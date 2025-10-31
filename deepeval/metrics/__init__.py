@@ -8,6 +8,11 @@ from .base_metric import (
 from .dag.dag import DAGMetric, DeepAcyclicGraph
 from .conversational_dag.conversational_dag import ConversationalDAGMetric
 from .bias.bias import BiasMetric
+from .exact_match.exact_match import ExactMatchMetric
+from .f1.f1 import F1Metric
+from .precision.precision import PrecisionMetric
+from .recall.recall import RecallMetric
+from .pattern_match.pattern_match import PatternMatchMetric
 from .toxicity.toxicity import ToxicityMetric
 from .pii_leakage.pii_leakage import PIILeakageMetric
 from .non_advice.non_advice import NonAdviceMetric
@@ -69,6 +74,12 @@ __all__ = [
     "BaseConversationalMetric",
     "BaseMultimodalMetric",
     "BaseArenaMetric",
+    # Non-LLM metrics
+    "ExactMatchMetric",
+    "PatternMatchMetric",
+    "F1Metric",
+    "PrecisionMetric",
+    "RecallMetric",
     # Core metrics
     "GEval",
     "ArenaGEval",

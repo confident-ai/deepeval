@@ -132,12 +132,24 @@ module.exports = {
         },
         {
           type: "category",
+          label: "Non-LLM",
+          items: [
+            "metrics-exact-match",
+            "metrics-precision",
+            "metrics-recall",
+            "metrics-f1",
+            "metrics-pattern-match",
+            "metrics-json-correctness",
+          ],
+          collapsed: true,
+        },
+        {
+          type: "category",
           label: "Others",
           items: [
             "metrics-summarization",
             "metrics-prompt-alignment",
             "metrics-hallucination",
-            "metrics-json-correctness",
             "metrics-ragas",
           ],
           collapsed: true,
