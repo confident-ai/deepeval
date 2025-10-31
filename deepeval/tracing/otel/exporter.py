@@ -493,6 +493,17 @@ class ConfidentSpanExporter(SpanExporter):
             output_token_count = span.attributes.get(
                 "confident.llm.output_token_count"
             )
+
+            # fallback to gen ai attributes if not found in confident attributes
+            if not input_token_count:
+                input_token_count = span.attributes.get(
+                    "gen_ai.usage.input_tokens"
+                )
+            if not output_token_count:
+                output_token_count = span.attributes.get(
+                    "gen_ai.usage.output_tokens"
+                )
+
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )
