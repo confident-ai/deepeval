@@ -23,6 +23,8 @@ try:
         AgentExecutionCompletedEvent,
         ToolUsageStartedEvent,
         ToolUsageFinishedEvent,
+        KnowledgeRetrievalStartedEvent,
+        KnowledgeRetrievalCompletedEvent,
     )
 
     crewai_installed = True
@@ -66,6 +68,14 @@ class CrewAIEventsListener(BaseEventListener):
         agent_id = getattr(event, "agent_id", "unknown")
         tool_name = getattr(event, "tool_name", "unknown")
         execution_id = f"tool_{source_id}_{task_id}_{agent_id}_{tool_name}"
+
+        return execution_id
+
+    @staticmethod
+    def get_knowledge_execution_id(source, event) -> str:
+        source_id = id(source)
+        agent_id = id(event.agent) if hasattr(event, "agent") else "unknown"
+        execution_id = f"_knowledge_{source_id}_{agent_id}"
 
         return execution_id
 
@@ -159,6 +169,32 @@ class CrewAIEventsListener(BaseEventListener):
                 current_span = current_span_context.get()
                 if current_span:
                     current_span.output = event.output
+                observer.__exit__(None, None, None)
+
+        @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
+        def on_knowledge_started(source, event: KnowledgeRetrievalStartedEvent):
+            observer = Observer(
+                span_type="tool",
+                func_name="knowledge_retrieval",
+                function_kwargs={},
+            )
+            self.span_observers[
+                self.get_knowledge_execution_id(source, event)
+            ] = observer
+            observer.__enter__()
+
+        @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
+        def on_knowledge_completed(
+            source, event: KnowledgeRetrievalCompletedEvent
+        ):
+            observer = self.span_observers.pop(
+                self.get_knowledge_execution_id(source, event)
+            )
+            if observer:
+                current_span = current_span_context.get()
+                if current_span:
+                    current_span.input = event.query
+                    current_span.output = event.retrieved_knowledge
                 observer.__exit__(None, None, None)
 
 

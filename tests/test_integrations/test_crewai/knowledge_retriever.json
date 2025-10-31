@@ -1,0 +1,109 @@
+{
+  "uuid": "3385b15a-6724-4df5-8175-b784c968a5f1",
+  "baseSpans": [
+    {
+      "uuid": "e26f1437-7aba-4ee0-9d13-a80fa992ecb0",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2025-10-29T09:21:30.616Z",
+      "endTime": "2025-10-29T09:21:35.863Z",
+      "input": {
+        "question": "What city does John live in and how old is he?"
+      },
+      "output": "John lives in San Francisco and he is 30 years old."
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "e26f1437-7aba-4ee0-9d13-a80fa992ecb0",
+      "startTime": "2025-10-29T09:21:30.620Z",
+      "endTime": "2025-10-29T09:21:35.855Z",
+      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.",
+      "output": "John lives in San Francisco and he is 30 years old.",
+      "toolsCalled": [
+        {
+          "name": "knowledge_retrieval",
+          "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.",
+          "inputParameters": {
+            "output": "Retrieve information about John, specifically his city of residence and age."
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "eee72251-85fb-4f8b-b107-5742bdbf9dd3",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
+      "startTime": "2025-10-29T09:21:34.798Z",
+      "endTime": "2025-10-29T09:21:35.853Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user.\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: John lives in San Francisco and he is 30 years old.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "aa87c362-931c-4de3-b625-5aa7c0420f98",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "5641a001-a8bd-4a8b-9597-82ef5005be08",
+      "startTime": "2025-10-29T09:21:30.621Z",
+      "endTime": "2025-10-29T09:21:34.125Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Your goal is to rewrite the user query so that it is optimized for retrieval from a vector database. Consider how the query will be used to find relevant documents, and aim to make it more specific and context-aware. \n\n Do not include any other text than the rewritten query, especially any preamble or postamble and only add expected output format if its relevant to the rewritten query. \n\n Focus on the key words of the intended task and to retrieve the most relevant information. \n\n There will be some extra context provided that might need to be removed such as expected_output formats structured_outputs and other instructions."
+        },
+        {
+          "role": "user",
+          "content": "The original query is: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.."
+        }
+      ],
+      "output": "Retrieve information about John, specifically his city of residence and age.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "5641a001-a8bd-4a8b-9597-82ef5005be08",
+      "name": "knowledge_retrieval",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
+      "startTime": "2025-10-29T09:21:30.621Z",
+      "endTime": "2025-10-29T09:21:34.795Z",
+      "input": "Retrieve information about John, specifically his city of residence and age.",
+      "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco."
+    }
+  ],
+  "startTime": "2025-10-29T09:21:30.616Z",
+  "endTime": "2025-10-29T09:21:35.863Z",
+  "environment": "development",
+  "input": {
+    "question": "What city does John live in and how old is he?"
+  },
+  "output": "John lives in San Francisco and he is 30 years old.",
+  "status": "SUCCESS"
+}
