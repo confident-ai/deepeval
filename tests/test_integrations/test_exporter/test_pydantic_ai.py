@@ -49,7 +49,6 @@ async def test_llm_trace():
             actual_dict["llmSpans"][0]["outputTokenCount"] == 500
         ), f"Expected output token count to be 500, got {actual_dict['llmSpans'][0]['outputTokenCount']}"
 
-
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None

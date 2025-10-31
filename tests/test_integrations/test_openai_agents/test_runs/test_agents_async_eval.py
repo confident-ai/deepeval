@@ -29,9 +29,9 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 #     is_run=True
 # )
 
+
 @assert_trace_json(
-    json_path=os.path.join(_current_dir, "test_async_evals.json"),
-    is_run=True
+    json_path=os.path.join(_current_dir, "test_async_evals.json"), is_run=True
 )
 def test_run_async_evals():
     for golden in dataset.evals_iterator():

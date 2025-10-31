@@ -18,6 +18,7 @@ def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
 
+
 agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
@@ -25,6 +26,7 @@ agent = FunctionAgent(
 )
 
 answer_relevancy_metric = AnswerRelevancyMetric()
+
 
 async def llm_app(input: str):
     agent_span_context = AgentSpanContext(
@@ -36,19 +38,22 @@ async def llm_app(input: str):
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 # @generate_trace_json(
 #     json_path=os.path.join(_current_dir, "test_async_eval.json"),
 #     is_run=True
 # )
 @assert_trace_json(
-    json_path=os.path.join(_current_dir, "test_async_eval.json"),
-    is_run=True
+    json_path=os.path.join(_current_dir, "test_async_eval.json"), is_run=True
 )
 def test_run_async_eval():
     from deepeval.dataset import EvaluationDataset, Golden
 
     dataset = EvaluationDataset(
-        goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 4 * 13?")]
+        goldens=[
+            Golden(input="What is 3 * 12?"),
+            Golden(input="What is 4 * 13?"),
+        ]
     )
 
     for golden in dataset.evals_iterator():

@@ -24,9 +24,9 @@ dataset = EvaluationDataset(
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 @assert_trace_json(
-    json_path=os.path.join(_current_dir, "test_sync_evals.json"),
-    is_run=True
+    json_path=os.path.join(_current_dir, "test_sync_evals.json"), is_run=True
 )
 def test_run_sync_evals():
     for golden in dataset.evals_iterator():

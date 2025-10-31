@@ -16,13 +16,14 @@ dataset = EvaluationDataset(goldens=goldens)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 # @generate_trace_json(
 #     json_path=os.path.join(_current_dir, "test_completion_sync_eval.json"),
 #     is_run=True
 # )
 @assert_trace_json(
     json_path=os.path.join(_current_dir, "test_completion_sync_eval.json"),
-    is_run=True
+    is_run=True,
 )
 def test_completion_sync_eval():
     for golden in dataset.evals_iterator():
@@ -36,7 +37,10 @@ def test_completion_sync_eval():
             client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": golden.input}
+                    {
+                        "role": "system",
+                        "content": "You are a helpful assistant.",
+                    },
+                    {"role": "user", "content": golden.input},
                 ],
             )

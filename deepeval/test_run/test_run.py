@@ -873,7 +873,9 @@ class TestRunManager:
             else 0
         )
 
-        print(f"Sending {num_remaining_batches} batches of {BATCH_SIZE} test cases")
+        print(
+            f"Sending {num_remaining_batches} batches of {BATCH_SIZE} test cases"
+        )
 
         for i in range(num_remaining_batches):
             start_index = i * BATCH_SIZE
