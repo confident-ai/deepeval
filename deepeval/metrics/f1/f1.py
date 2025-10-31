@@ -1,4 +1,6 @@
-from typing import List
+import re
+from typing import List, Tuple
+from collections import Counter
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -9,8 +11,9 @@ from deepeval.metrics.api import metric_data_manager
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
+_TOKENIZER = re.compile(r"\w+")
 
-class ExactMatchMetric(BaseMetric):
+class F1Metric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -19,7 +22,7 @@ class ExactMatchMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 1,
+        threshold: float = 0.5,
         verbose_mode: bool = False,
     ):
         self.threshold = threshold
@@ -40,14 +43,15 @@ class ExactMatchMetric(BaseMetric):
             expected = test_case.expected_output.strip()
             actual = test_case.actual_output.strip()
 
-            if expected == actual:
-                self.score = self.precision = self.recall = self.f1 = 1.0
-                self.reason = (
-                    "The actual and expected outputs are exact matches."
-                )
-            else:
-                self.score = self.precision = self.recall = self.f1 = 0.0
-                self.reason = "The actual and expected outputs are different."
+            self.score, expected_tokens, actual_tokens, matched_tokens = self._compute_f1(expected, actual)
+            self.reason = (
+                f"Expected Output tokens: {expected_tokens} "
+                f"Actual Output tokens: {actual_tokens} "
+                f"Matched tokens: {matched_tokens} "
+                f"Precision = num of matched tokens / num of actual tokens "
+                f"Recall = num of matched tokens / num of expected tokens "
+                f"F1 = 2 * recall * precision / (recall + precision) "
+            )
 
             self.success = self.score >= self.threshold
 
@@ -55,7 +59,7 @@ class ExactMatchMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Score: {self.score:.2f}",
+                        f"F1 Score: {self.score:.2f}",
                         f"Reason: {self.reason}",
                     ],
                 )
@@ -79,6 +83,37 @@ class ExactMatchMetric(BaseMetric):
             _in_component=_in_component,
         )
 
+    def _tokenize(self, text: str) -> List[str]:
+        return _TOKENIZER.findall(text.lower())
+
+    def _compute_f1(
+        self, expected: str, actual: str
+    ):
+        expected_tokens = self._tokenize(expected)
+        actual_tokens = self._tokenize(actual)
+
+        if not expected_tokens and not actual_tokens:
+            return 0.0, [], [], []
+
+        expected_counts = Counter(expected_tokens)
+        actual_counts = Counter(actual_tokens)
+        overlap = sum((expected_counts & actual_counts).values())
+        overlap_tokens = list((expected_counts & actual_counts).elements())
+
+        len_expected, len_actual = len(expected_tokens), len(actual_tokens)
+        if len_expected == 0 or len_actual == 0:
+            return 0.0, [], [], []
+
+        precision = overlap / len_actual
+        recall = overlap / len_expected
+        f1 = (
+            (2 * precision * recall / (precision + recall))
+            if (precision + recall)
+            else 0.0
+        )
+
+        return f1, expected_tokens, actual_tokens, overlap_tokens
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
@@ -91,4 +126,4 @@ class ExactMatchMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Exact Match"
+        return "F1"
