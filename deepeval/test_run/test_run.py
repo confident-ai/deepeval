@@ -463,19 +463,29 @@ class TestRunManager:
                     mode="r",
                     flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
-                    self.test_run = self.test_run.load(file)
+                    loaded = self.test_run.load(file)
+                    # only overwrite if loading actually worked
+                    self.test_run = loaded
             except (
                 FileNotFoundError,
+                json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(f"Error loading test run from disk: {e}", file=sys.stderr)
-                self.test_run = None
+                print(
+                    f"Warning: Could not load test run from disk: {e}",
+                    file=sys.stderr,
+                )
 
         return self.test_run
 
     def save_test_run(self, path: str, save_under_key: Optional[str] = None):
         if self.save_to_disk:
             try:
+                # ensure parent directory exists
+                parent = os.path.dirname(path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+
                 with portalocker.Lock(path, mode="w") as file:
                     if save_under_key:
                         try:
@@ -533,10 +543,19 @@ class TestRunManager:
                     self.test_run.save(file)
             except (
                 FileNotFoundError,
+                json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(f"Error updating test run to disk: {e}", file=sys.stderr)
-                self.test_run = None
+                print(
+                    f"Warning: Could not update test run on disk: {e}",
+                    file=sys.stderr,
+                )
+                if self.test_run is None:
+                    # guarantee a valid in-memory run so the update can proceed.
+                    # never destroy in-memory state on I/O failure.
+                    self.create_test_run()
+                self.test_run.add_test_case(api_test_case)
+                self.test_run.set_dataset_properties(test_case)
         else:
             if self.test_run is None:
                 self.create_test_run()
