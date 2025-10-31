@@ -9,6 +9,7 @@ import os
 
 # instrument_crewai()
 
+
 @tool
 def get_weather(city: str) -> str:
     """Fetch weather data for a given city. Returns temperature and conditions."""
@@ -24,7 +25,9 @@ def get_weather(city: str) -> str:
     temperature = f"{random.randint(45, 95)}°F"
     humidity = f"{random.randint(30, 90)}%"
 
-    return f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
+    return (
+        f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
+    )
 
 
 agent = Agent(
@@ -48,13 +51,13 @@ crew = Crew(
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
+
 # @generate_trace_json(
 #     json_path=os.path.join(_current_dir, "test_sync_eval.json"),
 #     is_run=True
 # )
 @assert_trace_json(
-    json_path=os.path.join(_current_dir, "test_sync_eval.json"),
-    is_run=True
+    json_path=os.path.join(_current_dir, "test_sync_eval.json"), is_run=True
 )
 def test_run_sync_eval():
     from deepeval.tracing import trace

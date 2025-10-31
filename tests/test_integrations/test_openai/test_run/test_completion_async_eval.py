@@ -8,6 +8,7 @@ from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 
 async_client = AsyncOpenAI()
 
+
 async def openai_llm_call(input):
     with trace(
         llm_span_context=LlmSpanContext(
@@ -18,10 +19,14 @@ async def openai_llm_call(input):
         return await async_client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful chatbot. Always generate a string response."},
+                {
+                    "role": "system",
+                    "content": "You are a helpful chatbot. Always generate a string response.",
+                },
                 {"role": "user", "content": input},
             ],
         )
+
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,7 +37,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 # )
 @assert_trace_json(
     json_path=os.path.join(_current_dir, "test_completion_async_eval.json"),
-    is_run=True
+    is_run=True,
 )
 def test_completion_async_eval():
     goldens = [
@@ -44,6 +49,7 @@ def test_completion_async_eval():
     for golden in dataset.evals_iterator():
         task = asyncio.create_task(openai_llm_call(golden.input))
         dataset.evaluate(task)
+
 
 # if __name__ == "__main__":
 #     test_completion_async_eval()

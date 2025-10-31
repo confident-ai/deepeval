@@ -198,7 +198,7 @@ def assert_trace_json(json_path: str, is_run: bool = False):
                     trace_testing_manager.run_name = json_path
                 else:
                     trace_testing_manager.test_name = json_path
-                
+
                 result = await func(*args, **kwargs)
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
                 expected_dict = load_trace_data(json_path)
@@ -223,7 +223,7 @@ def assert_trace_json(json_path: str, is_run: bool = False):
                     trace_testing_manager.run_name = json_path
                 else:
                     trace_testing_manager.test_name = json_path
-                
+
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
