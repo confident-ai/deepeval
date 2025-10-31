@@ -1,0 +1,150 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What's the weather in London?",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 6.255878416006453,
+      "order": 0,
+      "trace": {
+        "uuid": "ef058b002c8ac1949ec01cac8fd3655d",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "c43db7b6cf453a71",
+            "name": "",
+            "status": "SUCCESS",
+            "type": "agent",
+            "parentUuid": "2bab85adea689aed",
+            "startTime": "2025-10-31T09:22:37.189Z",
+            "endTime": "2025-10-31T09:22:54.252Z",
+            "input": [
+              {
+                "role": "System Instruction",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What's the weather in London?"
+              }
+            ],
+            "output": "I can\u2019t check live weather in this chat. Do you want current conditions, hourly, or a forecast for a specific day?\n\nIf you need it right now, try:\n- Met Office: metoffice.gov.uk/weather/forecast/gcpvj0v07\n- BBC Weather: bbc.co.uk/weather/2643743\n- Terminal/quick view: wttr.in/London\n\nTypical late-October London weather: highs around 12\u201315\u00b0C, lows 6\u20139\u00b0C, frequent showers, light to moderate breeze.",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant to the user's question with no irrelevant information included. Great job staying focused and helpful!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.007858,
+                "verboseLogs": "Statements:\n[\n    \"I can\u2019t check live weather in this chat.\",\n    \"Do you want current conditions, hourly, or a forecast for a specific day?\",\n    \"If you need it right now, try Met Office at metoffice.gov.uk/weather/forecast/gcpvj0v07.\",\n    \"If you need it right now, try BBC Weather at bbc.co.uk/weather/2643743.\",\n    \"If you need it right now, try Terminal/quick view at wttr.in/London.\",\n    \"Typical late-October London weather has highs around 12\u201315\u00b0C.\",\n    \"Typical late-October London weather has lows of 6\u20139\u00b0C.\",\n    \"Typical late-October London weather includes frequent showers.\",\n    \"Typical late-October London weather includes a light to moderate breeze.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:22:54.253Z",
+        "endTime": "2025-10-31T09:23:23.186Z",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What's the weather in London?",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 8.8261846670066,
+      "order": 1,
+      "trace": {
+        "uuid": "ef058b002c8ac1949ec01cac8fd3655d",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "c43db7b6cf453a71",
+            "name": "",
+            "status": "SUCCESS",
+            "type": "agent",
+            "parentUuid": "2bab85adea689aed",
+            "startTime": "2025-10-31T09:22:37.189Z",
+            "endTime": "2025-10-31T09:22:54.252Z",
+            "input": [
+              {
+                "role": "System Instruction",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What's the weather in London?"
+              }
+            ],
+            "output": "I can\u2019t check live weather in this chat. Do you want current conditions, hourly, or a forecast for a specific day?\n\nIf you need it right now, try:\n- Met Office: metoffice.gov.uk/weather/forecast/gcpvj0v07\n- BBC Weather: bbc.co.uk/weather/2643743\n- Terminal/quick view: wttr.in/London\n\nTypical late-October London weather: highs around 12\u201315\u00b0C, lows 6\u20139\u00b0C, frequent showers, light to moderate breeze.",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant to the user's question with no irrelevant information. Great job staying focused and helpful!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.013124000000000002,
+                "verboseLogs": "Statements:\n[\n    \"I can\u2019t check live weather in this chat.\",\n    \"Do you want current conditions, hourly, or a forecast for a specific day?\",\n    \"If you need it right now, try Met Office at metoffice.gov.uk/weather/forecast/gcpvj0v07.\",\n    \"If you need it right now, try BBC Weather at bbc.co.uk/weather/2643743.\",\n    \"If you need it right now, try Terminal/quick view at wttr.in/London.\",\n    \"Typical late-October London weather has highs around 12\u201315\u00b0C.\",\n    \"Typical late-October London weather has lows of 6\u20139\u00b0C.\",\n    \"Typical late-October London weather includes frequent showers.\",\n    \"Typical late-October London weather includes a light to moderate breeze.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement directly addresses the user's question by explaining the AI's limitation in providing live weather updates.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it clarifies what specific weather information the user is seeking, which helps address the question.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant because it provides a resource where the user can find the current weather in London.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it offers another resource for the user to check the current weather in London.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it provides an additional method for the user to check London's current weather.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant because it provides typical temperature highs for London in late October, which is useful in the absence of live data.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it gives typical temperature lows for London in late October, addressing the user's weather inquiry.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it describes typical weather conditions (showers) in London in late October, which helps answer the user's question.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": \"This statement is relevant as it provides information about typical wind conditions in London in late October, which is pertinent to the user's weather question.\"\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:22:54.253Z",
+        "endTime": "2025-10-31T09:23:23.186Z",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {
+      "": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 54.84856262500398
+}
