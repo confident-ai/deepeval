@@ -16,10 +16,10 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={false} />
 
-The Exact Match metric measures whether your LLM application's `actual_output` exactly matches the `expected_output`. If the outputs are not identical, it optionally computes an **F1-based similarity** score using token overlap.
+The Exact Match metric measures whether your LLM application's `actual_output` exactly matches the `expected_output`. The outputs must be **identical** for the metric to pass.
 
 :::note
-The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely compares the outputs on a lexical level (string or token-level comparison).
+The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely performs a **string-level equality check** between the outputs.
 :::
 
 
@@ -41,8 +41,7 @@ from deepeval.metrics import ExactMatchMetric
 from deepeval.test_case import LLMTestCase
 
 metric = ExactMatchMetric(
-    compute_f1=True,
-    threshold=0.5,
+    threshold=1.0,
     verbose_mode=True,
 )
 
@@ -59,10 +58,9 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating an `ExactMatchMetric`:
+There are **TWO** optional parameters when creating an `ExactMatchMetric`:
 
-- [Optional] `compute_f1`: a boolean when set to `True`, computes **precision**, **recall**, and **F1** based on token overlap if the outputs are not exact matches. Defaulted to `True`.
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 ### As a Standalone
@@ -78,23 +76,14 @@ print(metric.score, metric.reason)
 
 ## How Is It Calculated?
 
-The `ExactMatchMetric` score is calculated according to the following equations:
+The `ExactMatchMetric` score is calculated according to the following equation:
 
 <Equation
 formula="\text{Exact Match Score} =
-    \begin{cases}
-    1 & \text{if actual\_output = expected\_output}, \\
-    \text{F1(actual, expected)} & \text{(if compute\_f1=True)}, \\
-    0 & \text{(if compute\_f1=False)}
-    \end{cases}"
+ \begin{cases}
+ 1 & \text{if actual\_output = expected\_output}, \\
+ 0 & \text{otherwise}
+ \end{cases}"
 />
 
-Where:
-
-<Equation formula="\text{Precision} = \frac{\text{Num of overlapping tokens}}{\text{Num of tokens in actual output}}" />
-
-<Equation formula="\text{Recall} = \frac{\text{Num of overlapping tokens}}{\text{Num of tokens in expected output}}" />
-
-<Equation formula="\text{F1} = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}" />
-
-The `ExactMatchMetric` does not use an LLM for evaluation and instead uses the provided `expected_output` to find the exact match score of `actual_output`.
+The `ExactMatchMetric` performs a strict equality check and does not compute token-level similarity. For token-level evaluation, see [`PrecisionMetric`](/docs/metrics-precision), [`RecallMetric`](/docs/metrics-recall), or [`F1Metric`](/docs/metrics-f1).

@@ -135,6 +135,9 @@ module.exports = {
           label: "Non-LLM",
           items: [
             "metrics-exact-match",
+            "metrics-precision",
+            "metrics-recall",
+            "metrics-f1",
             "metrics-pattern-match",
             "metrics-json-correctness",
           ],
