@@ -1,12 +1,15 @@
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
-from deepeval.tracing.context import current_trace_context
+
+from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.types import (
     LlmOutput,
     LlmToolCall,
 )
 from deepeval.metrics import BaseMetric
+from deepeval.tracing.utils import prepare_tool_call_input_parameters
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -266,11 +269,33 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-
         uuid_str = str(run_id)
         tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
         exit_current_context(uuid_str=uuid_str)
+
+        # set the tools called in the parent span as well as on the trace level
+        tool_call = ToolCall(
+            name=tool_span.name,
+            description=tool_span.description,
+            output=output,
+            input_parameters=prepare_tool_call_input_parameters(
+                tool_span.input
+            ),
+        )
+        parent_span = current_span_context.get()
+        if parent_span:
+            if parent_span.tools_called is None:
+                parent_span.tools_called = []
+
+            parent_span.tools_called.append(tool_call)
+
+        trace = current_trace_context.get()
+        if trace:
+            if trace.tools_called is None:
+                trace.tools_called = []
+
+            trace.tools_called.append(tool_call)
 
     def on_tool_error(
         self,

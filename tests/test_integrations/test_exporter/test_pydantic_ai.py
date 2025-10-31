@@ -1,3 +1,4 @@
+import asyncio
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from tests.test_integrations.test_exporter.readable_spans import (
     list_of_readable_spans,
@@ -40,6 +41,14 @@ async def test_llm_trace():
             actual_dict["llmSpans"][0]["input"][-1]["role"]
             == "Model Request Parameters"
         ), f"Expected input role to be 'Model Request Parameters', got {actual_dict['llmSpans'][0]['input'][-1]['role']}"
+
+        assert (
+            actual_dict["llmSpans"][0]["inputTokenCount"] == 1000
+        ), f"Expected input token count to be 1000, got {actual_dict['llmSpans'][0]['inputTokenCount']}"
+        assert (
+            actual_dict["llmSpans"][0]["outputTokenCount"] == 500
+        ), f"Expected output token count to be 500, got {actual_dict['llmSpans'][0]['outputTokenCount']}"
+
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None

@@ -1,0 +1,29 @@
+{
+  "uuid": "16d45a68-f546-48a4-b6b6-0a105915d7d3",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "a30e4c16-1765-4364-a6b7-f8418f214a6f",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-29T06:14:53.884Z",
+      "endTime": "2025-10-29T06:14:56.801Z",
+      "input": "Hello, how are you?",
+      "output": "Hello! I'm doing well, thank you for asking. I'm here and ready to help you with whatever you need. How are you doing today? Is there anything I can assist you with?",
+      "model": "claude-sonnet-4-5",
+      "prompt": {},
+      "inputTokenCount": 25.0,
+      "outputTokenCount": 43.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-29T06:14:53.884Z",
+  "endTime": "2025-10-29T06:14:56.801Z",
+  "environment": "development",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm doing well, thank you for asking. I'm here and ready to help you with whatever you need. How are you doing today? Is there anything I can assist you with?",
+  "status": "SUCCESS"
+}

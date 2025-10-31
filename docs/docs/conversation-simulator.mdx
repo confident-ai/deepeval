@@ -55,7 +55,6 @@ There are **ONE** mandatory and **FOUR** optional parameters when creating a `Co
 
 - `model_callback`: a callback that wraps around your conversational agent.
 - [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
-- [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent simulation of conversations**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of conversations that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
 
@@ -108,6 +107,46 @@ A simulation ends either when the converaiton achieves the expected outcome outl
 :::tip
 You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
 :::
+
+## Advanced Usage
+
+### Lifecycle hooks
+
+The `ConversationSimulator` provides a `on_simulation_complete` hooks that allow you to execute custom logic whenever a simulation of an individual test case has completed. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
+
+```python
+from deepeval.simulator import ConversationSimulator
+from deepeval.test_case import ConversationalTestCase
+
+def handle_simulation_complete(test_case: ConversationalTestCase, index: int):
+    print(f"Conversation {index} completed with {len(test_case.turns)} turns")
+
+conversational_test_cases = simulator.simulate(
+    conversational_goldens=[golden1, golden2, golden3],
+    on_simulation_complete=handle_simulation_complete
+)
+```
+
+The hook function receives two parameters:
+
+- `test_case`: the completed `ConversationalTestCase` object containing all turns and metadata.
+- `index`: the index of the corresponding golden that was simulated (**ording is perserved** during simulation).
+
+:::tip
+When using `async_mode=True`, conversations may complete in any order due to concurrent execution. Use the `index` parameter to track which golden each test case corresponds to.
+:::
+
+### Existing turns
+
+If your multi-turn chatbot has one or more predefined turns (for example, a hardcoded assistant message at the beginning of a conversation), you would simply include this as part of the simulation by providing a list of preexisting `turns` to a `ConversationalGolden`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn
+
+golden = ConversationalGolden(turns=[Turn(role="assistant", content="Hi! How can I help you today?")])
+```
+
+By including a list of non-empty `turns`, `deepeval` will run simulations based on the additional context you've provided.
 
 ## Evaluate Simulated Turns
 

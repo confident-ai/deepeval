@@ -1,0 +1,37 @@
+{
+  "uuid": "48d12072-5e44-40eb-90b5-b9cef435660c",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "5502ff57-3b64-41c9-bea9-b8ed6076cb01",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-29T05:07:24.652Z",
+      "endTime": "2025-10-29T05:07:27.365Z",
+      "input": "Hello, how are you?",
+      "output": "Hello! I'm doing well, thank you for asking! I'm here and ready to help you with any questions or tasks you might have. How are you doing today? Is there anything I can assist you with?",
+      "model": "claude-sonnet-4-5",
+      "prompt": { "alias": "asd", "version": "00.00.01" },
+      "inputTokenCount": 25.0,
+      "outputTokenCount": 47.0,
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-29T05:07:24.652Z",
+  "endTime": "2025-10-29T05:07:27.366Z",
+  "name": "test_name_1",
+  "metadata": {
+    "test_metadata_1": "test_value_1"
+  },
+  "tags": ["test_tag_1"],
+  "environment": "development",
+  "userId": "test_user_id_1",
+  "threadId": "test_thread_id_1",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm doing well, thank you for asking! I'm here and ready to help you with any questions or tasks you might have. How are you doing today? Is there anything I can assist you with?",
+  "status": "SUCCESS"
+}

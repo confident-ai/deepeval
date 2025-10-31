@@ -39,6 +39,7 @@ import itertools
 import functools
 import threading
 import logging
+import time
 
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
@@ -52,6 +53,7 @@ from tenacity import (
 )
 from tenacity.stop import stop_base
 from tenacity.wait import wait_base
+from contextvars import ContextVar, copy_context
 
 from deepeval.constants import (
     ProviderSlug as PS,
@@ -65,6 +67,81 @@ Provider = Union[str, PS]
 _MAX_TIMEOUT_THREADS = get_settings().DEEPEVAL_TIMEOUT_THREAD_LIMIT
 _TIMEOUT_SEMA = threading.BoundedSemaphore(_MAX_TIMEOUT_THREADS)
 _WORKER_ID = itertools.count(1)
+_OUTER_DEADLINE = ContextVar("deepeval_outer_deadline", default=None)
+
+
+def set_outer_deadline(seconds: float | None):
+    """Set (or clear) the outer task time budget.
+
+    Stores a deadline in a local context variable so nested code
+    can cooperatively respect a shared budget. Always pair this with
+    `reset_outer_deadline(token)` in a `finally` block.
+
+    Args:
+        seconds: Number of seconds from now to set as the deadline. If `None`,
+            `0`, or a non-positive value is provided, the deadline is cleared.
+
+    Returns:
+        contextvars.Token: The token returned by the underlying ContextVar `.set()`
+        call, which must be passed to `reset_outer_deadline` to restore the
+        previous value.
+    """
+    if seconds and seconds > 0:
+        return _OUTER_DEADLINE.set(time.monotonic() + seconds)
+    return _OUTER_DEADLINE.set(None)
+
+
+def reset_outer_deadline(token):
+    """Restore the previous outer deadline set by `set_outer_deadline`.
+
+    This should be called in a `finally` block to ensure the deadline
+    is restored even if an exception occurs.
+
+    Args:
+        token: The `contextvars.Token` returned by `set_outer_deadline`.
+    """
+    if token is not None:
+        _OUTER_DEADLINE.reset(token)
+
+
+def _remaining_budget() -> float | None:
+    dl = _OUTER_DEADLINE.get()
+    if dl is None:
+        return None
+    return max(0.0, dl - time.monotonic())
+
+
+def _is_budget_spent() -> bool:
+    rem = _remaining_budget()
+    return rem is not None and rem <= 0.0
+
+
+def resolve_effective_attempt_timeout():
+    """Resolve the timeout to use for a single provider attempt.
+
+    Combines the configured per-attempt timeout with any remaining outer budget:
+    - If `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS` is `0` or `None`, returns `0`
+      callers should skip `asyncio.wait_for` in this case and rely on the outer cap.
+    - If positive and an outer deadline is present, returns
+      `min(per_attempt, remaining_budget)`.
+    - If positive and no outer deadline is present, returns `per_attempt`.
+
+    Returns:
+        float: Seconds to use for the inner per-attempt timeout. `0` means
+        disable inner timeout and rely on the outer budget instead.
+    """
+    per_attempt = float(
+        get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
+    )
+    # 0 or None disable inner wait_for. That means rely on outer task cap for timeouts instead.
+    if per_attempt <= 0:
+        return 0
+    # If we do have a positive per-attempt, use up to remaining outer budget.
+    rem = _remaining_budget()
+    if rem is not None:
+        return max(0.0, min(per_attempt, rem))
+    return per_attempt
+
 
 # --------------------------
 # Policy description
@@ -399,9 +476,10 @@ def make_after_log(slug: str):
         if not _logger.isEnabledFor(after_level):
             return
 
+        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
         exc_info = (
             (type(exc), exc, getattr(exc, "__traceback__", None))
-            if after_level >= logging.ERROR
+            if show_trace
             else None
         )
 
@@ -416,7 +494,7 @@ def make_after_log(slug: str):
     return _after
 
 
-def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
+def _make_timeout_error(timeout_seconds: float) -> asyncio.TimeoutError:
     settings = get_settings()
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
@@ -427,12 +505,12 @@ def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
         )
     msg = (
         f"call timed out after {timeout_seconds:g}s (per attempt). "
-        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS (0 disables) or reduce work per attempt."
+        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE (None disables) or reduce work per attempt."
     )
-    return TimeoutError(msg)
+    return asyncio.TimeoutError(msg)
 
 
-def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
+def run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
     """
     Run a synchronous callable with a soft timeout enforced by a helper thread,
     with a global cap on concurrent timeout-workers.
@@ -499,9 +577,11 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
     done = threading.Event()
     result = {"value": None, "exc": None}
 
+    context = copy_context()
+
     def target():
         try:
-            result["value"] = func(*args, **kwargs)
+            result["value"] = context.run(func, *args, **kwargs)
         except BaseException as e:
             result["exc"] = e
         finally:
@@ -562,37 +642,40 @@ def create_retry_decorator(provider: Provider):
 
             @functools.wraps(func)
             async def attempt(*args, **kwargs):
-                timeout_seconds = (
-                    get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
-                )
+                if _is_budget_spent():
+                    raise _make_timeout_error(0)
+
+                per_attempt_timeout = resolve_effective_attempt_timeout()
+
                 coro = func(*args, **kwargs)
-                if timeout_seconds > 0:
+                if per_attempt_timeout > 0:
                     try:
-                        return await asyncio.wait_for(coro, timeout_seconds)
-                    except asyncio.TimeoutError as e:
+                        return await asyncio.wait_for(coro, per_attempt_timeout)
+                    except (asyncio.TimeoutError, TimeoutError) as e:
                         if (
                             logger.isEnabledFor(logging.DEBUG)
                             and get_settings().DEEPEVAL_VERBOSE_MODE is True
                         ):
                             logger.debug(
                                 "async timeout after %.3fs (active_threads=%d, tasks=%d)",
-                                timeout_seconds,
+                                per_attempt_timeout,
                                 threading.active_count(),
                                 len(asyncio.all_tasks()),
                             )
-                        raise _make_timeout_error(timeout_seconds) from e
+                        raise _make_timeout_error(per_attempt_timeout) from e
                 return await coro
 
             return base_retry(attempt)
 
         @functools.wraps(func)
         def attempt(*args, **kwargs):
-            timeout_seconds = (
-                get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
-            )
-            if timeout_seconds > 0:
-                return _run_sync_with_timeout(
-                    func, timeout_seconds, *args, **kwargs
+            if _is_budget_spent():
+                raise _make_timeout_error(0)
+
+            per_attempt_timeout = resolve_effective_attempt_timeout()
+            if per_attempt_timeout > 0:
+                return run_sync_with_timeout(
+                    func, per_attempt_timeout, *args, **kwargs
                 )
             return func(*args, **kwargs)
 

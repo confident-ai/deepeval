@@ -1,7 +1,7 @@
 import re
 import uuid
 from jinja2 import Template
-from typing import Any, Dict, Type, Optional, List
+from typing import Any, Dict, Type, Optional, List, Match
 from pydantic import BaseModel, create_model
 
 from deepeval.prompt.api import (
@@ -16,36 +16,65 @@ from deepeval.prompt.api import (
 ###################################
 
 
-def interpolate_mustache(text: str, **kwargs) -> str:
+def interpolate_mustache(text: str, **kwargs: Any) -> str:
     """Interpolate using Mustache format: {{variable}}"""
-    formatted_template = re.sub(r"\{\{(\w+)\}\}", r"{\1}", text)
-    return formatted_template.format(**kwargs)
+
+    def replace_match(match: Match[str]) -> str:
+        var_name = match.group(1)
+        if var_name in kwargs:
+            return str(kwargs[var_name])
+        # Raise error for missing variables to maintain consistency
+        raise KeyError(f"Missing variable in template: {var_name}")
+
+    return re.sub(r"\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}", replace_match, text)
 
 
-def interpolate_mustache_with_space(text: str, **kwargs) -> str:
+def interpolate_mustache_with_space(text: str, **kwargs: Any) -> str:
     """Interpolate using Mustache with space format: {{ variable }}"""
-    formatted_template = re.sub(r"\{\{ (\w+) \}\}", r"{\1}", text)
-    return formatted_template.format(**kwargs)
+
+    def replace_match(match: Match[str]) -> str:
+        var_name = match.group(1)
+        if var_name in kwargs:
+            return str(kwargs[var_name])
+        # Raise error for missing variables to maintain consistency
+        raise KeyError(f"Missing variable in template: {var_name}")
+
+    return re.sub(r"\{\{ ([a-zA-Z_][a-zA-Z0-9_]*) \}\}", replace_match, text)
 
 
-def interpolate_fstring(text: str, **kwargs) -> str:
+def interpolate_fstring(text: str, **kwargs: Any) -> str:
     """Interpolate using F-string format: {variable}"""
-    return text.format(**kwargs)
+
+    def replace_match(match: Match[str]) -> str:
+        var_name = match.group(1)
+        if var_name in kwargs:
+            return str(kwargs[var_name])
+        # Raise error for missing variables to maintain consistency
+        raise KeyError(f"Missing variable in template: {var_name}")
+
+    return re.sub(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", replace_match, text)
 
 
-def interpolate_dollar_brackets(text: str, **kwargs) -> str:
+def interpolate_dollar_brackets(text: str, **kwargs: Any) -> str:
     """Interpolate using Dollar Brackets format: ${variable}"""
-    formatted_template = re.sub(r"\$\{(\w+)\}", r"{\1}", text)
-    return formatted_template.format(**kwargs)
+
+    def replace_match(match: Match[str]) -> str:
+        var_name = match.group(1)
+        if var_name in kwargs:
+            return str(kwargs[var_name])
+        # Raise error for missing variables to maintain consistency
+        raise KeyError(f"Missing variable in template: {var_name}")
+
+    return re.sub(r"\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}", replace_match, text)
 
 
-def interpolate_jinja(text: str, **kwargs) -> str:
+def interpolate_jinja(text: str, **kwargs: Any) -> str:
     template = Template(text)
     return template.render(**kwargs)
 
 
 def interpolate_text(
-    interpolation_type: PromptInterpolationType, text: str, **kwargs
+    interpolation_type: PromptInterpolationType, text: str, **kwargs: Any
 ) -> str:
     """Apply the appropriate interpolation method based on the type"""
     if interpolation_type == PromptInterpolationType.MUSTACHE:

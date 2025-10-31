@@ -951,6 +951,8 @@ class EvaluationDataset:
                     context=golden.context,
                     name=golden.name,
                     comments=golden.comments,
+                    additional_metadata=golden.additional_metadata,
+                    custom_column_key_values=golden.custom_column_key_values,
                 )
                 for golden in self.goldens
             ]
@@ -965,6 +967,10 @@ class EvaluationDataset:
                     name=golden.name,
                     comments=golden.comments,
                     source_file=golden.source_file,
+                    tools_called=golden.tools_called,
+                    expected_tools=golden.expected_tools,
+                    additional_metadata=golden.additional_metadata,
+                    custom_column_key_values=golden.custom_column_key_values,
                 )
                 for golden in self.goldens
             ]
@@ -995,36 +1001,68 @@ class EvaluationDataset:
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
                 if self._multi_turn:
-                    json_data = [
-                        {
-                            "scenario": golden.scenario,
-                            "turns": (
-                                format_turns(golden.turns)
-                                if golden.turns
-                                else None
-                            ),
-                            "expected_outcome": golden.expected_outcome,
-                            "user_description": golden.user_description,
-                            "context": golden.context,
-                            "name": golden.name,
-                            "comments": golden.comments,
-                        }
-                        for golden in goldens
-                    ]
+                    json_data = []
+                    for golden in goldens:
+                        # Serialize turns as structured list of dicts
+                        turns_list = (
+                            json.loads(format_turns(golden.turns))
+                            if golden.turns
+                            else None
+                        )
+                        json_data.append(
+                            {
+                                "scenario": golden.scenario,
+                                "turns": turns_list,
+                                "expected_outcome": golden.expected_outcome,
+                                "user_description": golden.user_description,
+                                "context": golden.context,
+                                "name": golden.name,
+                                "comments": golden.comments,
+                                "additional_metadata": golden.additional_metadata,
+                                "custom_column_key_values": golden.custom_column_key_values,
+                            }
+                        )
                 else:
-                    json_data = [
-                        {
-                            "input": golden.input,
-                            "actual_output": golden.actual_output,
-                            "expected_output": golden.expected_output,
-                            "retrieval_context": golden.retrieval_context,
-                            "context": golden.context,
-                            "name": golden.name,
-                            "comments": golden.comments,
-                            "source_file": golden.source_file,
-                        }
-                        for golden in goldens
-                    ]
+                    json_data = []
+                    for golden in goldens:
+                        # Convert ToolCall lists to list[dict]
+                        def _dump_tools(tools):
+                            if not tools:
+                                return None
+                            dumped = []
+                            for t in tools:
+                                if hasattr(t, "model_dump"):
+                                    dumped.append(
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
+                                    )
+                                elif hasattr(t, "dict"):
+                                    dumped.append(t.dict(exclude_none=True))
+                                else:
+                                    dumped.append(t)
+                            return dumped if len(dumped) > 0 else None
+
+                        json_data.append(
+                            {
+                                "input": golden.input,
+                                "actual_output": golden.actual_output,
+                                "expected_output": golden.expected_output,
+                                "retrieval_context": golden.retrieval_context,
+                                "context": golden.context,
+                                "name": golden.name,
+                                "comments": golden.comments,
+                                "source_file": golden.source_file,
+                                "tools_called": _dump_tools(
+                                    golden.tools_called
+                                ),
+                                "expected_tools": _dump_tools(
+                                    golden.expected_tools
+                                ),
+                                "additional_metadata": golden.additional_metadata,
+                                "custom_column_key_values": golden.custom_column_key_values,
+                            }
+                        )
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
             with open(
@@ -1041,6 +1079,8 @@ class EvaluationDataset:
                             "context",
                             "name",
                             "comments",
+                            "additional_metadata",
+                            "custom_column_key_values",
                         ]
                     )
                     for golden in goldens:
@@ -1054,6 +1094,21 @@ class EvaluationDataset:
                             if golden.turns is not None
                             else None
                         )
+                        additional_metadata = (
+                            json.dumps(
+                                golden.additional_metadata, ensure_ascii=False
+                            )
+                            if golden.additional_metadata is not None
+                            else None
+                        )
+                        custom_cols = (
+                            json.dumps(
+                                golden.custom_column_key_values,
+                                ensure_ascii=False,
+                            )
+                            if golden.custom_column_key_values
+                            else None
+                        )
                         writer.writerow(
                             [
                                 golden.scenario,
@@ -1063,6 +1118,8 @@ class EvaluationDataset:
                                 context,
                                 golden.name,
                                 golden.comments,
+                                additional_metadata,
+                                custom_cols,
                             ]
                         )
                 else:
@@ -1076,6 +1133,10 @@ class EvaluationDataset:
                             "name",
                             "comments",
                             "source_file",
+                            "tools_called",
+                            "expected_tools",
+                            "additional_metadata",
+                            "custom_column_key_values",
                         ]
                     )
                     for golden in goldens:
@@ -1089,6 +1150,42 @@ class EvaluationDataset:
                             if golden.context is not None
                             else None
                         )
+
+                        # Dump tools as JSON strings for CSV
+                        def _dump_tools_csv(tools):
+                            if not tools:
+                                return None
+                            dumped = []
+                            for t in tools:
+                                if hasattr(t, "model_dump"):
+                                    dumped.append(
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
+                                    )
+                                elif hasattr(t, "dict"):
+                                    dumped.append(t.dict(exclude_none=True))
+                                else:
+                                    dumped.append(t)
+                            return json.dumps(dumped, ensure_ascii=False)
+
+                        tools_called = _dump_tools_csv(golden.tools_called)
+                        expected_tools = _dump_tools_csv(golden.expected_tools)
+                        additional_metadata = (
+                            json.dumps(
+                                golden.additional_metadata, ensure_ascii=False
+                            )
+                            if golden.additional_metadata is not None
+                            else None
+                        )
+                        custom_cols = (
+                            json.dumps(
+                                golden.custom_column_key_values,
+                                ensure_ascii=False,
+                            )
+                            if golden.custom_column_key_values
+                            else None
+                        )
                         writer.writerow(
                             [
                                 golden.input,
@@ -1099,6 +1196,10 @@ class EvaluationDataset:
                                 golden.name,
                                 golden.comments,
                                 golden.source_file,
+                                tools_called,
+                                expected_tools,
+                                additional_metadata,
+                                custom_cols,
                             ]
                         )
         elif file_type == "jsonl":
@@ -1106,7 +1207,9 @@ class EvaluationDataset:
                 for golden in goldens:
                     if self._multi_turn:
                         turns = (
-                            format_turns(golden.turns) if golden.turns else None
+                            json.loads(format_turns(golden.turns))
+                            if golden.turns
+                            else None
                         )
                         record = {
                             "scenario": golden.scenario,
@@ -1114,6 +1217,10 @@ class EvaluationDataset:
                             "expected_outcome": golden.expected_outcome,
                             "user_description": golden.user_description,
                             "context": golden.context,
+                            "name": golden.name,
+                            "comments": golden.comments,
+                            "additional_metadata": golden.additional_metadata,
+                            "custom_column_key_values": golden.custom_column_key_values,
                         }
                     else:
                         retrieval_context = (
@@ -1126,12 +1233,37 @@ class EvaluationDataset:
                             if golden.context is not None
                             else None
                         )
+
+                        # Convert ToolCall lists to list[dict]
+                        def _dump_tools(tools):
+                            if not tools:
+                                return None
+                            dumped = []
+                            for t in tools:
+                                if hasattr(t, "model_dump"):
+                                    dumped.append(
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
+                                    )
+                                elif hasattr(t, "dict"):
+                                    dumped.append(t.dict(exclude_none=True))
+                                else:
+                                    dumped.append(t)
+                            return dumped if len(dumped) > 0 else None
+
                         record = {
                             "input": golden.input,
                             "actual_output": golden.actual_output,
                             "expected_output": golden.expected_output,
                             "retrieval_context": retrieval_context,
                             "context": context,
+                            "tools_called": _dump_tools(golden.tools_called),
+                            "expected_tools": _dump_tools(
+                                golden.expected_tools
+                            ),
+                            "additional_metadata": golden.additional_metadata,
+                            "custom_column_key_values": golden.custom_column_key_values,
                         }
 
                     file.write(json.dumps(record, ensure_ascii=False) + "\n")

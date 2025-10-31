@@ -76,23 +76,26 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        payload = self.get_converse_request_body(prompt)
-        client = await self._ensure_client()
-        response = await client.converse(
-            modelId=self.model_id,
-            messages=payload["messages"],
-            inferenceConfig=payload["inferenceConfig"],
-        )
-        message = response["output"]["message"]["content"][0]["text"]
-        cost = self.calculate_cost(
-            response["usage"]["inputTokens"],
-            response["usage"]["outputTokens"],
-        )
-        if schema is None:
-            return message, cost
-        else:
-            json_output = trim_and_load_json(message)
-            return schema.model_validate(json_output), cost
+        try:
+            payload = self.get_converse_request_body(prompt)
+            client = await self._ensure_client()
+            response = await client.converse(
+                modelId=self.model_id,
+                messages=payload["messages"],
+                inferenceConfig=payload["inferenceConfig"],
+            )
+            message = response["output"]["message"]["content"][0]["text"]
+            cost = self.calculate_cost(
+                response["usage"]["inputTokens"],
+                response["usage"]["outputTokens"],
+            )
+            if schema is None:
+                return message, cost
+            else:
+                json_output = trim_and_load_json(message)
+                return schema.model_validate(json_output), cost
+        finally:
+            await self.close()
 
     ###############################################
     # Client management

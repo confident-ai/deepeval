@@ -1,3 +1,4 @@
+from llama_index.core.instrumentation.events.llm import LLMChatEndEvent
 from deepeval.test_case.llm_test_case import LLMTestCase, ToolCall
 from deepeval.tracing.types import BaseSpan
 from typing import Any
@@ -81,3 +82,26 @@ def prepare_output_llm_test_case_params(
                 )
 
             span.llm_test_case.tools_called = tool_calls
+
+
+def extract_output_from_llm_chat_end_event(event: LLMChatEndEvent) -> list:
+    messages = []
+    for msg in event.response.message.blocks:
+        if msg.block_type == "text":
+            messages.append(
+                {
+                    "role": event.response.message.role.value,
+                    "content": msg.text,
+                }
+            )
+        elif msg.block_type == "tool_call":
+            messages.append(
+                {
+                    "name": msg.tool_name,
+                    "input_parameters": msg.tool_kwargs,
+                    "id": msg.tool_call_id,
+                }
+            )
+        else:
+            messages.append(msg.model_dump())
+    return messages

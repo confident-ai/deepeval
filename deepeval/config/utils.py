@@ -137,3 +137,8 @@ def dedupe_preserve_order(items: Iterable[str]) -> List[str]:
             seen.add(x)
             out.append(x)
     return out
+
+
+def constrain_between(value: float, lo: float, hi: float) -> float:
+    """Return value constrained to the inclusive range [lo, hi]."""
+    return min(max(value, lo), hi)

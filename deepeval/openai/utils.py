@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Any, Dict, List, Optional, Iterable
+from typing import Any, Dict, List, Iterable
 
 from openai.types.chat.chat_completion_message_param import (
     ChatCompletionMessageParam,
@@ -8,32 +8,8 @@ from openai.types.chat.chat_completion_message_param import (
 
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.context import current_span_context
-from deepeval.utils import shorten, len_long
-from deepeval.openai.types import OutputParameters
-
-
-_URL_MAX = 200
-_JSON_MAX = max(
-    len_long(), 400
-)  # <- make this bigger by increasing DEEPEVAL_MAXLEN_LONG above 400
-
-
-def _compact_dump(value: Any) -> str:
-    try:
-        dumped = json.dumps(
-            value, ensure_ascii=False, default=str, separators=(",", ":")
-        )
-    except Exception:
-        dumped = repr(value)
-    return shorten(dumped, max_len=_JSON_MAX)
-
-
-def _fmt_url(url: Optional[str]) -> str:
-    if not url:
-        return ""
-    if url.startswith("data:"):
-        return "[data-uri]"
-    return shorten(url, max_len=_URL_MAX)
+from deepeval.model_integrations.types import OutputParameters
+from deepeval.model_integrations.utils import compact_dump, fmt_url
 
 
 def create_child_tool_spans(output_parameters: OutputParameters):
@@ -111,7 +87,7 @@ def stringify_multimodal_content(content: Any) -> str:
                 url = image_url
             else:
                 url = (image_url or {}).get("url") or content.get("url")
-            return f"[image:{_fmt_url(url)}]"
+            return f"[image:{fmt_url(url)}]"
 
         # Responses API variants
         if t == "input_text":
@@ -122,14 +98,14 @@ def stringify_multimodal_content(content: Any) -> str:
                 url = image_url
             else:
                 url = (image_url or {}).get("url") or content.get("url")
-            return f"[image:{_fmt_url(url)}]"
+            return f"[image:{fmt_url(url)}]"
 
         # readability for other input_* types we don't currently handle
         if t and t.startswith("input_"):
             return f"[{t}]"
 
     # unknown dicts and types returned as shortened JSON
-    return _compact_dump(content)
+    return compact_dump(content)
 
 
 def render_messages(
@@ -228,7 +204,7 @@ def _render_content(content: Dict[str, Any], indent: int = 0) -> str:
             lines.append(f"{prefix}{key}:")
             lines.append(_render_content(value, indent + 1))
         elif isinstance(value, list):
-            lines.append(f"{prefix}{key}: {_compact_dump(value)}")
+            lines.append(f"{prefix}{key}: {compact_dump(value)}")
         else:
             lines.append(f"{prefix}{key}: {value}")
 
