@@ -1,8 +1,11 @@
+import time
 import asyncio
-
-from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from types import SimpleNamespace
 from typing import List, Optional, Protocol, runtime_checkable
+
+from deepeval.constants import ProviderSlug as PS
+from deepeval.metrics import BaseMetric, TaskCompletionMetric
+from deepeval.models.retry_policy import create_retry_decorator
 from deepeval.tracing.types import TraceSpanStatus
 
 
@@ -90,8 +93,7 @@ class _SleepyMetric(BaseMetric):
 
     Args:
         name: display name
-        async_sleep: seconds to sleep in a_measure (None/0 -> no stall)
-        sync_sleep: seconds to sleep in measure (None/0 -> no stall)
+        sleep_s: seconds to sleep (None/0 means no sleep)
         should_skip: mark as skipped instead of evaluating
         succeed: whether to set success=True after sleep, the default is False
     """
@@ -100,14 +102,12 @@ class _SleepyMetric(BaseMetric):
         self,
         name: str = "sleepy",
         *,
-        async_sleep: float | None = None,
-        sync_sleep: float | None = None,
+        sleep_s: float | None = None,
         should_skip: bool = False,
         succeed: bool = False,
     ):
         self.name = name
-        self.async_sleep = async_sleep
-        self.sync_sleep = sync_sleep
+        self.sleep_s = sleep_s
         self.should_skip = should_skip
         self.succeed = succeed
 
@@ -123,22 +123,64 @@ class _SleepyMetric(BaseMetric):
         if self.should_skip:
             self.skipped = True
             return
-        if self.sync_sleep:
-            import time
-
-            time.sleep(self.sync_sleep)
+        if self.sleep_s:
+            time.sleep(self.sleep_s)
         self.success = bool(self.succeed)
 
     async def a_measure(self, test_case, *_args, **_kwargs):
         if self.should_skip:
             self.skipped = True
             return
-        if self.async_sleep:
-            await asyncio.sleep(self.async_sleep)
+        if self.sleep_s:
+            await asyncio.sleep(self.sleep_s)
         self.success = bool(self.succeed)
 
     def is_successful(self) -> bool:
         return bool(self.success)
+
+
+class _PerAttemptTimeoutMetric(BaseMetric):
+    """
+    A metric that intentionally exceeds the per-attempt timeout budget to trigger
+    Tenacity retries. Works in both sync and async executor paths.
+
+    Use:
+      set sleep_s > per-attempt timeout
+    """
+
+    threshold = 0.0
+
+    def __init__(self, *, sleep_s: float = 10.0):
+        self.sleep_s = float(sleep_s)
+        self.name = "_PerAttemptTimeoutMetric"
+
+    # BaseMetric.measure is wrapped with run_sync_with_timeout
+    def measure(self, test_case, **kwargs) -> float:
+        retry = create_retry_decorator(PS.OPENAI)
+
+        @retry
+        def slow_op():
+            # run_sync_with_timeout() in the retry layer enforces the per-attempt timeout
+            time.sleep(self.sleep_s)
+            return 1.0
+
+        return slow_op()
+
+    # BaseMetric.a_measure is wrapped with asyncio.wait_for
+    async def a_measure(self, test_case, **kwargs) -> float:
+        retry = create_retry_decorator(PS.OPENAI)
+
+        @retry
+        async def slow_op():
+            # resolve_effective_attempt_timeout() will bound asyncio.wait_for(...) around this
+            await asyncio.sleep(self.sleep_s)
+            return 1.0
+
+        return await slow_op()
+
+    # required by BaseMetric
+    def is_successful(self) -> bool:
+        return False
 
 
 class _FakeSpan:

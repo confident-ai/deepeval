@@ -17,39 +17,45 @@ class SampleSchema(BaseModel):
 class TestGPTModelCompletionKwargs:
     """Test suite for GPTModel generation_kwargs functionality"""
 
-    def test_init_without_generation_kwargs(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(model="gpt-4o")
-            assert model.generation_kwargs == {}
-            assert model.model_name == "gpt-4o"
+    def test_init_without_generation_kwargs(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-    def test_init_with_generation_kwargs(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            generation_kwargs = {
-                "reasoning_effort": "high",
-                "max_tokens": 2000,
-                "seed": 42,
-            }
-            model = GPTModel(
-                model="gpt-5-mini", generation_kwargs=generation_kwargs
-            )
-            assert model.generation_kwargs == generation_kwargs
-            assert model.model_name == "gpt-5-mini"
+        model = GPTModel(model="gpt-4o")
+        assert model.generation_kwargs == {}
+        assert model.model_name == "gpt-4o"
 
-    def test_init_with_both_client_and_generation_kwargs(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            generation_kwargs = {"reasoning_effort": "medium"}
-            model = GPTModel(
-                model="gpt-4o",
-                timeout=30,  # client kwarg
-                max_retries=5,  # client kwarg
-                generation_kwargs=generation_kwargs,
-            )
-            assert model.generation_kwargs == generation_kwargs
-            assert model.kwargs == {"timeout": 30, "max_retries": 5}
+    def test_init_with_generation_kwargs(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+
+        generation_kwargs = {
+            "reasoning_effort": "high",
+            "max_tokens": 2000,
+            "seed": 42,
+        }
+        model = GPTModel(
+            model="gpt-5-mini", generation_kwargs=generation_kwargs
+        )
+        assert model.generation_kwargs == generation_kwargs
+        assert model.model_name == "gpt-5-mini"
+
+    def test_init_with_both_client_and_generation_kwargs(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+
+        generation_kwargs = {"reasoning_effort": "medium"}
+        model = GPTModel(
+            model="gpt-4o",
+            timeout=30,  # client kwarg
+            max_retries=5,  # client kwarg
+            generation_kwargs=generation_kwargs,
+        )
+        assert model.generation_kwargs == generation_kwargs
+        assert model.kwargs == {"timeout": 30, "max_retries": 5}
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
-    def test_generate_with_generation_kwargs(self, mock_openai_class):
+    def test_generate_with_generation_kwargs(self, mock_openai_class, settings):
         # Setup mock
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
@@ -59,27 +65,31 @@ class TestGPTModelCompletionKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-5",
-                generation_kwargs={"reasoning_effort": "high", "seed": 123},
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call generate
-            output, cost = model.generate("test prompt")
+        model = GPTModel(
+            model="gpt-5",
+            generation_kwargs={"reasoning_effort": "high", "seed": 123},
+        )
 
-            # Verify the completion was called with generation_kwargs
-            mock_client.chat.completions.create.assert_called_once_with(
-                model="gpt-5",
-                messages=[{"role": "user", "content": "test prompt"}],
-                temperature=1,  # GPT-5 auto-sets to 1
-                reasoning_effort="high",
-                seed=123,
-            )
-            assert output == "test response"
+        # Call generate
+        output, cost = model.generate("test prompt")
+
+        # Verify the completion was called with generation_kwargs
+        mock_client.chat.completions.create.assert_called_once_with(
+            model="gpt-5",
+            messages=[{"role": "user", "content": "test prompt"}],
+            temperature=1,  # GPT-5 auto-sets to 1
+            reasoning_effort="high",
+            seed=123,
+        )
+        assert output == "test response"
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
-    def test_generate_without_generation_kwargs(self, mock_openai_class):
+    def test_generate_without_generation_kwargs(
+        self, mock_openai_class, settings
+    ):
         # Setup mock
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
@@ -89,23 +99,25 @@ class TestGPTModelCompletionKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(model="gpt-4o")
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call generate without generation_kwargs
-            output, cost = model.generate("test prompt")
+        model = GPTModel(model="gpt-4o")
 
-            # Verify the completion was called without extra kwargs
-            mock_client.chat.completions.create.assert_called_once_with(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": "test prompt"}],
-                temperature=0,
-            )
-            assert output == "test response"
+        # Call generate without generation_kwargs
+        output, cost = model.generate("test prompt")
+
+        # Verify the completion was called without extra kwargs
+        mock_client.chat.completions.create.assert_called_once_with(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": "test prompt"}],
+            temperature=0,
+        )
+        assert output == "test response"
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
     def test_generate_with_schema_and_generation_kwargs(
-        self, mock_openai_class
+        self, mock_openai_class, settings
     ):
         # Setup mock
         mock_client = Mock()
@@ -121,29 +133,31 @@ class TestGPTModelCompletionKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_beta.chat.completions.parse.return_value = mock_completion
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-4o",  # Supports structured output
-                generation_kwargs={"reasoning_effort": "low", "top_p": 0.9},
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call generate with schema
-            output, cost = model.generate("test prompt", SampleSchema)
+        model = GPTModel(
+            model="gpt-4o",  # Supports structured output
+            generation_kwargs={"reasoning_effort": "low", "top_p": 0.9},
+        )
 
-            # Verify the parse method was called with generation_kwargs
-            mock_beta.chat.completions.parse.assert_called_once_with(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": "test prompt"}],
-                response_format=SampleSchema,
-                temperature=0,
-                reasoning_effort="low",
-                top_p=0.9,
-            )
-            assert output == mock_parsed
+        # Call generate with schema
+        output, cost = model.generate("test prompt", SampleSchema)
+
+        # Verify the parse method was called with generation_kwargs
+        mock_beta.chat.completions.parse.assert_called_once_with(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": "test prompt"}],
+            response_format=SampleSchema,
+            temperature=0,
+            reasoning_effort="low",
+            top_p=0.9,
+        )
+        assert output == mock_parsed
 
     @patch("deepeval.models.llms.openai_model.AsyncOpenAI")
     async def test_async_generate_with_generation_kwargs(
-        self, mock_async_openai_class
+        self, mock_async_openai_class, settings
     ):
         # Setup mock
         mock_client = MagicMock()
@@ -164,33 +178,35 @@ class TestGPTModelCompletionKwargs:
 
         mock_client.chat.completions.create = async_create
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-5-nano",
-                generation_kwargs={
-                    "reasoning_effort": "medium",
-                    "max_tokens": 1500,
-                },
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call async generate
-            output, cost = await model.a_generate("async test prompt")
+        model = GPTModel(
+            model="gpt-5-nano",
+            generation_kwargs={
+                "reasoning_effort": "medium",
+                "max_tokens": 1500,
+            },
+        )
 
-            # Verify the output
-            assert output == "async test response"
+        # Call async generate
+        output, cost = await model.a_generate("async test prompt")
 
-            # Verify the completion was called with the correct parameters
-            assert call_args["model"] == "gpt-5-nano"
-            assert call_args["messages"] == [
-                {"role": "user", "content": "async test prompt"}
-            ]
-            assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
-            assert call_args["reasoning_effort"] == "medium"
-            assert call_args["max_tokens"] == 1500
+        # Verify the output
+        assert output == "async test response"
+
+        # Verify the completion was called with the correct parameters
+        assert call_args["model"] == "gpt-5-nano"
+        assert call_args["messages"] == [
+            {"role": "user", "content": "async test prompt"}
+        ]
+        assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
+        assert call_args["reasoning_effort"] == "medium"
+        assert call_args["max_tokens"] == 1500
 
     @patch("deepeval.models.llms.openai_model.AsyncOpenAI")
     async def test_async_generate_with_schema_and_generation_kwargs(
-        self, mock_async_openai_class
+        self, mock_async_openai_class, settings
     ):
         # Setup mock
         mock_client = MagicMock()
@@ -214,33 +230,33 @@ class TestGPTModelCompletionKwargs:
 
         mock_beta.chat.completions.parse = async_parse
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-4o",  # Supports structured output
-                generation_kwargs={"reasoning_effort": "high", "seed": 42},
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call async generate with schema
-            output, cost = await model.a_generate(
-                "async test prompt", SampleSchema
-            )
+        model = GPTModel(
+            model="gpt-4o",  # Supports structured output
+            generation_kwargs={"reasoning_effort": "high", "seed": 42},
+        )
 
-            # Verify the output
-            assert output == mock_parsed
+        # Call async generate with schema
+        output, cost = await model.a_generate("async test prompt", SampleSchema)
 
-            # Verify the parse method was called with correct parameters
-            assert call_args["model"] == "gpt-4o"
-            assert call_args["messages"] == [
-                {"role": "user", "content": "async test prompt"}
-            ]
-            assert call_args["response_format"] == SampleSchema
-            assert call_args["temperature"] == 0
-            assert call_args["reasoning_effort"] == "high"
-            assert call_args["seed"] == 42
+        # Verify the output
+        assert output == mock_parsed
+
+        # Verify the parse method was called with correct parameters
+        assert call_args["model"] == "gpt-4o"
+        assert call_args["messages"] == [
+            {"role": "user", "content": "async test prompt"}
+        ]
+        assert call_args["response_format"] == SampleSchema
+        assert call_args["temperature"] == 0
+        assert call_args["reasoning_effort"] == "high"
+        assert call_args["seed"] == 42
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
     def test_generate_raw_response_with_generation_kwargs(
-        self, mock_openai_class
+        self, mock_openai_class, settings
     ):
         # Setup mock
         mock_client = Mock()
@@ -251,34 +267,38 @@ class TestGPTModelCompletionKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-4o",
-                generation_kwargs={
-                    "reasoning_effort": "high",
-                    "presence_penalty": 0.5,
-                },
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            # Call generate_raw_response
-            completion, cost = model.generate_raw_response(
-                "test prompt", top_logprobs=3
-            )
+        model = GPTModel(
+            model="gpt-4o",
+            generation_kwargs={
+                "reasoning_effort": "high",
+                "presence_penalty": 0.5,
+            },
+        )
 
-            # Verify the completion was called with both method params and generation_kwargs
-            mock_client.chat.completions.create.assert_called_once_with(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": "test prompt"}],
-                temperature=0,
-                logprobs=True,
-                top_logprobs=3,
-                reasoning_effort="high",
-                presence_penalty=0.5,
-            )
-            assert completion == mock_completion
+        # Call generate_raw_response
+        completion, cost = model.generate_raw_response(
+            "test prompt", top_logprobs=3
+        )
+
+        # Verify the completion was called with both method params and generation_kwargs
+        mock_client.chat.completions.create.assert_called_once_with(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": "test prompt"}],
+            temperature=0,
+            logprobs=True,
+            top_logprobs=3,
+            reasoning_effort="high",
+            presence_penalty=0.5,
+        )
+        assert completion == mock_completion
 
     @patch("deepeval.models.llms.openai_model.OpenAI")
-    def test_generate_samples_with_generation_kwargs(self, mock_openai_class):
+    def test_generate_samples_with_generation_kwargs(
+        self, mock_openai_class, settings
+    ):
         # Setup mock
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
@@ -289,60 +309,65 @@ class TestGPTModelCompletionKwargs:
         ]
         mock_client.chat.completions.create.return_value = mock_response
 
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(
-                model="gpt-4o", generation_kwargs={"reasoning_effort": "low"}
-            )
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(
+            model="gpt-4o", generation_kwargs={"reasoning_effort": "low"}
+        )
 
-            # Call generate_samples
-            samples = model.generate_samples(
-                "test prompt", n=2, temperature=0.7
-            )
+        # Call generate_samples
+        samples = model.generate_samples("test prompt", n=2, temperature=0.7)
 
-            # Verify the completion was called with generation_kwargs
-            mock_client.chat.completions.create.assert_called_once_with(
-                model="gpt-4o",
-                messages=[{"role": "user", "content": "test prompt"}],
-                n=2,
-                temperature=0.7,
-                reasoning_effort="low",
-            )
-            assert samples == ["sample1", "sample2"]
+        # Verify the completion was called with generation_kwargs
+        mock_client.chat.completions.create.assert_called_once_with(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": "test prompt"}],
+            n=2,
+            temperature=0.7,
+            reasoning_effort="low",
+        )
+        assert samples == ["sample1", "sample2"]
 
-    def test_backwards_compatibility(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            # This should work exactly as before
-            model = GPTModel(
-                model="gpt-4o", temperature=0.5, timeout=30  # client kwarg
-            )
-            assert model.model_name == "gpt-4o"
-            assert model.temperature == 0.5
-            assert model.kwargs == {"timeout": 30}
-            assert model.generation_kwargs == {}
+    def test_backwards_compatibility(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-    def test_gpt5_auto_temperature_adjustment(self):
+        # This should work exactly as before
+        model = GPTModel(
+            model="gpt-4o", temperature=0.5, timeout=30  # client kwarg
+        )
+        assert model.model_name == "gpt-4o"
+        assert model.temperature == 0.5
+        assert model.kwargs == {"timeout": 30}
+        assert model.generation_kwargs == {}
+
+    def test_gpt5_auto_temperature_adjustment(self, settings):
         """Test that GPT-5 models automatically adjust temperature to 1"""
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            # Test various GPT-5 models
-            gpt5_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
 
-            for model_name in gpt5_models:
-                model = GPTModel(
-                    model=model_name,
-                    temperature=0,  # Should be auto-adjusted to 1
-                    generation_kwargs={"reasoning_effort": "high"},
-                )
-                assert (
-                    model.temperature == 1
-                ), f"Temperature should be 1 for {model_name}"
-                assert model.generation_kwargs == {"reasoning_effort": "high"}
+        # Test various GPT-5 models
+        gpt5_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano"]
 
-    def test_empty_generation_kwargs(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(model="gpt-4o", generation_kwargs={})
-            assert model.generation_kwargs == {}
+        for model_name in gpt5_models:
+            model = GPTModel(
+                model=model_name,
+                temperature=0,  # Should be auto-adjusted to 1
+                generation_kwargs={"reasoning_effort": "high"},
+            )
+            assert (
+                model.temperature == 1
+            ), f"Temperature should be 1 for {model_name}"
+            assert model.generation_kwargs == {"reasoning_effort": "high"}
 
-    def test_none_generation_kwargs(self):
-        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
-            model = GPTModel(model="gpt-4o", generation_kwargs=None)
-            assert model.generation_kwargs == {}
+    def test_empty_generation_kwargs(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o", generation_kwargs={})
+        assert model.generation_kwargs == {}
+
+    def test_none_generation_kwargs(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o", generation_kwargs=None)
+        assert model.generation_kwargs == {}
