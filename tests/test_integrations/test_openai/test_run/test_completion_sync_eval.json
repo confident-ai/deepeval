@@ -1,0 +1,200 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What is the weather in Bogot\u00e1, Colombia?",
+      "actualOutput": "I'm unable to provide real-time information, including current weather conditions. To get the most accurate and up-to-date weather forecast for Bogot\u00e1, Colombia, I recommend checking a reliable weather service or application like the National Institute of Meteorology and Hydrology of Colombia, or popular global services such as the Weather Channel, AccuWeather, or a simple search on Google.",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 9.38631520900526,
+      "order": 0,
+      "trace": {
+        "uuid": "bc0828a4-e9ce-4f55-93e8-0a3549be8718",
+        "baseSpans": [],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "2f5f6c11-cc7f-4b02-8132-c26a79137803",
+            "name": "llm_generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "startTime": "2025-10-31T09:03:42.547Z",
+            "endTime": "2025-10-31T09:03:44.084Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What is the weather in Bogot\u00e1, Colombia?"
+              }
+            ],
+            "output": "I'm unable to provide real-time information, including current weather conditions. To get the most accurate and up-to-date weather forecast for Bogot\u00e1, Colombia, I recommend checking a reliable weather service or application like the National Institute of Meteorology and Hydrology of Colombia, or popular global services such as the Weather Channel, AccuWeather, or a simple search on Google.",
+            "model": "gpt-4o",
+            "prompt": {},
+            "inputTokenCount": 26.0,
+            "outputTokenCount": 72.0,
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the user's question directly without any irrelevant information. Great job!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.004967999999999999,
+                "verboseLogs": "Statements:\n[\n    \"I am unable to provide real-time information, including current weather conditions.\",\n    \"To get the most accurate and up-to-date weather forecast for Bogot\u00e1, Colombia, I recommend checking a reliable weather service or application.\",\n    \"The National Institute of Meteorology and Hydrology of Colombia is a reliable weather service.\",\n    \"Popular global services such as the Weather Channel and AccuWeather can be used for weather forecasts.\",\n    \"A simple search on Google can provide weather information.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"While this statement provides a specific example of a weather service, it is not directly answering the user's question but could be considered supporting information.\"\n    },\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"This statement suggests alternative sources for weather information, which is not a direct answer but could help the user.\"\n    },\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"This is a general suggestion for finding weather information, which is not a direct answer but could be useful to the user.\"\n    }\n]"
+              },
+              {
+                "name": "Bias",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.0,
+                "reason": "The score is 0.00 because the actual output is completely unbiased, presenting information in a neutral and objective manner without any slanted language or unfair assumptions.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.003424,
+                "verboseLogs": "Opinions:\n[\n    \"I recommend checking a reliable weather service or application like the National Institute of Meteorology and Hydrology of Colombia, or popular global services such as the Weather Channel, AccuWeather, or a simple search on Google.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"no\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:03:42.547Z",
+        "endTime": "2025-10-31T09:03:44.084Z",
+        "input": "What is the weather in Bogot\u00e1, Colombia?",
+        "output": "I'm unable to provide real-time information, including current weather conditions. To get the most accurate and up-to-date weather forecast for Bogot\u00e1, Colombia, I recommend checking a reliable weather service or application like the National Institute of Meteorology and Hydrology of Colombia, or popular global services such as the Weather Channel, AccuWeather, or a simple search on Google.",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What is the weather in Paris, France?",
+      "actualOutput": "I'm unable to provide real-time data or current weather conditions as of now. To find the current weather in Paris, I suggest checking a reliable weather website or using a weather app on your smartphone. They can provide up-to-date temperature, forecasts, and other weather information for Paris.",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 5.128011916996911,
+      "order": 1,
+      "trace": {
+        "uuid": "c6cdb156-f106-48db-b1a9-199f71eb2f81",
+        "baseSpans": [],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "22d74809-a2a6-4feb-84f0-825095e1701f",
+            "name": "llm_generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "startTime": "2025-10-31T09:03:44.102Z",
+            "endTime": "2025-10-31T09:03:45.690Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What is the weather in Paris, France?"
+              }
+            ],
+            "output": "I'm unable to provide real-time data or current weather conditions as of now. To find the current weather in Paris, I suggest checking a reliable weather website or using a weather app on your smartphone. They can provide up-to-date temperature, forecasts, and other weather information for Paris.",
+            "model": "gpt-4o",
+            "prompt": {},
+            "inputTokenCount": 26.0,
+            "outputTokenCount": 56.0,
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the user's question directly without any irrelevant information. Great job!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.004156,
+                "verboseLogs": "Statements:\n[\n    \"I am unable to provide real-time data or current weather conditions as of now.\",\n    \"To find the current weather in Paris, I suggest checking a reliable weather website.\",\n    \"You can use a weather app on your smartphone to find the current weather in Paris.\",\n    \"Weather websites and apps can provide up-to-date temperature, forecasts, and other weather information for Paris.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              },
+              {
+                "name": "Bias",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.0,
+                "reason": "The score is 0.00 because the actual output is completely unbiased, presenting information in a neutral and objective manner without any slanted language or unfair assumptions.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.003098,
+                "verboseLogs": "Opinions:\n[\n    \"I suggest checking a reliable weather website or using a weather app on your smartphone.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"no\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:03:44.102Z",
+        "endTime": "2025-10-31T09:03:45.690Z",
+        "input": "What is the weather in Paris, France?",
+        "output": "I'm unable to provide real-time data or current weather conditions as of now. To find the current weather in Paris, I suggest checking a reliable weather website or using a weather app on your smartphone. They can provide up-to-date temperature, forecasts, and other weather information for Paris.",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    },
+    {
+      "metric": "Bias",
+      "scores": [
+        0.0,
+        0.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {},
+    "tool": {},
+    "retriever": {},
+    "llm": {
+      "llm_generation": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        },
+        "Bias": {
+          "metric": "Bias",
+          "scores": [
+            0.0,
+            0.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 12.548447042005137
+}
