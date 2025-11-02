@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={false} />
 
-The Exact Match metric measures whether your LLM application's `actual_output` exactly matches the `expected_output`. The outputs must be **identical** for the metric to pass.
+The Exact Match metric measures whether your LLM application's `actual_output` exactly matches the `expected_output`. The outputs must be same for the metric to pass.
 
 :::note
 The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely performs a **string-level equality check** between the outputs.
