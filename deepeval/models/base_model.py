@@ -68,7 +68,9 @@ class DeepEvalBaseLLM(ABC):
         Returns:
             A list of strings.
         """
-        raise AttributeError
+        raise NotImplementedError(
+            "batch_generate is not implemented for this model"
+        )
 
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
