@@ -11,6 +11,7 @@ module.exports = {
         "frameworks/llamaindex",
         "frameworks/crewai",
         "frameworks/pydanticai",
+        "frameworks/openai-agents",
       ],
       collapsed: false,
     },
