@@ -25,9 +25,6 @@ def test_metrics_imports():
         # Non-LLM metrics
         JsonCorrectnessMetric,
         ExactMatchMetric,
-        PrecisionMetric,
-        RecallMetric,
-        F1Metric,
         PatternMatchMetric,
         # Other metrics
         HallucinationMetric,
@@ -92,9 +89,6 @@ def test_metrics_imports():
         HallucinationMetric,
         BiasMetric,
         ExactMatchMetric,
-        PrecisionMetric,
-        RecallMetric,
-        F1Metric,
         PatternMatchMetric,
         ToxicityMetric,
         SummarizationMetric,
