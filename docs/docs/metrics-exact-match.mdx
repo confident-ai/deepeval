@@ -5,10 +5,7 @@ sidebar_label: Exact Match
 ---
 
 <head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/metrics-exact-match"
-  />
+  <link rel="canonical" href="https://deepeval.com/docs/metrics-exact-match" />
 </head>
 
 import Equation from "@site/src/components/Equation";
@@ -16,12 +13,11 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={false} />
 
-The Exact Match metric measures whether your LLM application's `actual_output` exactly matches the `expected_output`. The outputs must be same for the metric to pass.
+The Exact Match metric measures whether your LLM application's `actual_output` matches the `expected_output` exactly.
 
 :::note
 The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely performs a **string-level equality check** between the outputs.
 :::
-
 
 ## Required Arguments
 
@@ -79,11 +75,11 @@ print(metric.score, metric.reason)
 The `ExactMatchMetric` score is calculated according to the following equation:
 
 <Equation
-formula="\text{Exact Match Score} =
+  formula="\text{Exact Match Score} =
  \begin{cases}
  1 & \text{if actual\_output = expected\_output}, \\
  0 & \text{otherwise}
  \end{cases}"
 />
 
-The `ExactMatchMetric` performs a strict equality check and does not compute token-level similarity. For token-level evaluation, see [`PrecisionMetric`](/docs/metrics-precision), [`RecallMetric`](/docs/metrics-recall), or [`F1Metric`](/docs/metrics-f1).
+The `ExactMatchMetric` performs a strict equality check to determine if the `actual_output` matches the `expected_output`.
