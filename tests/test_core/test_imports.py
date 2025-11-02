@@ -22,10 +22,13 @@ def test_metrics_imports():
         MCPUseMetric,
         MCPTaskCompletionMetric,
         MultiTurnMCPUseMetric,
+        # Non-LLM metrics
+        JsonCorrectnessMetric,
+        ExactMatchMetric,
+        PatternMatchMetric,
         # Other metrics
         HallucinationMetric,
         SummarizationMetric,
-        JsonCorrectnessMetric,
         PromptAlignmentMetric,
         # Safety and compliance metrics
         BiasMetric,
@@ -85,6 +88,8 @@ def test_metrics_imports():
         MultiTurnMCPUseMetric,
         HallucinationMetric,
         BiasMetric,
+        ExactMatchMetric,
+        PatternMatchMetric,
         ToxicityMetric,
         SummarizationMetric,
         PIILeakageMetric,
