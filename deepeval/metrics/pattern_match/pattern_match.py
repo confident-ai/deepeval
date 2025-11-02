@@ -19,21 +19,21 @@ class PatternMatchMetric(BaseMetric):
 
     def __init__(
         self,
-        expected_pattern: str,
-        case_sensitive: bool = False,
+        pattern: str,
+        ignore_case: bool = False,
         threshold: float = 1.0,
         verbose_mode: bool = False,
     ):
-        self.expected_pattern = expected_pattern.strip()
-        self.case_sensitive = case_sensitive
+        self.pattern = pattern.strip()
+        self.ignore_case = ignore_case
         self.verbose_mode = verbose_mode
         self.threshold = threshold
 
-        flags = 0 if case_sensitive else re.IGNORECASE
+        flags = re.IGNORECASE if ignore_case else 0
         try:
-            self._compiled_pattern = re.compile(self.expected_pattern, flags)
+            self._compiled_pattern = re.compile(self.pattern, flags)
         except re.error as e:
-            raise ValueError(f"Invalid regex pattern: {expected_pattern} — {e}")
+            raise ValueError(f"Invalid regex pattern: {pattern} — {e}")
 
     def measure(
         self,
@@ -62,7 +62,7 @@ class PatternMatchMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Pattern: {self.expected_pattern}",
+                        f"Pattern: {self.pattern}",
                         f"Actual: {actual}",
                         f"Score: {self.score:.2f}",
                         f"Reason: {self.reason}",
