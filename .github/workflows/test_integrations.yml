@@ -61,7 +61,7 @@ jobs:
       #----------------------------------------------
       - name: Install integration dependencies
         run: |
-          poetry run pip install crewai pydantic-ai langgraph llama-index langchain_openai openai-agents langchain
+          poetry install --with integrations
 
       #----------------------------------------------
       #              run test suite
