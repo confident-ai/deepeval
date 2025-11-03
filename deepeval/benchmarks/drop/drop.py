@@ -1,6 +1,10 @@
+import logging
+
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 
+from deepeval.config.settings import get_settings
+from deepeval.errors import DeepEvalError
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmark,
@@ -17,6 +21,8 @@ from deepeval.benchmarks.schema import (
 )
 from deepeval.telemetry import capture_benchmark_run
 
+
+logger = logging.getLogger(__name__)
 DELIMITER = ","
 
 
@@ -164,7 +170,7 @@ class DROP(DeepEvalBaseBenchmark):
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset is not None
         ), "Example dataset is empty. Call load_benchmark."
         prompt: dict = DROPTemplate.generate_output(
             train_set=self.shots_dataset,
@@ -206,7 +212,7 @@ class DROP(DeepEvalBaseBenchmark):
     ) -> List[Dict]:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset is not None
         ), "Example dataset is empty. Call load_benchmark."
 
         prompts = []
@@ -215,7 +221,6 @@ class DROP(DeepEvalBaseBenchmark):
             prompt: dict = DROPTemplate.generate_output(
                 train_set=self.shots_dataset,
                 input=golden.input,
-                type=golden.context[0],
                 n_shots=self.n_shots,
             )
             prompts.append(prompt)
@@ -228,23 +233,44 @@ class DROP(DeepEvalBaseBenchmark):
                 schema = DROPStringSchema
             schemas.append(schema)
 
+        effective_batch_size = len(goldens)
+        model_name = getattr(
+            model, "get_model_name", lambda: type(model).__name__
+        )()
+
         try:
             responses: List[
                 Union[DROPNumberSchema, DROPDateSchema, DROPStringSchema]
             ] = model.batch_generate(prompts=prompts, schemas=schemas)
             predictions = [str(res.answer) for res in responses]
-        except TypeError:
-            prompts = [
-                prompt
-                + "Output should be of type {type}. No explanation needed.".format(
-                    type=type
-                )
-                for prompt in prompts
-            ]
-            predictions = model.batch_generate(prompts)
+        except (AttributeError, NotImplementedError) as e:
+            logger.error(
+                "DROP: model %s does not implement batch_generate. Batch evaluation "
+                "(effective batch_size=%s) requires a batch-capable model. "
+                "Use a model that implements batch_generate(prompts, schemas) or run with batch_size=0/None.",
+                model_name,
+                effective_batch_size,
+                exc_info=get_settings().DEEPEVAL_LOG_STACK_TRACES,
+            )
+            raise DeepEvalError(
+                "Model does not implement batch_generate. Use a batch-capable model or set batch_size=0/None."
+            ) from e
 
-        if len(predictions) is not len(goldens):
-            raise ValueError(
+        except TypeError as e:
+            logger.error(
+                "DROP: model %s does not support schema-aware batch generation "
+                "(batch_generate(prompts, schemas)). DROP requires structured outputs "
+                "for number/date/span. Use a model that supports schemas or run with batch_size=0/None.",
+                model_name,
+                exc_info=get_settings().DEEPEVAL_LOG_STACK_TRACES,
+            )
+            raise DeepEvalError(
+                "Model does not support schema-aware batch generation required by DROP. "
+                "Use batch_generate(prompts, schemas) or set batch_size=0/None."
+            ) from e
+
+        if len(predictions) != effective_batch_size:
+            raise DeepEvalError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
             )
 
