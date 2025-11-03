@@ -15,5 +15,5 @@ if Anthropic or AsyncAnthropic:
     from deepeval.anthropic.patch import patch_anthropic_classes
     from deepeval.telemetry import capture_tracing_integration
 
-    with capture_tracing_integration("deepeval.anthropic"):
+    with capture_tracing_integration("anthropic"):
         patch_anthropic_classes()
