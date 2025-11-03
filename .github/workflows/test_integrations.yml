@@ -14,11 +14,11 @@ on:
           Running integration tests with secrets may expose sensitive data from untrusted third-party code.
           Proceed only after verifying the PR is safe to run.
         required: true
-        default: ${{ github.event.pull_request.number }}
       ref_kind:
         description: "Which ref to test (merge|head)"
         required: false
         default: "merge"
+
 permissions:
   contents: read
 
