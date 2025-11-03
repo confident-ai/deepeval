@@ -1,14 +1,13 @@
-from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.agents.tool_calling_agent.base import create_tool_calling_agent
+from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from deepeval.integrations.langchain import tool
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.prompt import Prompt
 import os
 from tests.test_integrations.utils import (
     assert_trace_json,
-    generate_trace_json,
 )
 
 prompt = Prompt(alias="asd")
