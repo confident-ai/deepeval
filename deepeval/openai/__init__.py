@@ -15,5 +15,7 @@ except ImportError:
 
 if OpenAI or AsyncOpenAI:
     from deepeval.openai.patch import patch_openai_classes
+    from deepeval.telemetry import capture_tracing_integration
 
-    patch_openai_classes()
+    with capture_tracing_integration("openai"):
+        patch_openai_classes()
