@@ -9,10 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: |
-          Please ensure you have reviewed the PR before running integration tests.
-          Running integration tests with secrets may expose sensitive data from untrusted third-party code.
-          Proceed only after verifying the PR is safe to run.
+        description: "PR number"
         required: true
       ref_kind:
         description: "Which ref to test (merge|head)"
