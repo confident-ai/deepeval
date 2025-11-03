@@ -1,0 +1,200 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What is the weather in Bogot\u00e1, Colombia?",
+      "actualOutput": "I can't provide real-time weather updates. For the latest weather in Bogot\u00e1, you can check a reliable weather website or use a weather app.",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 5.4899335829832125,
+      "order": 0,
+      "trace": {
+        "uuid": "b0277501-dcf9-417b-9a18-6192463c5740",
+        "baseSpans": [],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "dcd386f2-1fde-44b1-9541-f94ede2f7cbf",
+            "name": "llm_generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "startTime": "2025-10-31T09:06:38.878Z",
+            "endTime": "2025-10-31T09:06:44.222Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What is the weather in Bogot\u00e1, Colombia?"
+              }
+            ],
+            "output": "I can't provide real-time weather updates. For the latest weather in Bogot\u00e1, you can check a reliable weather website or use a weather app.",
+            "model": "gpt-4o",
+            "prompt": {},
+            "inputTokenCount": 26.0,
+            "outputTokenCount": 29.0,
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the user's question directly. Great job staying on topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.0035999999999999995,
+                "verboseLogs": "Statements:\n[\n    \"I can't provide real-time weather updates.\",\n    \"For the latest weather in Bogot\u00e1, you can check a reliable weather website.\",\n    \"You can use a weather app for the latest weather in Bogot\u00e1.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              },
+              {
+                "name": "Bias",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.0,
+                "reason": "The score is 0.00 because the actual output contains no biased language or content, demonstrating neutrality and fairness throughout.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.001316,
+                "verboseLogs": "Opinions:\n[] \n \nVerdicts:\n[]"
+              }
+            ]
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:06:38.878Z",
+        "endTime": "2025-10-31T09:06:44.222Z",
+        "input": "What is the weather in Bogot\u00e1, Colombia?",
+        "output": "I can't provide real-time weather updates. For the latest weather in Bogot\u00e1, you can check a reliable weather website or use a weather app.",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What is the weather in Paris, France?",
+      "actualOutput": "I'm unable to provide real-time information. To get the latest weather update for Paris, please check a reliable weather website or app.",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 4.393085957999574,
+      "order": 1,
+      "trace": {
+        "uuid": "adc7833c-a454-4e5c-a59c-672f9e329d59",
+        "baseSpans": [],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "302b7821-671c-4be8-af44-62976e46b27b",
+            "name": "llm_generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "startTime": "2025-10-31T09:06:38.894Z",
+            "endTime": "2025-10-31T09:06:40.869Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant."
+              },
+              {
+                "role": "user",
+                "content": "What is the weather in Paris, France?"
+              }
+            ],
+            "output": "I'm unable to provide real-time information. To get the latest weather update for Paris, please check a reliable weather website or app.",
+            "model": "gpt-4o",
+            "prompt": {},
+            "inputTokenCount": 26.0,
+            "outputTokenCount": 27.0,
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant to the question with no irrelevant statements. Great job staying focused and on-topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.0032700000000000003,
+                "verboseLogs": "Statements:\n[\n    \"I'm unable to provide real-time information.\",\n    \"To get the latest weather update for Paris, please check a reliable weather website or app.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              },
+              {
+                "name": "Bias",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.0,
+                "reason": "The score is 0.00 because the actual output contains no biased language or content, and demonstrates neutrality throughout.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.001304,
+                "verboseLogs": "Opinions:\n[] \n \nVerdicts:\n[]"
+              }
+            ]
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-31T09:06:38.894Z",
+        "endTime": "2025-10-31T09:06:40.869Z",
+        "input": "What is the weather in Paris, France?",
+        "output": "I'm unable to provide real-time information. To get the latest weather update for Paris, please check a reliable weather website or app.",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    },
+    {
+      "metric": "Bias",
+      "scores": [
+        0.0,
+        0.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {},
+    "tool": {},
+    "retriever": {},
+    "llm": {
+      "llm_generation": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        },
+        "Bias": {
+          "metric": "Bias",
+          "scores": [
+            0.0,
+            0.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 10.854484165989561
+}

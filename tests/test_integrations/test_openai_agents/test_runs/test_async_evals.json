@@ -1,0 +1,256 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What's the weather in UK?",
+      "actualOutput": "The weather in the UK can vary depending on the region and season. As of today, typical summer weather in the UK (June) includes temperatures ranging from 15\u00b0C to 22\u00b0C (59\u00b0F to 72\u00b0F), with a mix of sunny spells and occasional rain showers. \n\nFor a more specific and up-to-date forecast, please provide a city or region (such as London, Manchester, Edinburgh, etc.), or check a real-time weather service like the Met Office or BBC Weather.",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 6.819931040998199,
+      "order": 0,
+      "trace": {
+        "uuid": "trace_985170b40b254cae92a9ecd8a1e55108",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "d47c741b-eea8-4219-b9d6-f67167217471",
+            "name": "Weather Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T13:34:53.113Z",
+            "endTime": "2025-10-30T13:34:56.454Z",
+            "metadata": {
+              "output_type": "str"
+            },
+            "input": "What's the weather in UK?",
+            "output": "The weather in the UK can vary depending on the region and season. As of today, typical summer weather in the UK (June) includes temperatures ranging from 15\u00b0C to 22\u00b0C (59\u00b0F to 72\u00b0F), with a mix of sunny spells and occasional rain showers. \n\nFor a more specific and up-to-date forecast, please provide a city or region (such as London, Manchester, Edinburgh, etc.), or check a real-time weather service like the Met Office or BBC Weather.",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant to the question with no irrelevant statements. Great job staying focused and on-topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.0070739999999999996,
+                "verboseLogs": "Statements:\n[\n    \"France is a large country.\",\n    \"The weather in France can vary significantly depending on the region and the time of year.\",\n    \"Today, Paris (North/Central France) is mostly sunny with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\",\n    \"Today, Nice (South/East, Mediterranean Coast) is sunny and warm with temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\",\n    \"Today, Bordeaux (Southwest) is partly cloudy with temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\",\n    \"Today, Lyon (East/Central) is mostly sunny with highs near 24\u00b0C (75\u00b0F).\",\n    \"Today, Strasbourg (Northeast) is partly cloudy with temperatures around 22\u00b0C (72\u00b0F).\",\n    \"Today, Normandy/Brittany (Northwest coast) is mild and partly cloudy with temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\",\n    \"You can request a specific city forecast or a forecast for upcoming days.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "fb4d05ad-d4f1-4b9e-bd01-b954b1f0b474",
+            "name": "LLM Generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "d47c741b-eea8-4219-b9d6-f67167217471",
+            "startTime": "2025-10-30T13:34:53.118Z",
+            "endTime": "2025-10-30T13:34:56.453Z",
+            "metadata": {
+              "cached_input_tokens": 0,
+              "ouptut_reasoning_tokens": 0,
+              "invocation_params": {
+                "parallel_tool_calls": true,
+                "temperature": 1.0,
+                "tool_choice": "auto",
+                "tools": [],
+                "top_p": 1.0,
+                "reasoning": {},
+                "text": {
+                  "format": {
+                    "type": "text"
+                  },
+                  "verbosity": "medium"
+                },
+                "truncation": "disabled"
+              }
+            },
+            "input": [
+              {
+                "type": "message",
+                "role": "system",
+                "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+              },
+              {
+                "type": "message",
+                "role": "user",
+                "content": "What's the weather in UK?"
+              }
+            ],
+            "output": "The weather in the UK can vary depending on the region and season. As of today, typical summer weather in the UK (June) includes temperatures ranging from 15\u00b0C to 22\u00b0C (59\u00b0F to 72\u00b0F), with a mix of sunny spells and occasional rain showers. \n\nFor a more specific and up-to-date forecast, please provide a city or region (such as London, Manchester, Edinburgh, etc.), or check a real-time weather service like the Met Office or BBC Weather.",
+            "model": "gpt-4.1-2025-04-14",
+            "prompt": {},
+            "inputTokenCount": 38.0,
+            "outputTokenCount": 101.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T13:34:53.113Z",
+        "endTime": "2025-10-30T13:34:56.454Z",
+        "input": [
+          {
+            "type": "message",
+            "role": "system",
+            "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+          },
+          {
+            "type": "message",
+            "role": "user",
+            "content": "What's the weather in UK?"
+          }
+        ],
+        "output": "The weather in the UK can vary depending on the region and season. As of today, typical summer weather in the UK (June) includes temperatures ranging from 15\u00b0C to 22\u00b0C (59\u00b0F to 72\u00b0F), with a mix of sunny spells and occasional rain showers. \n\nFor a more specific and up-to-date forecast, please provide a city or region (such as London, Manchester, Edinburgh, etc.), or check a real-time weather service like the Met Office or BBC Weather.",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What's the weather in France?",
+      "actualOutput": "France is a large country and the weather can vary significantly depending on the region and the time of year. For **today**, here is a general overview:\n\n- **Paris (North/Central France):** Mostly sunny, with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\n- **Nice (South/East, Mediterranean Coast):** Sunny and warm, temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\n- **Bordeaux (Southwest):** Partly cloudy, temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\n- **Lyon (East/Central):** Mostly sunny, with highs near 24\u00b0C (75\u00b0F).\n- **Strasbourg (Northeast):** Partly cloudy, temperatures around 22\u00b0C (72\u00b0F).\n- **Normandy/Brittany (Northwest coast):** Mild and partly cloudy, temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\n\nIf you want a specific city or a forecast for upcoming days, please let me know!",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 10.31249129200296,
+      "order": 1,
+      "trace": {
+        "uuid": "trace_793c56d555314111a14d05505c934a16",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "c2736019-0563-4b26-8de0-36fb00a114d6",
+            "name": "Weather Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T13:34:53.114Z",
+            "endTime": "2025-10-30T13:35:00.987Z",
+            "metadata": {
+              "output_type": "str"
+            },
+            "input": "What's the weather in France?",
+            "output": "France is a large country and the weather can vary significantly depending on the region and the time of year. For **today**, here is a general overview:\n\n- **Paris (North/Central France):** Mostly sunny, with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\n- **Nice (South/East, Mediterranean Coast):** Sunny and warm, temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\n- **Bordeaux (Southwest):** Partly cloudy, temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\n- **Lyon (East/Central):** Mostly sunny, with highs near 24\u00b0C (75\u00b0F).\n- **Strasbourg (Northeast):** Partly cloudy, temperatures around 22\u00b0C (72\u00b0F).\n- **Normandy/Brittany (Northwest coast):** Mild and partly cloudy, temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\n\nIf you want a specific city or a forecast for upcoming days, please let me know!",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the question directly without any irrelevant information. Great job staying on topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.011099999999999999,
+                "verboseLogs": "Statements:\n[\n    \"France is a large country.\",\n    \"The weather in France can vary significantly depending on the region and the time of year.\",\n    \"Today, Paris (North/Central France) is mostly sunny with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\",\n    \"Today, Nice (South/East, Mediterranean Coast) is sunny and warm with temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\",\n    \"Today, Bordeaux (Southwest) is partly cloudy with temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\",\n    \"Today, Lyon (East/Central) is mostly sunny with highs near 24\u00b0C (75\u00b0F).\",\n    \"Today, Strasbourg (Northeast) is partly cloudy with temperatures around 22\u00b0C (72\u00b0F).\",\n    \"Today, Normandy/Brittany (Northwest coast) is mild and partly cloudy with temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\",\n    \"You can request a specific city forecast or a forecast for upcoming days.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"While this provides context about France's size, it does not directly address the weather but may explain why weather varies.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"This is not a weather report but a suggestion for further action; it is not directly relevant but could be helpful.\"\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "1165b6d1-6d14-4901-8af6-f76d19705c68",
+            "name": "LLM Generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "c2736019-0563-4b26-8de0-36fb00a114d6",
+            "startTime": "2025-10-30T13:34:53.215Z",
+            "endTime": "2025-10-30T13:35:00.987Z",
+            "metadata": {
+              "cached_input_tokens": 0,
+              "ouptut_reasoning_tokens": 0,
+              "invocation_params": {
+                "parallel_tool_calls": true,
+                "temperature": 1.0,
+                "tool_choice": "auto",
+                "tools": [],
+                "top_p": 1.0,
+                "reasoning": {},
+                "text": {
+                  "format": {
+                    "type": "text"
+                  },
+                  "verbosity": "medium"
+                },
+                "truncation": "disabled"
+              }
+            },
+            "input": [
+              {
+                "type": "message",
+                "role": "system",
+                "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+              },
+              {
+                "type": "message",
+                "role": "user",
+                "content": "What's the weather in France?"
+              }
+            ],
+            "output": "France is a large country and the weather can vary significantly depending on the region and the time of year. For **today**, here is a general overview:\n\n- **Paris (North/Central France):** Mostly sunny, with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\n- **Nice (South/East, Mediterranean Coast):** Sunny and warm, temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\n- **Bordeaux (Southwest):** Partly cloudy, temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\n- **Lyon (East/Central):** Mostly sunny, with highs near 24\u00b0C (75\u00b0F).\n- **Strasbourg (Northeast):** Partly cloudy, temperatures around 22\u00b0C (72\u00b0F).\n- **Normandy/Brittany (Northwest coast):** Mild and partly cloudy, temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\n\nIf you want a specific city or a forecast for upcoming days, please let me know!",
+            "model": "gpt-4.1-2025-04-14",
+            "prompt": {},
+            "inputTokenCount": 38.0,
+            "outputTokenCount": 210.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T13:34:53.113Z",
+        "endTime": "2025-10-30T13:35:00.987Z",
+        "input": [
+          {
+            "type": "message",
+            "role": "system",
+            "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+          },
+          {
+            "type": "message",
+            "role": "user",
+            "content": "What's the weather in France?"
+          }
+        ],
+        "output": "France is a large country and the weather can vary significantly depending on the region and the time of year. For **today**, here is a general overview:\n\n- **Paris (North/Central France):** Mostly sunny, with temperatures around 20\u201323\u00b0C (68\u201373\u00b0F).\n- **Nice (South/East, Mediterranean Coast):** Sunny and warm, temperatures around 25\u201327\u00b0C (77\u201381\u00b0F).\n- **Bordeaux (Southwest):** Partly cloudy, temperatures around 23\u201325\u00b0C (73\u201377\u00b0F).\n- **Lyon (East/Central):** Mostly sunny, with highs near 24\u00b0C (75\u00b0F).\n- **Strasbourg (Northeast):** Partly cloudy, temperatures around 22\u00b0C (72\u00b0F).\n- **Normandy/Brittany (Northwest coast):** Mild and partly cloudy, temperatures around 19\u201321\u00b0C (66\u201370\u00b0F).\n\nIf you want a specific city or a forecast for upcoming days, please let me know!",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {
+      "Weather Agent": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 18.211346957992646
+}

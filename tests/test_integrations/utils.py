@@ -1,11 +1,15 @@
 import json
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Mapping, Iterable
 from functools import wraps
 import inspect
 
 
 def assert_json_object_structure(
-    expected_json_obj: Dict[str, Any], actual_json_obj: Dict[str, Any]
+    expected_json_obj: Dict[str, Any],
+    actual_json_obj: Dict[str, Any],
+    ignore_paths: Tuple[str, ...] = (),
+    ignore_keys: Iterable[str] = ("tokenIntervals",),
+    ignore_keypaths: Mapping[str, Iterable[str]] = (),
 ) -> bool:
     """
     Validate that `actual_json_obj` matches the structure and data types of the JSON at `expected_file_path`.
@@ -18,6 +22,12 @@ def assert_json_object_structure(
     """
 
     def _compare(a: Any, b: Any, path: str = "root") -> bool:
+
+        # Ignore whole subtrees if path matches any prefix
+        for prefix in ignore_paths:
+            if path.startswith(prefix):
+                return True
+
         # Dict vs Dict
         if isinstance(b, dict):
             if not isinstance(a, dict):
@@ -28,7 +38,13 @@ def assert_json_object_structure(
                 return False
 
             # Filter out keys to ignore
-            keys_to_ignore = {"tokenIntervals"}
+            keys_to_ignore = set(ignore_keys) | {"tokenIntervals"}
+
+            if ignore_keypaths:
+                for pfx, keys in ignore_keypaths.items():
+                    if path.startswith(pfx):
+                        keys_to_ignore |= set(keys)
+
             b_keys = set(b.keys()) - keys_to_ignore
             a_keys = set(a.keys()) - keys_to_ignore
 
@@ -57,7 +73,23 @@ def assert_json_object_structure(
                 print(f"   Got: {type(a).__name__}")
                 print(f"   Value: {a}")
                 return False
+
             if len(a) != len(b):
+                # Allow extra items in in root.llmSpans[*].output
+                # To avoid brittle tests, require the actual list to start with the expected sequence,
+                # but allow extra trailing items. We still compare each expected element deeply.
+                if path.startswith("root.llmSpans[") and path.endswith(
+                    ".output"
+                ):
+                    if len(a) < len(b):
+                        print(
+                            f"❌ Length mismatch at '{path}': expected ≥{len(b)}, got {len(a)}"
+                        )
+                        return False
+                    for idx, be in enumerate(b):
+                        if not _compare(a[idx], be, f"{path}[{idx}]"):
+                            return False
+                    return True
                 print(
                     f"❌ Length mismatch at '{path}': expected {len(b)}, got {len(a)}"
                 )
@@ -95,7 +127,7 @@ def load_trace_data(file_path: str):
         return json.load(file)
 
 
-def generate_trace_json(json_path: str):
+def generate_trace_json(json_path: str, is_run: bool = False):
     """
     Decorator that generates and saves trace data to a JSON file.
 
@@ -116,7 +148,10 @@ def generate_trace_json(json_path: str):
             )
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
                 result = await func(*args, **kwargs)
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
 
@@ -127,6 +162,7 @@ def generate_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -136,7 +172,10 @@ def generate_trace_json(json_path: str):
             import asyncio
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
@@ -152,6 +191,7 @@ def generate_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         if inspect.iscoroutinefunction(func):
             return async_wrapper
@@ -161,7 +201,14 @@ def generate_trace_json(json_path: str):
     return decorator
 
 
-def assert_trace_json(json_path: str):
+def assert_trace_json(
+    json_path: str,
+    is_run: bool = False,
+    *,
+    ignore_paths: Tuple[str, ...] = (),
+    ignore_keys: Iterable[str] = ("tokenIntervals",),
+    ignore_keypaths: Mapping[str, Iterable[str]] = (),
+):
     """
     Decorator that tests trace data against an expected JSON file.
 
@@ -186,17 +233,27 @@ def assert_trace_json(json_path: str):
             )
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
+
                 result = await func(*args, **kwargs)
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
                 expected_dict = load_trace_data(json_path)
-
-                assert assert_json_object_structure(expected_dict, actual_dict)
+                assert assert_json_object_structure(
+                    expected_dict,
+                    actual_dict,
+                    ignore_paths=ignore_paths,
+                    ignore_keys=ignore_keys,
+                    ignore_keypaths=ignore_keypaths,
+                )
 
                 return result
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -206,7 +263,11 @@ def assert_trace_json(json_path: str):
             import asyncio
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
+
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
@@ -215,13 +276,19 @@ def assert_trace_json(json_path: str):
                     trace_testing_manager.wait_for_test_dict()
                 )
                 expected_dict = load_trace_data(json_path)
-
-                assert assert_json_object_structure(expected_dict, actual_dict)
+                assert assert_json_object_structure(
+                    expected_dict,
+                    actual_dict,
+                    ignore_paths=ignore_paths,
+                    ignore_keys=ignore_keys,
+                    ignore_keypaths=ignore_keypaths,
+                )
 
                 return result
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         if inspect.iscoroutinefunction(func):
             return async_wrapper

@@ -1,0 +1,2194 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What is 4 * 13?",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 12.641797958000097,
+      "order": 0,
+      "trace": {
+        "uuid": "4287adc2-e0ca-461a-890f-2cc5ce8933d8",
+        "baseSpans": [
+          {
+            "uuid": "FunctionAgent.init_run-1e5fba98-041a-49b2-8e9a-18d082d62a12",
+            "name": "init_run",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:19.759Z",
+            "endTime": "2025-10-30T14:41:19.760Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "user_msg": "What is 4 * 13?",
+                "chat_history": null,
+                "max_iterations": null
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.setup_agent-1d2a3c3e-570e-4526-9a4e-f8f9aaa4cc23",
+            "name": "setup_agent",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:19.760Z",
+            "endTime": "2025-10-30T14:41:19.760Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 4 * 13?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.run_agent_step-530ba46c-9bce-4bdb-817b-a7f8ff467feb",
+            "name": "run_agent_step",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:19.846Z",
+            "endTime": "2025-10-30T14:41:22.135Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "system",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "You are a helpful assistant that can perform calculations."
+                      }
+                    ]
+                  },
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 4 * 13?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                      "function": {
+                        "arguments": "{\"a\":4,\"b\":13}",
+                        "name": "multiply"
+                      },
+                      "type": "function"
+                    }
+                  ]
+                },
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": ""
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 4,
+                    "b": 13
+                  }
+                }
+              ],
+              "retry_messages": []
+            }
+          },
+          {
+            "uuid": "FunctionAgent.parse_agent_output-367a249c-173b-4eee-b5ce-da14f3c5824b",
+            "name": "parse_agent_output",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:22.138Z",
+            "endTime": "2025-10-30T14:41:22.138Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "response": {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                        "function": {
+                          "arguments": "{\"a\":4,\"b\":13}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                "current_agent_name": "Agent",
+                "tool_calls": [
+                  {
+                    "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                    "tool_name": "multiply",
+                    "tool_kwargs": {
+                      "a": 4,
+                      "b": 13
+                    }
+                  }
+                ],
+                "retry_messages": []
+              }
+            }
+          },
+          {
+            "uuid": "FunctionAgent.call_tool-f2b5a68c-efac-472f-af6b-b0f17c13f3a2",
+            "name": "call_tool",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:22.138Z",
+            "endTime": "2025-10-30T14:41:22.139Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "tool_name": "multiply",
+                "tool_kwargs": {
+                  "a": 4,
+                  "b": 13
+                },
+                "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+              }
+            },
+            "output": {
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 4,
+                "b": 13
+              },
+              "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+              "tool_output": {
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "52"
+                  }
+                ],
+                "tool_name": "multiply",
+                "raw_input": {
+                  "args": [],
+                  "kwargs": {
+                    "a": 4,
+                    "b": 13
+                  }
+                },
+                "raw_output": 52,
+                "is_error": false
+              },
+              "return_direct": false
+            }
+          },
+          {
+            "uuid": "FunctionAgent.aggregate_tool_results-d5585f48-e9ae-4811-8be6-371271980f97",
+            "name": "aggregate_tool_results",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:22.139Z",
+            "endTime": "2025-10-30T14:41:22.140Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "tool_name": "multiply",
+                "tool_kwargs": {
+                  "a": 4,
+                  "b": 13
+                },
+                "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                "tool_output": {
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "52"
+                    }
+                  ],
+                  "tool_name": "multiply",
+                  "raw_input": {
+                    "args": [],
+                    "kwargs": {
+                      "a": 4,
+                      "b": 13
+                    }
+                  },
+                  "raw_output": 52,
+                  "is_error": false
+                },
+                "return_direct": false
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.setup_agent-afb61930-888b-4483-9622-ab4068f8ab91",
+            "name": "setup_agent",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:22.141Z",
+            "endTime": "2025-10-30T14:41:22.141Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 4 * 13?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.run_agent_step-58b910b9-1c9a-491a-91a9-f9a739fa6e5d",
+            "name": "run_agent_step",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:22.141Z",
+            "endTime": "2025-10-30T14:41:25.116Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "system",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "You are a helpful assistant that can perform calculations."
+                      }
+                    ]
+                  },
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 4 * 13?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {},
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "4 * 13 is 52."
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 4,
+                    "b": 13
+                  },
+                  "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                }
+              ],
+              "retry_messages": []
+            }
+          },
+          {
+            "uuid": "FunctionAgent.parse_agent_output-47e30c4b-b8d5-4305-9250-f7b934e1faef",
+            "name": "parse_agent_output",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:25.116Z",
+            "endTime": "2025-10-30T14:41:25.117Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "response": {
+                  "role": "assistant",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "4 * 13 is 52."
+                    }
+                  ]
+                },
+                "current_agent_name": "Agent",
+                "tool_calls": [
+                  {
+                    "tool_name": "multiply",
+                    "tool_kwargs": {
+                      "a": 4,
+                      "b": 13
+                    },
+                    "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                  }
+                ],
+                "retry_messages": []
+              }
+            },
+            "output": {}
+          },
+          {
+            "uuid": "FunctionAgent._done-e79cb099-5ab4-40dc-ad41-2bcd396a7bb3",
+            "name": "_done",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "startTime": "2025-10-30T14:41:25.117Z",
+            "endTime": "2025-10-30T14:41:25.117Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {}
+            }
+          },
+          {
+            "uuid": "OpenAI._prepare_chat_with_tools-9245757a-c38b-45f6-8d2b-eee9191f263f",
+            "name": "_prepare_chat_with_tools",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-530ba46c-9bce-4bdb-817b-a7f8ff467feb",
+            "startTime": "2025-10-30T14:41:19.847Z",
+            "endTime": "2025-10-30T14:41:19.847Z",
+            "input": {
+              "tools": [
+                {
+                  "requires_context": false,
+                  "ctx_param_name": null,
+                  "partial_params": {}
+                }
+              ],
+              "user_msg": null,
+              "chat_history": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "verbose": false,
+              "allow_parallel_tool_calls": true,
+              "tool_required": false
+            },
+            "output": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "multiply",
+                    "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                    "parameters": {
+                      "properties": {
+                        "a": {
+                          "title": "A",
+                          "type": "number"
+                        },
+                        "b": {
+                          "title": "B",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "a",
+                        "b"
+                      ],
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "strict": false
+                  }
+                }
+              ],
+              "tool_choice": "auto"
+            }
+          },
+          {
+            "uuid": "OpenAI.astream_chat-2dd60d8b-7c5d-4452-9f2e-24cc999b5c93",
+            "name": "astream_chat",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-530ba46c-9bce-4bdb-817b-a7f8ff467feb",
+            "startTime": "2025-10-30T14:41:19.847Z",
+            "endTime": "2025-10-30T14:41:19.847Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                }
+              ],
+              "kwargs": {
+                "tools": [
+                  {
+                    "type": "function",
+                    "function": {
+                      "name": "multiply",
+                      "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                      "parameters": {
+                        "properties": {
+                          "a": {
+                            "title": "A",
+                            "type": "number"
+                          },
+                          "b": {
+                            "title": "B",
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object",
+                        "additionalProperties": false
+                      },
+                      "strict": false
+                    }
+                  }
+                ],
+                "tool_choice": "auto"
+              }
+            },
+            "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x179065240>"
+          },
+          {
+            "uuid": "FunctionTool.acall-2a970772-8885-4ed3-8644-92fafcda4265",
+            "name": "acall",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.call_tool-f2b5a68c-efac-472f-af6b-b0f17c13f3a2",
+            "startTime": "2025-10-30T14:41:22.139Z",
+            "endTime": "2025-10-30T14:41:22.139Z",
+            "input": {
+              "kwargs": {
+                "a": 4,
+                "b": 13
+              }
+            },
+            "output": {
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "52"
+                }
+              ],
+              "tool_name": "multiply",
+              "raw_input": {
+                "args": [],
+                "kwargs": {
+                  "a": 4,
+                  "b": 13
+                }
+              },
+              "raw_output": 52,
+              "is_error": false
+            }
+          },
+          {
+            "uuid": "OpenAI._prepare_chat_with_tools-ea58d113-53bc-4555-8951-b4e0db0df5d2",
+            "name": "_prepare_chat_with_tools",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-58b910b9-1c9a-491a-91a9-f9a739fa6e5d",
+            "startTime": "2025-10-30T14:41:22.141Z",
+            "endTime": "2025-10-30T14:41:22.142Z",
+            "input": {
+              "tools": [
+                {
+                  "requires_context": false,
+                  "ctx_param_name": null,
+                  "partial_params": {}
+                }
+              ],
+              "user_msg": null,
+              "chat_history": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                        "function": {
+                          "arguments": "{\"a\":4,\"b\":13}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "52"
+                    }
+                  ]
+                }
+              ],
+              "verbose": false,
+              "allow_parallel_tool_calls": true,
+              "tool_required": false
+            },
+            "output": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                        "function": {
+                          "arguments": "{\"a\":4,\"b\":13}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "52"
+                    }
+                  ]
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "multiply",
+                    "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                    "parameters": {
+                      "properties": {
+                        "a": {
+                          "title": "A",
+                          "type": "number"
+                        },
+                        "b": {
+                          "title": "B",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "a",
+                        "b"
+                      ],
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "strict": false
+                  }
+                }
+              ],
+              "tool_choice": "auto"
+            }
+          },
+          {
+            "uuid": "OpenAI.astream_chat-2c4083da-dd8a-4e41-99fa-466d0f12debb",
+            "name": "astream_chat",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-58b910b9-1c9a-491a-91a9-f9a739fa6e5d",
+            "startTime": "2025-10-30T14:41:22.142Z",
+            "endTime": "2025-10-30T14:41:22.142Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 4 * 13?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_t1thXboVWCh14xFEFC7HlYJ1",
+                        "function": {
+                          "arguments": "{\"a\":4,\"b\":13}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "52"
+                    }
+                  ]
+                }
+              ],
+              "kwargs": {
+                "tools": [
+                  {
+                    "type": "function",
+                    "function": {
+                      "name": "multiply",
+                      "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                      "parameters": {
+                        "properties": {
+                          "a": {
+                            "title": "A",
+                            "type": "number"
+                          },
+                          "b": {
+                            "title": "B",
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object",
+                        "additionalProperties": false
+                      },
+                      "strict": false
+                    }
+                  }
+                ],
+                "tool_choice": "auto"
+              }
+            },
+            "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x179065fc0>"
+          }
+        ],
+        "agentSpans": [
+          {
+            "uuid": "FunctionAgent.run-3a660d77-84d8-4b66-b241-f031474ca4c6",
+            "name": "Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T14:41:19.697Z",
+            "endTime": "2025-10-30T14:41:25.117Z",
+            "input": {
+              "ctx": null,
+              "start_event": {
+                "user_msg": "What is 4 * 13?",
+                "chat_history": null,
+                "max_iterations": null
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {},
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "4 * 13 is 52."
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 4,
+                    "b": 13
+                  },
+                  "tool_id": "call_t1thXboVWCh14xFEFC7HlYJ1"
+                }
+              ],
+              "retry_messages": []
+            },
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the input perfectly. Great job staying on topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.005858,
+                "verboseLogs": "Statements:\n[\n    \"4 multiplied by 13 is 52.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "8385a943-ab3c-4dc9-bf8f-8de61dcb4389",
+            "name": "ConfidentLLMSpan",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "OpenAI.astream_chat-2dd60d8b-7c5d-4452-9f2e-24cc999b5c93",
+            "startTime": "2025-10-30T14:41:19.847Z",
+            "endTime": "2025-10-30T14:41:22.135Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform calculations."
+              },
+              {
+                "role": "user",
+                "content": "What is 4 * 13?"
+              }
+            ],
+            "output": "",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          },
+          {
+            "uuid": "1ffbb98e-d3b2-4e97-a2a5-5b3254325e46",
+            "name": "ConfidentLLMSpan",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "OpenAI.astream_chat-2c4083da-dd8a-4e41-99fa-466d0f12debb",
+            "startTime": "2025-10-30T14:41:22.142Z",
+            "endTime": "2025-10-30T14:41:25.116Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform calculations."
+              },
+              {
+                "role": "user",
+                "content": "What is 4 * 13?"
+              },
+              {
+                "role": "assistant",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "52"
+              }
+            ],
+            "output": "4 * 13 is 52.",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T14:41:19.697Z",
+        "endTime": "2025-10-30T14:41:25.118Z",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What is 3 * 12?",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 7.011289709000266,
+      "order": 1,
+      "trace": {
+        "uuid": "19fc2373-028c-4155-bf3e-eaf754d521af",
+        "baseSpans": [
+          {
+            "uuid": "FunctionAgent.init_run-6922475a-701d-424a-9d37-8ee7baaad31d",
+            "name": "init_run",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:19.698Z",
+            "endTime": "2025-10-30T14:41:19.759Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "user_msg": "What is 3 * 12?",
+                "chat_history": null,
+                "max_iterations": null
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.setup_agent-604e458f-8bac-4c55-9d4d-f0633d21d0cb",
+            "name": "setup_agent",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:19.760Z",
+            "endTime": "2025-10-30T14:41:19.760Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 3 * 12?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.run_agent_step-35ceb380-c550-4dea-85ae-9c1b73ac2d53",
+            "name": "run_agent_step",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:19.760Z",
+            "endTime": "2025-10-30T14:41:24.221Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "system",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "You are a helpful assistant that can perform calculations."
+                      }
+                    ]
+                  },
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 3 * 12?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {
+                  "tool_calls": [
+                    {
+                      "index": 0,
+                      "id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                      "function": {
+                        "arguments": "{\"a\":3,\"b\":12}",
+                        "name": "multiply"
+                      },
+                      "type": "function"
+                    }
+                  ]
+                },
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": ""
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 3,
+                    "b": 12
+                  }
+                }
+              ],
+              "retry_messages": []
+            }
+          },
+          {
+            "uuid": "FunctionAgent.parse_agent_output-c01751a8-39b2-46b5-b265-22f1ba29a646",
+            "name": "parse_agent_output",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:24.222Z",
+            "endTime": "2025-10-30T14:41:24.222Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "response": {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                        "function": {
+                          "arguments": "{\"a\":3,\"b\":12}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                "current_agent_name": "Agent",
+                "tool_calls": [
+                  {
+                    "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                    "tool_name": "multiply",
+                    "tool_kwargs": {
+                      "a": 3,
+                      "b": 12
+                    }
+                  }
+                ],
+                "retry_messages": []
+              }
+            }
+          },
+          {
+            "uuid": "FunctionAgent.call_tool-3caf7a13-698d-433f-ac36-2449fff56864",
+            "name": "call_tool",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:24.222Z",
+            "endTime": "2025-10-30T14:41:24.223Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "tool_name": "multiply",
+                "tool_kwargs": {
+                  "a": 3,
+                  "b": 12
+                },
+                "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+              }
+            },
+            "output": {
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 3,
+                "b": 12
+              },
+              "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4",
+              "tool_output": {
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "36"
+                  }
+                ],
+                "tool_name": "multiply",
+                "raw_input": {
+                  "args": [],
+                  "kwargs": {
+                    "a": 3,
+                    "b": 12
+                  }
+                },
+                "raw_output": 36,
+                "is_error": false
+              },
+              "return_direct": false
+            }
+          },
+          {
+            "uuid": "FunctionAgent.aggregate_tool_results-7ea02404-78c6-4972-96bb-9accf3828045",
+            "name": "aggregate_tool_results",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:24.223Z",
+            "endTime": "2025-10-30T14:41:24.224Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "tool_name": "multiply",
+                "tool_kwargs": {
+                  "a": 3,
+                  "b": 12
+                },
+                "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                "tool_output": {
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "36"
+                    }
+                  ],
+                  "tool_name": "multiply",
+                  "raw_input": {
+                    "args": [],
+                    "kwargs": {
+                      "a": 3,
+                      "b": 12
+                    }
+                  },
+                  "raw_output": 36,
+                  "is_error": false
+                },
+                "return_direct": false
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.setup_agent-d511b659-4c4d-497e-a9dd-bbdc7ff16ba0",
+            "name": "setup_agent",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:24.225Z",
+            "endTime": "2025-10-30T14:41:24.225Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 3 * 12?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "input": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "current_agent_name": "Agent"
+            }
+          },
+          {
+            "uuid": "FunctionAgent.run_agent_step-9355273b-d33d-4260-9018-81972075c029",
+            "name": "run_agent_step",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:24.226Z",
+            "endTime": "2025-10-30T14:41:25.439Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "input": [
+                  {
+                    "role": "system",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "You are a helpful assistant that can perform calculations."
+                      }
+                    ]
+                  },
+                  {
+                    "role": "user",
+                    "additional_kwargs": {},
+                    "blocks": [
+                      {
+                        "block_type": "text",
+                        "text": "What is 3 * 12?"
+                      }
+                    ]
+                  }
+                ],
+                "current_agent_name": "Agent"
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {},
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "The result of \\( 3 \\times 12 \\) is 36."
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 3,
+                    "b": 12
+                  },
+                  "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                }
+              ],
+              "retry_messages": []
+            }
+          },
+          {
+            "uuid": "FunctionAgent.parse_agent_output-fc3b41cf-a23f-4163-b4f2-f8ec2d5d95ec",
+            "name": "parse_agent_output",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:25.440Z",
+            "endTime": "2025-10-30T14:41:25.440Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {
+                "response": {
+                  "role": "assistant",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "The result of \\( 3 \\times 12 \\) is 36."
+                    }
+                  ]
+                },
+                "current_agent_name": "Agent",
+                "tool_calls": [
+                  {
+                    "tool_name": "multiply",
+                    "tool_kwargs": {
+                      "a": 3,
+                      "b": 12
+                    },
+                    "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                  }
+                ],
+                "retry_messages": []
+              }
+            },
+            "output": {}
+          },
+          {
+            "uuid": "FunctionAgent._done-638ff46b-eb1c-450d-a325-ff6f08705ede",
+            "name": "_done",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "startTime": "2025-10-30T14:41:25.440Z",
+            "endTime": "2025-10-30T14:41:25.441Z",
+            "input": {
+              "ctx": {
+                "is_running": false
+              },
+              "ev": {}
+            }
+          },
+          {
+            "uuid": "OpenAI._prepare_chat_with_tools-9f05f966-580a-452f-aa2b-833f357156e9",
+            "name": "_prepare_chat_with_tools",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-35ceb380-c550-4dea-85ae-9c1b73ac2d53",
+            "startTime": "2025-10-30T14:41:19.760Z",
+            "endTime": "2025-10-30T14:41:19.761Z",
+            "input": {
+              "tools": [
+                {
+                  "requires_context": false,
+                  "ctx_param_name": null,
+                  "partial_params": {}
+                }
+              ],
+              "user_msg": null,
+              "chat_history": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "verbose": false,
+              "allow_parallel_tool_calls": true,
+              "tool_required": false
+            },
+            "output": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "multiply",
+                    "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                    "parameters": {
+                      "properties": {
+                        "a": {
+                          "title": "A",
+                          "type": "number"
+                        },
+                        "b": {
+                          "title": "B",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "a",
+                        "b"
+                      ],
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "strict": false
+                  }
+                }
+              ],
+              "tool_choice": "auto"
+            }
+          },
+          {
+            "uuid": "OpenAI.astream_chat-ebd27eb4-f32a-4ec0-94d2-4bc663f00a85",
+            "name": "astream_chat",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-35ceb380-c550-4dea-85ae-9c1b73ac2d53",
+            "startTime": "2025-10-30T14:41:19.761Z",
+            "endTime": "2025-10-30T14:41:19.765Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                }
+              ],
+              "kwargs": {
+                "tools": [
+                  {
+                    "type": "function",
+                    "function": {
+                      "name": "multiply",
+                      "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                      "parameters": {
+                        "properties": {
+                          "a": {
+                            "title": "A",
+                            "type": "number"
+                          },
+                          "b": {
+                            "title": "B",
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object",
+                        "additionalProperties": false
+                      },
+                      "strict": false
+                    }
+                  }
+                ],
+                "tool_choice": "auto"
+              }
+            },
+            "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x162d00280>"
+          },
+          {
+            "uuid": "FunctionTool.acall-6f8be232-7db4-444a-a925-a626a6474518",
+            "name": "acall",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.call_tool-3caf7a13-698d-433f-ac36-2449fff56864",
+            "startTime": "2025-10-30T14:41:24.223Z",
+            "endTime": "2025-10-30T14:41:24.223Z",
+            "input": {
+              "kwargs": {
+                "a": 3,
+                "b": 12
+              }
+            },
+            "output": {
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "36"
+                }
+              ],
+              "tool_name": "multiply",
+              "raw_input": {
+                "args": [],
+                "kwargs": {
+                  "a": 3,
+                  "b": 12
+                }
+              },
+              "raw_output": 36,
+              "is_error": false
+            }
+          },
+          {
+            "uuid": "OpenAI._prepare_chat_with_tools-851e9791-30d1-4910-b42d-0dfc8116b445",
+            "name": "_prepare_chat_with_tools",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-9355273b-d33d-4260-9018-81972075c029",
+            "startTime": "2025-10-30T14:41:24.226Z",
+            "endTime": "2025-10-30T14:41:24.226Z",
+            "input": {
+              "tools": [
+                {
+                  "requires_context": false,
+                  "ctx_param_name": null,
+                  "partial_params": {}
+                }
+              ],
+              "user_msg": null,
+              "chat_history": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                        "function": {
+                          "arguments": "{\"a\":3,\"b\":12}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "36"
+                    }
+                  ]
+                }
+              ],
+              "verbose": false,
+              "allow_parallel_tool_calls": true,
+              "tool_required": false
+            },
+            "output": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                        "function": {
+                          "arguments": "{\"a\":3,\"b\":12}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "36"
+                    }
+                  ]
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "multiply",
+                    "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                    "parameters": {
+                      "properties": {
+                        "a": {
+                          "title": "A",
+                          "type": "number"
+                        },
+                        "b": {
+                          "title": "B",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "a",
+                        "b"
+                      ],
+                      "type": "object",
+                      "additionalProperties": false
+                    },
+                    "strict": false
+                  }
+                }
+              ],
+              "tool_choice": "auto"
+            }
+          },
+          {
+            "uuid": "OpenAI.astream_chat-85e69bf1-522f-4a29-8e8d-31cd69c2b318",
+            "name": "astream_chat",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "FunctionAgent.run_agent_step-9355273b-d33d-4260-9018-81972075c029",
+            "startTime": "2025-10-30T14:41:24.226Z",
+            "endTime": "2025-10-30T14:41:24.227Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "system",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "You are a helpful assistant that can perform calculations."
+                    }
+                  ]
+                },
+                {
+                  "role": "user",
+                  "additional_kwargs": {},
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "What is 3 * 12?"
+                    }
+                  ]
+                },
+                {
+                  "role": "assistant",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_C1biROI5QFx6xFSri7vkf9B4",
+                        "function": {
+                          "arguments": "{\"a\":3,\"b\":12}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": ""
+                    }
+                  ]
+                },
+                {
+                  "role": "tool",
+                  "additional_kwargs": {
+                    "tool_call_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                  },
+                  "blocks": [
+                    {
+                      "block_type": "text",
+                      "text": "36"
+                    }
+                  ]
+                }
+              ],
+              "kwargs": {
+                "tools": [
+                  {
+                    "type": "function",
+                    "function": {
+                      "name": "multiply",
+                      "description": "multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.",
+                      "parameters": {
+                        "properties": {
+                          "a": {
+                            "title": "A",
+                            "type": "number"
+                          },
+                          "b": {
+                            "title": "B",
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object",
+                        "additionalProperties": false
+                      },
+                      "strict": false
+                    }
+                  }
+                ],
+                "tool_choice": "auto"
+              }
+            },
+            "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x179065a20>"
+          }
+        ],
+        "agentSpans": [
+          {
+            "uuid": "FunctionAgent.run-cfa8c12d-db56-4f7c-87a9-a12e277ec33f",
+            "name": "Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T14:41:19.696Z",
+            "endTime": "2025-10-30T14:41:25.441Z",
+            "input": {
+              "ctx": null,
+              "start_event": {
+                "user_msg": "What is 3 * 12?",
+                "chat_history": null,
+                "max_iterations": null
+              }
+            },
+            "output": {
+              "response": {
+                "role": "assistant",
+                "additional_kwargs": {},
+                "blocks": [
+                  {
+                    "block_type": "text",
+                    "text": "The result of \\( 3 \\times 12 \\) is 36."
+                  }
+                ]
+              },
+              "current_agent_name": "Agent",
+              "tool_calls": [
+                {
+                  "tool_name": "multiply",
+                  "tool_kwargs": {
+                    "a": 3,
+                    "b": 12
+                  },
+                  "tool_id": "call_C1biROI5QFx6xFSri7vkf9B4"
+                }
+              ],
+              "retry_messages": []
+            },
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because every part of the output was relevant and directly addressed the input. Great job staying focused and on-topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.003052,
+                "verboseLogs": "Statements:\n[\n    \"The result of 3 times 12 is 36.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"There is no clear input or question provided, so it is ambiguous whether the statement about 3 times 12 being 36 is relevant.\"\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "b65862f8-2c7e-49fa-92b8-0950ce5d49a1",
+            "name": "ConfidentLLMSpan",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "OpenAI.astream_chat-ebd27eb4-f32a-4ec0-94d2-4bc663f00a85",
+            "startTime": "2025-10-30T14:41:19.761Z",
+            "endTime": "2025-10-30T14:41:24.221Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform calculations."
+              },
+              {
+                "role": "user",
+                "content": "What is 3 * 12?"
+              }
+            ],
+            "output": "",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          },
+          {
+            "uuid": "a6f12738-f792-4ae3-8fa6-6c997b09a905",
+            "name": "ConfidentLLMSpan",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "OpenAI.astream_chat-85e69bf1-522f-4a29-8e8d-31cd69c2b318",
+            "startTime": "2025-10-30T14:41:24.226Z",
+            "endTime": "2025-10-30T14:41:25.439Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform calculations."
+              },
+              {
+                "role": "user",
+                "content": "What is 3 * 12?"
+              },
+              {
+                "role": "assistant",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "36"
+              }
+            ],
+            "output": "The result of \\( 3 \\times 12 \\) is 36.",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T14:41:19.696Z",
+        "endTime": "2025-10-30T14:41:25.441Z",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {
+      "Agent": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 18.397152749996167
+}

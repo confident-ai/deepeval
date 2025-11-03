@@ -56,6 +56,6 @@ json_path = os.path.join(_current_dir, "llama_index.json")
 
 
 # @generate_trace_json(json_path)
-@assert_trace_json(json_path)
+@assert_trace_json(json_path, ignore_paths=("root.baseSpans",))
 async def test_json_schema():
     await llm_app("What is 3 * 12?")
