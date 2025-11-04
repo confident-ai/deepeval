@@ -30,6 +30,7 @@ jobs:
       CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
+      DEEPEVAL_LOG_STACK_TRACES: 1
 
     steps:
 
