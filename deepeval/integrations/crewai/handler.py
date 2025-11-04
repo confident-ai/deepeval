@@ -11,6 +11,9 @@ from deepeval.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+print("Testing log redirection 1")
+print("Testing log redirection 2")
+print("Testing log redirection 3")
 
 try:
     crewai_installed = False
