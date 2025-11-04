@@ -29,7 +29,8 @@ try:
     )
 
     crewai_installed = True
-except Exception:
+except Exception as e:
+    logger.error(f"Failed to import BaseEventListener from crewai.events: {e}")
     # fallback attempts imports from an older version of crewai
     try:
         from crewai.utilities.events.base_event_listener import (
@@ -51,6 +52,7 @@ except Exception:
 
         crewai_installed = True
     except ImportError as e:
+        logger.error(f"Fallback import also failed: {e}")
         BaseEventListener = None
         crewai_installed = False
         if get_settings().DEEPEVAL_VERBOSE_MODE:
