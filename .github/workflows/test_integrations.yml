@@ -33,6 +33,21 @@ jobs:
       DEEPEVAL_LOG_STACK_TRACES: 1
 
     steps:
+      - name: Resolve ref
+        id: refsel
+        run: |
+          if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
+            echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
+          else
+            # test what would merge
+            echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout PR ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refsel.outputs.ref }}
+          fetch-depth: 0
 
       - name: Log PR and ref
         run: |
