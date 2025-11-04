@@ -37,6 +37,9 @@ async def run_agent():
     await agent.run("what is the weather in sf")
 
 
+@pytest.mark.needs_investigation(
+    reason="The trace structure has changed, please investigate."
+)
 @pytest.mark.skip(
     reason="[NEEDS INVESTIGATION] Test skipped due to the trace structure having changed."
 )

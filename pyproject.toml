@@ -81,6 +81,7 @@ addopts = "-m 'not skip_test'"
 markers = [
     "skip_test: skip the test",
     "enable_dotenv: allow this test to load .env files via autoload_dotenv()",
+    "needs_investigation: there is an issue with this test that needs investigation",
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

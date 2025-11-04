@@ -72,6 +72,9 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai.json")
 
 
+@pytest.mark.needs_investigation(
+    reason="The trace structure has changed, please investigate."
+)
 @pytest.mark.skip(
     reason="[NEEDS INVESTIGATION] Test skipped due to the trace structure having changed."
 )
