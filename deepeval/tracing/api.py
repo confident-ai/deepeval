@@ -29,7 +29,7 @@ class PromptApi(BaseModel):
 
 class MetricData(BaseModel):
     model_config = make_model_config(extra="ignore")
-    
+
     name: str
     threshold: float
     success: bool
@@ -43,8 +43,10 @@ class MetricData(BaseModel):
 
 
 class BaseApiSpan(BaseModel):
-    model_config = make_model_config(use_enum_values=True, validate_assignment=True)
-    
+    model_config = make_model_config(
+        use_enum_values=True, validate_assignment=True
+    )
+
     uuid: str
     name: str = None
     status: TraceSpanApiStatus
@@ -101,8 +103,10 @@ class BaseApiSpan(BaseModel):
 
 
 class TraceApi(BaseModel):
-    model_config = make_model_config(use_enum_values=True, validate_assignment=True)
-    
+    model_config = make_model_config(
+        use_enum_values=True, validate_assignment=True
+    )
+
     uuid: str
     base_spans: Optional[List[BaseApiSpan]] = Field(None, alias="baseSpans")
     agent_spans: Optional[List[BaseApiSpan]] = Field(None, alias="agentSpans")

@@ -95,7 +95,7 @@ class SchemaDataType(Enum):
 
 class OutputSchemaField(BaseModel):
     model_config = make_model_config(use_enum_values=True)
-    
+
     id: str
     type: SchemaDataType
     name: str
@@ -189,7 +189,7 @@ class PromptHttpResponse(BaseModel):
 
 class PromptPushRequest(BaseModel):
     model_config = make_model_config(use_enum_values=True)
-    
+
     model_config = ConfigDict(use_enum_values=True)
 
     alias: str
@@ -211,7 +211,7 @@ class PromptPushRequest(BaseModel):
 
 class PromptUpdateRequest(BaseModel):
     model_config = make_model_config(use_enum_values=True)
-    
+
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
     interpolation_type: PromptInterpolationType = Field(

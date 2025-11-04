@@ -80,7 +80,7 @@ class CustomEncoder(json.JSONEncoder):
 
 class CachedPrompt(BaseModel):
     model_config = make_model_config(use_enum_values=True)
-    
+
     alias: str
     version: str
     label: Optional[str] = None

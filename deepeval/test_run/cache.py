@@ -23,7 +23,7 @@ TEMP_CACHE_FILE_NAME = f"{HIDDEN_DIR}/.temp-deepeval-cache.json"
 
 class MetricConfiguration(BaseModel):
     model_config = make_model_config(arbitrary_types_allowed=True)
-    
+
     ##### Required fields #####
     threshold: float
     evaluation_model: Optional[str] = None

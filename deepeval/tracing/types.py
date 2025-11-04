@@ -58,7 +58,7 @@ class LlmOutput(BaseModel):
 
 class BaseSpan(BaseModel):
     model_config = make_model_config(arbitrary_types_allowed=True)
-    
+
     uuid: str
     status: TraceSpanStatus
     children: List["BaseSpan"] = Field(default_factory=list)
@@ -142,7 +142,7 @@ class ToolSpan(BaseSpan):
 
 class Trace(BaseModel):
     model_config = make_model_config(arbitrary_types_allowed=True)
-    
+
     uuid: str = Field(serialization_alias="uuid")
     status: TraceSpanStatus
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
