@@ -1,11 +1,19 @@
-name: Integration Tests (maintainer only)
+name: Integration Tests
 
 on:
-  # Manual trigger option for maintainers ( so we can run these tests against forks )
+  # Auto run for maintainer PRs
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  # Auto run when code lands on main
+  push:
+    branches: [main]
+
+  # Manual for forks (maintainer provides PR number)
   workflow_dispatch:
     inputs:
       pr:
-        description: "PR number"
+        description: "PR number (MUST REVIEW CODE FIRST)"
         required: true
       ref_kind:
         description: "Which ref to test (merge|head)"
@@ -14,18 +22,35 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: read
 
 concurrency:
-  group: full-tests-pr-${{ github.event.inputs.pr }}-${{ github.event.inputs.ref_kind }}
+  group: ${{ github.event_name == 'pull_request'
+      && format('full-tests-pr-{0}-merge', github.event.pull_request.number)
+      || github.event_name == 'workflow_dispatch'
+      && format('full-tests-pr-{0}-{1}', github.event.inputs.pr, github.event.inputs.ref_kind)
+      || format('full-tests-push-{0}', github.ref_name) }}
   cancel-in-progress: true
 
 jobs:
   test:
+    # Run if:
+    # - workflow_dispatch (manual)
+    # - OR IF pull_request where PR head repo == this repo and owner is confident-ai
+    # - OR IF push to main on confident-ai/*
+    if: ${{ github.event_name == 'workflow_dispatch' ||
+            (github.event_name == 'pull_request' &&
+             github.event.pull_request.head.repo.full_name == github.repository &&
+             startsWith(github.repository, 'confident-ai/') &&
+             !github.event.pull_request.draft) ||
+            (github.event_name == 'push' &&
+             github.ref == 'refs/heads/main' &&
+             startsWith(github.repository, 'confident-ai/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: ci-secrets
     env:
-      # Expose secrets when running for maintainers
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -33,48 +58,67 @@ jobs:
       DEEPEVAL_LOG_STACK_TRACES: 1
 
     steps:
-
-      #----------------------------------------------
-      #       check-out repo
-      #----------------------------------------------
       - name: Resolve ref
         id: refsel
         run: |
-          if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
-            echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
+              echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
+            else
+              echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
+            fi
           else
-            # test what would merge
-            echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
+            echo "ref=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checkout PR ref
+      - name: Checkout PR/main ref
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.refsel.outputs.ref }}
           fetch-depth: 0
 
-      - name: Log PR and ref
+      - name: Log target
         run: |
-          echo "PR number: ${{ github.event.inputs.pr }}"
-          echo "Ref kind: ${{ github.event.inputs.ref_kind }}"
-          if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
-            echo "Ref: refs/pull/${{ github.event.inputs.pr }}/head"
+          echo "Event: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR: #${{ github.event.pull_request.number }} (merge ref)"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual PR: #${{ github.event.inputs.pr }} (ref_kind=${{ github.event.inputs.ref_kind }})"
           else
-            echo "Ref: refs/pull/${{ github.event.inputs.pr }}/merge"
+            echo "Push target: ${GITHUB_REF_NAME} @ ${GITHUB_SHA}"
           fi
 
-      #----------------------------------------------
-      #       set-up python
-      #----------------------------------------------
+      # Manual run: create a Check Run against the exact checked-out commit
+      - name: Compute checked-out SHA (manual only)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        id: headsha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR Check Run (manual only)
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.ref_kind == 'merge' }}
+        id: createcheck
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const head_sha = '${{ steps.headsha.outputs.sha }}';
+            const { data: check } = await github.rest.checks.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            name: 'Integration Tests',
+            head_sha,
+            status: 'in_progress',
+            details_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('check_id', String(check.id));
+
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      
-      #----------------------------------------------
-      # install & configure poetry
-      #----------------------------------------------
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -82,49 +126,46 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      #----------------------------------------------
-      #       load cached venv if cache exists
-      #----------------------------------------------
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-integrations-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
-      #----------------------------------------------
-      # install dependencies if cache does not exist
-      #----------------------------------------------
-      - name: Install dependencies
+      - name: Install dependencies (no cache)
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root --only main
 
-      #----------------------------------------------
-      # install your root project, if required
-      #----------------------------------------------
       - name: Install project
         run: poetry install --no-interaction --only main
 
-      #----------------------------------------------
-      # install integration-specific dependencies
-      #----------------------------------------------
-      - name: Install integration dependencies
-        run: |
-          poetry install --with integrations
+      - name: Install integration extras
+        run: poetry install --with integrations
 
-      #----------------------------------------------
-      # Automatically run tests if secrets are available
-      #----------------------------------------------
       - name: Run integration tests (with secrets)
-        if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
-        run: |
-          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
-            tests/test_integrations/
+        if: ${{ secrets.OPENAI_API_KEY && secrets.CONFIDENT_API_KEY && secrets.ANTHROPIC_API_KEY }}
+        run: poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_integrations/
 
-      #----------------------------------------------
-      # Run tests (no secrets): skip tests that require API keys
-      #----------------------------------------------
       - name: Run integration tests (no secrets)
-        if: ${{ env.OPENAI_API_KEY == '' || env.CONFIDENT_API_KEY == '' || env.ANTHROPIC_API_KEY == '' }}
-        run: |
-          echo "Skipping integration tests - API keys required (OPENAI_API_KEY, ANTHROPIC_API_KEY, and CONFIDENT_API_KEY)"
+        if: ${{ !secrets.OPENAI_API_KEY || !secrets.CONFIDENT_API_KEY || !secrets.ANTHROPIC_API_KEY }}
+        run: echo "Skipping integration tests - API keys required."
+
+      - name: Finalize PR Check (manual only)
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.ref_kind == 'merge' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const check_id = parseInt(core.getInput('check_id') || '${{ steps.createcheck.outputs.check_id }}');
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: check_id,
+              status: 'completed',
+              conclusion: '${{ job.status }}',
+              completed_at: new Date().toISOString(),
+              output: {
+                title: 'Integration Tests',
+                summary: 'Manual maintainer run of integration tests.',
+              }
+            });
