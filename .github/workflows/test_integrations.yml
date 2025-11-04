@@ -1,10 +1,6 @@
 name: Integration Tests (maintainer only)
 
 on:
-  # Automatically trigger for PRs from trusted sources with secrets
-  pull_request:
-    branches:
-      - main
   # Manual trigger option for maintainers ( so we can run these tests against forks )
   workflow_dispatch:
     inputs:
@@ -36,6 +32,17 @@ jobs:
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
 
     steps:
+
+      - name: Log PR and ref
+        run: |
+          echo "PR number: ${{ github.event.inputs.pr }}"
+          echo "Ref kind: ${{ github.event.inputs.ref_kind }}"
+          if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
+            echo "Ref: refs/pull/${{ github.event.inputs.pr }}/head"
+          else
+            echo "Ref: refs/pull/${{ github.event.inputs.pr }}/merge"
+          fi
+
       #----------------------------------------------
       #       check-out repo and set-up python
       #----------------------------------------------
