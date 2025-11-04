@@ -1,18 +1,18 @@
 import os
-import json
-import asyncio
-import pytest
-from tests.test_integrations.utils import assert_trace_json, generate_trace_json
-
+from tests.test_integrations.utils import assert_trace_json
 from crewai import Task
-from crewai.tools import tool
 
-from deepeval.integrations.crewai import Crew, Agent, LLM, tool
+from deepeval.integrations.crewai import (
+    DeepEvalCrew,
+    DeepEvalAgent,
+    DeepEvalLLM,
+    deepeval_tool,
+)
 from deepeval.integrations.crewai import instrument_crewai
 from deepeval.tracing import trace
 
 
-@tool(metric_collection="test_collection_1")
+@deepeval_tool(metric_collection="test_collection_1")
 def get_weather(city: str) -> str:
     """Fetch weather data for a given city. Returns temperature and conditions."""
     weather_data = {
@@ -50,13 +50,13 @@ def get_weather(city: str) -> str:
         return f"Weather in {city}: 70°F, Clear, Humidity: 60% (default data)"
 
 
-llm = LLM(
+llm = DeepEvalLLM(
     model="gpt-4o-mini",
     temperature=0,
     metric_collection="test_collection_1",
 )
 
-agent = Agent(
+agent = DeepEvalAgent(
     role="Weather Reporter",
     goal="Provide accurate and helpful weather information to users.",
     backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
@@ -72,7 +72,7 @@ task = Task(
     agent=agent,
 )
 
-crew = Crew(
+crew = DeepEvalCrew(
     agents=[agent],
     tasks=[task],
     metric_collection="test_collection_1",

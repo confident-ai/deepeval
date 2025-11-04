@@ -6,13 +6,17 @@ from deepeval.metrics.base_metric import BaseMetric
 try:
     from crewai import Crew, Agent, LLM
 
-    is_crewai_installed = True
+    _is_crewai_installed = True
 except ImportError:
-    is_crewai_installed = False
+    _is_crewai_installed = False
 
 
 def is_crewai_installed():
-    if not is_crewai_installed:
+    return _is_crewai_installed
+
+
+def validate_crewai_installed():
+    if not is_crewai_installed():
         raise ImportError(
             "CrewAI is not installed. Please install it with `pip install crewai`."
         )
@@ -35,7 +39,7 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
             metric_collection: Optional[str] = None,
             **kwargs
         ):
-            is_crewai_installed()
+            validate_crewai_installed()
             super().__init__(*args, **kwargs)
             self._metric_collection = metric_collection
             self._metrics = metrics

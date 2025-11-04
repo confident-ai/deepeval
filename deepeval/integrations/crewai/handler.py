@@ -6,19 +6,11 @@ from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.types import LlmSpan
-from deepeval.config.settings import get_settings
-
-
-logger = logging.getLogger(__name__)
-
-print("Testing log redirection 1")
-print("Testing log redirection 2")
-print("Testing log redirection 3")
+from .subs import validate_crewai_installed, is_crewai_installed
 
 try:
-    crewai_installed = False
-    from crewai.events import BaseEventListener
     from crewai.events import (
+        BaseEventListener,
         CrewKickoffStartedEvent,
         CrewKickoffCompletedEvent,
         LLMCallStartedEvent,
@@ -30,71 +22,25 @@ try:
         KnowledgeRetrievalStartedEvent,
         KnowledgeRetrievalCompletedEvent,
     )
+except Exception:
+    # Don’t crash at import time
+    BaseEventListener = None
+    CrewKickoffStartedEvent = CrewKickoffCompletedEvent = None
+    LLMCallStartedEvent = LLMCallCompletedEvent = None
+    AgentExecutionStartedEvent = AgentExecutionCompletedEvent = None
+    ToolUsageStartedEvent = ToolUsageFinishedEvent = None
+    KnowledgeRetrievalStartedEvent = KnowledgeRetrievalCompletedEvent = None
 
-    crewai_installed = True
-except Exception as e:
-    logger.error(f"Failed to import BaseEventListener from crewai.events: {e}")
-    # fallback attempts imports from an older version of crewai
-    try:
-        from crewai.utilities.events.base_event_listener import (
-            BaseEventListener,
-        )
 
-        from crewai.events import (
-            CrewKickoffStartedEvent,
-            CrewKickoffCompletedEvent,
-            LLMCallStartedEvent,
-            LLMCallCompletedEvent,
-            AgentExecutionStartedEvent,
-            AgentExecutionCompletedEvent,
-            ToolUsageStartedEvent,
-            ToolUsageFinishedEvent,
-            KnowledgeRetrievalStartedEvent,
-            KnowledgeRetrievalCompletedEvent,
-        )
-
-        crewai_installed = True
-    except ImportError as e:
-        logger.error(f"Fallback import also failed: {e}")
-        BaseEventListener = None
-        crewai_installed = False
-        if get_settings().DEEPEVAL_VERBOSE_MODE:
-            if get_settings().DEEPEVAL_LOG_STACK_TRACES:
-                stack_info = e.__traceback__
-            else:
-                stack_info = None
-
-            if isinstance(e, ModuleNotFoundError):
-
-                logger.warning(
-                    "Optional crewai dependency not installed: %s",
-                    e.name,
-                    exc_info=stack_info,
-                    stacklevel=2,
-                )
-            else:
-                logger.warning(
-                    "CrewAI events import failed (BaseEventListener): %s. Falling back to `crewai.utilities.events.base_event_listener`.",
-                    e,
-                    exc_info=stack_info,
-                    stacklevel=2,
-                )
-
+logger = logging.getLogger(__name__)
+crewai_installed = is_crewai_installed()
 IS_WRAPPED_ALL = False
-
-
-def is_crewai_installed():
-    if not crewai_installed:
-        raise ImportError(
-            "CrewAI is not installed. Please install it with `pip install crewai`."
-        )
-
 
 if BaseEventListener is not None:
 
     class CrewAIEventsListener(BaseEventListener):
         def __init__(self):
-            is_crewai_installed()
+            validate_crewai_installed()
             super().__init__()
             self.span_observers: dict[str, Observer] = {}
 

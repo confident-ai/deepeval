@@ -6,7 +6,9 @@ from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import ToolSpan
 
 
-def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
+def deepeval_tool(
+    *args, metric=None, metric_collection=None, **kwargs
+) -> Callable:
     """
     Simple wrapper around crewai.tools.tool that:
       - prints the original function's input and output
