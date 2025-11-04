@@ -33,6 +33,10 @@ jobs:
       DEEPEVAL_LOG_STACK_TRACES: 1
 
     steps:
+
+      #----------------------------------------------
+      #       check-out repo
+      #----------------------------------------------
       - name: Resolve ref
         id: refsel
         run: |
@@ -60,10 +64,8 @@ jobs:
           fi
 
       #----------------------------------------------
-      #       check-out repo and set-up python
+      #       set-up python
       #----------------------------------------------
-      - name: Check out repository
-        uses: actions/checkout@v3
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v4
