@@ -270,18 +270,23 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
   label="Experiments on Confident AI"
 />
 
-:::tip
-If you haven't logged in, you can still upload the test run to Confident AI from local cache:
-
-```bash
-deepeval view
-```
-
-:::
-
 </TimelineItem>
 
 </Timeline>
+
+:::tip
+If you're looking for a quick way to run arena comparisons, [Confident AI](https://app.confident-ai.com) (DeepEval Cloud) allows you to test different prompts, model, tool, and output configurations **side by side** and evaluate these comparisons using any metrics directly on the platfrom.
+
+<Tabs>
+<TabItem value="quick-run" label="Quick Run">
+
+</TabItem>
+<TabItem value="experiment" label="Run an Experiment">
+
+</TabItem>
+</Tabs>
+
+:::
 
 ## Next Steps
 
@@ -289,6 +294,8 @@ Now that you have run your first Arena evals, you should:
 
 1. **Customize your metrics**: You can change the criteria of your metric to be more specific to your use-case.
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
+
+Further more, you can also run arena evals using the `compare()` function.
 
 The arena metric is only used for picking winners among the contestants, it's not used for evaluating the answers themselves. To evaluate your LLM application on specific use cases you can read the other quickstarts here:
 
