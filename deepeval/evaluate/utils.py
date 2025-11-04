@@ -8,6 +8,7 @@ from deepeval.utils import format_turn
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import (
+    ArenaGEval,
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
@@ -77,6 +78,35 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             reason=metric.reason,
             success=metric.is_successful(),
             strictMode=metric.strict_mode,
+            evaluationModel=metric.evaluation_model,
+            error=None,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )
+
+
+def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
+    if metric.error is not None:
+        return MetricData(
+            name=metric.__name__,
+            threshold=1,
+            score=None,
+            reason=None,
+            success=False,
+            strictMode=True,
+            evaluationModel=metric.evaluation_model,
+            error=metric.error,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )
+    else:
+        return MetricData(
+            name=metric.__name__,
+            score=1 if contestant == metric.winner else 0,
+            threshold=1,
+            reason=metric.reason,
+            success=metric.is_successful(),
+            strictMode=True,
             evaluationModel=metric.evaluation_model,
             error=None,
             evaluationCost=metric.evaluation_cost,

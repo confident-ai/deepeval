@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Callable
 import asyncio
+import time
 from rich.progress import (
     Progress,
     TextColumn,
@@ -8,14 +9,32 @@ from rich.progress import (
     TaskProgressColumn,
 )
 from collections import Counter
+import json
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig, ErrorConfig
 from deepeval.test_case import ArenaTestCase
+from deepeval.test_case.api import create_api_test_case
 from deepeval.metrics import ArenaGEval
-from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import (
+    add_pbar,
+    update_pbar,
+    custom_console,
+    get_or_create_event_loop,
+    open_browser,
+)
+from deepeval.test_run.test_run import (
+    TestRun,
+    MetricData,
+    TestRunEncoder,
+    MetricScores,
+    console,
+)
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.telemetry import capture_evaluation_run
+from deepeval.test_run.api import LLMApiTestCase
+from deepeval.evaluate.utils import create_arena_metric_data
+from deepeval.evaluate.types import PostExperimentRequest
 
 
 def compare(
@@ -26,6 +45,33 @@ def compare(
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     error_config: Optional[ErrorConfig] = ErrorConfig(),
 ) -> Dict[str, int]:
+
+    # Prepare test run map
+    unique_contestants = set(
+        [
+            contestant
+            for test_case in test_cases
+            for contestant in test_case.contestants.keys()
+        ]
+    )
+    test_run_map: Dict[str, TestRun] = {}
+    for contestant in unique_contestants:
+        test_run = TestRun(
+            identifier=contestant,
+            test_passed=0,
+            test_failed=0,
+        )
+        test_run.metrics_scores = [
+            MetricScores(
+                metric=metric.name,
+                scores=[],
+                passes=0,
+                fails=0,
+                errors=0,
+            )
+        ]
+        test_run_map[contestant] = test_run
+
     with capture_evaluation_run("compare()"):
         if async_config.run_async:
             loop = get_or_create_event_loop()
@@ -39,6 +85,7 @@ def compare(
                     throttle_value=async_config.throttle_value,
                     max_concurrent=async_config.max_concurrent,
                     skip_on_missing_params=error_config.skip_on_missing_params,
+                    test_run_map=test_run_map,
                 )
             )
         else:
@@ -49,6 +96,7 @@ def compare(
                 verbose_mode=display_config.verbose_mode,
                 show_indicator=display_config.show_indicator,
                 skip_on_missing_params=error_config.skip_on_missing_params,
+                test_run_map=test_run_map,
             )
 
     # Aggregate winners
@@ -57,7 +105,11 @@ def compare(
         if winner:
             winner_counts[winner] += 1
 
-    print(winner_counts)
+    wrap_up_experiment(
+        name="compare()",
+        test_runs=list(test_run_map.values()),
+        winner_counts=winner_counts,
+    )
     return dict(winner_counts)
 
 
@@ -70,6 +122,7 @@ async def a_execute_arena_test_cases(
     throttle_value: int,
     skip_on_missing_params: bool,
     max_concurrent: int,
+    test_run_map: Dict[str, TestRun],
 ) -> List[str]:
     semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -104,6 +157,8 @@ async def a_execute_arena_test_cases(
                 else metric.verbose_mode
             ),
         )
+
+        start_time = time.perf_counter()
         winner = await _a_handle_metric_measurement(
             metric=metric_copy,
             test_case=test_case,
@@ -112,10 +167,21 @@ async def a_execute_arena_test_cases(
             _progress=progress,
             _pbar_id=pbar_test_case_id,
         )
+        end_time = time.perf_counter()
+        run_duration = end_time - start_time
+
         if winner:
             winners.append(winner)
 
         update_pbar(progress, pbar_id)
+        update_test_run_map(
+            test_case=test_case,
+            index=index,
+            test_run_map=test_run_map,
+            metric_copy=metric_copy,
+            winner=winner,
+            run_duration=run_duration,
+        )
 
     # Create tasks for all test cases
     if show_indicator:
@@ -156,6 +222,7 @@ def execute_arena_test_cases(
     skip_on_missing_params: bool,
     show_indicator: bool,
     verbose_mode: Optional[bool] = None,
+    test_run_map: Optional[Dict[str, TestRun]] = None,
 ) -> List[str]:
     """
     Non-async version of comparing arena test cases.
@@ -183,6 +250,8 @@ def execute_arena_test_cases(
                     else metric.verbose_mode
                 ),
             )
+
+            start_time = time.perf_counter()
             winner = _handle_metric_measurement(
                 metric=metric_copy,
                 test_case=test_case,
@@ -191,10 +260,21 @@ def execute_arena_test_cases(
                 _progress=progress,
                 _pbar_id=pbar_test_case_id,
             )
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+
             if winner:
                 winners.append(winner)
 
             update_pbar(progress, pbar_id)
+            update_test_run_map(
+                test_case=test_case,
+                index=i,
+                test_run_map=test_run_map,
+                metric_copy=metric_copy,
+                winner=winner,
+                run_duration=run_duration,
+            )
 
     if show_indicator:
         progress = Progress(
@@ -313,3 +393,103 @@ async def _a_handle_metric_measurement(
                 return None
             else:
                 raise
+
+
+def update_test_run_map(
+    test_case: ArenaTestCase,
+    index: int,
+    test_run_map: Dict[str, TestRun],
+    metric_copy: ArenaGEval,
+    winner: str,
+    run_duration: float,
+):
+    for contestant, test_case in test_case.contestants.items():
+        test_run = test_run_map.get(contestant)
+
+        # update test cases in test run
+        api_test_case: LLMApiTestCase = create_api_test_case(
+            test_case=test_case, index=index
+        )
+        metric_data: MetricData = create_arena_metric_data(
+            metric_copy, contestant
+        )
+        api_test_case.update_metric_data(metric_data)
+        api_test_case.update_run_duration(run_duration)
+        test_run.add_test_case(api_test_case)
+
+        # update other test run attributes
+        if test_run.run_duration is None:
+            test_run.run_duration = 0.0
+        test_run.run_duration += run_duration
+
+        # Ensure test_passed and test_failed are initialized
+        if test_run.test_passed is None:
+            test_run.test_passed = 0
+        if test_run.test_failed is None:
+            test_run.test_failed = 0
+
+        if winner == contestant:
+            test_run.test_passed += 1
+        else:
+            test_run.test_failed += 1
+
+        # update metric scores
+        test_run.metrics_scores[0].metric = metric_copy.name
+        test_run.metrics_scores[0].scores.append(
+            1 if winner == contestant else 0
+        )
+        test_run.metrics_scores[0].passes += 1 if winner == contestant else 0
+        test_run.metrics_scores[0].fails += 1 if winner != contestant else 0
+        test_run.metrics_scores[0].errors += 0
+
+
+def wrap_up_experiment(
+    name: str,
+    test_runs: List[TestRun],
+    winner_counts: Counter,
+):
+    api = Api()
+    experiment_request = PostExperimentRequest(testRuns=test_runs, name=name)
+
+    try:
+        body = experiment_request.model_dump(by_alias=True, exclude_none=True)
+    except AttributeError:
+        body = experiment_request.dict(by_alias=True, exclude_none=True)
+        json_str = json.dumps(body, cls=TestRunEncoder)
+        body = json.loads(json_str)
+
+    maxRunDuration = max([test_run.run_duration for test_run in test_runs])
+    winner_breakdown = []
+    for contestant, wins in winner_counts.most_common():
+        winner_breakdown.append(
+            f"    » [bold green]{contestant}[/bold green]: {wins} wins"
+        )
+    winner_text = (
+        "\n".join(winner_breakdown) if winner_breakdown else "No winners"
+    )
+    console.print(
+        f"\n🎉 Arena completed! (time taken: {round(maxRunDuration, 2)}s | token cost: {test_runs[0].evaluation_cost or 0} USD)\n"
+        f"🏆 Results ({sum(winner_counts.values())} total test cases):\n"
+        f"{winner_text}\n\n"
+    )
+    try:
+        _, link = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.EXPERIMENT_ENDPOINT,
+            body=body,
+        )
+        if not is_confident():
+            console.print(
+                f"{'=' * 80}\n"
+                f"\n» Want to share experiments with your team? ❤️ 🏟️\n"
+                f"  » Run [bold]'deepeval login'[/bold] to analyze and save arena results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+            )
+        else:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
+                f"[link={link}]{link}[/link]"
+            )
+            open_browser(link)
+
+    except Exception as e:
+        print(f"Failed to post experiment: {e}")
