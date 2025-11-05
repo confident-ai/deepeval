@@ -412,7 +412,7 @@ def update_test_run_map(
     winner: str,
     run_duration: float,
 ):
-    for contestant, test_case in test_case.contestants.items():
+    for contestant, contestant_test_case in test_case.contestants.items():
         test_run = test_run_map.get(contestant)
 
         # update test cases in test run
