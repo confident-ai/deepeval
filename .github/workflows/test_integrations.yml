@@ -56,6 +56,7 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_LOG_STACK_TRACES: 1
+      LOG_LEVEL: "debug"
 
     steps:
       - name: Resolve ref
