@@ -482,7 +482,7 @@ def wrap_up_experiment(
     json_str = json.dumps(body, cls=TestRunEncoder)
     body = json.loads(json_str)
 
-    maxRunDuration = max([test_run.run_duration for test_run in test_runs])
+    maxRunDuration = max([test_run.run_duration or 0.0 for test_run in test_runs]) if test_runs else 0.0
     winner_breakdown = []
     for contestant, wins in winner_counts.most_common():
         winner_breakdown.append(
