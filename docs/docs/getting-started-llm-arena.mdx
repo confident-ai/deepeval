@@ -310,15 +310,18 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
 <Tabs>
 <TabItem value="quick-run" label="Quick Comparisons">
 
+Compare model outputs directly using arena evaluations.
+
 <VideoDisplayer
   src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
   label="Quick Comparisons"
 />
 
 </TabItem>
+
 <TabItem value="experiment" label="Experiments">
 
-An experiment is a collection of arena comparisons that you can run on a dataset and a set of metrics.
+Create an experiment to run comprehensive comparisons on an evaluation dataset and set of metrics.
 
 <VideoDisplayer
   src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Arun-experiment.mp4"
@@ -328,17 +331,31 @@ An experiment is a collection of arena comparisons that you can run on a dataset
 </TabItem>
 <TabItem value="traced-run" label="Traced Comparisons">
 
+View detailed traces of LLM and tool calls during model comparisons.
+
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
-  label="Quick Comparisons"
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Atraced-comparisons.mp4"
+  label="Traced Comparisons"
 />
 
 </TabItem>
 <TabItem value="metric-comparison" label="Metric Comparisons">
 
+Apply custom evaluation metrics to determine winning models in head-to-head comparisons.
+
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
-  label="Quick Comparisons"
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Ametric-comparisons.mp4"
+  label="Metric Comparisons"
+/>
+</TabItem>
+
+<TabItem value="log-prompts" label="Log Prompts and Models">
+
+Track prompts and model configurations to understand which hyperparameters lead to better performance.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Alog-prompts.mp4"
+  label="Log Prompts and Models"
 />
 
 </TabItem>
@@ -349,8 +366,6 @@ Now that you have run your first Arena evals, you should:
 
 1. **Customize your metrics**: You can change the criteria of your metric to be more specific to your use-case.
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
-
-Further more, you can also run arena evals using the `compare()` function.
 
 The arena metric is only used for picking winners among the contestants, it's not used for evaluating the answers themselves. To evaluate your LLM application on specific use cases you can read the other quickstarts here:
 
