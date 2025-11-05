@@ -57,6 +57,15 @@ jobs:
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_LOG_STACK_TRACES: 1
       LOG_LEVEL: "debug"
+      PYTHONFAULTHANDLER: "1"
+      PYTHONASYNCIODEBUG: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTEST_ADDOPTS: >-
+        -vv -rA --maxfail=1 --capture=tee-sys
+        --durations=25
+        -o log_cli=true -o log_cli_level=DEBUG
+        --log-cli-format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
+
 
     steps:
       - name: Resolve ref
@@ -143,6 +152,19 @@ jobs:
 
       - name: Install integration extras
         run: poetry install --with integrations
+
+      - name: Show installed integrations
+        run: |
+          poetry show crewai || true
+          poetry run python - <<'PY'
+          import importlib, pkgutil, sys
+          for m in ("crewai", "crewai.events"):
+              try:
+                  mod = importlib.import_module(m)
+                  print(f"{m} OK version=", getattr(mod, "__version__", "?"))
+              except Exception as e:
+                  print(f"{m} IMPORT FAIL:", repr(e), file=sys.stderr)
+          PY
 
       - name: Run integration tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
