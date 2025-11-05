@@ -492,7 +492,7 @@ def wrap_up_experiment(
         "\n".join(winner_breakdown) if winner_breakdown else "No winners"
     )
     console.print(
-        f"\n🎉 Arena completed! (time taken: {round(maxRunDuration, 2)}s | token cost: {test_runs[0].evaluation_cost or 0} USD)\n"
+        f"\n🎉 Arena completed! (time taken: {round(maxRunDuration, 2)}s | token cost: {test_runs[0].evaluation_cost if test_runs else 0} USD)\n"
         f"🏆 Results ({sum(winner_counts.values())} total test cases):\n"
         f"{winner_text}\n\n"
     )
