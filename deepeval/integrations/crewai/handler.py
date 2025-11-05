@@ -2,11 +2,16 @@ import logging
 import deepeval
 
 from typing import Optional
+
+from deepeval.config.settings import get_settings
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.types import LlmSpan
 from .subs import validate_crewai_installed, is_crewai_installed
+
+
+logger = logging.getLogger(__name__)
 
 try:
     from crewai.events import (
@@ -22,7 +27,16 @@ try:
         KnowledgeRetrievalStartedEvent,
         KnowledgeRetrievalCompletedEvent,
     )
-except Exception:
+except Exception as e:
+    if logger.isEnabledFor(logging.DEBUG):
+        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
+        exc_info = (
+            (type(e), e, getattr(e, "__traceback__", None))
+            if show_trace
+            else None
+        )
+        logger.debug("failed to import from crewai.events:", exc_info=exc_info)
+
     # Don’t crash at import time
     BaseEventListener = None
     CrewKickoffStartedEvent = CrewKickoffCompletedEvent = None
@@ -31,8 +45,6 @@ except Exception:
     ToolUsageStartedEvent = ToolUsageFinishedEvent = None
     KnowledgeRetrievalStartedEvent = KnowledgeRetrievalCompletedEvent = None
 
-
-logger = logging.getLogger(__name__)
 crewai_installed = is_crewai_installed()
 IS_WRAPPED_ALL = False
 

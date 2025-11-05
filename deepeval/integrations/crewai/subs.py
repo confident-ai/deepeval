@@ -1,13 +1,27 @@
+import logging
+
 from typing import List, Optional, Type, TypeVar
 from pydantic import PrivateAttr
 
+from deepeval.config.settings import get_settings
 from deepeval.metrics.base_metric import BaseMetric
+
+
+logger = logging.getLogger(__name__)
 
 try:
     from crewai import Crew, Agent, LLM
 
     _is_crewai_installed = True
-except ImportError:
+except Exception as e:
+    if logger.isEnabledFor(logging.DEBUG):
+        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
+        exc_info = (
+            (type(e), e, getattr(e, "__traceback__", None))
+            if show_trace
+            else None
+        )
+        logger.debug("failed to import from crewai:", exc_info=exc_info)
     _is_crewai_installed = False
 
 
