@@ -417,7 +417,7 @@ def update_test_run_map(
 
         # update test cases in test run
         api_test_case: LLMApiTestCase = create_api_test_case(
-            test_case=test_case, index=index
+            test_case=contestant_test_case, index=index
         )
         metric_data: MetricData = create_arena_metric_data(
             metric_copy, contestant
