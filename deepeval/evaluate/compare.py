@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Callable, Any
 import asyncio
 import time
 from rich.progress import (
@@ -30,6 +30,9 @@ from deepeval.test_run.test_run import (
     MetricScores,
     console,
 )
+from deepeval.test_run.hyperparameters import (
+    process_hyperparameters,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_run.api import LLMApiTestCase
@@ -40,6 +43,8 @@ from deepeval.evaluate.types import PostExperimentRequest
 def compare(
     test_cases: List[ArenaTestCase],
     metric: ArenaGEval,
+    name: str = "compare()",
+    hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
     # Configs
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -105,8 +110,12 @@ def compare(
         if winner:
             winner_counts[winner] += 1
 
+    process_test_runs(
+        test_run_map=test_run_map,
+        hyperparameters=hyperparameters,
+    )
     wrap_up_experiment(
-        name="compare()",
+        name=name,
         test_runs=list(test_run_map.values()),
         winner_counts=winner_counts,
     )
@@ -443,6 +452,21 @@ def update_test_run_map(
         test_run.metrics_scores[0].errors += 0
 
 
+def process_test_runs(
+    test_run_map: Dict[str, TestRun],
+    hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
+):
+    # process hyperparameters
+    if hyperparameters:
+        for contestant, contestant_hyperparameters in hyperparameters.items():
+            test_run = test_run_map.get(contestant)
+            if not test_run:
+                continue
+            test_run.hyperparameters = process_hyperparameters(
+                contestant_hyperparameters
+            )
+
+
 def wrap_up_experiment(
     name: str,
     test_runs: List[TestRun],
@@ -455,8 +479,8 @@ def wrap_up_experiment(
         body = experiment_request.model_dump(by_alias=True, exclude_none=True)
     except AttributeError:
         body = experiment_request.dict(by_alias=True, exclude_none=True)
-        json_str = json.dumps(body, cls=TestRunEncoder)
-        body = json.loads(json_str)
+    json_str = json.dumps(body, cls=TestRunEncoder)
+    body = json.loads(json_str)
 
     maxRunDuration = max([test_run.run_duration for test_run in test_runs])
     winner_breakdown = []

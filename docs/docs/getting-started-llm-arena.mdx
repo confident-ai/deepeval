@@ -238,6 +238,35 @@ arena_geval = ArenaGEval(...) # Use the same metric you've created before
 compare(test_cases=[test_case], metric=arena_geval)
 ```
 
+<details>
+  <summary>Log prompts and models</summary>
+
+You can optionally log prompts and models for each contestant through `hyperparameters` dictionary in the `compare()` function. This will allow you to easily attribute winning contestants to their corresponding hyperparameters.
+
+```python
+from deepeval.prompts import Prompt
+
+prompt_1 = Prompt(
+    alias="First Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+prompt_2 = Prompt(
+    alias="Second Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+
+compare(
+    test_cases=[test_case],
+    metric=arena_geval,
+    hyperparameters={
+        "Version 1": {"prompt": prompt_1},
+        "Version 2": {"prompt": prompt_2},
+    },
+)
+```
+
+</details>
+
 You can now run this python file to get your results:
 
 ```bash title="bash"
@@ -274,8 +303,9 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
 
 </Timeline>
 
-:::tip
-If you're looking for a quick way to run arena comparisons, [Confident AI](https://app.confident-ai.com) (DeepEval Cloud) allows you to easily test different prompts, models, tools, and output configurations **side by side** and evaluate these comparisons using any `deepeval` metric beyond `ArenaGEval` directly on the platfrom.
+## Next Steps
+
+`deepeval` lets you run Arena comparisons locally but isn’t optimized for iterative prompt or model improvements. If you’re looking for a more comprehensive and streamlined way to run Arena comparisons, [**Confident AI**](https://app.confident-ai.com) (DeepEval Cloud) enables you to easily test different prompts, models, tools, and output configurations **side by side**, and evaluate them using any `deepeval` metric beyond `ArenaGEval`—all directly on the platform.
 
 <Tabs>
 <TabItem value="quick-run" label="Quick Comparisons">
@@ -296,11 +326,24 @@ An experiment is a collection of arena comparisons that you can run on a dataset
 />
 
 </TabItem>
+<TabItem value="traced-run" label="Traced Comparisons">
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
+  label="Quick Comparisons"
+/>
+
+</TabItem>
+<TabItem value="metric-comparison" label="Metric Comparisons">
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
+  label="Quick Comparisons"
+/>
+
+</TabItem>
+
 </Tabs>
-
-:::
-
-## Next Steps
 
 Now that you have run your first Arena evals, you should:
 
