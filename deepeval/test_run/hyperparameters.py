@@ -35,7 +35,7 @@ def process_hyperparameters(
         if isinstance(value, Prompt):
             try:
                 prompt_key = f"{value.alias}_{value.version}"
-            except:
+            except AttributeError:
                 prompt_key = f"{value.alias}_00.00.01"
 
             if value._prompt_version_id is not None and value.type is not None:
