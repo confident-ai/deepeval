@@ -40,10 +40,6 @@ async def run_agent():
 @pytest.mark.needs_investigation(
     reason="The trace structure has changed, please investigate."
 )
-@pytest.mark.skip(
-    reason="[NEEDS INVESTIGATION] Test skipped due to the trace structure having changed."
-)
-# @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 async def test_execute_agent():
     await run_agent()

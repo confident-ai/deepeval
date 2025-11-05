@@ -50,9 +50,6 @@ json_path = os.path.join(_current_dir, "knowledge_retriever.json")
 @pytest.mark.needs_investigation(
     reason="The trace structure has changed, please investigate."
 )
-@pytest.mark.skip(
-    reason="[NEEDS INVESTIGATION] Test skipped due to the trace structure having changed."
-)
 @assert_trace_json(json_path)
 def test_knowledge_retriever():
     crew.kickoff(
