@@ -77,6 +77,7 @@ def compare(
         ]
         test_run_map[contestant] = test_run
 
+    start_time = time.time()
     with capture_evaluation_run("compare()"):
         if async_config.run_async:
             loop = get_or_create_event_loop()
@@ -103,6 +104,8 @@ def compare(
                 skip_on_missing_params=error_config.skip_on_missing_params,
                 test_run_map=test_run_map,
             )
+    end_time = time.time()
+    run_duration = end_time - start_time
 
     # Aggregate winners
     winner_counts = Counter()
@@ -118,6 +121,7 @@ def compare(
         name=name,
         test_runs=list(test_run_map.values()),
         winner_counts=winner_counts,
+        run_duration=run_duration,
     )
     return dict(winner_counts)
 
@@ -471,6 +475,7 @@ def wrap_up_experiment(
     name: str,
     test_runs: List[TestRun],
     winner_counts: Counter,
+    run_duration: float,
 ):
     api = Api()
     experiment_request = PostExperimentRequest(testRuns=test_runs, name=name)
@@ -482,7 +487,6 @@ def wrap_up_experiment(
     json_str = json.dumps(body, cls=TestRunEncoder)
     body = json.loads(json_str)
 
-    maxRunDuration = max([test_run.run_duration or 0.0 for test_run in test_runs]) if test_runs else 0.0
     winner_breakdown = []
     for contestant, wins in winner_counts.most_common():
         winner_breakdown.append(
@@ -492,7 +496,7 @@ def wrap_up_experiment(
         "\n".join(winner_breakdown) if winner_breakdown else "No winners"
     )
     console.print(
-        f"\n🎉 Arena completed! (time taken: {round(maxRunDuration, 2)}s | token cost: {test_runs[0].evaluation_cost if test_runs else 0} USD)\n"
+        f"\n🎉 Arena completed! (time taken: {round(run_duration, 2)}s | token cost: {test_runs[0].evaluation_cost if test_runs else 0} USD)\n"
         f"🏆 Results ({sum(winner_counts.values())} total test cases):\n"
         f"{winner_text}\n\n"
     )
