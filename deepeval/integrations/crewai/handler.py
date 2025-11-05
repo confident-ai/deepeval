@@ -13,7 +13,27 @@ from .subs import validate_crewai_installed, is_crewai_installed
 
 logger = logging.getLogger(__name__)
 
+
+def _import_fail(msg: str, e: Exception):
+    if logger.isEnabledFor(logging.DEBUG):
+        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
+        exc_info = (
+            (type(e), e, getattr(e, "__traceback__", None))
+            if show_trace
+            else None
+        )
+        logger.debug(msg, exc_info=exc_info)
+
+
+BaseEventListener = None
+CrewKickoffStartedEvent = CrewKickoffCompletedEvent = None
+LLMCallStartedEvent = LLMCallCompletedEvent = None
+AgentExecutionStartedEvent = AgentExecutionCompletedEvent = None
+ToolUsageStartedEvent = ToolUsageFinishedEvent = None
+KnowledgeRetrievalStartedEvent = KnowledgeRetrievalCompletedEvent = None
+
 try:
+    # support for latest version of crewai
     from crewai.events import (
         BaseEventListener,
         CrewKickoffStartedEvent,
@@ -28,22 +48,30 @@ try:
         KnowledgeRetrievalCompletedEvent,
     )
 except Exception as e:
-    if logger.isEnabledFor(logging.DEBUG):
-        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
-        exc_info = (
-            (type(e), e, getattr(e, "__traceback__", None))
-            if show_trace
-            else None
-        )
-        logger.debug("failed to import from crewai.events:", exc_info=exc_info)
+    _import_fail("failed to import from crewai.events:", e)
+    try:
 
-    # Don’t crash at import time
-    BaseEventListener = None
-    CrewKickoffStartedEvent = CrewKickoffCompletedEvent = None
-    LLMCallStartedEvent = LLMCallCompletedEvent = None
-    AgentExecutionStartedEvent = AgentExecutionCompletedEvent = None
-    ToolUsageStartedEvent = ToolUsageFinishedEvent = None
-    KnowledgeRetrievalStartedEvent = KnowledgeRetrievalCompletedEvent = None
+        # support for crewai 0.118
+        from crewai.utilities.events.base_event_listener import (
+            BaseEventListener,
+        )
+        from crewai.utilities.events.events import (
+            CrewKickoffStartedEvent,
+            CrewKickoffCompletedEvent,
+            LLMCallStartedEvent,
+            LLMCallCompletedEvent,
+            AgentExecutionStartedEvent,
+            AgentExecutionCompletedEvent,
+            ToolUsageStartedEvent,
+            ToolUsageFinishedEvent,
+            KnowledgeRetrievalStartedEvent,
+            KnowledgeRetrievalCompletedEvent,
+        )
+    except Exception as e:
+        _import_fail(
+            "failed to import from crewai.utilities.events.base_event_listener:",
+            e,
+        )
 
 crewai_installed = is_crewai_installed()
 IS_WRAPPED_ALL = False
