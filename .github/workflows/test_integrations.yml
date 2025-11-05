@@ -158,7 +158,7 @@ jobs:
           poetry show crewai || true
           poetry run python - <<'PY'
           import importlib, pkgutil, sys
-          for m in ("crewai", "crewai.events"):
+          for m in ("crewai", "crewai.events", "crewai.utilities.events.events"):
               try:
                   mod = importlib.import_module(m)
                   print(f"{m} OK version=", getattr(mod, "__version__", "?"))
