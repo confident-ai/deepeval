@@ -61,7 +61,11 @@ class GEval(BaseMetric):
         self.score_range_span = self.score_range[1] - self.score_range[0]
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self.evaluation_steps = (
+            evaluation_steps
+            if evaluation_steps and len(evaluation_steps) > 0
+            else None
+        )
         self.threshold = 1 if strict_mode else threshold
         self.top_logprobs = top_logprobs
         self.strict_mode = strict_mode
