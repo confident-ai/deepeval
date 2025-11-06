@@ -1,9 +1,11 @@
-from crewai.llm import LLM
-from crewai.crew import Crew
-from crewai.agent import Agent
 from functools import wraps
-from deepeval.tracing.tracing import Observer
 from typing import Any
+
+from deepeval.tracing.tracing import Observer
+from .subs import try_import_core_classes
+
+
+Crew, Agent, LLM = try_import_core_classes()
 
 
 def wrap_crew_kickoff():
