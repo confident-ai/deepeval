@@ -1,4 +1,15 @@
 import weakref
+import contextvars
+import logging
+import threading
+import functools
+import inspect
+import asyncio
+import random
+import atexit
+import queue
+import uuid
+
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -11,14 +22,6 @@ from typing import (
     Union,
 )
 from time import perf_counter
-import threading
-import functools
-import inspect
-import asyncio
-import random
-import atexit
-import queue
-import uuid
 from anthropic import Anthropic
 from openai import OpenAI
 from rich.console import Console
@@ -65,17 +68,70 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
-from deepeval.utils import dataclass_to_dict
+from deepeval.utils import dataclass_to_dict, should_async_debug
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 
+from deepeval.tracing._debug import print_dbg_tag, _task_id, _ctx_id
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
+logger = logging.getLogger(__name__)
+
+
+class _SpanExecutor:
+    """
+    Serialize all span mutations onto a single worker thread.
+
+    Why this exists:
+      - ContextVars are local to a single thread (or task ) and CrewAI events may fire on different threads.
+        Running span operations via one worker ensures ctx.run(fn) applies the right parent/trace
+        bindings regardless of where the event originated.
+      - The span and trace stores aren’t thread safe. A single writer avoids lock threadlocks and
+        race conditions during Observer.__enter__/__exit__ and trace updates.
+      - Keeps event listeners responsive by offloading span work, preserves submit order
+        (FIFO) and isolates exceptions so one bad operation doesn’t poison the event thread.
+    """
+
+    def __init__(self, name: str = "DeepEvalSpanWorker", daemon: bool = True):
+        self._queue = queue.Queue()
+        self._thread = threading.Thread(
+            target=self._run, name=name, daemon=daemon
+        )
+        self._thread.start()
+
+    def submit(self, fn, ctx=None):
+        self._queue.put((fn, ctx or contextvars.copy_context()))
+
+    def _run(self):
+        while True:
+            fn, ctx = self._queue.get()
+            try:
+                ctx.run(fn)
+            except Exception as e:
+                if should_async_debug():
+                    extra = {
+                        "ctx_id": id(ctx),
+                        "fn": getattr(fn, "__name__", type(fn).__name__),
+                    }
+                    if get_settings().DEEPEVAL_LOG_STACK_TRACES:
+                        logger.debug(
+                            "Span op raised in _SpanExecutor",
+                            exc_info=True,
+                            extra=extra,
+                        )
+                    else:
+                        logger.debug(
+                            "Span op raised in _SpanExecutor: %r",
+                            e,
+                            extra=extra,
+                        )
+            finally:
+                self._queue.task_done()
 
 
 class TraceManager:
@@ -129,6 +185,10 @@ class TraceManager:
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
+
+        # The span worker ensures that __enter__, __exit__ and span mutations run
+        # on a single thread with a stable Context.
+        self._span_exec = _SpanExecutor()
 
     def _warn_on_exit(self):
         queue_size = self._trace_queue.qsize()
@@ -329,6 +389,10 @@ class TraceManager:
         self.traces = []
         self.active_traces = {}
         self.active_spans = {}
+
+    # public hook for integrations to schedule span ops
+    def run_span_op(self, fn, ctx=None):
+        self._span_exec.submit(fn, ctx)
 
     def get_trace_dict(self, trace: Trace) -> Dict:
         """Convert a trace to a dictionary."""
@@ -857,6 +921,16 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
+        print_dbg_tag(
+            "ENTER",
+            extra=(
+                f"thr={threading.current_thread().name} "
+                f"task={_task_id()} "
+                f"ctx={_ctx_id()} "
+                f"uuid={self.uuid} type={self.span_type} name={self.name} parent={self.parent_uuid}"
+            ),
+        )
+
         if (
             parent_span
             and parent_span.progress is not None
@@ -892,6 +966,17 @@ class Observer:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit the tracer context, updating the span status and handling trace completion."""
+
+        print_dbg_tag(
+            "EXIT.begin",
+            extra=(
+                f"thr={threading.current_thread().name} "
+                f"task={_task_id()} "
+                f"ctx={_ctx_id()} "
+                f"uuid={self.uuid} "
+                f"ctxspan={getattr(current_span_context.get(), 'uuid', None)}"
+            ),
+        )
 
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
@@ -973,6 +1058,8 @@ class Observer:
 
         if self._progress is not None and self._pbar_callback_id is not None:
             self._progress.update(self._pbar_callback_id, advance=1)
+
+        print_dbg_tag("EXIT.done", extra=f"uuid={self.uuid}")
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""

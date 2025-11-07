@@ -1,12 +1,10 @@
 import os
 import pytest
-from tests.test_integrations.utils import assert_trace_json
-
 from crewai import Task, Agent, Crew
 from crewai.tools import tool
 
-# from deepeval.integrations.crewai import Crew, Agent, LLM
-from deepeval.integrations.crewai import instrument_crewai
+from tests.test_integrations.utils import assert_trace_json
+from deepeval.integrations.crewai.handler import instrument_crewai
 
 
 @tool

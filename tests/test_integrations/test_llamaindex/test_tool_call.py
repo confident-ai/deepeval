@@ -1,5 +1,4 @@
 import os
-import pytest
 
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent.workflow import ReActAgent
@@ -37,9 +36,6 @@ async def run_agent():
     await agent.run("what is the weather in sf")
 
 
-@pytest.mark.needs_investigation(
-    reason="The trace structure has changed, please investigate."
-)
 @assert_trace_json(json_path)
 async def test_execute_agent():
     await run_agent()
