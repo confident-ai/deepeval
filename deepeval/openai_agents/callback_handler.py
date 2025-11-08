@@ -85,7 +85,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _trace_name = trace_dict.get("workflow_name")
 
         trace_manager.remove_span(_trace_uuid)  # removing the dummy root span
-        trace_manager.end_trace(_trace_uuid)
+        trace_manager.schedule_end_trace(_trace_uuid)
         current_trace_context.set(None)
 
     def on_span_start(self, span: "Span") -> None:

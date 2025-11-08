@@ -230,18 +230,18 @@ if BaseEventListener is not None:
                 ctx = (self._exec_diag.pop(exec_id, None) or {}).get("ctx")
                 ctx = ctx or contextvars.copy_context()
 
-                if observer:
+                if not observer:
+                    return
 
-                    def _apply_llm_done():
-                        # Assuming that this event is called in the llm.call method
-                        current_span = current_span_context.get()
+                def _apply_llm_done():
+                    # Assuming that this event is called in the llm.call method
+                    current_span = self._rebind_to_observer(observer)
+                    # set the output
+                    if current_span:
+                        current_span.output = event.response
+                    observer.__exit__(None, None, None)
 
-                        # set the output
-                        if current_span:
-                            current_span.output = event.response
-                        observer.__exit__(None, None, None)
-
-                    trace_manager.run_span_op(_apply_llm_done, ctx)
+                trace_manager.run_span_op(_apply_llm_done, ctx)
 
             @crewai_event_bus.on(AgentExecutionStartedEvent)
             def on_agent_started(source, event: AgentExecutionStartedEvent):
@@ -407,15 +407,16 @@ if BaseEventListener is not None:
                                 ),
                             )
 
-                if observer:
+                if not observer:
+                    return
 
-                    def _apply_tool_exit():
-                        cur = current_span_context.get()
-                        if cur:
-                            cur.output = event.output
-                        observer.__exit__(None, None, None)
+                def _apply_tool_exit():
+                    current_span = self._rebind_to_observer(observer)
+                    if current_span:
+                        current_span.output = event.output
+                    observer.__exit__(None, None, None)
 
-                    trace_manager.run_span_op(_apply_tool_exit, ctx)
+                trace_manager.run_span_op(_apply_tool_exit, ctx)
 
             @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
             def on_knowledge_started(
@@ -482,16 +483,17 @@ if BaseEventListener is not None:
                 diag = self._exec_diag.pop(exec_id, None) or {}
                 ctx = diag.get("ctx") or contextvars.copy_context()
 
-                if observer:
+                if not observer:
+                    return
 
-                    def _apply_knowledge_done():
-                        cur = current_span_context.get()
-                        if cur:
-                            cur.input = event.query
-                            cur.output = event.retrieved_knowledge
-                        observer.__exit__(None, None, None)
+                def _apply_knowledge_done():
+                    current_span = self._rebind_to_observer(observer)
+                    if current_span:
+                        current_span.input = event.query
+                        current_span.output = event.retrieved_knowledge
+                    observer.__exit__(None, None, None)
 
-                    trace_manager.run_span_op(_apply_knowledge_done, ctx)
+                trace_manager.run_span_op(_apply_knowledge_done, ctx)
 
         def _find_active_root_span(self):
             # root = base span that hasn't finished yet
@@ -509,6 +511,16 @@ if BaseEventListener is not None:
                 if isinstance(span, AgentSpan) and span.end_time is None:
                     return span
             return None
+
+        def _rebind_to_observer(self, observer):
+            """Ensure the worker context has the exact span/trace that this observer opened."""
+            span = trace_manager.get_span_by_uuid(observer.uuid)
+            if span is not None:
+                current_span_context.set(span)
+                trace = trace_manager.active_traces.get(span.trace_uuid)
+                if trace:
+                    current_trace_context.set(trace)
+            return span
 
 else:
     CrewAIEventsListener = None

@@ -1,11 +1,12 @@
-from typing import Any, Dict, Optional
 import inspect
-from time import perf_counter
 import uuid
 
+from typing import Any, Dict, Optional
+from time import perf_counter
 from llama_index.core.agent.workflow.workflow_events import (
     AgentWorkflowStartEvent,
 )
+
 from deepeval.integrations.llama_index.utils import (
     extract_output_from_llm_chat_end_event,
 )
@@ -48,7 +49,7 @@ try:
     )
 
     llama_index_installed = True
-except:
+except Exception:
     llama_index_installed = False
 
 
@@ -264,7 +265,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         trace_manager.remove_span(base_span.uuid)
 
         if base_span.parent_uuid is None:
-            trace_manager.end_trace(base_span.trace_uuid)
+            trace_manager.schedule_end_trace(base_span.trace_uuid)
             self.root_span_trace_id_map.pop(base_span.uuid)
 
         return base_span
@@ -287,7 +288,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         )  # find a way to add error and handle the span without the parent id
 
         if base_span.parent_uuid is None:
-            trace_manager.end_trace(base_span.trace_uuid)
+            trace_manager.schedule_end_trace(base_span.trace_uuid)
             self.root_span_trace_id_map.pop(base_span.uuid)
 
         return base_span
