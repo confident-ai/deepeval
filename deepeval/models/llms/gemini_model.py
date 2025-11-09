@@ -51,7 +51,7 @@ class GeminiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        service_account_key: Optional[str] = None,
+        service_account_key: Optional[Dict] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -75,12 +75,17 @@ class GeminiModel(DeepEvalBaseLLM):
         self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI
         )
-        self.service_account_key = (
-            service_account_key
-            or KEY_FILE_HANDLER.fetch_data(
+        if service_account_key:
+            self.service_account_key = service_account_key
+        else:
+            service_account_key_data = KEY_FILE_HANDLER.fetch_data(
                 ModelKeyValues.GOOGLE_SERVICE_ACCOUNT_KEY
             )
-        )
+            if service_account_key_data is None:
+                self.service_account_key = None
+            else:
+                self.service_account_key = service_account_key_data
+
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -130,7 +135,9 @@ class GeminiModel(DeepEvalBaseLLM):
                 credentials=(
                     service_account.Credentials.from_service_account_info(
                         self.service_account_key,
-                        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                        scopes=[
+                            "https://www.googleapis.com/auth/cloud-platform"
+                        ],
                     )
                     if self.service_account_key
                     else None
