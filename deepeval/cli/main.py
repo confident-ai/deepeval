@@ -1484,6 +1484,11 @@ def set_gemini_model_env(
     google_cloud_location: Optional[str] = typer.Option(
         None, "--location", help="Google Cloud location"
     ),
+    google_service_account_key: Optional[str] = typer.Option(
+        None,
+        "--service-account-key",
+        help="Google Service Account Key for Gemini",
+    ),
     save: Optional[str] = typer.Option(
         None,
         "--save",
@@ -1513,6 +1518,8 @@ def set_gemini_model_env(
             settings.GOOGLE_CLOUD_PROJECT = google_cloud_project
         if google_cloud_location:
             settings.GOOGLE_CLOUD_LOCATION = google_cloud_location
+        if google_service_account_key:
+            settings.GOOGLE_SERVICE_ACCOUNT_KEY = google_service_account_key
         if model_name:
             settings.GEMINI_MODEL_NAME = model_name
 
