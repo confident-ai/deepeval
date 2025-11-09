@@ -16,7 +16,7 @@ General behavior for all `set-*` / `unset-*` commands:
 """
 
 import os
-from typing import Optional
+from typing import Optional, Dict
 from rich import print
 from rich.markup import escape
 import webbrowser
@@ -1484,7 +1484,7 @@ def set_gemini_model_env(
     google_cloud_location: Optional[str] = typer.Option(
         None, "--location", help="Google Cloud location"
     ),
-    google_service_account_key: Optional[str] = typer.Option(
+    google_service_account_key: Optional[Dict[str, str]] = typer.Option(
         None,
         "--service-account-key",
         help="Google Service Account Key for Gemini",

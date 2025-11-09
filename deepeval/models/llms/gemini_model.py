@@ -51,7 +51,7 @@ class GeminiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        service_account_key: Optional[Dict] = None,
+        service_account_key: Optional[Dict[str, str]] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
