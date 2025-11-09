@@ -9,6 +9,7 @@ from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from google.oauth2 import service_account
+import json
 
 default_gemini_model = "gemini-1.5-pro"
 
@@ -83,8 +84,8 @@ class GeminiModel(DeepEvalBaseLLM):
             )
             if service_account_key_data is None:
                 self.service_account_key = None
-            else:
-                self.service_account_key = service_account_key_data
+            elif isinstance(service_account_key_data, str):
+                self.service_account_key = json.loads(service_account_key_data)
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
