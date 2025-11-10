@@ -2,7 +2,7 @@ import portalocker
 import sys
 import json
 import os
-from typing import List, Optional, Union, Dict, Union
+from typing import List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -209,13 +209,16 @@ class TestRunCacheManager:
                     try:
                         data = json.loads(content)
                         self.temp_cached_test_run = CachedTestRun.load(data)
-                    except Exception as e:
+                    except Exception:
                         should_create_cached_test_run = True
             except portalocker.exceptions.LockException as e:
                 print(
                     f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
                     file=sys.stderr,
                 )
+
+            if should_create_cached_test_run:
+                self.create_cached_test_run(temp=from_temp)
 
             return self.temp_cached_test_run
         else:
@@ -330,7 +333,7 @@ class Cache:
                             if criteria_value != cached_criteria_value:
                                 return False
                             continue
-                    except:
+                    except Exception:
                         # For non-GEval
                         continue
 
