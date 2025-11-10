@@ -1,4 +1,4 @@
-import portalocker
+import logging
 import sys
 import json
 import os
@@ -12,10 +12,25 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
 from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
+    is_read_only_env,
     serialize,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
+
+
+logger = logging.getLogger(__name__)
+
+
+portalocker = None
+if not is_read_only_env():
+    try:
+        import portalocker
+    except Exception as e:
+        logger.warning("failed to import portalocker: %s", e)
+else:
+    logger.warning("READ_ONLY filesystem: skipping disk cache for test runs.")
+
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-cache.json"
 TEMP_CACHE_FILE_NAME = f"{HIDDEN_DIR}/.temp-deepeval-cache.json"
@@ -97,7 +112,7 @@ class TestRunCacheManager:
     def get_cached_test_case(
         self, test_case: LLMTestCase, hyperparameters: Union[Dict, None]
     ) -> Union[CachedTestCase, None]:
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return None
 
         cached_test_run = self.get_cached_test_run()
@@ -122,7 +137,7 @@ class TestRunCacheManager:
         hyperparameters: Union[Dict, None],
         to_temp: bool = False,
     ):
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
@@ -142,7 +157,7 @@ class TestRunCacheManager:
     def set_cached_test_run(
         self, cached_test_run: CachedTestRun, temp: bool = False
     ):
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return
 
         if temp:
@@ -151,7 +166,7 @@ class TestRunCacheManager:
             self.cached_test_run = cached_test_run
 
     def save_cached_test_run(self, to_temp: bool = False):
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return
 
         if to_temp:
@@ -178,7 +193,7 @@ class TestRunCacheManager:
                 )
 
     def create_cached_test_run(self, temp: bool = False):
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return
 
         cached_test_run = CachedTestRun()
@@ -188,7 +203,7 @@ class TestRunCacheManager:
     def get_cached_test_run(
         self, from_temp: bool = False
     ) -> Union[CachedTestRun, None]:
-        if self.disable_write_cache:
+        if self.disable_write_cache or portalocker is None:
             return
 
         should_create_cached_test_run = False
@@ -253,6 +268,9 @@ class TestRunCacheManager:
             return self.cached_test_run
 
     def wrap_up_cached_test_run(self):
+        if portalocker is None:
+            return
+
         if self.disable_write_cache:
             # Clear cache if write cache is disabled
             delete_file_if_exists(self.cache_file_name)

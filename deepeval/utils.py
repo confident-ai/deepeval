@@ -810,3 +810,7 @@ def format_error_text(
         text += " (Run with LOG_LEVEL=DEBUG for stack trace.)"
 
     return text
+
+
+def is_read_only_env():
+    return get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
