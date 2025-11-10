@@ -6,7 +6,9 @@ from ..types import (
     Candidate,
     CandidateId,
     Evaluator,
+    GoldenLike,
     ModuleId,
+    Prompt,
     PromptRewriter,
     ScoreTable,
 )
@@ -50,8 +52,8 @@ class GEPARunner:
     def optimize(
         self,
         root: Candidate,
-        d_feedback: Sequence[object],
-        d_pareto: Sequence[object],
+        d_feedback: Sequence[GoldenLike],
+        d_pareto: Sequence[GoldenLike],
     ) -> Tuple[Candidate, Dict]:
         """
         Returned report dict is a stable place to add lineage, accepted steps, etc.
@@ -89,7 +91,7 @@ class GEPARunner:
             feedback_text = self.evaluator.minibatch_feedback(parent, j, batch)
 
             # 5. update prompt via rewriter
-            old = parent.prompts.get(j, "")
+            old = parent.prompts.get(j, Prompt(text=""))
             new_prompt = self.rewriter.rewrite(
                 module_id=j, old_prompt=old, feedback_text=feedback_text
             )
