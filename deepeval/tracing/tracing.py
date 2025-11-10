@@ -144,7 +144,7 @@ class TraceManager:
 
     def mask(self, data: Any):
         if self.custom_mask_fn is not None:
-            self.custom_mask_fn(data)
+            return self.custom_mask_fn(data)
         else:
             return data
 
