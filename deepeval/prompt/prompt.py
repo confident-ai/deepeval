@@ -5,7 +5,7 @@ from rich.console import Console
 import time
 import json
 import os
-from pydantic import BaseModel, ValidationError, ConfigDict
+from pydantic import BaseModel, ValidationError
 import asyncio
 import portalocker
 import threading
@@ -24,9 +24,6 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
-    ReasoningEffort,
-    Verbosity,
-    ModelProvider,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -165,7 +162,7 @@ class Prompt:
             content = f.read()
         try:
             data = json.loads(content)
-        except:
+        except (json.JSONDecodeError, TypeError):
             self.text_template = content
             return content
 
@@ -203,7 +200,6 @@ class Prompt:
                     "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
-            print("@@@@@")
             return interpolate_text(interpolation_type, text_template, **kwargs)
 
         elif prompt_type == PromptType.LIST:
@@ -299,10 +295,9 @@ class Prompt:
         if not self.alias:
             return
 
-        # Ensure directory exists
-        os.makedirs(HIDDEN_DIR, exist_ok=True)
-
         try:
+            # Ensure directory exists
+            os.makedirs(HIDDEN_DIR, exist_ok=True)
             # Use r+ mode if file exists, w mode if it doesn't
             mode = "r+" if os.path.exists(CACHE_FILE_NAME) else "w"
 
@@ -481,7 +476,7 @@ class Prompt:
                             cached_prompt.output_schema
                         )
                     return
-            except:
+            except Exception:
                 pass
 
         api = Api()
