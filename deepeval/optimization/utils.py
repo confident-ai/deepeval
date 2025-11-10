@@ -1,16 +1,16 @@
 from __future__ import annotations
-from typing import List, Sequence, Tuple, TypeVar
 import random
+from typing import List, Sequence, Tuple
 
-T = TypeVar("T")
+from .types import GoldenLike
 
 
 def split_dataset(
-    dataset: Sequence[T],
+    dataset: Sequence[GoldenLike],
     pareto_size: int,
     *,
     seed: int = 0,
-) -> Tuple[List[T], List[T]]:
+) -> Tuple[List[GoldenLike], List[GoldenLike]]:
     """
     Split `dataset` into two disjoint parts:
 
@@ -22,7 +22,7 @@ def split_dataset(
 
     Args:
         dataset: Full list/sequence of examples.
-        pareto_size: Number of items to allocate to the Pareto set (clamped to [0, len(dataset)]).
+        pareto_size: Number of items to allocate to the Pareto set bound between [0, len(dataset)].
         seed: Random seed for reproducible selection.
 
     Returns:

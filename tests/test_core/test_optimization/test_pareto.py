@@ -43,7 +43,7 @@ def test_select_candidate_deterministic():
     }
     random_state = random.Random(123)
     selected_candidate = select_candidate_pareto(
-        candidate_scores_by_instance, rng=random_state
+        candidate_scores_by_instance, random_state=random_state
     )
     assert selected_candidate in candidate_scores_by_instance
 

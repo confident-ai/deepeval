@@ -1,7 +1,13 @@
 from typing import Sequence, List
 from dataclasses import dataclass
 from deepeval.optimization.gepa.loop import GEPARunner, GEPAConfig
-from deepeval.optimization.types import Candidate, Evaluator, ModuleId
+from deepeval.optimization.types import (
+    Candidate,
+    Evaluator,
+    GoldenLike,
+    ModuleId,
+)
+from tests.test_core.stubs import AddBetterRewriter
 
 
 # A tiny evaluator that rewards prompts containing the word "BETTER"
@@ -17,7 +23,7 @@ class ToyEvaluator(Evaluator):
         return [float(base_score) for _ in range(self.pareto_set_size)]
 
     def minibatch_score(
-        self, candidate: Candidate, minibatch: Sequence[object]
+        self, candidate: Candidate, minibatch: Sequence[GoldenLike]
     ) -> float:
         return float(
             sum("BETTER" in prompt for prompt in candidate.prompts.values())
@@ -27,20 +33,13 @@ class ToyEvaluator(Evaluator):
         self,
         candidate: Candidate,
         module_id: ModuleId,
-        minibatch: Sequence[object],
+        minibatch: Sequence[GoldenLike],
     ) -> str:
         return "Try adding BETTER."
 
     def select_module(self, candidate: Candidate) -> ModuleId:
         # Always mutate the first module for determinism
         return self.module_ids[0]
-
-
-class AddBetterRewriter:
-    def rewrite(
-        self, *, module_id: ModuleId, old_prompt: str, feedback_text: str
-    ) -> str:
-        return (old_prompt + " BETTER").strip()
 
 
 def test_gepa_improves_under_toy_evaluator():

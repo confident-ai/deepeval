@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Protocol, runtime_checkable
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.models.retry_policy import create_retry_decorator
+from deepeval.optimization.types import Prompt, ModuleId
 from deepeval.tracing.types import TraceSpanStatus
 
 
@@ -297,3 +298,20 @@ class _FakeTrace:
         self.status = TraceSpanStatus.SUCCESS
         self.error = None
         self.uuid = "trace-uuid"
+
+
+################
+# Optimization #
+################
+
+
+class AddBetterRewriter:
+    def rewrite(
+        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
+    ) -> Prompt:
+        # simple deterministic "improvement" for tests
+        return Prompt(
+            text=(old_prompt.text + " BETTER").strip(),
+            model_settings=old_prompt.model_settings,
+            messages=old_prompt.messages,
+        )
