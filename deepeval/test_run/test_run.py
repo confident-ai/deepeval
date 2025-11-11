@@ -6,10 +6,10 @@ from typing import Any, Optional, List, Dict, Union, Tuple
 import shutil
 import sys
 import datetime
-import portalocker
 from rich.table import Table
 from rich.console import Console
 from rich import print
+
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
@@ -25,6 +25,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
+    is_read_only_env,
     open_browser,
     shorten,
     format_turn,
@@ -40,6 +41,21 @@ from deepeval.prompt import (
 )
 from rich.panel import Panel
 from rich.columns import Columns
+
+
+portalocker = None
+if not is_read_only_env():
+    try:
+        import portalocker
+    except Exception as e:
+        print(
+            f"Warning: failed to import portalocker: {e}",
+            file=sys.stderr,
+        )
+else:
+    print(
+        "Warning: DeepEval is configured for read only environment. Test runs will not be written to disk."
+    )
 
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
@@ -456,7 +472,7 @@ class TestRunManager:
         if self.test_run is None:
             self.create_test_run(identifier=identifier)
 
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
@@ -479,7 +495,7 @@ class TestRunManager:
         return self.test_run
 
     def save_test_run(self, path: str, save_under_key: Optional[str] = None):
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
                 # ensure parent directory exists
                 parent = os.path.dirname(path)
@@ -505,11 +521,14 @@ class TestRunManager:
                 pass
 
     def save_final_test_run_link(self, link: str):
-        try:
-            with portalocker.Lock(LATEST_TEST_RUN_FILE_PATH, mode="w") as file:
-                json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
-        except portalocker.exceptions.LockException:
-            pass
+        if portalocker:
+            try:
+                with portalocker.Lock(
+                    LATEST_TEST_RUN_FILE_PATH, mode="w"
+                ) as file:
+                    json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
+            except portalocker.exceptions.LockException:
+                pass
 
     def update_test_run(
         self,
@@ -523,7 +542,7 @@ class TestRunManager:
         ):
             return
 
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
