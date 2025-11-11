@@ -7,6 +7,7 @@ from deepeval.optimization.types import (
     GoldenLike,
     ModuleId,
 )
+from deepeval.prompt.prompt import Prompt
 from tests.test_core.stubs import AddBetterRewriter
 
 
@@ -18,7 +19,8 @@ class ToyEvaluator(Evaluator):
 
     def score_on_pareto(self, candidate: Candidate) -> List[float]:
         base_score = sum(
-            "BETTER" in prompt for prompt in candidate.prompts.values()
+            "BETTER" in (prompt.text_template or "")
+            for prompt in candidate.prompts.values()
         )
         return [float(base_score) for _ in range(self.pareto_set_size)]
 
@@ -26,7 +28,10 @@ class ToyEvaluator(Evaluator):
         self, candidate: Candidate, minibatch: Sequence[GoldenLike]
     ) -> float:
         return float(
-            sum("BETTER" in prompt for prompt in candidate.prompts.values())
+            sum(
+                "BETTER" in (prompt.text_template or "")
+                for prompt in candidate.prompts.values()
+            )
         )
 
     def minibatch_feedback(
@@ -43,7 +48,12 @@ class ToyEvaluator(Evaluator):
 
 
 def test_gepa_improves_under_toy_evaluator():
-    root_candidate = Candidate.new(prompts={"gen": "do x", "crit": "check y"})
+    root_candidate = Candidate.new(
+        prompts={
+            "gen": Prompt(text_template="do x"),
+            "crit": Prompt(text_template="check y"),
+        }
+    )
     evaluator = ToyEvaluator(pareto_set_size=5, module_ids=["gen", "crit"])
     config = GEPAConfig(
         budget=3, minibatch_size=2, seed=42, rewriter=AddBetterRewriter()
@@ -56,5 +66,5 @@ def test_gepa_improves_under_toy_evaluator():
         root_candidate, feedback_examples, pareto_examples
     )
 
-    assert "BETTER" in best_candidate.prompts["gen"]
+    assert "BETTER" in (best_candidate.prompts["gen"].text_template or "")
     assert len(optimization_report["accepted_steps"]) >= 1

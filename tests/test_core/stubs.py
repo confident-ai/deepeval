@@ -6,7 +6,8 @@ from typing import Callable, List, Optional, Protocol, runtime_checkable
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.models.retry_policy import create_retry_decorator
-from deepeval.optimization.types import Prompt, ModuleId
+from deepeval.optimization.types import ModuleId
+from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import TraceSpanStatus
 
 
@@ -309,9 +310,12 @@ class AddBetterRewriter:
     def rewrite(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
     ) -> Prompt:
-        # simple deterministic "improvement" for tests
         return Prompt(
-            text=(old_prompt.text + " BETTER").strip(),
+            text_template=(
+                (old_prompt.text_template or "") + " BETTER"
+            ).strip(),
+            messages_template=old_prompt.messages_template,
             model_settings=old_prompt.model_settings,
-            messages=old_prompt.messages,
+            output_type=old_prompt.output_type,
+            output_schema=old_prompt.output_schema,
         )
