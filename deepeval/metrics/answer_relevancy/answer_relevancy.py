@@ -3,8 +3,9 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
+    a_gen_and_extract,
+    gen_and_extract,
     initialize_model,
 )
 from deepeval.test_case import (
@@ -15,7 +16,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.answer_relevancy.schema import *
+import deepeval.metrics.answer_relevancy.schema as arschema
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -73,7 +74,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
                 )
-                self.verdicts: List[AnswerRelevancyVerdict] = (
+                self.verdicts: List[arschema.AnswerRelevancyVerdict] = (
                     self._generate_verdicts(test_case.input)
                 )
                 self.score = self._calculate_score()
@@ -113,7 +114,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output
             )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
+            self.verdicts: List[arschema.AnswerRelevancyVerdict] = (
                 await self._a_generate_verdicts(test_case.input)
             )
             self.score = self._calculate_score()
@@ -133,7 +134,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, input: str) -> str:
+    async def _a_generate_reason(self, input: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -147,24 +148,15 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             score=format(self.score, ".2f"),
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=AnswerRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: AnswerRelevancyScoreReason = await self.model.a_generate(
-                    prompt=prompt, schema=AnswerRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            arschema.AnswerRelevancyScoreReason,
+            extract_schema=lambda r: r.reason,
+            extract_json=lambda d: d["reason"],
+        )
 
-    def _generate_reason(self, input: str) -> str:
+    def _generate_reason(self, input: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -179,26 +171,17 @@ class AnswerRelevancyMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=AnswerRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: AnswerRelevancyScoreReason = self.model.generate(
-                    prompt=prompt, schema=AnswerRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return gen_and_extract(
+            self,
+            prompt,
+            arschema.AnswerRelevancyScoreReason,
+            extract_schema=lambda r: r.reason,
+            extract_json=lambda d: d["reason"],
+        )
 
     async def _a_generate_verdicts(
         self, input: str
-    ) -> List[AnswerRelevancyVerdict]:
+    ) -> List[arschema.AnswerRelevancyVerdict]:
         if len(self.statements) == 0:
             return []
 
@@ -207,24 +190,20 @@ class AnswerRelevancyMetric(BaseMetric):
             statements=self.statements,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-                ]
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            arschema.Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda d: [
+                arschema.AnswerRelevancyVerdict(**item)
+                for item in d["verdicts"]
+            ],
+        )
 
-    def _generate_verdicts(self, input: str) -> List[AnswerRelevancyVerdict]:
+    def _generate_verdicts(
+        self, input: str
+    ) -> List[arschema.AnswerRelevancyVerdict]:
         if len(self.statements) == 0:
             return []
 
@@ -232,20 +211,17 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input,
             statements=self.statements,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-                ]
+
+        return gen_and_extract(
+            self,
+            prompt,
+            arschema.Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda d: [
+                arschema.AnswerRelevancyVerdict(**item)
+                for item in d["verdicts"]
+            ],
+        )
 
     async def _a_generate_statements(
         self,
@@ -254,20 +230,13 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Statements)
-            self.evaluation_cost += cost
-            return res.statements
-        else:
-            try:
-                res: Statements = await self.model.a_generate(
-                    prompt, schema=Statements
-                )
-                return res.statements
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["statements"]
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            arschema.Statements,
+            extract_schema=lambda r: r.statements,
+            extract_json=lambda d: d["statements"],
+        )
 
     def _generate_statements(
         self,
@@ -276,18 +245,14 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Statements)
-            self.evaluation_cost += cost
-            return res.statements
-        else:
-            try:
-                res: Statements = self.model.generate(prompt, schema=Statements)
-                return res.statements
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["statements"]
+
+        return gen_and_extract(
+            self,
+            prompt,
+            arschema.Statements,
+            extract_schema=lambda r: r.statements,
+            extract_json=lambda d: d["statements"],
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -308,7 +273,7 @@ class AnswerRelevancyMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

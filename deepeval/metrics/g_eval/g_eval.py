@@ -172,7 +172,7 @@ class GEval(BaseMetric):
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
                     f"Rubric:\n{format_rubrics(self.rubric)}",
-                    (f"Score: {self.score}"),
+                    f"Score: {self.score}",
                     f"Reason: {self.reason}",
                 ],
             )
@@ -192,21 +192,18 @@ class GEval(BaseMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+        result, cost = await self.model.a_generate_with_schema(
+            prompt, schema=gschema.Steps
+        )
+        if self.evaluation_cost is not None:
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
+
+        if isinstance(result, gschema.Steps):
+            steps: List[str] = result.steps
         else:
-            try:
-                res: gschema.Steps = await self.model.a_generate(
-                    prompt, schema=gschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+            steps = trimAndLoadJson(result, self)["steps"]
+
+        return steps
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -218,21 +215,19 @@ class GEval(BaseMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+
+        result, cost = self.model.generate_with_schema(
+            prompt, schema=gschema.Steps
+        )
+        if self.evaluation_cost is not None:
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
+
+        if isinstance(result, gschema.Steps):
+            steps: List[str] = result.steps
         else:
-            try:
-                res: gschema.Steps = self.model.generate(
-                    prompt, schema=gschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+            steps = trimAndLoadJson(result, self)["steps"]
+
+        return steps
 
     async def _a_evaluate(
         self, test_case: LLMTestCase, _additional_context: Optional[str] = None
@@ -271,14 +266,14 @@ class GEval(BaseMetric):
 
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
-            res, cost = await self.model.a_generate_raw_response(
+            result, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
 
             if self.evaluation_cost is not None:
                 self.evaluation_cost += cost
 
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -287,7 +282,7 @@ class GEval(BaseMetric):
 
             try:
                 weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
@@ -295,21 +290,19 @@ class GEval(BaseMetric):
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
+            result, cost = await self.model.a_generate_with_schema(
+                prompt, schema=gschema.ReasonScore
+            )
+            if self.evaluation_cost is not None:
                 self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
+
+            if isinstance(result, gschema.ReasonScore):
+                score, reason = result.score, result.reason
             else:
-                try:
-                    res: gschema.ReasonScore = await self.model.a_generate(
-                        prompt, schema=gschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+                data = trimAndLoadJson(result, self)
+                score, reason = data["score"], data["reason"]
+
+            return score, reason
 
     def _evaluate(
         self, test_case: LLMTestCase, _additional_context: Optional[str] = None
@@ -348,11 +341,11 @@ class GEval(BaseMetric):
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
 
-            res, cost = self.model.generate_raw_response(
+            result, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -361,28 +354,26 @@ class GEval(BaseMetric):
 
             try:
                 weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
+            result, cost = self.model.generate_with_schema(
+                prompt, schema=gschema.ReasonScore
+            )
+            if self.evaluation_cost is not None:
                 self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
+
+            if isinstance(result, gschema.ReasonScore):
+                score, reason = result.score, result.reason
             else:
-                try:
-                    res: gschema.ReasonScore = self.model.generate(
-                        prompt, schema=gschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+                data = trimAndLoadJson(result, self)
+                score, reason = data["score"], data["reason"]
+
+            return score, reason
 
     def is_successful(self) -> bool:
         if self.error is not None:
