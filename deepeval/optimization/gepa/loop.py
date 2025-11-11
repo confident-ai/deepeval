@@ -8,12 +8,12 @@ from ..types import (
     Evaluator,
     GoldenLike,
     ModuleId,
-    Prompt,
     PromptRewriter,
     ScoreTable,
 )
 from ..policies.selection import select_candidate_pareto
 from .mutation import NoOpRewriter
+from deepeval.prompt.prompt import Prompt
 
 
 @dataclass
@@ -91,7 +91,7 @@ class GEPARunner:
             feedback_text = self.evaluator.minibatch_feedback(parent, j, batch)
 
             # 5. update prompt via rewriter
-            old = parent.prompts.get(j, Prompt(text=""))
+            old = parent.prompts.get(j, Prompt(text_template=""))
             new_prompt = self.rewriter.rewrite(
                 module_id=j, old_prompt=old, feedback_text=feedback_text
             )

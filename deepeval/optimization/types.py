@@ -1,9 +1,8 @@
 from __future__ import annotations
 import uuid
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import (
-    Any,
     Dict,
     List,
     Optional,
@@ -12,6 +11,8 @@ from typing import (
     TYPE_CHECKING,
     TypeVar,
 )
+
+from deepeval.prompt.prompt import Prompt
 
 
 CandidateId = str
@@ -43,19 +44,6 @@ class Candidate:
         return Candidate(
             id=str(uuid.uuid4()), parent=parent, prompts=dict(prompts)
         )
-
-
-@dataclass
-class Prompt:
-    """
-    text: used for single text prompts
-    messages: used for chat style prompts
-    model_settings: allows for extensibility without breaking interface
-    """
-
-    text: str
-    messages: Optional[List[Dict[str, str]]] = None
-    model_settings: Dict[str, Any] = field(default_factory=dict)
 
 
 class Evaluator(Protocol):
