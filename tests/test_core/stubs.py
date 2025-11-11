@@ -1,7 +1,7 @@
 import time
 import asyncio
 from types import SimpleNamespace
-from typing import List, Optional, Protocol, runtime_checkable
+from typing import Callable, List, Optional, Protocol, runtime_checkable
 
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
@@ -47,6 +47,79 @@ def make_trace_api_like(status):
 
 def make_span_api_like():
     return SimpleNamespace(status=None, error=None, metrics_data=[])
+
+
+##########
+# Models #
+##########
+
+
+class AlwaysJsonModel:
+    """
+    Test stub that always returns JSON text and NEVER accepts `schema=`,
+    so the simulator takes the JSON path (trimAndLoadJson).
+
+    Pass an `extractor` callable that takes the full prompt and returns the
+    JSON snippet to emit.
+
+    Usage:
+      - AlwaysJsonModel.balanced_json_after_anchor(anchor)
+
+    """
+
+    def __init__(self, extractor: Callable[[str], str]):
+        if not callable(extractor):
+            raise TypeError("extractor must be a callable(prompt) -> str JSON")
+        self._extractor = extractor
+
+    # no support for `schema=` kwarg so we always take JSON path
+    def generate(self, prompt: str) -> str:
+        return self._extractor(prompt)
+
+    async def a_generate(self, prompt: str) -> str:
+        return self.generate(prompt)
+
+    def get_model_name(self) -> str:
+        return "always-json-stub"
+
+    @staticmethod
+    def balanced_json_after_anchor(anchor_text: str) -> Callable[[str], str]:
+        """
+        Returns an extractor that finds the first balanced JSON object
+        after the given anchor string.
+        """
+
+        def extractor(prompt: str) -> str:
+            anchor_index = prompt.find(anchor_text)
+            if anchor_index == -1:
+                raise ValueError(f"Anchor '{anchor_text}' not found in prompt.")
+
+            json_start_index = prompt.find("{", anchor_index)
+            if json_start_index == -1:
+                raise ValueError(
+                    f"No opening '{{' found after anchor '{anchor_text}'."
+                )
+
+            brace_depth = 0
+            for char_index, character in enumerate(
+                prompt[json_start_index:], start=json_start_index
+            ):
+                if character == "{":
+                    brace_depth += 1
+                elif character == "}":
+                    brace_depth -= 1
+                    if brace_depth == 0:
+                        json_end_index = char_index + 1
+                        return prompt[json_start_index:json_end_index]
+
+            raise ValueError(f"Unbalanced braces after anchor '{anchor_text}'.")
+
+        return extractor
+
+
+###########
+# Metrics #
+###########
 
 
 class _DummyMetric(BaseMetric):
@@ -183,6 +256,11 @@ class _PerAttemptTimeoutMetric(BaseMetric):
         return False
 
 
+#########
+# Spans #
+#########
+
+
 class _FakeSpan:
     def __init__(self, *, input=None, output=None, metrics=None, children=None):
         self.input = input
@@ -196,6 +274,11 @@ class _FakeSpan:
         self.children = children or []
         self.status = TraceSpanStatus.SUCCESS
         self.error = None
+
+
+##########
+# Traces #
+##########
 
 
 class _FakeTrace:
