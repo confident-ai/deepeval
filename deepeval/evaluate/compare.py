@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Callable, Any
+from typing import Optional, List, Dict, Callable
 import asyncio
 import time
 from rich.progress import (
@@ -13,7 +13,7 @@ import json
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig, ErrorConfig
-from deepeval.test_case import ArenaTestCase
+from deepeval.test_case import ArenaTestCase, Contestant
 from deepeval.test_case.api import create_api_test_case
 from deepeval.metrics import ArenaGEval
 from deepeval.utils import (
@@ -44,7 +44,6 @@ def compare(
     test_cases: List[ArenaTestCase],
     metric: ArenaGEval,
     name: str = "compare()",
-    hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
     # Configs
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -52,17 +51,17 @@ def compare(
 ) -> Dict[str, int]:
 
     # Prepare test run map
-    unique_contestants = set(
+    unique_contestant_names = set(
         [
-            contestant
+            contestant.name
             for test_case in test_cases
-            for contestant in test_case.contestants.keys()
+            for contestant in test_case.contestants
         ]
     )
     test_run_map: Dict[str, TestRun] = {}
-    for contestant in unique_contestants:
+    for contestant_name in unique_contestant_names:
         test_run = TestRun(
-            identifier=contestant,
+            identifier=contestant_name,
             test_passed=0,
             test_failed=0,
         )
@@ -75,7 +74,7 @@ def compare(
                 errors=0,
             )
         ]
-        test_run_map[contestant] = test_run
+        test_run_map[contestant_name] = test_run
 
     start_time = time.time()
     with capture_evaluation_run("compare()"):
@@ -113,10 +112,7 @@ def compare(
         if winner:
             winner_counts[winner] += 1
 
-    process_test_runs(
-        test_run_map=test_run_map,
-        hyperparameters=hyperparameters,
-    )
+    process_test_runs(test_run_map=test_run_map, test_cases=test_cases)
     wrap_up_experiment(
         name=name,
         test_runs=list(test_run_map.values()),
@@ -416,15 +412,15 @@ def update_test_run_map(
     winner: str,
     run_duration: float,
 ):
-    for contestant, contestant_test_case in test_case.contestants.items():
-        test_run = test_run_map.get(contestant)
+    for contestant in test_case.contestants:
+        test_run = test_run_map.get(contestant.name)
 
         # update test cases in test run
         api_test_case: LLMApiTestCase = create_api_test_case(
-            test_case=contestant_test_case, index=index
+            test_case=contestant.test_case, index=index
         )
         metric_data: MetricData = create_arena_metric_data(
-            metric_copy, contestant
+            metric_copy, contestant.name
         )
         api_test_case.update_metric_data(metric_data)
         api_test_case.update_run_duration(run_duration)
@@ -458,17 +454,23 @@ def update_test_run_map(
 
 def process_test_runs(
     test_run_map: Dict[str, TestRun],
-    hyperparameters: Optional[Dict[str, Dict[str, Any]]] = None,
+    test_cases: List[ArenaTestCase],
 ):
-    # process hyperparameters
-    if hyperparameters:
-        for contestant, contestant_hyperparameters in hyperparameters.items():
-            test_run = test_run_map.get(contestant)
-            if not test_run:
-                continue
-            test_run.hyperparameters = process_hyperparameters(
-                contestant_hyperparameters
-            )
+    hyperparameters_map = {
+        contestant_name: {}
+        for contestant_name in test_run_map.keys()
+    }
+
+    for test_case in test_cases:
+        for contestant in test_case.contestants:
+            if contestant.hyperparameters:
+                hyperparameters_map[contestant.name].update(contestant.hyperparameters)
+    
+    for contestant_name, hyperparameters in hyperparameters_map.items():
+        test_run = test_run_map.get(contestant_name)
+        test_run.hyperparameters = process_hyperparameters(
+            hyperparameters
+        )
 
 
 def wrap_up_experiment(
