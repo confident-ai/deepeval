@@ -46,7 +46,11 @@ class ArenaGEval(BaseArenaMetric):
         self.criteria = criteria
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self.evaluation_steps = (
+            evaluation_steps
+            if evaluation_steps and len(evaluation_steps) > 0
+            else None
+        )
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self._include_g_eval_suffix = _include_g_eval_suffix

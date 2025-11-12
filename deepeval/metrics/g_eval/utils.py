@@ -77,7 +77,7 @@ def validate_criteria_and_evaluation_steps(
 def validate_and_sort_rubrics(
     rubrics: Optional[List[Rubric]] = None,
 ) -> Optional[List[Rubric]]:
-    if rubrics is None:
+    if rubrics is None or len(rubrics) == 0:
         return None
 
     # Sort rubrics by start of range

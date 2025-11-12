@@ -1,7 +1,6 @@
 from pydantic import BaseModel
-from google.genai import types
+from google.genai import types, Client
 from typing import Optional, Dict
-from google import genai
 
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -9,7 +8,8 @@ from deepeval.models.retry_policy import (
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-
+from google.oauth2 import service_account
+import json
 
 default_gemini_model = "gemini-1.5-pro"
 
@@ -52,6 +52,7 @@ class GeminiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
+        service_account_key: Optional[Dict[str, str]] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -75,6 +76,17 @@ class GeminiModel(DeepEvalBaseLLM):
         self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI
         )
+        if service_account_key:
+            self.service_account_key = service_account_key
+        else:
+            service_account_key_data = KEY_FILE_HANDLER.fetch_data(
+                ModelKeyValues.GOOGLE_SERVICE_ACCOUNT_KEY
+            )
+            if service_account_key_data is None:
+                self.service_account_key = None
+            elif isinstance(service_account_key_data, str):
+                self.service_account_key = json.loads(service_account_key_data)
+
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -117,10 +129,20 @@ class GeminiModel(DeepEvalBaseLLM):
                 )
 
             # Create client for Vertex AI
-            self.client = genai.Client(
+            self.client = Client(
                 vertexai=True,
                 project=self.project,
                 location=self.location,
+                credentials=(
+                    service_account.Credentials.from_service_account_info(
+                        self.service_account_key,
+                        scopes=[
+                            "https://www.googleapis.com/auth/cloud-platform"
+                        ],
+                    )
+                    if self.service_account_key
+                    else None
+                ),
                 **self.kwargs,
             )
         else:
@@ -130,7 +152,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     "or set it in your DeepEval configuration."
                 )
             # Create client for Gemini API
-            self.client = genai.Client(api_key=self.api_key, **self.kwargs)
+            self.client = Client(api_key=self.api_key, **self.kwargs)
 
         # Configure default model generation settings
         self.model_safety_settings = [

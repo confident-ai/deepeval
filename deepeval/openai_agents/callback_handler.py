@@ -1,13 +1,21 @@
+from time import perf_counter
+
 from deepeval.tracing.tracing import (
     Observer,
     current_span_context,
     trace_manager,
 )
-from deepeval.openai_agents.extractors import *
+from deepeval.openai_agents.extractors import (
+    update_span_properties,
+    update_trace_properties_from_span_data,
+)
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.utils import make_json_serializable
-from time import perf_counter
-from deepeval.tracing.types import TraceSpanStatus
+from deepeval.tracing.types import (
+    BaseSpan,
+    LlmSpan,
+    TraceSpanStatus,
+)
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -18,6 +26,7 @@ try:
         GenerationSpanData,
         GuardrailSpanData,
         HandoffSpanData,
+        MCPListToolsSpanData,
         ResponseSpanData,
         SpanData,
     )

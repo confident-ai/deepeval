@@ -9,6 +9,8 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
+    validate_and_sort_rubrics,
+    validate_criteria_and_evaluation_steps,
 )
 from deepeval.test_case import (
     TurnParams,
@@ -63,27 +65,16 @@ class ConversationalGEval(BaseConversationalMetric):
 
         self.evaluation_params = evaluation_params
 
-        # Check if both criteria and evaluation_steps are not None at the same time
-        if criteria is None and evaluation_steps is None:
-            raise ValueError(
-                "Either 'criteria' or 'evaluation_steps' must be provided."
-            )
-
-        # Check if criteria is provided, it cannot be an empty string
-        if criteria is not None and not criteria.strip():
-            raise ValueError("Criteria provided cannot be an empty string.")
-
-        # Check if evaluation_steps is provided, it cannot be an empty list
-        if evaluation_steps is not None and len(evaluation_steps) == 0:
-            raise ValueError(
-                "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
-            )
-
+        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.criteria = criteria
-        self.rubric = rubric
+        self.rubric = validate_and_sort_rubrics(rubric)
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self.evaluation_steps = (
+            evaluation_steps
+            if evaluation_steps and len(evaluation_steps) > 0
+            else None
+        )
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
