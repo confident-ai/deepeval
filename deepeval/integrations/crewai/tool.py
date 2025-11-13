@@ -1,18 +1,33 @@
 import functools
 from typing import Callable
-from crewai.tools import tool as crewai_tool
 
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import ToolSpan
+from .subs import try_import_tool_decorator
 
 
-def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
+def deepeval_tool(
+    *args, metric=None, metric_collection=None, **kwargs
+) -> Callable:
     """
     Simple wrapper around crewai.tools.tool that:
       - prints the original function's input and output
       - accepts additional parameters: metric and metric_collection (unused, for compatibility)
       - remains backward compatible with CrewAI's decorator usage patterns
     """
+    crewai_tool = try_import_tool_decorator()
+    if crewai_tool is None:
+        # return a no-op decorator that preserves function behavior without CrewAI
+        # this is just to prevent our decorator from breaking things completely
+        def _noop(f):
+            return f
+
+        crewai_decorator = _noop
+    else:
+
+        def crewai_decorator(name, **kw):
+            return crewai_tool(name, **kw)
+
     crewai_kwargs = kwargs
 
     # Case 1: @tool (function passed directly)
@@ -29,7 +44,7 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
             result = f(*f_args, **f_kwargs)
             return result
 
-        return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+        return crewai_decorator(tool_name, **crewai_kwargs)(wrapped)
 
     # Case 2: @tool("name")
     if len(args) == 1 and isinstance(args[0], str):
@@ -45,7 +60,7 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
                 result = f(*f_args, **f_kwargs)
                 return result
 
-            return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            return crewai_decorator(tool_name, **crewai_kwargs)(wrapped)
 
         return _decorator
 
@@ -64,7 +79,7 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
                 result = f(*f_args, **f_kwargs)
                 return result
 
-            return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            return crewai_decorator(tool_name, **crewai_kwargs)(wrapped)
 
         return _decorator
 

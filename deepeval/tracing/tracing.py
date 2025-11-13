@@ -1,4 +1,15 @@
 import weakref
+import contextvars
+import logging
+import threading
+import functools
+import inspect
+import asyncio
+import random
+import atexit
+import queue
+import uuid
+
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -11,14 +22,6 @@ from typing import (
     Union,
 )
 from time import perf_counter
-import threading
-import functools
-import inspect
-import asyncio
-import random
-import atexit
-import queue
-import uuid
 from anthropic import Anthropic
 from openai import OpenAI
 from rich.console import Console
@@ -65,21 +68,80 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
-from deepeval.utils import dataclass_to_dict
+from deepeval.utils import dataclass_to_dict, should_async_debug
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 
+from deepeval.tracing._debug import print_dbg_tag, _task_id, _ctx_id
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
+logger = logging.getLogger(__name__)
+
+
+class _SpanExecutor:
+    """
+    Serialize all span mutations onto a single worker thread.
+
+    Why this exists:
+      - ContextVars are local to a single thread (or task ) and CrewAI events may fire on different threads.
+        Running span operations via one worker ensures ctx.run(fn) applies the right parent/trace
+        bindings regardless of where the event originated.
+      - The span and trace stores aren’t thread safe. A single writer avoids lock threadlocks and
+        race conditions during Observer.__enter__/__exit__ and trace updates.
+      - Keeps event listeners responsive by offloading span work, preserves submit order
+        (FIFO) and isolates exceptions so one bad operation doesn’t poison the event thread.
+    """
+
+    def __init__(self, name: str = "DeepEvalSpanWorker", daemon: bool = True):
+        self._queue = queue.Queue()
+        self._thread = threading.Thread(
+            target=self._run, name=name, daemon=daemon
+        )
+        self._thread.start()
+
+    def submit(self, fn, ctx=None):
+        self._queue.put((fn, ctx or contextvars.copy_context()))
+
+    def _run(self):
+        while True:
+            fn, ctx = self._queue.get()
+            try:
+                ctx.run(fn)
+            except Exception as e:
+                if should_async_debug():
+                    extra = {
+                        "ctx_id": id(ctx),
+                        "fn": getattr(fn, "__name__", type(fn).__name__),
+                    }
+                    if get_settings().DEEPEVAL_LOG_STACK_TRACES:
+                        logger.debug(
+                            "Span op raised in _SpanExecutor",
+                            exc_info=True,
+                            extra=extra,
+                        )
+                    else:
+                        logger.debug(
+                            "Span op raised in _SpanExecutor: %r",
+                            e,
+                            extra=extra,
+                        )
+            finally:
+                self._queue.task_done()
 
 
 class TraceManager:
     def __init__(self):
+        # The span worker ensures that __enter__, __exit__ and span mutations run
+        # on a single thread with a stable Context.
+        self._span_exec = _SpanExecutor()
+        self._lock = threading.RLock()
+
+        # Initialize spans and traces
         self.traces: List[Trace] = []
         self.active_traces: Dict[str, Trace] = {}  # Map of trace_uuid to Trace
         self.active_spans: Dict[str, BaseSpan] = (
@@ -185,6 +247,9 @@ class TraceManager:
         """Start a new trace and set it as the current trace."""
         if trace_uuid is None:
             trace_uuid = str(uuid.uuid4())
+        if trace_testing_manager.is_active():
+            trace_testing_manager.clear_payload()
+
         new_trace = Trace(
             uuid=trace_uuid,
             root_spans=[],
@@ -213,59 +278,83 @@ class TraceManager:
                 pass
         return new_trace
 
+    def schedule_end_trace(self, trace_uuid: str, ctx=None):
+        """
+        Enqueue a trace finalization on the span worker.
+
+        You rarely need to pass `ctx`. Provide it only if the
+        scheduled callable needs to read or write contextvars and you
+        want to capture a specific context. `end_trace()` itself does
+        not use contextvars, so callers can omit `ctx` in normal
+        usage.
+        """
+        self._span_exec.submit(
+            lambda: self.end_trace(trace_uuid),
+            ctx or contextvars.copy_context(),
+        )
+
     def end_trace(self, trace_uuid: str):
-        """End a specific trace by its UUID."""
+        """
+        End a specific trace by its UUID.
 
-        if trace_uuid in self.active_traces:
-            trace = self.active_traces[trace_uuid]
-            trace.end_time = (
-                perf_counter() if trace.end_time is None else trace.end_time
+        This function is thread safe and idempotent.
+
+        """
+        with self._lock:
+            trace = self.active_traces.pop(trace_uuid, None)
+
+        if trace is None:
+            if should_async_debug():
+                print_dbg_tag("TEST.EndTraceSkip", extra=f"uuid={trace_uuid}")
+            return
+
+        trace.end_time = trace.end_time or perf_counter()
+
+        # Default to SUCCESS for completed traces
+        # This assumes that if a trace completes, it was successful overall
+        # Users can manually set the status to ERROR if needed
+        if trace.status == TraceSpanStatus.IN_PROGRESS:
+            trace.status = TraceSpanStatus.SUCCESS
+
+        if trace_testing_manager.test_name:
+            # Trace testing mode is enabled
+            # Instead posting the trace to the queue, it will be stored in this global variable
+            body = self.create_trace_api(trace).model_dump(
+                by_alias=True, exclude_none=True
             )
-
-            # Default to SUCCESS for completed traces
-            # This assumes that if a trace completes, it was successful overall
-            # Users can manually set the status to ERROR if needed
-            if trace.status == TraceSpanStatus.IN_PROGRESS:
-                trace.status = TraceSpanStatus.SUCCESS
-
-            if trace_testing_manager.test_name:
-                # Trace testing mode is enabled
-                # Instead posting the trace to the queue, it will be stored in this global variable
-                body = self.create_trace_api(trace).model_dump(
-                    by_alias=True, exclude_none=True
+            trace_testing_manager.set_test_dict(make_json_serializable(body))
+            if should_async_debug():
+                print_dbg_tag(
+                    "TEST.EndTracePublished", extra=f"uuid={trace.uuid}"
                 )
-                trace_testing_manager.test_dict = make_json_serializable(body)
-            #  Post the trace to the server before removing it
-            elif not self.evaluating:
-                self.post_trace(trace)
-            else:
-                if self.evaluation_loop:
-                    if self.integration_traces_to_evaluate:
-                        pass
-                    elif self.test_case_metrics:
-                        pass
-                    elif trace_uuid in self.traces_to_evaluate_order:
-                        self.traces_to_evaluate.append(trace)
-                        self.traces_to_evaluate.sort(
-                            key=lambda t: self.traces_to_evaluate_order.index(
-                                t.uuid
-                            )
+        #  Post the trace to the server before removing it
+        elif not self.evaluating:
+            self.post_trace(trace)
+        else:
+            if self.evaluation_loop:
+                if self.integration_traces_to_evaluate:
+                    pass
+                elif self.test_case_metrics:
+                    pass
+                elif trace_uuid in self.traces_to_evaluate_order:
+                    self.traces_to_evaluate.append(trace)
+                    self.traces_to_evaluate.sort(
+                        key=lambda t: self.traces_to_evaluate_order.index(
+                            t.uuid
                         )
-                else:
-                    # print(f"Ending trace: {trace.root_spans}")
-                    self.environment = Environment.TESTING
-                    if (
-                        trace.root_spans
-                        and len(trace.root_spans) > 0
-                        and trace.root_spans[0].children
-                        and len(trace.root_spans[0].children) > 0
-                    ):
-                        trace.root_spans = [trace.root_spans[0].children[0]]
-                    for root_span in trace.root_spans:
-                        root_span.parent_uuid = None
-
-            # Remove from active traces
-            del self.active_traces[trace_uuid]
+                    )
+            else:
+                # print(f"Ending trace: {trace.root_spans}")
+                self.environment = Environment.TESTING
+                if (
+                    trace.root_spans
+                    and len(trace.root_spans) > 0
+                    and trace.root_spans[0].children
+                    and len(trace.root_spans[0].children) > 0
+                ):
+                    trace.root_spans = [trace.root_spans[0].children[0]]
+                for root_span in trace.root_spans:
+                    root_span.parent_uuid = None
 
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
@@ -329,6 +418,10 @@ class TraceManager:
         self.traces = []
         self.active_traces = {}
         self.active_spans = {}
+
+    # public hook for integrations to schedule span ops
+    def run_span_op(self, fn, ctx=None):
+        self._span_exec.submit(fn, ctx)
 
     def get_trace_dict(self, trace: Trace) -> Dict:
         """Convert a trace to a dictionary."""
@@ -857,6 +950,16 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
+        print_dbg_tag(
+            "ENTER",
+            extra=(
+                f"thr={threading.current_thread().name} "
+                f"task={_task_id()} "
+                f"ctx={_ctx_id()} "
+                f"uuid={self.uuid} type={self.span_type} name={self.name} parent={self.parent_uuid}"
+            ),
+        )
+
         if (
             parent_span
             and parent_span.progress is not None
@@ -892,6 +995,17 @@ class Observer:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit the tracer context, updating the span status and handling trace completion."""
+
+        print_dbg_tag(
+            "EXIT.begin",
+            extra=(
+                f"thr={threading.current_thread().name} "
+                f"task={_task_id()} "
+                f"ctx={_ctx_id()} "
+                f"uuid={self.uuid} "
+                f"ctxspan={getattr(current_span_context.get(), 'uuid', None)}"
+            ),
+        )
 
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
@@ -959,20 +1073,21 @@ class Observer:
             if current_span.status == TraceSpanStatus.ERRORED:
                 current_trace.status = TraceSpanStatus.ERRORED
             if current_trace and current_trace.uuid == current_span.trace_uuid:
-                other_active_spans = [
-                    span
-                    for span in trace_manager.active_spans.values()
-                    if span.trace_uuid == current_span.trace_uuid
-                ]
+                should_finalize = current_span.parent_uuid is None and not any(
+                    s.trace_uuid == current_span.trace_uuid
+                    for s in trace_manager.active_spans.values()
+                )
 
-                if not other_active_spans:
-                    trace_manager.end_trace(current_span.trace_uuid)
+                if should_finalize:
+                    trace_manager.schedule_end_trace(current_span.trace_uuid)
                     current_trace_context.set(None)
 
             current_span_context.set(None)
 
         if self._progress is not None and self._pbar_callback_id is not None:
             self._progress.update(self._pbar_callback_id, advance=1)
+
+        print_dbg_tag("EXIT.done", extra=f"uuid={self.uuid}")
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""

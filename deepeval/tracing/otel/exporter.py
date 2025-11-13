@@ -1,3 +1,6 @@
+import json
+import typing
+
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.sdk.trace.export import (
     SpanExportResult,
@@ -7,8 +10,7 @@ from opentelemetry.sdk.trace.export import (
 from pydantic import ValidationError, BaseModel
 from typing import Any, Dict, List, Optional
 from collections import defaultdict
-import typing
-import json
+
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.telemetry import capture_tracing_integration
@@ -148,7 +150,7 @@ class ConfidentSpanExporter(SpanExporter):
         else:
             for trace_key in active_traces_keys:
                 set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
-                trace_manager.end_trace(trace_key)
+                trace_manager.schedule_end_trace(trace_key)
             trace_manager.clear_traces()
             return SpanExportResult.SUCCESS
 

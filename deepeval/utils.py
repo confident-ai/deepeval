@@ -260,6 +260,10 @@ def should_use_cache() -> bool:
     return bool(get_settings().ENABLE_DEEPEVAL_CACHE)
 
 
+def should_async_debug() -> bool:
+    return get_settings().DEEPEVAL_DEBUG_ASYNC
+
+
 def set_should_use_cache(yes: bool):
     s = get_settings()
     with s.edit(persist=False):

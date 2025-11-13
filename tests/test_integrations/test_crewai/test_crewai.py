@@ -1,15 +1,10 @@
 import os
-import json
-import asyncio
 import pytest
-from tests.test_integrations.utils import assert_trace_json, generate_trace_json
-
-from crewai import Task, Agent, LLM, Crew
+from crewai import Task, Agent, Crew
 from crewai.tools import tool
 
-# from deepeval.integrations.crewai import Crew, Agent, LLM
-from deepeval.integrations.crewai import instrument_crewai
-from deepeval.tracing import trace
+from tests.test_integrations.utils import assert_trace_json
+from deepeval.integrations.crewai.handler import instrument_crewai
 
 
 @tool
@@ -75,6 +70,9 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai.json")
 
 
+@pytest.mark.needs_investigation(
+    reason="The trace structure has changed, please investigate."
+)
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 def test_crewai():

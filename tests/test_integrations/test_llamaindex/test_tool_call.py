@@ -1,8 +1,9 @@
 import os
+
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
-from tests.test_integrations.utils import generate_trace_json, assert_trace_json
+from tests.test_integrations.utils import assert_trace_json
 
 
 def get_weather(location: str) -> str:
@@ -35,7 +36,6 @@ async def run_agent():
     await agent.run("what is the weather in sf")
 
 
-# @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 async def test_execute_agent():
     await run_agent()

@@ -1,4 +1,15 @@
+import importlib
 import pytest
+
+# Skip the whole package if CrewAI or its dependencies fail import
+try:
+    importlib.import_module("crewai")
+    importlib.import_module("chromadb")  # may fail due to sqlite requirement
+except Exception as e:
+    pytest.skip(
+        f"Skipping CrewAI integration tests: {e}", allow_module_level=True
+    )
+
 from deepeval.integrations.crewai import instrument_crewai
 
 

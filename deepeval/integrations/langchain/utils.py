@@ -1,5 +1,22 @@
-from typing import Any, List, Dict, Optional
+import uuid
+
+from typing import Any, List, Dict, Optional, Union, Literal, Callable
 from langchain_core.outputs import ChatGeneration
+from time import perf_counter
+from rich.progress import Progress
+
+from deepeval.metrics import BaseMetric
+from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.types import (
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    RetrieverSpan,
+    SpanType,
+    ToolSpan,
+    TraceSpanStatus,
+)
 
 
 def parse_prompts_to_messages(
@@ -110,27 +127,6 @@ def safe_extract_model_name(
             return ls_model_name
 
     return None
-
-
-from typing import Any, List, Dict, Optional, Union, Literal, Callable
-from langchain_core.outputs import ChatGeneration
-from time import perf_counter
-import uuid
-from rich.progress import Progress
-from deepeval.tracing.tracing import Observer
-
-from deepeval.metrics import BaseMetric
-from deepeval.tracing.context import current_span_context, current_trace_context
-from deepeval.tracing.tracing import trace_manager
-from deepeval.tracing.types import (
-    AgentSpan,
-    BaseSpan,
-    LlmSpan,
-    RetrieverSpan,
-    SpanType,
-    ToolSpan,
-    TraceSpanStatus,
-)
 
 
 def enter_current_context(
@@ -305,7 +301,7 @@ def exit_current_context(
                 if span.trace_uuid == current_span.trace_uuid
             ]
             if not other_active_spans:
-                trace_manager.end_trace(current_span.trace_uuid)
+                trace_manager.schedule_end_trace(current_span.trace_uuid)
                 current_trace_context.set(None)
 
         current_span_context.set(None)
