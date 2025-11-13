@@ -11,33 +11,50 @@ from deepeval.test_case import ToolCall
 
 @dataclass
 class MLLMImage:
-    url: str
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
     local: Optional[bool] = None
-    filename: Optional[str] = field(default=None, init=False, repr=False)
-    mimeType: Optional[str] = field(default=None, init=False, repr=False)
-    dataBase64: Optional[str] = field(default=None, init=False, repr=False)
+    filename: Optional[str] = None
 
     def __post_init__(self):
-        is_local = self.is_local_path(self.url)
-        if self.local is not None:
-            assert self.local == is_local, "Local path mismatch"
-        else:
-            self.local = is_local
 
-        # compute filename, mime_type, and Base64 data
-        if self.local:
-            path = self.process_url(self.url)
-            self.filename = os.path.basename(path)
-            self.mimeType = (
-                mimetypes.guess_type(path)[0] or "application/octet-stream"
+        if self.url and self.dataBase64:
+            raise ValueError(
+                "You cannot provide both 'url' and 'dataBase64' at the same time when creating an MLLMImage."
             )
-            with open(path, "rb") as f:
-                raw = f.read()
-            self.dataBase64 = base64.b64encode(raw).decode("ascii")
+
+        if not self.url and not self.dataBase64:
+            raise ValueError(
+                "You must provide either a 'url' or both 'dataBase64' and 'mimeType' to create an MLLMImage."
+            )
+
+        if self.dataBase64 is not None:
+            if self.mimeType is None:
+                raise ValueError(
+                    "mimeType must be provided when initializing from Base64 data."
+                )
         else:
-            self.filename = None
-            self.mimeType = None
-            self.dataBase64 = None
+            is_local = self.is_local_path(self.url)
+            if self.local is not None:
+                assert self.local == is_local, "Local path mismatch"
+            else:
+                self.local = is_local
+
+            # compute filename, mime_type, and Base64 data
+            if self.local:
+                path = self.process_url(self.url)
+                self.filename = os.path.basename(path)
+                self.mimeType = (
+                    mimetypes.guess_type(path)[0] or "application/octet-stream"
+                )
+                with open(path, "rb") as f:
+                    raw = f.read()
+                self.dataBase64 = base64.b64encode(raw).decode("ascii")
+            else:
+                self.filename = None
+                self.mimeType = None
+                self.dataBase64 = None
 
     @staticmethod
     def process_url(url: str) -> str:
@@ -68,6 +85,12 @@ class MLLMImage:
             path = unquote(raw_path)
             return os.path.exists(path)
         return False
+
+    def as_data_uri(self) -> Optional[str]:
+        """Return the image as a data URI string, if Base64 data is available."""
+        if not self.dataBase64 or not self.mimeType:
+            return None
+        return f"data:{self.mimeType};base64,{self.dataBase64}"
 
 
 class MLLMTestCaseParams(Enum):
