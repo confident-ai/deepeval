@@ -89,10 +89,10 @@ class FormattedArenaTestCase:
 def format_arena_test_case(
     evaluation_params: List[LLMTestCaseParams], test_case: ArenaTestCase
 ) -> Tuple[FormattedArenaTestCase, Dict[str, str]]:
-    case = next(iter(test_case.contestants.values()))
+    case = next(iter([case.test_case for case in test_case.contestants]))
 
     # Create dummy name mapping
-    real_names = list(test_case.contestants.keys())
+    real_names = list([case.name for case in test_case.contestants])
     available_fake_names = FAKE_NAMES.copy()
     random.shuffle(available_fake_names)
 
@@ -119,10 +119,10 @@ def format_arena_test_case(
             else None
         ),
         contestants={
-            contestant: construct_formatted_llm_test_case(
-                evaluation_params, test_case
+            contestant.name: construct_formatted_llm_test_case(
+                evaluation_params, contestant.test_case
             )
-            for contestant, test_case in test_case.contestants.items()
+            for contestant in test_case.contestants
         },
         dummy_to_real_names=dummy_to_real_names,
     )

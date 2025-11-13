@@ -27,20 +27,29 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
 ```python
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
 from deepeval.metrics import ArenaGEval
+from deepeval import compare
 
 a_test_case = ArenaTestCase(
-    contestants={
-        "GPT-4": LLMTestCase(
-            input="What is the capital of France?",
-            actual_output="Paris",
+    contestants=[
+        Contestant(
+            name="GPT-4",
+            hyperparameters={"model": "gpt-4"},
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="Paris",
+            ),
         ),
-        "Claude-4": LLMTestCase(
-            input="What is the capital of France?",
-            actual_output="Paris is the capital of France.",
-        ),
-    },
+        Contestant(
+            name="Claude-4",
+            hyperparameters={"model": "claude-4"},
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="Paris is the capital of France.",
+            ),
+        )
+    ]
 )
 metric = ArenaGEval(
     name="Friendly",
@@ -51,9 +60,7 @@ metric = ArenaGEval(
     ],
 )
 
-
-metric.measure(a_test_case)
-print(metric.winner, metric.reason)
+compare(test_cases=[a_test_case], metric=metric)
 ```
 
 There are **THREE** mandatory and **FOUR** optional parameters required when instantiating an `ArenaGEval` class:
@@ -68,6 +75,21 @@ There are **THREE** mandatory and **FOUR** optional parameters required when ins
 
 :::danger
 For accurate and valid results, only evaluation parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
+:::
+
+### As a standalone
+
+You can also run the `ArenaGEval` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(a_test_case)
+print(metric.winner, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, computation) the `compare()` function offers.
 :::
 
 ## How Is It Calculated?

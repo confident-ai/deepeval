@@ -206,6 +206,46 @@ for golden in dataset.evals_iterator():
 
 </details>
 
+### Arena
+
+You can also evaluate prompts side-by-side using `ArenaGEval` to pick the best-performing prompt for your given criteria. Simply include the prompts in the `hyperparameters` field of each `Contestant`.
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
+from deepeval.metrics import ArenaGEval
+from deepeval.prompt import Prompt
+from deepeval import compare
+
+prompt_1 = Prompt(alias="First Prompt", text_template="You are a helpful assistant.")
+prompt_2 = Prompt(alias="Second Prompt", text_template="You are a helpful assistant.")
+
+test_case = ArenaTestCase(
+    contestants=[
+        Contestant(
+            name="Version 1",
+            hyperparameters={"prompt": prompt_1},
+            test_case=LLMTestCase(input='Who wrote the novel "1984"?', actual_output="George Orwell"),
+        ),
+        Contestant(
+            name="Version 2",
+            hyperparameters={"prompt": prompt_2},
+            test_case=LLMTestCase(input='Who wrote the novel "1984"?', actual_output='"1984" was written by George Orwell.'),
+        ),
+    ]
+)
+
+arena_geval = ArenaGEval(
+    name="Friendly",
+    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ]
+)
+
+compare(test_cases=[test_case], metric=arena_geval)
+```
+
 ## Creating Prompts
 
 ### Loading Prompts
