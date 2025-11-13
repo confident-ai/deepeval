@@ -104,8 +104,10 @@ def test_compare_with_hyperparameters():
             Contestant(
                 name="Claude-4",
                 hyperparameters={"model": "claude-4"},
-                input="What is the capital of France?",
-                actual_output="Paris is the capital of France.",
+                test_case=LLMTestCase(
+                    input="What is the capital of France?",
+                    actual_output="Paris is the capital of France.",
+                ),
             ),
         ],
     )
