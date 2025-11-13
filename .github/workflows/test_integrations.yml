@@ -167,7 +167,7 @@ jobs:
 
       - name: Run integration tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
-        run: poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys --ignore=tests/test_integrations/test_crewai tests/test_integrations/
+        run: poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys --ignore=tests/test_integrations/test_crewai/ tests/test_integrations/
 
       - name: Run integration tests (no secrets)
         if: ${{ env.OPENAI_API_KEY == '' || env.CONFIDENT_API_KEY == '' || env.ANTHROPIC_API_KEY == '' }}
