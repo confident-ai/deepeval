@@ -161,34 +161,42 @@ task_completion_metric = ArenaGEval(model=model)
 
 <TimelineItem title="Create an arena test case">
 
-Create an `ArenaTestCase` by passing a dictionary of contestants with version names as keys and their corresponding `LLMTestCase` as values.
+Create an `ArenaTestCase` by passing a list of contestants.
 
 ```python title="main.py"
-from deepeval.test_case import ArenaTestCase, LLMTestCase
+from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
 
-test_case = ArenaTestCase(
-    contestants={
-        "Version 1": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="George Orwell",
-        ),
-        "Version 2": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output='"1984" was written by George Orwell.',
-        ),
-        "Version 3": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="That dystopian masterpiece was penned by George Orwell 📚",
-        ),
-        "Version 4": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="George Orwell is the brilliant mind behind the novel '1984'.",
-        ),
-    },
+contestant_1 = Contestant(
+    name="Version 1",
+    hyperparameters={"model": "gpt-3.5-turbo"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris",
+    ),
 )
+
+contestant_2 = Contestant(
+    name="Version 2",
+    hyperparameters={"model": "gpt-4o"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris is the capital of France.",
+    ),
+)
+
+contestant_3 = Contestant(
+    name="Version 3",
+    hyperparameters={"model": "gpt-4.1"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="That dystopian masterpiece was penned by George Orwell 📚",
+    ),
+)
+
+test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
-You can learn more about `LLMTestCase` [here](https://deepeval.com/docs/evaluation-test-cases).
+You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/evaluation-arena-test-cases).
 
 </TimelineItem>
 

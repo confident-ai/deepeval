@@ -211,15 +211,26 @@ for golden in dataset.evals_iterator():
 You can also evaluate prompts side-by-side using `ArenaGEval` to pick the best-performing prompt for your given criteria. Instead of supplying your `hyperparameters` dictionary directly to `compare`, you can pass in a dictionary mapping the names of your contestants to their corresponding hyperparameter dictionaries.
 
 ```python title="main.py" showLineNumbers={true}
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
 from deepeval.metrics import ArenaGEval
 from deepeval.prompt import Prompt
 from deepeval import compare
 
+prompt_1 = Prompt(alias="First Prompt", text_template="You are a helpful assistant.")
+prompt_2 = Prompt(alias="Second Prompt", text_template="You are a helpful assistant.")
+
 test_case = ArenaTestCase(
     contestants={
-        "Version 1": LLMTestCase(input='Who wrote the novel "1984"?', actual_output="George Orwell"),
-        "Version 2": LLMTestCase(input='Who wrote the novel "1984"?', actual_output='"1984" was written by George Orwell.'),
+        "Version 1": Contestant(
+            name="Version 1",
+            hyperparameters={"prompt": prompt_1},
+            test_case=LLMTestCase(input='Who wrote the novel "1984"?', actual_output="George Orwell"),
+        ),
+        "Version 2": Contestant(
+            name="Version 2",
+            hyperparameters={"prompt": prompt_2},
+            test_case=LLMTestCase(input='Who wrote the novel "1984"?', actual_output='"1984" was written by George Orwell.'),
+        ),
     },
 )
 
@@ -232,9 +243,7 @@ arena_geval = ArenaGEval(
     ]
 )
 
-prompt_1 = Prompt(alias="First Prompt", text_template="You are a helpful assistant.")
-prompt_2 = Prompt(alias="Second Prompt", text_template="You are a helpful assistant.")
-compare(test_cases=[test_case], metric=arena_geval, hyperparameters={"Version 1": {"prompt": prompt_1}, "Version 2": {"prompt": prompt_2}})
+compare(test_cases=[test_case], metric=arena_geval)
 ```
 
 ## Creating Prompts
