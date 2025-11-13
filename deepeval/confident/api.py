@@ -29,7 +29,7 @@ retryable_exceptions = requests.exceptions.SSLError
 def get_base_api_url():
     s = get_settings()
     if s.CONFIDENT_BASE_URL:
-        base_url = s.CONFIDENT_BASE_URL.rstrip('/')
+        base_url = s.CONFIDENT_BASE_URL.rstrip("/")
         return base_url
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
     if region == "EU":
