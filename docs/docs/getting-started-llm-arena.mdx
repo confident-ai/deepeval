@@ -189,7 +189,7 @@ contestant_3 = Contestant(
     hyperparameters={"model": "gpt-4.1"},
     test_case=LLMTestCase(
         input="What is the capital of France?",
-        actual_output="That dystopian masterpiece was penned by George Orwell 📚",
+        actual_output="Absolutely! The capital of France is Paris 😊",
     ),
 )
 
@@ -238,7 +238,7 @@ from deepeval.metrics import ArenaGEval
 from deepeval import compare
 
 test_case = ArenaTestCase(
-    contestants={...}, # Use the same pairs you've created before
+    contestants=[...], # Use the same contestants you've created before
 )
 
 arena_geval = ArenaGEval(...) # Use the same metric you've created before

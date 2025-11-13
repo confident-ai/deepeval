@@ -27,21 +27,30 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
 ```python
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
 from deepeval.metrics import ArenaGEval
 from deepeval import compare
 
 a_test_case = ArenaTestCase(
-    contestants={
-        "GPT-4": LLMTestCase(
-            input="What is the capital of France?",
-            actual_output="Paris",
+    contestants=[
+        Contestant(
+            name="GPT-4",
+            hyperparameters={"model": "gpt-4"},
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="Paris",
+            ),
         ),
-        "Claude-4": LLMTestCase(
-            input="What is the capital of France?",
-            actual_output="Paris is the capital of France.",
-        ),
-    },
+        Contestant(
+            name="Claude-4",
+            hyperparameters={"model": "claude-4"},
+            name="Claude-4",
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="Paris is the capital of France.",
+            ),
+        )
+    ]
 )
 metric = ArenaGEval(
     name="Friendly",
@@ -51,7 +60,6 @@ metric = ArenaGEval(
         LLMTestCaseParams.ACTUAL_OUTPUT,
     ],
 )
-
 
 compare(test_cases=[a_test_case], metric=metric)
 ```

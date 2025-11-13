@@ -90,11 +90,11 @@ test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3]
 
 ### Contestant
 
-A `Contestant` represents a single unit of [llm iteraction](/docs/evaluation-test-cases#what-is-an-llm-interaction) from a specific version of your LLM app. It accepts a `test_case`, a `name` to identify the LLM app version that was used to generate the test case, and optionally any `hyperparameters` associated with the LLM version.
+A `Contestant` represents a single unit of [llm interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) from a specific version of your LLM app. It accepts a `test_case`, a `name` to identify the LLM app version that was used to generate the test case, and optionally any `hyperparameters` associated with the LLM version.
 
 ```python
-from deepeval.test_case import Contestant
-from deepeval.prompts import Prompt
+from deepeval.test_case import Contestant, LLMTestCase
+from deepeval.prompt import Prompt
 
 contestant_1 = Contestant(
     name="GPT-4",
@@ -111,7 +111,7 @@ contestant_1 = Contestant(
 
 ## Using Test Cases For Evals
 
-The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which pickes a "winner" out of the list of contestants:
+The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which picks a "winner" out of the list of contestants:
 
 ```python
 from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
