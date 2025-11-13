@@ -1,6 +1,10 @@
 from __future__ import annotations
 import random
-from typing import List, Tuple, TYPE_CHECKING, Union
+import re
+from typing import List, Tuple, TYPE_CHECKING, Union, Dict, Set
+
+from deepeval.prompt.prompt import Prompt
+from deepeval.optimization.types import ModuleId
 
 
 if TYPE_CHECKING:
@@ -49,3 +53,64 @@ def split_goldens(
     d_feedback = [goldens[i] for i in range(total) if i not in pareto_indices]
 
     return d_feedback, d_pareto
+
+
+################################
+# Prompt normalization helpers #
+################################
+
+
+def _slug(text: str) -> str:
+    slug = text.lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", slug)
+    return slug.strip("-")
+
+
+def generate_module_id(prompt: Prompt, index: int, existing: Set[str]) -> str:
+    """
+    Build a human-readable module id stable within a single optimization run.
+    Prefers alias/label; enrich with provider/name; dedupe; cap to 64 chars.
+    """
+    parts: List[str] = []
+    if prompt.alias:
+        parts.append(str(prompt.alias))
+    if prompt.label:
+        parts.append(str(prompt.label))
+
+    ms = prompt.model_settings
+    if ms is not None:
+        if ms.provider is not None:
+            parts.append(ms.provider.value)  # e.g., "OPEN_AI"
+        if ms.name:
+            parts.append(ms.name)
+
+    base = "-".join(_slug(p) for p in parts if p) or f"module-{index+1}"
+    base = base[:64] or f"module-{index+1}"
+
+    candidate = base
+    suffix = 2
+    while candidate in existing:
+        candidate = f"{base}-{suffix}"
+        candidate = candidate[:64]
+        suffix += 1
+
+    existing.add(candidate)
+    return candidate
+
+
+def normalize_seed_prompts(
+    seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]]
+) -> Dict[ModuleId, Prompt]:
+    """
+    Accept either {module_id: Prompt} or List[Prompt].
+    If a list is given, generate human-readable module ids.
+    """
+    if isinstance(seed_prompts, dict):
+        return dict(seed_prompts)  # shallow copy
+
+    mapping: Dict[ModuleId, Prompt] = {}
+    used: Set[str] = set()
+    for i, prompt in enumerate(seed_prompts):
+        module_id = generate_module_id(prompt, i, used)
+        mapping[module_id] = prompt
+    return mapping
