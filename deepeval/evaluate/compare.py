@@ -457,20 +457,19 @@ def process_test_runs(
     test_cases: List[ArenaTestCase],
 ):
     hyperparameters_map = {
-        contestant_name: {}
-        for contestant_name in test_run_map.keys()
+        contestant_name: {} for contestant_name in test_run_map.keys()
     }
 
     for test_case in test_cases:
         for contestant in test_case.contestants:
             if contestant.hyperparameters:
-                hyperparameters_map[contestant.name].update(contestant.hyperparameters)
-    
+                hyperparameters_map[contestant.name].update(
+                    contestant.hyperparameters
+                )
+
     for contestant_name, hyperparameters in hyperparameters_map.items():
         test_run = test_run_map.get(contestant_name)
-        test_run.hyperparameters = process_hyperparameters(
-            hyperparameters
-        )
+        test_run.hyperparameters = process_hyperparameters(hyperparameters)
 
 
 def wrap_up_experiment(

@@ -1,4 +1,9 @@
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
+from deepeval.test_case import (
+    ArenaTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+    Contestant,
+)
 from deepeval.metrics import ArenaGEval
 from deepeval.evaluate import compare
 from deepeval.prompt import Prompt
