@@ -2,7 +2,9 @@ from __future__ import annotations
 from typing import Dict, List, Sequence
 import random
 
-from ..types import CandidateId, ScoreTable
+from deepeval.optimization.types import CandidateId, ScoreTable
+
+# TODO: Add RoundRobinModuleSelector, WeightedModuleSelector utilities.
 
 
 def _is_dominated(
