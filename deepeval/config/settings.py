@@ -229,6 +229,11 @@ class Settings(BaseSettings):
     API_KEY: Optional[SecretStr] = None
     CONFIDENT_API_KEY: Optional[SecretStr] = None
 
+    # ======
+    # Base URL for Confident AI API server
+    # ======
+    CONFIDENT_BASE_URL: Optional[str] = None
+
     # General
     TEMPERATURE: Optional[confloat(ge=0, le=2)] = None
 
