@@ -21,7 +21,7 @@ class MLLMImage:
 
         if self.url and self.dataBase64:
             raise ValueError(
-                "You cannot provide both 'url' and 'dataBase64' at the same time when create an MLLMImage."
+                "You cannot provide both 'url' and 'dataBase64' at the same time when creating an MLLMImage."
             )
 
         if not self.url and not self.dataBase64:
