@@ -12,7 +12,7 @@ from deepeval.optimization.types import (
     ScoringAdapter,
     OptimizationResult,
 )
-from deepeval.optimization.utils import split_goldens
+from deepeval.optimization.utils import normalize_seed_prompts, split_goldens
 from deepeval.optimization.policies.selection import select_candidate_pareto
 from deepeval.prompt.prompt import Prompt
 from .configs import GEPAConfig
@@ -64,13 +64,14 @@ class GEPARunner:
     def optimize(
         self,
         *,
-        seed_prompts_by_module: Dict[ModuleId, Prompt],
+        seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Candidate, Dict]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, seed=self.config.random_seed
         )
+        seed_prompts_by_module = normalize_seed_prompts(seed_prompts)
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
         self._add_candidate(root_candidate)
         self.pareto_score_table[root_candidate.id] = (
@@ -169,13 +170,14 @@ class GEPARunner:
     async def a_optimize(
         self,
         *,
-        seed_prompts_by_module: Dict[ModuleId, Prompt],
+        seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Candidate, Dict]:
         """Asynchronous twin of optimize()."""
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, seed=self.config.random_seed
         )
+        seed_prompts_by_module = normalize_seed_prompts(seed_prompts)
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
         self._add_candidate(root_candidate)
         self.pareto_score_table[root_candidate.id] = (
