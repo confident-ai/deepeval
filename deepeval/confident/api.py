@@ -119,7 +119,7 @@ class Api:
         self.api_key = api_key
         self._headers = {
             "Content-Type": "application/json",
-            "CONFIDENT_API_KEY": api_key,
+            "CONFIDENT-API-KEY": api_key,
             "X-DeepEval-Version": deepeval.__version__,
         }
         self.base_api_url = get_base_api_url()
