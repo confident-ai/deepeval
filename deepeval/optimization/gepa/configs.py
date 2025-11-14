@@ -4,10 +4,14 @@ from pydantic import (
     BaseModel,
     Field,
     PositiveInt,
+    PrivateAttr,
     confloat,
     conint,
 )
 
+from deepeval.optimization.policies.tiebreaker import (
+    TieBreaker as TieBreakerPolicy,
+)
 from deepeval.optimization.types import PromptRewriter
 from .mutation import NoOpRewriter
 
@@ -31,7 +35,21 @@ class GEPAConfig(BaseModel):
     )
     random_seed: int = 0
     min_delta: confloat(ge=0.0) = 0.0
-    rewriter: Optional[PromptRewriter] = None
+    # Two candidates are considered tied if their aggregate scores are within tie_tolerance.
+    tie_tolerance: confloat(ge=0.0) = Field(
+        1e-9, description="Tie tolerance for aggregate scores"
+    )
+    tie_breaker: TieBreakerPolicy = Field(
+        TieBreakerPolicy.PREFER_ROOT,
+        description="How to break ties on aggregate",
+    )
+    announce_ties: bool = Field(
+        True, description="Print a one-line note when a tie is detected"
+    )
+    _rewriter: Optional[PromptRewriter] = PrivateAttr(default=None)
 
     def get_rewriter(self) -> PromptRewriter:
-        return self.rewriter or NoOpRewriter()
+        return self._rewriter or NoOpRewriter()
+
+
+GEPAConfig.TieBreaker = TieBreakerPolicy

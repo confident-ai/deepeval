@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 from typing import Dict, List, Optional
 
 
@@ -11,12 +11,23 @@ class AcceptedStepApi(BaseModel):
 
 
 class OptimizationResultApi(BaseModel):
-    optimization_id: str = Field(alias="optimizationId")
-    best_id: str = Field(alias="bestId")
-    accepted_steps: List[AcceptedStepApi] = Field(
-        default_factory=list, alias="acceptedSteps"
+    optimization_id: str = Field(
+        alias="optimizationId",
+        validation_alias=AliasChoices("optimizationId", "optimization_id"),
     )
-    pareto_scores: Dict[str, List[float]] = Field(alias="paretoScores")
+    best_id: str = Field(
+        alias="bestId",
+        validation_alias=AliasChoices("bestId", "best_id"),
+    )
+    accepted_steps: List[AcceptedStepApi] = Field(
+        default_factory=list,
+        alias="acceptedSteps",
+        validation_alias=AliasChoices("acceptedSteps", "accepted_steps"),
+    )
+    pareto_scores: Dict[str, List[float]] = Field(
+        alias="paretoScores",
+        validation_alias=AliasChoices("paretoScores", "pareto_scores"),
+    )
     parents: Dict[str, Optional[str]]
 
     @classmethod
