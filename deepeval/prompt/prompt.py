@@ -1,11 +1,11 @@
 from enum import Enum
-from typing import Optional, List, Dict, Type, Literal
+from typing import Optional, List, Dict, Type, Literal, TYPE_CHECKING
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 import time
 import json
 import os
-from pydantic import BaseModel, ValidationError, ConfigDict
+from pydantic import BaseModel, ValidationError
 import asyncio
 import portalocker
 import threading
@@ -24,9 +24,6 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
-    ReasoningEffort,
-    Verbosity,
-    ModelProvider,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -35,6 +32,10 @@ from deepeval.prompt.utils import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
+
+
+if TYPE_CHECKING:
+    from deepeval.optimization.gepa.api import OptimizationReport
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 VERSION_CACHE_KEY = "version"
@@ -132,6 +133,9 @@ class Prompt:
         elif messages_template:
             self.type = PromptType.LIST
 
+        # updated after optimization runs
+        self.optimization_report: Optional["OptimizationReport"] = None
+
     def __del__(self):
         """Cleanup polling tasks when instance is destroyed"""
         try:
@@ -165,7 +169,7 @@ class Prompt:
             content = f.read()
         try:
             data = json.loads(content)
-        except:
+        except (TypeError, json.JSONDecodeError):
             self.text_template = content
             return content
 
@@ -481,7 +485,7 @@ class Prompt:
                             cached_prompt.output_schema
                         )
                     return
-            except:
+            except Exception:
                 pass
 
         api = Api()

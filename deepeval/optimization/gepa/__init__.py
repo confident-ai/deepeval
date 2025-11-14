@@ -1,3 +1,4 @@
+from .api import OptimizationReport
 from .configs import GEPAConfig
 from .loop import GEPARunner
 from .mutation import LLMRewriter, MetricAwareLLMRewriter, NoOpRewriter
@@ -22,6 +23,7 @@ __all__ = [
     "NoOpRewriter",
     "Objective",
     "OptimizationResult",
+    "OptimizationReport",
     "ScoringAdapter",
     "WeightedObjective",
 ]
