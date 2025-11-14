@@ -13,7 +13,10 @@ from deepeval.optimization.types import (
     OptimizationResult,
 )
 from deepeval.optimization.utils import normalize_seed_prompts, split_goldens
-from deepeval.optimization.policies.selection import select_candidate_pareto
+from deepeval.optimization.policies import (
+    pick_best_with_ties,
+    select_candidate_pareto,
+)
 from deepeval.prompt.prompt import Prompt
 from .configs import GEPAConfig
 
@@ -58,8 +61,27 @@ class GEPARunner:
             candidate_id: self.aggregate_instances(vector)
             for candidate_id, vector in self.pareto_score_table.items()
         }
-        best_candidate_id = max(totals, key=totals.get)
-        return self.candidates_by_id[best_candidate_id]
+
+        chosen, tied, max_val = pick_best_with_ties(
+            totals,
+            self.parents_by_id,
+            random_state=self.random_state,
+            tie_tolerance=float(self.config.tie_tolerance),
+            policy=self.config.tie_breaker,
+        )
+
+        if self.config.announce_ties and len(tied) > 1:
+            from rich import print
+
+            print(
+                f"[GEPA] tie on aggregate={max_val:.4f} among {len(tied)} candidates; "
+                f"using tie_breaker={self.config.tie_breaker.value!r} selected {chosen}. "
+                f"To change, set GEPAConfig.tie_breaker to one of: "
+                f"{[t.value for t in self.config.TieBreaker]} "
+                f"(tie_tolerance={float(self.config.tie_tolerance):g})."
+            )
+
+        return self.candidates_by_id[chosen]
 
     def optimize(
         self,
@@ -82,6 +104,7 @@ class GEPARunner:
 
         remaining_budget = self.config.budget
         while remaining_budget > 0:
+            print(f"remaining_budget = {remaining_budget}")
             remaining_budget -= 1
 
             # 1. Pick candidate via Pareto
@@ -138,6 +161,19 @@ class GEPARunner:
                 child_candidate, minibatch
             )
 
+            print(f"[GEPA] module={selected_module_id}")
+            print(f"[GEPA] feedback: {feedback_text[:160]!r}")
+            print(
+                f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
+            )
+            if (
+                new_prompt.text_template.strip()
+                == old_prompt.text_template.strip()
+            ):
+                print("[GEPA] rewrite produced NO CHANGE")
+            else:
+                print("[GEPA] rewrite CHANGED prompt")
+
             if sigma_after >= sigma_before + self.config.min_delta:
                 # Accept
                 self._add_candidate(child_candidate)
@@ -189,6 +225,7 @@ class GEPARunner:
         accepted_steps: List[Dict] = []
         remaining_budget = self.config.budget
         while remaining_budget > 0:
+            print(f"remaining_budget = {remaining_budget}")
             remaining_budget -= 1
             selected_candidate_id = select_candidate_pareto(
                 self.pareto_score_table, random_state=self.random_state
@@ -234,6 +271,20 @@ class GEPARunner:
             sigma_after = await self.scoring_adapter.a_minibatch_score(
                 child_candidate, minibatch
             )
+
+            print(f"[GEPA] module={selected_module_id}")
+            print(f"[GEPA] feedback: {feedback_text[:160]!r}")
+            print(
+                f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
+            )
+            if (
+                new_prompt.text_template.strip()
+                == old_prompt.text_template.strip()
+            ):
+                print("[GEPA] rewrite produced NO CHANGE")
+            else:
+                print("[GEPA] rewrite CHANGED prompt")
+
             if sigma_after >= sigma_before + self.config.min_delta:
                 self._add_candidate(child_candidate)
                 self.pareto_score_table[child_candidate.id] = (

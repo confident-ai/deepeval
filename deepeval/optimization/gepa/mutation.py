@@ -1,10 +1,57 @@
 from __future__ import annotations
-import asyncio
-from typing import List, Optional, Tuple
+import json
+from typing import List, Optional, Tuple, Union
 
 from deepeval.optimization.types import MetricInfo, ModuleId, PromptRewriter
 from deepeval.prompt.prompt import Prompt
 from deepeval.models import DeepEvalBaseLLM
+
+
+##################
+# Common Helpers #
+##################
+def _compose_prompt_messages(system_message: str, user_message: str) -> str:
+    """
+    Join system and user messages into a single prompt string.
+    Strips surrounding whitespace from each part; if the system message is
+    empty/absent, returns just the user message.
+    """
+    system_text = (system_message or "").strip()
+    user_text = (user_message or "").strip()
+    return f"{system_text}\n\n{user_text}" if system_text else user_text
+
+
+def _normalize_llm_output_to_text(
+    result: Union[str, Tuple[Union[str, dict], float], dict]
+) -> str:
+    """
+    Convert a DeepEval LLM generate() / a_generate() result to a clean string.
+
+    Accepted inputs:
+      - str                        -> returned as trimmed
+      - (str|dict, float_cost)     -> first element extracted and normalized
+      - dict (e.g., JSON mode)     -> JSON-serialized with ensure_ascii=False
+
+    Fallback: if serialization fails, str(value).strip() is used.
+    """
+    output_value: Union[str, dict]
+    if isinstance(result, tuple):
+        output_value = result[0]
+    else:
+        output_value = result
+
+    if isinstance(output_value, str):
+        return output_value.strip()
+
+    try:
+        return json.dumps(output_value, ensure_ascii=False)
+    except Exception:
+        return str(output_value).strip()
+
+
+#################################
+# Rewriters for prompt mutation #
+#################################
 
 
 class NoOpRewriter(PromptRewriter):
@@ -51,22 +98,6 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
 """
         return system_message, user_message
 
-    async def _call_llm(self, system_message: str, user_message: str) -> str:
-        agenerate = getattr(self.llm, "agenerate", None)
-        if callable(agenerate):
-            text = await agenerate(
-                system_prompt=system_message, prompt=user_message
-            )
-        else:
-            loop = asyncio.get_running_loop()
-            text = await loop.run_in_executor(
-                None,
-                lambda: self.llm.generate(
-                    system_prompt=system_message, prompt=user_message
-                ),
-            )
-        return (text or "").strip()
-
     def rewrite(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
     ) -> Prompt:
@@ -77,10 +108,20 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             old_prompt=old_prompt,
             feedback_text=feedback_text,
         )
-        new_text = self.llm.generate(
-            system_prompt=system_message, prompt=user_message
-        )
-        new_text = (new_text or "").strip()
+        merged = _compose_prompt_messages(system_message, user_message)
+        out = self.llm.generate(merged)
+        new_text = _normalize_llm_output_to_text(out)
+        if new_text == old_prompt.text_template.strip():
+            print(
+                f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
+            )
+        else:
+            preview = (
+                (new_text[:80] + "...") if len(new_text) > 80 else new_text
+            )
+            print(
+                f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
+            )
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
     async def a_rewrite(
@@ -93,7 +134,21 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             old_prompt=old_prompt,
             feedback_text=feedback_text,
         )
-        new_text = await self._call_llm(system_message, user_message)
+        merged = _compose_prompt_messages(system_message, user_message)
+        out = await self.llm.a_generate(merged)
+        new_text = _normalize_llm_output_to_text(out)
+        if new_text == old_prompt.text_template.strip():
+            print(
+                f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
+            )
+        else:
+            preview = (
+                (new_text[:80] + "...") if len(new_text) > 80 else new_text
+            )
+            print(
+                f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
+            )
+
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
 
