@@ -19,13 +19,16 @@ from .mutation import NoOpRewriter
 class GEPAAsyncConfig(BaseModel):
     """Async controls used by GEPA"""
 
-    run_async: bool = False
+    run_async: bool = True
+    max_concurrent: PositiveInt = 20
+    throttle_seconds: confloat(ge=0.0) = 0.0
 
 
 class GEPADisplayConfig(BaseModel):
     """Display controls used by GEPA"""
 
     show_indicator: bool = True
+    verbose: bool = False
     announce_ties: bool = Field(
         True, description="Print a one-line note when a tie is detected"
     )

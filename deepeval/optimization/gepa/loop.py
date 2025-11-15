@@ -1,7 +1,18 @@
 from __future__ import annotations
 import uuid
 import random
-from typing import Dict, List, Tuple, TYPE_CHECKING, Union, Optional
+import time
+from pydantic import BaseModel as PydanticBaseModel
+from typing import (
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+    Optional,
+)
 from rich import print
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
@@ -14,11 +25,20 @@ from deepeval.optimization.types import (
     ScoringAdapter,
     OptimizationResult,
 )
+from deepeval.optimization.adapters.deepeval_scoring_adapter import (
+    DeepEvalScoringAdapter,
+)
 from deepeval.optimization.utils import split_goldens
 from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_candidate_pareto,
 )
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
+from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
 from .configs import GEPAConfig
@@ -41,9 +61,22 @@ class GEPARunner:
     def __init__(
         self,
         *,
-        scoring_adapter: ScoringAdapter,
         config: GEPAConfig,
         aggregate_instances: Aggregator = mean_of_all,
+        scoring_adapter: Optional[ScoringAdapter] = None,
+        # minimal-path inputs (used if scoring_adapter is None)
+        metrics: Optional[
+            List[
+                Union[
+                    BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
+                ]
+            ]
+        ] = None,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        generate: Optional[
+            Callable[[Prompt, "Golden"], Union[str, Awaitable[str]]]
+        ] = None,
     ):
         self.optimization_id: str = str(uuid.uuid4())
         self.scoring_adapter = scoring_adapter
@@ -51,6 +84,26 @@ class GEPARunner:
         self.random_state = random.Random(config.random_seed)
         self.rewriter = config.get_rewriter()
         self.aggregate_instances = aggregate_instances
+
+        if scoring_adapter is None:
+            if not metrics or (model is None and generate is None):
+                raise ValueError(
+                    "Provide either `scoring_adapter` or (`metrics` and one of `model`/`generate`)."
+                )
+            self.scoring_adapter = DeepEvalScoringAdapter(
+                metrics=metrics,
+                model=model,
+                model_schema=model_schema,
+                generate=generate,
+            )
+
+        if hasattr(self.scoring_adapter, "configure_async"):
+            self.scoring_adapter.configure_async(
+                max_concurrent=self.config.async_config.max_concurrent,
+                throttle_seconds=float(
+                    self.config.async_config.throttle_seconds
+                ),
+            )
 
         # State
         self.candidates_by_id: Dict[CandidateId, Candidate] = {}
@@ -134,7 +187,9 @@ class GEPARunner:
 
         def _one_step():
             nonlocal remaining_budget, accepted_steps
-            remaining_budget -= 1
+
+            if not d_feedback:
+                return False
 
             # 1. Pick candidate via Pareto
             selected_candidate_id = select_candidate_pareto(
@@ -146,9 +201,6 @@ class GEPARunner:
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
             # 3. Draw minibatch
-            if not d_feedback:
-                return False
-
             minibatch_size = max(
                 1, min(self.config.minibatch_size, len(d_feedback))
             )
@@ -172,6 +224,12 @@ class GEPARunner:
                 old_prompt=old_prompt,
                 feedback_text=feedback_text,
             )
+
+            old_txt = old_prompt.text_template.strip()
+            new_txt = new_prompt.text_template.strip()
+            if new_txt == old_txt:
+                # don't accept if child is the same as parent
+                return True
 
             # 6. Build child cand with prompt swap
             child_candidate = Candidate.new(
@@ -201,7 +259,8 @@ class GEPARunner:
             # else:
             #     print("[GEPA] rewrite CHANGED prompt")
 
-            if sigma_after >= sigma_before + self.config.min_delta:
+            jitter = 1e-6
+            if sigma_after >= sigma_before + max(self.config.min_delta, jitter):
                 # Accept
                 self._add_candidate(child_candidate)
                 self.pareto_score_table[child_candidate.id] = (
@@ -218,9 +277,10 @@ class GEPARunner:
                         after=sigma_after,
                     )
                 )
-                return True
+            return True
             # else: reject silently
 
+        step_index = 0
         if self.config.display_options.show_indicator:
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
@@ -233,10 +293,24 @@ class GEPARunner:
                     total=self.config.budget,
                 )
                 while remaining_budget > 0:
-                    if not _one_step():
+                    step_index += 1
+                    start_time = time.perf_counter()
+                    step_success = _one_step()
+                    end_time = time.perf_counter()
+                    time_taken = format(end_time - start_time, ".2f")
+
+                    if not step_success:
                         break
                     remaining_budget -= 1
                     progress.advance(task, 1)
+                    progress.update(
+                        task,
+                        description=(
+                            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
+                            f"[rgb(25,227,160)]• Step {step_index}/{self.config.budget} "
+                            f"• {time_taken}s • remaining={remaining_budget}"
+                        ),
+                    )
         else:
             while remaining_budget > 0:
                 if not _one_step():
@@ -277,7 +351,10 @@ class GEPARunner:
 
         async def _one_step():
             nonlocal remaining_budget, accepted_steps
-            remaining_budget -= 1
+
+            if not d_feedback:
+                print("no feedback, returning")
+                return False
 
             # 1. Pick candidate via Pareto
             selected_candidate_id = select_candidate_pareto(
@@ -289,9 +366,6 @@ class GEPARunner:
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
             # 3. Draw minibatch
-            if not d_feedback:
-                return False
-
             minibatch_size = max(
                 1, min(self.config.minibatch_size, len(d_feedback))
             )
@@ -315,6 +389,12 @@ class GEPARunner:
                 feedback_text=feedback_text,
             )
 
+            old_txt = old_prompt.text_template.strip()
+            new_txt = new_prompt.text_template.strip()
+            if new_txt == old_txt:
+                # don't accept if child is the same as parent
+                return True
+
             # 6. Child candidate
             child_candidate = Candidate.new(
                 prompts=dict(parent_candidate.prompts),
@@ -330,7 +410,8 @@ class GEPARunner:
                 child_candidate, minibatch
             )
 
-            if sigma_after >= sigma_before + self.config.min_delta:
+            jitter = 1e-6
+            if sigma_after >= sigma_before + max(self.config.min_delta, jitter):
                 self._add_candidate(child_candidate)
                 self.pareto_score_table[child_candidate.id] = (
                     await self.scoring_adapter.a_score_on_pareto(
@@ -347,8 +428,9 @@ class GEPARunner:
                     )
                 )
 
-                return True
+            return True
 
+        step_index = 0
         if self.config.display_options.show_indicator:
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
@@ -361,10 +443,24 @@ class GEPARunner:
                     total=self.config.budget,
                 )
                 while remaining_budget > 0:
-                    if not await _one_step():
+                    step_index += 1
+                    start_time = time.perf_counter()
+                    step_success = await _one_step()
+                    end_time = time.perf_counter()
+                    time_taken = format(end_time - start_time, ".2f")
+
+                    if not step_success:
                         break
                     remaining_budget -= 1
                     progress.advance(task, 1)
+                    progress.update(
+                        task,
+                        description=(
+                            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
+                            f"[rgb(25,227,160)]• Step {step_index}/{self.config.budget} "
+                            f"• {time_taken}s • remaining={remaining_budget}"
+                        ),
+                    )
         else:
             while remaining_budget > 0:
                 if not await _one_step():
@@ -379,4 +475,4 @@ class GEPARunner:
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
         )
-        return best, report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
