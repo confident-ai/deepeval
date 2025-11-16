@@ -11,6 +11,9 @@ sidebar_label: From Contexts
   />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 If you already have prepared contexts, you can skip document processing. Simply provide these contexts to the Synthesizer, and it will generate the Goldens directly without processing documents.
 
 <div
@@ -40,6 +43,10 @@ This is especially helpful if you **already have an embedded knowledge base**. F
 
 To generate synthetic `Golden`s from documents, simply provide a list of contexts:
 
+<Tabs>
+
+<TabItem value="goldens" label="Goldens">
+
 ```python
 from deepeval.synthesizer import Synthesizer
 
@@ -59,6 +66,34 @@ There are **ONE** mandatory and **THREE** optional parameters when using the `ge
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
 - [Optional] `source_files`: a list of strings specifying the source of the contexts. Length of `source_files` **MUST** be the same as the length of `contexts`.
+
+</TabItem>
+
+<TabItem value="convo_goldens" label="Conversational Goldens">
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_conversational_goldens_from_contexts(
+    # Provide a list of context for synthetic data generation
+    contexts=[
+        ["The Earth revolves around the Sun.", "Planets are celestial bodies."],
+        ["Water freezes at 0 degrees Celsius.", "The chemical formula for water is H2O."],
+    ]
+)
+```
+
+There are **ONE** mandatory and **THREE** optional parameters when using the `generate_conversational_goldens_from_contexts` method:
+
+- `contexts`: a list of context, where each context is itself a list of strings, ideally sharing a common theme or subject area.
+- [Optional] `include_expected_outcome`: a boolean which when set to `True`, will additionally generate an `expected_outcome` for each synthetic `ConversationalGolden`. Defaulted to `True`.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `source_files`: a list of strings specifying the source of the contexts. Length of `source_files` **MUST** be the same as the length of `contexts`.
+
+</TabItem>
+
+</Tabs>
 
 :::tip DID YOU KNOW?
 The `generate_goldens_from_docs()` method calls the `generate_goldens_from_contexts()` method under the hood, and the only difference between the two is the `generate_goldens_from_contexts()` method does not contain a [context construction step](synthesizer-generate-from-docs#how-does-context-construction-work), but instead uses the provided contexts directly for generation.
