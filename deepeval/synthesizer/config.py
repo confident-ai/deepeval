@@ -40,6 +40,14 @@ class StylingConfig:
     input_format: Optional[str] = None
     expected_output_format: Optional[str] = None
 
+@dataclass
+class ConversationalStylingConfig:
+    scenario_context: Optional[str] = None
+    conversational_task: Optional[str] = None
+    participant_roles: Optional[str] = None
+    scenario_format: Optional[str] = None
+    expected_outcome_format: Optional[str] = None
+
 
 @dataclass
 class ContextConstructionConfig:
