@@ -131,8 +131,11 @@ def async_synthesizer(evolution_config, styling_config):
         max_concurrent=3,
     )
 
+
 @pytest.fixture
-def sync_conversational_synthesizer(evolution_config, conversational_styling_config):
+def sync_conversational_synthesizer(
+    evolution_config, conversational_styling_config
+):
     return Synthesizer(
         async_mode=False,
         evolution_config=evolution_config,
@@ -142,13 +145,16 @@ def sync_conversational_synthesizer(evolution_config, conversational_styling_con
 
 
 @pytest.fixture
-def async_conversational_synthesizer(evolution_config, conversational_styling_config):
+def async_conversational_synthesizer(
+    evolution_config, conversational_styling_config
+):
     return Synthesizer(
         async_mode=True,
         evolution_config=evolution_config,
         conversational_styling_config=conversational_styling_config,
         max_concurrent=3,
     )
+
 
 def test_generate_goldens_from_contexts(sync_synthesizer: Synthesizer):
     goldens: List[Golden] = sync_synthesizer.generate_goldens_from_contexts(
@@ -251,7 +257,7 @@ async def test_async_generate_goldens_from_scratch(
 
 
 def test_generate_conversational_goldens_from_contexts(
-    sync_conversational_synthesizer: Synthesizer
+    sync_conversational_synthesizer: Synthesizer,
 ):
     goldens: List[ConversationalGolden] = (
         sync_conversational_synthesizer.generate_conversational_goldens_from_contexts(
@@ -293,7 +299,7 @@ def test_generate_conversational_goldens_from_docs(
 
 
 def test_generate_conversational_goldens_from_scratch(
-    sync_conversational_synthesizer: Synthesizer
+    sync_conversational_synthesizer: Synthesizer,
 ):
     num_goldens = 2
     goldens = sync_conversational_synthesizer.generate_conversational_goldens_from_scratch(
