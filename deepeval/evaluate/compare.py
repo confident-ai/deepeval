@@ -115,7 +115,7 @@ def compare(
     process_test_runs(test_run_map=test_run_map, test_cases=test_cases)
     wrap_up_experiment(
         name=name,
-        test_runs=list(test_run_map.values()),
+        test_runs=(test_run_map.values()),
         winner_counts=winner_counts,
         run_duration=run_duration,
     )
@@ -478,16 +478,6 @@ def wrap_up_experiment(
     winner_counts: Counter,
     run_duration: float,
 ):
-    api = Api()
-    experiment_request = PostExperimentRequest(testRuns=test_runs, name=name)
-
-    try:
-        body = experiment_request.model_dump(by_alias=True, exclude_none=True)
-    except AttributeError:
-        body = experiment_request.dict(by_alias=True, exclude_none=True)
-    json_str = json.dumps(body, cls=TestRunEncoder)
-    body = json.loads(json_str)
-
     winner_breakdown = []
     for contestant, wins in winner_counts.most_common():
         winner_breakdown.append(
@@ -501,24 +491,36 @@ def wrap_up_experiment(
         f"🏆 Results ({sum(winner_counts.values())} total test cases):\n"
         f"{winner_text}\n\n"
     )
+
+    if not is_confident():
+        console.print(
+            f"{'=' * 80}\n"
+            f"\n» Want to share experiments with your team? ❤️ 🏟️\n"
+            f"  » Run [bold]'deepeval login'[/bold] to analyze and save arena results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+        )
+        return
+
     try:
+        api = Api()
+        experiment_request = PostExperimentRequest(testRuns=test_runs, name=name)
+
+        try:
+            body = experiment_request.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            body = experiment_request.dict(by_alias=True, exclude_none=True)
+        json_str = json.dumps(body, cls=TestRunEncoder)
+        body = json.loads(json_str)
+
         _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.EXPERIMENT_ENDPOINT,
             body=body,
         )
-        if not is_confident():
-            console.print(
-                f"{'=' * 80}\n"
-                f"\n» Want to share experiments with your team? ❤️ 🏟️\n"
-                f"  » Run [bold]'deepeval login'[/bold] to analyze and save arena results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
-            )
-        else:
-            console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
-                f"[link={link}]{link}[/link]"
-            )
-            open_browser(link)
+        console.print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
+            f"[link={link}]{link}[/link]"
+        )
+        open_browser(link)
 
-    except Exception as e:
-        print(f"Failed to post experiment: {e}")
+    except Exception:
+        raise
