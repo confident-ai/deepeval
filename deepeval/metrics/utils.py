@@ -270,7 +270,7 @@ def check_arena_test_case_params(
             f"Expected ArenaTestCase, got {type(arena_test_case).__name__}"
         )
 
-    cases = list(arena_test_case.contestants.values())
+    cases = [contestant.test_case for contestant in arena_test_case.contestants]
     ref_input = cases[0].input
     for case in cases[1:]:
         if case.input != ref_input:

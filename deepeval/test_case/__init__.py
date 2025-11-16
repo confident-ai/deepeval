@@ -10,7 +10,7 @@ from .conversational_test_case import (
     TurnParams,
 )
 from .mllm_test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage
-from .arena_test_case import ArenaTestCase
+from .arena_test_case import ArenaTestCase, Contestant
 from .mcp import (
     MCPServer,
     MCPPromptCall,
@@ -35,4 +35,5 @@ __all__ = [
     "MLLMTestCaseParams",
     "MLLMImage",
     "ArenaTestCase",
+    "Contestant",
 ]
