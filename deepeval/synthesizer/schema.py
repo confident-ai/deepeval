@@ -74,3 +74,9 @@ class RewrittenScenario(BaseModel):
 class ScenarioFeedback(BaseModel):
     score: float
     feedback: str
+
+
+class ConversationalPromptStyling(BaseModel):
+    scenario_context: str
+    conversational_task: str
+    participant_roles: str
