@@ -37,6 +37,70 @@ class PromptSynthesizerTemplate:
         JSON:
         """
 
+    @staticmethod
+    def generate_synthetic_conversational_scenarios(
+        scenario: str,
+        conversational_task: str,
+        participant_roles: str,
+        num_goldens: int,
+    ):
+        return f"""
+        Generate a series of conversational SCENARIOS from scratch based on the provided scenario description,
+        conversational task, and participant roles.
+
+        A SCENARIO is a narrative description of a situation in which a conversation naturally occurs.
+        It is NOT a question, NOT a prompt, and NOT a user query. It MUST purely describe context.
+
+        Each scenario MUST depict a realistic MULTI-TURN conversational situation involving the given participants.
+
+        **
+        IMPORTANT FORMAT:
+        - Only return JSON
+        - JSON MUST contain: {{ "data": [ {{ "scenario": "..." }}, ... ] }}
+        - You MUST TRY to generate {num_goldens} items
+        **
+
+        Example of GOOD scenarios (situational descriptions):
+        - "During a late afternoon code review session, a junior engineer asks their senior engineer why an async function is inconsistent, leading to a detailed back-and-forth about race conditions."
+        - "While preparing for a sprint demo, a senior engineer helps a junior engineer interpret stack traces, prompting a step-by-step explanation."
+
+        Example of BAD scenarios (DO NOT DO):
+        - "Why does my async function return inconsistent results?" (This is a prompt)
+        - "Explain how to debug race conditions." (Instruction)
+        - "What is the freezing point of water?" (Question)
+
+        CRITICAL REQUIREMENTS:
+        - Scenario MUST be a narrative description of a SITUATION.
+        - Scenario MUST involve these participant roles: {participant_roles}
+        - Scenario MUST align with this conversational task: {conversational_task}
+        - Scenario MUST feel natural, real-world, and MULTI-TURN.
+        - Scenario MUST NOT contain:
+            • direct questions
+            • instructions
+            • tasks
+            • explicit prompts
+            • standalone facts
+        - Scenario MUST be grounded in the meaning of the provided base scenario description.
+
+        You MUST TRY to generate {num_goldens} high-quality, non-repetitive scenarios.
+        **
+
+        Base Scenario Description:
+        {scenario}
+
+        Conversational Task:
+        {conversational_task}
+
+        Participant Roles:
+        {participant_roles}
+
+        Num Scenarios:
+        {num_goldens}
+
+        JSON:
+        """
+
+
 
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
