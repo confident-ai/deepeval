@@ -59,6 +59,7 @@ class PromptStyling(BaseModel):
     task: str
     input_format: str
 
+
 class ConversationalScenario(BaseModel):
     scenario: str
 

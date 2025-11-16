@@ -47,8 +47,10 @@ class ExtractionTemplate:
 
     @staticmethod
     def extract_conversational_structure_from_scenarios(example_scenarios):
-        scenarios_text = "\n".join([f"- {scenario}" for scenario in example_scenarios])
-        
+        scenarios_text = "\n".join(
+            [f"- {scenario}" for scenario in example_scenarios]
+        )
+
         return f"""Analyze the following conversational scenarios and extract the common structural elements:
 
         Example Scenarios:

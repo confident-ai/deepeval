@@ -116,7 +116,9 @@ class Synthesizer:
         filtration_config: Optional[FiltrationConfig] = None,
         evolution_config: Optional[EvolutionConfig] = None,
         styling_config: Optional[StylingConfig] = None,
-        conversational_styling_config: Optional[ConversationalStylingConfig] = None,
+        conversational_styling_config: Optional[
+            ConversationalStylingConfig
+        ] = None,
         cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
@@ -138,12 +140,14 @@ class Synthesizer:
             styling_config if styling_config is not None else StylingConfig()
         )
         self.conversational_styling_config = (
-            conversational_styling_config 
-            if conversational_styling_config is not None 
+            conversational_styling_config
+            if conversational_styling_config is not None
             else ConversationalStylingConfig()
         )
         self.set_styling_config = True if styling_config is not None else False
-        self.set_conversational_styling_config = True if conversational_styling_config is not None else False
+        self.set_conversational_styling_config = (
+            True if conversational_styling_config is not None else False
+        )
         self.cost_tracking = cost_tracking
         self.synthesis_cost = 0 if self.using_native_model else None
 
@@ -1617,9 +1621,7 @@ class Synthesizer:
                     f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks.",
                 )
                 advance = max(num_contexts - len(contexts), 0)
-                (
-                    update_pbar(progress, pbar_id, advance) if advance else None
-                )
+                (update_pbar(progress, pbar_id, advance) if advance else None)
 
                 # Generate conversational goldens from contexts
                 goldens = self.generate_conversational_goldens_from_contexts(
@@ -1711,20 +1713,20 @@ class Synthesizer:
                 f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks.",
             )
             advance = max(num_contexts - len(contexts), 0)
-            (
-                update_pbar(progress, pbar_id, advance) if advance else None
-            )
+            (update_pbar(progress, pbar_id, advance) if advance else None)
 
             # Generate conversational goldens from contexts
-            goldens = await self.a_generate_conversational_goldens_from_contexts(
-                contexts=contexts,
-                include_expected_outcome=include_expected_outcome,
-                max_goldens_per_context=max_goldens_per_context,
-                source_files=source_files,
-                _context_scores=context_scores,
-                _progress=progress,
-                _pbar_id=pbar_id,
-                _reset_cost=False,
+            goldens = (
+                await self.a_generate_conversational_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    _context_scores=context_scores,
+                    _progress=progress,
+                    _pbar_id=pbar_id,
+                    _reset_cost=False,
+                )
             )
             if _reset_cost and self.cost_tracking and self.using_native_model:
                 print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -1837,15 +1839,19 @@ class Synthesizer:
                         participant_roles=self.conversational_styling_config.participant_roles,
                     )
                     synthetic_scenarios = self._generate_scenarios(prompt)
-                    update_pbar(progress, pbar_generate_scenarios_id, remove=False)
+                    update_pbar(
+                        progress, pbar_generate_scenarios_id, remove=False
+                    )
 
                     # Qualify scenarios
                     qualified_synthetic_scenarios: List[ConversationalScenario]
                     scores: List[float]
-                    qualified_synthetic_scenarios, scores = self._rewrite_scenarios(
-                        context, synthetic_scenarios
+                    qualified_synthetic_scenarios, scores = (
+                        self._rewrite_scenarios(context, synthetic_scenarios)
                     )
-                    update_pbar(progress, pbar_generate_scenarios_id, remove=False)
+                    update_pbar(
+                        progress, pbar_generate_scenarios_id, remove=False
+                    )
                     update_pbar(
                         progress, pbar_generate_goldens_id, remove=False
                     )
@@ -1854,16 +1860,18 @@ class Synthesizer:
                         qualified_synthetic_scenarios
                     ):
                         # Evolve scenario
-                        evolved_scenario, evolutions_used = self._evolve_scenario(
-                            scenario=data.scenario,
-                            context=context,
-                            num_evolutions=self.evolution_config.num_evolutions,
-                            evolutions=self.evolution_config.evolutions,
-                            progress=progress,
-                            pbar_evolve_scenario_id=pbar_evolve_scenario_ids[
-                                scenario_index
-                            ],
-                            remove_pbar=False,
+                        evolved_scenario, evolutions_used = (
+                            self._evolve_scenario(
+                                scenario=data.scenario,
+                                context=context,
+                                num_evolutions=self.evolution_config.num_evolutions,
+                                evolutions=self.evolution_config.evolutions,
+                                progress=progress,
+                                pbar_evolve_scenario_id=pbar_evolve_scenario_ids[
+                                    scenario_index
+                                ],
+                                remove_pbar=False,
+                            )
                         )
 
                         if should_style:
@@ -1891,7 +1899,9 @@ class Synthesizer:
                             context=context,
                             additional_metadata={
                                 "evolutions": evolutions_used,
-                                "synthetic_scenario_quality": scores[scenario_index],
+                                "synthetic_scenario_quality": scores[
+                                    scenario_index
+                                ],
                                 "context_quality": (
                                     _context_scores[context_index]
                                     if _context_scores is not None
@@ -1901,7 +1911,7 @@ class Synthesizer:
                                     source_files[context_index]
                                     if source_files is not None
                                     else None
-                                )
+                                ),
                             },
                         )
 
@@ -1930,7 +1940,10 @@ class Synthesizer:
                     remove_pbars(
                         progress,
                         pbar_evolve_scenario_ids
-                        + [pbar_generate_scenarios_id, pbar_generate_goldens_id],
+                        + [
+                            pbar_generate_scenarios_id,
+                            pbar_generate_goldens_id,
+                        ],
                     )
 
                 # Remove pbar if not from docs
@@ -2054,8 +2067,8 @@ class Synthesizer:
             conversational_task=self.conversational_styling_config.conversational_task,
             participant_roles=self.conversational_styling_config.participant_roles,
         )
-        synthetic_scenarios: List[ConversationalScenario] = await self._a_generate_scenarios(
-            prompt
+        synthetic_scenarios: List[ConversationalScenario] = (
+            await self._a_generate_scenarios(prompt)
         )
         # Limit the length of the synthetic scenarios to the maximum allowed
         synthetic_scenarios = synthetic_scenarios[:max_goldens_per_context]
@@ -2083,7 +2096,9 @@ class Synthesizer:
                 num_evolutions=self.evolution_config.num_evolutions,
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
-                pbar_evolve_scenario_id=pbar_evolve_scenario_ids[scenario_index],
+                pbar_evolve_scenario_id=pbar_evolve_scenario_ids[
+                    scenario_index
+                ],
                 remove_pbar=False,
             )
 
@@ -2101,7 +2116,9 @@ class Synthesizer:
                 )
                 evolved_scenario = res.scenario
                 update_pbar(
-                    progress, pbar_evolve_scenario_ids[scenario_index], remove=False
+                    progress,
+                    pbar_evolve_scenario_ids[scenario_index],
+                    remove=False,
                 )
 
             # Generate expected outcome
@@ -2112,9 +2129,13 @@ class Synthesizer:
                     context="\n".join(context),
                     expected_outcome_format=self.conversational_styling_config.expected_outcome_format,
                 )
-                expected_outcome = await self._a_generate(expected_outcome_prompt)
+                expected_outcome = await self._a_generate(
+                    expected_outcome_prompt
+                )
                 update_pbar(
-                    progress, pbar_evolve_scenario_ids[scenario_index], remove=False
+                    progress,
+                    pbar_evolve_scenario_ids[scenario_index],
+                    remove=False,
                 )
 
             # Create ConversationalGolden
@@ -2129,7 +2150,7 @@ class Synthesizer:
                         source_files[context_index]
                         if source_files is not None
                         else None
-                    )
+                    ),
                 },
             )
             update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -2137,7 +2158,9 @@ class Synthesizer:
 
         # Process all scenarios in parallel using asyncio.gather
         tasks = [
-            self.task_wrapper(semaphore, process_scenario, index, data, progress)
+            self.task_wrapper(
+                semaphore, process_scenario, index, data, progress
+            )
             for index, data in enumerate(qualified_synthetic_scenarios)
         ]
         results = await asyncio.gather(*tasks)
@@ -2216,7 +2239,8 @@ class Synthesizer:
                 return evolved_scenarios
 
             tasks = [
-                evolve_scenario(i, data) for i, data in enumerate(synthetic_data)
+                evolve_scenario(i, data)
+                for i, data in enumerate(synthetic_data)
             ]
             evolved_scenarios_list = await asyncio.gather(*tasks)
 
@@ -2319,7 +2343,9 @@ class Synthesizer:
     # Helper Methods for Scenario Generation
     #############################################################
 
-    async def _a_generate_scenarios(self, prompt: str) -> List[ConversationalScenario]:
+    async def _a_generate_scenarios(
+        self, prompt: str
+    ) -> List[ConversationalScenario]:
         res: ConversationalScenarioList = await self._a_generate_schema(
             prompt, ConversationalScenarioList, self.model
         )
@@ -2361,13 +2387,17 @@ class Synthesizer:
                     break
 
                 # Rewrite scenario if score below threshold
-                rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_scenarios(
-                    context, scenario, feedback
+                rewrite_prompt = (
+                    SynthesizerTemplate.rewrite_synthetic_scenarios(
+                        context, scenario, feedback
+                    )
                 )
-                rewritten_res: RewrittenScenario = await self._a_generate_schema(
-                    rewrite_prompt,
-                    RewrittenScenario,
-                    self.model,
+                rewritten_res: RewrittenScenario = (
+                    await self._a_generate_schema(
+                        rewrite_prompt,
+                        RewrittenScenario,
+                        self.model,
+                    )
                 )
                 scenario = rewritten_res.rewritten_scenario
 
@@ -2404,8 +2434,10 @@ class Synthesizer:
                     break
 
                 # Rewrite scenario if score below threshold
-                rewrite_prompt = SynthesizerTemplate.rewrite_synthetic_scenarios(
-                    context, scenario, feedback
+                rewrite_prompt = (
+                    SynthesizerTemplate.rewrite_synthetic_scenarios(
+                        context, scenario, feedback
+                    )
                 )
                 rewritten_res: RewrittenScenario = self._generate_schema(
                     rewrite_prompt,
@@ -2443,10 +2475,16 @@ class Synthesizer:
 
             # Create Evolution Prompt
             if isinstance(evolution_type, Evolution):
-                evolution_method = conversational_evolution_map[evolution_type.value]
-                prompt = evolution_method(scenario=evolved_scenario, context=context)
+                evolution_method = conversational_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(
+                    scenario=evolved_scenario, context=context
+                )
             elif isinstance(evolution_type, PromptEvolution):
-                evolution_method = conversational_prompt_evolution_map[evolution_type.value]
+                evolution_method = conversational_prompt_evolution_map[
+                    evolution_type.value
+                ]
                 prompt = evolution_method(scenario=evolved_scenario)
 
             # Perform Evolution
@@ -2477,10 +2515,16 @@ class Synthesizer:
 
             # Create Evolution Prompt
             if isinstance(evolution_type, Evolution):
-                evolution_method = conversational_evolution_map[evolution_type.value]
-                prompt = evolution_method(scenario=evolved_scenario, context=context)
+                evolution_method = conversational_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(
+                    scenario=evolved_scenario, context=context
+                )
             elif isinstance(evolution_type, PromptEvolution):
-                evolution_method = conversational_prompt_evolution_map[evolution_type.value]
+                evolution_method = conversational_prompt_evolution_map[
+                    evolution_type.value
+                ]
                 prompt = evolution_method(scenario=evolved_scenario)
 
             # Perform Evolution
@@ -2491,7 +2535,7 @@ class Synthesizer:
             update_pbar(progress, pbar_evolve_scenario_id, remove=remove_pbar)
 
         return evolved_scenario, evolutions_used
-    
+
     #############################################################
     # Generate Conversational Goldens from Goldens
     #############################################################
@@ -2525,12 +2569,11 @@ class Synthesizer:
             # Extract styles from conversational goldens if not already set
             if self.set_conversational_styling_config == False:
                 example_scenarios = random.sample(
-                    [golden.scenario for golden in goldens], min(len(goldens), 10)
+                    [golden.scenario for golden in goldens],
+                    min(len(goldens), 10),
                 )
-                styling_prompt = (
-                    ExtractionTemplate.extract_conversational_structure_from_scenarios(
-                        example_scenarios
-                    )
+                styling_prompt = ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                    example_scenarios
                 )
                 styles = self._generate_schema(
                     styling_prompt, ConversationalPromptStyling, self.model
@@ -2539,8 +2582,10 @@ class Synthesizer:
                 conversational_styling_config = ConversationalStylingConfig(
                     **styles_json, expected_outcome_format=None
                 )
-                self.conversational_styling_config = conversational_styling_config
-            
+                self.conversational_styling_config = (
+                    conversational_styling_config
+                )
+
             # Generate conversational goldens from scratch or from contexts if available
             if len(contexts) == 0:
                 return self.generate_conversational_goldens_from_scratch(
@@ -2571,10 +2616,8 @@ class Synthesizer:
             example_scenarios = random.sample(
                 [golden.scenario for golden in goldens], min(len(goldens), 10)
             )
-            styling_prompt = (
-                ExtractionTemplate.extract_conversational_structure_from_scenarios(
-                    example_scenarios
-                )
+            styling_prompt = ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                example_scenarios
             )
             styles = await self._a_generate_schema(
                 styling_prompt, ConversationalPromptStyling, self.model

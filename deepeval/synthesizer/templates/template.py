@@ -271,7 +271,7 @@ class SynthesizerTemplate:
             if conversational_task
             else ""
         )
-        
+
         return f"""I want you to act as a conversation scenario designer. Based on the given context, generate a list of JSON objects with a `scenario` key.
         Each `scenario` should describe a MULTI-TURN CONVERSATIONAL INTERACTION between specific participants discussing information from the context.
 
@@ -368,9 +368,21 @@ class SynthesizerTemplate:
         conversational_task: Optional[str] = None,
         participant_roles: Optional[str] = None,
     ):
-        context_section = f'Scenario Context: "{scenario_context}"' if scenario_context else ""
-        task_section = f'Conversational Task: "{conversational_task}"' if conversational_task else ""
-        roles_section = f'Participant Roles: "{participant_roles}"' if participant_roles else ""
+        context_section = (
+            f'Scenario Context: "{scenario_context}"'
+            if scenario_context
+            else ""
+        )
+        task_section = (
+            f'Conversational Task: "{conversational_task}"'
+            if conversational_task
+            else ""
+        )
+        roles_section = (
+            f'Participant Roles: "{participant_roles}"'
+            if participant_roles
+            else ""
+        )
 
         return f"""Given the evolved scenario, which describes a conversational situation, generate a JSON object with a key 'scenario'. 
         This key should contain a scenario description that fits the provided context, aligns with the conversational task, and involves the specified participant roles (if provided).
@@ -567,7 +579,7 @@ class FilterTemplate:
 
         JSON:
         """
-    
+
     @staticmethod
     def evaluate_synthetic_scenarios(scenario):
         return f"""Evaluate the provided conversational scenario for clarity, conversational nature, and appropriateness. Use the following criteria:
@@ -983,6 +995,8 @@ class EvolutionTemplate:
             Rewritten Input:
             """
         )
+
+
 class ConversationalEvolutionTemplate:
 
     base_instruction = """I want you to act as a conversational scenario rewriter.
