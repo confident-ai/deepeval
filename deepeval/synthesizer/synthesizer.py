@@ -33,6 +33,8 @@ from deepeval.synthesizer.templates import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
     ExtractionTemplate,
+    ConversationalEvolutionTemplate,
+    ConversationalPromptEvolutionTemplate,
 )
 from deepeval.synthesizer.schema import (
     SyntheticData,
@@ -46,6 +48,7 @@ from deepeval.synthesizer.schema import (
     InputFeedback,
     RewrittenInput,
     PromptStyling,
+    ConversationalPromptStyling,
 )
 from deepeval.synthesizer.config import (
     FiltrationConfig,
@@ -72,6 +75,16 @@ evolution_map = {
     "In-Breadth": EvolutionTemplate.in_breadth_evolution,
 }
 
+conversational_evolution_map = {
+    "Reasoning": ConversationalEvolutionTemplate.reasoning_evolution,
+    "Multi-context": ConversationalEvolutionTemplate.multi_context_evolution,
+    "Concretizing": ConversationalEvolutionTemplate.concretizing_evolution,
+    "Constrained": ConversationalEvolutionTemplate.constrained_evolution,
+    "Comparative": ConversationalEvolutionTemplate.comparative_question_evolution,
+    "Hypothetical": ConversationalEvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": ConversationalEvolutionTemplate.in_breadth_evolution,
+}
+
 prompt_evolution_map = {
     "Reasoning": PromptEvolutionTemplate.reasoning_evolution,
     "Concretizing": PromptEvolutionTemplate.concretizing_evolution,
@@ -79,6 +92,15 @@ prompt_evolution_map = {
     "Comparative": PromptEvolutionTemplate.comparative_question_evolution,
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
     "In-Breadth": PromptEvolutionTemplate.in_breadth_evolution,
+}
+
+conversational_prompt_evolution_map = {
+    "Reasoning": ConversationalPromptEvolutionTemplate.reasoning_evolution,
+    "Concretizing": ConversationalPromptEvolutionTemplate.concretizing_evolution,
+    "Constrained": ConversationalPromptEvolutionTemplate.constrained_evolution,
+    "Comparative": ConversationalPromptEvolutionTemplate.comparative_question_evolution,
+    "Hypothetical": ConversationalPromptEvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": ConversationalPromptEvolutionTemplate.in_breadth_evolution,
 }
 
 my_theme = Theme({"progress.elapsed": "cyan"})
@@ -101,7 +123,7 @@ class Synthesizer:
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
-        self.synthetic_conversational_goldens = []
+        self.synthetic_conversational_goldens: List[ConversationalGolden] = []
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
@@ -1867,11 +1889,6 @@ class Synthesizer:
                         golden = ConversationalGolden(
                             scenario=evolved_scenario,
                             context=context,
-                            source_file=(
-                                source_files[context_index]
-                                if source_files is not None
-                                else None
-                            ),
                             additional_metadata={
                                 "evolutions": evolutions_used,
                                 "synthetic_scenario_quality": scores[scenario_index],
@@ -1880,6 +1897,11 @@ class Synthesizer:
                                     if _context_scores is not None
                                     else None
                                 ),
+                                "source_files": (
+                                    source_files[context_index]
+                                    if source_files is not None
+                                    else None
+                                )
                             },
                         )
 
@@ -2100,15 +2122,14 @@ class Synthesizer:
                 scenario=evolved_scenario,
                 context=context,
                 expected_outcome=expected_outcome,
-                source_file=(
-                    source_files[context_index]
-                    if source_files is not None
-                    and context_index < len(source_files)
-                    else None
-                ),
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_scenario_quality": scores[scenario_index],
+                    "source_files": (
+                        source_files[context_index]
+                        if source_files is not None
+                        else None
+                    )
                 },
             )
             update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -2168,8 +2189,8 @@ class Synthesizer:
             # Generate scenarios
             prompt = PromptSynthesizerTemplate.generate_synthetic_conversational_scenarios(
                 scenario=self.conversational_styling_config.scenario_context,
-                task=self.conversational_styling_config.conversational_task,
-                input_format=self.conversational_styling_config.participant_roles,
+                conversational_task=self.conversational_styling_config.conversational_task,
+                participant_roles=self.conversational_styling_config.participant_roles,
                 num_goldens=num_goldens,
             )
             synthetic_data = self._generate_scenarios(prompt)
@@ -2255,8 +2276,8 @@ class Synthesizer:
                 # Generate scenarios
                 prompt = PromptSynthesizerTemplate.generate_synthetic_conversational_scenarios(
                     scenario=self.conversational_styling_config.scenario_context,
-                    task=self.conversational_styling_config.conversational_task,
-                    input_format=self.conversational_styling_config.participant_roles,
+                    conversational_task=self.conversational_styling_config.conversational_task,
+                    participant_roles=self.conversational_styling_config.participant_roles,
                     num_goldens=num_goldens,
                 )
                 synthetic_data = self._generate_scenarios(prompt)
@@ -2422,11 +2443,11 @@ class Synthesizer:
 
             # Create Evolution Prompt
             if isinstance(evolution_type, Evolution):
-                evolution_method = evolution_map[evolution_type.value]
-                prompt = evolution_method(input=evolved_scenario, context=context)
+                evolution_method = conversational_evolution_map[evolution_type.value]
+                prompt = evolution_method(scenario=evolved_scenario, context=context)
             elif isinstance(evolution_type, PromptEvolution):
-                evolution_method = prompt_evolution_map[evolution_type.value]
-                prompt = evolution_method(input=evolved_scenario)
+                evolution_method = conversational_prompt_evolution_map[evolution_type.value]
+                prompt = evolution_method(scenario=evolved_scenario)
 
             # Perform Evolution
             evolved_scenario = self._generate(prompt)
@@ -2434,7 +2455,6 @@ class Synthesizer:
 
             # Update Progress
             update_pbar(progress, pbar_evolve_scenario_id, remove=remove_pbar)
-
         return evolved_scenario, evolutions_used
 
     async def _a_evolve_scenario(
@@ -2457,11 +2477,11 @@ class Synthesizer:
 
             # Create Evolution Prompt
             if isinstance(evolution_type, Evolution):
-                evolution_method = evolution_map[evolution_type.value]
-                prompt = evolution_method(input=evolved_scenario, context=context)
+                evolution_method = conversational_evolution_map[evolution_type.value]
+                prompt = evolution_method(scenario=evolved_scenario, context=context)
             elif isinstance(evolution_type, PromptEvolution):
-                evolution_method = prompt_evolution_map[evolution_type.value]
-                prompt = evolution_method(input=evolved_scenario)
+                evolution_method = conversational_prompt_evolution_map[evolution_type.value]
+                prompt = evolution_method(scenario=evolved_scenario)
 
             # Perform Evolution
             evolved_scenario = await self._a_generate(prompt)
@@ -2471,3 +2491,108 @@ class Synthesizer:
             update_pbar(progress, pbar_evolve_scenario_id, remove=remove_pbar)
 
         return evolved_scenario, evolutions_used
+    
+    #############################################################
+    # Generate Conversational Goldens from Goldens
+    #############################################################
+
+    def generate_conversational_goldens_from_goldens(
+        self,
+        goldens: List[ConversationalGolden],
+        max_goldens_per_golden: int = 2,
+        include_expected_outcome: bool = True,
+    ) -> List[ConversationalGolden]:
+        self.synthetic_conversational_goldens = []
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            result = loop.run_until_complete(
+                self.a_generate_conversational_goldens_from_goldens(
+                    goldens=goldens,
+                    max_goldens_per_golden=max_goldens_per_golden,
+                    include_expected_outcome=include_expected_outcome,
+                )
+            )
+            self.synthetic_conversational_goldens.extend(result)
+            return result
+        else:
+            # Extract contexts and source files from conversational goldens
+            contexts = []
+            for golden in goldens:
+                if golden.context is None:
+                    continue
+                contexts.append(golden.context)
+
+            # Extract styles from conversational goldens if not already set
+            if self.set_conversational_styling_config == False:
+                example_scenarios = random.sample(
+                    [golden.scenario for golden in goldens], min(len(goldens), 10)
+                )
+                styling_prompt = (
+                    ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                        example_scenarios
+                    )
+                )
+                styles = self._generate_schema(
+                    styling_prompt, ConversationalPromptStyling, self.model
+                )
+                styles_json = json.loads(styles.model_dump_json())
+                conversational_styling_config = ConversationalStylingConfig(
+                    **styles_json, expected_outcome_format=None
+                )
+                self.conversational_styling_config = conversational_styling_config
+            
+            # Generate conversational goldens from scratch or from contexts if available
+            if len(contexts) == 0:
+                return self.generate_conversational_goldens_from_scratch(
+                    num_goldens=len(goldens) * max_goldens_per_golden,
+                )
+            else:
+                return self.generate_conversational_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_golden,
+                )
+
+    async def a_generate_conversational_goldens_from_goldens(
+        self,
+        goldens: List[ConversationalGolden],
+        max_goldens_per_golden: int = 2,
+        include_expected_outcome: bool = True,
+    ) -> List[ConversationalGolden]:
+        # Extract contexts and source files from conversational goldens
+        contexts = []
+        for golden in goldens:
+            if golden.context is None:
+                continue
+            contexts.append(golden.context)
+
+        # Extract styles from conversational goldens if not already set
+        if self.set_conversational_styling_config == False:
+            example_scenarios = random.sample(
+                [golden.scenario for golden in goldens], min(len(goldens), 10)
+            )
+            styling_prompt = (
+                ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                    example_scenarios
+                )
+            )
+            styles = await self._a_generate_schema(
+                styling_prompt, ConversationalPromptStyling, self.model
+            )
+            styles_json = json.loads(styles.model_dump_json())
+            conversational_styling_config = ConversationalStylingConfig(
+                **styles_json, expected_outcome_format=None
+            )
+            self.conversational_styling_config = conversational_styling_config
+
+        # Generate conversational goldens from scratch or from contexts if available
+        if len(contexts) == 0:
+            return await self.a_generate_conversational_goldens_from_scratch(
+                num_goldens=len(goldens) * max_goldens_per_golden,
+            )
+        else:
+            return await self.a_generate_conversational_goldens_from_contexts(
+                contexts=contexts,
+                include_expected_outcome=include_expected_outcome,
+                max_goldens_per_context=max_goldens_per_golden,
+            )
