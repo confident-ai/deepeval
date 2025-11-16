@@ -115,7 +115,7 @@ def compare(
     process_test_runs(test_run_map=test_run_map, test_cases=test_cases)
     wrap_up_experiment(
         name=name,
-        test_runs=(test_run_map.values()),
+        test_runs=list(test_run_map.values()),
         winner_counts=winner_counts,
         run_duration=run_duration,
     )
