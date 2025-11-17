@@ -247,7 +247,11 @@ While end-to-end evals treat your LLM app as a black-box, you also evaluate **in
 
 First paste in the following code:
 
-```python title="main.py"
+<Tabs>
+
+<TabItem value="python" label="Python">
+
+```python title="main.py" showLineNumbers={true}
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset, Golden
@@ -272,6 +276,98 @@ for golden in dataset.evals_iterator():
   # 6. Call LLM app
   llm_app(golden.input)
 ```
+
+</TabItem>
+
+<TabItem value="langgraph" label="LangGraph">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.integrations.langchain import CallbackHandler
+from deepeval.tracing import observe
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import  TaskCompletionMetric, AnswerRelevancyMetric
+
+from langgraph.graph import StateGraph, MessagesState, START, END
+
+# 1. Decorate components with metrics you wish to evaluate or debug
+@observe(metrics=[AnswerRelevancyMetric()])
+def mock_llm(state: MessagesState):
+    return {"messages": [{"role": "ai", "content": "hello world"}]}
+
+graph = StateGraph(MessagesState)
+graph.add_node(mock_llm)
+graph.add_edge(START, "mock_llm")
+graph.add_edge("mock_llm", END)
+graph = graph.compile()
+
+# 2. Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="Test input")])
+
+# 3. Loop through dataset
+for golden in dataset.evals_iterator():
+    # 4. Call LLM app
+    graph.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        # 5. Configure deepeval's callback handler (and optionally metrics for trace-level evals)
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
+    )
+```
+
+</TabItem>
+
+<TabItem value="langchain" label="LangChain">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.integrations.langchain import CallbackHandler, tool
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
+
+from langchain.agents import create_agent
+from langchain.agents.structured_output import ToolStrategy
+from pydantic import BaseModel
+
+class Weather(BaseModel):
+    temperature: float
+    condition: str
+
+# 1. Decorate components with metrics you wish to evaluate or debug
+@tool(metrics=[AnswerRelevancyMetric()])
+def weather_tool(city: str) -> str:
+    """Get the weather for a city."""
+    return f"it's sunny and 70 degrees in {city}"
+
+agent = create_agent(
+    "gpt-4o-mini",
+    tools=[weather_tool],
+    response_format=ToolStrategy(Weather)
+)
+
+# 2. Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in SF?")])
+
+# 3. Loop through dataset
+for golden in dataset.evals_iterator():
+    # 4. Call LLM app
+    agent.invoke(
+        {"messages": [{"role": "user", "content": golden.input}]},
+        # 5. Configure deepeval's callback handler (and optionally metrics for trace-level evals),
+        config={"callbacks": [CallbackHandler(metrics=[AnswerRelevancyMetric()])]}
+    )
+```
+
+</TabItem>
+
+<TabItem value="pydantic" label="Pydantic"></TabItem>
+
+<TabItem value="openai-agents" label="OpenAI Agents"></TabItem>
+
+<TabItem value="llamaindex" label="LlamaIndex"></TabItem>
+
+<TabItem value="openai" label="OpenAI"></TabItem>
+
+<TabItem value="anthropic" label="Anthropic"></TabItem>
+
+</Tabs>
 
 Then run `python main.py` to run a **component-level** eval:
 
