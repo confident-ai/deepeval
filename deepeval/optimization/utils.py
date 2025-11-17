@@ -15,7 +15,7 @@ def split_goldens(
     goldens: Union[List[Golden], List[ConversationalGolden]],
     pareto_size: int,
     *,
-    seed: int = 0,
+    random_state: random.Random,
 ) -> Tuple[
     Union[List[Golden], List[ConversationalGolden]],
     Union[List[Golden], List[ConversationalGolden]],
@@ -32,7 +32,9 @@ def split_goldens(
     Args:
         goldens: Full list/sequence of examples.
         pareto_size: Number of items to allocate to the Pareto set bound between [0, len(goldens)].
-        seed: Random seed for reproducible selection.
+        random_state: A shared `random.Random` instance that provides the source
+            of randomness. For reproducible runs, pass the same object used by
+            the GEPA loop constructed from `GEPAConfig.random_seed`
 
     Returns:
         (d_feedback, d_pareto)
@@ -44,7 +46,6 @@ def split_goldens(
     chosen_size = min(pareto_size, total)
 
     indices = list(range(total))
-    random_state = random.Random(seed)
     random_state.shuffle(indices)
 
     pareto_indices = set(indices[:chosen_size])

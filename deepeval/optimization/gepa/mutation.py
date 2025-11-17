@@ -2,7 +2,12 @@ from __future__ import annotations
 import json
 from typing import List, Optional, Tuple, Union
 
-from deepeval.optimization.types import MetricInfo, ModuleId, PromptRewriter
+from deepeval.errors import DeepEvalError
+from deepeval.optimization.types import (
+    MetricInfo,
+    ModuleId,
+    PromptRewriterProtocol,
+)
 from deepeval.prompt.prompt import Prompt
 from deepeval.models import DeepEvalBaseLLM
 
@@ -54,28 +59,13 @@ def _normalize_llm_output_to_text(
 #################################
 
 
-class NoOpRewriter(PromptRewriter):
-    """Safe default: returns the original prompt."""
-
-    def rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
-    ) -> Prompt:
-        return old_prompt
-
-    async def a_rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
-    ) -> Prompt:
-        return old_prompt
-
-
-class LLMRewriter(PromptRewriter):
+class PromptRewriter(PromptRewriterProtocol):
     """
     Uses a provided DeepEval model to rewrite the prompt for a module,
     guided by feedback_text (μ_f).
     """
 
-    def __init__(self, llm: DeepEvalBaseLLM, max_chars: int = 4000):
-        self.llm = llm
+    def __init__(self, max_chars: int = 4000):
         self.max_chars = max_chars
 
     def _compose_messages(
@@ -99,8 +89,18 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         return system_message, user_message
 
     def rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
+        self,
+        *,
+        model: DeepEvalBaseLLM,
+        module_id: ModuleId,
+        old_prompt: Prompt,
+        feedback_text: str,
     ) -> Prompt:
+        if model is None:
+            raise DeepEvalError(
+                "PromptRewriter requires a DeepEvalBaseLLM. "
+                "Pass `model=` to GEPARunner or provide a custom rewriter."
+            )
         if not feedback_text.strip():
             return old_prompt
         system_message, user_message = self._compose_messages(
@@ -109,7 +109,7 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             feedback_text=feedback_text,
         )
         merged = _compose_prompt_messages(system_message, user_message)
-        out = self.llm.generate(merged)
+        out = model.generate(merged)
         new_text = _normalize_llm_output_to_text(out)
         # if new_text == old_prompt.text_template.strip():
         #     print(
@@ -125,8 +125,18 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
     async def a_rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
+        self,
+        *,
+        model: DeepEvalBaseLLM,
+        module_id: ModuleId,
+        old_prompt: Prompt,
+        feedback_text: str,
     ) -> Prompt:
+        if model is None:
+            raise DeepEvalError(
+                "PromptRewriter requires a DeepEvalBaseLLM. "
+                "Pass `model=` to GEPARunner or provide a custom rewriter."
+            )
         if not feedback_text.strip():
             return old_prompt
         system_message, user_message = self._compose_messages(
@@ -135,7 +145,7 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             feedback_text=feedback_text,
         )
         merged = _compose_prompt_messages(system_message, user_message)
-        out = await self.llm.a_generate(merged)
+        out = await model.a_generate(merged)
         new_text = _normalize_llm_output_to_text(out)
         # if new_text == old_prompt.text_template.strip():
         #     print(
@@ -152,7 +162,7 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
 
-class MetricAwareLLMRewriter(LLMRewriter):
+class MetricAwareLLMRewriter(PromptRewriter):
     """
     Uses μ_f (feedback_text) and optional metric rubrics to rewrite a module prompt.
     - metrics_info: optional list of MetricInfo(name, rubric). If provided, a
@@ -161,13 +171,12 @@ class MetricAwareLLMRewriter(LLMRewriter):
 
     def __init__(
         self,
-        llm: DeepEvalBaseLLM,
         *,
         metrics_info: Optional[List[MetricInfo]] = None,
         max_chars: int = 4000,
         max_metrics_in_prompt: int = 20,
     ):
-        super().__init__(llm=llm, max_chars=max_chars)
+        super().__init__(max_chars=max_chars)
         self.metrics_info = metrics_info or []
         self.max_metrics_in_prompt = max_metrics_in_prompt
 

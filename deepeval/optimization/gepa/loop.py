@@ -2,6 +2,8 @@ from __future__ import annotations
 import uuid
 import random
 import time
+
+from contextlib import contextmanager
 from pydantic import BaseModel as PydanticBaseModel
 from typing import (
     Awaitable,
@@ -16,8 +18,11 @@ from typing import (
 from rich import print
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
+from deepeval.errors import DeepEvalError
+from deepeval.evaluate.configs import AsyncConfig
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
+    AcceptedStepDict,
     Candidate,
     CandidateId,
     ModuleId,
@@ -36,13 +41,12 @@ from deepeval.optimization.policies import (
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
 from .configs import GEPAConfig
-from .api import OptimizationReport, OptimizationResultApi
+from deepeval.optimization.types import OptimizationReport
 
 
 if TYPE_CHECKING:
@@ -62,47 +66,38 @@ class GEPARunner:
         self,
         *,
         config: GEPAConfig,
+        async_config: Optional[AsyncConfig] = AsyncConfig(),
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
-        # minimal-path inputs (used if scoring_adapter is None)
+        # used if scoring_adapter is None
         metrics: Optional[
-            List[
-                Union[
-                    BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
-                ]
-            ]
+            Union[List[BaseMetric], List[BaseConversationalMetric]]
         ] = None,
-        model: Optional[DeepEvalBaseLLM] = None,
+        model: DeepEvalBaseLLM,
         model_schema: Optional[PydanticBaseModel] = None,
-        generate: Optional[
-            Callable[[Prompt, "Golden"], Union[str, Awaitable[str]]]
-        ] = None,
     ):
         self.optimization_id: str = str(uuid.uuid4())
-        self.scoring_adapter = scoring_adapter
         self.config = config
+        self.async_config = async_config
         self.random_state = random.Random(config.random_seed)
+        self.model = model
+        self.scoring_adapter = scoring_adapter
         self.rewriter = config.get_rewriter()
         self.aggregate_instances = aggregate_instances
 
         if scoring_adapter is None:
-            if not metrics or (model is None and generate is None):
-                raise ValueError(
-                    "Provide either `scoring_adapter` or (`metrics` and one of `model`/`generate`)."
+            if not metrics:
+                raise DeepEvalError(
+                    "Provide `metrics` when no `scoring_adapter` is supplied."
                 )
             self.scoring_adapter = DeepEvalScoringAdapter(
-                metrics=metrics,
-                model=model,
-                model_schema=model_schema,
-                generate=generate,
+                metrics=metrics, model=model, model_schema=model_schema
             )
 
         if hasattr(self.scoring_adapter, "configure_async"):
             self.scoring_adapter.configure_async(
-                max_concurrent=self.config.async_config.max_concurrent,
-                throttle_seconds=float(
-                    self.config.async_config.throttle_seconds
-                ),
+                max_concurrent=self.async_config.max_concurrent,
+                throttle_seconds=float(self.async_config.throttle_value),
             )
 
         # State
@@ -146,11 +141,10 @@ class GEPARunner:
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Prompt:
         """
-        Public single-prompt API.
-        Returns the optimized Prompt; attaches an OptimizationReport to both
+        Returns the optimized Prompt. Attaches an OptimizationReport to both
         the returned Prompt and `self.report`.
         """
-        if self.config.async_config.run_async:
+        if self.async_config.run_async:
             loop = get_or_create_event_loop()
             best_prompt, report_dict = loop.run_until_complete(
                 self.a_execute_gepa(prompt=prompt, goldens=goldens)
@@ -159,10 +153,9 @@ class GEPARunner:
             best_prompt, report_dict = self.execute_gepa(
                 prompt=prompt, goldens=goldens
             )
-        report_api = OptimizationResultApi.from_runtime(report_dict)
-        final = OptimizationReport.model_validate(report_api.model_dump())
-        self.report = final
-        best_prompt.optimization_report = final
+
+        self.report = OptimizationReport.from_runtime(report_dict)
+        best_prompt.optimization_report = self.report
         return best_prompt
 
     def execute_gepa(
@@ -173,7 +166,7 @@ class GEPARunner:
     ) -> Tuple[Prompt, Dict]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
         d_feedback, d_pareto = split_goldens(
-            goldens, self.config.pareto_size, seed=self.config.random_seed
+            goldens, self.config.pareto_size, random_state=self.random_state
         )
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
@@ -192,57 +185,35 @@ class GEPARunner:
                 return False
 
             # 1. Pick candidate via Pareto
-            selected_candidate_id = select_candidate_pareto(
-                self.pareto_score_table, random_state=self.random_state
-            )
-            parent_candidate = self.candidates_by_id[selected_candidate_id]
+            parent_candidate = self._pick_candidate()
 
-            # 2. Pick module
+            # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
             # 3. Draw minibatch
-            minibatch_size = max(
-                1, min(self.config.minibatch_size, len(d_feedback))
-            )
+            minibatch = self._draw_minibatch(d_feedback)
 
-            minibatch: Union[List[Golden], List[ConversationalGolden]] = [
-                d_feedback[self.random_state.randrange(0, len(d_feedback))]
-                for _ in range(minibatch_size)
-            ]
-
-            # 4. Gather feedback μ_f
+            # 4. Feedback
             feedback_text = self.scoring_adapter.minibatch_feedback(
                 parent_candidate, selected_module_id, minibatch
             )
 
-            # 5. update prompt via rewriter
-            old_prompt = parent_candidate.prompts.get(
-                selected_module_id, Prompt(text_template="")
+            child_prompt = self._generate_child_prompt(
+                selected_module_id, parent_candidate, feedback_text
             )
-            new_prompt = self.rewriter.rewrite(
-                module_id=selected_module_id,
-                old_prompt=old_prompt,
-                feedback_text=feedback_text,
-            )
-
-            old_txt = old_prompt.text_template.strip()
-            new_txt = new_prompt.text_template.strip()
-            if new_txt == old_txt:
-                # don't accept if child is the same as parent
+            if child_prompt is None:
+                # child prompt matched parent. Skip this generation.
                 return True
 
-            # 6. Build child cand with prompt swap
-            child_candidate = Candidate.new(
-                prompts=dict(parent_candidate.prompts),
-                parent=parent_candidate.id,
+            child_candidate = self._make_child(
+                selected_module_id, parent_candidate, child_prompt
             )
-            child_candidate.prompts[selected_module_id] = new_prompt
 
-            # 7. Gate on minibatch improvement
-            sigma_before = self.scoring_adapter.minibatch_score(
+            parent_score = self.scoring_adapter.minibatch_score(
                 parent_candidate, minibatch
             )
-            sigma_after = self.scoring_adapter.minibatch_score(
+
+            child_score = self.scoring_adapter.minibatch_score(
                 child_candidate, minibatch
             )
 
@@ -259,64 +230,22 @@ class GEPARunner:
             # else:
             #     print("[GEPA] rewrite CHANGED prompt")
 
-            jitter = 1e-6
-            if sigma_after >= sigma_before + max(self.config.min_delta, jitter):
-                # Accept
-                self._add_candidate(child_candidate)
-                self.pareto_score_table[child_candidate.id] = (
-                    self.scoring_adapter.score_on_pareto(
-                        child_candidate, d_pareto
-                    )
-                )
+            # 7. Acceptance test
+            if self._should_accept_child(parent_score, child_score):
                 accepted_steps.append(
-                    dict(
-                        parent=parent_candidate.id,
-                        child=child_candidate.id,
-                        module=selected_module_id,
-                        before=sigma_before,
-                        after=sigma_after,
+                    self._accept_child(
+                        selected_module_id,
+                        parent_candidate,
+                        child_candidate,
+                        d_pareto,
+                        parent_score,
+                        child_score,
                     )
                 )
+
             return True
-            # else: reject silently
 
-        step_index = 0
-        if self.config.display_options.show_indicator:
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                BarColumn(bar_width=60),
-                TextColumn("[progress.description]{task.description}"),
-                transient=True,
-            ) as progress:
-                task = progress.add_task(
-                    f"Optimizing prompt with GEPA (budget={self.config.budget})...",
-                    total=self.config.budget,
-                )
-                while remaining_budget > 0:
-                    step_index += 1
-                    start_time = time.perf_counter()
-                    step_success = _one_step()
-                    end_time = time.perf_counter()
-                    time_taken = format(end_time - start_time, ".2f")
-
-                    if not step_success:
-                        break
-                    remaining_budget -= 1
-                    progress.advance(task, 1)
-                    progress.update(
-                        task,
-                        description=(
-                            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
-                            f"[rgb(25,227,160)]• Step {step_index}/{self.config.budget} "
-                            f"• {time_taken}s • remaining={remaining_budget}"
-                        ),
-                    )
-        else:
-            while remaining_budget > 0:
-                if not _one_step():
-                    break
-                remaining_budget -= 1
-
+        self._run_budgeted_loop(_one_step)
         best = self._best_by_aggregate()
         report = OptimizationResult(
             optimization_id=self.optimization_id,
@@ -335,7 +264,7 @@ class GEPARunner:
     ) -> Tuple[Prompt, Dict]:
         """Asynchronous twin of execute_gepa()."""
         d_feedback, d_pareto = split_goldens(
-            goldens, self.config.pareto_size, seed=self.config.random_seed
+            goldens, self.config.pareto_size, random_state=self.random_state
         )
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
@@ -353,120 +282,70 @@ class GEPARunner:
             nonlocal remaining_budget, accepted_steps
 
             if not d_feedback:
-                print("no feedback, returning")
                 return False
 
             # 1. Pick candidate via Pareto
-            selected_candidate_id = select_candidate_pareto(
-                self.pareto_score_table, random_state=self.random_state
-            )
-            parent_candidate = self.candidates_by_id[selected_candidate_id]
+            parent_candidate = self._pick_candidate()
 
             # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
             # 3. Draw minibatch
-            minibatch_size = max(
-                1, min(self.config.minibatch_size, len(d_feedback))
-            )
-            minibatch: Union[List[Golden], List[ConversationalGolden]] = [
-                d_feedback[self.random_state.randrange(0, len(d_feedback))]
-                for _ in range(minibatch_size)
-            ]
+            minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
             feedback_text = await self.scoring_adapter.a_minibatch_feedback(
                 parent_candidate, selected_module_id, minibatch
             )
 
-            # 5. Rewrite
-            old_prompt = parent_candidate.prompts.get(
-                selected_module_id, Prompt(text_template="")
+            child_prompt = await self._a_generate_child_prompt(
+                selected_module_id, parent_candidate, feedback_text
             )
-            new_prompt = await self.rewriter.a_rewrite(
-                module_id=selected_module_id,
-                old_prompt=old_prompt,
-                feedback_text=feedback_text,
-            )
-
-            old_txt = old_prompt.text_template.strip()
-            new_txt = new_prompt.text_template.strip()
-            if new_txt == old_txt:
-                # don't accept if child is the same as parent
+            if child_prompt is None:
+                # child prompt matched parent. Skip this generation.
                 return True
 
-            # 6. Child candidate
-            child_candidate = Candidate.new(
-                prompts=dict(parent_candidate.prompts),
-                parent=parent_candidate.id,
+            child_candidate = self._make_child(
+                selected_module_id, parent_candidate, child_prompt
             )
-            child_candidate.prompts[selected_module_id] = new_prompt
 
-            # 7. Acceptance test
-            sigma_before = await self.scoring_adapter.a_minibatch_score(
+            parent_score = await self.scoring_adapter.a_minibatch_score(
                 parent_candidate, minibatch
             )
-            sigma_after = await self.scoring_adapter.a_minibatch_score(
+
+            child_score = await self.scoring_adapter.a_minibatch_score(
                 child_candidate, minibatch
             )
 
-            jitter = 1e-6
-            if sigma_after >= sigma_before + max(self.config.min_delta, jitter):
-                self._add_candidate(child_candidate)
-                self.pareto_score_table[child_candidate.id] = (
-                    await self.scoring_adapter.a_score_on_pareto(
-                        child_candidate, d_pareto
-                    )
-                )
+            # print(f"[GEPA] module={selected_module_id}")
+            # print(f"[GEPA] feedback: {feedback_text[:160]!r}")
+            # print(
+            #     f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
+            # )
+            # if (
+            #     new_prompt.text_template.strip()
+            #     == old_prompt.text_template.strip()
+            # ):
+            #     print("[GEPA] rewrite produced NO CHANGE")
+            # else:
+            #     print("[GEPA] rewrite CHANGED prompt")
+
+            # 7. Acceptance test
+            if self._should_accept_child(parent_score, child_score):
                 accepted_steps.append(
-                    dict(
-                        parent=parent_candidate.id,
-                        child=child_candidate.id,
-                        module=selected_module_id,
-                        before=sigma_before,
-                        after=sigma_after,
+                    await self._a_accept_child(
+                        selected_module_id,
+                        parent_candidate,
+                        child_candidate,
+                        d_pareto,
+                        parent_score,
+                        child_score,
                     )
                 )
 
             return True
 
-        step_index = 0
-        if self.config.display_options.show_indicator:
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                BarColumn(bar_width=60),
-                TextColumn("[progress.description]{task.description}"),
-                transient=True,
-            ) as progress:
-                task = progress.add_task(
-                    f"Optimizing prompt with GEPA (budget={self.config.budget})...",
-                    total=self.config.budget,
-                )
-                while remaining_budget > 0:
-                    step_index += 1
-                    start_time = time.perf_counter()
-                    step_success = await _one_step()
-                    end_time = time.perf_counter()
-                    time_taken = format(end_time - start_time, ".2f")
-
-                    if not step_success:
-                        break
-                    remaining_budget -= 1
-                    progress.advance(task, 1)
-                    progress.update(
-                        task,
-                        description=(
-                            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
-                            f"[rgb(25,227,160)]• Step {step_index}/{self.config.budget} "
-                            f"• {time_taken}s • remaining={remaining_budget}"
-                        ),
-                    )
-        else:
-            while remaining_budget > 0:
-                if not await _one_step():
-                    break
-                remaining_budget -= 1
-
+        await self._a_run_budgeted_loop(_one_step)
         best = self._best_by_aggregate()
         report = OptimizationResult(
             optimization_id=self.optimization_id,
@@ -476,3 +355,226 @@ class GEPARunner:
             parents=self.parents_by_id,
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+
+    def _pick_candidate(self) -> Candidate:
+
+        selected_candidate_id = select_candidate_pareto(
+            self.pareto_score_table, random_state=self.random_state
+        )
+        return self.candidates_by_id[selected_candidate_id]
+
+    def _draw_minibatch(
+        self, d_feedback: Union[List[Golden], List[ConversationalGolden]]
+    ) -> Union[List[Golden], List[ConversationalGolden]]:
+        minibatch_size = max(
+            1, min(self.config.minibatch_size, len(d_feedback))
+        )
+        return [
+            d_feedback[self.random_state.randrange(0, len(d_feedback))]
+            for _ in range(minibatch_size)
+        ]
+
+    async def _a_generate_child_prompt(
+        self,
+        selected_module_id: ModuleId,
+        parent_candidate: Candidate,
+        feedback_text: str,
+    ) -> Optional[Prompt]:
+        # 5. Rewrite
+        old_prompt = parent_candidate.prompts.get(
+            selected_module_id, Prompt(text_template="")
+        )
+        new_prompt = await self.rewriter.a_rewrite(
+            model=self.model,
+            module_id=selected_module_id,
+            old_prompt=old_prompt,
+            feedback_text=feedback_text,
+        )
+
+        old_txt = old_prompt.text_template.strip()
+        new_txt = new_prompt.text_template.strip()
+        if new_txt == old_txt:
+            # don't accept if new prompt is the same as parent
+            return None
+        return new_prompt
+
+    def _generate_child_prompt(
+        self,
+        selected_module_id: ModuleId,
+        parent_candidate: Candidate,
+        feedback_text: str,
+    ):
+        # 5. Rewrite
+        old_prompt = parent_candidate.prompts.get(
+            selected_module_id, Prompt(text_template="")
+        )
+        new_prompt = self.rewriter.rewrite(
+            model=self.model,
+            module_id=selected_module_id,
+            old_prompt=old_prompt,
+            feedback_text=feedback_text,
+        )
+
+        old_txt = old_prompt.text_template.strip()
+        new_txt = new_prompt.text_template.strip()
+        if new_txt == old_txt:
+            # don't accept if new prompt is the same as parent
+            return None
+        return new_prompt
+
+    def _make_child(
+        self,
+        selected_module_id: ModuleId,
+        parent_candidate: Candidate,
+        child_prompt: Prompt,
+    ) -> Candidate:
+
+        # 6. Child candidate
+        child_candidate = Candidate.new(
+            prompts=dict(parent_candidate.prompts),
+            parent=parent_candidate.id,
+        )
+        child_candidate.prompts[selected_module_id] = child_prompt
+        return child_candidate
+
+    def _should_accept_child(
+        self, parent_score: float, child_score: float
+    ) -> bool:
+        jitter = 1e-6
+        return child_score >= parent_score + max(self.config.min_delta, jitter)
+
+    def _accept_child(
+        self,
+        selected_module_id: ModuleId,
+        parent_candidate: Candidate,
+        child_candidate: Candidate,
+        d_pareto: Union[List[Golden], List[ConversationalGolden]],
+        parent_score: float,
+        child_score: float,
+    ) -> AcceptedStepDict:
+        self._add_candidate(child_candidate)
+        self.pareto_score_table[child_candidate.id] = (
+            self.scoring_adapter.score_on_pareto(child_candidate, d_pareto)
+        )
+
+        return AcceptedStepDict(
+            parent=parent_candidate.id,
+            child=child_candidate.id,
+            module=selected_module_id,
+            before=parent_score,
+            after=child_score,
+        )
+
+    async def _a_accept_child(
+        self,
+        selected_module_id: ModuleId,
+        parent_candidate: Candidate,
+        child_candidate: Candidate,
+        d_pareto: Union[List[Golden], List[ConversationalGolden]],
+        parent_score: float,
+        child_score: float,
+    ) -> AcceptedStepDict:
+        self._add_candidate(child_candidate)
+        self.pareto_score_table[child_candidate.id] = (
+            await self.scoring_adapter.a_score_on_pareto(
+                child_candidate, d_pareto
+            )
+        )
+
+        return AcceptedStepDict(
+            parent=parent_candidate.id,
+            child=child_candidate.id,
+            module=selected_module_id,
+            before=parent_score,
+            after=child_score,
+        )
+
+    def _format_step_desc(
+        self, step_count: int, remaining_budget: int, elapsed_time: float
+    ) -> str:
+        return (
+            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
+            f"[rgb(25,227,160)]• Step {step_count}/{self.config.budget} "
+            f"• {elapsed_time:.2f}s • remaining={remaining_budget}"
+        )
+
+    def _progress_columns(self):
+        return (
+            SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
+            TextColumn("[progress.description]{task.description}"),
+        )
+
+    @contextmanager
+    def _maybe_progress(self) -> Progress:
+        """Context manager yielding a Progress or a no-op"""
+        if self.config.display_options.show_indicator:
+            with Progress(*self._progress_columns(), transient=True) as p:
+                yield p
+        else:
+
+            class _Noop:
+                def add_task(self, *_, **__):
+                    return 0
+
+                def advance(self, *_, **__):
+                    pass
+
+                def update(self, *_, **__):
+                    pass
+
+            yield _Noop()
+
+    def _run_budgeted_loop(
+        self,
+        gepa_step: Callable[[], bool],
+    ) -> None:
+        remaining = self.config.budget
+        step_count = 0
+        with self._maybe_progress() as progress:
+            task = progress.add_task(
+                f"Optimizing prompt with GEPA (budget={self.config.budget})...",
+                total=self.config.budget,
+            )
+            while remaining > 0:
+                step_count += 1
+                start_time = time.perf_counter()
+                ok = gepa_step()
+                end_time = time.perf_counter()
+                if not ok:
+                    break
+                remaining -= 1
+                progress.advance(task, 1)
+                progress.update(
+                    task,
+                    description=self._format_step_desc(
+                        step_count, remaining, end_time - start_time
+                    ),
+                )
+
+    async def _a_run_budgeted_loop(
+        self,
+        a_gepa_step: Callable[[], Awaitable[bool]],
+    ) -> None:
+        remaining = self.config.budget
+        step_count = 0
+        with self._maybe_progress() as progress:
+            task = progress.add_task(
+                f"Optimizing prompt with GEPA (budget={self.config.budget})...",
+                total=self.config.budget,
+            )
+            while remaining > 0:
+                step_count += 1
+                start_time = time.perf_counter()
+                ok = await a_gepa_step()
+                end_time = time.perf_counter()
+                if not ok:
+                    break
+                remaining -= 1
+                progress.advance(task, 1)
+                progress.update(
+                    task,
+                    description=self._format_step_desc(
+                        step_count, remaining, end_time - start_time
+                    ),
+                )

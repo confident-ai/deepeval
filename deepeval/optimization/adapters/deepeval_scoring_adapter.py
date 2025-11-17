@@ -4,7 +4,6 @@ import copy
 import inspect
 import json
 from typing import (
-    Awaitable,
     List,
     Callable,
     Dict,
@@ -24,7 +23,6 @@ from deepeval.optimization.types import (
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -87,44 +85,34 @@ async def _a_measure_no_indicator(metric, test_case):
 
 
 class DeepEvalScoringAdapter(ScoringAdapter):
-    """Scoring adapter backed by DeepEval metrics with a built-in generation step.
-    Users provide either a `model` (DeepEvalBaseLLM) or a `generate(prompt, golden)` callable.
-    """
+    """Scoring adapter backed by DeepEval metrics with a built-in generation step."""
 
     def __init__(
         self,
         *,
-        metrics: List[
-            Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-        ],
+        model: DeepEvalBaseLLM,
+        model_schema: Optional[PydanticBaseModel] = None,
+        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         build_test_case: Optional[
             Callable[
                 [Union[Golden, ConversationalGolden], str],
                 Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
             ]
         ] = None,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        generate: Optional[
-            Callable[[Prompt, "Golden"], Union[str, Awaitable[str]]]
-        ] = None,
         objective_scalar: Objective = MeanObjective(),
     ):
+        if model is None:
+            raise DeepEvalError("DeepEvalScoringAdapter requires a model.")
+
         self.metrics = list(metrics)
-        self._model = model
-        self._model_schema = model_schema
-        self._generate = generate
-        self._build_test_case = build_test_case or self._default_build_test_case
-        self._objective = objective_scalar
+        self.model = model
+        self.model_schema = model_schema
+        self.build_test_case = build_test_case or self._default_build_test_case
+        self.objective_scalar = objective_scalar
 
         # async
         self._semaphore: Optional[asyncio.Semaphore] = None
         self._throttle: float = 0.0
-
-        if self._model is None and self._generate is None:
-            raise DeepEvalError(
-                "DeepEvalScoringAdapter requires either `model=` or `generate=`."
-            )
 
     #######################################
     # prompt assembly & result unwrapping #
@@ -182,12 +170,12 @@ class DeepEvalScoringAdapter(ScoringAdapter):
         # Clone metrics to avoid shared-state races (e.g., .reason)
         metrics = [copy.copy(metric) for metric in self.metrics]
         actual = await self.a_generate(candidate.prompts, golden)
-        test_case = self._build_test_case(golden, actual)
+        test_case = self.build_test_case(golden, actual)
         per_metric: Dict[str, float] = {}
         for metric in metrics:
             score = await _a_measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        return self._objective.scalarize(per_metric)
+        return self.objective_scalar.scalarize(per_metric)
 
     def _score_one(
         self,
@@ -196,12 +184,12 @@ class DeepEvalScoringAdapter(ScoringAdapter):
     ) -> float:
         metrics = [copy.copy(m) for m in self.metrics]
         actual = self.generate(candidate.prompts, golden)
-        test_case = self._build_test_case(golden, actual)
+        test_case = self.build_test_case(golden, actual)
         per_metric: Dict[str, float] = {}
         for metric in metrics:
             score = _measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        return self._objective.scalarize(per_metric)
+        return self.objective_scalar.scalarize(per_metric)
 
     #################
     # Configuration #
@@ -225,10 +213,7 @@ class DeepEvalScoringAdapter(ScoringAdapter):
             iter(prompts_by_module.values())
         )
         compiled = self._compile_prompt_text(prompt, golden)
-        if self._generate:
-            out = self._generate(prompt, golden)
-            return out if isinstance(out, str) else str(out)
-        res = self._model.generate(compiled, schema=self._model_schema)
+        res = self.model.generate(compiled, schema=self.model_schema)
         return self._unwrap_text(res)
 
     async def a_generate(
@@ -238,19 +223,15 @@ class DeepEvalScoringAdapter(ScoringAdapter):
             iter(prompts_by_module.values())
         )
         compiled = self._compile_prompt_text(prompt, golden)
-        if self._generate:
-            maybe = self._generate(prompt, golden)
-            res = await maybe if inspect.isawaitable(maybe) else maybe
-            return self._unwrap_text(res)
-        if hasattr(self._model, "a_generate"):
-            res = await self._model.a_generate(
-                compiled, schema=self._model_schema
+        if hasattr(self.model, "a_generate"):
+            res = await self.model.a_generate(
+                compiled, schema=self.model_schema
             )
             return self._unwrap_text(res)
         loop = asyncio.get_running_loop()
         res = await loop.run_in_executor(
             None,
-            lambda: self._model.generate(compiled, schema=self._model_schema),
+            lambda: self.model.generate(compiled, schema=self.model_schema),
         )
         return self._unwrap_text(res)
 
@@ -282,7 +263,7 @@ class DeepEvalScoringAdapter(ScoringAdapter):
         reasons: List[str] = []
         for golden in minibatch:
             actual = self.generate(candidate.prompts, golden)
-            test_case = self._build_test_case(golden, actual)
+            test_case = self.build_test_case(golden, actual)
             for metric in [copy.copy(m) for m in self.metrics]:
                 _ = _measure_no_indicator(metric, test_case)
                 if getattr(metric, "reason", None):
@@ -331,7 +312,7 @@ class DeepEvalScoringAdapter(ScoringAdapter):
             metrics = [copy.copy(metric) for metric in self.metrics]
             # metrics = self.metrics
             actual = await self.a_generate(candidate.prompts, golden)
-            test_case = self._build_test_case(golden, actual)
+            test_case = self.build_test_case(golden, actual)
             out: List[str] = []
             for metric in metrics:
                 _ = await _a_measure_no_indicator(metric, test_case)

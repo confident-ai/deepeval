@@ -2,9 +2,19 @@ from __future__ import annotations
 import uuid
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Protocol, TYPE_CHECKING, Union
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    TYPE_CHECKING,
+    TypedDict,
+    Union,
+)
+from pydantic import BaseModel, Field, AliasChoices
 
 from deepeval.prompt.prompt import Prompt
+from deepeval.models.base_model import DeepEvalBaseLLM
 
 
 if TYPE_CHECKING:
@@ -87,32 +97,24 @@ class ScoringAdapter(Protocol):
     async def a_select_module(self, candidate: Candidate) -> ModuleId: ...
 
 
-class PromptRewriter(Protocol):
+class PromptRewriterProtocol(Protocol):
     def rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
+        self,
+        *,
+        model: Optional[DeepEvalBaseLLM],
+        module_id: ModuleId,
+        old_prompt: Prompt,
+        feedback_text: str,
     ) -> Prompt: ...
 
     async def a_rewrite(
-        self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
+        self,
+        *,
+        model: Optional[DeepEvalBaseLLM],
+        module_id: ModuleId,
+        old_prompt: Prompt,
+        feedback_text: str,
     ) -> Prompt: ...
-
-
-@dataclass
-class OptimizationResult:
-    optimization_id: str
-    best_id: CandidateId
-    accepted_steps: List[Dict]
-    pareto_scores: Dict[CandidateId, List[float]]
-    parents: Dict[CandidateId, Optional[CandidateId]]
-
-    def as_dict(self) -> Dict:
-        return dict(
-            optimization_id=self.optimization_id,
-            best_id=self.best_id,
-            accepted_steps=self.accepted_steps,
-            pareto_scores=self.pareto_scores,
-            parents=self.parents,
-        )
 
 
 class Objective(Protocol):
@@ -144,3 +146,63 @@ class WeightedObjective(Objective):
 class MetricInfo:
     name: str
     rubric: Optional[str] = None
+
+
+class AcceptedStepDict(TypedDict):
+    parent: CandidateId
+    child: CandidateId
+    module: ModuleId
+    before: float
+    after: float
+
+
+class AcceptedStep(BaseModel):
+    parent: str
+    child: str
+    module: str
+    before: float
+    after: float
+
+
+@dataclass
+class OptimizationResult:
+    optimization_id: str
+    best_id: CandidateId
+    accepted_steps: List[Dict]
+    pareto_scores: Dict[CandidateId, List[float]]
+    parents: Dict[CandidateId, Optional[CandidateId]]
+
+    def as_dict(self) -> Dict:
+        return dict(
+            optimization_id=self.optimization_id,
+            best_id=self.best_id,
+            accepted_steps=self.accepted_steps,
+            pareto_scores=self.pareto_scores,
+            parents=self.parents,
+        )
+
+
+class OptimizationReport(BaseModel):
+    optimization_id: str = Field(
+        alias="optimizationId",
+        validation_alias=AliasChoices("optimizationId", "optimization_id"),
+    )
+    best_id: str = Field(
+        alias="bestId",
+        validation_alias=AliasChoices("bestId", "best_id"),
+    )
+    accepted_steps: list[AcceptedStep] = Field(
+        default_factory=list,
+        alias="acceptedSteps",
+        validation_alias=AliasChoices("acceptedSteps", "accepted_steps"),
+    )
+    pareto_scores: dict[str, list[float]] = Field(
+        alias="paretoScores",
+        validation_alias=AliasChoices("paretoScores", "pareto_scores"),
+    )
+    parents: dict[str, str | None]
+
+    @classmethod
+    def from_runtime(cls, result: dict) -> "OptimizationReport":
+        # accepts the dict from OptimizationResult.as_dict()
+        return cls(**result)

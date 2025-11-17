@@ -36,7 +36,7 @@ from deepeval.constants import HIDDEN_DIR
 
 
 if TYPE_CHECKING:
-    from deepeval.optimization.gepa.api import OptimizationReport
+    from deepeval.optimization.types import OptimizationReport
 
 logger = logging.getLogger(__name__)
 

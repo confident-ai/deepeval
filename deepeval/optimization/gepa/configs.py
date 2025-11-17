@@ -1,27 +1,21 @@
 from __future__ import annotations
+import time
 from typing import Optional
 from pydantic import (
     BaseModel,
-    Field,
-    PositiveInt,
-    PrivateAttr,
     confloat,
     conint,
+    Field,
+    field_validator,
+    PositiveInt,
+    PrivateAttr,
 )
 
 from deepeval.optimization.policies.tiebreaker import (
     TieBreaker as TieBreakerPolicy,
 )
-from deepeval.optimization.types import PromptRewriter
-from .mutation import NoOpRewriter
-
-
-class GEPAAsyncConfig(BaseModel):
-    """Async controls used by GEPA"""
-
-    run_async: bool = True
-    max_concurrent: PositiveInt = 20
-    throttle_seconds: confloat(ge=0.0) = 0.0
+from deepeval.optimization.types import PromptRewriterProtocol
+from .mutation import PromptRewriter
 
 
 class GEPADisplayConfig(BaseModel):
@@ -58,19 +52,29 @@ class GEPAConfig(BaseModel):
         1e-9, description="Tie tolerance for aggregate scores"
     )
     tie_breaker: TieBreakerPolicy = Field(
-        TieBreakerPolicy.PREFER_ROOT,
+        TieBreakerPolicy.RANDOM,
         description="How to break ties on aggregate",
     )
-    async_config: GEPAAsyncConfig = Field(default_factory=GEPAAsyncConfig)
+
     display_options: GEPADisplayConfig = Field(
         default_factory=GEPADisplayConfig
     )
-    _rewriter: Optional[PromptRewriter] = PrivateAttr(default=None)
+    _rewriter: Optional[PromptRewriterProtocol] = PrivateAttr(default=None)
 
-    def get_rewriter(self) -> PromptRewriter:
-        return self._rewriter or NoOpRewriter()
+    def set_rewriter(self, r: PromptRewriterProtocol) -> None:
+        self._rewriter = r
+
+    def get_rewriter(self) -> PromptRewriterProtocol:
+        return self._rewriter or PromptRewriter()
+
+    @field_validator("random_seed", mode="before")
+    @classmethod
+    def _coerce_random_seed(cls, seed):
+        if seed is None:
+            return time.time_ns()
+        else:
+            return seed
 
 
 GEPAConfig.TieBreaker = TieBreakerPolicy
-GEPAConfig.AsyncConfig = GEPAAsyncConfig
 GEPAConfig.DisplayConfig = GEPADisplayConfig
