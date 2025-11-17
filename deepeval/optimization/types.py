@@ -22,24 +22,24 @@ if TYPE_CHECKING:
 
 
 # move inline make union
-CandidateId = str
+PromptConfigurationId = str
 ModuleId = str
 ScoreVector = List[float]  # scores per instance on D_pareto, aligned order
-ScoreTable = Dict[CandidateId, ScoreVector]
+ScoreTable = Dict[PromptConfigurationId, ScoreVector]
 
 
 @dataclass
-class Candidate:
-    id: CandidateId
-    parent: Optional[CandidateId]
+class PromptConfiguration:
+    id: PromptConfigurationId
+    parent: Optional[PromptConfigurationId]
     prompts: Dict[ModuleId, Prompt]
 
     @staticmethod
     def new(
         prompts: Dict[ModuleId, Prompt],
-        parent: Optional[CandidateId] = None,
-    ) -> "Candidate":
-        return Candidate(
+        parent: Optional[PromptConfigurationId] = None,
+    ) -> "PromptConfiguration":
+        return PromptConfiguration(
             id=str(uuid.uuid4()), parent=parent, prompts=dict(prompts)
         )
 
@@ -50,7 +50,7 @@ class ScoringAdapter(Protocol):
     # Sync
     def score_on_pareto(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> ScoreVector:
         """Return per-instance scores on D_pareto."""
@@ -58,7 +58,7 @@ class ScoringAdapter(Protocol):
 
     def minibatch_score(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float:
         """Return average score μ on a minibatch from D_feedback."""
@@ -66,35 +66,39 @@ class ScoringAdapter(Protocol):
 
     def minibatch_feedback(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
         """Return μ_f text for the module (metric.reason + traces, etc.)."""
         ...
 
-    def select_module(self, candidate: Candidate) -> ModuleId:
+    def select_module(
+        self, prompt_configuration: PromptConfiguration
+    ) -> ModuleId:
         """Pick a module to mutate (random/weighted/round-robin)."""
         ...
 
     # Async
     async def a_score_on_pareto(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> ScoreVector: ...
     async def a_minibatch_score(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float: ...
     async def a_minibatch_feedback(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str: ...
-    async def a_select_module(self, candidate: Candidate) -> ModuleId: ...
+    async def a_select_module(
+        self, prompt_configuration: PromptConfiguration
+    ) -> ModuleId: ...
 
 
 class PromptRewriterProtocol(Protocol):
@@ -149,8 +153,8 @@ class MetricInfo:
 
 
 class AcceptedIterationDict(TypedDict):
-    parent: CandidateId
-    child: CandidateId
+    parent: PromptConfigurationId
+    child: PromptConfigurationId
     module: ModuleId
     before: float
     after: float
@@ -167,10 +171,10 @@ class AcceptedIteration(BaseModel):
 @dataclass
 class OptimizationResult:
     optimization_id: str
-    best_id: CandidateId
+    best_id: PromptConfigurationId
     accepted_iterations: List[Dict]
-    pareto_scores: Dict[CandidateId, List[float]]
-    parents: Dict[CandidateId, Optional[CandidateId]]
+    pareto_scores: Dict[PromptConfigurationId, List[float]]
+    parents: Dict[PromptConfigurationId, Optional[PromptConfigurationId]]
 
     def as_dict(self) -> Dict:
         return dict(

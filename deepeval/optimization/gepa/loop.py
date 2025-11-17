@@ -23,8 +23,8 @@ from deepeval.evaluate.configs import AsyncConfig
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
     AcceptedIterationDict,
-    Candidate,
-    CandidateId,
+    PromptConfiguration,
+    PromptConfigurationId,
     ModuleId,
     ScoreTable,
     ScoringAdapter,
@@ -36,7 +36,7 @@ from deepeval.optimization.adapters.deepeval_scoring_adapter import (
 from deepeval.optimization.utils import split_goldens
 from deepeval.optimization.policies import (
     pick_best_with_ties,
-    select_candidate_pareto,
+    select_prompt_configuration_pareto,
 )
 from deepeval.metrics import (
     BaseMetric,
@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 class GEPARunner:
     """
     GEPA loop with a sync/async API parity.
-    - Candidate selection: Pareto-frequency over D_pareto instance scores.
+    - PromptConfiguration selection: Pareto-frequency over D_pareto instance scores.
     - Acceptance: minibatch improvement on D_feedback (σ_after >= σ_before + min_delta).
     """
 
@@ -101,19 +101,29 @@ class GEPARunner:
             )
 
         # State
-        self.candidates_by_id: Dict[CandidateId, Candidate] = {}
-        self.parents_by_id: Dict[CandidateId, Optional[CandidateId]] = {}
+        self.prompt_configurations_by_id: Dict[
+            PromptConfigurationId, PromptConfiguration
+        ] = {}
+        self.parents_by_id: Dict[
+            PromptConfigurationId, Optional[PromptConfigurationId]
+        ] = {}
         self.pareto_score_table: ScoreTable = {}
 
-    def _add_candidate(self, candidate: Candidate):
-        self.candidates_by_id[candidate.id] = candidate
-        self.parents_by_id[candidate.id] = candidate.parent
+    def _add_prompt_configuration(
+        self, prompt_configuration: PromptConfiguration
+    ):
+        self.prompt_configurations_by_id[prompt_configuration.id] = (
+            prompt_configuration
+        )
+        self.parents_by_id[prompt_configuration.id] = (
+            prompt_configuration.parent
+        )
 
-    def _best_by_aggregate(self) -> Candidate:
+    def _best_by_aggregate(self) -> PromptConfiguration:
         assert self.pareto_score_table, "No scores yet"
         totals = {
-            candidate_id: self.aggregate_instances(vector)
-            for candidate_id, vector in self.pareto_score_table.items()
+            prompt_configuration_id: self.aggregate_instances(vector)
+            for prompt_configuration_id, vector in self.pareto_score_table.items()
         }
 
         chosen, tied, max_val = pick_best_with_ties(
@@ -126,13 +136,13 @@ class GEPARunner:
 
         if self.config.display_options.announce_ties and len(tied) > 1:
             print(
-                f"[GEPA] tie on aggregate={max_val:.4f} among {len(tied)} candidates; "
+                f"[GEPA] tie on aggregate={max_val:.4f} among {len(tied)} prompt_configurations; "
                 f"using tie_breaker={self.config.tie_breaker.value!r} selected {chosen}. "
                 f"To change, set GEPAConfig.tie_breaker to one of: "
                 f"{[t.value for t in self.config.TieBreaker]} "
                 f"(tie_tolerance={float(self.config.tie_tolerance):g})."
             )
-        return self.candidates_by_id[chosen]
+        return self.prompt_configurations_by_id[chosen]
 
     def optimize(
         self,
@@ -169,10 +179,14 @@ class GEPARunner:
             goldens, self.config.pareto_size, random_state=self.random_state
         )
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
-        self._add_candidate(root_candidate)
-        self.pareto_score_table[root_candidate.id] = (
-            self.scoring_adapter.score_on_pareto(root_candidate, d_pareto)
+        root_prompt_configuration = PromptConfiguration.new(
+            prompts=dict(seed_prompts_by_module)
+        )
+        self._add_prompt_configuration(root_prompt_configuration)
+        self.pareto_score_table[root_prompt_configuration.id] = (
+            self.scoring_adapter.score_on_pareto(
+                root_prompt_configuration, d_pareto
+            )
         )
 
         accepted_iterations: List[Dict] = []
@@ -184,8 +198,8 @@ class GEPARunner:
             if not d_feedback:
                 return False
 
-            # 1. Pick candidate via Pareto
-            parent_candidate = self._pick_candidate()
+            # 1. Pick prompt_configuration via Pareto
+            parent_prompt_configuration = self._pick_prompt_configuration()
 
             # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
@@ -195,26 +209,26 @@ class GEPARunner:
 
             # 4. Feedback
             feedback_text = self.scoring_adapter.minibatch_feedback(
-                parent_candidate, selected_module_id, minibatch
+                parent_prompt_configuration, selected_module_id, minibatch
             )
 
             child_prompt = self._generate_child_prompt(
-                selected_module_id, parent_candidate, feedback_text
+                selected_module_id, parent_prompt_configuration, feedback_text
             )
             if child_prompt is None:
                 # child prompt matched parent. Skip this generation.
                 return True
 
-            child_candidate = self._make_child(
-                selected_module_id, parent_candidate, child_prompt
+            child_prompt_configuration = self._make_child(
+                selected_module_id, parent_prompt_configuration, child_prompt
             )
 
             parent_score = self.scoring_adapter.minibatch_score(
-                parent_candidate, minibatch
+                parent_prompt_configuration, minibatch
             )
 
             child_score = self.scoring_adapter.minibatch_score(
-                child_candidate, minibatch
+                child_prompt_configuration, minibatch
             )
 
             # print(f"[GEPA] module={selected_module_id}")
@@ -235,8 +249,8 @@ class GEPARunner:
                 accepted_iterations.append(
                     self._accept_child(
                         selected_module_id,
-                        parent_candidate,
-                        child_candidate,
+                        parent_prompt_configuration,
+                        child_prompt_configuration,
                         d_pareto,
                         parent_score,
                         child_score,
@@ -267,11 +281,13 @@ class GEPARunner:
             goldens, self.config.pareto_size, random_state=self.random_state
         )
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
-        root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
-        self._add_candidate(root_candidate)
-        self.pareto_score_table[root_candidate.id] = (
+        root_prompt_configuration = PromptConfiguration.new(
+            prompts=dict(seed_prompts_by_module)
+        )
+        self._add_prompt_configuration(root_prompt_configuration)
+        self.pareto_score_table[root_prompt_configuration.id] = (
             await self.scoring_adapter.a_score_on_pareto(
-                root_candidate, d_pareto
+                root_prompt_configuration, d_pareto
             )
         )
 
@@ -284,8 +300,8 @@ class GEPARunner:
             if not d_feedback:
                 return False
 
-            # 1. Pick candidate via Pareto
-            parent_candidate = self._pick_candidate()
+            # 1. Pick prompt_configuration via Pareto
+            parent_prompt_configuration = self._pick_prompt_configuration()
 
             # 2. Single module id
             selected_module_id: ModuleId = self.SINGLE_MODULE_ID
@@ -295,26 +311,26 @@ class GEPARunner:
 
             # 4. Feedback
             feedback_text = await self.scoring_adapter.a_minibatch_feedback(
-                parent_candidate, selected_module_id, minibatch
+                parent_prompt_configuration, selected_module_id, minibatch
             )
 
             child_prompt = await self._a_generate_child_prompt(
-                selected_module_id, parent_candidate, feedback_text
+                selected_module_id, parent_prompt_configuration, feedback_text
             )
             if child_prompt is None:
                 # child prompt matched parent. Skip this generation.
                 return True
 
-            child_candidate = self._make_child(
-                selected_module_id, parent_candidate, child_prompt
+            child_prompt_configuration = self._make_child(
+                selected_module_id, parent_prompt_configuration, child_prompt
             )
 
             parent_score = await self.scoring_adapter.a_minibatch_score(
-                parent_candidate, minibatch
+                parent_prompt_configuration, minibatch
             )
 
             child_score = await self.scoring_adapter.a_minibatch_score(
-                child_candidate, minibatch
+                child_prompt_configuration, minibatch
             )
 
             # print(f"[GEPA] module={selected_module_id}")
@@ -335,8 +351,8 @@ class GEPARunner:
                 accepted_iterations.append(
                     await self._a_accept_child(
                         selected_module_id,
-                        parent_candidate,
-                        child_candidate,
+                        parent_prompt_configuration,
+                        child_prompt_configuration,
                         d_pareto,
                         parent_score,
                         child_score,
@@ -356,12 +372,14 @@ class GEPARunner:
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 
-    def _pick_candidate(self) -> Candidate:
+    def _pick_prompt_configuration(self) -> PromptConfiguration:
 
-        selected_candidate_id = select_candidate_pareto(
+        selected_prompt_configuration_id = select_prompt_configuration_pareto(
             self.pareto_score_table, random_state=self.random_state
         )
-        return self.candidates_by_id[selected_candidate_id]
+        return self.prompt_configurations_by_id[
+            selected_prompt_configuration_id
+        ]
 
     def _draw_minibatch(
         self, d_feedback: Union[List[Golden], List[ConversationalGolden]]
@@ -377,11 +395,11 @@ class GEPARunner:
     async def _a_generate_child_prompt(
         self,
         selected_module_id: ModuleId,
-        parent_candidate: Candidate,
+        parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
     ) -> Optional[Prompt]:
         # 5. Rewrite
-        old_prompt = parent_candidate.prompts.get(
+        old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
         new_prompt = await self.rewriter.a_rewrite(
@@ -401,11 +419,11 @@ class GEPARunner:
     def _generate_child_prompt(
         self,
         selected_module_id: ModuleId,
-        parent_candidate: Candidate,
+        parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
     ):
         # 5. Rewrite
-        old_prompt = parent_candidate.prompts.get(
+        old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
         new_prompt = self.rewriter.rewrite(
@@ -425,17 +443,17 @@ class GEPARunner:
     def _make_child(
         self,
         selected_module_id: ModuleId,
-        parent_candidate: Candidate,
+        parent_prompt_configuration: PromptConfiguration,
         child_prompt: Prompt,
-    ) -> Candidate:
+    ) -> PromptConfiguration:
 
-        # 6. Child candidate
-        child_candidate = Candidate.new(
-            prompts=dict(parent_candidate.prompts),
-            parent=parent_candidate.id,
+        # 6. Child prompt_configuration
+        child_prompt_configuration = PromptConfiguration.new(
+            prompts=dict(parent_prompt_configuration.prompts),
+            parent=parent_prompt_configuration.id,
         )
-        child_candidate.prompts[selected_module_id] = child_prompt
-        return child_candidate
+        child_prompt_configuration.prompts[selected_module_id] = child_prompt
+        return child_prompt_configuration
 
     def _should_accept_child(
         self, parent_score: float, child_score: float
@@ -446,20 +464,22 @@ class GEPARunner:
     def _accept_child(
         self,
         selected_module_id: ModuleId,
-        parent_candidate: Candidate,
-        child_candidate: Candidate,
+        parent_prompt_configuration: PromptConfiguration,
+        child_prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
         parent_score: float,
         child_score: float,
     ) -> AcceptedIterationDict:
-        self._add_candidate(child_candidate)
-        self.pareto_score_table[child_candidate.id] = (
-            self.scoring_adapter.score_on_pareto(child_candidate, d_pareto)
+        self._add_prompt_configuration(child_prompt_configuration)
+        self.pareto_score_table[child_prompt_configuration.id] = (
+            self.scoring_adapter.score_on_pareto(
+                child_prompt_configuration, d_pareto
+            )
         )
 
         return AcceptedIterationDict(
-            parent=parent_candidate.id,
-            child=child_candidate.id,
+            parent=parent_prompt_configuration.id,
+            child=child_prompt_configuration.id,
             module=selected_module_id,
             before=parent_score,
             after=child_score,
@@ -468,22 +488,22 @@ class GEPARunner:
     async def _a_accept_child(
         self,
         selected_module_id: ModuleId,
-        parent_candidate: Candidate,
-        child_candidate: Candidate,
+        parent_prompt_configuration: PromptConfiguration,
+        child_prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
         parent_score: float,
         child_score: float,
     ) -> AcceptedIterationDict:
-        self._add_candidate(child_candidate)
-        self.pareto_score_table[child_candidate.id] = (
+        self._add_prompt_configuration(child_prompt_configuration)
+        self.pareto_score_table[child_prompt_configuration.id] = (
             await self.scoring_adapter.a_score_on_pareto(
-                child_candidate, d_pareto
+                child_prompt_configuration, d_pareto
             )
         )
 
         return AcceptedIterationDict(
-            parent=parent_candidate.id,
-            child=child_candidate.id,
+            parent=parent_prompt_configuration.id,
+            child=child_prompt_configuration.id,
             module=selected_module_id,
             before=parent_score,
             after=child_score,

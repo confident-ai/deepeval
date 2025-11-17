@@ -14,7 +14,7 @@ from typing import (
 from functools import lru_cache
 
 from deepeval.optimization.types import (
-    Candidate,
+    PromptConfiguration,
     Objective,
     MeanObjective,
     ModuleId,
@@ -164,12 +164,12 @@ class DeepEvalScoringAdapter(ScoringAdapter):
 
     async def _a_score_one(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         golden: Union[Golden, ConversationalGolden],
     ) -> float:
         # Clone metrics to avoid shared-state races (e.g., .reason)
         metrics = [copy.copy(metric) for metric in self.metrics]
-        actual = await self.a_generate(candidate.prompts, golden)
+        actual = await self.a_generate(prompt_configuration.prompts, golden)
         test_case = self.build_test_case(golden, actual)
         per_metric: Dict[str, float] = {}
         for metric in metrics:
@@ -179,11 +179,11 @@ class DeepEvalScoringAdapter(ScoringAdapter):
 
     def _score_one(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         golden: Union[Golden, ConversationalGolden],
     ) -> float:
         metrics = [copy.copy(m) for m in self.metrics]
-        actual = self.generate(candidate.prompts, golden)
+        actual = self.generate(prompt_configuration.prompts, golden)
         test_case = self.build_test_case(golden, actual)
         per_metric: Dict[str, float] = {}
         for metric in metrics:
@@ -237,32 +237,37 @@ class DeepEvalScoringAdapter(ScoringAdapter):
 
     def score_on_pareto(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> List[float]:
-        return [self._score_one(candidate, golden) for golden in d_pareto]
+        return [
+            self._score_one(prompt_configuration, golden) for golden in d_pareto
+        ]
 
     def minibatch_score(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float:
         if not minibatch:
             return 0.0
 
-        scores = [self._score_one(candidate, golden) for golden in minibatch]
+        scores = [
+            self._score_one(prompt_configuration, golden)
+            for golden in minibatch
+        ]
         return sum(scores) / len(scores)
 
     def minibatch_feedback(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
         # default metric feedback (μ_f): concat metric.reason across minibatch and cap length lightly
         reasons: List[str] = []
         for golden in minibatch:
-            actual = self.generate(candidate.prompts, golden)
+            actual = self.generate(prompt_configuration.prompts, golden)
             test_case = self.build_test_case(golden, actual)
             for metric in [copy.copy(m) for m in self.metrics]:
                 _ = _measure_no_indicator(metric, test_case)
@@ -280,22 +285,22 @@ class DeepEvalScoringAdapter(ScoringAdapter):
 
     async def a_score_on_pareto(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> List[float]:
         tasks = [
-            self._bounded(self._a_score_one(candidate, golden))
+            self._bounded(self._a_score_one(prompt_configuration, golden))
             for golden in d_pareto
         ]
         return await asyncio.gather(*tasks)
 
     async def a_minibatch_score(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float:
         tasks = [
-            self._bounded(self._a_score_one(candidate, golden))
+            self._bounded(self._a_score_one(prompt_configuration, golden))
             for golden in minibatch
         ]
         scores = await asyncio.gather(*tasks)
@@ -303,7 +308,7 @@ class DeepEvalScoringAdapter(ScoringAdapter):
 
     async def a_minibatch_feedback(
         self,
-        candidate: Candidate,
+        prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
@@ -311,7 +316,7 @@ class DeepEvalScoringAdapter(ScoringAdapter):
             # Clone per task to avoid data races on .reason
             metrics = [copy.copy(metric) for metric in self.metrics]
             # metrics = self.metrics
-            actual = await self.a_generate(candidate.prompts, golden)
+            actual = await self.a_generate(prompt_configuration.prompts, golden)
             test_case = self.build_test_case(golden, actual)
             out: List[str] = []
             for metric in metrics:
@@ -333,8 +338,12 @@ class DeepEvalScoringAdapter(ScoringAdapter):
                 seen.add(reason)
         return "\n---\n".join(unique[:8])
 
-    def select_module(self, candidate: Candidate) -> ModuleId:
+    def select_module(
+        self, prompt_configuration: PromptConfiguration
+    ) -> ModuleId:
         return "__module__"
 
-    async def a_select_module(self, candidate: Candidate) -> ModuleId:
+    async def a_select_module(
+        self, prompt_configuration: PromptConfiguration
+    ) -> ModuleId:
         return "__module__"

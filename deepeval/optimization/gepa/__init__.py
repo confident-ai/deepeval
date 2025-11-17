@@ -2,7 +2,7 @@ from .configs import GEPAConfig
 from .loop import GEPARunner
 from .mutation import PromptRewriter, MetricAwareLLMRewriter
 from ..types import (
-    Candidate,
+    PromptConfiguration,
     OptimizationResult,
     OptimizationReport,
     ModuleId,
@@ -13,7 +13,7 @@ from ..types import (
 )
 
 __all__ = [
-    "Candidate",
+    "PromptConfiguration",
     "GEPAConfig",
     "GEPARunner",
     "PromptRewriter",
