@@ -22,7 +22,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.evaluate.configs import AsyncConfig
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
-    AcceptedStepDict,
+    AcceptedIterationDict,
     Candidate,
     CandidateId,
     ModuleId,
@@ -175,11 +175,11 @@ class GEPARunner:
             self.scoring_adapter.score_on_pareto(root_candidate, d_pareto)
         )
 
-        accepted_steps: List[Dict] = []
-        remaining_budget = self.config.budget
+        accepted_iterations: List[Dict] = []
+        remaining_iterations = self.config.iterations
 
-        def _one_step():
-            nonlocal remaining_budget, accepted_steps
+        def _one_iteration():
+            nonlocal remaining_iterations, accepted_iterations
 
             if not d_feedback:
                 return False
@@ -232,7 +232,7 @@ class GEPARunner:
 
             # 7. Acceptance test
             if self._should_accept_child(parent_score, child_score):
-                accepted_steps.append(
+                accepted_iterations.append(
                     self._accept_child(
                         selected_module_id,
                         parent_candidate,
@@ -245,12 +245,12 @@ class GEPARunner:
 
             return True
 
-        self._run_budgeted_loop(_one_step)
+        self._run_loop_iteration(_one_iteration)
         best = self._best_by_aggregate()
         report = OptimizationResult(
             optimization_id=self.optimization_id,
             best_id=best.id,
-            accepted_steps=accepted_steps,
+            accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
         )
@@ -275,11 +275,11 @@ class GEPARunner:
             )
         )
 
-        accepted_steps: List[Dict] = []
-        remaining_budget = self.config.budget
+        accepted_iterations: List[Dict] = []
+        remaining_iterations = self.config.iterations
 
-        async def _one_step():
-            nonlocal remaining_budget, accepted_steps
+        async def _one_iteration():
+            nonlocal remaining_iterations, accepted_iterations
 
             if not d_feedback:
                 return False
@@ -332,7 +332,7 @@ class GEPARunner:
 
             # 7. Acceptance test
             if self._should_accept_child(parent_score, child_score):
-                accepted_steps.append(
+                accepted_iterations.append(
                     await self._a_accept_child(
                         selected_module_id,
                         parent_candidate,
@@ -345,12 +345,12 @@ class GEPARunner:
 
             return True
 
-        await self._a_run_budgeted_loop(_one_step)
+        await self._a_run_loop_iteration(_one_iteration)
         best = self._best_by_aggregate()
         report = OptimizationResult(
             optimization_id=self.optimization_id,
             best_id=best.id,
-            accepted_steps=accepted_steps,
+            accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
         )
@@ -451,13 +451,13 @@ class GEPARunner:
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
         parent_score: float,
         child_score: float,
-    ) -> AcceptedStepDict:
+    ) -> AcceptedIterationDict:
         self._add_candidate(child_candidate)
         self.pareto_score_table[child_candidate.id] = (
             self.scoring_adapter.score_on_pareto(child_candidate, d_pareto)
         )
 
-        return AcceptedStepDict(
+        return AcceptedIterationDict(
             parent=parent_candidate.id,
             child=child_candidate.id,
             module=selected_module_id,
@@ -473,7 +473,7 @@ class GEPARunner:
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
         parent_score: float,
         child_score: float,
-    ) -> AcceptedStepDict:
+    ) -> AcceptedIterationDict:
         self._add_candidate(child_candidate)
         self.pareto_score_table[child_candidate.id] = (
             await self.scoring_adapter.a_score_on_pareto(
@@ -481,7 +481,7 @@ class GEPARunner:
             )
         )
 
-        return AcceptedStepDict(
+        return AcceptedIterationDict(
             parent=parent_candidate.id,
             child=child_candidate.id,
             module=selected_module_id,
@@ -489,13 +489,13 @@ class GEPARunner:
             after=child_score,
         )
 
-    def _format_step_desc(
-        self, step_count: int, remaining_budget: int, elapsed_time: float
+    def _format_progress_description(
+        self, iteration: int, remaining_iterations: int, elapsed_time: float
     ) -> str:
         return (
-            f"Optimizing prompt with GEPA (budget={self.config.budget}) "
-            f"[rgb(25,227,160)]• Step {step_count}/{self.config.budget} "
-            f"• {elapsed_time:.2f}s • remaining={remaining_budget}"
+            f"Optimizing prompt with GEPA (iterations={self.config.iterations}) "
+            f"[rgb(25,227,160)]• Iteration {iteration}/{self.config.iterations} "
+            f"• {elapsed_time:.2f}s • remaining={remaining_iterations}"
         )
 
     def _progress_columns(self):
@@ -525,21 +525,21 @@ class GEPARunner:
 
             yield _Noop()
 
-    def _run_budgeted_loop(
+    def _run_loop_iteration(
         self,
-        gepa_step: Callable[[], bool],
+        gepa_iteration: Callable[[], bool],
     ) -> None:
-        remaining = self.config.budget
-        step_count = 0
+        remaining = self.config.iterations
+        iteration = 0
         with self._maybe_progress() as progress:
             task = progress.add_task(
-                f"Optimizing prompt with GEPA (budget={self.config.budget})...",
-                total=self.config.budget,
+                f"Optimizing prompt with GEPA (iterations={remaining})...",
+                total=remaining,
             )
             while remaining > 0:
-                step_count += 1
+                iteration += 1
                 start_time = time.perf_counter()
-                ok = gepa_step()
+                ok = gepa_iteration()
                 end_time = time.perf_counter()
                 if not ok:
                     break
@@ -547,26 +547,26 @@ class GEPARunner:
                 progress.advance(task, 1)
                 progress.update(
                     task,
-                    description=self._format_step_desc(
-                        step_count, remaining, end_time - start_time
+                    description=self._format_progress_description(
+                        iteration, remaining, end_time - start_time
                     ),
                 )
 
-    async def _a_run_budgeted_loop(
+    async def _a_run_loop_iteration(
         self,
-        a_gepa_step: Callable[[], Awaitable[bool]],
+        a_gepa_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
-        remaining = self.config.budget
-        step_count = 0
+        remaining = self.config.iterations
+        iteration = 0
         with self._maybe_progress() as progress:
             task = progress.add_task(
-                f"Optimizing prompt with GEPA (budget={self.config.budget})...",
-                total=self.config.budget,
+                f"Optimizing prompt with GEPA (iterations={remaining})...",
+                total=remaining,
             )
             while remaining > 0:
-                step_count += 1
+                iteration += 1
                 start_time = time.perf_counter()
-                ok = await a_gepa_step()
+                ok = await a_gepa_iteration()
                 end_time = time.perf_counter()
                 if not ok:
                     break
@@ -574,7 +574,7 @@ class GEPARunner:
                 progress.advance(task, 1)
                 progress.update(
                     task,
-                    description=self._format_step_desc(
-                        step_count, remaining, end_time - start_time
+                    description=self._format_progress_description(
+                        iteration, remaining, end_time - start_time
                     ),
                 )

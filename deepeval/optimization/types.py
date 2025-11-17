@@ -148,7 +148,7 @@ class MetricInfo:
     rubric: Optional[str] = None
 
 
-class AcceptedStepDict(TypedDict):
+class AcceptedIterationDict(TypedDict):
     parent: CandidateId
     child: CandidateId
     module: ModuleId
@@ -156,7 +156,7 @@ class AcceptedStepDict(TypedDict):
     after: float
 
 
-class AcceptedStep(BaseModel):
+class AcceptedIteration(BaseModel):
     parent: str
     child: str
     module: str
@@ -168,7 +168,7 @@ class AcceptedStep(BaseModel):
 class OptimizationResult:
     optimization_id: str
     best_id: CandidateId
-    accepted_steps: List[Dict]
+    accepted_iterations: List[Dict]
     pareto_scores: Dict[CandidateId, List[float]]
     parents: Dict[CandidateId, Optional[CandidateId]]
 
@@ -176,7 +176,7 @@ class OptimizationResult:
         return dict(
             optimization_id=self.optimization_id,
             best_id=self.best_id,
-            accepted_steps=self.accepted_steps,
+            accepted_iterations=self.accepted_iterations,
             pareto_scores=self.pareto_scores,
             parents=self.parents,
         )
@@ -191,10 +191,12 @@ class OptimizationReport(BaseModel):
         alias="bestId",
         validation_alias=AliasChoices("bestId", "best_id"),
     )
-    accepted_steps: list[AcceptedStep] = Field(
+    accepted_iterations: list[AcceptedIteration] = Field(
         default_factory=list,
-        alias="acceptedSteps",
-        validation_alias=AliasChoices("acceptedSteps", "accepted_steps"),
+        alias="acceptedIterations",
+        validation_alias=AliasChoices(
+            "acceptedIterations", "accepted_iterations"
+        ),
     )
     pareto_scores: dict[str, list[float]] = Field(
         alias="paretoScores",

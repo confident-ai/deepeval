@@ -31,14 +31,14 @@ class GEPADisplayConfig(BaseModel):
 class GEPAConfig(BaseModel):
     """
     Core GEPA hyperparameters.
-    - budget: total mutation attempts (Alg. 1 loop steps)
+    - iterations: total mutation attempts (Alg. 1 loop iterations)
     - minibatch_size: b is size of minibatch from D_feedback
     - pareto_size: n_pareto is size of D_pareto
     - random_seed: RNG seed for reproducibility
     - min_delta: optional acceptance tolerance, such as σ′ >= σ + min_delta
     """
 
-    budget: PositiveInt = Field(..., description="Total mutation attempts")
+    iterations: PositiveInt = Field(..., description="Total mutation attempts")
     minibatch_size: PositiveInt = Field(
         ..., description="Minibatch size for D_feedback"
     )
