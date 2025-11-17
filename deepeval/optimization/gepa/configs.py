@@ -11,7 +11,7 @@ from pydantic import (
     PrivateAttr,
 )
 
-from deepeval.optimization.policies.tiebreaker import (
+from deepeval.optimization.policies.tie_breaker import (
     TieBreaker as TieBreakerPolicy,
 )
 from deepeval.optimization.types import PromptRewriterProtocol

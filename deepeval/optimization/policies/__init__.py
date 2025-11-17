@@ -4,7 +4,7 @@ from .selection import (
     sample_by_frequency,
     select_prompt_configuration_pareto,
 )
-from .tiebreaker import TieBreaker, pick_best_with_ties
+from .tie_breaker import TieBreaker, pick_best_with_ties
 
 __all__ = [
     "pareto_frontier",
