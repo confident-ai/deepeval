@@ -502,10 +502,14 @@ def wrap_up_experiment(
 
     try:
         api = Api()
-        experiment_request = PostExperimentRequest(testRuns=test_runs, name=name)
+        experiment_request = PostExperimentRequest(
+            testRuns=test_runs, name=name
+        )
 
         try:
-            body = experiment_request.model_dump(by_alias=True, exclude_none=True)
+            body = experiment_request.model_dump(
+                by_alias=True, exclude_none=True
+            )
         except AttributeError:
             body = experiment_request.dict(by_alias=True, exclude_none=True)
         json_str = json.dumps(body, cls=TestRunEncoder)
