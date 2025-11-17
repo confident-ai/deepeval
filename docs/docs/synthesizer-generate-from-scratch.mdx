@@ -42,9 +42,9 @@ This approach is particularly useful if your LLM application **doesn't rely on R
 
 Since there is no grounded context involved, you'll need to provide a `StylingConfig` when instantiating a `Synthesizer` for `deepeval`'s `Synthesizer` to know what types of goldens it should generate:
 
-<Tabs>
+<Tabs groupId="single-multi-turns">
 
-<TabItem value="goldens" label="Goldens">
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -62,7 +62,7 @@ synthesizer = Synthesizer(styling_config=styling_config)
 
 </TabItem>
 
-<TabItem value="convo_goldens" label="Conversational Goldens">
+<TabItem value="multi-turn" label="Multi-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -83,28 +83,28 @@ synthesizer = Synthesizer(conversational_styling_config=conversational_styling_c
 
 Finally, to generate synthetic goldens without provided context, simply supply the number of goldens you want generated:
 
-<Tabs>
+<Tabs groupId="single-multi-turns">
 
-<TabItem value="goldens" label="Goldens">
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
-
 ...
-synthesizer.generate_goldens_from_scratch(num_goldens=25)
-print(synthesizer.synthetic_goldens)
+
+goldens = synthesizer.generate_goldens_from_scratch(num_goldens=25)
+print(goldens)
 ```
 
 </TabItem>
 
-<TabItem value="convo_goldens" label="Conversational Goldens">
+<TabItem value="multi-turn" label="Multi-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
-
 ...
-synthesizer.generate_conversational_goldens_from_scratch(num_goldens=25)
-print(synthesizer.synthetic_goldens)
+
+conversational_goldens = synthesizer.generate_conversational_goldens_from_scratch(num_goldens=25)
+print(conversational_goldens)
 ```
 
 </TabItem>

@@ -133,7 +133,7 @@ class Index extends React.Component {
           <FeatureCard
             title="LLM-as-a-Judge Metrics"
             link="/docs/metrics-introduction"
-            description="40+ research-backed metrics, including custom G-Eval and deterministic metrics."
+            description="50+ research-backed metrics, including custom G-Eval and deterministic metrics."
           />
           <FeatureCard
             title="Single and Multi-Turn Evals"

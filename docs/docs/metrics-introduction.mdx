@@ -12,12 +12,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
-`deepeval` offers 40+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while the metric acts as the ruler based on a specific criteria of interest, a test case represents the thing you're trying to measure.
-
-:::tip Persisting settings
-You can persist CLI settings with the optional `--save` flag.
-See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
-:::
+`deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
 
 ## Quick Summary
 
@@ -160,7 +155,8 @@ More information on everything can be found on the [Confident AI evaluation docs
 
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 
-- Research-backed LLM-as-as-Judge (`GEval`)
+- Are research-backed LLM-as-as-Judge (`GEval`)
+- One of the most used in the world (20 million+ daily evaluations)
 - Make deterministic metric scores possible (when using `DAGMetric`)
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
 - Provide a comprehensive reason for the scores computed
