@@ -389,6 +389,7 @@ Using `.env.local` or `.env` is optional. If they are missing, DeepEval uses you
 ```bash
 cp .env.example .env.local
 # then edit .env.local (ignored by git)
+```
 
 <br />
 

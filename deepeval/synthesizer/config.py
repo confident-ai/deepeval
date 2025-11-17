@@ -42,6 +42,15 @@ class StylingConfig:
 
 
 @dataclass
+class ConversationalStylingConfig:
+    scenario_context: Optional[str] = None
+    conversational_task: Optional[str] = None
+    participant_roles: Optional[str] = None
+    scenario_format: Optional[str] = None
+    expected_outcome_format: Optional[str] = None
+
+
+@dataclass
 class ContextConstructionConfig:
     embedder: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
     critic_model: Optional[Union[str, DeepEvalBaseLLM]] = None

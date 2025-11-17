@@ -44,3 +44,35 @@ class ExtractionTemplate:
 
             {inputs}
      """
+
+    @staticmethod
+    def extract_conversational_structure_from_scenarios(example_scenarios):
+        scenarios_text = "\n".join(
+            [f"- {scenario}" for scenario in example_scenarios]
+        )
+
+        return f"""Analyze the following conversational scenarios and extract the common structural elements:
+
+        Example Scenarios:
+        {scenarios_text}
+
+        Based on these examples, identify and return in JSON format:
+        1. **scenario_context**: The general context or domain in which these conversations occur (e.g., "customer service", "educational settings", "workplace interactions")
+        2. **conversational_task**: The primary goal or purpose these conversations aim to achieve (e.g., "resolve issues", "provide information", "give feedback")
+        3. **participant_roles**: The typical participants involved in these conversations (e.g., "customer and support agent", "teacher and student", "manager and employee")
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'scenario_context', 'conversational_task', and 'participant_roles' keys.
+
+        Example JSON:
+        {{
+            "scenario_context": "Educational settings and academic discussions",
+            "conversational_task": "Explain concepts and answer questions",
+            "participant_roles": "Teacher and student, or peer students"
+        }}
+
+        The values MUST be STRINGS that capture the essence of the conversational patterns in the examples.
+        **
+
+        JSON:
+        """
