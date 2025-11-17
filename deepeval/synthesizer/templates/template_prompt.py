@@ -37,6 +37,69 @@ class PromptSynthesizerTemplate:
         JSON:
         """
 
+    @staticmethod
+    def generate_synthetic_conversational_scenarios(
+        scenario: str,
+        conversational_task: str,
+        participant_roles: str,
+        num_goldens: int,
+    ):
+        return f"""
+        Generate a series of conversational SCENARIOS from scratch based on the provided scenario description,
+        conversational task, and participant roles.
+
+        A SCENARIO is a narrative description of a situation in which a conversation naturally occurs.
+        It is NOT a question, NOT a prompt, and NOT a user query. It MUST purely describe context.
+
+        Each scenario MUST depict a realistic MULTI-TURN conversational situation involving the given participants.
+
+        **
+        IMPORTANT FORMAT:
+        - Only return JSON
+        - JSON MUST contain: {{ "data": [ {{ "scenario": "..." }}, ... ] }}
+        - You MUST TRY to generate {num_goldens} items
+        **
+
+        Example of GOOD scenarios (situational descriptions):
+        - "During a late afternoon code review session, a junior engineer asks their senior engineer why an async function is inconsistent, leading to a detailed back-and-forth about race conditions."
+        - "While preparing for a sprint demo, a senior engineer helps a junior engineer interpret stack traces, prompting a step-by-step explanation."
+
+        Example of BAD scenarios (DO NOT DO):
+        - "Why does my async function return inconsistent results?" (This is a prompt)
+        - "Explain how to debug race conditions." (Instruction)
+        - "What is the freezing point of water?" (Question)
+
+        CRITICAL REQUIREMENTS:
+        - Scenario MUST be a narrative description of a SITUATION.
+        - Scenario MUST involve these participant roles: {participant_roles}
+        - Scenario MUST align with this conversational task: {conversational_task}
+        - Scenario MUST feel natural, real-world, and MULTI-TURN.
+        - Scenario MUST NOT contain:
+            • direct questions
+            • instructions
+            • tasks
+            • explicit prompts
+            • standalone facts
+        - Scenario MUST be grounded in the meaning of the provided base scenario description.
+
+        You MUST TRY to generate {num_goldens} high-quality, non-repetitive scenarios.
+        **
+
+        Base Scenario Description:
+        {scenario}
+
+        Conversational Task:
+        {conversational_task}
+
+        Participant Roles:
+        {participant_roles}
+
+        Num Scenarios:
+        {num_goldens}
+
+        JSON:
+        """
+
 
 ######################################################################################################
 ##### Approach similar to https://github.com/nlpxucan/WizardLM/blob/main/Evol_Instruct/depth.py ######
@@ -280,5 +343,204 @@ class PromptEvolutionTemplate:
             Input:
             {input}
             Rewritten Input:
+            """
+        )
+
+
+class ConversationalPromptEvolutionTemplate:
+
+    base_instruction = """I want you to act as a conversational scenario rewriter.
+    Your objective is to rewrite the given `Scenario`. You MUST complicate the `Scenario` using the following method:"""
+
+    @staticmethod
+    def reasoning_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` to force participants into multi-step conversational reasoning.
+            2. Add layered inferences or analytical leaps required in dialogue.
+            3. `Rewritten Scenario` must stay concise, human-readable, and remain a conversation setup.
+            4. Do NOT exceed **15 words**.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two students discuss climate change.
+            Example rewritten scenario:
+            Two students debate climate impacts, tracing cause-effect chains across multiple evidence sources.
+
+            --------------------------
+
+            Example scenario:
+            A doctor explains treatment options.
+            Example rewritten scenario:
+            Doctor and patient reason through symptoms requiring sequential diagnostic logic.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def concretizing_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Replace broad conversation setup with a **more specific, concrete** conversational scene.
+            2. Add real-world detail (location, constraint, specific topic).
+            3. Keep under **15 words**, concise, and still a dialogue setup.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two engineers talk about safety.
+            Example rewritten scenario:
+            Two engineers argue over failing brake-system logs during late-night review.
+
+            --------------------------
+
+            Example scenario:
+            Two friends discuss exercise.
+            Example rewritten scenario:
+            Two friends compare heart-rate sensor issues during a marathon-training chat.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def constrained_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Add at least one new constraint shaping the conversation.
+            2. Constraint must significantly affect the dialogue.
+            3. Keep under **15 words**, concise, conversational.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two coworkers plan a report.
+            Example rewritten scenario:
+            Two coworkers plan a report with strict no-internet constraint.
+
+            --------------------------
+
+            Example scenario:
+            A teacher reviews homework.
+            Example rewritten scenario:
+            Teacher and student discuss homework under urgent submission deadline.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def comparative_question_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` so the conversation centers on comparing two+ items.
+            2. Must highlight similarities/differences through dialogue.
+            3. Keep under **15 words**, concise, conversational.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two analysts discuss tools.
+            Example rewritten scenario:
+            Two analysts compare legacy analytics pipeline vs. new automated system.
+
+            --------------------------
+
+            Example scenario:
+            Two students study history.
+            Example rewritten scenario:
+            Two students contrast Renaissance ideals with Enlightenment philosophies.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def hypothetical_scenario_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` to introduce a hypothetical twist derived from the setup.
+            2. The hypothetical MUST drive the conversation.
+            3. Keep under **15 words**, concise, conversational.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two scientists discuss pollution.
+            Example rewritten scenario:
+            Two scientists debate effects if emissions doubled overnight.
+
+            --------------------------
+
+            Example scenario:
+            A medic trains a recruit.
+            Example rewritten scenario:
+            Medic and recruit plan response to hypothetical antibiotic-resistant outbreak.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def in_breadth_evolution(scenario):
+        return (
+            ConversationalPromptEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` into a new conversation within the same domain.
+            2. The new conversation must explore a rarer, niche angle.
+            3. Keep under **15 words**, concise, conversational.
+
+            **
+            EXAMPLES
+
+            Example scenario:
+            Two doctors discuss patient care.
+            Example rewritten scenario:
+            Two doctors debate rare autoimmune disorder diagnostics.
+
+            --------------------------
+
+            Example scenario:
+            Two programmers discuss bugs.
+            Example rewritten scenario:
+            Two programmers examine obscure concurrency race-condition failures.
+
+            --------------------------
+
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
             """
         )

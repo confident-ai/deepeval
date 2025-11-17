@@ -11,6 +11,9 @@ sidebar_label: From Documents
   />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**. By simply providing these documents, the Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
 
 <div
@@ -52,6 +55,10 @@ pip install chromadb langchain-core langchain-community langchain-text-splitters
 
 Then, to generate synthetic `Golden`s from documents, simply provide a list of document paths:
 
+<Tabs>
+
+<TabItem value="goldens" label="Goldens">
+
 ```python
 from deepeval.synthesizer import Synthesizer
 
@@ -67,6 +74,30 @@ There is **ONE** mandatory and **THREE** optional parameters when using the `gen
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
 - [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
+
+</TabItem>
+
+<TabItem value="convo_goldens" label="Conversational Goldens">
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+synthesizer.generate_conversational_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+)
+```
+
+There is **ONE** mandatory and **THREE** optional parameters when using the `generate_conversational_goldens_from_docs` method:
+
+- `document_paths`: a list of strings, representing the path to the documents from which contexts will be extracted from. Supported document types include: `.txt`, `.docx`, `.pdf`, `.md`, `.markdown`, and `.mdx`.
+- [Optional] `include_expected_outcome`: a boolean which when set to `True`, will additionally generate an `expected_outcome` for each synthetic `ConversationalGolden`. Defaulted to `True`.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
+
+</TabItem>
+
+</Tabs>
 
 :::info
 The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_construction_config`, and **NOT** simply `max_goldens_per_context`.
