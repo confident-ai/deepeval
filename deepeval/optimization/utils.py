@@ -1,8 +1,22 @@
 from __future__ import annotations
+import inspect
 import random
 import re
-from typing import List, Tuple, TYPE_CHECKING, Union, Dict, Set
+from typing import (
+    Any,
+    Callable,
+    List,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
+    Dict,
+    Set,
+)
+from pydantic import BaseModel as PydanticBaseModel
 
+from deepeval.errors import DeepEvalError
+from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.types import ModuleId
 
@@ -115,3 +129,178 @@ def normalize_seed_prompts(
         module_id = generate_module_id(prompt, i, used)
         mapping[module_id] = prompt
     return mapping
+
+
+def require_model_or_callback(
+    *,
+    component: str,
+    model: Optional[DeepEvalBaseLLM],
+    model_callback: Optional[
+        Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ]
+    ],
+) -> Tuple[
+    Optional[DeepEvalBaseLLM],
+    Optional[Callable[..., Union[str, Dict, Tuple[Union[str, Dict], float]]]],
+]:
+    """
+    Ensure that at least one of `model` or `model_callback` is provided.
+
+    - `model` should be a DeepEvalBaseLLM.
+    - `model_callback` should be a callable that performs generation and
+      returns the model output.
+
+    Returns the pair unchanged on success.
+    """
+    if model is None and model_callback is None:
+        raise DeepEvalError(
+            f"{component} requires either a `model` or a `model_callback`.\n\n"
+            "Pass a DeepEvalBaseLLM instance via `model=` to let DeepEval call "
+            "`model.generate()` / `model.a_generate()`, or supply a custom callable "
+            "via `model_callback=` that performs generation and returns the model output."
+        )
+    return model, model_callback
+
+
+def build_model_callback_kwargs(
+    *,
+    # scoring context
+    prompt: Optional[Prompt] = None,
+    prompt_text: Optional[str] = None,
+    golden: Optional[Union["Golden", "ConversationalGolden"]] = None,
+    prompts_by_module: Optional[Dict[ModuleId, Prompt]] = None,
+    # rewriter context
+    module_id: Optional[ModuleId] = None,
+    old_prompt: Optional[Prompt] = None,
+    feedback_text: Optional[str] = None,
+    # shared
+    model: Optional[DeepEvalBaseLLM] = None,
+    model_schema: Optional["PydanticBaseModel"] = None,
+) -> Dict[str, Any]:
+    """
+    Build a superset of kwargs for GEPA model callbacks.
+
+    All keys are present in the dict so callbacks can declare any subset of:
+
+        hook: str           # injected by invoke_model_callback / a_invoke_model_callback
+        prompt: Prompt
+        prompt_text: str
+        golden: Golden | ConversationalGolden
+        prompts_by_module: Dict[ModuleId, Prompt]
+        module_id: ModuleId
+        old_prompt: Prompt
+        feedback_text: str
+        model: DeepEvalBaseLLM
+        model_schema: BaseModel
+
+    Non applicable fields are set to None.
+    """
+    return {
+        # scoring context
+        "prompt": prompt,
+        "prompt_text": prompt_text,
+        "golden": golden,
+        "prompts_by_module": prompts_by_module,
+        # rewriter context
+        "module_id": module_id,
+        "old_prompt": old_prompt,
+        "feedback_text": feedback_text,
+        # shared
+        "model": model,
+        "model_schema": model_schema,
+    }
+
+
+def invoke_model_callback(
+    *,
+    hook: str,
+    model_callback: Callable[
+        ...,
+        Union[
+            str,
+            Dict,
+            Tuple[Union[str, Dict], float],
+        ],
+    ],
+    candidate_kwargs: Dict[str, Any],
+) -> Union[
+    str,
+    Dict,
+    Tuple[Union[str, Dict], float],
+]:
+    """
+    Call a user provided model_callback in a synchronous context.
+
+    - Filters kwargs to only those the callback accepts.
+    - Injects `hook` if the callback declares it.
+    - Raises if the callback returns an awaitable; callers must use async
+      helpers for async callbacks.
+    """
+    sig = inspect.signature(model_callback)
+    supported = set(sig.parameters.keys())
+
+    filtered = {
+        key: value
+        for key, value in candidate_kwargs.items()
+        if key in supported
+    }
+
+    if "hook" in supported:
+        filtered["hook"] = hook
+
+    result = model_callback(**filtered)
+    if inspect.isawaitable(result):
+        raise DeepEvalError(
+            "model_callback returned an awaitable from a synchronous context. "
+            "Either declare the callback as `async def` and use async GEPA, or call "
+            "`model.generate(...)` instead of `model.a_generate(...)` inside a sync callback."
+        )
+    return result
+
+
+async def a_invoke_model_callback(
+    *,
+    hook: str,
+    model_callback: Callable[
+        ...,
+        Union[
+            str,
+            Dict,
+            Tuple[Union[str, Dict], float],
+        ],
+    ],
+    candidate_kwargs: Dict[str, Any],
+) -> Union[
+    str,
+    Dict,
+    Tuple[Union[str, Dict], float],
+]:
+    """
+    Call a user provided model_callback in an async context.
+
+    - Filters kwargs to only those the callback accepts.
+    - Injects `hook` if the callback declares it.
+    - Supports both sync and async callbacks.
+    """
+    sig = inspect.signature(model_callback)
+    supported = set(sig.parameters.keys())
+
+    filtered = {
+        key: value
+        for key, value in candidate_kwargs.items()
+        if key in supported
+    }
+
+    if "hook" in supported:
+        filtered["hook"] = hook
+
+    result = model_callback(**filtered)
+    if inspect.isawaitable(result):
+        return await result
+    return result

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import inspect
 import uuid
 import random
 import time
@@ -28,12 +29,13 @@ from deepeval.optimization.types import (
     ModuleId,
     ScoreTable,
     ScoringAdapter,
+    OptimizationReport,
     OptimizationResult,
 )
 from deepeval.optimization.adapters.deepeval_scoring_adapter import (
     DeepEvalScoringAdapter,
 )
-from deepeval.optimization.utils import split_goldens
+from deepeval.optimization.utils import split_goldens, require_model_or_callback
 from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
@@ -46,7 +48,6 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
 from .configs import GEPAConfig
-from deepeval.optimization.types import OptimizationReport
 
 
 if TYPE_CHECKING:
@@ -66,32 +67,84 @@ class GEPARunner:
         self,
         *,
         config: GEPAConfig,
-        async_config: Optional[AsyncConfig] = AsyncConfig(),
+        async_config: Optional[AsyncConfig] = None,
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
         # used if scoring_adapter is None
         metrics: Optional[
             Union[List[BaseMetric], List[BaseConversationalMetric]]
         ] = None,
-        model: DeepEvalBaseLLM,
+        model: Optional[DeepEvalBaseLLM] = None,
         model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
     ):
+
+        model, model_callback = require_model_or_callback(
+            component="GEPA prompt optimization",
+            model=model,
+            model_callback=model_callback,
+        )
+
         self.optimization_id: str = str(uuid.uuid4())
         self.config = config
-        self.async_config = async_config
+        self.async_config = async_config or AsyncConfig()
         self.random_state = random.Random(config.random_seed)
         self.model = model
+        self.model_schema = model_schema
+        self.model_callback = model_callback
         self.scoring_adapter = scoring_adapter
         self.rewriter = config.get_rewriter()
         self.aggregate_instances = aggregate_instances
 
         if scoring_adapter is None:
+            is_callback_async = (
+                inspect.iscoroutinefunction(model_callback)
+                if model_callback is not None
+                else False
+            )
+
             if not metrics:
                 raise DeepEvalError(
                     "Provide `metrics` when no `scoring_adapter` is supplied."
                 )
+
+            if (
+                not self.async_config.run_async
+                and model is None
+                and is_callback_async
+            ):
+                raise DeepEvalError(
+                    "Invalid GEPA configuration: sync runs (async_config.run_async=False) "
+                    "require either a DeepEvalBaseLLM `model` or a synchronous `model_callback`. "
+                    "Got an async-only model_callback with no model."
+                )
+
+            if (
+                self.async_config.run_async
+                and model is not None
+                and not hasattr(model, "a_generate")
+                and model_callback is None
+            ):
+                raise DeepEvalError(
+                    "Invalid GEPA configuration: async runs (async_config.run_async=True) "
+                    "require either a `model` that implements `a_generate` or a `model_callback` "
+                    "for prompt rewrites. Got a sync-only model with no callback."
+                )
+
             self.scoring_adapter = DeepEvalScoringAdapter(
-                metrics=metrics, model=model, model_schema=model_schema
+                metrics=metrics,
+                model=model,
+                model_schema=model_schema,
+                model_callback=model_callback,
             )
 
         if hasattr(self.scoring_adapter, "configure_async"):
@@ -190,10 +243,9 @@ class GEPARunner:
         )
 
         accepted_iterations: List[Dict] = []
-        remaining_iterations = self.config.iterations
 
         def _one_iteration():
-            nonlocal remaining_iterations, accepted_iterations
+            nonlocal accepted_iterations
 
             if not d_feedback:
                 return False
@@ -292,10 +344,9 @@ class GEPARunner:
         )
 
         accepted_iterations: List[Dict] = []
-        remaining_iterations = self.config.iterations
 
         async def _one_iteration():
-            nonlocal remaining_iterations, accepted_iterations
+            nonlocal accepted_iterations
 
             if not d_feedback:
                 return False
@@ -404,6 +455,8 @@ class GEPARunner:
         )
         new_prompt = await self.rewriter.a_rewrite(
             model=self.model,
+            model_schema=self.model_schema,
+            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,
@@ -428,6 +481,8 @@ class GEPARunner:
         )
         new_prompt = self.rewriter.rewrite(
             model=self.model,
+            model_schema=self.model_schema,
+            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,
@@ -526,7 +581,7 @@ class GEPARunner:
         )
 
     @contextmanager
-    def _maybe_progress(self) -> Progress:
+    def _maybe_progress(self):
         """Context manager yielding a Progress or a no-op"""
         if self.config.display_options.show_indicator:
             with Progress(*self._progress_columns(), transient=True) as p:
@@ -549,26 +604,26 @@ class GEPARunner:
         self,
         gepa_iteration: Callable[[], bool],
     ) -> None:
-        remaining = self.config.iterations
+        remaining_iterations = self.config.iterations
         iteration = 0
         with self._maybe_progress() as progress:
             task = progress.add_task(
-                f"Optimizing prompt with GEPA (iterations={remaining})...",
-                total=remaining,
+                f"Optimizing prompt with GEPA (iterations={remaining_iterations})...",
+                total=remaining_iterations,
             )
-            while remaining > 0:
+            while remaining_iterations > 0:
                 iteration += 1
                 start_time = time.perf_counter()
                 ok = gepa_iteration()
                 end_time = time.perf_counter()
                 if not ok:
                     break
-                remaining -= 1
+                remaining_iterations -= 1
                 progress.advance(task, 1)
                 progress.update(
                     task,
                     description=self._format_progress_description(
-                        iteration, remaining, end_time - start_time
+                        iteration, remaining_iterations, end_time - start_time
                     ),
                 )
 

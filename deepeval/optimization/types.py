@@ -3,15 +3,17 @@ import uuid
 
 from dataclasses import dataclass
 from typing import (
+    Callable,
     Dict,
     List,
     Optional,
     Protocol,
     TYPE_CHECKING,
     TypedDict,
+    Tuple,
     Union,
 )
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import BaseModel as PydanticBaseModel, Field, AliasChoices
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.models.base_model import DeepEvalBaseLLM
@@ -105,8 +107,19 @@ class PromptRewriterProtocol(Protocol):
     def rewrite(
         self,
         *,
-        model: Optional[DeepEvalBaseLLM],
         module_id: ModuleId,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt: ...
@@ -114,8 +127,19 @@ class PromptRewriterProtocol(Protocol):
     async def a_rewrite(
         self,
         *,
-        model: Optional[DeepEvalBaseLLM],
         module_id: ModuleId,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt: ...
@@ -160,7 +184,7 @@ class AcceptedIterationDict(TypedDict):
     after: float
 
 
-class AcceptedIteration(BaseModel):
+class AcceptedIteration(PydanticBaseModel):
     parent: str
     child: str
     module: str
@@ -186,7 +210,7 @@ class OptimizationResult:
         )
 
 
-class OptimizationReport(BaseModel):
+class OptimizationReport(PydanticBaseModel):
     optimization_id: str = Field(
         alias="optimizationId",
         validation_alias=AliasChoices("optimizationId", "optimization_id"),

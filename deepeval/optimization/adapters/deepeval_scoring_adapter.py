@@ -4,21 +4,28 @@ import copy
 import inspect
 import json
 from typing import (
-    List,
     Callable,
     Dict,
-    Union,
+    List,
     Optional,
+    Tuple,
+    Union,
     TYPE_CHECKING,
 )
 from functools import lru_cache
 
+from deepeval.errors import DeepEvalError
 from deepeval.optimization.types import (
     PromptConfiguration,
     Objective,
     MeanObjective,
     ModuleId,
-    ScoringAdapter,
+)
+from deepeval.optimization.utils import (
+    require_model_or_callback,
+    invoke_model_callback,
+    a_invoke_model_callback,
+    build_model_callback_kwargs,
 )
 from deepeval.metrics import (
     BaseMetric,
@@ -29,7 +36,6 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
 )
-from deepeval.errors import DeepEvalError
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from pydantic import BaseModel as PydanticBaseModel
@@ -84,14 +90,26 @@ async def _a_measure_no_indicator(metric, test_case):
     )
 
 
-class DeepEvalScoringAdapter(ScoringAdapter):
+class DeepEvalScoringAdapter:
     """Scoring adapter backed by DeepEval metrics with a built-in generation step."""
+
+    DEFAULT_MODULE_ID: ModuleId = "__module__"
 
     def __init__(
         self,
         *,
-        model: DeepEvalBaseLLM,
+        model: Optional[DeepEvalBaseLLM] = None,
         model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         build_test_case: Optional[
             Callable[
@@ -101,8 +119,11 @@ class DeepEvalScoringAdapter(ScoringAdapter):
         ] = None,
         objective_scalar: Objective = MeanObjective(),
     ):
-        if model is None:
-            raise DeepEvalError("DeepEvalScoringAdapter requires a model.")
+        model, model_callback = require_model_or_callback(
+            component="DeepEvalScoringAdapter",
+            model=model,
+            model_callback=model_callback,
+        )
 
         self.metrics = list(metrics)
         self.model = model
@@ -110,6 +131,12 @@ class DeepEvalScoringAdapter(ScoringAdapter):
         self.build_test_case = build_test_case or self._default_build_test_case
         self.objective_scalar = objective_scalar
 
+        self._model_callback = model_callback
+        self._callback_is_async: bool = (
+            inspect.iscoroutinefunction(model_callback)
+            if model_callback is not None
+            else False
+        )
         # async
         self._semaphore: Optional[asyncio.Semaphore] = None
         self._throttle: float = 0.0
@@ -209,31 +236,84 @@ class DeepEvalScoringAdapter(ScoringAdapter):
     def generate(
         self, prompts_by_module: Dict[ModuleId, Prompt], golden: "Golden"
     ) -> str:
-        prompt = prompts_by_module.get("__module__") or next(
+
+        if not prompts_by_module:
+            raise DeepEvalError(
+                "DeepEvalScoringAdapter.generate(...) received an empty "
+                "`prompts_by_module`; at least one Prompt is required."
+            )
+
+        module_id = self._select_module_id_from_prompts(prompts_by_module)
+        prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
         )
-        compiled = self._compile_prompt_text(prompt, golden)
-        res = self.model.generate(compiled, schema=self.model_schema)
-        return self._unwrap_text(res)
+        prompt_text = self._compile_prompt_text(prompt, golden)
+
+        # Use callback if provided
+        if self._model_callback is not None and not self._callback_is_async:
+            candidate_kwargs = build_model_callback_kwargs(
+                module_id=module_id,
+                prompt=prompt,
+                prompt_text=prompt_text,
+                golden=golden,
+                prompts_by_module=prompts_by_module,
+                model=self.model,
+                model_schema=self.model_schema,
+            )
+            result = invoke_model_callback(
+                hook="score_generate",
+                model_callback=self._model_callback,
+                candidate_kwargs=candidate_kwargs,
+            )
+            return self._unwrap_text(result)
+
+        result = self.model.generate(prompt_text, schema=self.model_schema)
+        return self._unwrap_text(result)
 
     async def a_generate(
         self, prompts_by_module: Dict[ModuleId, Prompt], golden: "Golden"
     ) -> str:
-        prompt = prompts_by_module.get("__module__") or next(
+
+        if not prompts_by_module:
+            raise DeepEvalError(
+                "DeepEvalScoringAdapter.a_generate(...) received an empty "
+                "`prompts_by_module`; at least one Prompt is required."
+            )
+
+        module_id = self._select_module_id_from_prompts(prompts_by_module)
+        prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
         )
-        compiled = self._compile_prompt_text(prompt, golden)
-        if hasattr(self.model, "a_generate"):
-            res = await self.model.a_generate(
-                compiled, schema=self.model_schema
+        prompt_text = self._compile_prompt_text(prompt, golden)
+
+        if self._model_callback is not None:
+            candidate_kwargs = build_model_callback_kwargs(
+                module_id=module_id,
+                prompt=prompt,
+                prompt_text=prompt_text,
+                golden=golden,
+                prompts_by_module=prompts_by_module,
+                model=self.model,
+                model_schema=self.model_schema,
             )
-            return self._unwrap_text(res)
+            result = await a_invoke_model_callback(
+                hook="score_generate",
+                model_callback=self._model_callback,
+                candidate_kwargs=candidate_kwargs,
+            )
+            return self._unwrap_text(result)
+
+        if hasattr(self.model, "a_generate"):
+            result = await self.model.a_generate(
+                prompt_text, schema=self.model_schema
+            )
+            return self._unwrap_text(result)
         loop = asyncio.get_running_loop()
-        res = await loop.run_in_executor(
+        result = await loop.run_in_executor(
             None,
-            lambda: self.model.generate(compiled, schema=self.model_schema),
+            lambda: self.model.generate(prompt_text, schema=self.model_schema),
         )
-        return self._unwrap_text(res)
+        return self._unwrap_text(result)
 
     def score_on_pareto(
         self,
@@ -338,12 +418,35 @@ class DeepEvalScoringAdapter(ScoringAdapter):
                 seen.add(reason)
         return "\n---\n".join(unique[:8])
 
+    def _select_module_id_from_prompts(
+        self, prompts_by_module: Dict[ModuleId, Prompt]
+    ) -> ModuleId:
+        """
+        Default module selection strategy:
+
+        - Prefer the synthetic '__module__' key when present
+        - Otherwise fall back to the first key in prompts_by_module.
+
+        Assumes `prompts_by_module` is non-empty; callers should validate that.
+        """
+        if self.DEFAULT_MODULE_ID in prompts_by_module:
+            return self.DEFAULT_MODULE_ID
+
+        # At this point we expect at least one key.
+        try:
+            return next(iter(prompts_by_module.keys()))
+        except StopIteration:
+            raise DeepEvalError(
+                "DeepEvalScoringAdapter._select_module_id_from_prompts(...) "
+                "received an empty `prompts_by_module`. At least one Prompt is required."
+            )
+
     def select_module(
         self, prompt_configuration: PromptConfiguration
     ) -> ModuleId:
-        return "__module__"
+        return self._select_module_id_from_prompts(prompt_configuration.prompts)
 
     async def a_select_module(
         self, prompt_configuration: PromptConfiguration
     ) -> ModuleId:
-        return "__module__"
+        return self.select_module(prompt_configuration)

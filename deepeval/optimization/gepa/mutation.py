@@ -1,15 +1,21 @@
 from __future__ import annotations
 import json
-from typing import List, Optional, Tuple, Union
+import inspect
+from typing import Callable, Dict, List, Optional, Tuple, Union
+from pydantic import BaseModel as PydanticBaseModel
 
-from deepeval.errors import DeepEvalError
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.optimization.types import (
     MetricInfo,
     ModuleId,
-    PromptRewriterProtocol,
+)
+from deepeval.optimization.utils import (
+    a_invoke_model_callback,
+    invoke_model_callback,
+    require_model_or_callback,
+    build_model_callback_kwargs,
 )
 from deepeval.prompt.prompt import Prompt
-from deepeval.models import DeepEvalBaseLLM
 
 
 ##################
@@ -59,7 +65,7 @@ def _normalize_llm_output_to_text(
 #################################
 
 
-class PromptRewriter(PromptRewriterProtocol):
+class PromptRewriter:
     """
     Uses a provided DeepEval model to rewrite the prompt for a module,
     guided by feedback_text (μ_f).
@@ -91,16 +97,27 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
     def rewrite(
         self,
         *,
-        model: DeepEvalBaseLLM,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
         module_id: ModuleId,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt:
-        if model is None:
-            raise DeepEvalError(
-                "PromptRewriter requires a DeepEvalBaseLLM. "
-                "Pass `model=` to GEPARunner or provide a custom rewriter."
-            )
+        model, model_callback = require_model_or_callback(
+            component="PromptRewriter",
+            model=model,
+            model_callback=model_callback,
+        )
         if not feedback_text.strip():
             return old_prompt
         system_message, user_message = self._compose_messages(
@@ -109,7 +126,30 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             feedback_text=feedback_text,
         )
         merged = _compose_prompt_messages(system_message, user_message)
-        out = model.generate(merged)
+
+        is_callback_async = (
+            inspect.iscoroutinefunction(model_callback)
+            if model_callback is not None
+            else False
+        )
+
+        if model_callback is not None and not is_callback_async:
+            candidate_kwargs = build_model_callback_kwargs(
+                module_id=module_id,
+                old_prompt=old_prompt,
+                feedback_text=feedback_text,
+                merged=merged,
+                prompt_text=merged,
+                model=model,
+                model_schema=model_schema,
+            )
+            out = invoke_model_callback(
+                hook="prompt_rewrite",
+                model_callback=model_callback,
+                candidate_kwargs=candidate_kwargs,
+            )
+        else:
+            out = model.generate(merged, schema=model_schema)
         new_text = _normalize_llm_output_to_text(out)
         # if new_text == old_prompt.text_template.strip():
         #     print(
@@ -127,16 +167,27 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
     async def a_rewrite(
         self,
         *,
-        model: DeepEvalBaseLLM,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
         module_id: ModuleId,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt:
-        if model is None:
-            raise DeepEvalError(
-                "PromptRewriter requires a DeepEvalBaseLLM. "
-                "Pass `model=` to GEPARunner or provide a custom rewriter."
-            )
+        model, model_callback = require_model_or_callback(
+            component="PromptRewriter",
+            model=model,
+            model_callback=model_callback,
+        )
         if not feedback_text.strip():
             return old_prompt
         system_message, user_message = self._compose_messages(
@@ -144,8 +195,27 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             old_prompt=old_prompt,
             feedback_text=feedback_text,
         )
-        merged = _compose_prompt_messages(system_message, user_message)
-        out = await model.a_generate(merged)
+        merged_prompt_text = _compose_prompt_messages(
+            system_message, user_message
+        )
+        if model_callback is not None:
+            candidate_kwargs = build_model_callback_kwargs(
+                module_id=module_id,
+                old_prompt=old_prompt,
+                feedback_text=feedback_text,
+                prompt_text=merged_prompt_text,
+                model=model,
+                model_schema=model_schema,
+            )
+            out = await a_invoke_model_callback(
+                hook="prompt_rewrite",
+                model_callback=model_callback,
+                candidate_kwargs=candidate_kwargs,
+            )
+        else:
+            out = await model.a_generate(
+                merged_prompt_text, schema=model_schema
+            )
         new_text = _normalize_llm_output_to_text(out)
         # if new_text == old_prompt.text_template.strip():
         #     print(
