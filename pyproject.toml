@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.7.0"
+version = "3.7.2"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ exclude = ["tests/*", "tracing_tests/*"]
 deepeval = 'deepeval.cli.main:app'
 
 [tool.poetry.plugins."pytest11"]
-plugins = "deepeval.plugins.plugin"
+deepeval = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <4.0"
@@ -31,8 +31,8 @@ portalocker = "*"
 openai = "*"
 aiohttp = "*"
 typer = ">=0.9,<1.0.0"
-click=">=8.0.0,<8.3.0"
-ollama="*"
+click = ">=8.0.0,<8.3.0"
+ollama = "*"
 setuptools = "*"
 wheel = "*"
 nest_asyncio = "*"
@@ -52,7 +52,7 @@ jinja2 = "*"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
-black = {extras = ["jupyter"], version = "^25.1.0"}
+black = { extras = ["jupyter"], version = "^25.1.0" }
 chromadb = "*"
 langchain = "*"
 langchain_core = "*"
@@ -89,8 +89,8 @@ asyncio_default_fixture_loop_scope = "function"
 optional = true
 
 [tool.poetry.group.integrations.dependencies]
-crewai = {version = "*", python = ">=3.10,<3.11"}
-pydantic-ai = {version = "^1.0.18", python = ">=3.10,<3.11"}
+crewai = { version = "*", python = ">=3.10,<3.11" }
+pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.11" }
 langgraph = "^0.6.10"
 llama-index = "^0.14.4"
 langchain_openai = "^0.3.35"

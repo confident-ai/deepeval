@@ -162,7 +162,7 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
-    ):
+    ) -> List[Golden]:
         self.synthetic_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
@@ -1555,7 +1555,7 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
-    ):
+    ) -> List[ConversationalGolden]:
         self.synthetic_conversational_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
