@@ -174,6 +174,15 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Optimization",
+      className: "sidebar-item-icon-prompt-optimization",
+      items: [
+        "prompt-optimization",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
       label: "Synthetic Data Generation",
       className: "sidebar-item-icon-synthetic-data",
       items: [

@@ -1,0 +1,697 @@
+---
+id: prompt-optimization
+title: Prompt Optimization (GEPA)
+sidebar_label: Prompt Optimization
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/prompt-optimization"
+  />
+</head>
+
+nav bar similar to synthisizer - its own section
+
+## Quick Summary
+
+DeepEval includes an automated prompt optimizer based on **GEPA** (Genetic-Pareto), a sample-efficient prompt optimization algorithm built on:
+
+1. Genetic prompt evolution
+2. Reflection using natural-language feedback
+3. Pareto-based candidate selection
+
+At a high level:
+
+- You provide:
+  - A base `Prompt` you want to improve.
+  - A list of **goldens** that describe the behavior you want.
+  - One or more DeepEval **metrics**. In practice you’ll usually use LLM-as-a-judge metrics (metrics that call an LLM to score outputs and often return a textual `reason`), because GEPA uses their natural-language feedback during optimization.
+  - Either:
+    - A `DeepEvalBaseLLM` **judge model**, or
+    - A custom `model_callback` you control.
+- GEPA:
+  - Mutates your prompt into new **prompt configurations** (internal `PromptConfiguration` objects).
+  - Runs your LLM app on the goldens and scores each configuration.
+  - Maintains a **Pareto frontier** over metrics.
+  - Returns an improved `Prompt` plus an `OptimizationReport`.
+
+GEPA runs on top of the evaluation stack you already use in DeepEval: test cases, metrics, LLM models, and goldens.
+
+---
+
+## When Should I Use Prompt Optimization?
+
+Use GEPA when:
+
+* You already have **goldens** that encode the behavior you care about.
+  * e.g. ambiguous queries with disambiguating context, safety edge cases, RAG queries, etc.
+* You want to optimize **prompt templates** rather than constantly editing strings by hand.
+* You care about **multiple metrics at once**, such as answer quality (`AnswerRelevancyMetric`) or policy metrics (`ToxicityMetric`) and want GEPA to balance them using a **Pareto frontier over prompts**, instead of collapsing everything into a single scalar score.
+
+If you’re still deciding:
+
+* what test cases to create, see [Single-Turn Test Cases](/docs/evaluation-test-cases),
+* what metrics to use, see [Metrics Introduction](/docs/metrics-introduction),
+* how to organize goldens at scale, see [Evaluation Datasets](/docs/evaluation-datasets).
+
+Come back to GEPA once you have:
+
+1. A list of goldens you trust, and
+2. Metrics that reflect "good" behavior for your use case.
+
+---
+
+## How GEPA Works in DeepEval (High-Level)
+
+Internally, GEPA operates on **prompt configurations**:
+
+```python
+@dataclass
+class PromptConfiguration:
+    id: str                          # unique id
+    parent: Optional[str]            # parent id
+    prompts: dict[ModuleId, Prompt]  # Internally one module -> one Prompt
+```
+Today, DeepEval uses a single internal `ModuleId` and treats your base `Prompt`
+as a one-module configuration. The `ModuleId` concept is reserved for future
+extensions and you don’t set or manage it yourself.
+
+A GEPA run looks like this:
+
+1. **You provide**
+   * A base `Prompt`.
+   * A list of **goldens**.
+   * A list of DeepEval metrics
+   * Either:
+     * a `DeepEvalBaseLLM` judge model, or
+     * a `model_callback` used to generate outputs during scoring.
+   * A `GEPAConfig` that controls search behavior.
+
+2. **GEPA initializes**
+   * Splits the goldens into:
+     * `D_pareto`: the subset used to maintain the **Pareto frontier**.
+     * `D_feedback`: the pool it samples minibatches from for feedback.
+   * Evaluates the base `PromptConfiguration` on `D_pareto` to seed the frontier.
+
+3. **For each iteration** (iteration count set by `config.iterations`):
+   * Picks a **parent configuration** from the current Pareto frontier.
+   * Uses a `ScoringAdapter` to:
+     * Get **feedback text** from metrics, using a minibatch from `D_feedback`.
+   * Calls the **prompt rewriter** (`PromptRewriterProtocol`) with:
+     * The internal `module_id`.
+     * The current `Prompt`.
+     * Feedback text from metrics.
+     * Either a model or `model_callback` (if both are supplied, the callback is used).
+   * Evaluates the resulting **child configuration** on `D_pareto`.
+   * Uses `GEPAConfig.min_delta`, `tie_tolerance`, and the **tie-breaker policy** to decide whether to:
+     * Accept the child and add it to the Pareto frontier, or
+     * Reject it and keep the parent.
+
+4. **At the end**:
+   * Selects a **best configuration** from the frontier.
+   * Returns the corresponding optimized `Prompt` with an attached `OptimizationReport`.
+
+---
+
+## Quickstart: Basic GEPA Run with a Judge Model
+
+This section shows:
+
+* How to define **goldens** in code.
+* How to set up a **metric** and **judge model**.
+* How to configure **GEPA** and run it once.
+
+### 1. Build Your Goldens
+
+```python title="goldens.py"
+from deepeval.dataset.golden import Golden
+
+
+def build_goldens() -> list[Golden]:
+    return [
+        Golden(
+            input="What's the capital of France?",
+            expected_output="Paris",
+        ),
+        Golden(
+            input="Where is Georgia?",
+            expected_output="Georgia is a country in the Caucasus; its capital is Tbilisi.",
+            context=["We mean the country, not the U.S. state."],
+        ),
+        Golden(
+            input="What is apple?",
+            expected_output=(
+                "Apple is a technology company known for the iPhone, Mac, and iPad."
+            ),
+            context=["We mean the company, not the fruit."],
+        ),
+        Golden(
+            input="Describe bass.",
+            expected_output="Bass is a low-pitched range in music.",
+            context=["We mean the musical term, not the fish."],
+        ),
+    ]
+```
+
+If you already use `EvaluationDataset`, you can also do:
+
+```python title="goldens_from_dataset.py"
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Dataset")
+goldens = dataset.goldens         # pass this into GEPA
+```
+
+### 2. Define Metric, Judge, and Async Config
+
+```python title="metrics_and_model.py"
+from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models.llms.openai_model import GPTModel
+
+RUN_ASYNC = True
+
+metric = AnswerRelevancyMetric(
+    async_mode=RUN_ASYNC,
+    include_reason=True,
+)
+
+judge = GPTModel(
+    model="gpt-4o-mini",
+    temperature=0.8,  # turn up the heat a bit to encourage diverse rewrites
+)
+
+async_config = AsyncConfig(run_async=RUN_ASYNC)
+```
+
+You can use any `DeepEvalBaseLLM` subclass as the judge (OpenAI-style models, local models, etc.).
+
+### 3. Configure GEPA
+
+```python title="gepa_config.py"
+from deepeval.optimization.gepa import GEPAConfig
+
+
+config = GEPAConfig(
+    iterations=5,
+    minibatch_size=4,
+    pareto_size=5,
+    min_delta=0.05,
+    # random_seed=None,  # None -> time-based seed; default is 0 (deterministic)
+    tie_breaker=GEPAConfig.TieBreaker.PREFER_CHILD,
+    display_options=GEPAConfig.DisplayConfig(
+        show_indicator=True,   # show a simple progress indicator while GEPA runs
+        verbose=False,
+        announce_ties=True,    # print a one-line message when tied candidates are detected
+    ),
+)
+```
+
+### 4. Run GEPA with `GEPARunner`
+
+```python title="prompt_optimization_basic.py"
+from deepeval.evaluate import AsyncConfig
+from deepeval.prompt import Prompt
+from deepeval.optimization.gepa import GEPARunner
+from deepeval.dataset.golden import Golden
+
+from goldens import build_goldens
+from metrics_and_model import metric, judge, async_config
+from gepa_config import config
+
+
+def main():
+    goldens: list[Golden] = build_goldens()
+
+    base_prompt = Prompt(
+        text_template="Respond to the query."
+    )
+
+    runner = GEPARunner(
+        config=config,
+        async_config=async_config,
+        metrics=[metric],
+        model=judge,
+        # model_schema=None,         # optional schema for structured outputs
+        # model_callback=None,       # optional callback; see below
+    )
+
+    optimized_prompt = runner.optimize(
+        prompt=base_prompt,
+        goldens=goldens,
+    )
+
+    print("Optimized prompt:")
+    print(optimized_prompt.text_template)
+
+    print("\nOptimization report:")
+    print(optimized_prompt.optimization_report)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+On success:
+
+* `optimized_prompt` is a regular `Prompt` instance you can plug into your app.
+* `optimized_prompt.optimization_report` is an `OptimizationReport`.
+
+---
+
+## Using `model_callback` Instead of a Judge Model
+
+Sometimes you don’t want GEPA to call a `DeepEvalBaseLLM` directly. For example:
+
+- You already have a **wrapped LLM client** that implements retries, logging, etc.
+- You want to route generation through a **custom gateway**.
+- You want more control over **prompt formatting** or **tracing**.
+
+In those cases, you can pass a `model_callback` instead of a judge model.
+
+### Callback Shape
+
+The callback type used by `GEPARunner` is:
+
+```python
+Callable[
+    ...,
+    Union[
+        str,
+        Dict,
+        Tuple[Union[str, Dict], float],
+    ],
+]
+```
+
+That is:
+
+* It accepts **keyword arguments** (documented below).
+* It returns either:
+  * a `str` (just the generated text), or
+  * a `dict` (provider-specific object), or
+  * a `(result, cost)` tuple, where `result` is a `str` or `dict` and `cost` is a `float`
+
+GEPA will normalize these to text internally in the same way as `DeepEvalBaseLLM.generate()`.
+
+### Hooks and Keyword Arguments
+
+Your callback is shared between **scoring** and **prompt rewriting**. To distinguish the two, GEPA passes a `hook` string and a set of keyword arguments.
+
+* For **scoring** (when generating outputs on goldens):
+  * `hook="score_generate"`
+  * `golden`: the current `Golden`
+  * `prompt`: the current `Prompt` being used for this golden
+  * `prompt_text`: the fully rendered prompt text (what you send to your LLM)
+  * `prompts_by_module`: the full `dict[ModuleId, Prompt]` for the current configuration.
+  * `model`: the judge model, if provided.
+  * `model_schema`: optional Pydantic schema for structured outputs.
+
+* For **prompt rewriting**:
+  * `hook="prompt_rewrite"`
+  * `module_id`: the module being mutated (internal id; currently there is one module per run).
+  * `old_prompt`: the `Prompt` being rewritten.
+  * `feedback_text`: feedback text from metrics.
+  * `prompt_text`: the fully rendered prompt text (what you send to your LLM)
+  * `model` / `model_schema`: as above.
+
+To keep your callback ergonomic, GEPA only passes arguments that your function actually accepts. It builds a large `kwargs` dict and then filters it to match your parameter names, so you are free to accept only what you need:
+
+```python
+    judge = GPTModel(model="gpt-4o-mini", temperature=0.8)
+
+    # A minimal example only needs hook + prompt_text explicitly.
+    # Add other supported keywords as desired, or get them from **kwargs
+    async def model_callback(
+        hook: str,
+        prompt_text: str | None = None,
+        **kwargs,
+    ):
+        if hook == "prompt_rewrite":
+            # Optional: inspect feedback or old_prompt if you accept them in the signature
+            ...
+        elif hook == "score_generate":
+            # Optional: inspect golden / prompt if you accept them in the signature
+            ...
+
+        # Use prompt_text as the actual prompt you send to your LLM client
+        return await judge.a_generate(prompt_text)
+
+    runner = GEPARunner(
+        config=config,
+        async_config=AsyncConfig(run_async=RUN_ASYNC),
+        metrics=[metric],
+        model_callback=model_callback,  # <--- callback instead of model
+        # model=judge,                  # optional; if both set, callback is preferred
+    )
+
+    runner.optimize(...)
+
+```
+
+Notes:
+
+* GEPA always exposes a single main entrypoint: `runner.optimize(...)`.
+* `async_config.run_async` controls whether GEPA uses its async path under the hood:
+  * If `async_config.run_async` is `True`, `optimize(...)` will drive the async GEPA loop internally (spinning up an event loop as needed), and an **async** `model_callback` is supported.
+  * If `async_config.run_async` is `False`, everything runs synchronously and `model_callback` **must be synchronous**; if it returns a coroutine in this mode, you’ll get an error.
+* If you pass **both** `model` and `model_callback`, GEPA will **prefer the callback**, but still pass the model object into `model_callback` as `model`.
+
+---
+
+## `GEPARunner` API
+
+### Constructor
+
+```python
+from deepeval.optimization.gepa import GEPARunner, GEPAConfig
+from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import BaseMetric, BaseConversationalMetric
+from deepeval.models.base_model import DeepEvalBaseLLM
+from pydantic import BaseModel as PydanticBaseModel
+
+runner = GEPARunner(
+    *,
+    config: GEPAConfig,
+    async_config: AsyncConfig | None = None,
+    aggregate_instances=mean_of_all,
+    scoring_adapter: ScoringAdapter | None = None,
+    metrics: list[BaseMetric] | list[BaseConversationalMetric] | None = None,
+    model: DeepEvalBaseLLM | None = None,
+    model_schema: PydanticBaseModel | None = None,
+    model_callback: Callable[..., str | Dict | Tuple[str | Dict, float]] | None = None,
+)
+```
+
+Parameters:
+
+* **`config: GEPAConfig`**
+  Required. Controls iteration budget, minibatch size, Pareto frontier size, tie handling, and display options.
+
+* **`async_config: AsyncConfig | None`**  
+  Controls whether GEPA runs in sync or async mode (and how much concurrency the underlying evaluation uses).
+  * If `None`, a default `AsyncConfig()` is created.
+  * If `async_config.run_async` is `True`, `optimize(...)` will use the async GEPA path internally (driving an event loop for you).
+  * If `async_config.run_async` is `False`, GEPA runs purely synchronously.
+
+* **`aggregate_instances`**
+  A function that aggregates per-instance scores (on `D_pareto`) into a single scalar used for comparisons.
+  Default: `mean_of_all`, which averages over all instances.
+
+* **`scoring_adapter: ScoringAdapter | None`**
+  Advanced. Plug in a **custom scoring adapter** that implements:
+
+  ```python
+  class ScoringAdapter(Protocol):
+      def score_on_pareto(self, prompt_configuration, d_pareto) -> ScoreVector: ...
+      def minibatch_score(self, prompt_configuration, minibatch) -> float: ...
+      def minibatch_feedback(self, prompt_configuration, module, minibatch) -> str: ...
+      def select_module(self, prompt_configuration) -> ModuleId: ...
+      # plus async equivalents
+  ```
+
+  If you provide a `scoring_adapter`, it is responsible for interacting with metrics and the model. GEPA will still handle prompt rewriting and search.
+
+* **`metrics`**
+  Required if `scoring_adapter` is `None`.
+  A list of `BaseMetric` or `BaseConversationalMetric` instances. GEPA will internally create a `DeepEvalScoringAdapter` that:
+
+  * Uses these metrics to compute per-metric scores on goldens.
+  * Aggregates them via the configured objective.
+  * Generates feedback strings for the rewriter.
+
+* **`model`**
+  Optional `DeepEvalBaseLLM` judge. Used by the default scoring adapter and prompt rewriter when `model_callback` is not provided. Can be `None` if you provide `model_callback`.
+
+* **`model_schema`**
+  Optional Pydantic schema for structured outputs. Passed through to the model or `model_callback` and respected by the default prompt rewriter.
+
+* **`model_callback`**
+  Optional callback used instead of `model.generate()` / `model.a_generate()`. See [Using `model_callback` Instead of a Judge Model](#using-model_callback-instead-of-a-judge-model).
+  If you pass **both** `model` and `model_callback`, GEPA prefers `model_callback` but still passes the model into it as an argument.
+
+Internally, `GEPARunner` validates that **at least one** of `model` or `model_callback` is provided when using the default scoring adapter.
+
+### Methods
+
+* **`optimize(prompt, goldens)`**
+
+```python
+  optimized_prompt = runner.optimize(
+      prompt=base_prompt,   # Prompt
+      goldens=goldens,      # list[Golden]
+  )
+```
+
+Runs one full GEPA optimization loop and returns the **best `Prompt`** found.
+
+Internally, `optimize(...)`:
+
+* Resets the runner’s internal GEPA state for a fresh run.
+* Chooses the **sync vs async** path based on `async_config.run_async`.
+* Attaches an `OptimizationReport` to the returned prompt as
+  `optimized_prompt.optimization_report`.
+
+`optimize(...)` is the primary public API:
+
+* If `async_config.run_async` is `True`, `optimize(...)` will drive the async GEPA
+  loop under the hood (creating or reusing an event loop as needed).
+* If `async_config.run_async` is `False`, everything runs synchronously.
+
+
+### Reports
+
+After a run, the **returned `Prompt`** carries an `OptimizationReport`:
+
+```python
+from deepeval.optimization.types import OptimizationReport
+
+report: OptimizationReport = optimized_prompt.optimization_report
+````
+
+The runtime result is represented as:
+
+```python
+class AcceptedIteration(PydanticBaseModel):
+    parent: str
+    child: str
+    module: str
+    before: float
+    after: float
+
+class OptimizationReport(PydanticBaseModel):
+    optimization_id: str
+    best_id: str
+    accepted_iterations: list[AcceptedIteration]
+    pareto_scores: dict[str, list[float]]
+    parents: dict[str, str | None]
+```
+
+Common uses:
+
+* Inspect which prompt configurations were accepted and why.
+* Visualize how scores evolved over iterations.
+* Debug or audit GEPA runs by `optimization_id`.
+
+---
+
+## `GEPAConfig` and `GEPADisplayConfig`
+
+From `deepeval.optimization.gepa.configs`:
+
+```python
+from pydantic import BaseModel, Field, PositiveInt, conint, confloat
+from deepeval.optimization.policies.tie_breaker import TieBreaker as TieBreakerPolicy
+
+class GEPADisplayConfig(BaseModel):
+    show_indicator: bool = True
+    verbose: bool = False
+    announce_ties: bool = Field(
+        True, description="Print a one-line note when a tie is detected"
+    )
+
+class GEPAConfig(BaseModel):
+    iterations: PositiveInt = Field(..., description="Total mutation attempts")
+    minibatch_size: PositiveInt = Field(
+        ..., description="Minibatch size for D_feedback"
+    )
+    pareto_size: conint(ge=1) = Field(
+        ..., description="Size of D_pareto (must be >= 1)"
+    )
+    random_seed: int = 0
+    min_delta: confloat(ge=0.0) = 0.0
+    tie_tolerance: confloat(ge=0.0) = Field(
+        1e-9, description="Tie tolerance for aggregate scores"
+    )
+    tie_breaker: TieBreakerPolicy = Field(
+        TieBreakerPolicy.RANDOM,
+        description="How to break ties on aggregate",
+    )
+    display_options: GEPADisplayConfig = Field(
+        default_factory=GEPADisplayConfig
+    )
+
+    def set_rewriter(self, r: PromptRewriterProtocol) -> None:
+        self._rewriter = r
+
+    def get_rewriter(self) -> PromptRewriterProtocol:
+        return self._rewriter or PromptRewriter()
+
+```
+
+### Core Fields
+
+* **`iterations`**  
+  Total number of mutation attempts (Algorithm 1 loop iterations): how many times GEPA is allowed to rewrite and re-evaluate your prompt.  
+  In DeepEval, each iteration means:
+  - generating outputs on your goldens,
+  - scoring them with your metrics,
+  - and possibly accepting a new prompt.  
+  **Rule of thumb:** start with `5–10` for quick experiments, and `10–30` once you’re confident in your goldens and want a more thorough search (subject to your token budget).
+
+* **`minibatch_size`**  
+  `b`: the size of each minibatch drawn from `D_feedback` when computing feedback and minibatch scores. Larger minibatches give more stable feedback but cost more tokens per iteration.  
+  In DeepEval, this is how many goldens GEPA samples per iteration to:
+  - ask your metrics for feedback text, and
+  - compute an average score for the candidate prompt.  
+  **Rule of thumb:** pick something like **5–10% of `len(goldens)`**
+
+* **`pareto_size`**  
+  `n_pareto`: the maximum size of the Pareto frontier (`D_pareto`). Larger values preserve more diverse prompts; smaller values focus the search on a few top candidates.  
+  In DeepEval, this is the number of **active candidate prompts** GEPA keeps around at once.  
+  **Rule of thumb:** `3–10` is a good starting range. Use the low end if you only have one or two metrics, and the high end if you’re balancing several metrics (e.g., quality + safety).
+
+* **`random_seed`**  
+  RNG seed for reproducibility.  
+  In DeepEval:
+  - If you pass `None`, a time-based seed (`time.time_ns()`) is used so each run explores a different path.
+  - The default `0` is a fixed seed, so reruns with the same config and goldens will follow the same GEPA trajectory.  
+  **Rule of thumb:** keep `0` (the default) when you want reproducible experiments; set `random_seed=None` when you want each run to explore a fresh random search.
+
+* **`min_delta`**  
+  Optional acceptance tolerance: a child configuration must improve the aggregated score by at least `min_delta` to be considered better than its parent (e.g. require `σ' >= σ + min_delta`).  
+  In DeepEval, this controls **how picky** GEPA is:
+  - `0.0` accepts any improvement, even tiny ones.
+  - Larger values (e.g. `0.01–0.05` for scores in `[0, 1]`) demand more meaningful gains before replacing a prompt.  
+  **Rule of thumb:** start with `0.0–0.05` depending on how noisy your metrics are. If metrics are stable, a higher `min_delta` can prevent overfitting to noise.
+
+* **`tie_tolerance`**  
+  Two candidates with aggregate scores within `tie_tolerance` of each other are treated as **tied**.  
+  In DeepEval, this is mainly about numerical stability when comparing floating-point scores.  
+  **Rule of thumb:** you’ll almost always leave this at the default (`1e-9`). Only increase it if you intentionally want nearby scores (e.g. within `1e-3`) to count as ties for your use case.
+
+* **`tie_breaker`**  
+  A `TieBreakerPolicy` enum controlling how to resolve ties between candidates whose aggregate scores are within `tie_tolerance`. Common values include:
+
+  * `TieBreaker.PREFER_ROOT`: when tied, prefer the parent over the newly generated child.
+  * `TieBreaker.RANDOM`: pick randomly among tied configurations.
+  * `TieBreaker.PREFER_CHILD`: when tied, prefer the newly generated child over its parent.
+
+  In DeepEval, this lets you control whether ties drift toward exploration (`PREFER_CHILD`) or stay conservative (`PREFER_ROOT`).
+
+
+### Display Options
+
+* **`display_options.show_indicator`**
+  When `True`, shows a lightweight progress indicator while GEPA runs.
+
+* **`display_options.verbose`**
+  When `True`, prints additional information about each iteration (currently this has no effect).
+
+* **`display_options.announce_ties`**
+  When `True`, prints a short line whenever a tie is detected using `tie_tolerance`.
+
+
+### Custom Prompt Rewriter
+
+GEPA optionally lets you override how prompts are rewritten between iterations by supplying your own **prompt rewriter**. A rewriter must satisfy the `PromptRewriterProtocol`:
+
+```python
+from typing import Callable, Dict, Optional, Tuple, Union
+from pydantic import BaseModel as PydanticBaseModel
+
+from deepeval.models.base_model import DeepEvalBaseLLM
+from deepeval.prompt.prompt import Prompt
+from deepeval.optimization.types import ModuleId
+
+class PromptRewriterProtocol(Protocol):
+    def rewrite(
+        self,
+        *,
+        module_id: ModuleId,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
+        old_prompt: Prompt,
+        feedback_text: str,
+    ) -> Prompt: ...
+
+    async def a_rewrite(
+        self,
+        *,
+        module_id: ModuleId,
+        model: Optional[DeepEvalBaseLLM] = None,
+        model_schema: Optional[PydanticBaseModel] = None,
+        model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None,
+        old_prompt: Prompt,
+        feedback_text: str,
+    ) -> Prompt: ...
+```
+
+At a high level:
+
+* **`old_prompt`** is the current `Prompt` GEPA is using for that module.
+* **`feedback_text`** is natural-language feedback derived from your metrics on a minibatch of goldens (e.g. "the answer ignored the context about X...").
+* **`module_id`** identifies which module is being mutated (currently internal; one module per run).
+* **`model` / `model_schema` / `model_callback`** give you the same tools GEPA uses internally:
+  * you can ignore them and rewrite purely with Python logic, or
+  * you can call `model` or `model_callback` with `feedback_text` and your own prompt template to ask an LLM to propose a new prompt.
+
+Your implementation must:
+
+* Return a **new `Prompt` instance** that GEPA will treat as the "child" candidate.
+* Implement both `rewrite(...)` and `a_rewrite(...)`:
+  * GEPA will use the sync `rewrite(...)` path in sync runs.
+  * GEPA will use `a_rewrite(...)` in async runs.
+
+You attach a custom rewriter to the config:
+
+```python
+config = GEPAConfig(
+    iterations=20,
+    minibatch_size=4,
+    pareto_size=8,
+)
+
+config.set_rewriter(my_rewriter_instance)
+```
+
+If you don’t set a rewriter, `GEPAConfig.get_rewriter()` uses the default `PromptRewriter` in `deepeval.optimization.gepa.mutation`, which is an LLM-driven rewriter that consumes `feedback_text` and produces new prompt variants.
+
+---
+
+For more background, see:
+
+* [Single-Turn Test Cases](/docs/evaluation-test-cases)
+* [Metrics Introduction](/docs/metrics-introduction)
+* [Evaluation Datasets](/docs/evaluation-datasets)

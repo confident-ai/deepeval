@@ -138,7 +138,6 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
                 module_id=module_id,
                 old_prompt=old_prompt,
                 feedback_text=feedback_text,
-                merged=merged,
                 prompt_text=merged,
                 model=model,
                 model_schema=model_schema,

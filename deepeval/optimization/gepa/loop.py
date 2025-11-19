@@ -204,9 +204,10 @@ class GEPARunner:
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Prompt:
         """
-        Returns the optimized Prompt. Attaches an OptimizationReport to both
-        the returned Prompt and `self.report`.
+        Returns the optimized Prompt. Attaches an OptimizationReport to
+        the returned Prompt.
         """
+        self.reset_state()
         if self.async_config.run_async:
             loop = get_or_create_event_loop()
             best_prompt, report_dict = loop.run_until_complete(
@@ -217,8 +218,9 @@ class GEPARunner:
                 prompt=prompt, goldens=goldens
             )
 
-        self.report = OptimizationReport.from_runtime(report_dict)
-        best_prompt.optimization_report = self.report
+        best_prompt.optimization_report = OptimizationReport.from_runtime(
+            report_dict
+        )
         return best_prompt
 
     def execute_gepa(
@@ -228,6 +230,7 @@ class GEPARunner:
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, Dict]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
+        self.reset_state()
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, random_state=self.random_state
         )
@@ -329,6 +332,7 @@ class GEPARunner:
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, Dict]:
         """Asynchronous twin of execute_gepa()."""
+        self.reset_state()
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, random_state=self.random_state
         )
@@ -422,6 +426,16 @@ class GEPARunner:
             parents=self.parents_by_id,
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+
+    def reset_state(self):
+        self.optimization_id: str = str(uuid.uuid4())
+        self.prompt_configurations_by_id: Dict[
+            PromptConfigurationId, PromptConfiguration
+        ] = {}
+        self.parents_by_id: Dict[
+            PromptConfigurationId, Optional[PromptConfigurationId]
+        ] = {}
+        self.pareto_score_table: ScoreTable = {}
 
     def _pick_prompt_configuration(self) -> PromptConfiguration:
 
