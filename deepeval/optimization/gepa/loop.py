@@ -2,6 +2,8 @@ from __future__ import annotations
 import uuid
 import random
 from typing import Dict, List, Tuple, TYPE_CHECKING, Union, Optional
+from rich import print
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
@@ -12,13 +14,15 @@ from deepeval.optimization.types import (
     ScoringAdapter,
     OptimizationResult,
 )
-from deepeval.optimization.utils import normalize_seed_prompts, split_goldens
+from deepeval.optimization.utils import split_goldens
 from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_candidate_pareto,
 )
 from deepeval.prompt.prompt import Prompt
+from deepeval.utils import get_or_create_event_loop
 from .configs import GEPAConfig
+from .api import OptimizationReport, OptimizationResultApi
 
 
 if TYPE_CHECKING:
@@ -31,6 +35,8 @@ class GEPARunner:
     - Candidate selection: Pareto-frequency over D_pareto instance scores.
     - Acceptance: minibatch improvement on D_feedback (σ_after >= σ_before + min_delta).
     """
+
+    SINGLE_MODULE_ID = "__module__"
 
     def __init__(
         self,
@@ -70,9 +76,7 @@ class GEPARunner:
             policy=self.config.tie_breaker,
         )
 
-        if self.config.announce_ties and len(tied) > 1:
-            from rich import print
-
+        if self.config.display_options.announce_ties and len(tied) > 1:
             print(
                 f"[GEPA] tie on aggregate={max_val:.4f} among {len(tied)} candidates; "
                 f"using tie_breaker={self.config.tie_breaker.value!r} selected {chosen}. "
@@ -80,20 +84,45 @@ class GEPARunner:
                 f"{[t.value for t in self.config.TieBreaker]} "
                 f"(tie_tolerance={float(self.config.tie_tolerance):g})."
             )
-
         return self.candidates_by_id[chosen]
 
     def optimize(
         self,
         *,
-        seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
+        prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Tuple[Candidate, Dict]:
+    ) -> Prompt:
+        """
+        Public single-prompt API.
+        Returns the optimized Prompt; attaches an OptimizationReport to both
+        the returned Prompt and `self.report`.
+        """
+        if self.config.async_config.run_async:
+            loop = get_or_create_event_loop()
+            best_prompt, report_dict = loop.run_until_complete(
+                self.a_execute_gepa(prompt=prompt, goldens=goldens)
+            )
+        else:
+            best_prompt, report_dict = self.execute_gepa(
+                prompt=prompt, goldens=goldens
+            )
+        report_api = OptimizationResultApi.from_runtime(report_dict)
+        final = OptimizationReport.model_validate(report_api.model_dump())
+        self.report = final
+        best_prompt.optimization_report = final
+        return best_prompt
+
+    def execute_gepa(
+        self,
+        *,
+        prompt: Prompt,
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+    ) -> Tuple[Prompt, Dict]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, seed=self.config.random_seed
         )
-        seed_prompts_by_module = normalize_seed_prompts(seed_prompts)
+        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
         self._add_candidate(root_candidate)
         self.pareto_score_table[root_candidate.id] = (
@@ -101,10 +130,10 @@ class GEPARunner:
         )
 
         accepted_steps: List[Dict] = []
-
         remaining_budget = self.config.budget
-        while remaining_budget > 0:
-            print(f"remaining_budget = {remaining_budget}")
+
+        def _one_step():
+            nonlocal remaining_budget, accepted_steps
             remaining_budget -= 1
 
             # 1. Pick candidate via Pareto
@@ -114,13 +143,11 @@ class GEPARunner:
             parent_candidate = self.candidates_by_id[selected_candidate_id]
 
             # 2. Pick module
-            selected_module_id: ModuleId = self.scoring_adapter.select_module(
-                parent_candidate
-            )
+            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
 
             # 3. Draw minibatch
             if not d_feedback:
-                break
+                return False
 
             minibatch_size = max(
                 1, min(self.config.minibatch_size, len(d_feedback))
@@ -161,18 +188,18 @@ class GEPARunner:
                 child_candidate, minibatch
             )
 
-            print(f"[GEPA] module={selected_module_id}")
-            print(f"[GEPA] feedback: {feedback_text[:160]!r}")
-            print(
-                f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
-            )
-            if (
-                new_prompt.text_template.strip()
-                == old_prompt.text_template.strip()
-            ):
-                print("[GEPA] rewrite produced NO CHANGE")
-            else:
-                print("[GEPA] rewrite CHANGED prompt")
+            # print(f"[GEPA] module={selected_module_id}")
+            # print(f"[GEPA] feedback: {feedback_text[:160]!r}")
+            # print(
+            #     f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
+            # )
+            # if (
+            #     new_prompt.text_template.strip()
+            #     == old_prompt.text_template.strip()
+            # ):
+            #     print("[GEPA] rewrite produced NO CHANGE")
+            # else:
+            #     print("[GEPA] rewrite CHANGED prompt")
 
             if sigma_after >= sigma_before + self.config.min_delta:
                 # Accept
@@ -191,7 +218,30 @@ class GEPARunner:
                         after=sigma_after,
                     )
                 )
+                return True
             # else: reject silently
+
+        if self.config.display_options.show_indicator:
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True,
+            ) as progress:
+                task = progress.add_task(
+                    f"Optimizing prompt with GEPA (budget={self.config.budget})...",
+                    total=self.config.budget,
+                )
+                while remaining_budget > 0:
+                    if not _one_step():
+                        break
+                    remaining_budget -= 1
+                    progress.advance(task, 1)
+        else:
+            while remaining_budget > 0:
+                if not _one_step():
+                    break
+                remaining_budget -= 1
 
         best = self._best_by_aggregate()
         report = OptimizationResult(
@@ -201,19 +251,19 @@ class GEPARunner:
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
         )
-        return best, report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 
-    async def a_optimize(
+    async def a_execute_gepa(
         self,
         *,
-        seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
+        prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Tuple[Candidate, Dict]:
-        """Asynchronous twin of optimize()."""
+    ) -> Tuple[Prompt, Dict]:
+        """Asynchronous twin of execute_gepa()."""
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, seed=self.config.random_seed
         )
-        seed_prompts_by_module = normalize_seed_prompts(seed_prompts)
+        seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_candidate = Candidate.new(prompts=dict(seed_prompts_by_module))
         self._add_candidate(root_candidate)
         self.pareto_score_table[root_candidate.id] = (
@@ -224,32 +274,38 @@ class GEPARunner:
 
         accepted_steps: List[Dict] = []
         remaining_budget = self.config.budget
-        while remaining_budget > 0:
-            print(f"remaining_budget = {remaining_budget}")
+
+        async def _one_step():
+            nonlocal remaining_budget, accepted_steps
             remaining_budget -= 1
+
+            # 1. Pick candidate via Pareto
             selected_candidate_id = select_candidate_pareto(
                 self.pareto_score_table, random_state=self.random_state
             )
             parent_candidate = self.candidates_by_id[selected_candidate_id]
-            selected_module_id: ModuleId = (
-                await self.scoring_adapter.a_select_module(parent_candidate)
-            )
 
+            # 2. Single module id
+            selected_module_id: ModuleId = self.SINGLE_MODULE_ID
+
+            # 3. Draw minibatch
             if not d_feedback:
-                break
+                return False
 
             minibatch_size = max(
                 1, min(self.config.minibatch_size, len(d_feedback))
             )
-
             minibatch: Union[List[Golden], List[ConversationalGolden]] = [
                 d_feedback[self.random_state.randrange(0, len(d_feedback))]
                 for _ in range(minibatch_size)
             ]
 
+            # 4. Feedback
             feedback_text = await self.scoring_adapter.a_minibatch_feedback(
                 parent_candidate, selected_module_id, minibatch
             )
+
+            # 5. Rewrite
             old_prompt = parent_candidate.prompts.get(
                 selected_module_id, Prompt(text_template="")
             )
@@ -259,31 +315,20 @@ class GEPARunner:
                 feedback_text=feedback_text,
             )
 
+            # 6. Child candidate
             child_candidate = Candidate.new(
                 prompts=dict(parent_candidate.prompts),
                 parent=parent_candidate.id,
             )
             child_candidate.prompts[selected_module_id] = new_prompt
 
+            # 7. Acceptance test
             sigma_before = await self.scoring_adapter.a_minibatch_score(
                 parent_candidate, minibatch
             )
             sigma_after = await self.scoring_adapter.a_minibatch_score(
                 child_candidate, minibatch
             )
-
-            print(f"[GEPA] module={selected_module_id}")
-            print(f"[GEPA] feedback: {feedback_text[:160]!r}")
-            print(
-                f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
-            )
-            if (
-                new_prompt.text_template.strip()
-                == old_prompt.text_template.strip()
-            ):
-                print("[GEPA] rewrite produced NO CHANGE")
-            else:
-                print("[GEPA] rewrite CHANGED prompt")
 
             if sigma_after >= sigma_before + self.config.min_delta:
                 self._add_candidate(child_candidate)
@@ -301,6 +346,30 @@ class GEPARunner:
                         after=sigma_after,
                     )
                 )
+
+                return True
+
+        if self.config.display_options.show_indicator:
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
+                TextColumn("[progress.description]{task.description}"),
+                transient=True,
+            ) as progress:
+                task = progress.add_task(
+                    f"Optimizing prompt with GEPA (budget={self.config.budget})...",
+                    total=self.config.budget,
+                )
+                while remaining_budget > 0:
+                    if not await _one_step():
+                        break
+                    remaining_budget -= 1
+                    progress.advance(task, 1)
+        else:
+            while remaining_budget > 0:
+                if not await _one_step():
+                    break
+                remaining_budget -= 1
 
         best = self._best_by_aggregate()
         report = OptimizationResult(

@@ -111,17 +111,17 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         merged = _compose_prompt_messages(system_message, user_message)
         out = self.llm.generate(merged)
         new_text = _normalize_llm_output_to_text(out)
-        if new_text == old_prompt.text_template.strip():
-            print(
-                f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
-            )
-        else:
-            preview = (
-                (new_text[:80] + "...") if len(new_text) > 80 else new_text
-            )
-            print(
-                f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
-            )
+        # if new_text == old_prompt.text_template.strip():
+        #     print(
+        #         f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
+        #     )
+        # else:
+        #     preview = (
+        #         (new_text[:80] + "...") if len(new_text) > 80 else new_text
+        #     )
+        #     print(
+        #         f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
+        #     )
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
     async def a_rewrite(
@@ -137,17 +137,17 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         merged = _compose_prompt_messages(system_message, user_message)
         out = await self.llm.a_generate(merged)
         new_text = _normalize_llm_output_to_text(out)
-        if new_text == old_prompt.text_template.strip():
-            print(
-                f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
-            )
-        else:
-            preview = (
-                (new_text[:80] + "...") if len(new_text) > 80 else new_text
-            )
-            print(
-                f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
-            )
+        # if new_text == old_prompt.text_template.strip():
+        #     print(
+        #         f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
+        #     )
+        # else:
+        #     preview = (
+        #         (new_text[:80] + "...") if len(new_text) > 80 else new_text
+        #     )
+        #     print(
+        #         f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
+        #     )
 
         return old_prompt if not new_text else Prompt(text_template=new_text)
 

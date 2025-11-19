@@ -33,3 +33,10 @@ class OptimizationResultApi(BaseModel):
     @classmethod
     def from_runtime(cls, result: Dict) -> "OptimizationResultApi":
         return cls(**result)
+
+
+# TODO: probably just rename the above
+class OptimizationReport(OptimizationResultApi):
+    """Optimization report with the same schema as OptimizationResultApi."""
+
+    pass

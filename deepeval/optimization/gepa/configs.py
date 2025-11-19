@@ -16,6 +16,21 @@ from deepeval.optimization.types import PromptRewriter
 from .mutation import NoOpRewriter
 
 
+class GEPAAsyncConfig(BaseModel):
+    """Async controls used by GEPA"""
+
+    run_async: bool = False
+
+
+class GEPADisplayConfig(BaseModel):
+    """Display controls used by GEPA"""
+
+    show_indicator: bool = True
+    announce_ties: bool = Field(
+        True, description="Print a one-line note when a tie is detected"
+    )
+
+
 class GEPAConfig(BaseModel):
     """
     Core GEPA hyperparameters.
@@ -43,8 +58,9 @@ class GEPAConfig(BaseModel):
         TieBreakerPolicy.PREFER_ROOT,
         description="How to break ties on aggregate",
     )
-    announce_ties: bool = Field(
-        True, description="Print a one-line note when a tie is detected"
+    async_config: GEPAAsyncConfig = Field(default_factory=GEPAAsyncConfig)
+    display_options: GEPADisplayConfig = Field(
+        default_factory=GEPADisplayConfig
     )
     _rewriter: Optional[PromptRewriter] = PrivateAttr(default=None)
 
@@ -53,3 +69,5 @@ class GEPAConfig(BaseModel):
 
 
 GEPAConfig.TieBreaker = TieBreakerPolicy
+GEPAConfig.AsyncConfig = GEPAAsyncConfig
+GEPAConfig.DisplayConfig = GEPADisplayConfig
