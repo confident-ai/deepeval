@@ -28,9 +28,10 @@ To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `
 
 ```python
 from somewhere import llm
-from deepeval.tracing import observe
+from deepeval.tracing import observe, update_current_trace
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.metrics import StepEfficiencyMetric
+from deepeval.test_case import ToolCall
 
 
 @observe
@@ -54,11 +55,11 @@ def agent(input):
 dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like in SF?")])
 
 # Initialize metric
-step_efficiency = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
+metric = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
 
 # Loop through dataset
-for goldens in dataset.evals_iterator(metrics=[step_efficiency]):
-    trip_planner_agent(golden.input)
+for golden in dataset.evals_iterator(metrics=[metric]):
+    agent(golden.input)
 ```
 
 There are **SEVEN** optional parameters when creating a `StepEfficiencyMetric`:
@@ -72,21 +73,9 @@ There are **SEVEN** optional parameters when creating a `StepEfficiencyMetric`:
 
 To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
-### As a standalone
-
-You can also run the `StepEfficiencyMetric` on a single test case as a standalone, one-off execution.
-
-```python
-...
-
-metric.measure(convo_test_case)
-print(metric.score, metric.reason)
-```
-
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::info
+The `StepEfficiencyMetric` is an agentic trace-only metric, so unlike other `deepeval` metrics, it cannot be used as a standaolne and **MUST** be used in the `evals_iterator` or `observe` decorator.
 :::
-
 
 ## How Is It Calculated?
 
