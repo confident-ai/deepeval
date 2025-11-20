@@ -28,9 +28,10 @@ To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `
 
 ```python
 from somewhere import llm
-from deepeval.tracing import observe
+from deepeval.tracing import observe, update_current_trace
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.metrics import PlanQualityMetric
+from deepeval.test_case import ToolCall
 
 
 @observe
@@ -54,11 +55,11 @@ def agent(input):
 dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like in SF?")])
 
 # Initialize metric
-plan_quality = PlanQualityMetric(threshold=0.7, model="gpt-4o")
+metric = PlanQualityMetric(threshold=0.7, model="gpt-4o")
 
 # Loop through dataset
-for goldens in dataset.evals_iterator(metrics=[plan_quality]):
-    trip_planner_agent(golden.input)
+for golden in dataset.evals_iterator(metrics=[metric]):
+    agent(golden.input)
 ```
 
 There are **SEVEN** optional parameters when creating a `PlanQualityMetric`:
@@ -72,28 +73,17 @@ There are **SEVEN** optional parameters when creating a `PlanQualityMetric`:
 
 To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
-### As a standalone
-
-You can also run the `PlanQualityMetric` on a single test case as a standalone, one-off execution.
-
-```python
-...
-
-metric.measure(convo_test_case)
-print(metric.score, metric.reason)
-```
-
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::info
+The `PlanQualityMetric` is an agentic trace-only metric, so unlike other `deepeval` metrics, it cannot be used as a standaolne and **MUST** be used in the `evals_iterator` or `observe` decorator.
 :::
 
 ## How Is It Calculated?
 
-The `PlanAdherenceMetric` score is calculated using the following steps:
+The `PlanQualityMetric` score is calculated using the following steps:
 
 - Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
 - Extract **Plan** from the trace, a plan is extracted from the agent's `thinking` or `reasoning`. If there are no statements that clearly define or imply a plan from the trace, the metric passes by default with a score of `1`.
 
-<Equation formula="\text{Plan Adherence Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
+<Equation formula="\text{Plan Quality Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and task.
