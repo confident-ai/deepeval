@@ -16,6 +16,7 @@ from deepeval.models.llms import (
     KimiModel,
     GrokModel,
     DeepSeekModel,
+    OpenRouterModel,
 )
 from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
@@ -52,4 +53,5 @@ __all__ = [
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",
     "OllamaEmbeddingModel",
+    "OpenRouterModel",
 ]

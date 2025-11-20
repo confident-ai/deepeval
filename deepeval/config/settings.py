@@ -291,6 +291,12 @@ class Settings(BaseSettings):
     OPENAI_MODEL_NAME: Optional[str] = None
     OPENAI_COST_PER_INPUT_TOKEN: Optional[float] = None
     OPENAI_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    # OpenRouter
+    USE_OPENROUTER_MODEL: Optional[bool] = None
+    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_MODEL_NAME: Optional[str] = None
+    OPENROUTER_COST_PER_INPUT_TOKEN: Optional[float] = None
+    OPENROUTER_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # Vertex AI
     VERTEX_AI_MODEL_NAME: Optional[str] = None
     # VLLM
