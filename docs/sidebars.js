@@ -174,12 +174,20 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Optimization",
+      label: "Prompt Optimization",
       className: "sidebar-item-icon-prompt-optimization",
-      items: [
-        "prompt-optimization",
-      ],
       collapsed: false,
+      items: [
+        "prompt-optimization-introduction",
+        {
+          type: "category",
+          label: "Optimization Algorithms",
+          collapsed: false,
+          items: [
+            "prompt-optimization-gepa",
+          ],
+        }
+      ],
     },
     {
       type: "category",
