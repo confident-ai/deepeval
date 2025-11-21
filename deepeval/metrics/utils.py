@@ -507,8 +507,6 @@ def initialize_multimodal_model(
     """
     Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
     """
-    print("Initializing multimodal model...")
-    print(model)
     if is_native_mllm(model):
         return model, True
     if isinstance(model, DeepEvalBaseMLLM):
@@ -518,8 +516,6 @@ def initialize_multimodal_model(
     if should_use_ollama_model():
         return MultimodalOllamaModel(), True
     elif should_use_azure_openai():
-        print("Using Azure OpenAI for multimodal model...")
-        print(MultimodalAzureOpenAIMLLMModel)
         return MultimodalAzureOpenAIMLLMModel(model_name=model), True
     elif isinstance(model, str) or model is None:
         return MultimodalOpenAIModel(model=model), True
