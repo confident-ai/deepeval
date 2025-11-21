@@ -25,6 +25,7 @@ from deepeval.models import (
     MultimodalOpenAIModel,
     MultimodalGeminiModel,
     MultimodalOllamaModel,
+    MultimodalAzureOpenAIMLLMModel,
     AmazonBedrockModel,
     LiteLLMModel,
     KimiModel,
@@ -501,11 +502,13 @@ def is_native_model(
 
 
 def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+    model: Optional[Union[str, DeepEvalBaseMLLM, AzureOpenAIModel]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
     """
+    print("Initializing multimodal model...")
+    print(model)
     if is_native_mllm(model):
         return model, True
     if isinstance(model, DeepEvalBaseMLLM):
@@ -514,6 +517,10 @@ def initialize_multimodal_model(
         return MultimodalGeminiModel(), True
     if should_use_ollama_model():
         return MultimodalOllamaModel(), True
+    elif should_use_azure_openai():
+        print("Using Azure OpenAI for multimodal model...")
+        print(MultimodalAzureOpenAIMLLMModel)
+        return MultimodalAzureOpenAIMLLMModel(model_name=model), True
     elif isinstance(model, str) or model is None:
         return MultimodalOpenAIModel(model=model), True
     raise TypeError(
