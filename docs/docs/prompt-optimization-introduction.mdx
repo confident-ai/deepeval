@@ -122,22 +122,20 @@ Once you have an optimizer instance, you can optimize any `Prompt` against a rel
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
 
-goldens = [
-    Golden(
-        input="What is Saturn?",
-        expected_output="Saturn is a car brand.",
-        context=["We mean the car brand, not the planet."],
-    ),
-    Golden(
-        input="What is Mercury?",
-        expected_output="Mercury is a planet.",
-        context=["We mean the planet, not the element or car brand."],
-    ),
-]
-
 optimized_prompt = optimizer.optimize(
     prompt=Prompt(text_template="Respond to the query."),
-    goldens=goldens,
+    goldens=[
+        Golden(
+            input="What is Saturn?",
+            expected_output="Saturn is a car brand.",
+            context=["We mean the car brand, not the planet."],
+        ),
+        Golden(
+            input="What is Mercury?",
+            expected_output="Mercury is a planet.",
+            context=["We mean the planet, not the element or car brand."],
+        ),
+    ],
 )
 
 print("Optimized prompt:")

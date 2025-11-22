@@ -8,42 +8,87 @@ from pydantic import (
     Field,
     field_validator,
     PositiveInt,
-    PrivateAttr,
 )
 
 from deepeval.optimization.policies.tie_breaker import (
     TieBreaker as TieBreakerPolicy,
 )
-from deepeval.optimization.types import PromptRewriterProtocol
-from .mutation import PromptRewriter
-
-
-class GEPADisplayConfig(BaseModel):
-    """Display controls used by GEPA"""
-
-    show_indicator: bool = True
-    verbose: bool = False
-    announce_ties: bool = Field(
-        True, description="Print a one-line note when a tie is detected"
-    )
 
 
 class GEPAConfig(BaseModel):
     """
-    Core GEPA hyperparameters.
-    - iterations: total mutation attempts (Alg. 1 loop iterations)
-    - minibatch_size: b is size of minibatch from D_feedback
-    - pareto_size: n_pareto is size of D_pareto
-    - random_seed: RNG seed for reproducibility
-    - min_delta: optional acceptance tolerance, such as σ′ >= σ + min_delta
+    Core configuration for the GEPA optimization loop.
+
+    Fields:
+      - iterations:
+          Total number of GEPA loop iterations (mutation attempts).
+
+      - minibatch_size:
+          Fixed minibatch size drawn from D_feedback. When set, this
+          overrides dynamic sizing based on `minibatch_ratio`,
+          `minibatch_min_size`, and `minibatch_max_size`.
+
+      - minibatch_min_size:
+          Hard lower bound on the minibatch size used for D_feedback
+          when dynamic sizing is in effect.
+
+      - minibatch_max_size:
+          Hard upper bound on the minibatch size used for D_feedback
+          when dynamic sizing is in effect.
+
+      - minibatch_ratio:
+          Target fraction of len(goldens) used to compute a dynamic
+          minibatch size for D_feedback. The final size is bound
+          between `minibatch_min_size` and `minibatch_max_size`.
+
+      - pareto_size:
+          Size of the Pareto validation subset D_pareto. The splitter
+          will bind this between [0, len(goldens)], and the runner requires
+          at least 2 total goldens to run GEPA.
+
+      - random_seed:
+          RNG seed for reproducibility. If set to None, a seed is
+          derived from time.time_ns() via the field validator.
+
+      - min_delta:
+          Minimum improvement required for a child configuration to be
+          accepted, e.g. σ_child >= σ_parent + min_delta. A small jitter
+          is applied internally to avoid floating-point edge cases.
+
+      - tie_tolerance:
+          Two candidates are considered tied on aggregate score if
+          their values differ by at most this tolerance.
+
+      - tie_breaker:
+          Policy used to break ties when multiple prompt configurations
+          share the best aggregate score. See `GEPAConfig.TieBreaker`
+          for the available options.
     """
 
-    iterations: PositiveInt = Field(..., description="Total mutation attempts")
-    minibatch_size: PositiveInt = Field(
-        ..., description="Minibatch size for D_feedback"
+    iterations: PositiveInt = Field(
+        default=5, description="Total mutation attempts"
+    )
+    minibatch_size: Optional[conint(ge=1)] = Field(
+        default=None,
+        description="Fixed minibatch size for D_feedback; when set, overrides dynamic sizing.",
+    )
+    minibatch_min_size: conint(ge=1) = Field(
+        default=4,
+        description="Hard lower bound on minibatch size for D_feedback.",
+    )
+    minibatch_max_size: PositiveInt = Field(
+        default=32,
+        description="Hard upper bound on minibatch size for D_feedback.",
+    )
+    minibatch_ratio: confloat(gt=0.0, le=1.0) = Field(
+        default=0.05,
+        description=(
+            "Target fraction of len(goldens) used to compute a dynamic "
+            "minibatch size for D_feedback."
+        ),
     )
     pareto_size: conint(ge=1) = Field(
-        ..., description="Size of D_pareto (must be >= 1)"
+        default=3, description="Size of D_pareto (must be >= 1)"
     )
     random_seed: int = 0
     min_delta: confloat(ge=0.0) = 0.0
@@ -52,20 +97,9 @@ class GEPAConfig(BaseModel):
         1e-9, description="Tie tolerance for aggregate scores"
     )
     tie_breaker: TieBreakerPolicy = Field(
-        TieBreakerPolicy.RANDOM,
+        TieBreakerPolicy.PREFER_CHILD,
         description="How to break ties on aggregate",
     )
-
-    display_options: GEPADisplayConfig = Field(
-        default_factory=GEPADisplayConfig
-    )
-    _rewriter: Optional[PromptRewriterProtocol] = PrivateAttr(default=None)
-
-    def set_rewriter(self, r: PromptRewriterProtocol) -> None:
-        self._rewriter = r
-
-    def get_rewriter(self) -> PromptRewriterProtocol:
-        return self._rewriter or PromptRewriter()
 
     @field_validator("random_seed", mode="before")
     @classmethod
@@ -77,4 +111,3 @@ class GEPAConfig(BaseModel):
 
 
 GEPAConfig.TieBreaker = TieBreakerPolicy
-GEPAConfig.DisplayConfig = GEPADisplayConfig

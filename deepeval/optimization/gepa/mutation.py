@@ -1,10 +1,7 @@
 from __future__ import annotations
 import json
-import inspect
 from typing import Callable, Dict, List, Optional, Tuple, Union
-from pydantic import BaseModel as PydanticBaseModel
 
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.optimization.types import (
     MetricInfo,
     ModuleId,
@@ -12,7 +9,7 @@ from deepeval.optimization.types import (
 from deepeval.optimization.utils import (
     a_invoke_model_callback,
     invoke_model_callback,
-    require_model_or_callback,
+    validate_callback,
     build_model_callback_kwargs,
 )
 from deepeval.prompt.prompt import Prompt
@@ -25,7 +22,7 @@ def _compose_prompt_messages(system_message: str, user_message: str) -> str:
     """
     Join system and user messages into a single prompt string.
     Strips surrounding whitespace from each part; if the system message is
-    empty/absent, returns just the user message.
+    empty or absent, returns just the user message.
     """
     system_text = (system_message or "").strip()
     user_text = (user_message or "").strip()
@@ -41,7 +38,7 @@ def _normalize_llm_output_to_text(
     Accepted inputs:
       - str                        -> returned as trimmed
       - (str|dict, float_cost)     -> first element extracted and normalized
-      - dict (e.g., JSON mode)     -> JSON-serialized with ensure_ascii=False
+      - dict (e.g. JSON mode)      -> JSON serialized with ensure_ascii=False
 
     Fallback: if serialization fails, str(value).strip() is used.
     """
@@ -97,94 +94,20 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
     def rewrite(
         self,
         *,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None,
+        model_callback: Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ],
         module_id: ModuleId,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt:
-        model, model_callback = require_model_or_callback(
+        model_callback = validate_callback(
             component="PromptRewriter",
-            model=model,
-            model_callback=model_callback,
-        )
-        if not feedback_text.strip():
-            return old_prompt
-        system_message, user_message = self._compose_messages(
-            module_id=module_id,
-            old_prompt=old_prompt,
-            feedback_text=feedback_text,
-        )
-        merged = _compose_prompt_messages(system_message, user_message)
-
-        is_callback_async = (
-            inspect.iscoroutinefunction(model_callback)
-            if model_callback is not None
-            else False
-        )
-
-        if model_callback is not None and not is_callback_async:
-            candidate_kwargs = build_model_callback_kwargs(
-                module_id=module_id,
-                old_prompt=old_prompt,
-                feedback_text=feedback_text,
-                prompt_text=merged,
-                model=model,
-                model_schema=model_schema,
-            )
-            out = invoke_model_callback(
-                hook="prompt_rewrite",
-                model_callback=model_callback,
-                candidate_kwargs=candidate_kwargs,
-            )
-        else:
-            out = model.generate(merged, schema=model_schema)
-        new_text = _normalize_llm_output_to_text(out)
-        # if new_text == old_prompt.text_template.strip():
-        #     print(
-        #         f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
-        #     )
-        # else:
-        #     preview = (
-        #         (new_text[:80] + "...") if len(new_text) > 80 else new_text
-        #     )
-        #     print(
-        #         f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
-        #     )
-        return old_prompt if not new_text else Prompt(text_template=new_text)
-
-    async def a_rewrite(
-        self,
-        *,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None,
-        module_id: ModuleId,
-        old_prompt: Prompt,
-        feedback_text: str,
-    ) -> Prompt:
-        model, model_callback = require_model_or_callback(
-            component="PromptRewriter",
-            model=model,
             model_callback=model_callback,
         )
         if not feedback_text.strip():
@@ -197,37 +120,65 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         merged_prompt_text = _compose_prompt_messages(
             system_message, user_message
         )
-        if model_callback is not None:
-            candidate_kwargs = build_model_callback_kwargs(
-                module_id=module_id,
-                old_prompt=old_prompt,
-                feedback_text=feedback_text,
-                prompt_text=merged_prompt_text,
-                model=model,
-                model_schema=model_schema,
-            )
-            out = await a_invoke_model_callback(
-                hook="prompt_rewrite",
-                model_callback=model_callback,
-                candidate_kwargs=candidate_kwargs,
-            )
-        else:
-            out = await model.a_generate(
-                merged_prompt_text, schema=model_schema
-            )
-        new_text = _normalize_llm_output_to_text(out)
-        # if new_text == old_prompt.text_template.strip():
-        #     print(
-        #         f"[DEBUG][GEPA] rewrite produced NO CHANGE | module={module_id}"
-        #     )
-        # else:
-        #     preview = (
-        #         (new_text[:80] + "...") if len(new_text) > 80 else new_text
-        #     )
-        #     print(
-        #         f"[DEBUG][GEPA] rewrite CHANGED | module={module_id} | new='{preview}'"
-        #     )
 
+        candidate_kwargs = build_model_callback_kwargs(
+            prompt=old_prompt,
+            prompt_text=merged_prompt_text,
+            feedback_text=feedback_text,
+        )
+        out = invoke_model_callback(
+            hook="prompt_rewrite",
+            model_callback=model_callback,
+            candidate_kwargs=candidate_kwargs,
+        )
+
+        new_text = _normalize_llm_output_to_text(out)
+        return old_prompt if not new_text else Prompt(text_template=new_text)
+
+    async def a_rewrite(
+        self,
+        *,
+        model_callback: Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ],
+        module_id: ModuleId,
+        old_prompt: Prompt,
+        feedback_text: str,
+    ) -> Prompt:
+        model_callback = validate_callback(
+            component="PromptRewriter",
+            model_callback=model_callback,
+        )
+
+        if not feedback_text.strip():
+            return old_prompt
+
+        system_message, user_message = self._compose_messages(
+            module_id=module_id,
+            old_prompt=old_prompt,
+            feedback_text=feedback_text,
+        )
+        merged_prompt_text = _compose_prompt_messages(
+            system_message, user_message
+        )
+
+        candidate_kwargs = build_model_callback_kwargs(
+            prompt=old_prompt,
+            prompt_text=merged_prompt_text,
+            feedback_text=feedback_text,
+        )
+        out = await a_invoke_model_callback(
+            hook="prompt_rewrite",
+            model_callback=model_callback,
+            candidate_kwargs=candidate_kwargs,
+        )
+
+        new_text = _normalize_llm_output_to_text(out)
         return old_prompt if not new_text else Prompt(text_template=new_text)
 
 

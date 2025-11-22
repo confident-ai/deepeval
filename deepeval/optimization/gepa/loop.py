@@ -1,11 +1,8 @@
 from __future__ import annotations
-import inspect
 import uuid
 import random
 import time
 
-from contextlib import contextmanager
-from pydantic import BaseModel as PydanticBaseModel
 from typing import (
     Awaitable,
     Callable,
@@ -16,11 +13,8 @@ from typing import (
     Union,
     Optional,
 )
-from rich import print
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
 from deepeval.errors import DeepEvalError
-from deepeval.evaluate.configs import AsyncConfig
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
     AcceptedIterationDict,
@@ -29,24 +23,19 @@ from deepeval.optimization.types import (
     ModuleId,
     ScoreTable,
     ScoringAdapter,
-    OptimizationReport,
     OptimizationResult,
+    RunnerStatusType,
+    RunnerStatusCallbackProtocol,
 )
-from deepeval.optimization.adapters.deepeval_scoring_adapter import (
-    DeepEvalScoringAdapter,
-)
-from deepeval.optimization.utils import split_goldens, require_model_or_callback
+from deepeval.optimization.utils import split_goldens
 from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
 )
-from deepeval.metrics import (
-    BaseMetric,
-    BaseConversationalMetric,
-)
-from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
-from deepeval.utils import get_or_create_event_loop
+from deepeval.optimization.gepa.mutation import (
+    PromptRewriter,
+)
 from .configs import GEPAConfig
 
 
@@ -56,27 +45,39 @@ if TYPE_CHECKING:
 
 class GEPARunner:
     """
-    GEPA loop with a sync/async API parity.
-    - PromptConfiguration selection: Pareto-frequency over D_pareto instance scores.
-    - Acceptance: minibatch improvement on D_feedback (σ_after >= σ_before + min_delta).
+    GEPA loop with sync/async execution.
+
+    This runner is intentionally low level and does not know about metrics,
+    models, or async configs. It relies on a preconfigured
+    ScoringAdapter and PromptRewriter, which are typically constructed by
+    the higher-level PromptOptimizer.
     """
 
-    SINGLE_MODULE_ID = "__module__"
+    SINGLE_MODULE_ID: ModuleId = "__module__"
 
     def __init__(
         self,
         *,
         config: GEPAConfig,
-        async_config: Optional[AsyncConfig] = None,
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
-        # used if scoring_adapter is None
-        metrics: Optional[
-            Union[List[BaseMetric], List[BaseConversationalMetric]]
-        ] = None,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
+    ) -> None:
+        self.config = config
+        self.aggregate_instances = aggregate_instances
+        self.scoring_adapter = scoring_adapter
+
+        # random seeded from config is used for splits, sampling, and tie-breaking.
+        self.random_state = random.Random(config.random_seed)
+
+        # runtime state to be reset between runs
+        self.reset_state()
+
+        # Status callback set by PromptOptimizer:
+        #   (kind, step_index, total_steps, detail) -> None
+        self.status_callback: Optional[RunnerStatusCallbackProtocol] = None
+
+        # Model callback used by the rewriter set by PromptOptimizer.
+        self.model_callback: Optional[
             Callable[
                 ...,
                 Union[
@@ -85,160 +86,44 @@ class GEPARunner:
                     Tuple[Union[str, Dict], float],
                 ],
             ]
-        ] = None,
-    ):
+        ] = None
 
-        model, model_callback = require_model_or_callback(
-            component="GEPA prompt optimization",
-            model=model,
-            model_callback=model_callback,
-        )
+        # lazy loaded
+        self._rewriter: Optional[PromptRewriter] = None
 
-        self.optimization_id: str = str(uuid.uuid4())
-        self.config = config
-        self.async_config = async_config or AsyncConfig()
-        self.random_state = random.Random(config.random_seed)
-        self.model = model
-        self.model_schema = model_schema
-        self.model_callback = model_callback
-        self.scoring_adapter = scoring_adapter
-        self.rewriter = config.get_rewriter()
-        self.aggregate_instances = aggregate_instances
+    ##############
+    # Public API #
+    ##############
 
-        if scoring_adapter is None:
-            is_callback_async = (
-                inspect.iscoroutinefunction(model_callback)
-                if model_callback is not None
-                else False
-            )
-
-            if not metrics:
-                raise DeepEvalError(
-                    "Provide `metrics` when no `scoring_adapter` is supplied."
-                )
-
-            if (
-                not self.async_config.run_async
-                and model is None
-                and is_callback_async
-            ):
-                raise DeepEvalError(
-                    "Invalid GEPA configuration: sync runs (async_config.run_async=False) "
-                    "require either a DeepEvalBaseLLM `model` or a synchronous `model_callback`. "
-                    "Got an async-only model_callback with no model."
-                )
-
-            if (
-                self.async_config.run_async
-                and model is not None
-                and not hasattr(model, "a_generate")
-                and model_callback is None
-            ):
-                raise DeepEvalError(
-                    "Invalid GEPA configuration: async runs (async_config.run_async=True) "
-                    "require either a `model` that implements `a_generate` or a `model_callback` "
-                    "for prompt rewrites. Got a sync-only model with no callback."
-                )
-
-            self.scoring_adapter = DeepEvalScoringAdapter(
-                metrics=metrics,
-                model=model,
-                model_schema=model_schema,
-                model_callback=model_callback,
-            )
-
-        if hasattr(self.scoring_adapter, "configure_async"):
-            self.scoring_adapter.configure_async(
-                max_concurrent=self.async_config.max_concurrent,
-                throttle_seconds=float(self.async_config.throttle_value),
-            )
-
-        # State
-        self.prompt_configurations_by_id: Dict[
-            PromptConfigurationId, PromptConfiguration
-        ] = {}
-        self.parents_by_id: Dict[
-            PromptConfigurationId, Optional[PromptConfigurationId]
-        ] = {}
-        self.pareto_score_table: ScoreTable = {}
-
-    def _add_prompt_configuration(
-        self, prompt_configuration: PromptConfiguration
-    ):
-        self.prompt_configurations_by_id[prompt_configuration.id] = (
-            prompt_configuration
-        )
-        self.parents_by_id[prompt_configuration.id] = (
-            prompt_configuration.parent
-        )
-
-    def _best_by_aggregate(self) -> PromptConfiguration:
-        assert self.pareto_score_table, "No scores yet"
-        totals = {
-            prompt_configuration_id: self.aggregate_instances(vector)
-            for prompt_configuration_id, vector in self.pareto_score_table.items()
-        }
-
-        chosen, tied, max_val = pick_best_with_ties(
-            totals,
-            self.parents_by_id,
-            random_state=self.random_state,
-            tie_tolerance=float(self.config.tie_tolerance),
-            policy=self.config.tie_breaker,
-        )
-
-        if self.config.display_options.announce_ties and len(tied) > 1:
-            print(
-                f"[GEPA] tie on aggregate={max_val:.4f} among {len(tied)} prompt_configurations; "
-                f"using tie_breaker={self.config.tie_breaker.value!r} selected {chosen}. "
-                f"To change, set GEPAConfig.tie_breaker to one of: "
-                f"{[t.value for t in self.config.TieBreaker]} "
-                f"(tie_tolerance={float(self.config.tie_tolerance):g})."
-            )
-        return self.prompt_configurations_by_id[chosen]
-
-    def optimize(
+    def execute(
         self,
         *,
         prompt: Prompt,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
-    ) -> Prompt:
-        """
-        Returns the optimized Prompt. Attaches an OptimizationReport to
-        the returned Prompt.
-        """
-        self.reset_state()
-        if self.async_config.run_async:
-            loop = get_or_create_event_loop()
-            best_prompt, report_dict = loop.run_until_complete(
-                self.a_execute_gepa(prompt=prompt, goldens=goldens)
-            )
-        else:
-            best_prompt, report_dict = self.execute_gepa(
-                prompt=prompt, goldens=goldens
-            )
-
-        best_prompt.optimization_report = OptimizationReport.from_runtime(
-            report_dict
-        )
-        return best_prompt
-
-    def execute_gepa(
-        self,
-        *,
-        prompt: Prompt,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
+        goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
+        total_goldens = len(goldens)
+        if total_goldens < 2:
+            raise DeepEvalError(
+                "GEPA prompt optimization requires at least 2 goldens, but "
+                f"received {total_goldens}. Provide at least two goldens to "
+                "run the optimizer."
+            )
+
+        self._ensure_scoring_adapter()
+        self._ensure_rewriter()
         self.reset_state()
+
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, random_state=self.random_state
         )
+
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_prompt_configuration = PromptConfiguration.new(
             prompts=dict(seed_prompts_by_module)
         )
         self._add_prompt_configuration(root_prompt_configuration)
+
         self.pareto_score_table[root_prompt_configuration.id] = (
             self.scoring_adapter.score_on_pareto(
                 root_prompt_configuration, d_pareto
@@ -247,7 +132,7 @@ class GEPARunner:
 
         accepted_iterations: List[Dict] = []
 
-        def _one_iteration():
+        def _one_iteration() -> bool:
             nonlocal accepted_iterations
 
             if not d_feedback:
@@ -267,39 +152,28 @@ class GEPARunner:
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
+            # 5. Rewrite
             child_prompt = self._generate_child_prompt(
                 selected_module_id, parent_prompt_configuration, feedback_text
             )
             if child_prompt is None:
-                # child prompt matched parent. Skip this generation.
+                # Child prompt matched parent; skip this iteration.
                 return True
 
+            # 6. Child prompt_configuration
             child_prompt_configuration = self._make_child(
                 selected_module_id, parent_prompt_configuration, child_prompt
             )
 
+            # 7. Evaluate parent/child on minibatch
             parent_score = self.scoring_adapter.minibatch_score(
                 parent_prompt_configuration, minibatch
             )
-
             child_score = self.scoring_adapter.minibatch_score(
                 child_prompt_configuration, minibatch
             )
 
-            # print(f"[GEPA] module={selected_module_id}")
-            # print(f"[GEPA] feedback: {feedback_text[:160]!r}")
-            # print(
-            #     f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
-            # )
-            # if (
-            #     new_prompt.text_template.strip()
-            #     == old_prompt.text_template.strip()
-            # ):
-            #     print("[GEPA] rewrite produced NO CHANGE")
-            # else:
-            #     print("[GEPA] rewrite CHANGED prompt")
-
-            # 7. Acceptance test
+            # 8. Acceptance test
             if self._should_accept_child(parent_score, child_score):
                 accepted_iterations.append(
                     self._accept_child(
@@ -325,22 +199,35 @@ class GEPARunner:
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 
-    async def a_execute_gepa(
+    async def a_execute(
         self,
         *,
         prompt: Prompt,
-        goldens: Union[List[Golden], List[ConversationalGolden]],
+        goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
         """Asynchronous twin of execute_gepa()."""
+        total_goldens = len(goldens)
+        if total_goldens < 2:
+            raise DeepEvalError(
+                "GEPA prompt optimization requires at least 2 goldens, but "
+                f"received {total_goldens}. Provide at least two goldens to "
+                "run the optimizer."
+            )
+
+        self._ensure_scoring_adapter()
+        self._ensure_rewriter()
         self.reset_state()
+
         d_feedback, d_pareto = split_goldens(
             goldens, self.config.pareto_size, random_state=self.random_state
         )
+
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
         root_prompt_configuration = PromptConfiguration.new(
             prompts=dict(seed_prompts_by_module)
         )
         self._add_prompt_configuration(root_prompt_configuration)
+
         self.pareto_score_table[root_prompt_configuration.id] = (
             await self.scoring_adapter.a_score_on_pareto(
                 root_prompt_configuration, d_pareto
@@ -349,7 +236,7 @@ class GEPARunner:
 
         accepted_iterations: List[Dict] = []
 
-        async def _one_iteration():
+        async def _one_iteration() -> bool:
             nonlocal accepted_iterations
 
             if not d_feedback:
@@ -369,39 +256,28 @@ class GEPARunner:
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
+            # 5. Rewrite
             child_prompt = await self._a_generate_child_prompt(
                 selected_module_id, parent_prompt_configuration, feedback_text
             )
             if child_prompt is None:
-                # child prompt matched parent. Skip this generation.
+                # Child prompt matched parent; skip this iteration.
                 return True
 
+            # 6. Child prompt_configuration
             child_prompt_configuration = self._make_child(
                 selected_module_id, parent_prompt_configuration, child_prompt
             )
 
+            # 7. Evaluate parent/child on minibatch
             parent_score = await self.scoring_adapter.a_minibatch_score(
                 parent_prompt_configuration, minibatch
             )
-
             child_score = await self.scoring_adapter.a_minibatch_score(
                 child_prompt_configuration, minibatch
             )
 
-            # print(f"[GEPA] module={selected_module_id}")
-            # print(f"[GEPA] feedback: {feedback_text[:160]!r}")
-            # print(
-            #     f"[GEPA] σ_before={sigma_before:.4f} σ_after={sigma_after:.4f}"
-            # )
-            # if (
-            #     new_prompt.text_template.strip()
-            #     == old_prompt.text_template.strip()
-            # ):
-            #     print("[GEPA] rewrite produced NO CHANGE")
-            # else:
-            #     print("[GEPA] rewrite CHANGED prompt")
-
-            # 7. Acceptance test
+            # 8. Acceptance test
             if self._should_accept_child(parent_score, child_score):
                 accepted_iterations.append(
                     await self._a_accept_child(
@@ -413,7 +289,6 @@ class GEPARunner:
                         child_score,
                     )
                 )
-
             return True
 
         await self._a_run_loop_iteration(_one_iteration)
@@ -427,8 +302,12 @@ class GEPARunner:
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 
-    def reset_state(self):
-        self.optimization_id: str = str(uuid.uuid4())
+    ###################
+    # State & helpers #
+    ###################
+
+    def reset_state(self) -> None:
+        self.optimization_id = str(uuid.uuid4())
         self.prompt_configurations_by_id: Dict[
             PromptConfigurationId, PromptConfiguration
         ] = {}
@@ -437,8 +316,64 @@ class GEPARunner:
         ] = {}
         self.pareto_score_table: ScoreTable = {}
 
-    def _pick_prompt_configuration(self) -> PromptConfiguration:
+    def _ensure_scoring_adapter(self) -> None:
+        if self.scoring_adapter is None:
+            raise DeepEvalError(
+                "GEPARunner requires a `scoring_adapter`. "
+                "Construct one (for example, DeepEvalScoringAdapter) in "
+                "PromptOptimizer and assign it to `runner.scoring_adapter`."
+            )
 
+    def _ensure_rewriter(self) -> None:
+        if self._rewriter is not None:
+            return
+
+        # For now, always use the basic PromptRewriter. Additional
+        # variants (e.g. for GEPA Alg. 4 crossover) can be introduced
+        # later
+        self._rewriter = PromptRewriter()
+
+    def _add_prompt_configuration(
+        self, prompt_configuration: PromptConfiguration
+    ) -> None:
+        self.prompt_configurations_by_id[prompt_configuration.id] = (
+            prompt_configuration
+        )
+        self.parents_by_id[prompt_configuration.id] = (
+            prompt_configuration.parent
+        )
+
+    def _best_by_aggregate(self) -> PromptConfiguration:
+        assert self.pareto_score_table, "No scores yet"
+        totals = {
+            prompt_configuration_id: self.aggregate_instances(vector)
+            for prompt_configuration_id, vector in self.pareto_score_table.items()
+        }
+
+        chosen, tied, max_val = pick_best_with_ties(
+            totals,
+            self.parents_by_id,
+            random_state=self.random_state,
+            tie_tolerance=float(self.config.tie_tolerance),
+            policy=self.config.tie_breaker,
+        )
+        if self.status_callback is not None and len(tied) > 1:
+            msg = (
+                f"tie on aggregate={max_val:.4f} among {len(tied)} "
+                f"prompt_configurations; using tie_breaker="
+                f"{self.config.tie_breaker.value!r} selected {chosen}. "
+                f"To change, set GEPAConfig.tie_breaker to one of: "
+                f"{[t.value for t in self.config.TieBreaker]} "
+                f"(tie_tolerance={float(self.config.tie_tolerance):g})."
+            )
+            self.status_callback(
+                RunnerStatusType.TIE,
+                detail=msg,
+            )
+
+        return self.prompt_configurations_by_id[chosen]
+
+    def _pick_prompt_configuration(self) -> PromptConfiguration:
         selected_prompt_configuration_id = select_prompt_configuration_pareto(
             self.pareto_score_table, random_state=self.random_state
         )
@@ -447,14 +382,31 @@ class GEPARunner:
         ]
 
     def _draw_minibatch(
-        self, d_feedback: Union[List[Golden], List[ConversationalGolden]]
-    ) -> Union[List[Golden], List[ConversationalGolden]]:
-        minibatch_size = max(
-            1, min(self.config.minibatch_size, len(d_feedback))
-        )
+        self, d_feedback: Union[List["Golden"], List["ConversationalGolden"]]
+    ) -> Union[List["Golden"], List["ConversationalGolden"]]:
+        # Determine effective minibatch size from GEPAConfig, bounded by the
+        # available feedback set.
+        n_feedback = len(d_feedback)
+        if n_feedback <= 0:
+            return []
+
+        if self.config.minibatch_size is not None:
+            size = self.config.minibatch_size
+        else:
+            # Dynamic sizing from ratio, bounded between min and max.
+            dynamic = max(
+                1, int(round(n_feedback * self.config.minibatch_ratio))
+            )
+            size = max(
+                self.config.minibatch_min_size,
+                min(dynamic, self.config.minibatch_max_size),
+            )
+
+        size = max(1, min(size, n_feedback))
+
         return [
-            d_feedback[self.random_state.randrange(0, len(d_feedback))]
-            for _ in range(minibatch_size)
+            d_feedback[self.random_state.randrange(0, n_feedback)]
+            for _ in range(size)
         ]
 
     async def _a_generate_child_prompt(
@@ -463,13 +415,11 @@ class GEPARunner:
         parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
     ) -> Optional[Prompt]:
-        # 5. Rewrite
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
-        new_prompt = await self.rewriter.a_rewrite(
-            model=self.model,
-            model_schema=self.model_schema,
+        assert self._rewriter is not None
+        new_prompt = await self._rewriter.a_rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
@@ -488,14 +438,12 @@ class GEPARunner:
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
-    ):
-        # 5. Rewrite
+    ) -> Optional[Prompt]:
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
-        new_prompt = self.rewriter.rewrite(
-            model=self.model,
-            model_schema=self.model_schema,
+        assert self._rewriter is not None
+        new_prompt = self._rewriter.rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
@@ -515,8 +463,6 @@ class GEPARunner:
         parent_prompt_configuration: PromptConfiguration,
         child_prompt: Prompt,
     ) -> PromptConfiguration:
-
-        # 6. Child prompt_configuration
         child_prompt_configuration = PromptConfiguration.new(
             prompts=dict(parent_prompt_configuration.prompts),
             parent=parent_prompt_configuration.id,
@@ -535,7 +481,7 @@ class GEPARunner:
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         child_prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List[Golden], List[ConversationalGolden]],
+        d_pareto: Union[List["Golden"], List["ConversationalGolden"]],
         parent_score: float,
         child_score: float,
     ) -> AcceptedIterationDict:
@@ -559,7 +505,7 @@ class GEPARunner:
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         child_prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List[Golden], List[ConversationalGolden]],
+        d_pareto: Union[List["Golden"], List["ConversationalGolden"]],
         parent_score: float,
         child_score: float,
     ) -> AcceptedIterationDict:
@@ -578,92 +524,93 @@ class GEPARunner:
             after=child_score,
         )
 
-    def _format_progress_description(
-        self, iteration: int, remaining_iterations: int, elapsed_time: float
-    ) -> str:
-        return (
-            f"Optimizing prompt with GEPA (iterations={self.config.iterations}) "
-            f"[rgb(25,227,160)]• Iteration {iteration}/{self.config.iterations} "
-            f"• {elapsed_time:.2f}s • remaining={remaining_iterations}"
-        )
+    def _update_progress(
+        self,
+        total_iterations: int,
+        iteration: int,
+        remaining_iterations: int,
+        elapsed: float,
+    ):
+        if self.status_callback is not None:
+            detail = (
+                f"(iterations={total_iterations}) "
+                f"• iteration {iteration}/{total_iterations} "
+                f"• {elapsed:.2f}s • remaining={remaining_iterations}"
+            )
+            self.status_callback(
+                RunnerStatusType.PROGRESS,
+                step_index=iteration,
+                total_steps=total_iterations,
+                detail=detail,
+            )
 
-    def _progress_columns(self):
-        return (
-            SpinnerColumn(style="rgb(106,0,255)"),
-            BarColumn(bar_width=60),
-            TextColumn("[progress.description]{task.description}"),
-        )
-
-    @contextmanager
-    def _maybe_progress(self):
-        """Context manager yielding a Progress or a no-op"""
-        if self.config.display_options.show_indicator:
-            with Progress(*self._progress_columns(), transient=True) as p:
-                yield p
-        else:
-
-            class _Noop:
-                def add_task(self, *_, **__):
-                    return 0
-
-                def advance(self, *_, **__):
-                    pass
-
-                def update(self, *_, **__):
-                    pass
-
-            yield _Noop()
+    def _update_error(
+        self, total_iterations: int, iteration: int, exc: Exception
+    ):
+        # Report a user facing error event
+        if self.status_callback is not None:
+            detail = (
+                f"(iterations={total_iterations}) "
+                f"• error {exc.__class__.__name__}: {exc} "
+                f"• halted at iteration {iteration}"
+            )
+            self.status_callback(
+                RunnerStatusType.ERROR,
+                step_index=iteration,
+                total_steps=total_iterations,
+                detail=detail,
+            )
 
     def _run_loop_iteration(
         self,
         gepa_iteration: Callable[[], bool],
     ) -> None:
-        remaining_iterations = self.config.iterations
+        total_iterations = self.config.iterations
+        remaining_iterations = total_iterations
         iteration = 0
-        with self._maybe_progress() as progress:
-            task = progress.add_task(
-                f"Optimizing prompt with GEPA (iterations={remaining_iterations})...",
-                total=remaining_iterations,
-            )
-            while remaining_iterations > 0:
-                iteration += 1
-                start_time = time.perf_counter()
+        self._update_progress(
+            total_iterations, iteration, remaining_iterations, 0
+        )
+        while remaining_iterations > 0:
+            iteration += 1
+            start_time = time.perf_counter()
+            try:
                 ok = gepa_iteration()
-                end_time = time.perf_counter()
-                if not ok:
-                    break
-                remaining_iterations -= 1
-                progress.advance(task, 1)
-                progress.update(
-                    task,
-                    description=self._format_progress_description(
-                        iteration, remaining_iterations, end_time - start_time
-                    ),
-                )
+            except Exception as exc:
+                # Report a user facing error event and halt optimization.
+                self._update_error(total_iterations, iteration, exc)
+                break
+            elapsed = time.perf_counter() - start_time
+            if not ok:
+                break
+            remaining_iterations -= 1
+            self._update_progress(
+                total_iterations, iteration, remaining_iterations, elapsed
+            )
 
     async def _a_run_loop_iteration(
         self,
         a_gepa_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
-        remaining = self.config.iterations
+        total_iterations = self.config.iterations
+        remaining_iterations = total_iterations
         iteration = 0
-        with self._maybe_progress() as progress:
-            task = progress.add_task(
-                f"Optimizing prompt with GEPA (iterations={remaining})...",
-                total=remaining,
-            )
-            while remaining > 0:
-                iteration += 1
-                start_time = time.perf_counter()
+        self._update_progress(
+            total_iterations, iteration, remaining_iterations, 0
+        )
+        while remaining_iterations > 0:
+            iteration += 1
+            start_time = time.perf_counter()
+            try:
                 ok = await a_gepa_iteration()
-                end_time = time.perf_counter()
-                if not ok:
-                    break
-                remaining -= 1
-                progress.advance(task, 1)
-                progress.update(
-                    task,
-                    description=self._format_progress_description(
-                        iteration, remaining, end_time - start_time
-                    ),
-                )
+            except Exception as exc:
+                # Report a user facing error event and halt optimization.
+                self._update_error(total_iterations, iteration, exc)
+                break
+            elapsed = time.perf_counter() - start_time
+            if not ok:
+                break
+            remaining_iterations -= 1
+            self._update_progress(
+                total_iterations, iteration, remaining_iterations, elapsed
+            )

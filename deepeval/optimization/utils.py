@@ -13,10 +13,8 @@ from typing import (
     Dict,
     Set,
 )
-from pydantic import BaseModel as PydanticBaseModel
 
 from deepeval.errors import DeepEvalError
-from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.types import ModuleId
 
@@ -57,7 +55,21 @@ def split_goldens(
         raise ValueError("pareto_size must be >= 0")
 
     total = len(goldens)
-    chosen_size = min(pareto_size, total)
+
+    if total == 0:
+        # nothing to split
+        return [], []
+
+    # With a single example, we cannot form a meaningful feedback set.
+    # callers like GEPARunner should enforce a minimum of 2 goldens for
+    # optimization.
+    if total == 1:
+        return [], list(goldens)
+
+    # For total >= 2, ensure that we always leave at least one example
+    # for d_feedback. This keeps the splits disjoint while still honoring
+    # pareto_size as a target up to (total - 1).
+    chosen_size = min(pareto_size, total - 1)
 
     indices = list(range(total))
     random_state.shuffle(indices)
@@ -83,8 +95,8 @@ def _slug(text: str) -> str:
 
 def generate_module_id(prompt: Prompt, index: int, existing: Set[str]) -> str:
     """
-    Build a human-readable module id stable within a single optimization run.
-    Prefers alias/label; enrich with provider/name; dedupe; cap to 64 chars.
+    Build a human readable module id stable within a single optimization run.
+    Prefers alias/label; enrich with model settings provider and name; dedupe; cap to 64 chars.
     """
     parts: List[str] = []
     if prompt.alias:
@@ -95,7 +107,7 @@ def generate_module_id(prompt: Prompt, index: int, existing: Set[str]) -> str:
     ms = prompt.model_settings
     if ms is not None:
         if ms.provider is not None:
-            parts.append(ms.provider.value)  # e.g., "OPEN_AI"
+            parts.append(ms.provider.value)
         if ms.name:
             parts.append(ms.name)
 
@@ -118,7 +130,7 @@ def normalize_seed_prompts(
 ) -> Dict[ModuleId, Prompt]:
     """
     Accept either {module_id: Prompt} or List[Prompt].
-    If a list is given, generate human-readable module ids.
+    If a list is given, generate human readable module ids.
     """
     if isinstance(seed_prompts, dict):
         return dict(seed_prompts)  # shallow copy
@@ -131,10 +143,9 @@ def normalize_seed_prompts(
     return mapping
 
 
-def require_model_or_callback(
+def validate_callback(
     *,
     component: str,
-    model: Optional[DeepEvalBaseLLM],
     model_callback: Optional[
         Callable[
             ...,
@@ -146,74 +157,56 @@ def require_model_or_callback(
         ]
     ],
 ) -> Tuple[
-    Optional[DeepEvalBaseLLM],
     Optional[Callable[..., Union[str, Dict, Tuple[Union[str, Dict], float]]]],
 ]:
     """
-    Ensure that at least one of `model` or `model_callback` is provided.
+    Ensure that `model_callback` is provided.
 
-    - `model` should be a DeepEvalBaseLLM.
     - `model_callback` should be a callable that performs generation and
       returns the model output.
 
     Returns the pair unchanged on success.
     """
-    if model is None and model_callback is None:
+    if model_callback is None:
         raise DeepEvalError(
-            f"{component} requires either a `model` or a `model_callback`.\n\n"
-            "Pass a DeepEvalBaseLLM instance via `model=` to let DeepEval call "
-            "`model.generate()` / `model.a_generate()`, or supply a custom callable "
-            "via `model_callback=` that performs generation and returns the model output."
+            f"{component} requires a `model_callback`.\n\n"
+            "supply a custom callable via `model_callback=` that performs "
+            "generation and returns the model output."
         )
-    return model, model_callback
+    return model_callback
 
 
 def build_model_callback_kwargs(
     *,
     # scoring context
-    prompt: Optional[Prompt] = None,
-    prompt_text: Optional[str] = None,
     golden: Optional[Union["Golden", "ConversationalGolden"]] = None,
-    prompts_by_module: Optional[Dict[ModuleId, Prompt]] = None,
     # rewriter context
-    module_id: Optional[ModuleId] = None,
-    old_prompt: Optional[Prompt] = None,
     feedback_text: Optional[str] = None,
     # shared
-    model: Optional[DeepEvalBaseLLM] = None,
-    model_schema: Optional["PydanticBaseModel"] = None,
+    prompt: Optional[Prompt] = None,
+    prompt_text: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Build a superset of kwargs for GEPA model callbacks.
 
     All keys are present in the dict so callbacks can declare any subset of:
 
-        hook: str           # injected by invoke_model_callback / a_invoke_model_callback
+        hook: str           # injected by (a_)invoke_model_callback
         prompt: Prompt
         prompt_text: str
         golden: Golden | ConversationalGolden
-        prompts_by_module: Dict[ModuleId, Prompt]
-        module_id: ModuleId
-        old_prompt: Prompt
         feedback_text: str
-        model: DeepEvalBaseLLM
-        model_schema: BaseModel
 
     Non applicable fields are set to None.
     """
     return {
         # scoring context
-        "prompt": prompt,
-        "prompt_text": prompt_text,
         "golden": golden,
-        "prompts_by_module": prompts_by_module,
         # rewriter context
-        "module_id": module_id,
-        "old_prompt": old_prompt,
         "feedback_text": feedback_text,
         # shared
-        "model": model,
-        "model_schema": model_schema,
+        "prompt": prompt,
+        "prompt_text": prompt_text,
     }
 
 

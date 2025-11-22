@@ -22,7 +22,7 @@ from deepeval.optimization.types import (
     ModuleId,
 )
 from deepeval.optimization.utils import (
-    require_model_or_callback,
+    validate_callback,
     invoke_model_callback,
     a_invoke_model_callback,
     build_model_callback_kwargs,
@@ -36,7 +36,6 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
 )
-from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.prompt.prompt import Prompt
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -98,18 +97,14 @@ class DeepEvalScoringAdapter:
     def __init__(
         self,
         *,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None,
+        model_callback: Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ],
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         build_test_case: Optional[
             Callable[
@@ -119,15 +114,12 @@ class DeepEvalScoringAdapter:
         ] = None,
         objective_scalar: Objective = MeanObjective(),
     ):
-        model, model_callback = require_model_or_callback(
+        model_callback = validate_callback(
             component="DeepEvalScoringAdapter",
-            model=model,
             model_callback=model_callback,
         )
 
         self.metrics = list(metrics)
-        self.model = model
-        self.model_schema = model_schema
         self.build_test_case = build_test_case or self._default_build_test_case
         self.objective_scalar = objective_scalar
 
@@ -146,7 +138,6 @@ class DeepEvalScoringAdapter:
     #######################################
     def _compile_prompt_text(self, prompt: Prompt, golden: "Golden") -> str:
         user_input = getattr(golden, "input", None) or ""
-        # Keep it simple and predictable; metrics do judging separately.
         return f"{prompt.text_template}\n\n{user_input}".strip()
 
     def _unwrap_text(
@@ -167,7 +158,7 @@ class DeepEvalScoringAdapter:
     def _default_build_test_case(
         self, golden: "Golden", actual: str
     ) -> LLMTestCase:
-        # Generic LLM case; conversational/multimodal users can pass their own builder
+        # Generic LLM case
         return LLMTestCase(
             input=getattr(golden, "input", None),
             expected_output=getattr(golden, "expected_output", None),
@@ -194,7 +185,7 @@ class DeepEvalScoringAdapter:
         prompt_configuration: PromptConfiguration,
         golden: Union[Golden, ConversationalGolden],
     ) -> float:
-        # Clone metrics to avoid shared-state races (e.g., .reason)
+        # Clone metrics to avoid shared-state
         metrics = [copy.copy(metric) for metric in self.metrics]
         actual = await self.a_generate(prompt_configuration.prompts, golden)
         test_case = self.build_test_case(golden, actual)
@@ -249,25 +240,17 @@ class DeepEvalScoringAdapter:
         )
         prompt_text = self._compile_prompt_text(prompt, golden)
 
-        # Use callback if provided
-        if self._model_callback is not None and not self._callback_is_async:
-            candidate_kwargs = build_model_callback_kwargs(
-                module_id=module_id,
-                prompt=prompt,
-                prompt_text=prompt_text,
-                golden=golden,
-                prompts_by_module=prompts_by_module,
-                model=self.model,
-                model_schema=self.model_schema,
-            )
-            result = invoke_model_callback(
-                hook="score_generate",
-                model_callback=self._model_callback,
-                candidate_kwargs=candidate_kwargs,
-            )
-            return self._unwrap_text(result)
+        candidate_kwargs = build_model_callback_kwargs(
+            prompt=prompt,
+            prompt_text=prompt_text,
+            golden=golden,
+        )
+        result = invoke_model_callback(
+            hook="score_generate",
+            model_callback=self._model_callback,
+            candidate_kwargs=candidate_kwargs,
+        )
 
-        result = self.model.generate(prompt_text, schema=self.model_schema)
         return self._unwrap_text(result)
 
     async def a_generate(
@@ -286,32 +269,15 @@ class DeepEvalScoringAdapter:
         )
         prompt_text = self._compile_prompt_text(prompt, golden)
 
-        if self._model_callback is not None:
-            candidate_kwargs = build_model_callback_kwargs(
-                module_id=module_id,
-                prompt=prompt,
-                prompt_text=prompt_text,
-                golden=golden,
-                prompts_by_module=prompts_by_module,
-                model=self.model,
-                model_schema=self.model_schema,
-            )
-            result = await a_invoke_model_callback(
-                hook="score_generate",
-                model_callback=self._model_callback,
-                candidate_kwargs=candidate_kwargs,
-            )
-            return self._unwrap_text(result)
-
-        if hasattr(self.model, "a_generate"):
-            result = await self.model.a_generate(
-                prompt_text, schema=self.model_schema
-            )
-            return self._unwrap_text(result)
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            None,
-            lambda: self.model.generate(prompt_text, schema=self.model_schema),
+        candidate_kwargs = build_model_callback_kwargs(
+            prompt=prompt,
+            prompt_text=prompt_text,
+            golden=golden,
+        )
+        result = await a_invoke_model_callback(
+            hook="score_generate",
+            model_callback=self._model_callback,
+            candidate_kwargs=candidate_kwargs,
         )
         return self._unwrap_text(result)
 
@@ -344,7 +310,7 @@ class DeepEvalScoringAdapter:
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
-        # default metric feedback (μ_f): concat metric.reason across minibatch and cap length lightly
+        # default metric feedback (μ_f): concat metric.reason across minibatch and cap length
         reasons: List[str] = []
         for golden in minibatch:
             actual = self.generate(prompt_configuration.prompts, golden)
@@ -361,7 +327,9 @@ class DeepEvalScoringAdapter:
             if reason not in seen:
                 unique.append(reason)
                 seen.add(reason)
-        return "\n---\n".join(unique[:8])  # TODO: Make this configurable
+        return "\n---\n".join(
+            unique[:8]
+        )  # TODO: Make how much feedback configurable
 
     async def a_score_on_pareto(
         self,
@@ -393,7 +361,7 @@ class DeepEvalScoringAdapter:
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
         async def reasons_one(golden) -> List[str]:
-            # Clone per task to avoid data races on .reason
+            # Clone per task to avoid shared state
             metrics = [copy.copy(metric) for metric in self.metrics]
             # metrics = self.metrics
             actual = await self.a_generate(prompt_configuration.prompts, golden)

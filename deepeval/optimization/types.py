@@ -13,6 +13,7 @@ from typing import (
     Tuple,
     Union,
 )
+from enum import Enum
 from pydantic import BaseModel as PydanticBaseModel, Field, AliasChoices
 
 from deepeval.prompt.prompt import Prompt
@@ -22,8 +23,6 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
 
-
-# move inline make union
 PromptConfigurationId = str
 ModuleId = str
 ScoreVector = List[float]  # scores per instance on D_pareto, aligned order
@@ -143,6 +142,63 @@ class PromptRewriterProtocol(Protocol):
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt: ...
+
+
+class RunnerStatusType(str, Enum):
+    """Status events emitted by optimization runners."""
+
+    PROGRESS = "progress"
+    TIE = "tie"
+    ERROR = "error"
+
+
+class RunnerStatusCallbackProtocol(Protocol):
+    def __call__(
+        self,
+        kind: RunnerStatusType,
+        *,
+        detail: str,
+        step_index: Optional[int] = None,
+        total_steps: Optional[int] = None,
+    ) -> None: ...
+
+
+class RunnerProtocol(Protocol):
+    """
+    Contract for prompt optimization runners used by PromptOptimizer.
+
+    Runners are responsible for executing the optimization algorithm
+    and returning an optimized Prompt plus a report dict.
+    """
+
+    # status_callback is injected by PromptOptimizer
+    # A runner may call this to report:
+    # progress, ties, or errors during execution.
+    status_callback: Optional[RunnerStatusCallbackProtocol]
+    model_callback: Optional[
+        Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ]
+    ]
+
+    def execute(
+        self,
+        *,
+        prompt: Prompt,
+        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+    ) -> Tuple[Prompt, Dict]: ...
+
+    async def a_execute(
+        self,
+        *,
+        prompt: Prompt,
+        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+    ) -> Tuple[Prompt, Dict]: ...
 
 
 class Objective(Protocol):
