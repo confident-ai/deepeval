@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Protocol, runtime_checkable
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.models.retry_policy import create_retry_decorator
+from deepeval.optimization.gepa.loop import GEPARunner
 from deepeval.optimization.types import ModuleId
 from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import TraceSpanStatus
@@ -54,6 +55,33 @@ def make_span_api_like():
 ##########
 # Models #
 ##########
+
+
+class StubProvider:
+    def __init__(self, value: str) -> None:
+        self.value = value
+
+
+class StubModelSettings:
+    def __init__(self, provider=None, name: str | None = None) -> None:
+        self.provider = provider
+        self.name = name
+
+
+class StubPrompt:
+    def __init__(
+        self,
+        alias: str | None = None,
+        label: str | None = None,
+        model_settings: StubModelSettings | None = None,
+    ) -> None:
+        self.alias = alias
+        self.label = label
+        self.model_settings = model_settings
+
+
+class DummyModel:
+    pass
 
 
 class AlwaysJsonModel:
@@ -306,6 +334,45 @@ class _FakeTrace:
 ################
 
 
+class _DummyRewriter:
+    """
+    Minimal object satisfying the PromptRewriterProtocol at runtime.
+    Used to verify set_rewriter/get_rewriter wiring.
+    """
+
+    def rewrite(self, **kwargs):
+        # Just return the original prompt unmodified
+        return kwargs["old_prompt"]
+
+    async def a_rewrite(self, **kwargs):
+        return kwargs["old_prompt"]
+
+
+class SuffixRewriter:
+    """Rewriter that appends a suffix to the prompt text."""
+
+    def __init__(self, suffix: str = " CHILD") -> None:
+        self.suffix = suffix
+        self.calls = []
+        self.a_calls = []
+
+    def rewrite(self, *, module_id, old_prompt, feedback_text, **kwargs):
+        self.calls.append((module_id, old_prompt, feedback_text))
+        return Prompt(
+            text_template=(old_prompt.text_template or "") + self.suffix
+        )
+
+    async def a_rewrite(
+        self, *, module_id, old_prompt, feedback_text, **kwargs
+    ):
+        self.a_calls.append((module_id, old_prompt, feedback_text))
+        return self.rewrite(
+            module_id=module_id,
+            old_prompt=old_prompt,
+            feedback_text=feedback_text,
+        )
+
+
 class AddBetterRewriter:
     def rewrite(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
@@ -319,3 +386,169 @@ class AddBetterRewriter:
             output_type=old_prompt.output_type,
             output_schema=old_prompt.output_schema,
         )
+
+
+class DummyRunner:
+    """
+    Minimal runner used to verify set_runner wiring.
+    """
+
+    def __init__(self):
+        self.model_callback = None
+        self.status_callback = None
+
+    def execute(self, *, prompt, goldens):
+        raise NotImplementedError
+
+    async def a_execute(self, *, prompt, goldens):
+        raise NotImplementedError
+
+
+class DummyRunnerForOptimize:
+    """
+    Runner that simulates a completed optimization run.
+    """
+
+    def __init__(self):
+        self.model_callback = None
+        self.status_callback = None
+        self.last_execute_args = None
+
+    def execute(self, *, prompt, goldens):
+        self.last_execute_args = (prompt, goldens)
+        best = Prompt(text_template="optimized")
+        report = {
+            "optimization_id": "opt-123",
+            "best_id": "best",
+            "accepted_iterations": [],
+            "pareto_scores": {"best": [1.0]},
+            "parents": {"best": None},
+        }
+        return best, report
+
+    async def a_execute(self, *, prompt, goldens):
+        raise AssertionError("a_execute should not be called in sync optimize")
+
+
+class SyncDummyRunner:
+    """
+    Runner used to test _run_optimization(sync path).
+    """
+
+    def __init__(self):
+        self.execute_calls = 0
+        self.a_execute_calls = 0
+
+    def execute(self, *, prompt, goldens):
+        self.execute_calls += 1
+        return prompt, {
+            "optimization_id": "sync-id",
+            "best_id": "root",
+            "accepted_iterations": [],
+            "pareto_scores": {"root": [1.0]},
+            "parents": {"root": None},
+        }
+
+    async def a_execute(self, *, prompt, goldens):
+        self.a_execute_calls += 1
+        return prompt, {
+            "optimization_id": "async-id",
+            "best_id": "root",
+            "accepted_iterations": [],
+            "pareto_scores": {"root": [1.0]},
+            "parents": {"root": None},
+        }
+
+
+class AsyncDummyRunner:
+    """
+    Runner used to test _run_optimization(async path).
+    """
+
+    def __init__(self):
+        self.execute_calls = 0
+        self.a_execute_calls = 0
+
+    def execute(self, *, prompt, goldens):
+        self.execute_calls += 1
+        raise AssertionError(
+            "execute() should not be called when run_async=True"
+        )
+
+    async def a_execute(self, *, prompt, goldens):
+        self.a_execute_calls += 1
+        return prompt, {
+            "optimization_id": "opt-async",
+            "best_id": "root",
+            "accepted_iterations": [],
+            "pareto_scores": {"root": [1.0]},
+            "parents": {"root": None},
+        }
+
+
+class DummyProgress:
+    """
+    Tiny stub for rich.progress.Progress used to test _on_status.
+    Records update / advance calls.
+    """
+
+    def __init__(self):
+        self.records = []
+
+    def update(self, task_id, **kwargs):
+        self.records.append(("update", task_id, kwargs))
+
+    def advance(self, task_id, amount):
+        self.records.append(("advance", task_id, {"amount": amount}))
+
+
+class StubScoringAdapter:
+    """
+    Minimal scoring adapter stub for exercising GEPARunner.
+
+    - score_on_pareto / minibatch_score:
+        returns higher scores for prompts whose text contains "CHILD"
+        so that "improved" children can be accepted.
+    """
+
+    def __init__(self) -> None:
+        self.pareto_calls = []
+        self.a_pareto_calls = []
+        self.feedback_calls = []
+        self.a_feedback_calls = []
+        self.score_calls = []
+        self.a_score_calls = []
+
+    def score_on_pareto(self, prompt_configuration, d_pareto):
+        self.pareto_calls.append((prompt_configuration, list(d_pareto)))
+        prompt = prompt_configuration.prompts[GEPARunner.SINGLE_MODULE_ID]
+        txt = (prompt.text_template or "").strip()
+        return [1.0] if "CHILD" in txt else [0.5]
+
+    async def a_score_on_pareto(self, prompt_configuration, d_pareto):
+        self.a_pareto_calls.append((prompt_configuration, list(d_pareto)))
+        return self.score_on_pareto(prompt_configuration, d_pareto)
+
+    def minibatch_feedback(self, prompt_configuration, module_id, minibatch):
+        self.feedback_calls.append(
+            (prompt_configuration, module_id, list(minibatch))
+        )
+        return "feedback"
+
+    async def a_minibatch_feedback(
+        self, prompt_configuration, module_id, minibatch
+    ):
+        self.a_feedback_calls.append(
+            (prompt_configuration, module_id, list(minibatch))
+        )
+        return "feedback"
+
+    def minibatch_score(self, prompt_configuration, minibatch):
+        self.score_calls.append((prompt_configuration, list(minibatch)))
+        prompt = prompt_configuration.prompts[GEPARunner.SINGLE_MODULE_ID]
+        txt = (prompt.text_template or "").strip()
+        return 1.0 if "CHILD" in txt else 0.5
+
+    async def a_minibatch_score(self, prompt_configuration, minibatch):
+        self.a_score_calls.append((prompt_configuration, list(minibatch)))
+        return self.minibatch_score(prompt_configuration, minibatch)
