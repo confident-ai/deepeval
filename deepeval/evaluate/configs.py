@@ -7,7 +7,7 @@ from deepeval.test_run.test_run import TestRunResultDisplay
 @dataclass
 class AsyncConfig:
     run_async: bool = True
-    throttle_value: int = 0
+    throttle_value: float = 0
     max_concurrent: int = 20
 
     def __post_init__(self):
