@@ -15,6 +15,7 @@ from typing import (
 )
 
 from deepeval.errors import DeepEvalError
+from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.types import ModuleId
 
@@ -143,39 +144,6 @@ def normalize_seed_prompts(
     return mapping
 
 
-def validate_callback(
-    *,
-    component: str,
-    model_callback: Optional[
-        Callable[
-            ...,
-            Union[
-                str,
-                Dict,
-                Tuple[Union[str, Dict], float],
-            ],
-        ]
-    ],
-) -> Tuple[
-    Optional[Callable[..., Union[str, Dict, Tuple[Union[str, Dict], float]]]],
-]:
-    """
-    Ensure that `model_callback` is provided.
-
-    - `model_callback` should be a callable that performs generation and
-      returns the model output.
-
-    Returns the pair unchanged on success.
-    """
-    if model_callback is None:
-        raise DeepEvalError(
-            f"{component} requires a `model_callback`.\n\n"
-            "supply a custom callable via `model_callback=` that performs "
-            "generation and returns the model output."
-        )
-    return model_callback
-
-
 def build_model_callback_kwargs(
     *,
     # scoring context
@@ -297,3 +265,53 @@ async def a_invoke_model_callback(
     if inspect.isawaitable(result):
         return await result
     return result
+
+
+##############
+# Validation #
+##############
+
+
+def validate_callback(
+    *,
+    component: str,
+    model_callback: Optional[
+        Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ]
+    ],
+) -> Callable[..., Union[str, Dict, Tuple[Union[str, Dict], float]]]:
+    """
+    Ensure that `model_callback` is provided.
+
+    - `model_callback` should be a callable that performs generation and
+      returns the model output.
+
+    Returns `model_callback` unchanged on success.
+    """
+    if model_callback is None:
+        raise DeepEvalError(
+            f"{component} requires a `model_callback`.\n\n"
+            "supply a custom callable via `model_callback=` that performs "
+            "generation and returns the model output."
+        )
+    return model_callback
+
+
+def validate_metrics(
+    *,
+    component: str,
+    metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
+) -> Union[List[BaseMetric], List[BaseConversationalMetric]]:
+
+    if metrics is None or not len(metrics):
+        raise DeepEvalError(
+            f"{component} requires a `metrics`.\n\n"
+            "supply one or more DeepEval metrics via `metrics=`"
+        )
+    return list(metrics)

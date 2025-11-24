@@ -32,14 +32,12 @@ def _dummy_model_callback(**_kwargs):
 
 
 def test_build_default_scoring_adapter_requires_metrics():
-    optimizer = PromptOptimizer(
-        model_callback=_dummy_model_callback,
-        metrics=None,
-        display_config=OptimizerDisplayConfig(show_indicator=False),
-    )
-
-    with pytest.raises(DeepEvalError, match="requires `metrics`"):
-        optimizer._build_default_scoring_adapter()
+    with pytest.raises(DeepEvalError, match="requires a `metrics`"):
+        PromptOptimizer(
+            model_callback=_dummy_model_callback,
+            metrics=None,
+            display_config=OptimizerDisplayConfig(show_indicator=False),
+        )
 
 
 def test_build_default_runner_constructs_gepa_runner_and_sets_callbacks():
@@ -90,7 +88,7 @@ def test_build_default_runner_unsupported_algorithm_raises():
 def test_set_runner_wires_callbacks():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
 
@@ -114,7 +112,7 @@ def test_set_runner_wires_callbacks():
 def test_optimize_with_custom_runner_attaches_report_and_returns_prompt():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
     # Ensure optimize() uses the synchronous execute() path
@@ -147,7 +145,7 @@ def test_optimize_with_custom_runner_attaches_report_and_returns_prompt():
 def test_run_optimization_uses_sync_execute_when_run_async_false():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
     runner = SyncDummyRunner()
@@ -171,7 +169,7 @@ def test_run_optimization_uses_sync_execute_when_run_async_false():
 def test_run_optimization_uses_async_execute_when_run_async_true():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
     runner = AsyncDummyRunner()
@@ -198,7 +196,7 @@ def test_run_optimization_uses_async_execute_when_run_async_true():
 def test_on_status_error_prints_message_when_indicator_disabled(capsys):
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
 
@@ -217,7 +215,7 @@ def test_on_status_tie_respects_announce_ties_flag(capsys):
     # Ties disabled: no output
     opt_quiet = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(
             show_indicator=False, announce_ties=False
         ),
@@ -234,7 +232,7 @@ def test_on_status_tie_respects_announce_ties_flag(capsys):
     # Ties enabled: one-line message
     opt_verbose = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(
             show_indicator=False, announce_ties=True
         ),
@@ -252,7 +250,7 @@ def test_on_status_tie_respects_announce_ties_flag(capsys):
 def test_on_status_progress_updates_progress_when_indicator_enabled():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=True),
     )
 
@@ -293,7 +291,7 @@ def test_on_status_progress_updates_progress_when_indicator_enabled():
 def test_format_progress_description_includes_colored_detail():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
-        metrics=None,
+        metrics=[_DummyMetric()],
         display_config=OptimizerDisplayConfig(show_indicator=False),
     )
 

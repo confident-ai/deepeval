@@ -124,12 +124,6 @@ class GEPARunner:
         )
         self._add_prompt_configuration(root_prompt_configuration)
 
-        self.pareto_score_table[root_prompt_configuration.id] = (
-            self.scoring_adapter.score_on_pareto(
-                root_prompt_configuration, d_pareto
-            )
-        )
-
         accepted_iterations: List[Dict] = []
 
         def _one_iteration() -> bool:
@@ -137,6 +131,14 @@ class GEPARunner:
 
             if not d_feedback:
                 return False
+
+            # Seed Pareto scores lazily on first iteration
+            if not self.pareto_score_table:
+                self.pareto_score_table[root_prompt_configuration.id] = (
+                    self.scoring_adapter.score_on_pareto(
+                        root_prompt_configuration, d_pareto
+                    )
+                )
 
             # 1. Pick prompt_configuration via Pareto
             parent_prompt_configuration = self._pick_prompt_configuration()
@@ -228,12 +230,6 @@ class GEPARunner:
         )
         self._add_prompt_configuration(root_prompt_configuration)
 
-        self.pareto_score_table[root_prompt_configuration.id] = (
-            await self.scoring_adapter.a_score_on_pareto(
-                root_prompt_configuration, d_pareto
-            )
-        )
-
         accepted_iterations: List[Dict] = []
 
         async def _one_iteration() -> bool:
@@ -241,6 +237,14 @@ class GEPARunner:
 
             if not d_feedback:
                 return False
+
+            # Seed Pareto scores lazily on first iteration
+            if not self.pareto_score_table:
+                self.pareto_score_table[root_prompt_configuration.id] = (
+                    await self.scoring_adapter.a_score_on_pareto(
+                        root_prompt_configuration, d_pareto
+                    )
+                )
 
             # 1. Pick prompt_configuration via Pareto
             parent_prompt_configuration = self._pick_prompt_configuration()

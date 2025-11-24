@@ -23,6 +23,7 @@ from deepeval.optimization.types import (
 )
 from deepeval.optimization.utils import (
     validate_callback,
+    validate_metrics,
     invoke_model_callback,
     a_invoke_model_callback,
     build_model_callback_kwargs,
@@ -97,15 +98,6 @@ class DeepEvalScoringAdapter:
     def __init__(
         self,
         *,
-        model_callback: Callable[
-            ...,
-            Union[
-                str,
-                Dict,
-                Tuple[Union[str, Dict], float],
-            ],
-        ],
-        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         build_test_case: Optional[
             Callable[
                 [Union[Golden, ConversationalGolden], str],
@@ -114,24 +106,50 @@ class DeepEvalScoringAdapter:
         ] = None,
         objective_scalar: Objective = MeanObjective(),
     ):
-        model_callback = validate_callback(
+        self.model_callback: Optional[
+            Callable[
+                ...,
+                Union[
+                    str,
+                    Dict,
+                    Tuple[Union[str, Dict], float],
+                ],
+            ]
+        ] = None
+        self.metrics: Union[
+            List[BaseMetric], List[BaseConversationalMetric]
+        ] = []
+
+        self.build_test_case = build_test_case or self._default_build_test_case
+        self.objective_scalar = objective_scalar
+
+        # async
+        self._semaphore: Optional[asyncio.Semaphore] = None
+        self._throttle: float = 0.0
+
+    def set_model_callback(
+        self,
+        model_callback: Callable[
+            ...,
+            Union[
+                str,
+                Dict,
+                Tuple[Union[str, Dict], float],
+            ],
+        ],
+    ):
+        self.model_callback = validate_callback(
             component="DeepEvalScoringAdapter",
             model_callback=model_callback,
         )
 
-        self.metrics = list(metrics)
-        self.build_test_case = build_test_case or self._default_build_test_case
-        self.objective_scalar = objective_scalar
-
-        self._model_callback = model_callback
-        self._callback_is_async: bool = (
-            inspect.iscoroutinefunction(model_callback)
-            if model_callback is not None
-            else False
+    def set_metrics(
+        self,
+        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
+    ):
+        self.metrics = validate_metrics(
+            component="DeepEvalScoringAdapter", metrics=metrics
         )
-        # async
-        self._semaphore: Optional[asyncio.Semaphore] = None
-        self._throttle: float = 0.0
 
     #######################################
     # prompt assembly & result unwrapping #
@@ -234,6 +252,14 @@ class DeepEvalScoringAdapter:
                 "`prompts_by_module`; at least one Prompt is required."
             )
 
+        validate_callback(
+            component="DeepEvalScoringAdapter",
+            model_callback=self.model_callback,
+        )
+        validate_metrics(
+            component="DeepEvalScoringAdapter", metrics=self.metrics
+        )
+
         module_id = self._select_module_id_from_prompts(prompts_by_module)
         prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
@@ -247,7 +273,7 @@ class DeepEvalScoringAdapter:
         )
         result = invoke_model_callback(
             hook="score_generate",
-            model_callback=self._model_callback,
+            model_callback=self.model_callback,
             candidate_kwargs=candidate_kwargs,
         )
 
@@ -263,6 +289,14 @@ class DeepEvalScoringAdapter:
                 "`prompts_by_module`; at least one Prompt is required."
             )
 
+        validate_callback(
+            component="DeepEvalScoringAdapter",
+            model_callback=self.model_callback,
+        )
+        validate_metrics(
+            component="DeepEvalScoringAdapter", metrics=self.metrics
+        )
+
         module_id = self._select_module_id_from_prompts(prompts_by_module)
         prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
@@ -276,7 +310,7 @@ class DeepEvalScoringAdapter:
         )
         result = await a_invoke_model_callback(
             hook="score_generate",
-            model_callback=self._model_callback,
+            model_callback=self.model_callback,
             candidate_kwargs=candidate_kwargs,
         )
         return self._unwrap_text(result)

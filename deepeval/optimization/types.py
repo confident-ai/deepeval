@@ -186,6 +186,8 @@ class RunnerProtocol(Protocol):
         ]
     ]
 
+    scoring_adapter: Optional[ScoringAdapter]
+
     def execute(
         self,
         *,
@@ -202,12 +204,24 @@ class RunnerProtocol(Protocol):
 
 
 class Objective(Protocol):
-    """Scalarizes per-metric scores into a single μ per instance."""
+    """Strategy for reducing scores per-metric to a single scalar value.
+
+    Implementations receive a mapping from metric name to score
+    (for example, {"AnswerRelevancyMetric": 0.82}) and return a
+    single float used for comparisons inside the optimizer.
+    """
 
     def scalarize(self, scores_by_metric: Dict[str, float]) -> float: ...
 
 
 class MeanObjective(Objective):
+    """Default scalarizer: unweighted arithmetic mean.
+
+    - If `scores_by_metric` is non-empty, returns the arithmetic
+      mean of all metric scores.
+    - If `scores_by_metric` is empty, returns 0.0.
+    """
+
     def scalarize(self, scores_by_metric: Dict[str, float]) -> float:
         if not scores_by_metric:
             return 0.0
@@ -215,14 +229,32 @@ class MeanObjective(Objective):
 
 
 class WeightedObjective(Objective):
-    def __init__(self, weights_by_metric: Dict[str, float]):
-        self.weights_by_metric = dict(weights_by_metric)
+    """
+    Objective that scales each metric's score by a user-provided weight and sums them.
+
+    - `weights_by_metric` keys should match the names of the metrics passed to the
+      metric class names passed to the PromptOptimizer.
+    - Metrics not present in `weights_by_metric` receive `default_weight`.
+      This makes it easy to emphasize a subset of metrics while keeping
+      everything else at a baseline weight of 1.0, e.g.:
+
+          WeightedObjective({"AnswerRelevancyMetric": 2.0})
+
+      which treats AnswerRelevancy as 2x as important as the other metrics.
+    """
+
+    def __init__(
+        self,
+        weights_by_metric: Optional[Dict[str, float]] = None,
+        default_weight: float = 1.0,
+    ):
+        self.weights_by_metric: Dict[str, float] = dict(weights_by_metric or {})
+        self.default_weight: float = float(default_weight)
 
     def scalarize(self, scores_by_metric: Dict[str, float]) -> float:
         return sum(
-            self.weights_by_metric.get(name, 0.0)
-            * scores_by_metric.get(name, 0.0)
-            for name in scores_by_metric.keys()
+            self.weights_by_metric.get(name, self.default_weight) * score
+            for name, score in scores_by_metric.items()
         )
 
 

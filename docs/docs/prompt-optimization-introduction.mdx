@@ -94,7 +94,7 @@ optimizer = PromptOptimizer(
 )
 ```
 
-:::info Callback Inputs And Outputs
+:::note Callback Inputs And Outputs
 
 All optimization algorithms in `deepeval` treat `prompt_text` as the string to send to your system, and expect one of:
 
@@ -105,14 +105,16 @@ All optimization algorithms in `deepeval` treat `prompt_text` as the string to s
 Internally, the optimizer normalizes this to text in the same way `DeepEvalBaseLLM.generate()` does.
 :::
 
-If you want more context in your callback, you can also declare extra keyword arguments. When present in the signature, the optimizer may populate:
+If you want more context in your callback, you can declare extra **keyword arguments**. When present in the function signature, the optimizer will populate them for you.
 
-- `hook`: a phase label such as `"score_generate"` or `"prompt_rewrite"`,
-- `golden`: the current `Golden` (or `ConversationalGolden`) being scored,
-- `prompt`: the current `Prompt` candidate at this step,
-- `feedback_text`: natural language feedback derived from your metrics during rewriting.
+There are **FOUR** optional keyword arguments your `model_callback` can accept:
 
-Anything you do not name in the function signature is not passed.
+- [Optional] `hook`: a short string label for the current phase (for example `"score_generate"` or `"prompt_rewrite"`).
+- [Optional] `golden`: the current `Golden` (or `ConversationalGolden`) being scored.
+- [Optional] `prompt`: the current `Prompt` candidate being evaluated or rewritten.
+- [Optional] `feedback_text`: a string of natural language feedback derived from your metrics during rewriting.
+
+If you don’t declare a parameter in your callback’s signature, DeepEval simply does not pass it.
 
 ## Optimize Your First Prompt
 
@@ -146,6 +148,7 @@ print(optimized_prompt.optimization_report)
 ```
 
 The result is:
+
 - an updated `Prompt` whose `text_template` you can drop directly into your app, and
 - an `optimization_report` attached to that prompt describing how the run went.
 
@@ -153,22 +156,17 @@ The report includes a unique optimization id, the accepted prompt candidates, an
 
 ## PromptOptimizer Configuration
 
-`PromptOptimizer` keeps its own configuration small so you can get started with minimal setup. The main fields are:
+There are **TWO** required parameters and **THREE* optional parameters when creating a `PromptOptimizer`:
 
-- `metrics`
-  Required. List of `deepeval` metrics used for scoring and feedback (for example `AnswerRelevancyMetric`). These are the same metrics you use with `evaluate(...)`.
-- `model_callback`
-  Required. A callable that receives `prompt_text` (and any optional kwargs you declare) and returns your model or app’s response.
-- `async_config`
-  Optional. An `AsyncConfig` instance that controls concurrency. By default, the optimizer uses the same async behaviour as evaluation. For details, see [Async Configs](/docs/evaluation-flags-and-configs#async-configs).
-- `display_options`
-  Optional. An `OptimizerDisplayConfig` to control lightweight CLI display, such as showing a progress indicator while optimization runs.
-- `algorithm`
-  Optional. Name of the optimization algorithm. Defaults to `"gepa"`. In most cases you do not need to change this.
+- [Required] `metrics`: a list of DeepEval metrics used for scoring and feedback (for example `AnswerRelevancyMetric`). These are the same metrics you pass to `evaluate(...)`.
+- [Required] `model_callback`: a callable that receives `prompt_text` (and any optional callback keyword arguments you declare) and returns your model or app’s response.
+- [Optional] `async_config`: an `AsyncConfig` instance that controls concurrency. By default, the optimizer uses the same async behaviour as evaluation. For details, see [Async Configs](/docs/evaluation-flags-and-configs#async-configs).
+- [Optional] `display_config`: an `OptimizerDisplayConfig` that controls lightweight CLI display, such as showing a progress indicator while optimization runs.
+- [Optional] `algorithm`: a string naming the optimization algorithm. Defaults to `"gepa"`. In most cases you do not need to change this.
 
 If you want full control over algorithm-specific settings (for example, GEPA’s `iterations`, minibatch sizing, or tie-breaking), construct a runner such as `GEPARunner` with a `GEPAConfig` and attach it via `optimizer.set_runner(...)`. The [GEPA page](/docs/prompt-optimization-gepa) covers those fields in detail.
 
-:::info Next Steps
+:::tip Next Steps
 
 To go deeper:
 

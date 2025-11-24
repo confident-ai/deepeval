@@ -1,6 +1,6 @@
 ---
 id: prompt-optimization-gepa
-title: How GEPA Works
+title: GEPA
 sidebar_label: GEPA
 ---
 <head>
@@ -15,15 +15,17 @@ import TabItem from "@theme/TabItem";
 
 `deepeval`’s optimizer is built on **GEPA** (Genetic-Pareto), adapted from the DSPy paper [GEPA: Genetic Pareto Optimization of LLM Prompts](https://arxiv.org/pdf/2507.19457). GEPA is a sample-efficient algorithm that explores prompt variants using metric-driven feedback and multi-objective selection.
 
-## GEPA At A Glance
+## What Is GEPA?
 
 Each GEPA run starts from your current prompt and a set of goldens, then iteratively proposes new prompts and keeps the ones that look meaningfully better.
 
 In broad strokes:
 
 1. Start from your current prompt and evaluation goldens.
-2. Split goldens into a **Pareto set** for stable comparison and a **feedback pool** for exploration.
-3. Repeat for a fixed number of iterations: gather feedback on a minibatch, rewrite the prompt, score the new candidate on the Pareto set, decide whether to keep it.
+2. Split goldens into two groups:
+   - `D_pareto`: a fixed evaluation subset used to score every candidate on the same examples.
+   - `D_feedback`: the remaining examples used for exploration and feedback.
+3. Repeat for a fixed number of iterations: gather feedback on a minibatch, rewrite the prompt, score the new candidate on `D_pareto`, decide whether to keep it.
 4. Return the best prompt found, plus an `OptimizationReport` with details of the run.
 
 The rest of this page unpacks how those steps work inside `deepeval`.
@@ -38,15 +40,15 @@ optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
 
 GEPA first splits your goldens into two disjoint subsets:
 
-- `D_pareto` is a fixed subset used as a stable benchmark when comparing prompts.
-- `D_feedback` contains the remaining goldens and is used for sampling minibatches and collecting feedback.
+- `D_pareto` is a fixed subset used to score **every** prompt candidate. Because this subset does not change during a run, differences in scores reflect changes to the prompt, not changes in which examples were sampled.
+- `D_feedback` contains the remaining goldens and is used for sampling minibatches, collecting feedback text, and doing cheaper approximate scoring.
 
 The size of `D_pareto` is controlled by `pareto_size` in `GEPAConfig`. The split is randomized but reproducible using a shared random seed.
 
 In practice:
 
-- `D_pareto` gives you a consistent lens for comparing prompts over time.
-- `D_feedback` gives you variety so the optimizer does not overfit to a single slice of the dataset.
+- `D_pareto` lets GEPA compare prompts fairly across iterations because each candidate is evaluated on the same examples.
+- `D_feedback` lets GEPA see more of your dataset over time without evaluating every example on every step.
 
 You can use GEPA with few or many goldens. A larger pool of goldens improves coverage, while the cost per step is controlled by `pareto_size` and the minibatch settings rather than by the total number of goldens.
 
@@ -68,7 +70,7 @@ GEPA treats your metrics as the source of both scores and feedback.
 
 On `D_pareto`, each metric produces numeric scores for a prompt. These are aggregated into:
 
-- averages per-metric used for Pareto comparisons, and
+- averages per metric used for multi-objective (Pareto) comparisons, and
 - a single scalar aggregate used when deciding whether a child prompt should replace its parent.
 
 On `D_feedback`, metrics can also produce natural language reasons describing where the model succeeded or failed. During each iteration, GEPA:
@@ -80,7 +82,7 @@ On `D_feedback`, metrics can also produce natural language reasons describing wh
 
 This `feedback_text` is what the optimizer's internal prompt rewriter uses to propose the next prompt candidate.
 
-## GEPA Loop
+## How Does It Work
 
 Once goldens are split and the initial prompt is scored, GEPA enters its main loop. Each iteration does the following:
 
@@ -99,7 +101,7 @@ Intuitively, each iteration is:
 
 ## Pareto Frontier
 
-Because you may care about several metrics at once, GEPA maintains a **Pareto frontier** of prompts rather than a single scalar-best candidate.
+When you optimize for multiple metrics at once, there is rarely a single prompt that is best on every metric. Instead, GEPA maintains a **Pareto frontier** of prompts.
 
 A prompt is considered dominated if there exists another prompt that is at least as good on every metric and strictly better on at least one. The Pareto frontier is the set of non-dominated prompts that represent different trade-offs among your metrics.
 
@@ -113,23 +115,77 @@ You can inspect these score vectors later via the optimization report to underst
 
 ## GEPA Configuration
 
-`GEPAConfig` holds the main settings for the algorithm. The most important fields are:
+`GEPAConfig` holds the main settings for the GEPA algorithm. Most users can start with the defaults and only tune a few fields as needed.
 
-- `iterations`
-  Total number of mutation attempts. Higher values give more search but cost more evaluations.
-- `pareto_size`
-  Number of goldens in `D_pareto`. This controls the cost of scoring each candidate on the stable set.
+A minimal configuration looks like this:
 
-- `minibatch_size`, `minibatch_min_size`, `minibatch_max_size`, `minibatch_ratio`
-  Control how many goldens are sampled from `D_feedback` on each iteration. If `minibatch_size` is set, it is used directly (bounded by `len(goldens)`). Otherwise, a dynamic size is computed from `minibatch_ratio` and then bounded between the min and max sizes.
-- `random_seed`
-  Seed used for all GEPA randomness, including the Pareto/feedback split and sampling. Use this to make runs reproducible.
-- `min_delta`
-  Minimum improvement required for a child to be considered clearly better than its parent.
-- `tie_tolerance` and `tie_breaker`
-  Control how near-equal scores are treated. If two candidates are within `tie_tolerance`, they are considered tied and the `tie_breaker` policy decides whether to keep the parent, the child, or another consistent choice.
+```python
+from deepeval.optimization.gepa.configs import GEPAConfig
 
-Most users can start with the defaults. When you want more control, you can construct a `GEPAConfig`, pass it to `GEPARunner`, and attach that runner to your `PromptOptimizer`.
+config = GEPAConfig()
+````
+
+There are **TEN** optional parameters when creating a `GEPAConfig`:
+
+* [Optional] `iterations`: total number of mutation attempts. Higher values give more search but cost more evaluations.
+* [Optional] `pareto_size`: number of goldens in `D_pareto`. This controls the cost of scoring each candidate on the stable set.
+* [Optional] `minibatch_size`: fixed minibatch size drawn from `D_feedback` on each iteration. If set, this value is used directly (bounded by `len(goldens)`).
+* [Optional] `minibatch_min_size`: lower bound on the dynamic minibatch size when `minibatch_size` is not set.
+* [Optional] `minibatch_max_size`: upper bound on the dynamic minibatch size when `minibatch_size` is not set.
+* [Optional] `minibatch_ratio`: fraction of `D_feedback` used to compute a dynamic minibatch size when `minibatch_size` is not set. The resulting size is then clamped between `minibatch_min_size` and `minibatch_max_size`.
+* [Optional] `random_seed`: seed used for all GEPA randomness, including the Pareto/feedback split and minibatch sampling. Use this to make runs reproducible.
+* [Optional] `min_delta`: minimum improvement required for a child to be considered clearly better than its parent on the minibatch aggregate.
+* [Optional] `tie_tolerance`: tolerance for treating two prompts as “tied” on the aggregate score. If candidates differ by less than this value, they are considered tied.
+* [Optional] `tie_breaker`: policy used to break ties when candidates are within `tie_tolerance`. Controls whether GEPA prefers the parent, the child, or another consistent strategy.
+
+When you want more control, you can construct a `GEPAConfig`, pass it to a `GEPARunner`, and attach that runner to your `PromptOptimizer`. For example, to use a weighted scalar objective:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.optimization import PromptOptimizer
+from deepeval.optimization.adapters.deepeval_scoring_adapter import (
+    DeepEvalScoringAdapter,
+)
+from deepeval.optimization.aggregates import median_of_all
+from deepeval.optimization.gepa.configs import GEPAConfig
+from deepeval.optimization.gepa.loop import GEPARunner
+from deepeval.optimization.types import WeightedObjective
+
+
+async def model_callback(prompt_text: str):
+    # Replace this with your actual app / LLM call
+    return await YourApp(prompt_text)
+
+
+optimizer = PromptOptimizer(
+    # Metrics are used both for scoring and feedback
+    metrics= [
+        AnswerRelevancyMetric(),
+        BiasMetric(),
+    ],
+    model_callback=model_callback,
+)
+
+optimizer.set_runner(
+    GEPARunner(
+        config = GEPAConfig(
+            iterations=10,
+            pareto_size=16,
+            minibatch_size=4,
+        ),
+        aggregate_instances=median_of_all,
+        scoring_adapter = DeepEvalScoringAdapter(
+            # Emphasize AnswerRelevancy 1.5x relative to Bias.
+            objective_scalar = WeightedObjective(
+                weights_by_metric={
+                    "AnswerRelevancyMetric": 1.5,
+                }
+            ),
+        ),
+))
+```
+
+This pattern lets you tune GEPA’s behaviour (iterations, Pareto size, minibatch sizing, tie-breaking, etc.) while keeping the same `PromptOptimizer` API.
 
 ## What GEPA Returns
 
@@ -144,3 +200,4 @@ You can log or store this report alongside your prompt to compare different opti
 
 For how to wire GEPA into your own system, see the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For details on callback structure and available kwargs, refer to the "Create An Optimizer" section on that page and the discussion of `model_callback`.
 :::
+

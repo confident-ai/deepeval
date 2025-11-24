@@ -23,7 +23,7 @@ from deepeval.optimization.types import (
     RunnerProtocol,
     RunnerStatusType,
 )
-from deepeval.optimization.utils import validate_callback
+from deepeval.optimization.utils import validate_callback, validate_metrics
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
 from .configs import OptimizerDisplayConfig
@@ -65,10 +65,7 @@ class PromptOptimizer:
                 Tuple[Union[str, Dict], float],
             ],
         ],
-        # used if scoring_adapter is None
-        metrics: Optional[
-            Union[List[BaseMetric], List[BaseConversationalMetric]]
-        ] = None,
+        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         async_config: Optional[AsyncConfig] = None,
         display_config: Optional[OptimizerDisplayConfig] = None,
         algorithm: str = "gepa",
@@ -78,12 +75,9 @@ class PromptOptimizer:
             component="PromptOptimizer",
             model_callback=model_callback,
         )
-
-        # Metrics are required for the default GEPA runner
-        # They are marked optional on the API for future custom runner support.
-        self.metrics: Optional[
-            Union[List[BaseMetric], List[BaseConversationalMetric]]
-        ] = (list(metrics) if metrics is not None else None)
+        self.metrics = validate_metrics(
+            component="PromptOptimizer", metrics=metrics
+        )
 
         self.async_config = async_config or AsyncConfig()
         self.display_config = display_config or OptimizerDisplayConfig()
@@ -111,7 +105,8 @@ class PromptOptimizer:
         The returned Prompt will have an OptimizationReport attached as
         `prompt.optimization_report`.
         """
-        self.runner = self.runner or self._build_default_runner()
+        if self.runner is None:
+            self.set_runner(self._build_default_runner())
 
         if not self.display_config.show_indicator:
             best_prompt, report_dict = self._run_optimization(
@@ -144,6 +139,14 @@ class PromptOptimizer:
 
     def set_runner(self, runner: RunnerProtocol):
         self._set_runner_callbacks(runner)
+        scoring_adapter = getattr(runner, "scoring_adapter", None)
+        if scoring_adapter is None:
+            runner.scoring_adapter = self._build_default_scoring_adapter()
+        else:
+            if not len(runner.scoring_adapter.metrics):
+                runner.scoring_adapter.set_metrics(self.metrics)
+            if runner.scoring_adapter.model_callback is None:
+                runner.scoring_adapter.model_callback = self.model_callback
         self.runner = runner
 
     ####################
@@ -239,20 +242,22 @@ class PromptOptimizer:
         return base
 
     def _build_default_scoring_adapter(self) -> DeepEvalScoringAdapter:
-        if not self.metrics:
-            raise DeepEvalError(
-                "PromptOptimizer requires `metrics` when using the default "
-                "GEPA algorithm. Pass a list of metrics when constructing "
-                "the optimizer."
-            )
-        return DeepEvalScoringAdapter(
-            model_callback=self.model_callback,
-            metrics=self.metrics,
-        )
+        scoring_adapter = DeepEvalScoringAdapter()
+        scoring_adapter.set_model_callback(self.model_callback)
+        scoring_adapter.set_metrics(self.metrics)
+        return scoring_adapter
 
     def _set_runner_callbacks(self, runner: RunnerProtocol):
-        runner.model_callback = self.model_callback
-        runner.status_callback = self._on_status
+        runner.model_callback = (
+            self.model_callback
+            if runner.model_callback is None
+            else runner.model_callback
+        )
+        runner.status_callback = (
+            self._on_status
+            if runner.status_callback is None
+            else runner.status_callback
+        )
 
     def _build_default_runner(self) -> RunnerProtocol:
         if self.algorithm != "gepa":
