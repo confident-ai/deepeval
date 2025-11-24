@@ -123,6 +123,7 @@ class HumanEval(DeepEvalBaseBenchmark):
                         task.value,
                         golden.input,
                         prediction,
+                        task_correct,
                         golden.expected_output,
                         score,
                     )
