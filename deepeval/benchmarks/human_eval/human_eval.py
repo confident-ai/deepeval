@@ -92,7 +92,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
-        self.verbose_mode: bool = (False,)
+        self.verbose_mode: bool = verbose_mode
 
     def evaluate(
         self, model: DeepEvalBaseLLM, *args, k: int = 1, **kwargs
