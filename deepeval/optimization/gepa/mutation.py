@@ -30,7 +30,7 @@ def _compose_prompt_messages(system_message: str, user_message: str) -> str:
 
 
 def _normalize_llm_output_to_text(
-    result: Union[str, Tuple[Union[str, dict], float], dict]
+    result: Union[str, Tuple[Union[str, dict], float], dict],
 ) -> str:
     """
     Convert a DeepEval LLM generate() / a_generate() result to a clean string.
