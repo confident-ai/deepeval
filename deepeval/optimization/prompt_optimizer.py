@@ -109,8 +109,11 @@ class PromptOptimizer:
             self.set_runner(self._build_default_runner())
 
         if not self.display_config.show_indicator:
-            best_prompt, report_dict = self._run_optimization(
-                prompt=prompt, goldens=goldens
+            best_prompt, report_dict = (
+                self._run_optimization_with_error_handling(
+                    prompt=prompt,
+                    goldens=goldens,
+                )
             )
         else:
             with Progress(
@@ -126,11 +129,16 @@ class PromptOptimizer:
                 )
                 self._progress_state = (progress, task)
 
-                best_prompt, report_dict = self._run_optimization(
-                    prompt=prompt, goldens=goldens
-                )
-
-            self._progress_state = None
+                try:
+                    best_prompt, report_dict = (
+                        self._run_optimization_with_error_handling(
+                            prompt=prompt,
+                            goldens=goldens,
+                        )
+                    )
+                finally:
+                    # Clear progress state even if an error occurs
+                    self._progress_state = None
 
         best_prompt.optimization_report = OptimizationReport.from_runtime(
             report_dict
@@ -165,6 +173,53 @@ class PromptOptimizer:
                 self.runner.a_execute(prompt=prompt, goldens=goldens)
             )
         return self.runner.execute(prompt=prompt, goldens=goldens)
+
+    def _run_optimization_with_error_handling(
+        self,
+        *,
+        prompt: Prompt,
+        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+    ) -> Tuple[Prompt, Dict]:
+        """
+        Run optimization and convert uncaught exceptions into a concise
+        user facing error message.
+
+        This is a fallback for errors that occur before the runner
+        enters its main iteration loop, which would otherwise surface
+        as a full traceback.
+        """
+        try:
+            return self._run_optimization(prompt=prompt, goldens=goldens)
+        except Exception as exc:
+            # Try to recover iteration count from the runner config
+            total_steps: Optional[int] = None
+            iterations: Optional[int] = None
+            runner_config = getattr(self.runner, "config", None)
+            if runner_config is not None:
+                iterations = getattr(runner_config, "iterations", None)
+                if iterations is not None:
+                    total_steps = int(iterations)
+
+            prefix = (
+                f"(iterations={iterations}) " if iterations is not None else ""
+            )
+            detail = (
+                f"{prefix}• error {exc.__class__.__name__}: {exc} "
+                "• halted before first iteration"
+            )
+
+            self._on_status(
+                RunnerStatusType.ERROR,
+                detail=detail,
+                step_index=None,
+                total_steps=total_steps,
+            )
+
+            algo = self.algorithm.upper()
+
+            # using `from None` avoids a long chained stack trace while keeping
+            # the error message readable.
+            raise DeepEvalError(f"[{algo}] {detail}") from None
 
     def _on_status(
         self,
