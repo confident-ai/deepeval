@@ -3,18 +3,32 @@ import asyncio
 import copy
 import inspect
 import json
+from functools import lru_cache
+from pydantic import BaseModel as PydanticBaseModel
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
     Optional,
     Tuple,
     Union,
-    TYPE_CHECKING,
 )
-from functools import lru_cache
 
+from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.errors import DeepEvalError
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+)
+from deepeval.test_case import (
+    LLMTestCase,
+    ConversationalTestCase,
+    MLLMTestCase,
+)
+from deepeval.prompt.api import PromptType, PromptMessage
+from deepeval.prompt.prompt import Prompt
+
 from deepeval.optimization.types import (
     PromptConfiguration,
     Objective,
@@ -28,21 +42,6 @@ from deepeval.optimization.utils import (
     a_invoke_model_callback,
     build_model_callback_kwargs,
 )
-from deepeval.metrics import (
-    BaseMetric,
-    BaseConversationalMetric,
-)
-from deepeval.test_case import (
-    LLMTestCase,
-    ConversationalTestCase,
-    MLLMTestCase,
-)
-from deepeval.prompt.prompt import Prompt
-from pydantic import BaseModel as PydanticBaseModel
-
-
-if TYPE_CHECKING:
-    from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
 @lru_cache(maxsize=None)
@@ -158,6 +157,59 @@ class DeepEvalScoringAdapter:
         user_input = getattr(golden, "input", None) or ""
         return f"{prompt.text_template}\n\n{user_input}".strip()
 
+    def _compile_prompt_messages(
+        self,
+        prompt: Prompt,
+        golden: Union["Golden", "ConversationalGolden"],
+    ) -> List[str]:
+        """
+        Build the message contents for PromptType.LIST.
+
+        Starts from `prompt.messages_template` and appends a new PromptMessage with
+        the golden's `input` as the final message content.
+        """
+        messages_template = prompt.messages_template or []
+        compiled: List[PromptMessage] = list(messages_template)
+
+        user_input = getattr(golden, "input", None)
+        if user_input:
+            compiled = compiled + [
+                PromptMessage(role="user", content=str(user_input))
+            ]
+
+        return compiled
+
+    def _build_callback_kwargs_for_prompt(
+        self,
+        prompt: Prompt,
+        golden: Union["Golden", "ConversationalGolden"],
+    ) -> Dict[str, Any]:
+        """
+        Decide whether to treat the prompt as TEXT or LIST and build the
+        corresponding callback kwargs.
+
+        - For TEXT prompts, we send: prompt_type="TEXT", prompt_text=...
+        - For LIST prompts, we send: prompt_type="LIST", prompt_messages=[...]
+        """
+
+        if prompt.type is PromptType.LIST:
+            prompt_messages = self._compile_prompt_messages(prompt, golden)
+            return build_model_callback_kwargs(
+                prompt=prompt,
+                prompt_type=prompt.type.value,
+                prompt_messages=prompt_messages,
+                golden=golden,
+            )
+
+        # Default to TEXT behaviour
+        prompt_text = self._compile_prompt_text(prompt, golden)
+        return build_model_callback_kwargs(
+            prompt=prompt,
+            prompt_type=prompt.type.value,
+            prompt_text=prompt_text,
+            golden=golden,
+        )
+
     def _unwrap_text(
         self, result: Union[str, Dict, PydanticBaseModel, tuple]
     ) -> str:
@@ -264,13 +316,12 @@ class DeepEvalScoringAdapter:
         prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
         )
-        prompt_text = self._compile_prompt_text(prompt, golden)
 
-        candidate_kwargs = build_model_callback_kwargs(
+        candidate_kwargs = self._build_callback_kwargs_for_prompt(
             prompt=prompt,
-            prompt_text=prompt_text,
             golden=golden,
         )
+
         result = invoke_model_callback(
             hook="score_generate",
             model_callback=self.model_callback,
@@ -301,18 +352,18 @@ class DeepEvalScoringAdapter:
         prompt = prompts_by_module.get(module_id) or next(
             iter(prompts_by_module.values())
         )
-        prompt_text = self._compile_prompt_text(prompt, golden)
 
-        candidate_kwargs = build_model_callback_kwargs(
+        candidate_kwargs = self._build_callback_kwargs_for_prompt(
             prompt=prompt,
-            prompt_text=prompt_text,
             golden=golden,
         )
+
         result = await a_invoke_model_callback(
             hook="score_generate",
             model_callback=self.model_callback,
             candidate_kwargs=candidate_kwargs,
         )
+
         return self._unwrap_text(result)
 
     def score_on_pareto(

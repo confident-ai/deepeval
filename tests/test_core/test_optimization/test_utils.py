@@ -6,13 +6,15 @@ import pytest
 from tests.test_core.stubs import StubProvider, StubModelSettings, StubPrompt
 from deepeval.errors import DeepEvalError
 from deepeval.optimization.utils import (
-    split_goldens,
-    generate_module_id,
-    normalize_seed_prompts,
-    validate_callback,
-    build_model_callback_kwargs,
-    invoke_model_callback,
     a_invoke_model_callback,
+    build_model_callback_kwargs,
+    generate_module_id,
+    invoke_model_callback,
+    normalize_seed_prompts,
+    split_goldens,
+    validate_callback,
+    validate_instance,
+    validate_sequence_of,
 )
 
 #################
@@ -225,22 +227,31 @@ def test_build_model_callback_kwargs_populates_all_fields() -> None:
     prompt = StubPrompt(alias="alias")
     golden = object()
     feedback_text = "feedback"
+    prompt_type = "LIST"
+    prompt_text = "pt"
+    prompt_messages = ["m1", "m2"]
 
     kwargs = build_model_callback_kwargs(
         prompt=prompt,
-        prompt_text="pt",
+        prompt_type=prompt_type,
+        prompt_text=prompt_text,
+        prompt_messages=prompt_messages,
         golden=golden,
         feedback_text=feedback_text,
     )
 
     assert kwargs["prompt"] is prompt
-    assert kwargs["prompt_text"] == "pt"
+    assert kwargs["prompt_type"] == prompt_type
+    assert kwargs["prompt_text"] == prompt_text
+    assert kwargs["prompt_messages"] == prompt_messages
     assert kwargs["golden"] is golden
     assert kwargs["feedback_text"] == feedback_text
 
     assert set(kwargs.keys()) == {
         "prompt",
+        "prompt_type",
         "prompt_text",
+        "prompt_messages",
         "golden",
         "feedback_text",
     }
@@ -250,7 +261,9 @@ def test_build_model_callback_kwargs_defaults_missing_fields_to_none() -> None:
     kwargs = build_model_callback_kwargs()
 
     assert kwargs["prompt"] is None
+    assert kwargs["prompt_type"] is None
     assert kwargs["prompt_text"] is None
+    assert kwargs["prompt_messages"] is None
     assert kwargs["golden"] is None
     assert kwargs["feedback_text"] is None
 
@@ -393,3 +406,162 @@ def test_a_invoke_model_callback_supports_sync_callback() -> None:
         "prompt_text": "the prompt",
         "hook": "score_generate",
     }
+
+
+######################
+# validate_instance  #
+######################
+
+
+def test_validate_instance_accepts_expected_type():
+    value = "hello"
+
+    result = validate_instance(
+        component="MyComponent",
+        param_name="param",
+        value=value,
+        expected_types=str,
+    )
+
+    # returns original value on success
+    assert result is value
+
+
+def test_validate_instance_accepts_tuple_of_expected_types():
+    class A:
+        pass
+
+    class B:
+        pass
+
+    a = A()
+
+    result = validate_instance(
+        component="MyComponent",
+        param_name="param",
+        value=a,
+        expected_types=(A, B),
+    )
+
+    assert result is a
+
+
+def test_validate_instance_allows_none_when_flag_set():
+    result = validate_instance(
+        component="MyComponent",
+        param_name="param",
+        value=None,
+        expected_types=str,
+        allow_none=True,
+    )
+
+    assert result is None
+
+
+def test_validate_instance_raises_for_wrong_type():
+    with pytest.raises(DeepEvalError) as excinfo:
+        validate_instance(
+            component="MyComponent",
+            param_name="param",
+            value=123,
+            expected_types=str,
+        )
+
+    msg = str(excinfo.value)
+    assert "MyComponent expected `param` to be an instance of str" in msg
+    assert "but received 'int' instead." in msg
+
+
+########################
+# validate_sequence_of #
+########################
+
+
+def test_validate_sequence_of_accepts_list_of_expected_type():
+    items = [1, 2, 3]
+
+    result = validate_sequence_of(
+        component="MyComponent",
+        param_name="items",
+        value=items,
+        expected_item_types=int,
+    )
+
+    # returns original container
+    assert result is items
+
+
+def test_validate_sequence_of_accepts_tuple_when_allowed():
+    items = (1, 2, 3)
+
+    result = validate_sequence_of(
+        component="MyComponent",
+        param_name="items",
+        value=items,
+        expected_item_types=int,
+        sequence_types=(list, tuple),
+    )
+
+    assert result is items
+
+
+def test_validate_sequence_of_allows_none_when_flag_set():
+    result = validate_sequence_of(
+        component="MyComponent",
+        param_name="items",
+        value=None,
+        expected_item_types=int,
+        allow_none=True,
+    )
+
+    assert result is None
+
+
+def test_validate_sequence_of_rejects_none_without_allow():
+    with pytest.raises(DeepEvalError) as excinfo:
+        validate_sequence_of(
+            component="MyComponent",
+            param_name="goldens",
+            value=None,
+            expected_item_types=int,
+        )
+
+    msg = str(excinfo.value)
+    # default sequence_types=(list, tuple)
+    assert "MyComponent expected `goldens` to be a list or tuple of int" in msg
+    assert "but received None instead." in msg
+
+
+def test_validate_sequence_of_rejects_wrong_sequence_type():
+    items = {1, 2, 3}  # set instead of list/tuple
+
+    with pytest.raises(DeepEvalError) as excinfo:
+        validate_sequence_of(
+            component="MyComponent",
+            param_name="items",
+            value=items,
+            expected_item_types=int,
+        )
+
+    msg = str(excinfo.value)
+    assert "MyComponent expected `items` to be a list or tuple" in msg
+    assert "but received 'set' instead." in msg
+
+
+def test_validate_sequence_of_rejects_wrong_item_type():
+    items = [1, "bad", 3]
+
+    with pytest.raises(DeepEvalError) as excinfo:
+        validate_sequence_of(
+            component="MyComponent",
+            param_name="items",
+            value=items,
+            expected_item_types=int,
+        )
+
+    msg = str(excinfo.value)
+    assert (
+        "MyComponent expected all elements of `items` to be instances of int"
+        in msg
+    )
+    assert "element at index 1 has type 'str'." in msg

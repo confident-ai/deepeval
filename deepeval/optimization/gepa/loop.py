@@ -32,6 +32,7 @@ from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
 )
+from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.gepa.mutation import (
     PromptRewriter,
@@ -337,6 +338,50 @@ class GEPARunner:
         # later
         self._rewriter = PromptRewriter()
 
+    def _prompts_equivalent(
+        self, old_prompt: Prompt, new_prompt: Prompt
+    ) -> bool:
+        """
+        Compare two Prompts for GEPA acceptance purposes.
+
+        This is used as:
+            if self._prompts_equivalent(old, new):
+                # reject child (treat as "no change")
+                return None
+
+        So:
+        - Return True:  "do not accept this child"
+        - Return False: "child is meaningfully different"
+
+        Rules:
+        - If the types must be the same for this check to be meaningful
+        - For TEXT: compare text_template with whitespace trimmed
+        - For LIST: compare messages_template (length, role, and content,
+          with content whitespace trimmed).
+        """
+
+        # LIST prompts: compare messages
+        if new_prompt.type == PromptType.LIST:
+            old_msgs = old_prompt.messages_template
+            new_msgs = new_prompt.messages_template
+            if len(old_msgs) != len(new_msgs):
+                return False
+
+            for old_msg, new_msg in zip(old_msgs, new_msgs):
+                if old_msg.role != new_msg.role:
+                    return False
+                if (old_msg.content or "").strip() != (
+                    new_msg.content or ""
+                ).strip():
+                    return False
+
+            return True
+
+        # TEXT prompts: compare text_template
+        old_txt = (old_prompt.text_template or "").strip()
+        new_txt = (new_prompt.text_template or "").strip()
+        return new_txt == old_txt
+
     def _add_prompt_configuration(
         self, prompt_configuration: PromptConfiguration
     ) -> None:
@@ -348,7 +393,6 @@ class GEPARunner:
         )
 
     def _best_by_aggregate(self) -> PromptConfiguration:
-        assert self.pareto_score_table, "No scores yet"
         totals = {
             prompt_configuration_id: self.aggregate_instances(vector)
             for prompt_configuration_id, vector in self.pareto_score_table.items()
@@ -422,7 +466,7 @@ class GEPARunner:
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
-        assert self._rewriter is not None
+
         new_prompt = await self._rewriter.a_rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
@@ -430,10 +474,11 @@ class GEPARunner:
             feedback_text=feedback_text,
         )
 
-        old_txt = old_prompt.text_template.strip()
-        new_txt = new_prompt.text_template.strip()
-        if new_txt == old_txt:
+        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
+            old_prompt, new_prompt
+        ):
             # don't accept if new prompt is the same as parent
+            # or if the type somehow changed
             return None
         return new_prompt
 
@@ -446,7 +491,7 @@ class GEPARunner:
         old_prompt = parent_prompt_configuration.prompts.get(
             selected_module_id, Prompt(text_template="")
         )
-        assert self._rewriter is not None
+
         new_prompt = self._rewriter.rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
@@ -454,10 +499,11 @@ class GEPARunner:
             feedback_text=feedback_text,
         )
 
-        old_txt = old_prompt.text_template.strip()
-        new_txt = new_prompt.text_template.strip()
-        if new_txt == old_txt:
+        if old_prompt.type != new_prompt.type or self._prompts_equivalent(
+            old_prompt, new_prompt
+        ):
             # don't accept if new prompt is the same as parent
+            # or if the type somehow changed
             return None
         return new_prompt
 

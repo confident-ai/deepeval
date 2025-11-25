@@ -5,11 +5,11 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    TYPE_CHECKING,
 )
 
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
 
+from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.errors import DeepEvalError
 from deepeval.metrics import BaseConversationalMetric, BaseMetric
 from deepeval.evaluate.configs import AsyncConfig
@@ -23,14 +23,15 @@ from deepeval.optimization.types import (
     RunnerProtocol,
     RunnerStatusType,
 )
-from deepeval.optimization.utils import validate_callback, validate_metrics
+from deepeval.optimization.utils import (
+    validate_callback,
+    validate_metrics,
+    validate_instance,
+    validate_sequence_of,
+)
+from deepeval.optimization.configs import OptimizerDisplayConfig
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
-from .configs import OptimizerDisplayConfig
-
-
-if TYPE_CHECKING:
-    from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
 class PromptOptimizer:
@@ -78,10 +79,44 @@ class PromptOptimizer:
         self.metrics = validate_metrics(
             component="PromptOptimizer", metrics=metrics
         )
+        # Validate async_config
+        async_config = async_config or AsyncConfig()
+        validate_instance(
+            component="PromptOptimizer.__init__",
+            param_name="async_config",
+            value=async_config,
+            expected_types=AsyncConfig,
+        )
+        self.async_config = async_config
 
-        self.async_config = async_config or AsyncConfig()
+        display_config = display_config or OptimizerDisplayConfig()
+        validate_instance(
+            component="PromptOptimizer.__init__",
+            param_name="display_config",
+            value=display_config,
+            expected_types=OptimizerDisplayConfig,
+        )
         self.display_config = display_config or OptimizerDisplayConfig()
-        self.algorithm = (algorithm or "gepa").lower()
+
+        # Validate algorithm
+        algo_raw = algorithm or "gepa"
+        if not isinstance(algo_raw, str):
+            raise DeepEvalError(
+                "PromptOptimizer.__init__ expected `algorithm` to be a string "
+                f"(e.g. 'gepa'), but received {type(algorithm).__name__!r} instead."
+            )
+
+        algo_normalized = (algo_raw.strip() or "gepa").lower()
+        allowed_algorithms = {"gepa"}
+
+        if algo_normalized not in allowed_algorithms:
+            raise DeepEvalError(
+                "PromptOptimizer.__init__ received unsupported `algorithm` "
+                f"value {algorithm!r}. Supported algorithms are: "
+                + ", ".join(sorted(allowed_algorithms))
+            )
+
+        self.algorithm = algo_normalized
 
         # Internal state used only when a progress indicator is active.
         # Tuple is (Progress instance, task_id).
@@ -105,6 +140,23 @@ class PromptOptimizer:
         The returned Prompt will have an OptimizationReport attached as
         `prompt.optimization_report`.
         """
+        # Validate prompt
+        validate_instance(
+            component="PromptOptimizer.optimize",
+            param_name="prompt",
+            value=prompt,
+            expected_types=Prompt,
+        )
+
+        # Validate goldens: must be a list of Golden or ConversationalGolden
+        validate_sequence_of(
+            component="PromptOptimizer.optimize",
+            param_name="goldens",
+            value=goldens,
+            expected_item_types=(Golden, ConversationalGolden),
+            sequence_types=(list,),
+        )
+
         if self.runner is None:
             self.set_runner(self._build_default_runner())
 

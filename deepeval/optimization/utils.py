@@ -22,6 +22,7 @@ from deepeval.optimization.types import ModuleId
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
+    from deepeval.prompt.api import PromptMessage
 
 
 def split_goldens(
@@ -152,7 +153,9 @@ def build_model_callback_kwargs(
     feedback_text: Optional[str] = None,
     # shared
     prompt: Optional[Prompt] = None,
+    prompt_type: Optional[str] = None,
     prompt_text: Optional[str] = None,
+    prompt_messages: Optional[List["PromptMessage"]] = None,
 ) -> Dict[str, Any]:
     """
     Build a superset of kwargs for GEPA model callbacks.
@@ -161,7 +164,9 @@ def build_model_callback_kwargs(
 
         hook: str           # injected by (a_)invoke_model_callback
         prompt: Prompt
+        prompt_type: str
         prompt_text: str
+        prompt_messages: List[PromptMessage]
         golden: Golden | ConversationalGolden
         feedback_text: str
 
@@ -174,7 +179,9 @@ def build_model_callback_kwargs(
         "feedback_text": feedback_text,
         # shared
         "prompt": prompt,
+        "prompt_type": prompt_type,
         "prompt_text": prompt_text,
+        "prompt_messages": prompt_messages,
     }
 
 
@@ -270,6 +277,98 @@ async def a_invoke_model_callback(
 ##############
 # Validation #
 ##############
+def _format_type_names(types: Tuple[type, ...]) -> str:
+    names = [t.__name__ for t in types]
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} or {names[1]}"
+    return ", ".join(names[:-1]) + f", or {names[-1]}"
+
+
+def validate_instance(
+    *,
+    component: str,
+    param_name: str,
+    value: Any,
+    expected_types: Union[type, Tuple[type, ...]],
+    allow_none: bool = False,
+) -> Any:
+    """
+    Generic type validator.
+
+    - component: Intended to help identify what is being validated.
+        e.g. "PromptOptimizer.__init__", "PromptOptimizer.optimize", etc.
+    - param_name: the name of the parameter being validated
+    - value: the actual value passed.
+    - expected_types: a type or tuple of types to accept.
+    - allow_none: if True, None is allowed and returned as-is.
+    """
+    if value is None and allow_none:
+        return value
+
+    if not isinstance(expected_types, tuple):
+        expected_types = (expected_types,)
+
+    if not isinstance(value, expected_types):
+        expected_desc = _format_type_names(expected_types)
+        raise DeepEvalError(
+            f"{component} expected `{param_name}` to be an instance of "
+            f"{expected_desc}, but received {type(value).__name__!r} instead."
+        )
+    return value
+
+
+def validate_sequence_of(
+    *,
+    component: str,
+    param_name: str,
+    value: Any,
+    expected_item_types: Union[type, Tuple[type, ...]],
+    sequence_types: Tuple[type, ...] = (list, tuple),
+    allow_none: bool = False,
+) -> Any:
+    """
+    Generic container validator.
+
+    - Ensures `value` is one of `sequence_types` (list by default).
+    - Ensures each item is an instance of `expected_item_types`.
+
+    Returns the original `value` on success.
+    """
+    if value is None:
+        if allow_none:
+            return value
+        raise DeepEvalError(
+            f"{component} expected `{param_name}` to be a "
+            f"{_format_type_names(sequence_types)} of "
+            f"{_format_type_names(expected_item_types if isinstance(expected_item_types, tuple) else (expected_item_types,))}, "
+            "but received None instead."
+        )
+
+    if not isinstance(sequence_types, tuple):
+        sequence_types = (sequence_types,)
+
+    if not isinstance(value, sequence_types):
+        expected_seq = _format_type_names(sequence_types)
+        raise DeepEvalError(
+            f"{component} expected `{param_name}` to be a {expected_seq}, "
+            f"but received {type(value).__name__!r} instead."
+        )
+
+    if not isinstance(expected_item_types, tuple):
+        expected_item_types = (expected_item_types,)
+
+    for index, item in enumerate(value):
+        if not isinstance(item, expected_item_types):
+            expected_items = _format_type_names(expected_item_types)
+            raise DeepEvalError(
+                f"{component} expected all elements of `{param_name}` to be "
+                f"instances of {expected_items}, but element at index {index} "
+                f"has type {type(item).__name__!r}."
+            )
+
+    return value
 
 
 def validate_callback(
@@ -314,4 +413,12 @@ def validate_metrics(
             f"{component} requires a `metrics`.\n\n"
             "supply one or more DeepEval metrics via `metrics=`"
         )
+
+    validate_sequence_of(
+        component=component,
+        param_name="metrics",
+        value=metrics,
+        expected_item_types=(BaseMetric, BaseConversationalMetric),
+        sequence_types=(list, tuple),
+    )
     return list(metrics)

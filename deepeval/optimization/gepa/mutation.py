@@ -12,12 +12,94 @@ from deepeval.optimization.utils import (
     validate_callback,
     build_model_callback_kwargs,
 )
+from deepeval.prompt.api import PromptType, PromptMessage
 from deepeval.prompt.prompt import Prompt
 
 
 ##################
 # Common Helpers #
 ##################
+def _summarize_prompt_for_rewrite(old_prompt: Prompt, max_chars: int) -> str:
+    """
+    Produce a human-readable summary of the current prompt for the
+    rewriter instruction block.
+
+    - For TEXT prompts, this is just `text_template`.
+    - For LIST prompts, this is a numbered list of (role, content) lines.
+    """
+    prompt_type = old_prompt.type
+
+    # LIST prompts: show each message with its role.
+    if prompt_type is PromptType.LIST and old_prompt.messages_template:
+        lines: List[str] = []
+        for message_index, message in enumerate(old_prompt.messages_template):
+            role = message.role or ""
+            content = message.content or ""
+            lines.append(f"[{message_index+1}] ({role}) {content}")
+        combined = "\n".join(lines)
+        return combined[:max_chars]
+
+    # Since it is not a LIST prompt, just use text_template.
+    text = old_prompt.text_template or ""
+    return text[:max_chars]
+
+
+def _apply_rewritten_prompt(old_prompt: Prompt, new_text: str) -> Prompt:
+    """
+    Apply the rewritten text to a Prompt, preserving representation:
+
+    - For TEXT prompts, update `text_template`.
+    - For LIST prompts, rewrite the content of a single message while
+      keeping the number of messages the same.
+    - Preserve additonal Prompt meta such as `label` and `interpolation_type`
+    """
+    if not new_text:
+        return old_prompt
+
+    prompt_type = old_prompt.type
+
+    if prompt_type is PromptType.LIST and old_prompt.messages_template:
+        messages = old_prompt.messages_template
+
+        # Prefer the first system message; otherwise, rewrite the first.
+        target_index: int = 0
+        for message_idx, message in enumerate(messages):
+            role = (message.role or "").lower()
+            if role == "system":
+                target_index = message_idx
+                break
+
+        new_messages: List[PromptMessage] = []
+        for message_index, message in enumerate(messages):
+            if message_index == target_index:
+                role = message.role or "system"
+                new_messages.append(PromptMessage(role=role, content=new_text))
+            else:
+                new_messages.append(message)
+
+        new_prompt = Prompt(
+            alias=old_prompt.alias,
+            text_template=None,
+            messages_template=new_messages,
+            model_settings=old_prompt.model_settings,
+            output_type=old_prompt.output_type,
+            output_schema=old_prompt.output_schema,
+        )
+
+    else:
+        # Since it is not LIST, it must be TEXT type
+        new_prompt = Prompt(
+            alias=old_prompt.alias,
+            text_template=new_text,
+            model_settings=old_prompt.model_settings,
+            output_type=old_prompt.output_type,
+            output_schema=old_prompt.output_schema,
+        )
+    new_prompt.label = (old_prompt.label,)
+    new_prompt.interpolation_type = (old_prompt.interpolation_type,)
+    return new_prompt
+
+
 def _compose_prompt_messages(system_message: str, user_message: str) -> str:
     """
     Join system and user messages into a single prompt string.
@@ -74,6 +156,9 @@ class PromptRewriter:
     def _compose_messages(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
     ) -> Tuple[str, str]:
+        current_prompt_block = _summarize_prompt_for_rewrite(
+            old_prompt, self.max_chars
+        )
         system_message = (
             "You are refining a prompt used in a multi-step LLM pipeline. "
             "Given the current prompt and concise feedback, produce a revised prompt "
@@ -81,7 +166,7 @@ class PromptRewriter:
             "Return only the new prompt text, no explanations."
         )
         user_message = f"""[Current Prompt]
-{old_prompt.text_template[:self.max_chars]}
+{current_prompt_block}
 
 [Feedback]
 {feedback_text[:self.max_chars]}
@@ -121,9 +206,19 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             system_message, user_message
         )
 
+        prompt_type = old_prompt.type
+        prompt_type_name: Optional[str] = (
+            prompt_type.name if prompt_type is not None else None
+        )
+        prompt_messages: Optional[List[PromptMessage]] = None
+        if prompt_type is PromptType.LIST and old_prompt.messages_template:
+            prompt_messages = old_prompt.messages_template
+
         candidate_kwargs = build_model_callback_kwargs(
             prompt=old_prompt,
+            prompt_type=prompt_type_name,
             prompt_text=merged_prompt_text,
+            prompt_messages=prompt_messages,
             feedback_text=feedback_text,
         )
         out = invoke_model_callback(
@@ -133,7 +228,7 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         )
 
         new_text = _normalize_llm_output_to_text(out)
-        return old_prompt if not new_text else Prompt(text_template=new_text)
+        return _apply_rewritten_prompt(old_prompt, new_text)
 
     async def a_rewrite(
         self,
@@ -167,9 +262,19 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             system_message, user_message
         )
 
+        prompt_type = old_prompt.type
+        prompt_type_name: Optional[str] = (
+            prompt_type.name if prompt_type is not None else None
+        )
+        prompt_messages: Optional[List[PromptMessage]] = None
+        if prompt_type is PromptType.LIST and old_prompt.messages_template:
+            prompt_messages = old_prompt.messages_template
+
         candidate_kwargs = build_model_callback_kwargs(
             prompt=old_prompt,
+            prompt_type=prompt_type_name,
             prompt_text=merged_prompt_text,
+            prompt_messages=prompt_messages,
             feedback_text=feedback_text,
         )
         out = await a_invoke_model_callback(
@@ -179,7 +284,7 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         )
 
         new_text = _normalize_llm_output_to_text(out)
-        return old_prompt if not new_text else Prompt(text_template=new_text)
+        return _apply_rewritten_prompt(old_prompt, new_text)
 
 
 class MetricAwareLLMRewriter(PromptRewriter):
@@ -203,6 +308,11 @@ class MetricAwareLLMRewriter(PromptRewriter):
     def _compose_messages(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
     ) -> Tuple[str, str]:
+
+        current_prompt_block = _summarize_prompt_for_rewrite(
+            old_prompt, self.max_chars
+        )
+
         # Optional rubrics block
         rubric_block = ""
         if self.metrics_info:
@@ -227,7 +337,7 @@ class MetricAwareLLMRewriter(PromptRewriter):
 {module_id}
 
 [Current Prompt]
-{old_prompt.text_template[:self.max_chars]}
+{current_prompt_block}
 
 [Feedback]
 {feedback_text[:self.max_chars]}

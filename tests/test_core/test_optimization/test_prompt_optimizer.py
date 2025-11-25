@@ -12,6 +12,7 @@ from deepeval.optimization.types import (
     RunnerStatusType,
 )
 from deepeval.prompt.prompt import Prompt
+from deepeval.dataset.golden import Golden
 from tests.test_core.stubs import (
     _DummyMetric,
     AsyncDummyRunner,
@@ -37,6 +38,60 @@ def test_build_default_scoring_adapter_requires_metrics():
             model_callback=_dummy_model_callback,
             metrics=None,
             display_config=OptimizerDisplayConfig(show_indicator=False),
+        )
+
+
+def test_build_default_scoring_adapter_rejects_non_metric_types():
+    # metrics must be BaseMetric, BaseConversationalMetric subclasses
+    with pytest.raises(
+        DeepEvalError,
+        match="expected all elements of `metrics`",
+    ):
+        PromptOptimizer(
+            model_callback=_dummy_model_callback,
+            metrics=[object()],
+            display_config=OptimizerDisplayConfig(show_indicator=False),
+        )
+
+
+def test_prompt_optimizer_init_rejects_invalid_async_config_type():
+    # async_config must be an AsyncConfig instance if provided
+    with pytest.raises(
+        DeepEvalError,
+        match="PromptOptimizer.__init__ expected `async_config` to be an instance of AsyncConfig",
+    ):
+        PromptOptimizer(
+            model_callback=_dummy_model_callback,
+            metrics=[_DummyMetric()],
+            async_config=object(),
+            display_config=OptimizerDisplayConfig(show_indicator=False),
+        )
+
+
+def test_prompt_optimizer_init_rejects_invalid_display_config_type():
+    # display_config must be an OptimizerDisplayConfig instance if provided
+    with pytest.raises(
+        DeepEvalError,
+        match="PromptOptimizer.__init__ expected `display_config` to be an instance of OptimizerDisplayConfig",
+    ):
+        PromptOptimizer(
+            model_callback=_dummy_model_callback,
+            metrics=[_DummyMetric()],
+            display_config=object(),
+        )
+
+
+def test_prompt_optimizer_init_rejects_unsupported_algorithm():
+    # Unsupported algorithms should be rejected at construction time
+    with pytest.raises(
+        DeepEvalError,
+        match=r"algorithm.*not-gepa",
+    ):
+        PromptOptimizer(
+            model_callback=_dummy_model_callback,
+            metrics=[_DummyMetric()],
+            display_config=OptimizerDisplayConfig(show_indicator=False),
+            algorithm="not-gepa",
         )
 
 
@@ -69,20 +124,6 @@ def test_build_default_runner_constructs_gepa_runner_and_sets_callbacks():
 
     # model_callback should be the same callable we passed in
     assert runner.model_callback is optimizer.model_callback
-
-
-def test_build_default_runner_unsupported_algorithm_raises():
-    optimizer = PromptOptimizer(
-        model_callback=_dummy_model_callback,
-        metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
-        algorithm="not-gepa",
-    )
-
-    with pytest.raises(
-        DeepEvalError, match="Unsupported optimization algorithm"
-    ):
-        optimizer._build_default_runner()
 
 
 def test_set_runner_wires_callbacks():
@@ -122,7 +163,10 @@ def test_optimize_with_custom_runner_attaches_report_and_returns_prompt():
     optimizer.set_runner(runner)
 
     original_prompt = Prompt(text_template="base")
-    goldens = [object(), object()]
+    goldens = [
+        Golden(input="q1", expected_output="a1"),
+        Golden(input="q2", expected_output="a2"),
+    ]
 
     best = optimizer.optimize(prompt=original_prompt, goldens=goldens)
 
@@ -140,6 +184,57 @@ def test_optimize_with_custom_runner_attaches_report_and_returns_prompt():
     assert isinstance(report, OptimizationReport)
     assert report.optimization_id == "opt-123"
     assert report.best_id == "best"
+
+
+def test_optimize_rejects_non_prompt_type():
+    optimizer = PromptOptimizer(
+        model_callback=_dummy_model_callback,
+        metrics=[_DummyMetric()],
+        display_config=OptimizerDisplayConfig(show_indicator=False),
+    )
+
+    # goldens can be an empty list; we're only exercising prompt validation here
+    with pytest.raises(
+        DeepEvalError,
+        match="PromptOptimizer.optimize expected `prompt` to be an instance of Prompt",
+    ):
+        optimizer.optimize(prompt="not-a-prompt", goldens=[])
+
+
+def test_optimize_rejects_non_list_goldens():
+    optimizer = PromptOptimizer(
+        model_callback=_dummy_model_callback,
+        metrics=[_DummyMetric()],
+        display_config=OptimizerDisplayConfig(show_indicator=False),
+    )
+
+    prompt = Prompt(text_template="base")
+
+    with pytest.raises(
+        DeepEvalError,
+        match="PromptOptimizer.optimize expected `goldens` to be a list",
+    ):
+        optimizer.optimize(prompt=prompt, goldens=("not", "a", "list"))
+
+
+def test_optimize_rejects_invalid_golden_elements():
+    optimizer = PromptOptimizer(
+        model_callback=_dummy_model_callback,
+        metrics=[_DummyMetric()],
+        display_config=OptimizerDisplayConfig(show_indicator=False),
+    )
+
+    prompt = Prompt(text_template="base")
+    goldens = [
+        Golden(input="q1", expected_output="a1"),
+        "not-a-golden",
+    ]
+
+    with pytest.raises(
+        DeepEvalError,
+        match="expected all elements of `goldens`",
+    ):
+        optimizer.optimize(prompt=prompt, goldens=goldens)
 
 
 def test_run_optimization_uses_sync_execute_when_run_async_false():
