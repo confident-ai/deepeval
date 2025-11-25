@@ -1,14 +1,21 @@
+# tests/test_core/test_optimization/test_mutations/test_prompt_rewriter.py
 from dataclasses import dataclass
+import random
 
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.gepa.mutation import (
+from deepeval.optimization.mutations.prompt_rewriter import (
     _compose_prompt_messages,
     _normalize_llm_output_to_text,
     PromptRewriter,
     MetricAwareLLMRewriter,
 )
+from deepeval.optimization.configs import (
+    PromptListMutationConfig,
+    PromptListMutationTargetType,
+)
+from deepeval.prompt.api import PromptMessage
 from deepeval.prompt.prompt import Prompt
 
 
@@ -180,6 +187,128 @@ def test_prompt_rewriter_returns_old_prompt_if_new_text_empty_after_trim():
     assert new is old
 
 
+def test_prompt_rewriter_list_default_mutates_first_message():
+    """
+    With default PromptListMutationConfig (FIRST, no role),
+    the first message is rewritten.
+    """
+    rewriter = PromptRewriter()
+    old = Prompt(
+        messages_template=[
+            PromptMessage(role="user", content="m0"),
+            PromptMessage(role="system", content="m1"),
+            PromptMessage(role="assistant", content="m2"),
+        ]
+    )
+
+    def model_callback(**kwargs):
+        return "rewritten list"
+
+    new = rewriter.rewrite(
+        module_id="__module__",
+        old_prompt=old,
+        feedback_text="feedback",
+        model_callback=model_callback,
+    )
+
+    assert isinstance(new, Prompt)
+    assert new.messages_template is not None
+    msgs = new.messages_template
+
+    # First message content is replaced, others are unchanged.
+    assert msgs[0].content == "rewritten list"
+    assert msgs[1].content == "m1"
+    assert msgs[2].content == "m2"
+
+    # Roles are preserved.
+    assert msgs[0].role == "user"
+    assert msgs[1].role == "system"
+    assert msgs[2].role == "assistant"
+
+
+def test_prompt_rewriter_list_respects_target_role_first():
+    """
+    When target_role is set and target_type == FIRST,
+    we rewrite the first message whose role matches.
+    """
+    cfg = PromptListMutationConfig(
+        target_type=PromptListMutationTargetType.FIRST,
+        target_role="system",
+    )
+    rewriter = PromptRewriter(list_mutation_config=cfg)
+    old = Prompt(
+        messages_template=[
+            PromptMessage(role="user", content="u0"),
+            PromptMessage(role="system", content="s0"),
+            PromptMessage(role="system", content="s1"),
+        ]
+    )
+
+    def model_callback(**kwargs):
+        return "rewrite-system"
+
+    new = rewriter.rewrite(
+        module_id="__module__",
+        old_prompt=old,
+        feedback_text="feedback",
+        model_callback=model_callback,
+    )
+
+    msgs = new.messages_template
+    assert msgs[0].content == "u0"
+    assert msgs[1].content == "rewrite-system"
+    assert msgs[2].content == "s1"
+
+
+def test_prompt_rewriter_list_random_uses_random_state_and_role_filter():
+    """
+    RANDOM mode with a seeded RNG + target_role should pick among the
+    matching-role messages only, deterministically.
+    """
+    cfg = PromptListMutationConfig(
+        target_type=PromptListMutationTargetType.RANDOM,
+        target_role="assistant",
+    )
+    rewriter = PromptRewriter(
+        list_mutation_config=cfg,
+        random_state=random.Random(0),
+    )
+    old = Prompt(
+        messages_template=[
+            PromptMessage(role="system", content="sys"),
+            PromptMessage(role="assistant", content="a0"),
+            PromptMessage(role="assistant", content="a1"),
+        ]
+    )
+
+    def model_callback(**kwargs):
+        return "rewrite"
+
+    new = rewriter.rewrite(
+        module_id="__module__",
+        old_prompt=old,
+        feedback_text="feedback",
+        model_callback=model_callback,
+    )
+
+    msgs = new.messages_template
+    # System message stays unchanged.
+    assert msgs[0].content == "sys"
+
+    # With Random(0) and candidates [1, 2], we expect index 2.
+    assert msgs[1].content == "a0"
+    assert msgs[2].content == "rewrite"
+
+
+def test_prompt_rewriter_accepts_int_random_seed_and_converts_to_random():
+    """
+    Passing an int seed for random_state should be accepted and
+    converted into a random.Random instance.
+    """
+    rewriter = PromptRewriter(random_state=123)
+    assert isinstance(rewriter.random_state, random.Random)
+
+
 ##########################
 # PromptRewriter (async) #
 ##########################
@@ -275,6 +404,7 @@ def test_metric_aware_rewriter_compose_messages_with_rubrics_and_defaults():
     ]
     rewriter = MetricAwareLLMRewriter(
         metrics_info=metrics_info,
+        max_chars=4000,
         max_metrics_in_prompt=10,
     )
 
@@ -303,6 +433,7 @@ def test_metric_aware_rewriter_respects_max_metrics_in_prompt():
     ]
     rewriter = MetricAwareLLMRewriter(
         metrics_info=metrics_info,
+        max_chars=4000,
         max_metrics_in_prompt=3,
     )
 

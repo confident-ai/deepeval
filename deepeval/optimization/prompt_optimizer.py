@@ -16,6 +16,9 @@ from deepeval.evaluate.configs import AsyncConfig
 from deepeval.optimization.adapters.deepeval_scoring_adapter import (
     DeepEvalScoringAdapter,
 )
+from deepeval.optimization.mutations.prompt_rewriter import (
+    PromptRewriter,
+)
 from deepeval.optimization.gepa.configs import GEPAConfig
 from deepeval.optimization.gepa.loop import GEPARunner
 from deepeval.optimization.types import (
@@ -29,7 +32,11 @@ from deepeval.optimization.utils import (
     validate_instance,
     validate_sequence_of,
 )
-from deepeval.optimization.configs import OptimizerDisplayConfig
+from deepeval.optimization.configs import (
+    OptimizerDisplayConfig,
+    OptimizerPromptRolesConfig,
+    PromptListMutationConfig,
+)
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
 
@@ -69,6 +76,8 @@ class PromptOptimizer:
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         async_config: Optional[AsyncConfig] = None,
         display_config: Optional[OptimizerDisplayConfig] = None,
+        roles_config: Optional[OptimizerPromptRolesConfig] = None,
+        prompt_list_mutation_config: Optional[PromptListMutationConfig] = None,
         algorithm: str = "gepa",
     ):
         # Validate and store the callback
@@ -89,6 +98,7 @@ class PromptOptimizer:
         )
         self.async_config = async_config
 
+        # validate display_config
         display_config = display_config or OptimizerDisplayConfig()
         validate_instance(
             component="PromptOptimizer.__init__",
@@ -96,7 +106,29 @@ class PromptOptimizer:
             value=display_config,
             expected_types=OptimizerDisplayConfig,
         )
-        self.display_config = display_config or OptimizerDisplayConfig()
+        self.display_config = display_config
+
+        # validate roles_config
+        roles_config = roles_config or OptimizerPromptRolesConfig()
+        validate_instance(
+            component="PromptOptimizer.__init__",
+            param_name="roles_config",
+            value=roles_config,
+            expected_types=OptimizerPromptRolesConfig,
+        )
+        self.roles_config = roles_config
+
+        # validate prompt_list_mutation_config
+        prompt_list_mutation_config = (
+            prompt_list_mutation_config or PromptListMutationConfig()
+        )
+        validate_instance(
+            component="PromptOptimizer.__init__",
+            param_name="prompt_list_mutation_config",
+            value=prompt_list_mutation_config,
+            expected_types=PromptListMutationConfig,
+        )
+        self.prompt_list_mutation_config = prompt_list_mutation_config
 
         # Validate algorithm
         algo_raw = algorithm or "gepa"
@@ -349,7 +381,12 @@ class PromptOptimizer:
         return base
 
     def _build_default_scoring_adapter(self) -> DeepEvalScoringAdapter:
-        scoring_adapter = DeepEvalScoringAdapter()
+        roles = self.roles_config
+        scoring_adapter = DeepEvalScoringAdapter(
+            list_input_role=roles.list_input_role,
+            conversational_user_role=roles.conversational_user_role,
+            conversational_assistant_role=roles.conversational_assistant_role,
+        )
         scoring_adapter.set_model_callback(self.model_callback)
         scoring_adapter.set_metrics(self.metrics)
         return scoring_adapter
@@ -382,7 +419,15 @@ class PromptOptimizer:
             )
 
         config = GEPAConfig()
-        runner = GEPARunner(config=config, scoring_adapter=scoring_adapter)
+        runner = GEPARunner(
+            config=config,
+            scoring_adapter=scoring_adapter,
+        )
+        runner._rewriter = PromptRewriter(
+            max_chars=config.rewrite_instruction_max_chars,
+            list_mutation_config=self.prompt_list_mutation_config,
+            random_state=runner.random_state,
+        )
 
         self._set_runner_callbacks(runner)
 

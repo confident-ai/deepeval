@@ -100,6 +100,13 @@ class GEPAConfig(BaseModel):
         TieBreakerPolicy.PREFER_CHILD,
         description="How to break ties on aggregate",
     )
+    rewrite_instruction_max_chars: PositiveInt = Field(
+        default=4096,
+        description=(
+            "Maximum number of characters from prompt, feedback, and related text "
+            "included in rewrite instructions."
+        ),
+    )
 
     @field_validator("random_seed", mode="before")
     @classmethod

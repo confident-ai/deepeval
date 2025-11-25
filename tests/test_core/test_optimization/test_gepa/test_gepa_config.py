@@ -29,6 +29,9 @@ def test_gepa_config_defaults_sanity():
     # Random seed default (no validator involved when not None)
     assert cfg.random_seed == 0
 
+    # Prompt feedback / rewrite text length limit
+    assert cfg.rewrite_instruction_max_chars == 4096
+
 
 def test_gepa_config_random_seed_none_uses_time_based_seed():
     """
@@ -110,3 +113,10 @@ def test_gepa_config_field_bounds_validated():
 
     with pytest.raises(ValidationError):
         GEPAConfig(min_delta=-0.1)
+
+    # rewrite_instruction_max_chars must be PositiveInt (>= 1)
+    with pytest.raises(ValidationError):
+        GEPAConfig(rewrite_instruction_max_chars=0)
+
+    with pytest.raises(ValidationError):
+        GEPAConfig(rewrite_instruction_max_chars=-10)

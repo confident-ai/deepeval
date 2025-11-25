@@ -25,6 +25,7 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     MLLMTestCase,
+    Turn,
 )
 from deepeval.prompt.api import PromptType, PromptMessage
 from deepeval.prompt.prompt import Prompt
@@ -104,6 +105,9 @@ class DeepEvalScoringAdapter:
             ]
         ] = None,
         objective_scalar: Objective = MeanObjective(),
+        list_input_role: str = "user",
+        conversational_user_role: str = "user",
+        conversational_assistant_role: str = "assistant",
     ):
         self.model_callback: Optional[
             Callable[
@@ -121,6 +125,10 @@ class DeepEvalScoringAdapter:
 
         self.build_test_case = build_test_case or self._default_build_test_case
         self.objective_scalar = objective_scalar
+
+        self.list_input_role = list_input_role
+        self.conversational_user_role = conversational_user_role
+        self.conversational_assistant_role = conversational_assistant_role
 
         # async
         self._semaphore: Optional[asyncio.Semaphore] = None
@@ -153,15 +161,40 @@ class DeepEvalScoringAdapter:
     #######################################
     # prompt assembly & result unwrapping #
     #######################################
-    def _compile_prompt_text(self, prompt: Prompt, golden: "Golden") -> str:
-        user_input = getattr(golden, "input", None) or ""
-        return f"{prompt.text_template}\n\n{user_input}".strip()
+    def _primary_input_from_golden(
+        self, golden: Union[Golden, ConversationalGolden]
+    ) -> str:
+        """
+        Return the primary textual input to feed into the prompt for a given golden.
+
+        - For Golden: use `input`
+        - For ConversationalGolden: use `scenario`
+        """
+        if isinstance(golden, Golden):
+            return golden.input
+
+        if isinstance(golden, ConversationalGolden):
+            return golden.scenario
+
+        raise DeepEvalError(
+            "DeepEvalScoringAdapter expected golden to be a Golden or "
+            f"ConversationalGolden, but received {type(golden).__name__!r}."
+        )
+
+    def _compile_prompt_text(
+        self, prompt: Prompt, golden: Union[Golden, ConversationalGolden]
+    ) -> str:
+        user_input = self._primary_input_from_golden(golden)
+        base_text = prompt.text_template or ""
+        if not user_input:
+            return base_text.strip()
+        return f"{base_text}\n\n{user_input}".strip()
 
     def _compile_prompt_messages(
         self,
         prompt: Prompt,
-        golden: Union["Golden", "ConversationalGolden"],
-    ) -> List[str]:
+        golden: Union[Golden, ConversationalGolden],
+    ) -> List[PromptMessage]:
         """
         Build the message contents for PromptType.LIST.
 
@@ -171,10 +204,10 @@ class DeepEvalScoringAdapter:
         messages_template = prompt.messages_template or []
         compiled: List[PromptMessage] = list(messages_template)
 
-        user_input = getattr(golden, "input", None)
+        user_input = self._primary_input_from_golden(golden)
         if user_input:
             compiled = compiled + [
-                PromptMessage(role="user", content=str(user_input))
+                PromptMessage(role=self.list_input_role, content=user_input)
             ]
 
         return compiled
@@ -226,15 +259,69 @@ class DeepEvalScoringAdapter:
     # Test case helpers #
     #####################
     def _default_build_test_case(
-        self, golden: "Golden", actual: str
-    ) -> LLMTestCase:
-        # Generic LLM case
-        return LLMTestCase(
-            input=getattr(golden, "input", None),
-            expected_output=getattr(golden, "expected_output", None),
-            actual_output=actual,
-            context=getattr(golden, "context", None),
-            retrieval_context=getattr(golden, "retrieval_context", None),
+        self, golden: Union[Golden, ConversationalGolden], actual: str
+    ) -> Union[LLMTestCase, ConversationalTestCase]:
+        """
+        Default conversion from Golden or ConversationalGolden into a DeepEval test case.
+
+        - Golden -> LLMTestCase
+        - ConversationalGolden -> ConversationalTestCase
+        """
+        if isinstance(golden, Golden):
+            return LLMTestCase(
+                input=golden.input,
+                expected_output=golden.expected_output,
+                actual_output=actual,
+                context=golden.context,
+                retrieval_context=golden.retrieval_context,
+                additional_metadata=golden.additional_metadata,
+                comments=golden.comments,
+                name=golden.name,
+                tools_called=golden.tools_called,
+                expected_tools=golden.expected_tools,
+            )
+
+        if isinstance(golden, ConversationalGolden):
+            user_role = self.conversational_user_role
+            assistant_role = self.conversational_assistant_role
+            # Start from any turns specified on the golden.
+            turns: List[Turn] = list(golden.turns or [])
+
+            if turns:
+                last = turns[-1]
+                if last.role == assistant_role:
+                    # Replace the last assistant turn's content with the model's actual output.
+                    turns[-1] = Turn(
+                        role=last.role,
+                        content=actual,
+                        user_id=last.user_id,
+                        retrieval_context=last.retrieval_context,
+                        tools_called=last.tools_called,
+                    )
+                else:
+                    # Append a new assistant turn with the actual output.
+                    turns.append(Turn(role=assistant_role, content=actual))
+            else:
+                # No turns provided: synthesize a minimal two-turn conversation.
+                turns = [
+                    Turn(role=user_role, content=golden.scenario),
+                    Turn(role=assistant_role, content=actual),
+                ]
+
+            return ConversationalTestCase(
+                turns=turns,
+                scenario=golden.scenario,
+                expected_outcome=golden.expected_outcome,
+                user_description=golden.user_description,
+                context=golden.context,
+                additional_metadata=golden.additional_metadata,
+                comments=golden.comments,
+                name=golden.name,
+            )
+
+        raise DeepEvalError(
+            "DeepEvalScoringAdapter._default_build_test_case expected a Golden "
+            f"or ConversationalGolden, but received {type(golden).__name__!r}."
         )
 
     ###################
@@ -295,7 +382,9 @@ class DeepEvalScoringAdapter:
     ########################
 
     def generate(
-        self, prompts_by_module: Dict[ModuleId, Prompt], golden: "Golden"
+        self,
+        prompts_by_module: Dict[ModuleId, Prompt],
+        golden: Union[Golden, ConversationalGolden],
     ) -> str:
 
         if not prompts_by_module:
@@ -331,7 +420,9 @@ class DeepEvalScoringAdapter:
         return self._unwrap_text(result)
 
     async def a_generate(
-        self, prompts_by_module: Dict[ModuleId, Prompt], golden: "Golden"
+        self,
+        prompts_by_module: Dict[ModuleId, Prompt],
+        golden: Union[Golden, ConversationalGolden],
     ) -> str:
 
         if not prompts_by_module:

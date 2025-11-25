@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import random
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 from deepeval.optimization.types import (
@@ -11,6 +12,10 @@ from deepeval.optimization.utils import (
     invoke_model_callback,
     validate_callback,
     build_model_callback_kwargs,
+)
+from deepeval.optimization.configs import (
+    PromptListMutationConfig,
+    PromptListMutationTargetType,
 )
 from deepeval.prompt.api import PromptType, PromptMessage
 from deepeval.prompt.prompt import Prompt
@@ -44,7 +49,70 @@ def _summarize_prompt_for_rewrite(old_prompt: Prompt, max_chars: int) -> str:
     return text[:max_chars]
 
 
-def _apply_rewritten_prompt(old_prompt: Prompt, new_text: str) -> Prompt:
+def _select_list_target_index(
+    messages: List[PromptMessage],
+    config: PromptListMutationConfig,
+    random_state: random.Random,
+) -> int:
+    """
+    Select which list message index to rewrite, based on PromptListMutationConfig.
+
+    Rules:
+    - Start with all indices in scope.
+    - If target_role is set, restrict candidates to messages with that role
+      (case insensitive). If no messages match, fall back to all indices.
+    - target_type:
+        * FIRST:       pick the first candidate index.
+        * RANDOM:      pick a candidate via random_state.choice(candidates).
+        * FIXED_INDEX: use target_index when valid (and consistent with role
+                       filter), otherwise fall back to the first candidate.
+    """
+    if not messages:
+        return 0
+
+    messages_length = len(messages)
+    candidate_indices = list(range(messages_length))
+
+    # if there is only one option, then just use it
+    if messages_length == 1:
+        return candidate_indices[0]
+
+    # Optional case insensitive role restriction
+    if config.target_role:
+        target_role_lower = config.target_role.lower()
+        filtered = [
+            index
+            for index, message in enumerate(messages)
+            if (message.role or "").lower() == target_role_lower
+        ]
+        if filtered:
+            candidate_indices = filtered
+
+    target_type = config.target_type
+
+    if target_type is PromptListMutationTargetType.FIRST:
+        return candidate_indices[0]
+
+    if target_type is PromptListMutationTargetType.RANDOM:
+        return random_state.choice(candidate_indices)
+
+    if target_type is PromptListMutationTargetType.FIXED_INDEX:
+        index = config.target_index
+        # Valid index and (if role filter is active) in the candidate set
+        if index is not None and 0 <= index < messages_length:
+            if not config.target_role or index in candidate_indices:
+                return index
+
+    # Defensive fallback: treat as FIRST
+    return candidate_indices[0]
+
+
+def _apply_rewritten_prompt(
+    old_prompt: Prompt,
+    new_text: str,
+    random_state: random.Random,
+    list_mutation_config: Optional[PromptListMutationConfig] = None,
+) -> Prompt:
     """
     Apply the rewritten text to a Prompt, preserving representation:
 
@@ -60,20 +128,24 @@ def _apply_rewritten_prompt(old_prompt: Prompt, new_text: str) -> Prompt:
 
     if prompt_type is PromptType.LIST and old_prompt.messages_template:
         messages = old_prompt.messages_template
+        config = list_mutation_config or PromptListMutationConfig()
 
-        # Prefer the first system message; otherwise, rewrite the first.
-        target_index: int = 0
-        for message_idx, message in enumerate(messages):
-            role = (message.role or "").lower()
-            if role == "system":
-                target_index = message_idx
-                break
+        target_index = _select_list_target_index(
+            messages=messages,
+            config=config,
+            random_state=random_state,
+        )
 
         new_messages: List[PromptMessage] = []
         for message_index, message in enumerate(messages):
             if message_index == target_index:
-                role = message.role or "system"
-                new_messages.append(PromptMessage(role=role, content=new_text))
+                # Preserve the original role; do not inject a new one.
+                new_messages.append(
+                    PromptMessage(
+                        role=message.role,
+                        content=new_text,
+                    )
+                )
             else:
                 new_messages.append(message)
 
@@ -95,8 +167,9 @@ def _apply_rewritten_prompt(old_prompt: Prompt, new_text: str) -> Prompt:
             output_type=old_prompt.output_type,
             output_schema=old_prompt.output_schema,
         )
-    new_prompt.label = (old_prompt.label,)
-    new_prompt.interpolation_type = (old_prompt.interpolation_type,)
+
+    new_prompt.label = old_prompt.label
+    new_prompt.interpolation_type = old_prompt.interpolation_type
     return new_prompt
 
 
@@ -148,10 +221,30 @@ class PromptRewriter:
     """
     Uses a provided DeepEval model to rewrite the prompt for a module,
     guided by feedback_text (μ_f).
+
+    For LIST prompts, the target message to rewrite is chosen according to
+    `list_mutation_config` and `random_state`.
     """
 
-    def __init__(self, max_chars: int = 4000):
+    def __init__(
+        self,
+        *,
+        max_chars: int = 4000,
+        list_mutation_config: Optional[PromptListMutationConfig] = None,
+        random_state: Optional[Union[int, random.Random]] = None,
+    ):
         self.max_chars = max_chars
+        self.list_mutation_config = (
+            list_mutation_config or PromptListMutationConfig()
+        )
+
+        # Accept either an int seed or a Random instance.
+        if isinstance(random_state, int):
+            self.random_state: Optional[random.Random] = random.Random(
+                random_state
+            )
+        else:
+            self.random_state = random_state or random.Random()
 
     def _compose_messages(
         self, *, module_id: ModuleId, old_prompt: Prompt, feedback_text: str
@@ -228,7 +321,12 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         )
 
         new_text = _normalize_llm_output_to_text(out)
-        return _apply_rewritten_prompt(old_prompt, new_text)
+        return _apply_rewritten_prompt(
+            old_prompt,
+            new_text,
+            self.random_state,
+            self.list_mutation_config,
+        )
 
     async def a_rewrite(
         self,
@@ -284,7 +382,12 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
         )
 
         new_text = _normalize_llm_output_to_text(out)
-        return _apply_rewritten_prompt(old_prompt, new_text)
+        return _apply_rewritten_prompt(
+            old_prompt,
+            new_text,
+            self.random_state,
+            self.list_mutation_config,
+        )
 
 
 class MetricAwareLLMRewriter(PromptRewriter):
@@ -300,8 +403,14 @@ class MetricAwareLLMRewriter(PromptRewriter):
         metrics_info: Optional[List[MetricInfo]] = None,
         max_chars: int = 4000,
         max_metrics_in_prompt: int = 20,
+        list_mutation_config: Optional[PromptListMutationConfig] = None,
+        random_state: Optional[Union[int, random.Random]] = None,
     ):
-        super().__init__(max_chars=max_chars)
+        super().__init__(
+            max_chars=max_chars,
+            list_mutation_config=list_mutation_config,
+            random_state=random_state,
+        )
         self.metrics_info = metrics_info or []
         self.max_metrics_in_prompt = max_metrics_in_prompt
 

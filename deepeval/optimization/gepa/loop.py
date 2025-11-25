@@ -34,7 +34,7 @@ from deepeval.optimization.policies import (
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimization.gepa.mutation import (
+from deepeval.optimization.mutations.prompt_rewriter import (
     PromptRewriter,
 )
 from .configs import GEPAConfig
