@@ -203,7 +203,7 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
         client = self.load_model(async_mode=False)
         prompt = self.generate_prompt(multimodal_input)
         messages = [{"role": "user", "content": prompt}]
-        
+
         # Generate completion
         completion = client.chat.completions.create(
             model=self.deployment_name,
@@ -229,7 +229,7 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
         client = self.load_model(async_mode=True)
         prompt = self.generate_prompt(multimodal_input)
         messages = [{"role": "user", "content": prompt}]
-        
+
         # Generate completion
         completion = await client.chat.completions.create(
             model=self.deployment_name,

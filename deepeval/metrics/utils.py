@@ -502,7 +502,7 @@ def is_native_model(
 
 
 def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM, AzureOpenAIModel]] = None,
+    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
 ) -> Tuple[DeepEvalBaseLLM, bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)

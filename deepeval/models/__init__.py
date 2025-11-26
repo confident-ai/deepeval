@@ -21,7 +21,7 @@ from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
     MultimodalOllamaModel,
     MultimodalGeminiModel,
-    MultimodalAzureOpenAIMLLMModel
+    MultimodalAzureOpenAIMLLMModel,
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
