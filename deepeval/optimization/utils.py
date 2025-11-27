@@ -17,7 +17,13 @@ from typing import (
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimization.types import ModuleId
+from deepeval.prompt.api import PromptType, PromptMessage
+from deepeval.optimization.types import (
+    ModuleId,
+    PromptConfigurationId,
+    PromptConfiguration,
+    OptimizationReport,
+)
 
 
 if TYPE_CHECKING:
@@ -271,6 +277,121 @@ async def a_invoke_model_callback(
     if inspect.isawaitable(result):
         return await result
     return result
+
+
+###########
+# Reports #
+###########
+
+
+def build_prompt_config_snapshots(
+    prompt_configurations_by_id: Dict[
+        PromptConfigurationId, "PromptConfiguration"
+    ],
+) -> Dict[PromptConfigurationId, Dict[str, Any]]:
+    """
+    Build a serializable snapshot of all prompt configurations.
+
+    Shape matches the docs for `prompt_configurations`:
+
+    {
+      "<config_id>": {
+        "parent": "<parent_id or None>",
+        "prompts": {
+          "<module_id>": {
+            "type": "TEXT",
+            "text_template": "...",
+          }
+          # or
+          "<module_id>": {
+            "type": "LIST",
+            "messages": [
+              {"role": "system", "content": "..."},
+              ...
+            ],
+          },
+        },
+      },
+      ...
+    }
+    """
+    snapshots: Dict[PromptConfigurationId, Dict[str, Any]] = {}
+
+    for cfg_id, cfg in prompt_configurations_by_id.items():
+        prompts_snapshot: Dict[str, Any] = {}
+
+        for module_id, prompt in cfg.prompts.items():
+            if prompt.type is PromptType.LIST:
+                messages = [
+                    {"role": msg.role, "content": (msg.content or "")}
+                    for msg in (prompt.messages_template or [])
+                ]
+                prompts_snapshot[module_id] = {
+                    "type": "LIST",
+                    "messages": messages,
+                }
+            else:
+                prompts_snapshot[module_id] = {
+                    "type": "TEXT",
+                    "text_template": (prompt.text_template or ""),
+                }
+
+        snapshots[cfg_id] = {
+            "parent": cfg.parent,
+            "prompts": prompts_snapshot,
+        }
+
+    return snapshots
+
+
+def inflate_prompts_from_report(
+    report: OptimizationReport,
+) -> Dict[str, Dict[str, Prompt]]:
+    """
+    Build a mapping from configuration id -> { module_id -> Prompt }.
+
+    This is a convenience for users who want to work with real Prompt
+    instances instead of raw snapshots.
+
+    Returns:
+        {
+          "<config_id>": {
+            "<module_id>": Prompt(...),
+            ...
+          },
+          ...
+        }
+    """
+    inflated: Dict[str, Dict[str, Prompt]] = {}
+
+    for cfg_id, cfg_snapshot in report.prompt_configurations.items():
+        module_prompts: Dict[str, Prompt] = {}
+
+        for module_id, module_snapshot in cfg_snapshot.prompts.items():
+            if module_snapshot.type == "TEXT":
+                module_prompts[module_id] = Prompt(
+                    text_template=module_snapshot.text_template or ""
+                )
+            else:  # "LIST"
+                messages = [
+                    PromptMessage(role=m.role, content=m.content)
+                    for m in module_snapshot.messages or []
+                ]
+                module_prompts[module_id] = Prompt(messages_template=messages)
+
+        inflated[cfg_id] = module_prompts
+
+    return inflated
+
+
+def get_best_prompts_from_report(
+    report: OptimizationReport,
+) -> Dict[str, Prompt]:
+    """
+    Convenience wrapper returning the best configuration's module prompts.
+    """
+    all_prompts = inflate_prompts_from_report(report)
+    return all_prompts.get(report.best_id, {})
 
 
 ##############

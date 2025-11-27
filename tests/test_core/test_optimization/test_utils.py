@@ -4,7 +4,9 @@ import random
 import pytest
 
 from tests.test_core.stubs import StubProvider, StubModelSettings, StubPrompt
+from deepeval.prompt.prompt import Prompt, PromptMessage
 from deepeval.errors import DeepEvalError
+from deepeval.optimization.types import PromptConfiguration, OptimizationReport
 from deepeval.optimization.utils import (
     a_invoke_model_callback,
     build_model_callback_kwargs,
@@ -12,6 +14,8 @@ from deepeval.optimization.utils import (
     invoke_model_callback,
     normalize_seed_prompts,
     split_goldens,
+    build_prompt_config_snapshots,
+    inflate_prompts_from_report,
     validate_callback,
     validate_instance,
     validate_sequence_of,
@@ -401,6 +405,121 @@ def test_a_invoke_model_callback_supports_sync_callback() -> None:
         "prompt_text": "the prompt",
         "hook": "score_generate",
     }
+
+
+################
+# report utils #
+################
+
+
+def test_build_prompt_config_snapshots_includes_text_and_list_prompts() -> None:
+    """
+    build_prompt_config_snapshots should:
+      - include all configurations by id,
+      - preserve parent relationships,
+      - produce TEXT and LIST snapshots with expected shape.
+    """
+    # Root configuration with one TEXT and one LIST prompt
+    root_cfg = PromptConfiguration.new(
+        prompts={
+            "text-module": Prompt(text_template="Hello, world"),
+            "list-module": Prompt(
+                messages_template=[
+                    PromptMessage(role="system", content="sys"),
+                    PromptMessage(role="user", content="hi"),
+                ]
+            ),
+        }
+    )
+
+    # Child configuration with a different TEXT prompt
+    child_cfg = PromptConfiguration.new(
+        prompts={
+            "text-module": Prompt(text_template="Child prompt"),
+        },
+        parent=root_cfg.id,
+    )
+
+    snapshots = build_prompt_config_snapshots(
+        {root_cfg.id: root_cfg, child_cfg.id: child_cfg}
+    )
+
+    # We should have both configuration ids
+    assert set(snapshots.keys()) == {root_cfg.id, child_cfg.id}
+
+    root_snap = snapshots[root_cfg.id]
+    child_snap = snapshots[child_cfg.id]
+
+    # Parent relationships
+    assert root_snap["parent"] is None
+    assert child_snap["parent"] == root_cfg.id
+
+    # TEXT module snapshot
+    text_mod = root_snap["prompts"]["text-module"]
+    assert text_mod["type"] == "TEXT"
+    assert text_mod["text_template"] == "Hello, world"
+
+    # LIST module snapshot
+    list_mod = root_snap["prompts"]["list-module"]
+    assert list_mod["type"] == "LIST"
+    assert list_mod["messages"] == [
+        {"role": "system", "content": "sys"},
+        {"role": "user", "content": "hi"},
+    ]
+
+
+def test_inflate_prompts_from_report_reconstructs_prompts() -> None:
+    """
+    inflate_prompts_from_report should turn snapshot dicts into real Prompt objects
+    for both TEXT and LIST modules.
+    """
+    runtime = {
+        "optimization_id": "opt-123",
+        "best_id": "cfg-best",
+        "accepted_iterations": [],
+        "pareto_scores": {"cfg-best": [1.0]},
+        "parents": {"cfg-best": None},
+        "prompt_configurations": {
+            "cfg-best": {
+                "parent": None,
+                "prompts": {
+                    "__module__": {
+                        "type": "TEXT",
+                        "text_template": "Base prompt",
+                    },
+                    "chat": {
+                        "type": "LIST",
+                        "messages": [
+                            {"role": "system", "content": "sys"},
+                            {"role": "user", "content": "hi"},
+                        ],
+                    },
+                },
+            }
+        },
+    }
+
+    report = OptimizationReport.from_runtime(runtime)
+    inflated = inflate_prompts_from_report(report)
+
+    assert "cfg-best" in inflated
+    best_prompts = inflated["cfg-best"]
+
+    # TEXT prompt
+    text_prompt = best_prompts["__module__"]
+    assert isinstance(text_prompt, Prompt)
+    assert text_prompt.text_template == "Base prompt"
+
+    # LIST prompt
+    list_prompt = best_prompts["chat"]
+    assert isinstance(list_prompt, Prompt)
+    assert list_prompt.messages_template is not None
+    assert len(list_prompt.messages_template) == 2
+
+    roles = [m.role for m in list_prompt.messages_template]
+    contents = [m.content for m in list_prompt.messages_template]
+    assert roles == ["system", "user"]
+    assert contents == ["sys", "hi"]
 
 
 ######################

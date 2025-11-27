@@ -416,14 +416,31 @@ class DummyRunnerForOptimize:
 
     def execute(self, *, prompt, goldens):
         self.last_execute_args = (prompt, goldens)
+
+        # Simulate an "optimized" best prompt
         best = Prompt(text_template="optimized")
+
+        # Minimal but valid OptimizationResult-like payload
         report = {
             "optimization_id": "opt-123",
             "best_id": "best",
             "accepted_iterations": [],
             "pareto_scores": {"best": [1.0]},
             "parents": {"best": None},
+            "prompt_configurations": {
+                "best": {
+                    "parent": None,
+                    "prompts": {
+                        # Arbitrary module id; just needs to be a string key
+                        "module-1": {
+                            "type": "TEXT",  # coerces into PromptType / Literal
+                            "text_template": "optimized",
+                        }
+                    },
+                }
+            },
         }
+
         return best, report
 
     async def a_execute(self, *, prompt, goldens):

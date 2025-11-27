@@ -27,7 +27,10 @@ from deepeval.optimization.types import (
     RunnerStatusType,
     RunnerStatusCallbackProtocol,
 )
-from deepeval.optimization.utils import split_goldens
+from deepeval.optimization.utils import (
+    split_goldens,
+    build_prompt_config_snapshots,
+)
 from deepeval.optimization.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
@@ -193,12 +196,16 @@ class GEPARunner:
 
         self._run_loop_iteration(_one_iteration)
         best = self._best_by_aggregate()
+        prompt_config_snapshots = build_prompt_config_snapshots(
+            self.prompt_configurations_by_id
+        )
         report = OptimizationResult(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
+            prompt_configurations=prompt_config_snapshots,
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 
@@ -298,12 +305,16 @@ class GEPARunner:
 
         await self._a_run_loop_iteration(_one_iteration)
         best = self._best_by_aggregate()
+        prompt_config_snapshots = build_prompt_config_snapshots(
+            self.prompt_configurations_by_id
+        )
         report = OptimizationResult(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
+            prompt_configurations=prompt_config_snapshots,
         )
         return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
 

@@ -3,9 +3,11 @@ import uuid
 
 from dataclasses import dataclass
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
+    Literal,
     Optional,
     Protocol,
     TYPE_CHECKING,
@@ -280,6 +282,24 @@ class AcceptedIteration(PydanticBaseModel):
     after: float
 
 
+class PromptMessageSnapshot(PydanticBaseModel):
+    role: str
+    content: str
+
+
+class PromptModuleSnapshot(PydanticBaseModel):
+    type: Literal["TEXT", "LIST"]
+    # Only used when type == "TEXT"
+    text_template: Optional[str] = None
+    # Only used when type == "LIST"
+    messages: Optional[List[PromptMessageSnapshot]] = None
+
+
+class PromptConfigSnapshot(PydanticBaseModel):
+    parent: Optional[str]
+    prompts: Dict[str, PromptModuleSnapshot]
+
+
 @dataclass
 class OptimizationResult:
     optimization_id: str
@@ -287,6 +307,7 @@ class OptimizationResult:
     accepted_iterations: List[Dict]
     pareto_scores: Dict[PromptConfigurationId, List[float]]
     parents: Dict[PromptConfigurationId, Optional[PromptConfigurationId]]
+    prompt_configurations: Dict[PromptConfigurationId, Dict[str, Any]]
 
     def as_dict(self) -> Dict:
         return dict(
@@ -295,6 +316,7 @@ class OptimizationResult:
             accepted_iterations=self.accepted_iterations,
             pareto_scores=self.pareto_scores,
             parents=self.parents,
+            prompt_configurations=self.prompt_configurations,
         )
 
 
@@ -319,6 +341,12 @@ class OptimizationReport(PydanticBaseModel):
         validation_alias=AliasChoices("paretoScores", "pareto_scores"),
     )
     parents: dict[str, str | None]
+    prompt_configurations: dict[str, PromptConfigSnapshot] = Field(
+        alias="promptConfigurations",
+        validation_alias=AliasChoices(
+            "promptConfigurations", "prompt_configurations"
+        ),
+    )
 
     @classmethod
     def from_runtime(cls, result: dict) -> "OptimizationReport":
