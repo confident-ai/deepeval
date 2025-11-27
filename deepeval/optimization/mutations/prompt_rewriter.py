@@ -32,10 +32,9 @@ def _summarize_prompt_for_rewrite(old_prompt: Prompt, max_chars: int) -> str:
     - For TEXT prompts, this is just `text_template`.
     - For LIST prompts, this is a numbered list of (role, content) lines.
     """
-    prompt_type = old_prompt.type
 
     # LIST prompts: show each message with its role.
-    if prompt_type is PromptType.LIST and old_prompt.messages_template:
+    if old_prompt.type is PromptType.LIST and old_prompt.messages_template:
         lines: List[str] = []
         for message_index, message in enumerate(old_prompt.messages_template):
             role = message.role or ""
@@ -124,9 +123,7 @@ def _apply_rewritten_prompt(
     if not new_text:
         return old_prompt
 
-    prompt_type = old_prompt.type
-
-    if prompt_type is PromptType.LIST and old_prompt.messages_template:
+    if old_prompt.type is PromptType.LIST and old_prompt.messages_template:
         messages = old_prompt.messages_template
         config = list_mutation_config or PromptListMutationConfig()
 
@@ -299,17 +296,12 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             system_message, user_message
         )
 
-        prompt_type = old_prompt.type
-        prompt_type_name: Optional[str] = (
-            prompt_type.name if prompt_type is not None else None
-        )
         prompt_messages: Optional[List[PromptMessage]] = None
-        if prompt_type is PromptType.LIST and old_prompt.messages_template:
+        if old_prompt.type is PromptType.LIST and old_prompt.messages_template:
             prompt_messages = old_prompt.messages_template
 
         candidate_kwargs = build_model_callback_kwargs(
             prompt=old_prompt,
-            prompt_type=prompt_type_name,
             prompt_text=merged_prompt_text,
             prompt_messages=prompt_messages,
             feedback_text=feedback_text,
@@ -360,17 +352,12 @@ Rewrite the prompt. Keep it concise and actionable. Do not include extraneous te
             system_message, user_message
         )
 
-        prompt_type = old_prompt.type
-        prompt_type_name: Optional[str] = (
-            prompt_type.name if prompt_type is not None else None
-        )
         prompt_messages: Optional[List[PromptMessage]] = None
-        if prompt_type is PromptType.LIST and old_prompt.messages_template:
+        if old_prompt.type is PromptType.LIST and old_prompt.messages_template:
             prompt_messages = old_prompt.messages_template
 
         candidate_kwargs = build_model_callback_kwargs(
             prompt=old_prompt,
-            prompt_type=prompt_type_name,
             prompt_text=merged_prompt_text,
             prompt_messages=prompt_messages,
             feedback_text=feedback_text,

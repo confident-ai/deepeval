@@ -37,10 +37,7 @@ async def model_callback(prompt_text: str):
 
 # Run optimization
 optimizer = PromptOptimizer(metrics=[AnswerRelevancyMetric()], model_callback=model_callback)
-optimized_prompt = optimizer.optimize(
-    prompt=Prompt(text_template="Respond to the query."),
-    goldens=goldens,
-)
+optimized_prompt = optimizer.optimize(prompt=Prompt(text_template="Respond to the query."), goldens=goldens,)
 print("Optimized prompt:", optimized_prompt.text_template)
 ```
 
@@ -87,7 +84,7 @@ There are **TWO** required parameters and **FIVE** optional parameters when crea
 - `model_callback`: callable that receives `prompt_text` and returns your model or app’s response.
 - [Optional] `async_config`: `AsyncConfig` controlling concurrency.
 - [Optional] `display_config`: `OptimizerDisplayConfig` controlling CLI progress display.
-- [Optional] `list_input_role`: role used when appending golden input to LIST-style prompts. Default is "user".
+- [Optional] `list_input_role`: string role used when appending golden input to LIST-style prompts. Default is "user".
 - [Optional] `prompt_list_mutation_config`: `PromptListMutationConfig` controlling which message is rewritten in LIST-style prompts.
 - [Optional] `algorithm`: optimization algorithm name.
 
@@ -110,7 +107,6 @@ There are **SEVEN** optional keyword arguments your `model_callback` can accept:
 - [Optional] `hook`: short label for the current phase (for example `"score_generate"` or `"prompt_rewrite"`).
 - [Optional] `golden`: the current `Golden` or `ConversationalGolden` being scored.
 - [Optional] `prompt`: the current `Prompt` candidate being evaluated or rewritten.
-- [Optional] `prompt_type`: string indicating the prompt type (`"TEXT"` or `"LIST"`).
 - [Optional] `feedback_text`: natural language feedback derived from your metrics during rewriting.
 
 Exactly one of prompt_text or prompt_messages is populated on each callback, depending on the prompt type. The optimizer inspects your callback’s signature and only passes the parameters you declare, so you can start with just prompt_text and add more parameters later as you need extra context.
@@ -210,7 +206,6 @@ optimizer = PromptOptimizer(
     ...,
     display_config=OptimizerDisplayConfig(show_indicator=True, announce_ties=True,),
     prompt_list_mutation_config=PromptListMutationConfig(),
-    list_input_role="user",
 )
 ```
 

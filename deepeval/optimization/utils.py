@@ -179,7 +179,6 @@ def build_model_callback_kwargs(
         "feedback_text": feedback_text,
         # shared
         "prompt": prompt,
-        "prompt_type": prompt_type,
         "prompt_text": prompt_text,
         "prompt_messages": prompt_messages,
     }

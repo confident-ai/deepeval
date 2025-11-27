@@ -34,7 +34,6 @@ from deepeval.optimization.utils import (
 )
 from deepeval.optimization.configs import (
     OptimizerDisplayConfig,
-    OptimizerPromptRolesConfig,
     PromptListMutationConfig,
 )
 from deepeval.prompt.prompt import Prompt
@@ -76,8 +75,8 @@ class PromptOptimizer:
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         async_config: Optional[AsyncConfig] = None,
         display_config: Optional[OptimizerDisplayConfig] = None,
-        roles_config: Optional[OptimizerPromptRolesConfig] = None,
         prompt_list_mutation_config: Optional[PromptListMutationConfig] = None,
+        list_input_role: str = "user",
         algorithm: str = "gepa",
     ):
         # Validate and store the callback
@@ -108,16 +107,6 @@ class PromptOptimizer:
         )
         self.display_config = display_config
 
-        # validate roles_config
-        roles_config = roles_config or OptimizerPromptRolesConfig()
-        validate_instance(
-            component="PromptOptimizer.__init__",
-            param_name="roles_config",
-            value=roles_config,
-            expected_types=OptimizerPromptRolesConfig,
-        )
-        self.roles_config = roles_config
-
         # validate prompt_list_mutation_config
         prompt_list_mutation_config = (
             prompt_list_mutation_config or PromptListMutationConfig()
@@ -129,6 +118,15 @@ class PromptOptimizer:
             expected_types=PromptListMutationConfig,
         )
         self.prompt_list_mutation_config = prompt_list_mutation_config
+
+        # validate list_input_role
+        validate_instance(
+            component="PromptOptimizer.__init__",
+            param_name="list_input_role",
+            value=list_input_role,
+            expected_types=str,
+        )
+        self.list_input_role = list_input_role
 
         # Validate algorithm
         algo_raw = algorithm or "gepa"
@@ -381,11 +379,8 @@ class PromptOptimizer:
         return base
 
     def _build_default_scoring_adapter(self) -> DeepEvalScoringAdapter:
-        roles = self.roles_config
         scoring_adapter = DeepEvalScoringAdapter(
-            list_input_role=roles.list_input_role,
-            conversational_user_role=roles.conversational_user_role,
-            conversational_assistant_role=roles.conversational_assistant_role,
+            list_input_role=self.list_input_role
         )
         scoring_adapter.set_model_callback(self.model_callback)
         scoring_adapter.set_metrics(self.metrics)

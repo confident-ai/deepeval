@@ -106,8 +106,6 @@ class DeepEvalScoringAdapter:
         ] = None,
         objective_scalar: Objective = MeanObjective(),
         list_input_role: str = "user",
-        conversational_user_role: str = "user",
-        conversational_assistant_role: str = "assistant",
     ):
         self.model_callback: Optional[
             Callable[
@@ -125,10 +123,7 @@ class DeepEvalScoringAdapter:
 
         self.build_test_case = build_test_case or self._default_build_test_case
         self.objective_scalar = objective_scalar
-
         self.list_input_role = list_input_role
-        self.conversational_user_role = conversational_user_role
-        self.conversational_assistant_role = conversational_assistant_role
 
         # async
         self._semaphore: Optional[asyncio.Semaphore] = None
@@ -221,15 +216,14 @@ class DeepEvalScoringAdapter:
         Decide whether to treat the prompt as TEXT or LIST and build the
         corresponding callback kwargs.
 
-        - For TEXT prompts, we send: prompt_type="TEXT", prompt_text=...
-        - For LIST prompts, we send: prompt_type="LIST", prompt_messages=[...]
+        - For TEXT prompts, we send: prompt_text=...
+        - For LIST prompts, we send: prompt_messages=[...]
         """
 
         if prompt.type is PromptType.LIST:
             prompt_messages = self._compile_prompt_messages(prompt, golden)
             return build_model_callback_kwargs(
                 prompt=prompt,
-                prompt_type=prompt.type.value,
                 prompt_messages=prompt_messages,
                 golden=golden,
             )
@@ -238,7 +232,6 @@ class DeepEvalScoringAdapter:
         prompt_text = self._compile_prompt_text(prompt, golden)
         return build_model_callback_kwargs(
             prompt=prompt,
-            prompt_type=prompt.type.value,
             prompt_text=prompt_text,
             golden=golden,
         )
@@ -282,11 +275,10 @@ class DeepEvalScoringAdapter:
             )
 
         if isinstance(golden, ConversationalGolden):
-            user_role = self.conversational_user_role
-            assistant_role = self.conversational_assistant_role
             # Start from any turns specified on the golden.
             turns: List[Turn] = list(golden.turns or [])
-
+            assistant_role = "assistant"
+            user_role = "user"
             if turns:
                 last = turns[-1]
                 if last.role == assistant_role:
