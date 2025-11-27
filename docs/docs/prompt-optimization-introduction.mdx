@@ -220,8 +220,8 @@ There are **TWO** optional parameters when creating an `OptimizerDisplayConfig`:
 
 There are **THREE** optional parameters when creating a `PromptListMutationConfig`:
 
-- [Optional] `target_type`: `PromptListMutationTargetType` indicating which message in a LIST-style prompt is eligible for mutation. Options are `"first"`, `"random"`, or `"fixed_index"`. Default is `"first"`.
+- [Optional] `target_type`: `PromptListMutationTargetType` indicating which message in a LIST-style prompt is eligible for mutation. Options are `"random"`, or `"fixed_index"`. Default is `"random"`.
 - [Optional] `target_role`: string role filter. When set, only messages with this role (case insensitive) are considered as mutation targets. Default is `None`.
-- [Optional] `target_index`: zero-based index used when `target_type` is `"fixed_index"`. Default is `None`.
+- [Optional] `target_index`: zero-based index used when `target_type` is `"fixed_index"`. Default is `0`.
 
 These configs let you fine-tune how optimization behaves without changing your metrics or callback. You can start with the defaults and only override the specific fields you need for your use case.

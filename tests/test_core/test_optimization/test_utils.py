@@ -227,13 +227,11 @@ def test_build_model_callback_kwargs_populates_all_fields() -> None:
     prompt = StubPrompt(alias="alias")
     golden = object()
     feedback_text = "feedback"
-    prompt_type = "LIST"
     prompt_text = "pt"
     prompt_messages = ["m1", "m2"]
 
     kwargs = build_model_callback_kwargs(
         prompt=prompt,
-        prompt_type=prompt_type,
         prompt_text=prompt_text,
         prompt_messages=prompt_messages,
         golden=golden,
@@ -241,7 +239,6 @@ def test_build_model_callback_kwargs_populates_all_fields() -> None:
     )
 
     assert kwargs["prompt"] is prompt
-    assert kwargs["prompt_type"] == prompt_type
     assert kwargs["prompt_text"] == prompt_text
     assert kwargs["prompt_messages"] == prompt_messages
     assert kwargs["golden"] is golden
@@ -249,7 +246,6 @@ def test_build_model_callback_kwargs_populates_all_fields() -> None:
 
     assert set(kwargs.keys()) == {
         "prompt",
-        "prompt_type",
         "prompt_text",
         "prompt_messages",
         "golden",
@@ -261,7 +257,6 @@ def test_build_model_callback_kwargs_defaults_missing_fields_to_none() -> None:
     kwargs = build_model_callback_kwargs()
 
     assert kwargs["prompt"] is None
-    assert kwargs["prompt_type"] is None
     assert kwargs["prompt_text"] is None
     assert kwargs["prompt_messages"] is None
     assert kwargs["golden"] is None

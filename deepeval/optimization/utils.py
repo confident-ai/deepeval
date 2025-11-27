@@ -421,3 +421,57 @@ def validate_metrics(
         sequence_types=(list, tuple),
     )
     return list(metrics)
+
+
+def validate_int_in_range(
+    *,
+    component: str,
+    param_name: str,
+    value: int,
+    min_inclusive: Optional[int] = None,
+    max_exclusive: Optional[int] = None,
+) -> int:
+    """
+    Validate that an int is within range [min_inclusive, max_exclusive).
+
+    - If `min_inclusive` is not None, value must be >= min_inclusive.
+    - If `max_exclusive` is not None, value must be < max_exclusive.
+
+    Returns the validated int on success.
+    """
+    value = validate_instance(
+        component=component,
+        param_name=param_name,
+        value=value,
+        expected_types=int,
+    )
+
+    # Lower bound check
+    if min_inclusive is not None and value < min_inclusive:
+        if max_exclusive is None:
+            raise DeepEvalError(
+                f"{component} expected `{param_name}` to be >= {min_inclusive}, "
+                f"but received {value!r} instead."
+            )
+        max_inclusive = max_exclusive - 1
+        raise DeepEvalError(
+            f"{component} expected `{param_name}` to be between "
+            f"{min_inclusive} and {max_inclusive} (inclusive), "
+            f"but received {value!r} instead."
+        )
+
+    # Upper bound check (half-open, < max_exclusive)
+    if max_exclusive is not None and value >= max_exclusive:
+        if min_inclusive is None:
+            raise DeepEvalError(
+                f"{component} expected `{param_name}` to be < {max_exclusive}, "
+                f"but received {value!r} instead."
+            )
+        max_inclusive = max_exclusive - 1
+        raise DeepEvalError(
+            f"{component} expected `{param_name}` to be between "
+            f"{min_inclusive} and {max_inclusive} (inclusive), "
+            f"but received {value!r} instead."
+        )
+
+    return value

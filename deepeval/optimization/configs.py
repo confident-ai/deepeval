@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conint
 from typing import Optional
 
 
@@ -14,20 +14,19 @@ class OptimizerDisplayConfig(BaseModel):
 
 
 class PromptListMutationTargetType(Enum):
-    FIRST = "first"
     RANDOM = "random"
     FIXED_INDEX = "fixed_index"
 
 
 class PromptListMutationConfig(BaseModel):
     target_type: PromptListMutationTargetType = (
-        PromptListMutationTargetType.FIRST
+        PromptListMutationTargetType.RANDOM
     )
     target_role: Optional[str] = Field(
         default=None,
         description="If set, restricts candidates to messages with this role (case insensitive).",
     )
-    target_index: Optional[int] = Field(
-        default=None,
+    target_index: conint(ge=0) = Field(
+        default=0,
         description="0-based index used when target_type == FIXED_INDEX.",
     )

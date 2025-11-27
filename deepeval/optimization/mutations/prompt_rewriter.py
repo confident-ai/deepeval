@@ -3,6 +3,7 @@ import json
 import random
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
+from deepeval.errors import DeepEvalError
 from deepeval.optimization.types import (
     MetricInfo,
     ModuleId,
@@ -11,6 +12,8 @@ from deepeval.optimization.utils import (
     a_invoke_model_callback,
     invoke_model_callback,
     validate_callback,
+    validate_int_in_range,
+    validate_instance,
     build_model_callback_kwargs,
 )
 from deepeval.optimization.configs import (
@@ -67,14 +70,20 @@ def _select_list_target_index(
                        filter), otherwise fall back to the first candidate.
     """
     if not messages:
-        return 0
+        raise DeepEvalError(
+            "PromptRewriter._select_list_target_index expected at least one "
+            "message, but received an empty message list."
+        )
+
+    validate_instance(
+        component="PromptRewriter._select_list_target_index",
+        param_name="target_type",
+        value=config.target_type,
+        expected_types=PromptListMutationTargetType,
+    )
 
     messages_length = len(messages)
     candidate_indices = list(range(messages_length))
-
-    # if there is only one option, then just use it
-    if messages_length == 1:
-        return candidate_indices[0]
 
     # Optional case insensitive role restriction
     if config.target_role:
@@ -89,21 +98,25 @@ def _select_list_target_index(
 
     target_type = config.target_type
 
-    if target_type is PromptListMutationTargetType.FIRST:
-        return candidate_indices[0]
-
     if target_type is PromptListMutationTargetType.RANDOM:
         return random_state.choice(candidate_indices)
 
     if target_type is PromptListMutationTargetType.FIXED_INDEX:
-        index = config.target_index
-        # Valid index and (if role filter is active) in the candidate set
-        if index is not None and 0 <= index < messages_length:
-            if not config.target_role or index in candidate_indices:
-                return index
+        index = validate_int_in_range(
+            component="PromptRewriter._select_list_target_index",
+            param_name="target_index",
+            value=int(config.target_index),
+            min_inclusive=0,
+            max_exclusive=len(candidate_indices),
+        )
+        return candidate_indices[index]
 
-    # Defensive fallback: treat as FIRST
-    return candidate_indices[0]
+    # if you got this error it means that a new PromptListMutationTargetType was added,
+    # but not handled above
+    raise DeepEvalError(
+        "PromptRewriter._select_list_target_index received unsupported "
+        f"target_type={target_type!r}. Expected RANDOM or FIXED_INDEX."
+    )
 
 
 def _apply_rewritten_prompt(
