@@ -84,7 +84,13 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 messages=payload["messages"],
                 inferenceConfig=payload["inferenceConfig"],
             )
-            message = response["output"]["message"]["content"][0]["text"]
+            message = next(
+                (
+                    item["text"]
+                    for item in response["output"]["message"]["content"]
+                    if "text" in item
+                )
+            )
             cost = self.calculate_cost(
                 response["usage"]["inputTokens"],
                 response["usage"]["outputTokens"],
