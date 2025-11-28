@@ -37,7 +37,7 @@ class LocalModel(DeepEvalBaseLLM):
             # keep it secret, keep it safe from serializings, logging and alike
             self.local_model_api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self.api_key = settings.LOCAL_MODEL_API_KEY
+            self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
 
         self.base_url = (
             base_url
