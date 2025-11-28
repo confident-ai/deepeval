@@ -803,7 +803,6 @@ async def a_execute_test_cases(
                 if not t.done():
                     t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            raise
 
     return test_results
 
