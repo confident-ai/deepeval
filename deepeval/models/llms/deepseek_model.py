@@ -3,7 +3,6 @@ from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
 
 from deepeval.config.settings import get_settings
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseLLM
@@ -53,9 +52,6 @@ class DeepSeekModel(DeepEvalBaseLLM):
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
 
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.DEEPSEEK_API_KEY
-        )
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
             self.api_key: SecretStr | None = SecretStr(api_key)
