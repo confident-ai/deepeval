@@ -49,6 +49,8 @@ _DEPRECATED_TO_OVERRIDE = {
     "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS": "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE",
     "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS": "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE",
 }
+# Track which secrets we've warned about when loading from the legacy keyfile
+_LEGACY_KEYFILE_SECRET_WARNED: set[str] = set()
 
 
 def _find_legacy_enum(env_key: str):
@@ -86,6 +88,82 @@ def _is_secret_key(settings: "Settings", env_key: str) -> bool:
     if origin is Union:
         return any(arg is SecretStr for arg in get_args(field.annotation))
     return False
+
+
+def _merge_legacy_keyfile_into_env() -> None:
+    """
+    Backwards compatibility: merge values from the legacy .deepeval/.deepeval
+    JSON keystore into os.environ for known Settings fields, without
+    overwriting existing process env vars.
+
+    This runs before we compute the Settings env fingerprint so that Pydantic
+    can see these values on first construction.
+
+    Precedence: process env -> dotenv -> legacy json
+    """
+    # if somebody really wants to skip this behavior
+    if parse_bool(os.getenv("DEEPEVAL_DISABLE_LEGACY_KEYFILE"), default=False):
+        return
+
+    from deepeval.constants import HIDDEN_DIR, KEY_FILE
+    from deepeval.key_handler import (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SECRET_KEYS,
+    )
+
+    key_path = Path(HIDDEN_DIR) / KEY_FILE
+
+    try:
+        with key_path.open("r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                # Corrupted file -> ignore, same as KeyFileHandler
+                return
+    except FileNotFoundError:
+        # No legacy store -> nothing to merge
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    # Map JSON keys (enum .value) -> env keys (enum .name)
+    mapping: Dict[str, str] = {}
+    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+        for member in enum:
+            mapping[member.value] = member.name
+
+    for json_key, raw in data.items():
+        env_key = mapping.get(json_key)
+        if not env_key:
+            continue
+
+        # Process env always wins
+        if env_key in os.environ:
+            continue
+        if raw is None:
+            continue
+
+        # Mirror the legacy warning semantics for secrets, but only once per key
+        if (
+            json_key in SECRET_KEYS
+            and json_key not in _LEGACY_KEYFILE_SECRET_WARNED
+        ):
+            logger.warning(
+                "Reading secret '%s' from legacy %s/%s. "
+                "Persisting API keys in plaintext is deprecated. "
+                "Move this to your environment (.env / .env.local). "
+                "This fallback will be removed in a future release.",
+                json_key,
+                HIDDEN_DIR,
+                KEY_FILE,
+            )
+            _LEGACY_KEYFILE_SECRET_WARNED.add(json_key)
+
+        # Let Settings validators coerce types; we just inject the raw string
+        os.environ[env_key] = str(raw)
 
 
 def _read_env_file(path: Path) -> Dict[str, str]:
@@ -1008,6 +1086,9 @@ _settings_lock = threading.RLock()
 
 
 def _calc_env_fingerprint() -> str:
+    # Pull legacy .deepeval JSON-based settings into the process env before hashing
+    _merge_legacy_keyfile_into_env()
+
     env = os.environ.copy()
     # must hash in a stable order.
     keys = sorted(

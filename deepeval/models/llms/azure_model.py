@@ -1,10 +1,10 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
+from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.openai_model import (
     structured_outputs_models,
     json_mode_models,
@@ -16,7 +16,7 @@ from deepeval.models.retry_policy import (
 )
 
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
+from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.constants import ProviderSlug as PS
 
 
@@ -35,24 +35,29 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
+
         # fetch Azure deployment parameters
-        model_name = model_name or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_MODEL_NAME
-        )
-        self.deployment_name = deployment_name or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_DEPLOYMENT_NAME
-        )
-        self.azure_openai_api_key = (
-            azure_openai_api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.AZURE_OPENAI_API_KEY)
-        )
+        model_name = model_name or settings.AZURE_MODEL_NAME
+        self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
+
+        if azure_openai_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.azure_openai_api_key: SecretStr | None = SecretStr(
+                azure_openai_api_key
+            )
+        else:
+            self.azure_openai_api_key = settings.AZURE_OPENAI_API_KEY
+
         self.openai_api_version = (
-            openai_api_version
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
+            openai_api_version or settings.OPENAI_API_VERSION
         )
-        self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT
+        self.azure_endpoint = (
+            azure_endpoint
+            or settings.AZURE_OPENAI_ENDPOINT
+            and str(settings.AZURE_OPENAI_ENDPOINT)
         )
+
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -270,8 +275,15 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
+        api_key = require_secret_api_key(
+            self.azure_openai_api_key,
+            provider_label="AzureOpenAI",
+            env_var_name="AZURE_OPENAI_API_KEY",
+            param_hint="`azure_openai_api_key` to AzureOpenAIModel(...)",
+        )
+
         kw = dict(
-            api_key=self.azure_openai_api_key,
+            api_key=api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
