@@ -117,6 +117,18 @@ class AlwaysJsonModel:
         return extractor
 
 
+class _RecordingClient:
+    """
+    Generic SDK-style client stub that records kwargs passed to its constructor.
+
+    Used by provider model tests to assert that we pass the correct api_key and
+    retry options to SDK constructors without making network calls.
+    """
+
+    def __init__(self, **kwargs):
+        self.kwargs = dict(kwargs)
+
+
 ###########
 # Metrics #
 ###########
