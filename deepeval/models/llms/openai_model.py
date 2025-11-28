@@ -521,7 +521,7 @@ class GPTModel(DeepEvalBaseLLM):
             self._openai_api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`openai_api_key` to GPTModel(...)",
+            param_hint="`_openai_api_key` to GPTModel(...)",
         )
 
         kw = dict(
