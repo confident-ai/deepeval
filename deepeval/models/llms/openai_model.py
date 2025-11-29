@@ -484,9 +484,9 @@ class GPTModel(DeepEvalBaseLLM):
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
 
-    ###############################################
-    # Model
-    ###############################################
+    #########
+    # Model #
+    #########
 
     def get_model_name(self):
         return self.model_name

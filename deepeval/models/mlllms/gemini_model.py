@@ -67,7 +67,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             or default_multimodal_gemini_model
         )
 
-        # Get API key from key handler if not provided
+        # Get API key from settings if not provided
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and aolike
             self.api_key: SecretStr | None = SecretStr(api_key)
@@ -254,31 +254,37 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             )
             return response.text, 0
 
-    ###############################################
-    # Model
-    ###############################################
+    #########
+    # Model #
+    #########
 
     def get_model_name(self) -> str:
         """Returns the name of the Gemini model being used."""
         return self.model_name
 
-    def load_model(self):
+    def load_model(self, *args, **kwargs):
         """Creates and returns a GenAI client.
 
         With the Gen AI SDK, the model is set at inference time, so we only
         construct the client here. Kept for compatibility with other MLLMs.
         """
-        return self._build_client()
+        return self._build_client(**kwargs)
 
-    def _client_kwargs(self) -> dict:
+    def _client_kwargs(self, **override_kwargs) -> dict:
         """
-        Return kwargs forwarded to genai.Client. We currently rely on
-        Tenacity (retry_gemini) for retries instead of configuring them here.
-        """
-        return dict(self.kwargs or {})
+        Return kwargs forwarded to genai.Client.
 
-    def _build_client(self):
+        Start from the ctor kwargs captured on `self.kwargs`, then apply any
+        overrides passed via load_model(...).
+        """
+        client_kwargs = dict(self.kwargs or {})
+        if override_kwargs:
+            client_kwargs.update(override_kwargs)
+        return client_kwargs
+
+    def _build_client(self, **override_kwargs):
         """Build and return a genai.Client for either Gemini API or Vertex AI."""
+        client_kwargs = self._client_kwargs(**override_kwargs)
 
         if self.should_use_vertexai():
             if not self.project or not self.location:
@@ -293,7 +299,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 vertexai=True,
                 project=self.project,
                 location=self.location,
-                **self._client_kwargs(),
+                **client_kwargs,
             )
 
         api_key = require_secret_api_key(
@@ -304,4 +310,4 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         )
 
         # Create client for Gemini API
-        return genai.Client(api_key=api_key, **self._client_kwargs())
+        return genai.Client(api_key=api_key, **client_kwargs)

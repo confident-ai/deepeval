@@ -11,7 +11,6 @@ from deepeval.models.retry_policy import (
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.constants import ProviderSlug as PS
 
 
@@ -99,10 +98,7 @@ class LocalModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
-        )
-        return f"{model_name} (Local Model)"
+        return f"{self.model_name} (Local Model)"
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

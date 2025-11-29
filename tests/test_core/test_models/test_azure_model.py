@@ -82,7 +82,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Create model with explicit deployment_name to avoid KEY_FILE_HANDLER issues
+        # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
@@ -117,7 +117,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Create model with explicit deployment_name to avoid KEY_FILE_HANDLER issues
+        # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
