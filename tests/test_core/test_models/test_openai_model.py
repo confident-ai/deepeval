@@ -411,3 +411,46 @@ def test_openai_model_uses_explicit_key_over_settings_and_strips_secret(
 
     assert isinstance(api_key, str)
     assert api_key == "constructor-key"
+
+
+##########################################
+# Tests for Settings-based model/pricing #
+##########################################
+
+
+def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
+    """
+    When no `model` is provided, GPTModel should fall back to
+    Settings.OPENAI_MODEL_NAME (instead of the legacy key file).
+    """
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_MODEL_NAME = "gpt-4o-mini"
+
+    model = GPTModel()
+    assert model.model_name == "gpt-4o-mini"
+
+
+def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
+    settings,
+):
+    """
+    When a model is missing from `model_pricing`, GPTModel should populate
+    pricing from Settings.OPENAI_COST_PER_INPUT_TOKEN and
+    Settings.OPENAI_COST_PER_OUTPUT_TOKEN instead of the legacy key file.
+    """
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_MODEL_NAME = "gpt-5-chat-latest"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 0.123
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.456
+
+    # Ensure this model has no pricing so GPTModel must use Settings-based costs
+    openai_mod.model_pricing.pop("gpt-5-chat-latest", None)
+
+    model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
+    assert model.model_name == "gpt-5-chat-latest"
+
+    pricing = openai_mod.model_pricing["gpt-5-chat-latest"]
+    assert pricing["input"] == 0.123
+    assert pricing["output"] == 0.456
