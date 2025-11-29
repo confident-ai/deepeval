@@ -24,6 +24,7 @@ def convert_test_cases_to_goldens(
             "retrieval_context": test_case.retrieval_context,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
+            "additional_metadata": test_case.additional_metadata,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -70,6 +71,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "expected_outcome": test_case.expected_outcome,
             "user_description": test_case.user_description,
             "context": test_case.context,
+            "additional_metadata": test_case.additional_metadata,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
