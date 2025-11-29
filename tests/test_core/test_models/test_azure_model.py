@@ -1,9 +1,13 @@
 """Tests for AzureOpenAIModel generation_kwargs parameter"""
 
+import deepeval.models.llms.azure_model as azure_mod
+
 from unittest.mock import Mock, patch
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 import pytest
+from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.llms.azure_model import AzureOpenAIModel
+from tests.test_core.stubs import _RecordingClient
 
 
 class SampleSchema(BaseModel):
@@ -78,7 +82,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Create model with explicit deployment_name to avoid KEY_FILE_HANDLER issues
+        # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
@@ -113,7 +117,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         mock_completion.usage.completion_tokens = 20
         mock_client.chat.completions.create.return_value = mock_completion
 
-        # Create model with explicit deployment_name to avoid KEY_FILE_HANDLER issues
+        # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
@@ -199,6 +203,130 @@ class TestAzureOpenAIModelGenerationKwargs:
 
         model = AzureOpenAIModel(generation_kwargs=None)
         assert model.generation_kwargs == {}
+
+
+##########################
+# Test Secret Management #
+##########################
+
+
+def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
+    monkeypatch,
+):
+    # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+
+    # rebuild the Settings singleton from the current env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+
+    # Sanity check: Settings should expose this as a SecretStr
+    assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
+
+    # Stub the AzureOpenAi SDK clients so we don't make any real calls
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # Construct the model with an explicit key
+    model = AzureOpenAIModel(
+        model="gpt-4.1",
+        azure_openai_api_key="constructor-key",
+    )
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    api_key = client.kwargs.get("api_key")
+
+    assert isinstance(api_key, str)
+    assert api_key == "constructor-key"
+
+
+def test_azure_openai_model_defaults_from_settings(monkeypatch):
+    # Seed env so Settings picks up all Azure-related values
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://azure.example.com")
+    monkeypatch.setenv("AZURE_DEPLOYMENT_NAME", "settings-deployment")
+    monkeypatch.setenv("AZURE_MODEL_NAME", "settings-model")
+    monkeypatch.setenv("OPENAI_API_VERSION", "2024-02-15-preview")
+
+    # Rebuild settings from env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+
+    # Sanity: API key should be a SecretStr on the settings object
+    assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
+
+    # Stub Azure SDK clients so no real network calls happen
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # No ctor args: everything should come from Settings
+    model = AzureOpenAIModel()
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    kw = client.kwargs
+
+    # Client kwargs pulled from Settings
+    assert kw.get("api_key") == "env-secret-key"
+    endpoint = kw.get("azure_endpoint")
+    assert endpoint is not None
+    assert endpoint.rstrip("/") == "https://azure.example.com"
+    assert kw.get("azure_deployment") == "settings-deployment"
+    assert kw.get("api_version") == "2024-02-15-preview"
+
+    # Model name should also come from Settings
+    assert model.model_name == "settings-model"
+
+
+def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
+    # Baseline Settings values
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "settings-secret-key")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://settings-endpoint")
+    monkeypatch.setenv("AZURE_DEPLOYMENT_NAME", "settings-deployment")
+    monkeypatch.setenv("AZURE_MODEL_NAME", "settings-model")
+    monkeypatch.setenv("OPENAI_API_VERSION", "2024-02-15-preview")
+
+    reset_settings(reload_dotenv=False)
+
+    # Stub SDK clients
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # Explicit ctor args should override everything from Settings
+    model = AzureOpenAIModel(
+        deployment_name="ctor-deployment",
+        model_name="ctor-model",
+        azure_openai_api_key="ctor-secret-key",
+        openai_api_version="2099-01-01-preview",
+        azure_endpoint="https://ctor-endpoint",
+    )
+
+    client = model.model
+    kw = client.kwargs
+
+    # API key should come from ctor, not Settings
+    assert kw.get("api_key") == "ctor-secret-key"
+    # Endpoint & deployment from ctor
+    assert kw.get("azure_endpoint") == "https://ctor-endpoint"
+    assert kw.get("azure_deployment") == "ctor-deployment"
+    # API version from ctor
+    assert kw.get("api_version") == "2099-01-01-preview"
+
+    # Model name should match ctor value
+    assert model.model_name == "ctor-model"
 
 
 if __name__ == "__main__":

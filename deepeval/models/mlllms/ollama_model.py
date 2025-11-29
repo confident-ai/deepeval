@@ -8,7 +8,6 @@ import io
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.key_handler import KEY_FILE_HANDLER, ModelKeyValues
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
@@ -19,14 +18,34 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class MultimodalOllamaModel(DeepEvalBaseMLLM):
-    def __init__(self, **kwargs):
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
+    def __init__(
+        self,
+        model: Optional[str] = None,
+        host: Optional[str] = None,
+        **kwargs,
+    ):
+        """
+        Multimodal Ollama model.
+
+        - `model`: Ollama model name (e.g. "llava").
+        - `host`: Ollama base URL (e.g. "http://localhost:11434").
+        - extra **kwargs are passed through to the underlying Client.
+        """
+        settings = get_settings()
+
+        # Resolve host/base URL
+        self.base_url = (
+            host
+            or settings.LOCAL_MODEL_BASE_URL is not None
+            and str(settings.LOCAL_MODEL_BASE_URL)
         )
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_BASE_URL
-        )
-        self.kwargs = kwargs
+
+        # Resolve model name
+        model_name = model or settings.LOCAL_MODEL_NAME
+
+        # Client kwargs
+        self.kwargs = kwargs or {}
+
         super().__init__(model_name)
 
     @retry_ollama
@@ -132,13 +151,25 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
             print(f"Error converting image to base64: {e}")
             return None
 
+    ###############################################
+    # Model
+    ###############################################
+
     def load_model(self, async_mode: bool = False):
         if not async_mode:
             return self._build_client(Client)
         return self._build_client(AsyncClient)
 
+    def _client_kwargs(self) -> Dict:
+        """
+        Return client-init kwargs.
+        Ollama's Python client doesn't have built-in retry config like OpenAI,
+        so we just pass these through untouched.
+        """
+        return dict(self.kwargs or {})
+
     def _build_client(self, cls):
-        return cls(host=self.base_url, **self.kwargs)
+        return cls(host=self.base_url, **self._client_kwargs())
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

@@ -1,5 +1,9 @@
 from typing import Dict, Optional, List
 from openai import OpenAI, AsyncOpenAI
+from pydantic import SecretStr
+
+from deepeval.config.settings import get_settings
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -27,7 +31,12 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         generation_kwargs: Optional[Dict] = None,
         **client_kwargs,
     ):
-        self.openai_api_key = openai_api_key
+        if openai_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.openai_api_key: SecretStr | None = SecretStr(openai_api_key)
+        else:
+            self.openai_api_key = get_settings().OPENAI_API_KEY
+
         self.model_name = model if model else default_openai_embedding_model
         if self.model_name not in valid_openai_embedding_models:
             raise ValueError(
@@ -81,12 +90,19 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncOpenAI)
 
     def _build_client(self, cls):
+        openai_api_key = require_secret_api_key(
+            self.openai_api_key,
+            provider_label="OpenAI",
+            env_var_name="OPENAI_API_KEY",
+            param_hint="`openai_api_key` to OpenAIEmbeddingModel(...)",
+        )
+
         client_kwargs = self.client_kwargs.copy()
         if not sdk_retries_for(PS.OPENAI):
             client_kwargs["max_retries"] = 0
 
         client_init_kwargs = dict(
-            api_key=self.openai_api_key,
+            api_key=openai_api_key,
             **client_kwargs,
         )
         try:

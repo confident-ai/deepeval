@@ -1,6 +1,6 @@
-from typing import Optional, Tuple, Union, Dict, List, Any
-from pydantic import BaseModel
 import logging
+from typing import Optional, Tuple, Union, Dict, List, Any
+from pydantic import BaseModel, SecretStr
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -8,11 +8,11 @@ from tenacity import (
     wait_exponential_jitter,
     RetryCallState,
 )
-import os
 
+from deepeval.config.settings import get_settings
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -44,33 +44,41 @@ class LiteLLMModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        from litellm import completion, acompletion, get_llm_provider
 
+        settings = get_settings()
         # Get model name from parameter or key file
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LITELLM_MODEL_NAME
-        )
+        model_name = model or settings.LITELLM_MODEL_NAME
         if not model_name:
             raise ValueError(
                 "Model name must be provided either through parameter or set-litellm command"
             )
 
-        # Get API key from parameter, key file, or environment variable
-        self.api_key = (
-            api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_KEY)
-            or os.getenv("LITELLM_PROXY_API_KEY")
-            or os.getenv("OPENAI_API_KEY")
-            or os.getenv("ANTHROPIC_API_KEY")
-            or os.getenv("GOOGLE_API_KEY")
-        )
+        # Get API key from parameter, or settings
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and aolike
+            self.api_key: SecretStr | None = SecretStr(api_key)
+        else:
+            self.api_key = (
+                settings.LITELLM_API_KEY
+                or settings.LITELLM_PROXY_API_KEY
+                or settings.OPENAI_API_KEY
+                or settings.ANTHROPIC_API_KEY
+                or settings.GOOGLE_API_KEY
+            )
 
         # Get API base from parameter, key file, or environment variable
         self.api_base = (
             api_base
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_BASE)
-            or os.getenv("LITELLM_API_BASE")
-            or os.getenv("LITELLM_PROXY_API_BASE")
+            or (
+                str(settings.LITELLM_API_BASE)
+                if settings.LITELLM_API_BASE is not None
+                else None
+            )
+            or (
+                str(settings.LITELLM_PROXY_API_BASE)
+                if settings.LITELLM_PROXY_API_BASE is not None
+                else None
+            )
         )
 
         if temperature < 0:
@@ -101,7 +109,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
         }
 
         if self.api_key:
-            completion_params["api_key"] = self.api_key
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="LiteLLM",
+                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                param_hint="`api_key` to LiteLLMModel(...)",
+            )
+            completion_params["api_key"] = api_key
         if self.api_base:
             completion_params["api_base"] = self.api_base
 
@@ -150,7 +164,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
         }
 
         if self.api_key:
-            completion_params["api_key"] = self.api_key
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="LiteLLM",
+                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                param_hint="`api_key` to LiteLLMModel(...)",
+            )
+            completion_params["api_key"] = api_key
         if self.api_base:
             completion_params["api_base"] = self.api_base
 
@@ -195,11 +215,17 @@ class LiteLLMModel(DeepEvalBaseLLM):
         from litellm import completion
 
         try:
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="LiteLLM",
+                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                param_hint="`api_key` to LiteLLMModel(...)",
+            )
             completion_params = {
                 "model": self.model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
-                "api_key": self.api_key,
+                "api_key": api_key,
                 "api_base": self.api_base,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
@@ -230,11 +256,17 @@ class LiteLLMModel(DeepEvalBaseLLM):
         from litellm import acompletion
 
         try:
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="LiteLLM",
+                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                param_hint="`api_key` to LiteLLMModel(...)",
+            )
             completion_params = {
                 "model": self.model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
-                "api_key": self.api_key,
+                "api_key": api_key,
                 "api_base": self.api_base,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
@@ -263,12 +295,18 @@ class LiteLLMModel(DeepEvalBaseLLM):
         from litellm import completion
 
         try:
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="LiteLLM",
+                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                param_hint="`api_key` to LiteLLMModel(...)",
+            )
             completion_params = {
                 "model": self.model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": temperature,
                 "n": n,
-                "api_key": self.api_key,
+                "api_key": api_key,
                 "api_base": self.api_base,
             }
             completion_params.update(self.kwargs)

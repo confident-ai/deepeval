@@ -1,15 +1,16 @@
 from typing import Optional, Tuple, Union, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
+from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.constants import ProviderSlug as PS
 
 
@@ -28,18 +29,21 @@ class LocalModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
+        settings = get_settings()
+
+        model_name = model or settings.LOCAL_MODEL_NAME
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.local_model_api_key: SecretStr | None = SecretStr(api_key)
+        else:
+            self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
+
+        self.base_url = (
+            base_url
+            or settings.LOCAL_MODEL_BASE_URL is not None
+            and str(settings.LOCAL_MODEL_BASE_URL)
         )
-        self.local_model_api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_API_KEY
-        )
-        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_BASE_URL
-        )
-        self.format = format or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_FORMAT
-        )
+        self.format = format or settings.LOCAL_MODEL_FORMAT
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -94,10 +98,7 @@ class LocalModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
-        )
-        return f"{model_name} (Local Model)"
+        return f"{self.model_name} (Local Model)"
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
@@ -115,8 +116,15 @@ class LocalModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
+        local_model_api_key = require_secret_api_key(
+            self.local_model_api_key,
+            provider_label="Local",
+            env_var_name="LOCAL_MODEL_API_KEY",
+            param_hint="`api_key` to LocalModel(...)",
+        )
+
         kw = dict(
-            api_key=self.local_model_api_key,
+            api_key=local_model_api_key,
             base_url=self.base_url,
             **self._client_kwargs(),
         )

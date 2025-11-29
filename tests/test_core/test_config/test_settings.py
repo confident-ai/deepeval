@@ -1,6 +1,7 @@
+import json
 import os
-from pathlib import Path
 import pytest
+from pathlib import Path
 
 from deepeval.config.utils import parse_bool
 from deepeval.config.settings import (
@@ -445,3 +446,61 @@ def test_legacy_enabled_alias_not_persisted_to_dotenv(
     # Booleans are persisted as 1 or 0
     assert "DEEPEVAL_TELEMETRY_OPT_OUT=1" in content
     assert "DEEPEVAL_VERBOSE_MODE=1" in content
+
+
+##########################################
+# Legacy .deepeval JSON -> Settings shim #
+##########################################
+
+
+def test_legacy_keyfile_populates_openai_api_key_when_env_missing(
+    monkeypatch, hidden_store_dir: Path
+):
+    """
+    Backwards compatibility: if OPENAI_API_KEY only exists in the legacy
+    .deepeval/.deepeval JSON store (and not in the process env), Settings
+    should surface it as Settings.OPENAI_API_KEY.
+    """
+    from pydantic import SecretStr
+    from deepeval.constants import KEY_FILE
+    from deepeval.config.settings import get_settings, reset_settings
+
+    # Make sure the process env does NOT shadow the legacy value
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    # Simulate an older DeepEval that persisted the key into the hidden store
+    keyfile_path = hidden_store_dir / KEY_FILE
+    keyfile_path.write_text(json.dumps({"OPENAI_API_KEY": "legacy-json-key"}))
+
+    # Force a fresh Settings instance so any bootstrap logic runs
+    reset_settings(reload_dotenv=False)
+    s = get_settings()
+
+    # Desired behavior (will FAIL until you wire in the legacy loader):
+    assert isinstance(s.OPENAI_API_KEY, SecretStr)
+    assert s.OPENAI_API_KEY.get_secret_value() == "legacy-json-key"
+
+
+def test_env_openai_api_key_takes_precedence_over_legacy_keyfile(
+    monkeypatch, hidden_store_dir: Path
+):
+    """
+    Env vars must always win over the legacy .deepeval/.deepeval JSON store.
+    If both are present, Settings.OPENAI_API_KEY should use the env value.
+    """
+    from pydantic import SecretStr
+    from deepeval.constants import KEY_FILE
+    from deepeval.config.settings import get_settings, reset_settings
+
+    # Seed the legacy keyfile with one value
+    keyfile_path = hidden_store_dir / KEY_FILE
+    keyfile_path.write_text(json.dumps({"OPENAI_API_KEY": "legacy-json-key"}))
+
+    # And also set an env-level value that should take precedence
+    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
+
+    reset_settings(reload_dotenv=False)
+    s = get_settings()
+
+    assert isinstance(s.OPENAI_API_KEY, SecretStr)
+    assert s.OPENAI_API_KEY.get_secret_value() == "env-secret-key"

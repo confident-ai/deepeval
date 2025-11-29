@@ -1,16 +1,15 @@
 from typing import Dict, List, Optional
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from deepeval.key_handler import (
-    EmbeddingKeyValues,
-    ModelKeyValues,
-    KEY_FILE_HANDLER,
-)
+from pydantic import SecretStr
+
+from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
 from deepeval.constants import ProviderSlug as PS
+from deepeval.models.utils import require_secret_api_key
 
 
 retry_azure = create_retry_decorator(PS.AZURE)
@@ -27,18 +26,25 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         generation_kwargs: Optional[Dict] = None,
         **client_kwargs,
     ):
-        self.openai_api_key = openai_api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_API_KEY
-        )
+        settings = get_settings()
+
+        if openai_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.openai_api_key: SecretStr | None = SecretStr(openai_api_key)
+        else:
+            self.openai_api_key = settings.AZURE_OPENAI_API_KEY
+
         self.openai_api_version = (
-            openai_api_version
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
+            openai_api_version or settings.OPENAI_API_VERSION
         )
-        self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT
+        self.azure_endpoint = (
+            azure_endpoint
+            or settings.AZURE_OPENAI_ENDPOINT
+            and str(settings.AZURE_OPENAI_ENDPOINT)
         )
-        self.azure_deployment = azure_deployment or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
+
+        self.azure_deployment = (
+            azure_deployment or settings.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
         self.client_kwargs = client_kwargs or {}
         self.model_name = model or self.azure_deployment
@@ -86,12 +92,19 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncAzureOpenAI)
 
     def _build_client(self, cls):
+        api_key = require_secret_api_key(
+            self.openai_api_key,
+            provider_label="AzureOpenAI",
+            env_var_name="AZURE_OPENAI_API_KEY",
+            param_hint="`openai_api_key` to AzureOpenAIEmbeddingModel(...)",
+        )
+
         client_kwargs = self.client_kwargs.copy()
         if not sdk_retries_for(PS.AZURE):
             client_kwargs["max_retries"] = 0
 
         client_init_kwargs = dict(
-            api_key=self.openai_api_key,
+            api_key=api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.azure_deployment,

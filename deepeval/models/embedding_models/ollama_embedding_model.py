@@ -1,7 +1,7 @@
 from ollama import Client, AsyncClient
 from typing import List, Optional, Dict
 
-from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
+from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -20,12 +20,14 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         generation_kwargs: Optional[Dict] = None,
         **client_kwargs,
     ):
-        self.host = host or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
+        settings = get_settings()
+
+        self.host = (
+            host
+            or settings.LOCAL_EMBEDDING_BASE_URL is not None
+            and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.model_name = model or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
-        )
+        self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
         self.client_kwargs = client_kwargs or {}
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(self.model_name)

@@ -1,18 +1,20 @@
-from typing import Optional, Tuple, List, Union
+import base64
+from typing import Optional, Tuple, List, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ParsedChatCompletion
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from io import BytesIO
-import base64
 
+from deepeval.config.settings import get_settings
 from deepeval.models.llms.openai_model import (
     model_pricing,
     structured_outputs_models,
+    _request_timeout_seconds,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.test_case import MLLMImage
-from deepeval.models.utils import parse_model_name
+from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -60,17 +62,26 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         *args,
         **kwargs,
     ):
+        settings = get_settings()
         model_name = None
         if isinstance(model, str):
             model_name = parse_model_name(model)
             if model_name not in valid_multimodal_gpt_models:
                 raise ValueError(
-                    f"Invalid model. Available Multimodal GPT models: {', '.join(model for model in valid_multimodal_gpt_models)}"
+                    f"Invalid model. Available Multimodal GPT models: "
+                    f"{', '.join(model for model in valid_multimodal_gpt_models)}"
                 )
+        elif settings.OPENAI_MODEL_NAME is not None:
+            model_name = settings.OPENAI_MODEL_NAME
         elif model is None:
             model_name = default_multimodal_gpt_model
 
-        self._openai_api_key = _openai_api_key
+        if _openai_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and aolike
+            self._openai_api_key: SecretStr | None = SecretStr(_openai_api_key)
+        else:
+            self._openai_api_key = settings.OPENAI_API_KEY
+
         self.args = args
         self.kwargs = kwargs
 
@@ -86,7 +97,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         multimodal_input: List[Union[str, MLLMImage]],
         schema: Optional[BaseModel] = None,
     ) -> Tuple[str, float]:
-        client = OpenAI(api_key=self._openai_api_key)
+        client = self.load_model(async_mode=False)
         prompt = self.generate_prompt(multimodal_input)
 
         if schema:
@@ -123,7 +134,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         multimodal_input: List[Union[str, MLLMImage]],
         schema: Optional[BaseModel] = None,
     ) -> Tuple[str, float]:
-        client = AsyncOpenAI(api_key=self._openai_api_key)
+        client = self.load_model(async_mode=True)
         prompt = self.generate_prompt(multimodal_input)
 
         if schema:
@@ -247,12 +258,52 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
         return base64_encoded_image
 
-    def _client(self, async_mode: bool = False):
-        kw = {"api_key": self._openai_api_key}
-        if not sdk_retries_for(PS.OPENAI):
-            kw["max_retries"] = 0
-        Client = AsyncOpenAI if async_mode else OpenAI
-        return Client(**kw)
+    ###############################################
+    # Model
+    ###############################################
 
     def get_model_name(self):
         return self.model_name
+
+    def load_model(self, async_mode: bool = False):
+        Client = AsyncOpenAI if async_mode else OpenAI
+        return self._build_client(Client)
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity is managing retries, force OpenAI SDK retries off to avoid
+        double retries. If the user opts into SDK retries for 'openai' via
+        DEEPEVAL_SDK_RETRY_PROVIDERS, leave their retry settings as is.
+        """
+        kwargs: Dict = {}
+        if not sdk_retries_for(PS.OPENAI):
+            kwargs["max_retries"] = 0
+
+        if not kwargs.get("timeout"):
+            kwargs["timeout"] = _request_timeout_seconds()
+        return kwargs
+
+    def _build_client(self, cls):
+        api_key = require_secret_api_key(
+            self._openai_api_key,
+            provider_label="OpenAI",
+            env_var_name="OPENAI_API_KEY",
+            param_hint="`_openai_api_key` to MultimodalOpenAIModel(...)",
+        )
+
+        kw = dict(
+            api_key=api_key,
+            **self._client_kwargs(),
+        )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # older OpenAI SDKs may not accept max_retries, in that case remove and retry once
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise
+
+    def _client(self, async_mode: bool = False):
+        # Backwards-compat path for internal callers in this module
+        return self.load_model(async_mode=async_mode)

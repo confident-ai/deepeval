@@ -1,7 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from openai import (
     OpenAI,
@@ -12,7 +11,7 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
+from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -227,23 +226,18 @@ class GPTModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
         model_name = None
-        model = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENAI_MODEL_NAME
-        )
+        model = model or settings.OPENAI_MODEL_NAME
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN
-            )
+            else settings.OPENAI_COST_PER_INPUT_TOKEN
         )
         cost_per_output_token = (
             cost_per_output_token
             if cost_per_output_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
-            )
+            else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
         if isinstance(model, str):
@@ -272,7 +266,12 @@ class GPTModel(DeepEvalBaseLLM):
         elif model is None:
             model_name = default_gpt_model
 
-        self._openai_api_key = _openai_api_key
+        if _openai_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self._openai_api_key: SecretStr | None = SecretStr(_openai_api_key)
+        else:
+            self._openai_api_key = get_settings().OPENAI_API_KEY
+
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
 
@@ -485,9 +484,9 @@ class GPTModel(DeepEvalBaseLLM):
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
 
-    ###############################################
-    # Model
-    ###############################################
+    #########
+    # Model #
+    #########
 
     def get_model_name(self):
         return self.model_name
@@ -512,9 +511,15 @@ class GPTModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
+        api_key = require_secret_api_key(
+            self._openai_api_key,
+            provider_label="OpenAI",
+            env_var_name="OPENAI_API_KEY",
+            param_hint="`_openai_api_key` to GPTModel(...)",
+        )
 
         kw = dict(
-            api_key=self._openai_api_key,
+            api_key=api_key,
             base_url=self.base_url,
             **self._client_kwargs(),
         )

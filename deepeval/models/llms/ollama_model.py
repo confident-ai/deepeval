@@ -2,12 +2,11 @@ from ollama import Client, AsyncClient, ChatResponse
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 
+from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.constants import ProviderSlug as PS
 
 
@@ -23,17 +22,20 @@ class OllamaModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
-        )
+        settings = get_settings()
+        model_name = model or settings.LOCAL_MODEL_NAME
         self.base_url = (
             base_url
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_BASE_URL)
+            or (
+                settings.LOCAL_MODEL_BASE_URL is not None
+                and str(settings.LOCAL_MODEL_BASE_URL)
+            )
             or "http://localhost:11434"
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        # Raw kwargs destined for the underlying Ollama client
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
@@ -97,8 +99,16 @@ class OllamaModel(DeepEvalBaseLLM):
             return self._build_client(Client)
         return self._build_client(AsyncClient)
 
+    def _client_kwargs(self) -> Dict:
+        """Return kwargs forwarded to the underlying Ollama Client/AsyncClient."""
+        return dict(self.kwargs or {})
+
     def _build_client(self, cls):
-        return cls(host=self.base_url, **self.kwargs)
+        kw = dict(
+            host=self.base_url,
+            **self._client_kwargs(),
+        )
+        return cls(**kw)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

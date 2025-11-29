@@ -1,14 +1,13 @@
-import os
-
 from typing import Optional, Tuple, Union, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
+from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -62,27 +61,28 @@ class GrokModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.GROK_MODEL_NAME
-        )
+        settings = get_settings()
+
+        model_name = model or settings.GROK_MODEL_NAME
+
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
             )
-        temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.TEMPERATURE
-        )
+        temperature_from_key = settings.TEMPERATURE
         if temperature_from_key is None:
             self.temperature = temperature
         else:
             self.temperature = float(temperature_from_key)
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
-        self.api_key = (
-            api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GROK_API_KEY)
-            or os.getenv("GROK_API_KEY")
-        )
+
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.api_key: SecretStr | None = SecretStr(api_key)
+        else:
+            self.api_key = settings.GROK_API_KEY
+
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
@@ -226,7 +226,14 @@ class GrokModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
-        kw = dict(api_key=self.api_key, **self._client_kwargs())
+        api_key = require_secret_api_key(
+            self.api_key,
+            provider_label="Grok",
+            env_var_name="GROK_API_KEY",
+            param_hint="`api_key` to GrokModel(...)",
+        )
+
+        kw = dict(api_key=api_key, **self._client_kwargs())
         try:
             return cls(**kw)
         except TypeError as e:
