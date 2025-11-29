@@ -218,7 +218,6 @@ class EvaluationDataset:
                 )
             self._multi_turn = True
             self._add_conversational_golden(golden)
-            
 
     def _add_golden(self, golden: Union[Golden, ConversationalGolden]):
         if isinstance(golden, Golden):
