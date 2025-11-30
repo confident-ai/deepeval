@@ -185,6 +185,8 @@ module.exports = {
           collapsed: false,
           items: [
             "prompt-optimization-gepa",
+            "prompt-optimization-miprov2",
+            "prompt-optimization-copro",
           ],
         }
       ],

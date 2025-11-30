@@ -19,8 +19,6 @@ from deepeval.optimization.adapters.deepeval_scoring_adapter import (
 from deepeval.optimization.mutations.prompt_rewriter import (
     PromptRewriter,
 )
-from deepeval.optimization.gepa.configs import GEPAConfig
-from deepeval.optimization.gepa.loop import GEPARunner
 from deepeval.optimization.types import (
     OptimizationReport,
     RunnerProtocol,
@@ -38,6 +36,12 @@ from deepeval.optimization.configs import (
 )
 from deepeval.prompt.prompt import Prompt
 from deepeval.utils import get_or_create_event_loop
+from deepeval.optimization.gepa.configs import GEPAConfig
+from deepeval.optimization.gepa.loop import GEPARunner
+from deepeval.optimization.miprov2.configs import MIPROConfig
+from deepeval.optimization.miprov2.loop import MIPRORunner
+from deepeval.optimization.copro.configs import COPROConfig
+from deepeval.optimization.copro.loop import COPRORunner
 
 
 class PromptOptimizer:
@@ -137,7 +141,12 @@ class PromptOptimizer:
             )
 
         algo_normalized = (algo_raw.strip() or "gepa").lower()
-        allowed_algorithms = {"gepa"}
+        if algo_normalized in {"mipro", "miprov2"}:
+            algo_normalized = "miprov2"
+        if algo_normalized in {"copro"}:
+            algo_normalized = "copro"
+
+        allowed_algorithms = {"gepa", "miprov2", "copro"}
 
         if algo_normalized not in allowed_algorithms:
             raise DeepEvalError(
@@ -399,10 +408,11 @@ class PromptOptimizer:
         )
 
     def _build_default_runner(self) -> RunnerProtocol:
-        if self.algorithm != "gepa":
+        if self.algorithm not in {"gepa", "miprov2", "copro"}:
             raise DeepEvalError(
                 f"Unsupported optimization algorithm: {self.algorithm!r}. "
-                "Only 'gepa' is currently supported."
+                "Supported algorithms are: 'gepa', 'miprov2' (alias 'mipro'), "
+                "'copro'."
             )
 
         scoring_adapter = self._build_default_scoring_adapter()
@@ -413,11 +423,29 @@ class PromptOptimizer:
                 throttle_seconds=float(self.async_config.throttle_value),
             )
 
-        config = GEPAConfig()
-        runner = GEPARunner(
-            config=config,
-            scoring_adapter=scoring_adapter,
-        )
+        if self.algorithm == "gepa":
+            config = GEPAConfig()
+            runner: RunnerProtocol = GEPARunner(
+                config=config,
+                scoring_adapter=scoring_adapter,
+            )
+        elif self.algorithm == "miprov2":
+            # MIPROv2 0-shot, instruction-only
+            config = MIPROConfig()
+            runner = MIPRORunner(
+                config=config,
+                scoring_adapter=scoring_adapter,
+            )
+        else:
+            # COPRO cooperative multi-proposal variant
+            config = COPROConfig()
+            runner = COPRORunner(
+                config=config,
+                scoring_adapter=scoring_adapter,
+            )
+
+        # Attach a PromptRewriter to both GEPA and MIPRO so they share the same
+        # list mutation behaviour and random_state
         runner._rewriter = PromptRewriter(
             max_chars=config.rewrite_instruction_max_chars,
             list_mutation_config=self.prompt_list_mutation_config,

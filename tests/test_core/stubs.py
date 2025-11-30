@@ -6,7 +6,6 @@ from typing import Callable, List, Optional, Protocol, runtime_checkable
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.models.retry_policy import create_retry_decorator
-from deepeval.optimization.gepa.loop import GEPARunner
 from deepeval.optimization.types import ModuleId
 from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import TraceSpanStatus
@@ -521,7 +520,8 @@ class DummyProgress:
 
 class StubScoringAdapter:
     """
-    Minimal scoring adapter stub for exercising GEPARunner.
+    Minimal scoring adapter stub for exercising GEPARunner and other
+    single-module optimization runners.
 
     - score_on_pareto / minibatch_score:
         returns higher scores for prompts whose text contains "CHILD"
@@ -536,10 +536,16 @@ class StubScoringAdapter:
         self.score_calls = []
         self.a_score_calls = []
 
+    def _get_prompt_text(self, prompt_configuration):
+        if not getattr(prompt_configuration, "prompts", None):
+            return ""
+        # For GEPA/MIPRO we expect a single module id in `prompts`.
+        prompt = next(iter(prompt_configuration.prompts.values()))
+        return (prompt.text_template or "").strip()
+
     def score_on_pareto(self, prompt_configuration, d_pareto):
         self.pareto_calls.append((prompt_configuration, list(d_pareto)))
-        prompt = prompt_configuration.prompts[GEPARunner.SINGLE_MODULE_ID]
-        txt = (prompt.text_template or "").strip()
+        txt = self._get_prompt_text(prompt_configuration)
         return [1.0] if "CHILD" in txt else [0.5]
 
     async def a_score_on_pareto(self, prompt_configuration, d_pareto):
@@ -562,8 +568,7 @@ class StubScoringAdapter:
 
     def minibatch_score(self, prompt_configuration, minibatch):
         self.score_calls.append((prompt_configuration, list(minibatch)))
-        prompt = prompt_configuration.prompts[GEPARunner.SINGLE_MODULE_ID]
-        txt = (prompt.text_template or "").strip()
+        txt = self._get_prompt_text(prompt_configuration)
         return 1.0 if "CHILD" in txt else 0.5
 
     async def a_minibatch_score(self, prompt_configuration, minibatch):

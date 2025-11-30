@@ -18,10 +18,12 @@ class PromptListMutationTargetType(Enum):
     FIXED_INDEX = "fixed_index"
 
 
+# default all messages
 class PromptListMutationConfig(BaseModel):
     target_type: PromptListMutationTargetType = (
         PromptListMutationTargetType.RANDOM
     )
+    # should be list
     target_role: Optional[str] = Field(
         default=None,
         description="If set, restricts candidates to messages with this role (case insensitive).",
