@@ -7,9 +7,6 @@ from enum import Enum
 from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
-import time
-import json
-import os
 from pydantic import BaseModel, ValidationError
 import asyncio
 import threading
@@ -364,6 +361,8 @@ class Prompt:
                 f.seek(0)
                 f.truncate()
                 json.dump(cache_data, f, cls=CustomEncoder)
+                f.flush()
+                os.fsync(f.fileno())
         except portalocker.exceptions.LockException:
             # If we can't acquire the lock, silently skip caching
             pass

@@ -90,6 +90,8 @@ class CachedTestRun(BaseModel):
             # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
         json.dump(body, f, cls=CustomEncoder)
+        f.flush()
+        os.fsync(f.fileno())
         return self
 
     # load from file (this happens initially during a test run)
