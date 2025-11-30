@@ -52,6 +52,33 @@ def make_span_api_like():
 ##########
 # Models #
 ##########
+class DummyWithReasonModel:
+    """Minimal model stub for metrics that expect a schema with a `reason` field.
+
+    - `reason_text` controls the string returned in the `reason` field.
+    - If you pass `schema_cls`, it will always use that class to construct
+      the response; otherwise it uses the `schema` argument from generate().
+    """
+
+    def __init__(self, reason_text: str = "dummy reason", schema_cls=None):
+        self.calls = []
+        self.reason_text = reason_text
+        self.schema_cls = schema_cls
+
+    def _build_response(self, schema):
+        cls = self.schema_cls or schema
+        if cls is None:
+            return self.reason_text
+        # Assume the schema has a `reason` field
+        return cls(reason=self.reason_text)
+
+    def generate(self, prompt, schema=None):
+        self.calls.append((prompt, schema))
+        return self._build_response(schema), 0.0
+
+    async def a_generate(self, prompt, schema=None):
+        self.calls.append((prompt, schema))
+        return self._build_response(schema), 0.0
 
 
 class AlwaysJsonModel:

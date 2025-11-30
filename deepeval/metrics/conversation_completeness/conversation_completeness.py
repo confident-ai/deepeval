@@ -5,6 +5,11 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.conversation_completeness.template import (
     ConversationCompletenessTemplate,
 )
+from deepeval.metrics.conversation_completeness.schema import (
+    ConversationCompletenessScoreReason,
+    ConversationCompletenessVerdict,
+    UserIntentions,
+)
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -18,7 +23,6 @@ from deepeval.test_case import ConversationalTestCase
 from deepeval.test_case import TurnParams
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_completeness.schema import *
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -146,7 +150,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
     async def _a_generate_reason(self) -> str:
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            verdict_field = getattr(verdict, "verdict", None)
+            if not isinstance(verdict_field, str):
+                # fixes #2327
+                # gaurd against non-string / None verdice
+                continue
+            if verdict_field.strip().lower() == "no":
                 incompletenesses.append(verdict.reason)
 
         prompt = ConversationCompletenessTemplate.generate_reason(
@@ -164,7 +173,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             try:
                 res: ConversationCompletenessScoreReason = (
                     await self.model.a_generate(
-                        prompt, schema=ConversationCompletenessScoreReason
+                        prompt,
+                        schema=ConversationCompletenessScoreReason,
                     )
                 )
                 return res.reason
@@ -179,7 +189,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            verdict_field = getattr(verdict, "verdict", None)
+            if not isinstance(verdict_field, str):
+                # fixes #2327
+                # gaurd against non-string / None verdice
+                continue
+            if verdict_field.strip().lower() == "no":
                 incompletenesses.append(verdict.reason)
 
         prompt = ConversationCompletenessTemplate.generate_reason(
@@ -196,7 +211,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         else:
             try:
                 res: ConversationCompletenessScoreReason = self.model.generate(
-                    prompt, schema=ConversationCompletenessScoreReason
+                    prompt,
+                    schema=ConversationCompletenessScoreReason,
                 )
                 return res.reason
             except TypeError:
@@ -301,7 +317,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
         relevant_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
+            verdict_field = getattr(verdict, "verdict", None)
+            if not isinstance(verdict_field, str):
+                # fixes #2327
+                # gaurd against non-string / None verdice
+                continue
+            if verdict_field.strip().lower() != "no":
                 relevant_count += 1
 
         score = relevant_count / number_of_verdicts
@@ -313,7 +334,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         else:
             try:
                 self.score >= self.threshold
-            except:
+            except Exception:
                 self.success = False
         return self.success
 
