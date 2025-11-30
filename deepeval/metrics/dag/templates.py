@@ -18,7 +18,7 @@ DAG Traversal:
 {verbose_steps}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'reason' key providing the reason. Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text.
 Example JSON:
 {{
     "reason": "The score is <metric_name_score> because <your_reason>."
@@ -41,7 +41,7 @@ class TaskNodeTemplate:
 ===END OF INSTRUCTIONS===
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'output' key as the output from the instructions.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'output' key as the output from the instructions. Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text.
 Example JSON:
 {{
     "output": "your output goes here"
@@ -60,10 +60,10 @@ class BinaryJudgementTemplate:
 {text}
 
 **
-IMPORTANT: Please make sure to only return a json with two keys: `verdict` (True or False), and the 'reason' key providing the reason. The verdict must be a boolean only, either True or False.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with two keys: "verdict" (a boolean true or false) and "reason" (a string explanation). Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text.
 Example JSON:
 {{
-    "verdict": True,
+    "verdict": true,
     "reason": "..."
 }}
 **
@@ -82,10 +82,10 @@ class NonBinaryJudgementTemplate:
 {text}
 
 **
-IMPORTANT: Please make sure to only return a json with two keys: 'verdict' {options} and 'reason' providing the reason.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with two keys: "verdict" and "reason". The "verdict" must be a string equal to one of the following options: {options}. Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text.
 Example JSON:
 {{
-    "verdict": {options},
+    "verdict": "<one_of_the_options>",
     "reason": "..."
 }}
 **

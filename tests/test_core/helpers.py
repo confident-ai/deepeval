@@ -1,8 +1,10 @@
+import json
 import time
 import uuid
 from datetime import datetime, timezone
 
 from deepeval.tracing.api import TraceApi, TraceSpanApiStatus
+from tests.test_core.stubs import AlwaysJsonModel
 
 
 def ts_iso8601_utc(ts: float) -> str:
@@ -60,3 +62,13 @@ def reset_settings_env(monkeypatch, *, skip_keys: set[str] = set()):
 
     # don’t carry default save across tests, keep things clean
     monkeypatch.delenv("DEEPEVAL_DEFAULT_SAVE", raising=False)
+
+
+def _extract_example_json(template_text: str) -> dict:
+    """
+    Mirror how AlwaysJsonModel pulls the first JSON block after
+    an "Example JSON:" anchor and ensure it is valid JSON.
+    """
+    extractor = AlwaysJsonModel.balanced_json_after_anchor("Example JSON:")
+    json_str = extractor(template_text)
+    return json.loads(json_str)

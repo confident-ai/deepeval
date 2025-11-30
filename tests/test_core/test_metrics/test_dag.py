@@ -19,6 +19,13 @@ from deepeval.metrics.dag.utils import (
     copy_graph,
     is_valid_dag,
 )
+from deepeval.metrics.dag.templates import (
+    VerdictNodeTemplate,
+    TaskNodeTemplate,
+    BinaryJudgementTemplate,
+    NonBinaryJudgementTemplate,
+)
+from tests.test_core.helpers import _extract_example_json
 
 
 class TestDeepAcyclicGraph:
@@ -532,3 +539,69 @@ class TestConversationalDeepAcyclicGraph:
         task = ConversationalTaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes, multiturn=True)
+
+
+class TestDagPromptTemplates:
+    @pytest.mark.parametrize(
+        "template_text",
+        [
+            VerdictNodeTemplate.generate_reason(
+                verbose_steps=["leaf -> verdict"],
+                score=0.7,
+                name="my-metric",
+            ),
+            TaskNodeTemplate.generate_task_output(
+                instructions="Do something",
+                text="input text",
+            ),
+            BinaryJudgementTemplate.generate_binary_verdict(
+                criteria="Is it good?",
+                text="some text",
+            ),
+            NonBinaryJudgementTemplate.generate_non_binary_verdict(
+                criteria="Pick a label",
+                text="some text",
+                options=["A", "B", "C"],
+            ),
+        ],
+    )
+    def test_dag_templates_example_json_is_valid(self, template_text: str):
+        """The Example JSON block in each DAG template must be valid JSON.
+
+        Before the fix for issue-2332, the BinaryJudgementTemplate and
+        NonBinaryJudgementTemplate examples used Python-style booleans
+        and list reprs, which caused json.loads to fail. This test
+        will fail on that behaviour and pass once the examples are
+        corrected.
+        """
+        data = _extract_example_json(template_text)
+        assert isinstance(data, dict)
+
+    def test_dag_templates_discourage_markdown_fences(self):
+        """DAG templates should explicitly ask for JSON with no markdown fences.
+
+        This makes it less likely that models will wrap the JSON in
+        ```json ...``` blocks, which break downstream JSON parsing.
+        """
+        samples = [
+            TaskNodeTemplate.generate_task_output(
+                instructions="Do something",
+                text="input text",
+            ),
+            BinaryJudgementTemplate.generate_binary_verdict(
+                criteria="Is it good?",
+                text="some text",
+            ),
+            NonBinaryJudgementTemplate.generate_non_binary_verdict(
+                criteria="Pick a label",
+                text="some text",
+                options=["A", "B"],
+            ),
+        ]
+
+        for tmpl in samples:
+            lower = tmpl.lower()
+            # Must explicitly forbid markdown code fences
+            assert "do not wrap the json in markdown code fences" in lower
+            # And still talk about valid JSON
+            assert "valid and parseable json" in lower

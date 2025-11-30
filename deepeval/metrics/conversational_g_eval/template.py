@@ -10,10 +10,10 @@ Evaluation Criteria:
 {criteria}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the "steps" key as a list of strings. No words or explanation is needed. Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text, commentary, or formatting.
 Example JSON:
 {{
-    "steps": <list_of_strings>
+    "steps": ["Check if the answer addresses the user query.", "Verify factual correctness where applicable.", "Assess clarity and coherence of the answer."]
 }}
 **
 
@@ -65,7 +65,7 @@ JSON:
     {parameters}
 
     ---
-    IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"` and `"reason"`. No additional text, commentary, or formatting.
+    IMPORTANT: You MUST return only in valid and parseable JSON format, with the exact keys `"score"` and `"reason"`. Do not wrap the JSON in markdown code fences (for example ```json ... ```), and do not include any extra text, commentary, or formatting.
 
     ---
     Example JSON:
