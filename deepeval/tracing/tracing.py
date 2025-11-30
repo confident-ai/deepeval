@@ -441,11 +441,11 @@ class TraceManager:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        # buffer for payloads that need to be sent after main exits
-        remaining_trace_request_bodies: List[Dict[str, Any]] = []
+        # buffer for traces that need to be sent after main exits
+        remaining_traces: List[TraceApi] = []
 
         async def _a_send_trace(trace_obj):
-            nonlocal remaining_trace_request_bodies
+            nonlocal remaining_traces
             try:
                 # Build API object & payload
                 if isinstance(trace_obj, TraceApi):
@@ -486,7 +486,7 @@ class TraceManager:
                     )
                 elif self._flush_enabled:
                     # Main thread gone → to be flushed
-                    remaining_trace_request_bodies.append(body)
+                    remaining_traces.append(trace_api)
 
             except Exception as e:
                 queue_size = self._trace_queue.qsize()
@@ -544,24 +544,35 @@ class TraceManager:
                 loop.run_until_complete(
                     asyncio.gather(*pending, return_exceptions=True)
                 )
-            self.flush_traces(remaining_trace_request_bodies)
+            self.flush_traces(remaining_traces)
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
 
-    def flush_traces(
-        self, remaining_trace_request_bodies: List[Dict[str, Any]]
-    ):
+    def flush_traces(self, remaining_traces: List[TraceApi]):
         if not tracing_enabled() or not self.tracing_enabled:
             return
 
         self._print_trace_status(
             TraceWorkerStatus.WARNING,
-            message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)",
+            message=f"Flushing {len(remaining_traces)} remaining trace(s)",
         )
-        for body in remaining_trace_request_bodies:
+        for trace_api in remaining_traces:
             with capture_send_trace():
                 try:
-                    api = Api(api_key=self.confident_api_key)
+                    try:
+                        body = trace_api.model_dump(
+                            by_alias=True,
+                            exclude_none=True,
+                        )
+                    except AttributeError:
+                        # Pydantic version below 2.0
+                        body = trace_api.dict(by_alias=True, exclude_none=True)
+
+                    body = make_json_serializable(body)
+                    if trace_api.confident_api_key:
+                        api = Api(api_key=trace_api.confident_api_key)
+                    else:
+                        api = Api(api_key=self.confident_api_key)
 
                     _, link = api.send_request(
                         method=HttpMethods.POST,
