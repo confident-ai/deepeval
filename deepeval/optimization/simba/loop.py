@@ -1,4 +1,4 @@
-# - COPRO cooperative 0-shot variant:
+# - SIMBA-style multi-strategy 0-shot variant:
 #   - Works on a single set of goldens (no D_pareto split).
 #   - Maintains a bounded population of candidate prompts
 #     (size controlled by `population_size`).
@@ -7,7 +7,8 @@
 #       - Sample a minibatch of goldens for scoring.
 #       - Compute feedback once for the parent + minibatch.
 #       - Propose multiple child prompts cooperatively from the same parent
-#         (up to `proposals_per_step` children).
+#         (up to `proposals_per_step` children), each using a SIMBA edit
+#         strategy (e.g., APPEND_DEMO or APPEND_RULE).
 #       - For each child, accept it if its minibatch score improves on the
 #         parent by at least `min_delta`, add it to the pool, and prune
 #         low-scoring candidates if the population exceeds `population_size`.
@@ -20,7 +21,6 @@ import random
 import time
 import uuid
 from typing import (
-    TYPE_CHECKING,
     Awaitable,
     Callable,
     Dict,
@@ -31,6 +31,7 @@ from typing import (
 )
 
 from deepeval.errors import DeepEvalError
+from deepeval.dataset.golden import ConversationalGolden, Golden
 from deepeval.optimization.aggregates import Aggregator, mean_of_all
 from deepeval.optimization.types import (
     AcceptedIterationDict,
@@ -43,22 +44,17 @@ from deepeval.optimization.types import (
     ScoreTable,
     ScoringAdapter,
 )
-from deepeval.optimization.utils import (
-    build_prompt_config_snapshots,
-)
+from deepeval.optimization.utils import build_prompt_config_snapshots
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.mutations.prompt_rewriter import PromptRewriter
 
-from .configs import COPROConfig
-
-if TYPE_CHECKING:  # pragma: no cover - type-checking only
-    from deepeval.dataset.golden import ConversationalGolden, Golden
+from .configs import SIMBAConfig, SIMBAStrategy
 
 
-class COPRORunner:
+class SIMBARunner:
     """
-    COPRO style cooperative prompt optimization loop with sync/async execution.
+    SIMBA-style cooperative prompt optimization loop with sync/async execution.
 
     This runner is intentionally low level and does not know about metrics,
     models, or async configs. It relies on a preconfigured ScoringAdapter and
@@ -66,14 +62,10 @@ class COPRORunner:
 
     - Optimizes a single Prompt (instruction) against a list of Goldens.
     - Uses mini-batches of goldens for trial scoring and epsilon-greedy
-      selection over prompt candidates based on mean minibatch scores,
-      extended with cooperative proposals:
-        - At each iteration, a parent candidate is selected.
-        - A shared feedback string is computed on a minibatch.
-        - Multiple child prompts are proposed from that parent using the
-          same feedback but different LLM samples.
-        - Any child whose minibatch score improves over the parent by at
-          least ``min_delta`` is added to the candidate pool.
+      selection over prompt candidates based on mean minibatch scores.
+    - At each iteration, proposes multiple child prompts using SIMBA-style
+      edit strategies (APPEND_DEMO and APPEND_RULE) by passing different
+      instructions into the PromptRewriter.
     """
 
     SINGLE_MODULE_ID: ModuleId = "__module__"
@@ -81,7 +73,7 @@ class COPRORunner:
     def __init__(
         self,
         *,
-        config: COPROConfig,
+        config: SIMBAConfig,
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
     ) -> None:
@@ -89,10 +81,16 @@ class COPRORunner:
         self.aggregate_instances = aggregate_instances
         self.scoring_adapter = scoring_adapter
 
-        # Random seeded from config is used for minibatch sampling and
-        # epsilon-greedy candidate selection.
-        self.random_state = random.Random(config.random_seed)
+        if config.max_demos_per_proposal > 0:
+            self._strategies = [
+                SIMBAStrategy.APPEND_DEMO,
+                SIMBAStrategy.APPEND_RULE,
+            ]
+        else:
+            self._strategies = [SIMBAStrategy.APPEND_RULE]
 
+        # Random seeded from config is used for minibatch sampling, strategy
+        # selection, and epsilon-greedy candidate selection.
         self.random_state = random.Random(config.random_seed)
 
         # Runtime state to be reset between runs
@@ -125,10 +123,10 @@ class COPRORunner:
         self,
         *,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, Dict]:
         """
-        Synchronous COPRO run from a full list of goldens.
+        Synchronous SIMBA run from a full list of goldens.
 
         The full goldens set is used both for mini-batched scoring during
         optimization and for a final full evaluation of the best candidate.
@@ -136,7 +134,7 @@ class COPRORunner:
         total_goldens = len(goldens)
         if total_goldens < 1:
             raise DeepEvalError(
-                "COPRO prompt optimization requires at least 1 golden, but "
+                "SIMBA prompt optimization requires at least 1 golden, but "
                 f"received {total_goldens}. Provide at least one golden to run "
                 "the optimizer."
             )
@@ -182,7 +180,7 @@ class COPRORunner:
             minibatch = self._draw_minibatch(goldens)
 
             # Compute shared feedback for this parent/minibatch that will be
-            # used by all cooperative child proposals.
+            # used by all SIMBA proposals in this iteration.
             feedback_text = self.scoring_adapter.minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
@@ -193,16 +191,19 @@ class COPRORunner:
             jitter = 1e-6
             min_delta = max(self.config.min_delta, jitter)
 
-            # 2. Generate multiple cooperative child prompts and evaluate them.
+            # 2. Generate multiple SIMBA child prompts and evaluate them.
             num_proposals = int(self.config.proposals_per_step)
             for _ in range(num_proposals):
+                strategy = self._sample_strategy()
                 child_prompt = self._generate_child_prompt(
+                    strategy,
                     selected_module_id,
                     parent_prompt_configuration,
                     feedback_text,
+                    minibatch,
                 )
                 if child_prompt is None:
-                    # No child, nothing more to do this iteration
+                    # No child, nothing to evaluate for this proposal.
                     continue
 
                 child_prompt_configuration = self._make_child(
@@ -267,7 +268,7 @@ class COPRORunner:
         self,
         *,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, Dict]:
         """
         Asynchronous twin of execute().
@@ -275,7 +276,7 @@ class COPRORunner:
         total_goldens = len(goldens)
         if total_goldens < 1:
             raise DeepEvalError(
-                "COPRO prompt optimization requires at least 1 golden, but "
+                "SIMBA prompt optimization requires at least 1 golden, but "
                 f"received {total_goldens}. Provide at least one golden to run "
                 "the optimizer."
             )
@@ -288,9 +289,6 @@ class COPRORunner:
         root_prompt_configuration = PromptConfiguration.new(
             prompts=dict(seed_prompts_by_module)
         )
-        # Add root candidate to the pool, but defer its first minibatch
-        # evaluation until the first iteration so that any long running
-        # model calls happen under the main loop (with progress updates).
         self._add_prompt_configuration(root_prompt_configuration)
 
         accepted_iterations: List[Dict] = []
@@ -302,8 +300,6 @@ class COPRORunner:
             if not goldens:
                 return False
 
-            # Lazily seed with a minibatch score for the root
-            # candidate on the first iteration.
             if not self._minibatch_score_counts:
                 seed_minibatch = self._draw_minibatch(goldens)
                 root_score = await self.scoring_adapter.a_minibatch_score(
@@ -330,10 +326,13 @@ class COPRORunner:
 
             num_proposals = int(self.config.proposals_per_step)
             for _ in range(num_proposals):
+                strategy = self._sample_strategy()
                 child_prompt = await self._a_generate_child_prompt(
+                    strategy,
                     selected_module_id,
                     parent_prompt_configuration,
                     feedback_text,
+                    minibatch,
                 )
                 if child_prompt is None:
                     continue
@@ -404,7 +403,7 @@ class COPRORunner:
         self.parents_by_id: Dict[
             PromptConfigurationId, Optional[PromptConfigurationId]
         ] = {}
-        # For COPRO we reuse the same field name as GEPA for full evaluation scores.
+        # For SIMBA we reuse the same field name as GEPA for full-eval scores.
         self.pareto_score_table: ScoreTable = {}
 
         # Surrogate stats: running mean minibatch scores per candidate.
@@ -417,7 +416,7 @@ class COPRORunner:
     def _ensure_scoring_adapter(self) -> None:
         if self.scoring_adapter is None:
             raise DeepEvalError(
-                "COPRORunner requires a `scoring_adapter`. "
+                "SIMBARunner requires a `scoring_adapter`. "
                 "Construct one (for example, DeepEvalScoringAdapter) in "
                 "PromptOptimizer and assign it to `runner.scoring_adapter`."
             )
@@ -546,7 +545,7 @@ class COPRORunner:
         """
         if not self.prompt_configurations_by_id:
             raise DeepEvalError(
-                "COPRORunner has no prompt configurations; this should not happen."
+                "SIMBARunner has no prompt configurations; this should not happen."
             )
 
         best_id: Optional[PromptConfigurationId] = None
@@ -602,13 +601,13 @@ class COPRORunner:
         """
         if not self.prompt_configurations_by_id:
             raise DeepEvalError(
-                "COPRORunner has no prompt configurations to select from."
+                "SIMBARunner has no prompt configurations to select from."
             )
 
         candidate_ids = list(self.prompt_configurations_by_id.keys())
         if not candidate_ids:
             raise DeepEvalError(
-                "COPRORunner has an empty candidate pool; this should not happen."
+                "SIMBARunner has an empty candidate pool; this should not happen."
             )
 
         eps = float(self.config.exploration_probability)
@@ -621,10 +620,10 @@ class COPRORunner:
 
     def _draw_minibatch(
         self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Union[List["Golden"], List["ConversationalGolden"]]:
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+    ) -> Union[List[Golden], List[ConversationalGolden]]:
         """
-        Determine effective minibatch size from COPROConfig, bounded by the
+        Determine effective minibatch size from SIMBAConfig, bounded by the
         available goldens, and sample with replacement.
         """
         n = len(goldens)
@@ -646,7 +645,7 @@ class COPRORunner:
 
     async def _a_full_evaluate_best(
         self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> None:
         if not self.prompt_configurations_by_id:
             return
@@ -660,7 +659,7 @@ class COPRORunner:
 
     def _full_evaluate_best(
         self,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> None:
         if not self.prompt_configurations_by_id:
             return
@@ -674,24 +673,30 @@ class COPRORunner:
 
     async def _a_generate_child_prompt(
         self,
+        strategy: SIMBAStrategy,
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
+        minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> Optional[Prompt]:
         try:
             old_prompt = parent_prompt_configuration.prompts[selected_module_id]
         except KeyError as exc:
             raise DeepEvalError(
-                "COPRORunner expected a prompt for module_id "
+                "SIMBARunner expected a prompt for module_id "
                 f"{selected_module_id!r} but none was found in the "
                 "current prompt configuration."
             ) from exc
+
+        strategy_feedback = self._build_feedback_for_strategy(
+            strategy, feedback_text, minibatch
+        )
 
         new_prompt = await self._rewriter.a_rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
-            feedback_text=feedback_text,
+            feedback_text=strategy_feedback,
         )
 
         if old_prompt.type != new_prompt.type or self._prompts_equivalent(
@@ -703,25 +708,31 @@ class COPRORunner:
 
     def _generate_child_prompt(
         self,
+        strategy: SIMBAStrategy,
         selected_module_id: ModuleId,
         parent_prompt_configuration: PromptConfiguration,
         feedback_text: str,
+        minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> Optional[Prompt]:
         try:
             old_prompt = parent_prompt_configuration.prompts[selected_module_id]
         except KeyError as exc:
             # This should never happen in normal operation.
             raise DeepEvalError(
-                "COPRORunner expected a prompt for module_id "
+                "SIMBARunner expected a prompt for module_id "
                 f"{selected_module_id!r} but none was found in the "
                 "current prompt configuration."
             ) from exc
+
+        strategy_feedback = self._build_feedback_for_strategy(
+            strategy, feedback_text, minibatch
+        )
 
         new_prompt = self._rewriter.rewrite(
             model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
-            feedback_text=feedback_text,
+            feedback_text=strategy_feedback,
         )
 
         if old_prompt.type != new_prompt.type or self._prompts_equivalent(
@@ -743,6 +754,140 @@ class COPRORunner:
         )
         child_prompt_configuration.prompts[selected_module_id] = child_prompt
         return child_prompt_configuration
+
+    def _truncate_instruction(self, text: str) -> str:
+        """
+        Truncate strategy instructions + feedback to the configured character
+        budget so the rewriter prompt does not explode.
+        """
+        max_chars = self.config.rewrite_instruction_max_chars
+        if max_chars <= 0:
+            return text
+        if len(text) <= max_chars:
+            return text
+        return text[:max_chars]
+
+    def _build_demo_block(
+        self,
+        minibatch: Union[List[Golden], List[ConversationalGolden]],
+    ) -> str:
+        """
+        Build a small block of input/context/output demos from the current
+        minibatch, inspired by SIMBA's `append_a_demo` strategy.
+
+        For each Golden:
+
+            Golden:
+                Input   <- golden.input
+                Context <- " ".join(golden.context) if present
+                Output  <- golden.expected_output
+
+            ConversationalGolden:
+                Input   <- golden.scenario
+                Context <- " ".join(golden.context) if present
+                Output  <- golden.expected_outcome
+
+        All text segments are independently truncated to `demo_input_max_chars`.
+        """
+        max_demos = self.config.max_demos_per_proposal
+        if max_demos <= 0:
+            return ""
+
+        lines: List[str] = []
+        demo_limit = min(max_demos, len(minibatch))
+        max_chars = self.config.demo_input_max_chars
+
+        for golden in minibatch[:demo_limit]:
+            if isinstance(golden, Golden):
+                input_text = golden.input or ""
+                expected_output_text = golden.expected_output or ""
+                ctx_list = golden.context or []
+            elif isinstance(golden, ConversationalGolden):
+                input_text = golden.scenario or ""
+                expected_output_text = golden.expected_outcome or ""
+                ctx_list = golden.context or []
+            else:
+                # Unknown type; skip defensively
+                continue
+
+            context_text = " ".join(ctx_list) if ctx_list else ""
+
+            # Skip completely empty triples
+            if not input_text and not expected_output_text and not context_text:
+                continue
+
+            # Truncate each segment independently
+            if max_chars > 0:
+                if len(input_text) > max_chars:
+                    input_text = input_text[:max_chars]
+                if len(context_text) > max_chars:
+                    context_text = context_text[:max_chars]
+                if len(expected_output_text) > max_chars:
+                    expected_output_text = expected_output_text[:max_chars]
+
+            demo_lines: List[str] = [f"Input: {input_text}"]
+            if context_text:
+                demo_lines.append(f"Context: {context_text}")
+            demo_lines.append(f"Output: {expected_output_text}")
+
+            lines.append("\n".join(demo_lines))
+
+        return "\n\n".join(lines)
+
+    def _build_feedback_for_strategy(
+        self,
+        strategy: SIMBAStrategy,
+        feedback_text: str,
+        minibatch: Union[List[Golden], List[ConversationalGolden]],
+    ) -> str:
+        """
+        Construct a strategy-specific feedback string that is passed into
+        PromptRewriter.rewrite / a_rewrite.
+
+        - APPEND_RULE: emphasize extracting a concise rule from metric feedback.
+        - APPEND_DEMO: emphasize appending concrete demos built from goldens.
+        """
+        base = (feedback_text or "").strip()
+
+        if strategy is SIMBAStrategy.APPEND_RULE:
+            prefix = (
+                "Strategy: Append a concise natural-language rule to the existing "
+                "prompt that addresses the issues described below. Preserve all "
+                "original instructions and add the new rule(s) in a clearly marked "
+                '"Rules" or "Guidelines" section.\n\n'
+            )
+            text = prefix
+            if base:
+                text += "Evaluation feedback:\n" + base
+            return self._truncate_instruction(text)
+
+        if strategy is SIMBAStrategy.APPEND_DEMO:
+            demos = self._build_demo_block(minibatch)
+            prefix = (
+                "Strategy: Append one or more concrete input/output demonstrations "
+                "to the prompt. Each demo should illustrate how to respond "
+                "correctly on similar inputs.\n\n"
+            )
+            text = prefix
+            if base:
+                text += "Evaluation feedback:\n" + base + "\n\n"
+            if demos:
+                text += (
+                    "Candidate demos built from the current minibatch:\n"
+                    + demos
+                )
+            return self._truncate_instruction(text)
+
+        # just pass through feedback.
+        return self._truncate_instruction(base)
+
+    def _sample_strategy(self) -> SIMBAStrategy:
+        """
+        Sample one of the configured SIMBA edit strategies.
+
+        Defaults to APPEND_RULE if the strategy list is empty for any reason.
+        """
+        return self.random_state.choice(self._strategies)
 
     def _update_progress(
         self,
@@ -786,7 +931,7 @@ class COPRORunner:
 
     def _run_loop_iteration(
         self,
-        copro_iteration: Callable[[], bool],
+        simba_iteration: Callable[[], bool],
     ) -> None:
         total_iterations = self.config.iterations
         remaining_iterations = total_iterations
@@ -798,7 +943,7 @@ class COPRORunner:
             iteration += 1
             start_time = time.perf_counter()
             try:
-                ok = copro_iteration()
+                ok = simba_iteration()
             except Exception as exc:
                 self._update_error(total_iterations, iteration, exc)
                 break
@@ -812,7 +957,7 @@ class COPRORunner:
 
     async def _a_run_loop_iteration(
         self,
-        a_copro_iteration: Callable[[], Awaitable[bool]],
+        a_simba_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
         total_iterations = self.config.iterations
         remaining_iterations = total_iterations
@@ -824,7 +969,7 @@ class COPRORunner:
             iteration += 1
             start_time = time.perf_counter()
             try:
-                ok = await a_copro_iteration()
+                ok = await a_simba_iteration()
             except Exception as exc:
                 self._update_error(total_iterations, iteration, exc)
                 break

@@ -92,8 +92,7 @@ class MIPROConfig(BaseModel):
             "size; bounded between minibatch_min_size and minibatch_max_size."
         ),
     )
-    random_seed: int = 0
-
+    random_seed: conint(ge=0) = 0
     min_delta: confloat(ge=0.0) = Field(
         default=0.0,
         description=(

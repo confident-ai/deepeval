@@ -48,7 +48,14 @@ class PromptConfiguration:
 
 
 class ScoringAdapter(Protocol):
-    """Scoring Adapter contract used by GEPARunner (sync/async twins)."""
+    """
+    Scoring adapter contract used by optimization runners.
+
+    Runners call into this adapter to:
+    - compute scores per-instance on some subset (score_on_pareto),
+    - compute minibatch means for selection and acceptance,
+    - generate feedback text used by the PromptRewriter.
+    """
 
     # Sync
     def score_on_pareto(
@@ -79,7 +86,7 @@ class ScoringAdapter(Protocol):
     def select_module(
         self, prompt_configuration: PromptConfiguration
     ) -> ModuleId:
-        """Pick a module to mutate (random/weighted/round-robin)."""
+        """Pick a module to mutate."""
         ...
 
     # Async

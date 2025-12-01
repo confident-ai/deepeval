@@ -42,6 +42,8 @@ from deepeval.optimization.miprov2.configs import MIPROConfig
 from deepeval.optimization.miprov2.loop import MIPRORunner
 from deepeval.optimization.copro.configs import COPROConfig
 from deepeval.optimization.copro.loop import COPRORunner
+from deepeval.optimization.simba.configs import SIMBAConfig
+from deepeval.optimization.simba.loop import SIMBARunner
 
 
 class PromptOptimizer:
@@ -143,16 +145,14 @@ class PromptOptimizer:
         algo_normalized = (algo_raw.strip() or "gepa").lower()
         if algo_normalized in {"mipro", "miprov2"}:
             algo_normalized = "miprov2"
-        if algo_normalized in {"copro"}:
-            algo_normalized = "copro"
 
-        allowed_algorithms = {"gepa", "miprov2", "copro"}
+        self._allowed_algorithms = {"gepa", "miprov2", "copro", "simba"}
 
-        if algo_normalized not in allowed_algorithms:
+        if algo_normalized not in self._allowed_algorithms:
             raise DeepEvalError(
                 "PromptOptimizer.__init__ received unsupported `algorithm` "
                 f"value {algorithm!r}. Supported algorithms are: "
-                + ", ".join(sorted(allowed_algorithms))
+                + ", ".join(sorted(self._allowed_algorithms))
             )
 
         self.algorithm = algo_normalized
@@ -408,11 +408,11 @@ class PromptOptimizer:
         )
 
     def _build_default_runner(self) -> RunnerProtocol:
-        if self.algorithm not in {"gepa", "miprov2", "copro"}:
+        if self.algorithm not in self._allowed_algorithms:
             raise DeepEvalError(
                 f"Unsupported optimization algorithm: {self.algorithm!r}. "
                 "Supported algorithms are: 'gepa', 'miprov2' (alias 'mipro'), "
-                "'copro'."
+                "'copro', 'simba'."
             )
 
         scoring_adapter = self._build_default_scoring_adapter()
@@ -436,16 +436,21 @@ class PromptOptimizer:
                 config=config,
                 scoring_adapter=scoring_adapter,
             )
-        else:
+        elif self.algorithm == "copro":
             # COPRO cooperative multi-proposal variant
             config = COPROConfig()
             runner = COPRORunner(
                 config=config,
                 scoring_adapter=scoring_adapter,
             )
+        else:
+            config = SIMBAConfig()
+            runner = SIMBARunner(
+                config=config,
+                scoring_adapter=scoring_adapter,
+            )
 
-        # Attach a PromptRewriter to both GEPA and MIPRO so they share the same
-        # list mutation behaviour and random_state
+        # Attach a PromptRewriter to the runner so that it has mutation behavior
         runner._rewriter = PromptRewriter(
             max_chars=config.rewrite_instruction_max_chars,
             list_mutation_config=self.prompt_list_mutation_config,

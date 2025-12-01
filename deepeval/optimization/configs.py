@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class OptimizerDisplayConfig(BaseModel):
-    """Display controls used by GEPA"""
+    """Display controls used by PromptOptimizer for all algorithms."""
 
     show_indicator: bool = True
     announce_ties: bool = Field(
