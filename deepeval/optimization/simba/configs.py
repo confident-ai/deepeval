@@ -1,22 +1,7 @@
 from __future__ import annotations
-from enum import Enum
 from pydantic import Field, PositiveInt, conint
 
 from deepeval.optimization.copro.configs import COPROConfig
-
-
-class SIMBAStrategy(str, Enum):
-    """
-    Edit strategies used by SIMBA-style optimization.
-
-    - APPEND_DEMO: append one or more input/output demos distilled from the
-      current minibatch, similar in spirit to DSPy's `append_a_demo`.
-    - APPEND_RULE: append a concise natural-language rule distilled from
-      feedback, similar in spirit to DSPy's `append_a_rule`.
-    """
-
-    APPEND_DEMO = "append_demo"
-    APPEND_RULE = "append_rule"
 
 
 class SIMBAConfig(COPROConfig):

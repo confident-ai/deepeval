@@ -7,7 +7,8 @@ from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
 from deepeval.optimization.types import PromptConfiguration
-from deepeval.optimization.simba.configs import SIMBAConfig, SIMBAStrategy
+from deepeval.optimization.simba.configs import SIMBAConfig
+from deepeval.optimization.simba.types import SIMBAStrategy
 from deepeval.optimization.simba.loop import SIMBARunner
 
 from tests.test_core.stubs import (

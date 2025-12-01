@@ -49,7 +49,8 @@ from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimization.mutations.prompt_rewriter import PromptRewriter
 
-from .configs import SIMBAConfig, SIMBAStrategy
+from .configs import SIMBAConfig
+from .types import SIMBAStrategy
 
 
 class SIMBARunner:
