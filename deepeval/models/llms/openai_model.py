@@ -474,6 +474,22 @@ class GPTModel(DeepEvalBaseLLM):
         return completions
 
     ###############################################
+    # Capabilities - opt-in
+    ###############################################
+
+    def supports_structured_outputs(self) -> bool:
+        """
+        OpenAI models that natively enforce typed structured outputs
+        """
+        return self.model_name in structured_outputs_models
+
+    def supports_json_mode(self) -> bool:
+        """
+        OpenAI models that enforce JSON mode
+        """
+        return self.model_name in json_mode_models
+
+    ###############################################
     # Utilities
     ###############################################
 

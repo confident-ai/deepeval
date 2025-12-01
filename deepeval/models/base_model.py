@@ -76,6 +76,30 @@ class DeepEvalBaseLLM(ABC):
     def get_model_name(self, *args, **kwargs) -> str:
         pass
 
+    # Capabilities
+    def supports_structured_outputs(self) -> bool:
+        return False
+
+    def supports_json_mode(self) -> bool:
+        return False
+
+    # Schema-safe wrappers
+    def generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return self.generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass  # this means provider doesn't accept schema kwarg
+        return self.generate(*args, **kwargs)
+
+    async def a_generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return await self.a_generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass
+        return await self.a_generate(*args, **kwargs)
+
 
 class DeepEvalBaseMLLM(ABC):
     def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
@@ -102,6 +126,31 @@ class DeepEvalBaseMLLM(ABC):
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
         pass
+
+    # Capabilities
+
+    def supports_structured_outputs(self) -> bool:
+        return False
+
+    def supports_json_mode(self) -> bool:
+        return False
+
+    # Schema-safe wrappers
+    def generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return self.generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass  # this means provider doesn't accept schema kwarg
+        return self.generate(*args, **kwargs)
+
+    async def a_generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return await self.a_generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass
+        return await self.a_generate(*args, **kwargs)
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
