@@ -1,7 +1,14 @@
 import os
 import portalocker
+
+import deepeval.test_run.test_run as tr_mod
+
+from types import SimpleNamespace
+
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run.test_run import TestRunManager, LLMApiTestCase
+from tests.test_core.helpers import _make_fake_portalocker
+from tests.test_core.stubs import RecordingPortalockerLock
 
 
 def test_get_test_run_preserves_valid_instance_on_read_lock(tmp_path):
@@ -87,3 +94,59 @@ def test_update_test_run_falls_back_in_memory_on_read_failure(tmp_path):
     out = trm.get_test_run()
     assert out is not None
     assert any(tc.name == "t1" for tc in out.test_cases)
+
+
+def test_save_test_run_with_save_under_key_flushes_and_syncs(
+    monkeypatch, tmp_path
+):
+    """
+    When save_under_key is used, TestRunManager.save_test_run calls json.dump
+    directly. We want to ensure that path flushes and fsyncs the file before releasing
+    the portalocker lock.
+    """
+    # Patch portalocker inside the module under test
+    monkeypatch.setattr(
+        tr_mod, "portalocker", _make_fake_portalocker(), raising=False
+    )
+
+    # Track fsync calls
+    fsync_calls: list[int] = []
+
+    def fake_fsync(fd: int) -> None:
+        fsync_calls.append(fd)
+
+    monkeypatch.setattr(tr_mod.os, "fsync", fake_fsync)
+
+    # Minimal "test_run" stub: only needs model_dump/dict for this path
+    dummy_test_run = SimpleNamespace(
+        model_dump=lambda **kwargs: {"foo": "bar"},
+        dict=lambda **kwargs: {"foo": "bar"},
+        save=lambda f: None,
+    )
+
+    # Minimal "self" stub: save_to_disk + test_run
+    dummy_manager = SimpleNamespace(
+        save_to_disk=True,
+        test_run=dummy_test_run,
+    )
+
+    path = tmp_path / "run.json"
+
+    # Call the real implementation as an unbound method
+    TestRunManager.save_test_run(
+        dummy_manager,
+        str(path),
+        save_under_key="wrapped_key",
+    )
+
+    f = RecordingPortalockerLock.last_file
+    assert f is not None, "RecordingPortalockerLock did not capture a file"
+
+    assert f.flushed, (
+        "save_test_run(..., save_under_key=...) should call file.flush() "
+        "after json.dump(...)"
+    )
+    assert (
+        fsync_calls
+    ), "save_test_run(..., save_under_key=...) should call os.fsync(file.fileno())"
+    assert fsync_calls[-1] == f.fileno()

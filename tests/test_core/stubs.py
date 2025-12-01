@@ -1,3 +1,4 @@
+import io
 import time
 import asyncio
 from types import SimpleNamespace
@@ -309,3 +310,54 @@ class _FakeTrace:
         self.status = TraceSpanStatus.SUCCESS
         self.error = None
         self.uuid = "trace-uuid"
+
+
+##################
+# File I/O stubs #
+##################
+
+
+class RecordingFile(io.StringIO):
+    """
+    Test stub that records flush() calls and exposes a fake fileno(),
+    used to verify that we call flush() and os.fsync(fd) correctly.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.flushed = False
+        self.closed_flag = False
+        # Arbitrary fake file descriptor; tests only check identity equality
+        self._fd = 42
+
+    def flush(self):
+        self.flushed = True
+        return super().flush()
+
+    def fileno(self):
+        return self._fd
+
+    def close(self):
+        self.closed_flag = True
+        return super().close()
+
+
+class RecordingPortalockerLock:
+    """
+    Minimal drop-in for portalocker.Lock used in tests.
+
+    It always returns a new RecordingFile and exposes the most recently
+    created one via the class attribute `last_file` so tests can assert on it.
+    """
+
+    last_file = None
+
+    def __init__(self, *args, **kwargs):
+        self.file = RecordingFile()
+        RecordingPortalockerLock.last_file = self.file
+
+    def __enter__(self):
+        return self.file
+
+    def __exit__(self, exc_type, exc, tb):
+        self.file.close()
