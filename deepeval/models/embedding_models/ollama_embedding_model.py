@@ -24,7 +24,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         self.host = (
             host
-            or settings.LOCAL_EMBEDDING_BASE_URL is not None
+            or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
         self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
