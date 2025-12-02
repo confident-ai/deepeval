@@ -1,8 +1,10 @@
 import time
 import uuid
+from types import SimpleNamespace
 from datetime import datetime, timezone
 
 from deepeval.tracing.api import TraceApi, TraceSpanApiStatus
+from tests.test_core.stubs import RecordingPortalockerLock
 
 
 def ts_iso8601_utc(ts: float) -> str:
@@ -60,3 +62,16 @@ def reset_settings_env(monkeypatch, *, skip_keys: set[str] = set()):
 
     # don’t carry default save across tests, keep things clean
     monkeypatch.delenv("DEEPEVAL_DEFAULT_SAVE", raising=False)
+
+
+def _make_fake_portalocker():
+    """
+    Minimal portalocker replacement for tests that need to inspect file writes.
+    """
+    return SimpleNamespace(
+        Lock=RecordingPortalockerLock,
+        LOCK_EX=1,
+        LOCK_SH=2,
+        LOCK_NB=4,
+        exceptions=SimpleNamespace(LockException=RuntimeError),
+    )

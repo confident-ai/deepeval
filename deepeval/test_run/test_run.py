@@ -406,9 +406,10 @@ class TestRun(BaseModel):
         try:
             body = self.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
-            # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
         json.dump(body, f, cls=TestRunEncoder)
+        f.flush()
+        os.fsync(f.fileno())
         return self
 
     @classmethod
@@ -515,6 +516,8 @@ class TestRunManager:
                             )
                         wrapper_data = {save_under_key: test_run_data}
                         json.dump(wrapper_data, file, cls=TestRunEncoder)
+                        file.flush()
+                        os.fsync(file.fileno())
                     else:
                         self.test_run.save(file)
             except portalocker.exceptions.LockException:
@@ -527,6 +530,8 @@ class TestRunManager:
                     LATEST_TEST_RUN_FILE_PATH, mode="w"
                 ) as file:
                     json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
+                    file.flush()
+                    os.fsync(file.fileno())
             except portalocker.exceptions.LockException:
                 pass
 

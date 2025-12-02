@@ -2,7 +2,7 @@ import warnings
 
 from typing import Optional, Tuple, Union, Dict
 from anthropic import Anthropic, AsyncAnthropic
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
@@ -10,7 +10,7 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.models.utils import parse_model_name
+from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 
@@ -41,7 +41,14 @@ class AnthropicModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = parse_model_name(model)
-        self._anthropic_api_key = _anthropic_api_key
+
+        if _anthropic_api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self._anthropic_api_key: SecretStr | None = SecretStr(
+                _anthropic_api_key
+            )
+        else:
+            self._anthropic_api_key = get_settings().ANTHROPIC_API_KEY
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
@@ -155,9 +162,14 @@ class AnthropicModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
-        settings = get_settings()
+        api_key = require_secret_api_key(
+            self._anthropic_api_key,
+            provider_label="Anthropic",
+            env_var_name="ANTHROPIC_API_KEY",
+            param_hint="`_anthropic_api_key` to AnthropicModel(...)",
+        )
         kw = dict(
-            api_key=settings.ANTHROPIC_API_KEY or self._anthropic_api_key,
+            api_key=api_key,
             **self._client_kwargs(),
         )
         try:
