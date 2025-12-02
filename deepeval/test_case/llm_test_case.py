@@ -368,8 +368,8 @@ class LLMTestCase(BaseModel):
         self.is_multimodal = (
             any(
                 [
-                    re.search(pattern, self.input) is not None,
-                    re.search(pattern, self.actual_output) is not None,
+                    re.search(pattern, self.input) is not None if self.input else False,
+                    re.search(pattern, self.actual_output) is not None if self.actual_output else False,
                 ]
             )
             if isinstance(self.input, str)
