@@ -6,8 +6,8 @@ from deepeval.metrics.utils import (
     check_mllm_test_case_params,
 )
 from deepeval.test_case import (
-    MLLMTestCase,
-    MLLMTestCaseParams,
+    LLMTestCase,
+    LLMTestCaseParams,
     ToolCallParams,
     ToolCall,
 )
@@ -16,11 +16,11 @@ from deepeval.metrics import BaseMultimodalMetric
 
 class MultimodalToolCorrectnessMetric(BaseMultimodalMetric):
 
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
-        MLLMTestCaseParams.TOOLS_CALLED,
-        MLLMTestCaseParams.EXPECTED_TOOLS,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.TOOLS_CALLED,
+        LLMTestCaseParams.EXPECTED_TOOLS,
     ]
 
     def __init__(
@@ -43,7 +43,7 @@ class MultimodalToolCorrectnessMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -90,7 +90,7 @@ class MultimodalToolCorrectnessMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,

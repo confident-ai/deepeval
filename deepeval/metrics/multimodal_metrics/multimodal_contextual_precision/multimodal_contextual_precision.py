@@ -1,7 +1,7 @@
 from typing import Optional, List, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.template import (
     MultiModalContextualPrecisionTemplate,
 )
@@ -12,7 +12,6 @@ from deepeval.metrics.utils import (
     check_mllm_test_case_params,
     initialize_multimodal_model,
 )
-from deepeval.test_case import LLMTestCaseParams
 from deepeval.models import DeepEvalBaseMLLM
 import deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.schema as mcpschema
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -46,7 +45,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -94,7 +93,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,

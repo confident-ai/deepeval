@@ -48,8 +48,6 @@ from deepeval.test_case import (
     Turn,
     LLMTestCase,
     LLMTestCaseParams,
-    MLLMTestCase,
-    MLLMTestCaseParams,
     ConversationalTestCase,
     MLLMImage,
     Turn,
@@ -289,8 +287,8 @@ def check_arena_test_case_params(
 
 
 def check_mllm_test_case_params(
-    test_case: MLLMTestCase,
-    test_case_params: List[MLLMTestCaseParams],
+    test_case: LLMTestCase,
+    test_case_params: List[LLMTestCaseParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: BaseMetric,
@@ -313,11 +311,6 @@ def check_mllm_test_case_params(
             error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
             raise ValueError(error_str)
 
-    if isinstance(test_case, MLLMTestCase) is False:
-        error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
-        metric.error = error_str
-        raise ValueError(error_str)
-
     missing_params = []
     for param in test_case_params:
         if getattr(test_case, param.value) is None:
@@ -339,8 +332,8 @@ def check_mllm_test_case_params(
 
 
 def check_mllm_test_cases_params(
-    test_cases: List[MLLMTestCase],
-    test_case_params: List[MLLMTestCaseParams],
+    test_cases: List[LLMTestCase],
+    test_case_params: List[LLMTestCaseParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: BaseMetric,

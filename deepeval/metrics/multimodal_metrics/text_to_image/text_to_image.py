@@ -4,7 +4,7 @@ import math
 import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
 )
@@ -19,9 +19,9 @@ from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
 
@@ -43,7 +43,7 @@ class TextToImageMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
@@ -99,7 +99,7 @@ class TextToImageMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:

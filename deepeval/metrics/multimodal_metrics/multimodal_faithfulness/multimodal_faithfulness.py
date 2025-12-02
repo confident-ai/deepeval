@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 import asyncio
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_faithfulness.template import (
     MultimodalFaithfulnessTemplate,
 )
@@ -20,10 +20,10 @@ from deepeval.metrics.indicator import metric_progress_indicator
 
 class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
 
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
-        MLLMTestCaseParams.RETRIEVAL_CONTEXT,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
     ]
 
     def __init__(
@@ -50,7 +50,7 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -96,7 +96,7 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,

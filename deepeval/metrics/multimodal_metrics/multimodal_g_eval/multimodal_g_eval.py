@@ -4,8 +4,8 @@ from typing import Optional, List, Tuple, Type, Union
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
-    MLLMTestCaseParams,
-    MLLMTestCase,
+    LLMTestCaseParams,
+    LLMTestCase,
 )
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import (
     MultimodalGEvalTemplate,
@@ -42,7 +42,7 @@ class MultimodalGEval(BaseMultimodalMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[MLLMTestCaseParams],
+        evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
@@ -79,7 +79,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -134,7 +134,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _additional_context: Optional[str] = None,
@@ -221,7 +221,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list = construct_test_case_list(
             self.evaluation_params, test_case
@@ -296,7 +296,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                     return data["score"], data["reason"]
 
     def _evaluate(
-        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list = construct_test_case_list(
             self.evaluation_params, test_case

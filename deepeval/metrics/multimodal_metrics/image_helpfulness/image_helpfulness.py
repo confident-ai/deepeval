@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
     ImageHelpfulnessTemplate,
 )
@@ -22,9 +22,9 @@ from deepeval.utils import get_or_create_event_loop
 
 class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -46,7 +46,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -146,7 +146,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,

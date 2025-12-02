@@ -1,7 +1,7 @@
 from typing import Optional, List, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.template import (
     MultimodalAnswerRelevancyTemplate,
 )
@@ -19,9 +19,9 @@ from deepeval.metrics.indicator import metric_progress_indicator
 
 class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
 
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -43,7 +43,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -90,7 +90,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
