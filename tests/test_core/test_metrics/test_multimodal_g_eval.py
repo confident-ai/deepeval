@@ -2,7 +2,7 @@ import os
 import pytest
 
 from deepeval import assert_test
-from deepeval.test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.multimodal_g_eval import (
     MultimodalGEval,
 )
@@ -84,8 +84,8 @@ def test_multimodal_geval_uses_custom_evaluation_template(strict_mode):
         name="MM Correctness (custom template)",
         criteria="Decide if the actual output correctly answers the question given the image.",
         evaluation_params=[
-            MLLMTestCaseParams.ACTUAL_OUTPUT,
-            MLLMTestCaseParams.EXPECTED_OUTPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+            LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
         threshold=0.5,
         verbose_mode=True,
@@ -95,10 +95,10 @@ def test_multimodal_geval_uses_custom_evaluation_template(strict_mode):
         evaluation_template=MyMMTemplate,
     )
 
-    tc = MLLMTestCase(
-        input=["What fruit is shown in the image?", MLLMImage(url=BANANA)],
-        actual_output=["A banana."],
-        expected_output=["A banana."],
+    tc = LLMTestCase(
+        input=f"What fruit is shown in the image? {MLLMImage(url=BANANA)}",
+        actual_output="A banana.",
+        expected_output="A banana.",
     )
 
     assert_test(tc, [metric])

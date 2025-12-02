@@ -21,7 +21,7 @@ from deepeval.test_run.api import (
 )
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing.api import SpanApiType, span_api_type_literals
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
@@ -182,7 +182,7 @@ class TestRun(BaseModel):
 
     def set_dataset_properties(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
         if self.dataset_alias is None:
             self.dataset_alias = test_case._dataset_alias
@@ -533,7 +533,7 @@ class TestRunManager:
     def update_test_run(
         self,
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
         if (
             api_test_case.metrics_data is not None

@@ -70,7 +70,6 @@ from deepeval.models.retry_policy import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
 )
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run import (
@@ -264,7 +263,7 @@ async def _await_with_outer_deadline(obj, *args, timeout: float, **kwargs):
 
 def execute_test_cases(
     test_cases: Union[
-        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+        List[LLMTestCase], List[ConversationalTestCase]
     ],
     metrics: Union[
         List[BaseMetric],
@@ -325,12 +324,12 @@ def execute_test_cases(
         )
         for i, test_case in enumerate(test_cases):
             # skip what we know we won't run
-            if isinstance(test_case, LLMTestCase):
+            if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal):
                 if not llm_metrics:
                     update_pbar(progress, pbar_id)
                     continue
                 per_case_total = len(llm_metrics)
-            elif isinstance(test_case, MLLMTestCase):
+            elif (isinstance(test_case, LLMTestCase) and test_case.is_multimodal):
                 if not mllm_metrics:
                     update_pbar(progress, pbar_id)
                     continue
@@ -349,10 +348,10 @@ def execute_test_cases(
 
             metrics_for_case = (
                 llm_metrics
-                if isinstance(test_case, LLMTestCase)
+                if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal)
                 else (
                     mllm_metrics
-                    if isinstance(test_case, MLLMTestCase)
+                    if (isinstance(test_case, LLMTestCase) and test_case.is_multimodal)
                     else conversational_metrics
                 )
             )
@@ -360,10 +359,10 @@ def execute_test_cases(
                 test_case=test_case,
                 index=(
                     llm_test_case_count + 1
-                    if isinstance(test_case, LLMTestCase)
+                    if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal)
                     else (
                         mllm_test_case_count + 1
-                        if isinstance(test_case, MLLMTestCase)
+                        if (isinstance(test_case, LLMTestCase) and test_case.is_multimodal)
                         else conversational_test_case_count + 1
                     )
                 ),
@@ -383,7 +382,7 @@ def execute_test_cases(
                         for metric in metrics:
                             metric.error = None  # Reset metric error
 
-                        if isinstance(test_case, LLMTestCase):
+                        if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal):
                             llm_test_case_count += 1
                             cached_test_case = None
                             if cache_config.use_cache:
@@ -436,7 +435,7 @@ def execute_test_cases(
                                 update_pbar(progress, pbar_test_case_id)
 
                         # No caching and not sending test cases to Confident AI for multimodal metrics yet
-                        elif isinstance(test_case, MLLMTestCase):
+                        elif (isinstance(test_case, LLMTestCase) and test_case.is_multimodal):
                             mllm_test_case_count += 1
                             for metric in mllm_metrics:
                                 current_index = index_of[id(metric)]
@@ -561,7 +560,7 @@ def execute_test_cases(
 
 async def a_execute_test_cases(
     test_cases: Union[
-        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+        List[LLMTestCase], List[ConversationalTestCase]
     ],
     metrics: Union[
         List[BaseMetric],
@@ -613,7 +612,7 @@ async def a_execute_test_cases(
     llm_test_case_counter = -1
     mllm_test_case_counter = -1
     conversational_test_case_counter = -1
-    test_results: List[Union[TestResult, MLLMTestCase]] = []
+    test_results: List[Union[TestResult, LLMTestCase]] = []
     tasks = []
 
     if display_config.show_indicator and _use_bar_indicator:
@@ -632,7 +631,7 @@ async def a_execute_test_cases(
         with progress:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
-                    if isinstance(test_case, LLMTestCase):
+                    if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal):
                         if len(llm_metrics) == 0:
                             update_pbar(progress, pbar_id)
                             continue
@@ -660,7 +659,7 @@ async def a_execute_test_cases(
                         )
                         tasks.append(asyncio.create_task(task))
 
-                    elif isinstance(test_case, MLLMTestCase):
+                    elif (isinstance(test_case, LLMTestCase) and test_case.is_multimodal):
                         mllm_test_case_counter += 1
                         copied_multimodal_metrics: List[
                             BaseMultimodalMetric
@@ -722,7 +721,7 @@ async def a_execute_test_cases(
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
-                if isinstance(test_case, LLMTestCase):
+                if (isinstance(test_case, LLMTestCase) and not test_case.is_multimodal):
                     if len(llm_metrics) == 0:
                         continue
                     llm_test_case_counter += 1
@@ -770,7 +769,7 @@ async def a_execute_test_cases(
                     )
                     tasks.append(asyncio.create_task((task)))
 
-                elif isinstance(test_case, MLLMTestCase):
+                elif (isinstance(test_case, LLMTestCase) and test_case.is_multimodal):
                     mllm_test_case_counter += 1
                     copied_multimodal_metrics: List[BaseMultimodalMetric] = (
                         copy_metrics(mllm_metrics)
@@ -812,7 +811,7 @@ async def _a_execute_llm_test_cases(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
     test_run_manager: TestRunManager,
-    test_results: List[Union[TestResult, MLLMTestCase]],
+    test_results: List[Union[TestResult, LLMTestCase]],
     count: int,
     test_run: TestRun,
     ignore_errors: bool,
@@ -931,9 +930,9 @@ async def _a_execute_llm_test_cases(
 
 async def _a_execute_mllm_test_cases(
     metrics: List[BaseMultimodalMetric],
-    test_case: MLLMTestCase,
+    test_case: LLMTestCase,
     test_run_manager: TestRunManager,
-    test_results: List[Union[TestResult, MLLMTestCase]],
+    test_results: List[Union[TestResult, LLMTestCase]],
     count: int,
     ignore_errors: bool,
     skip_on_missing_params: bool,
@@ -1010,7 +1009,7 @@ async def _a_execute_conversational_test_cases(
     ],
     test_case: ConversationalTestCase,
     test_run_manager: TestRunManager,
-    test_results: List[Union[TestResult, MLLMTestCase]],
+    test_results: List[Union[TestResult, LLMTestCase]],
     count: int,
     ignore_errors: bool,
     skip_on_missing_params: bool,
@@ -1773,7 +1772,7 @@ async def a_execute_agentic_test_cases(
 async def _a_execute_agentic_test_case(
     golden: Golden,
     test_run_manager: TestRunManager,
-    test_results: List[Union[TestResult, MLLMTestCase]],
+    test_results: List[Union[TestResult, LLMTestCase]],
     count: int,
     verbose_mode: Optional[bool],
     ignore_errors: bool,
@@ -3202,7 +3201,7 @@ async def _evaluate_test_case_pairs(
 
 def _execute_metric(
     metric: BaseMetric,
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     show_metric_indicator: bool,
     in_component: bool,
     error_config: ErrorConfig,
