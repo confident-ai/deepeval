@@ -9,7 +9,7 @@ from pydantic import (
 )
 import time
 
-from deepeval.optimizer.policies.tie_breaker import (
+from deepeval.optimizer.policies import (
     TieBreaker as TieBreakerPolicy,
 )
 
