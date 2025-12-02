@@ -35,6 +35,7 @@ class ProviderSlug(str, Enum):
     LITELLM = "litellm"
     LOCAL = "local"
     OLLAMA = "ollama"
+    OPENROUTER = "openrouter"
 
 
 def slugify(value: Union[str, ProviderSlug]) -> str:
