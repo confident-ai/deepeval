@@ -1,9 +1,9 @@
-from typing import List, Optional, Literal
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
 class FaithfulnessVerdict(BaseModel):
-    verdict: Literal["yes", "idk", "no"]
+    verdict: str
     reason: Optional[str] = Field(default=None)
 
 

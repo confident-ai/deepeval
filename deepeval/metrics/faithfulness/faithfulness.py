@@ -4,14 +4,17 @@ import asyncio
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
+    MLLMImage
 )
 from deepeval.metrics import BaseMetric
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_llm_test_case_params,
+    check_mllm_test_case_params,
     initialize_model,
+    initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -46,8 +49,7 @@ class FaithfulnessMetric(BaseMetric):
         evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -66,8 +68,19 @@ class FaithfulnessMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        
+        self.multimodal = test_case.multimodal
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        if self.multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
+            self.model, self.using_native_model = initialize_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -84,8 +97,19 @@ class FaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
+                if self.multimodal:
+                    retrieval_context = convert_to_multi_modal_array(
+                        test_case.retrieval_context
+                    )
+                    actual_output = convert_to_multi_modal_array(
+                        test_case.actual_output
+                    )
+                else:
+                    retrieval_context = test_case.retrieval_context
+                    actual_output = test_case.actual_output
+
+                self.truths = self._generate_truths(retrieval_context)
+                self.claims = self._generate_claims(actual_output)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -114,7 +138,18 @@ class FaithfulnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        self.multimodal = test_case.multimodal
+
+        if self.multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
+            self.model, self.using_native_model = initialize_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -123,9 +158,20 @@ class FaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self.multimodal:
+                retrieval_context = convert_to_multi_modal_array(
+                    test_case.retrieval_context
+                )
+                actual_output = convert_to_multi_modal_array(
+                    test_case.actual_output
+                )
+            else:
+                retrieval_context = test_case.retrieval_context
+                actual_output = test_case.actual_output
+            
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_truths(test_case.retrieval_context),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_truths(retrieval_context),
+                self._a_generate_claims(actual_output),
             )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -155,10 +201,16 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
-            contradictions=contradictions,
-            score=format(self.score, ".2f"),
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -186,10 +238,16 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
-            contradictions=contradictions,
-            score=format(self.score, ".2f"),
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -213,9 +271,16 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, retrieval_context="\n\n".join(self.truths)
-        )
+
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+        
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -241,9 +306,16 @@ class FaithfulnessMetric(BaseMetric):
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, retrieval_context="\n\n".join(self.truths)
-        )
+
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -263,10 +335,16 @@ class FaithfulnessMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_truths(
+                excerpt=retrieval_context,
+                extraction_limit=self.truths_extraction_limit,
+            )
+        else:
+            prompt = self.evaluation_template.generate_truths(
+                retrieval_context="\n\n".join(retrieval_context),
+                extraction_limit=self.truths_extraction_limit,
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Truths)
             self.evaluation_cost += cost
@@ -281,10 +359,16 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_truths(
+                excerpt=retrieval_context,
+                extraction_limit=self.truths_extraction_limit,
+            )
+        else:
+            prompt = self.evaluation_template.generate_truths(
+                retrieval_context="\n\n".join(retrieval_context),
+                extraction_limit=self.truths_extraction_limit,
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Truths)
             self.evaluation_cost += cost
@@ -299,9 +383,14 @@ class FaithfulnessMetric(BaseMetric):
                 return data["truths"]
 
     async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_claims(
+                excerpt=actual_output
+            )
+        else:
+            prompt = self.evaluation_template.generate_claims(
+                actual_output=actual_output
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -316,9 +405,14 @@ class FaithfulnessMetric(BaseMetric):
                 return data["claims"]
 
     def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
-        )
+        if self.multimodal:
+            prompt = self.evaluation_template.generate_multimodal_claims(
+                excerpt=actual_output
+            )
+        else:
+            prompt = self.evaluation_template.generate_claims(
+                actual_output=actual_output
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost
