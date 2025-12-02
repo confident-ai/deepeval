@@ -24,7 +24,6 @@ from deepeval.metrics import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
     Turn,
 )
 from deepeval.prompt.api import PromptType, PromptMessage
@@ -101,7 +100,7 @@ class DeepEvalScoringAdapter:
         build_test_case: Optional[
             Callable[
                 [Union[Golden, ConversationalGolden], str],
-                Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+                Union[LLMTestCase, ConversationalTestCase],
             ]
         ] = None,
         objective_scalar: Objective = MeanObjective(),
