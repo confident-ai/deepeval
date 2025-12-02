@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.config.utils import (
     get_env_bool,
@@ -814,3 +815,26 @@ def format_error_text(
 
 def is_read_only_env():
     return get_settings().DEEPEVAL_FILE_SYSTEM == "READ_ONLY"
+
+
+##############
+# validation #
+##############
+
+
+def require_param(
+    param: Optional[Any] = None,
+    *,
+    provider_label: str,
+    env_var_name: str,
+    param_hint: str,
+) -> Any:
+
+    if param is None:
+        raise DeepEvalError(
+            f"{provider_label} is missing a required parameter. "
+            f"Set {env_var_name} in your environment or pass "
+            f"{param_hint}."
+        )
+
+    return param
