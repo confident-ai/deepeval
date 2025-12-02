@@ -11,7 +11,6 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from google.oauth2 import service_account
 
 
 if TYPE_CHECKING:
@@ -243,6 +242,13 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         return self._build_client(**kwargs)
 
+    def _require_oauth2(self):
+        return require_dependency(
+            "google.oauth2",
+            provider_label="GeminiModel",
+            install_hint="Install it with `pip install google-auth`.",
+        )
+
     def _require_module(self):
         return require_dependency(
             "google.genai",
@@ -268,8 +274,9 @@ class GeminiModel(DeepEvalBaseLLM):
                     "GOOGLE_CLOUD_LOCATION in your DeepEval configuration."
                 )
 
+            oauth2 = self._require_oauth2()
             credentials = (
-                service_account.Credentials.from_service_account_info(
+                oauth2.service_account.Credentials.from_service_account_info(
                     self.service_account_key,
                     scopes=[
                         "https://www.googleapis.com/auth/cloud-platform",
