@@ -42,8 +42,8 @@ Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "Contains specific investment advice"
+            "reason": "Contains specific investment advice",
+            "verdict": "yes"
         }}
     ]
 }}

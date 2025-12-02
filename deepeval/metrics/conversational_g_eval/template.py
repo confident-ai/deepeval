@@ -70,7 +70,8 @@ JSON:
     ---
     Example JSON:
     {{
-    "score": 0,
-    "reason": "Your concise and informative reason here."
+        "reason": "Your concise and informative reason here.",
+        "score": 0
     }}
-    """
+
+    JSON:"""

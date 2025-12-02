@@ -718,6 +718,8 @@ async def a_execute_test_cases(
                     "Gather timed out after %.1fs. Some metrics may be marked as timed out.",
                     _gather_timeout(),
                 )
+                if not error_config.ignore_errors:
+                    raise
 
     else:
         for test_case in test_cases:
@@ -803,7 +805,8 @@ async def a_execute_test_cases(
                 if not t.done():
                     t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            raise
+            if not error_config.ignore_errors:
+                raise
 
     return test_results
 

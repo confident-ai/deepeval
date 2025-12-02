@@ -77,8 +77,8 @@ class ConversationalBinaryJudgementTemplate:
 
                 Example:
                 {{
-                "verdict": true,
-                "reason": "The assistant provided a clear and direct answer in response to every user query."
+                "reason": "The assistant provided a clear and direct answer in response to every user query.",
+                "verdict": true
                 }}
                 **
                 JSON:
@@ -108,8 +108,8 @@ class ConversationalNonBinaryJudgementTemplate:
 
                 Example:
                 {{
-                "verdict": "{options[1]}",
-                "reason": "The assistant partially addressed the user’s issue but missed clarifying their follow-up question."
+                "reason": "The assistant partially addressed the user's issue but missed clarifying their follow-up question.",
+                "verdict": "{options[1]}"
                 }}
                 **
                 JSON:

@@ -1,6 +1,11 @@
 {
   "redirects": [
     {
+      "source": "/docs/getting-started-agents",
+      "destination": "/guides/guides-ai-agent-evaluation",
+      "statusCode": 301
+    },
+    {
       "source": "/docs/guides-rag-evaluation",
       "destination": "/guides/guides-rag-evaluation",
       "statusCode": 301

@@ -49,12 +49,12 @@ Expected JSON format:
             "verdict": "yes"
         }},
         {{
-            "verdict": "no",
-            "reason": <explanation_for_irrelevance>
+            "reason": <explanation_for_irrelevance>,
+            "verdict": "no"
         }},
         {{
-            "verdict": "idk",
-            "reason": <explanation_for_ambiguity>
+            "reason": <explanation_for_ambiguity>,
+            "verdict": "idk"
         }}
     ]  
 }}

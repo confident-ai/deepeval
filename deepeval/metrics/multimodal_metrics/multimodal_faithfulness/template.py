@@ -107,24 +107,24 @@ class MultimodalFaithfulnessTemplate:
                 {{
                     "verdicts": [
                         {{
-                            "verdict": "idk",
-                            "reason": "The claim about Barack Obama is not directly addressed in the retrieval context, and so poses no contradiction."
+                            "reason": "The claim about Barack Obama is not directly addressed in the retrieval context, and so poses no contradiction.",
+                            "verdict": "idk"
                         }},
                         {{
-                            "verdict": "idk",
-                            "reason": "The claim about Zurich being a city in London is incorrect but does not pose a contradiction to the retrieval context."
+                            "reason": "The claim about Zurich being a city in London is incorrect but does not pose a contradiction to the retrieval context.",
+                            "verdict": "idk"
                         }},
                         {{
                             "verdict": "yes"
                         }},
                         {{
-                            "verdict": "no",
-                            "reason": "The actual output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead."
+                            "reason": "The actual output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead.",
+                            "verdict": "no"
                         }},
                         {{
-                            "verdict": "no",
-                            "reason": "The actual output claims Einstein is a German chef, which is not correct as the retrieval context states he was a German scientist instead."
-                        }},
+                            "reason": "The actual output claims Einstein is a German chef, which is not correct as the retrieval context states he was a German scientist instead.",
+                            "verdict": "no"
+                        }}
                     ]  
                 }}
                 ===== END OF EXAMPLE ======

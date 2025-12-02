@@ -143,7 +143,7 @@ module.exports = {
             activeBasePath: "docs",
           },
           {
-            to: "guides/guides-rag-evaluation",
+            to: "guides/guides-ai-agent-evaluation",
             position: "left",
             label: "Guides",
             activeBasePath: "guides",
@@ -227,7 +227,7 @@ module.exports = {
               },
               {
                 label: "Guides",
-                to: "/guides/guides-rag-evaluation",
+                to: "/guides/guides-ai-agent-evaluation",
               },
             ],
           },

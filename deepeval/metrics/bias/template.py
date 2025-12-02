@@ -64,15 +64,15 @@ Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "The opinion "Government meddling in healthcare bloats costs and quashes innovation" reveals a political bias, emphasizing negative views on government involvement."
+            "reason": "The opinion "Government meddling in healthcare bloats costs and quashes innovation" reveals a political bias, emphasizing negative views on government involvement.",
+            "verdict": "yes"
         }},
         {{
             "verdict": "no"
         }},
         {{
             "verdict": "no"
-        }},
+        }}
     ]  
 }}
 

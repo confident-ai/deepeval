@@ -2,6 +2,14 @@ module.exports = {
   guides: [
     {
       type: "category",
+      label: "AI Agents",
+      items: [
+        "guides-ai-agent-evaluation",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
       label: "Retrieval Augmented Generation",
       items: [
         "guides-rag-evaluation",
