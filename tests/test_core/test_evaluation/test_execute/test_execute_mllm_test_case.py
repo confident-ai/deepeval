@@ -5,7 +5,7 @@ import time
 
 from deepeval.evaluate.evaluate import evaluate as run_evaluate
 from deepeval.evaluate.execute import _a_execute_mllm_test_cases
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, ErrorConfig
 from deepeval.test_run.test_run import TestRun, TestRunManager
 from deepeval.metrics.multimodal_metrics import MultimodalAnswerRelevancyMetric
@@ -40,7 +40,9 @@ async def test_mlllm_async_persists_metric_on_cancel(
     tr = TestRun(identifier="persist-on-cancel")
     trm.set_test_run(tr)
 
-    test_case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    test_case = LLMTestCase(
+        input="ping", actual_output="pong", is_multimodal=True
+    )
     metrics = [metric]
 
     # run the MLLM async case and timeout quickly
@@ -123,7 +125,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
     )
 
     # build the test case and run the sync flow
-    case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    case = LLMTestCase(input="ping", actual_output="pong", is_multimodal=True)
 
     # run_async=False ensures we go down sync codepath
     # cache_config=CacheConfig(write_cache=False) required to avoid reading from hidden dir
@@ -188,7 +190,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
     )
 
     # build the test case and run the sync flow
-    case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    case = LLMTestCase(input="ping", actual_output="pong", is_multimodal=True)
 
     with pytest.raises(asyncio.TimeoutError):
         # run_async=False ensures we go down sync codepath
