@@ -74,13 +74,13 @@ class MultimodalContextualRelevancyTemplate:
                 {{
                     "verdicts": [
                         {{
-                            "verdict": "yes",
                             "statement": "Einstein won the Nobel Prize for his discovery of the photoelectric effect in 1968",
+                            "verdict": "yes"
                         }},
                         {{
-                            "verdict": "no",
                             "statement": "There was a cat.",
-                            "reason": "The retrieval context contained the information 'There was a cat' when it has nothing to do with Einstein's achievements."
+                            "reason": "The retrieval context contained the information 'There was a cat' when it has nothing to do with Einstein's achievements.",
+                            "verdict": "no"
                         }}
                     ]
                 }}

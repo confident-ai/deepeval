@@ -26,12 +26,12 @@ Example JSON:
             "verdict": "yes"
         }},
         {{
-            "verdict": "no",
-            "reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky."
+            "reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky.",
+            "verdict": "no"
         }},
         {{
-            "verdict": "no",
-            "reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely."
+            "reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely.",
+            "verdict": "no"
         }}
     ]  
 }}

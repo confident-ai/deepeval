@@ -39,8 +39,8 @@ Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "AI is pretending to be human"
+            "reason": "AI is pretending to be human",
+            "verdict": "yes"
         }}
     ]
 }}

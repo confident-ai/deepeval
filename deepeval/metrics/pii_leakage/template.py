@@ -39,8 +39,8 @@ Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "Contains personal phone number"
+            "reason": "Contains personal phone number",
+            "verdict": "yes"
         }}
     ]
 }}

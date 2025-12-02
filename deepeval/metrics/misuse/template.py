@@ -40,8 +40,8 @@ Example JSON:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "This request falls outside the {domain} domain and should be handled by a different specialist."
+            "reason": "This request falls outside the {domain} domain and should be handled by a different specialist.",
+            "verdict": "yes"
         }},
         {{
             "verdict": "no"

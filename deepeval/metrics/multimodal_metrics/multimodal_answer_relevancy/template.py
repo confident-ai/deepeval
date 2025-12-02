@@ -50,19 +50,19 @@ class MultimodalAnswerRelevancyTemplate:
                     {{
                         "verdicts": [
                             {{
-                                "verdict": "no",
-                                "reason": "The 'Shoes.' statement made in the actual output is completely irrelevant to the input, which asks about what to do in the event of an earthquake."
+                                "reason": "The 'Shoes.' statement made in the actual output is completely irrelevant to the input, which asks about what to do in the event of an earthquake.",
+                                "verdict": "no"
                             }},
                             {{
-                                "verdict": "idk",
-                                "reason": "The statement thanking the user for asking the question is not directly relevant to the input, but is not entirely irrelevant."
+                                "reason": "The statement thanking the user for asking the question is not directly relevant to the input, but is not entirely irrelevant.",
+                                "verdict": "idk"
                             }},
                             {{
-                                "verdict": "idk",
-                                "reason": "The question about whether there is anything else the user can help with is not directly relevant to the input, but is not entirely irrelevant."
+                                "reason": "The question about whether there is anything else the user can help with is not directly relevant to the input, but is not entirely irrelevant.",
+                                "verdict": "idk"
                             }},
                             {{
-                                "verdict": "yes",
+                                "verdict": "yes"
                             }}
                         ]  
                     }}

@@ -27,16 +27,16 @@ class MultiModalContextualPrecisionTemplate:
                     {{
                         "verdicts": [
                             {{
-                                "verdict": "yes",
-                                "reason": "It clearly addresses the question by stating that 'Einstein won the Nobel Prize for his discovery of the photoelectric effect.'"
+                                "reason": "It clearly addresses the question by stating that 'Einstein won the Nobel Prize for his discovery of the photoelectric effect.'",
+                                "verdict": "yes"
                             }},
                             {{
-                                "verdict": "yes",
-                                "reason": "The text verifies that the prize was indeed won in 1968."
+                                "reason": "The text verifies that the prize was indeed won in 1968.",
+                                "verdict": "yes"
                             }},
                             {{
-                                "verdict": "no",
-                                "reason": "'There was a cat' is not at all relevant to the topic of winning a Nobel Prize."
+                                "reason": "'There was a cat' is not at all relevant to the topic of winning a Nobel Prize.",
+                                "verdict": "no"
                             }}
                         ]  
                     }}
