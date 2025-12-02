@@ -41,6 +41,9 @@ class Golden(BaseModel):
     def set_is_multimodal(self):
         import re
 
+        if self.multimodal is True:
+            return self
+
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
         self.multimodal = (
             any(
@@ -90,6 +93,9 @@ class ConversationalGolden(BaseModel):
     @model_validator(mode="after")
     def set_is_multimodal(self):
         import re
+
+        if self.multimodal is True:
+            return self
 
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
         self.multimodal = any(

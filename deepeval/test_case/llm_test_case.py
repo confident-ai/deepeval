@@ -338,7 +338,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="completionTime",
         validation_alias=AliasChoices("completionTime", "completion_time"),
     )
-    multimodal: bool = False
+    multimodal: bool = Field(default=False)
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
@@ -364,26 +364,23 @@ class LLMTestCase(BaseModel):
     def set_is_multimodal(self):
         import re
 
+        if self.multimodal is True:
+            return self
+
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-        self.multimodal = (
+
+        auto_detect = (
             any(
                 [
-                    (
-                        re.search(pattern, self.input) is not None
-                        if self.input
-                        else False
-                    ),
-                    (
-                        re.search(pattern, self.actual_output) is not None
-                        if self.actual_output
-                        else False
-                    ),
+                    re.search(pattern, self.input or "") is not None,
+                    re.search(pattern, self.actual_output or "") is not None,
                 ]
             )
             if isinstance(self.input, str)
-            else self.multimodal
+            else False
         )
 
+        self.multimodal = auto_detect
         return self
 
     @model_validator(mode="before")
