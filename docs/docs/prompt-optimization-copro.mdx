@@ -1,0 +1,185 @@
+---
+id: prompt-optimization-copro
+title: COPRO
+sidebar_label: COPRO
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/prompt-optimization-copro"
+  />
+</head>
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval`’s optimizer also supports **COPRO** (cooperative prompt optimization), a bounded-population, zero-shot algorithm adapted from the MIPROv2 family in the DSPy ecosystem. In our setting, COPRO behaves like MIPROv2 but proposes multiple child prompts cooperatively from a shared feedback signal while keeping the active candidate pool at a fixed maximum size.
+
+## What Is COPRO?
+
+Each COPRO run starts from your current prompt and a set of goldens, then explores a bounded population of candidate prompts over a fixed number of iterations.
+
+In broad strokes:
+
+1. Start from your current prompt and the full set of goldens.
+2. Maintain a population of candidate prompts that always includes the original prompt.
+3. On each iteration, pick a parent prompt from the population using an epsilon greedy rule on mean minibatch score.
+4. Draw a single minibatch, compute feedback for the parent once, and reuse that feedback to propose multiple child prompts cooperatively.
+5. Score each child on the same minibatch and accept any that improve on the parent by at least `min_delta`, adding them to the population.
+6. If the population exceeds `population_size`, prune low-scoring candidates so only the best remain.
+7. Periodically, and at the end, fully evaluate the current best candidate on the full golden set.
+
+The result is an optimized `Prompt` plus an `OptimizationReport` that you can log or inspect later.
+
+Like MIPROv2, COPRO works on a single golden set with minibatch scoring and full evaluations. Unlike MIPROv2, it proposes multiple children per iteration from shared feedback and keeps the population size bounded.
+
+## Goldens And Minibatches
+
+When you call:
+
+```python
+optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
+````
+
+COPRO uses the full list of `goldens` in two ways:
+
+- to draw minibatches for fast, noisy scoring and feedback during optimization, and
+- to run full evaluations of the current best candidate at checkpoints and at the end of the run.
+
+There is no separate `D_pareto` or `D_feedback` split. All sampling happens from the same golden set.
+
+:::info Minibatch Sizing
+
+On each iteration, `COPRORunner` draws a minibatch from the full golden set. The effective size is chosen from four fields in `COPROConfig` (inherited from `MIPROConfig`):
+
+- `minibatch_size` is a fixed size. When set, it is used directly, bounded by `len(goldens)`.
+- `minibatch_min_size` is a hard lower bound used when dynamic sizing is in effect.
+- `minibatch_max_size` is a hard upper bound used when dynamic sizing is in effect.
+- `minibatch_ratio` is a fraction of `len(goldens)` used to compute a dynamic minibatch size when `minibatch_size` is not set.
+
+Conceptually, if `minibatch_size` is not set, the dynamic size is derived from `minibatch_ratio` and then clamped between `minibatch_min_size` and `minibatch_max_size`. Sampling is done with replacement, so the same golden may appear more than once within or across minibatches.
+
+Larger minibatches give a more stable signal per iteration at higher cost. Smaller minibatches are cheaper but noisier.
+:::
+
+Minibatch scores drive local decisions. Full evaluations are used for more reliable selection at checkpoints. Every time the internal trial counter is divisible by `full_eval_every`, the runner selects the current best candidate by mean minibatch score, evaluates it on the full golden set, and stores its per-instance metric score vector in `pareto_score_table`. At the end of the run, if no full evaluation has been performed yet, the runner forces a full evaluation of the best candidate by mean minibatch score.
+
+The best final prompt is chosen by aggregating these full evaluation score vectors into a scalar using `aggregate_instances` (which defaults to `mean_of_all`). If no full evaluation scores are available, the runner falls back to selecting the best candidate by mean minibatch score.
+
+## Scoring & Feedback
+
+COPRO uses your metrics in the same way as MIPROv2 and GEPA.
+
+On minibatches, it calls your metrics through a `ScoringAdapter` to obtain numeric scores for candidates and to extract natural language feedback that describes how the model behaved. The numeric scores feed into a running mean minibatch score per candidate. The feedback strings are combined into a single `feedback_text` that is reused to propose multiple children from the same parent.
+
+On full evaluations, COPRO calls the same adapter on the full golden set to produce per-instance metric scores for the current best candidate. These full evaluation scores are stored in `pareto_score_table` and later aggregated to select the final prompt.
+
+During each iteration, the runner:
+
+1. Draws a minibatch from the full list of goldens.
+2. Calls your app through `model_callback` for that batch.
+3. Scores the outputs with your metrics via `minibatch_score`.
+4. Collects metric reasons into a single `feedback_text` string via `minibatch_feedback`.
+
+This `feedback_text` is passed to the internal `PromptRewriter`. For COPRO, the same feedback string is reused across several child proposals from the same parent and minibatch, with diversity coming from stochastic LLM sampling in the rewriter.
+
+If the rewriter returns a prompt that is equivalent to the parent, or if the type changes from TEXT to LIST or the reverse, that proposal is treated as a no-change child and ignored. The iteration still counts toward the budget, but the candidate population is not updated by that particular child.
+
+## How Does It Work
+
+Once the root candidate is seeded and scored on a minibatch, COPRO enters its main loop. Each iteration does the following:
+
+1. Select a parent candidate from the population using epsilon-greedy selection on mean minibatch score.
+2. Draw a fresh minibatch from the full golden set.
+3. Compute a shared `feedback_text` for the parent and minibatch using your app and metrics.
+4. Propose multiple child prompts cooperatively from the same parent using the shared feedback.
+5. Score each child on the minibatch and accept any that improve on the parent by at least `min_delta`.
+6. If the population exceeds `population_size`, prune the worst-scoring candidates while preserving the best.
+7. Optionally, if `full_eval_every` divides the current trial index, run a full evaluation of the current best candidate.
+
+COPRO maintains its population of candidates using `PromptConfiguration` objects. Each configuration has a unique id, a reference to its parent configuration id, and a `prompts` mapping keyed by module id. In the current integration there is a single hard-coded module id, so each configuration holds exactly one `Prompt`.
+
+On the first iteration, the runner lazily evaluates the root candidate on a minibatch and records its minibatch score. After that, each iteration either accepts one or more children into the population or leaves the population unchanged.
+
+### Epsilon-Greedy Selection And Cooperative Proposals
+
+Candidate selection uses the same epsilon-greedy rule as MIPROv2:
+
+- With probability `exploration_probability`, pick a random candidate from the population.
+- Otherwise, pick the candidate with the highest mean minibatch score.
+
+Once a parent is selected, COPRO draws a single minibatch and computes `feedback_text` for that parent and minibatch. It then uses this shared feedback to propose several child prompts from the same parent. The number of proposals is controlled by `proposals_per_step`.
+
+Each proposal goes through the same steps:
+
+- Use the `PromptRewriter` with the parent prompt and the shared feedback to produce a child prompt.
+- If the child is a no-change proposal or changes the prompt type, ignore it.
+- Otherwise, build a new `PromptConfiguration` for the child.
+- Score the child on the same minibatch using `minibatch_score`.
+- If the child’s score improves on the parent’s mean minibatch score by at least `min_delta` (plus a small jitter), accept the child:
+
+  - add the child configuration to the population,
+  - update its running mean minibatch score, and
+  - record the iteration in the optimization report.
+
+After accepting any children, `_add_prompt_configuration` enforces the `population_size` limit by pruning the lowest-scoring candidates based on mean minibatch score, never removing the current best. This keeps the search focused while preventing the population from growing without bound.
+
+## COPRO Configuration
+
+`COPROConfig` extends `MIPROConfig` with two additional fields that control cooperative behavior and population size. All base fields behave exactly as described in the [MIPROv2 documentation](/docs/prompt-optimization-miprov2).
+
+A minimal configuration looks like this:
+
+```python
+from deepeval.optimization.copro.configs import COPROConfig
+
+config = COPROConfig()
+```
+
+There are **TWO** additional optional parameters beyond those in `MIPROConfig`:
+
+- [Optional] `population_size`: maximum number of prompt candidates maintained in the active population. When this limit is exceeded, COPRO prunes lower-scoring candidates based on mean minibatch score while preserving the current best. Default is `4`.
+- [Optional] `proposals_per_step`: number of child prompts proposed cooperatively from the same parent in each optimization iteration. Higher values increase diversity per iteration at higher cost. Default is `4`.
+
+All other fields such as `iterations`, minibatch sizing parameters, `min_delta`, `exploration_probability`, `full_eval_every`, and `rewrite_instruction_max_chars` are inherited from `MIPROConfig` and behave identically to the MIPROv2 runner.
+
+### Using COPRO With PromptOptimizer
+
+You can let `PromptOptimizer` manage the runner and select COPRO via its `algorithm` settings, or you can construct a `COPRORunner` directly for finer control.
+
+The pattern below shows how to plug in a custom `COPROConfig` and attach a COPRO runner to your optimizer:
+
+```python
+from deepeval.optimization import PromptOptimizer
+from deepeval.optimization.copro.configs import COPROConfig
+from deepeval.optimization.copro.loop import COPRORunner
+
+...
+
+optimizer = PromptOptimizer(...)
+optimizer.set_runner(COPRORunner(config=COPROConfig(),))
+```
+
+If needed, you can also pass a custom `aggregate_instances` function and a configured `ScoringAdapter` when constructing `COPRORunner`, just as you would for MIPROv2.
+
+This setup keeps the same `PromptOptimizer` API while giving you explicit control over COPRO’s cooperative search behaviour and population management.
+
+## What COPRO Returns
+
+After the configured number of iterations, COPRO selects a best prompt and returns it as a regular `Prompt`:
+
+- `optimized_prompt.text_template` is the optimized prompt string that you can use directly in your app.
+- `optimized_prompt.optimization_report` is an `OptimizationReport` that captures how the run progressed.
+
+The `OptimizationReport` produced by COPRO has the same structure as the one described in the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For COPRO specifically:
+
+- `pareto_scores` contains full evaluation scores for each fully evaluated candidate on the complete golden set. The field name matches GEPA’s report format, but here it always refers to full set scores rather than a separate Pareto subset.
+- `accepted_iterations`, `parents`, and the underlying `prompt_configurations` let you reconstruct the candidate population over time, see which children were accepted when, and rebuild prompts for further analysis.
+
+You can log or persist this report alongside your prompt to understand how COPRO explored the search space and to reproduce or compare optimization runs later.
+
+:::info Where To Go Next
+
+For a high level overview of prompt optimization in `deepeval`, including configuration of `PromptOptimizer` and `model_callback`, see the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For details on MIPROv2 and its unbounded-population variant, see the [MIPROv2 page](/docs/prompt-optimization-miprov2). For GEPA’s multi-objective Pareto search, see the [GEPA page](/docs/prompt-optimization-gepa).
+:::

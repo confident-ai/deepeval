@@ -15,7 +15,10 @@ import TabItem from "@theme/TabItem";
 
 `deepeval` offers the following algorithms to optimize your prompts:
 
-- [GEPA](/docs/prompt-optimization-gepa)
+- [GEPA](/docs/prompt-optimization-gepa) – multi-objective genetic–Pareto search that maintains a Pareto frontier of prompts using metric-driven feedback on a split golden set.
+- [miprov2](/docs/prompt-optimization-miprov2) – zero-shot surrogate-based search over an unbounded pool of prompts using epsilon-greedy selection on minibatch scores and periodic full evaluations.
+- [copro](/docs/prompt-optimization-copro) – cooperative variant of MIPROv2 that proposes multiple children per iteration and keeps a bounded population of high-performing prompts.
+
 
 ## Quick Summary
 
@@ -197,10 +200,7 @@ Most applications can rely on the defaults you saw earlier. If you need more con
 
 ```python
 from deepeval.optimization import PromptOptimizer
-from deepeval.optimization.configs import (
-    OptimizerDisplayConfig,
-    PromptListMutationConfig,
-)
+from deepeval.optimization.configs import OptimizerDisplayConfig, PromptListMutationConfig
 
 optimizer = PromptOptimizer(
     ...,

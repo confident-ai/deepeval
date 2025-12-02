@@ -1,0 +1,175 @@
+---
+id: prompt-optimization-miprov2
+title: MIPROv2
+sidebar_label: MIPROv2
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/prompt-optimization-miprov2"
+  />
+</head>
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval`’s optimizer also supports a zero shot MIPRO style algorithm, adapted from the MIPROv2 optimizer in the DSPy ecosystem. In our setting, MIPROv2 treats prompt optimization as a search over a pool of candidate prompts using mini batch scores as a surrogate objective.
+
+## What Is MIPROv2?
+
+Each MIPROv2 run starts from your current prompt and a set of goldens, then proposes and evaluates new prompts over a fixed number of trials.
+
+In broad strokes:
+
+1. Start from your current prompt and the full set of goldens.
+2. Maintain a pool of candidate prompts that always includes the original prompt.
+3. On each trial, pick a parent prompt from the pool using an epsilon greedy rule on mean mini batch score.
+4. Rewrite the parent using metric driven feedback on a mini batch of goldens.
+5. Score the child on the same mini batch and decide whether to accept it into the pool.
+6. Periodically, and at the end, fully evaluate the best candidate on the full golden set.
+
+The result is an optimized `Prompt` plus an `OptimizationReport` that you can log or inspect later.
+
+Unlike GEPA, there is no separate Pareto split. MIPROv2 uses a single golden set both for mini batch scoring and for full evaluations of the best candidate.
+
+## Goldens And Minibatches
+
+When you call:
+
+```python
+optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
+````
+
+MIPROv2 uses the full list of `goldens` in two ways:
+
+- to draw mini batches for fast, noisy scoring during optimization, and
+- to run full evaluations of the current best candidate at checkpoints and at the end of the run.
+
+There is no distinction between `D_pareto` and `D_feedback`. All sampling happens from the same golden set.
+
+:::info Minibatch Sizing
+
+On each trial, `MIPRORunner` draws a mini batch from the full golden set. The effective size is chosen from four fields in `MIPROConfig`:
+
+- `minibatch_size` is a fixed size. When set, it is used directly, bounded by `len(goldens)`.
+- `minibatch_min_size` is a hard lower bound used when dynamic sizing is in effect.
+- `minibatch_max_size` is a hard upper bound used when dynamic sizing is in effect.
+- `minibatch_ratio` is a fraction of `len(goldens)` used to compute a dynamic mini batch size when `minibatch_size` is not set.
+
+Conceptually, if `minibatch_size` is not set, the dynamic size is derived from `minibatch_ratio` and then clamped between `minibatch_min_size` and `minibatch_max_size`. Sampling is done with replacement, so the same golden may appear more than once within or across mini batches.
+
+Larger mini batches give a more stable signal per trial at higher cost. Smaller mini batches are cheaper but noisier.
+:::
+
+Mini batch scores drive local decisions. Full evaluations are used for more reliable selection at checkpoints. Every time the internal trial counter is divisible by `full_eval_every`, the runner selects the current best candidate by mean mini batch score, evaluates it on the full golden set, and stores its per instance metric score vector in `pareto_score_table`. At the end of the run, if no full evaluation has been performed yet, the runner forces a full evaluation of the best candidate by mean mini batch score.
+
+The best final prompt is chosen by aggregating these full evaluation score vectors into a scalar using `aggregate_instances` (which defaults to `mean_of_all`). If no full evaluation scores are available, the runner falls back to selecting the best candidate by mean mini batch score.
+
+## Scoring & Feedback
+
+MIPROv2 uses your metrics in the same way as GEPA.
+
+On mini batches, it calls your metrics through a `ScoringAdapter` to obtain numeric scores for each candidate and to extract natural language feedback that describes how the model behaved. The numeric scores contribute to a running mean mini batch score per candidate. The feedback strings are combined into a single `feedback_text` used for rewriting.
+
+On full evaluations, it calls the same adapter on the full golden set to produce per instance metric scores for the current best candidate. These full evaluation scores are stored in `pareto_score_table` and later aggregated to select the final prompt.
+
+During each trial, the runner:
+
+1. Draws a mini batch from the full list of goldens.
+2. Calls your app through `model_callback` for that batch.
+3. Scores the outputs with your metrics via `minibatch_score`.
+4. Collects metric reasons into a single `feedback_text` string via `minibatch_feedback`.
+
+This `feedback_text` is passed to the internal `PromptRewriter`, which proposes a new child prompt. If the rewriter returns a prompt that is equivalent to the parent, or if the type changes from TEXT to LIST or the reverse, the iteration is treated as a no change step. The trial still counts toward the budget, but the candidate pool is not updated.
+
+## How Does It Work
+
+Once the root candidate is seeded and scored on a mini batch, MIPROv2 enters its main loop. Each trial does the following:
+
+1. Select a parent candidate from the pool using epsilon greedy selection on mean mini batch score.
+2. Draw a fresh mini batch from the full golden set.
+3. Run your app and metrics on that mini batch to compute `feedback_text`.
+4. Call the prompt rewriter with the parent prompt plus `feedback_text` to generate a child prompt.
+5. Score the child prompt on the same mini batch using `minibatch_score`.
+6. Compare the child score to the parent’s mean mini batch score and decide whether to accept the child.
+7. Optionally, if `full_eval_every` divides the current trial index, run a full evaluation of the current best candidate.
+
+MIPROv2 maintains its pool of candidates using `PromptConfiguration` objects. Each configuration has:
+
+- a unique internal id,
+- a reference to its parent configuration id, and
+- a `prompts` mapping keyed by module id. In the current integration there is a single hard coded module id, so each configuration holds exactly one `Prompt`.
+
+On the first trial, the runner lazily evaluates the root candidate on a mini batch and records its mini batch score. After that, each new trial either adds an accepted child to the pool or leaves the pool unchanged.
+
+The acceptance test is controlled by `min_delta` in `MIPROConfig`. When the child’s mini batch score improves on the parent’s mean mini batch score by at least `min_delta` (plus a small jitter), the child is accepted:
+
+- the child configuration is added to the pool,
+- the child’s mini batch score is recorded and folded into its running mean, and
+- the iteration is recorded in the optimization report.
+
+If the improvement is smaller than `min_delta`, the child is rejected and the candidate pool stays as it was.
+
+## MIPROv2 Configuration
+
+`MIPROConfig` holds the main settings for how MIPROv2 behaves. Most users can start with the defaults and only tune a few fields as needed.
+
+A minimal configuration looks like this:
+
+```python
+from deepeval.optimization.miprov2.configs import MIPROConfig
+
+config = MIPROConfig()
+```
+
+There are **TEN** optional parameters when creating a `MIPROConfig`:
+
+- [Optional] `iterations`: total number of MIPRO trials or prompt proposals. Higher values give more search at higher evaluation cost. Default is `5`.
+- [Optional] `minibatch_size`: fixed mini batch size drawn from the full golden set. When set, this overrides dynamic sizing. Default is `None`.
+- [Optional] `minibatch_min_size`: hard lower bound on mini batch size when dynamic sizing is in effect. Default is `4`.
+- [Optional] `minibatch_max_size`: hard upper bound on mini batch size when dynamic sizing is in effect. Default is `32`.
+- [Optional] `minibatch_ratio`: target fraction of `len(goldens)` used to compute a dynamic mini batch size when `minibatch_size` is not set. The resulting size is bounded between `minibatch_min_size` and `minibatch_max_size`. Default is `0.05`.
+- [Optional] `random_seed`: integer seed used for all randomness in the runner, including mini batch sampling and epsilon greedy candidate selection. If set to `None`, the config derives a seed from `time.time_ns()`. Default is `0`.
+- [Optional] `min_delta`: minimum improvement in mini batch score required for a child prompt to be accepted over its parent. If the child does not improve the parent’s mean mini batch score by at least this amount, it is rejected. Default is `0.0`.
+- [Optional] `exploration_probability`: probability of sampling a random candidate instead of the best by mean mini batch score. This controls the balance between exploration and exploitation. Default is `0.2`.
+- [Optional] `full_eval_every`: if set, the runner fully evaluates the current best candidate on the full golden set every `full_eval_every` trials. If `None`, only a single full evaluation is performed at the end of the run. Default is `5`.
+- [Optional] `rewrite_instruction_max_chars`: maximum number of characters from the prompt, feedback, and related text that the `PromptRewriter` will include in rewrite instructions. Default is `4096`.
+
+### Using MIPROv2 With PromptOptimizer
+
+You can let `PromptOptimizer` manage the runner and just select MIPROv2 via its `algorithm` settings, or you can construct a `MIPRORunner` directly for finer control.
+
+The pattern below shows how to plug in a custom `MIPROConfig`, a scoring adapter, and a custom aggregator:
+
+```python
+from deepeval.optimization import PromptOptimizer
+from deepeval.optimization.miprov2.configs import MIPROConfig
+from deepeval.optimization.miprov2.loop import MIPRORunner
+
+...
+
+optimizer = PromptOptimizer(...)
+optimizer.set_runner(MIPRORunner(config=MIPROConfig(),))
+```
+
+This setup keeps the same `PromptOptimizer` API while giving you explicit control over MIPROv2’s search behaviour.
+
+## What MIPROv2 Returns
+
+After the configured number of iterations, MIPROv2 selects a best prompt and returns it as a regular `Prompt`:
+
+- `optimized_prompt.text_template` is the optimized prompt string that you can use directly in your app.
+- `optimized_prompt.optimization_report` is an `OptimizationReport` that captures how the run progressed.
+
+The `OptimizationReport` produced by MIPROv2 has the same structure as the one described in the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For MIPROv2 specifically:
+
+- `pareto_scores` contains full evaluation scores for each fully evaluated candidate on the complete golden set. The field name matches GEPA’s report format, but here it always refers to full set scores rather than a separate Pareto subset.
+- `accepted_iterations`, `parents`, and `prompt_configurations` let you reconstruct the candidate pool, see which children were accepted when, and rebuild prompts for further analysis.
+
+You can log or persist this report alongside your prompt to understand how MIPROv2 explored the search space, and to reproduce or compare optimization runs later.
+
+:::info Where To Go Next
+
+For a high level overview of prompt optimization in `deepeval`, including configuration of `PromptOptimizer` and `model_callback`, see the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For details on GEPA and its Pareto based search, see the [GEPA page](/docs/prompt-optimization-gepa).
+:::
