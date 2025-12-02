@@ -1,6 +1,7 @@
 import io
 import time
 import asyncio
+from unittest.mock import MagicMock
 from types import SimpleNamespace
 from typing import Callable, List, Optional, Protocol, runtime_checkable
 
@@ -155,8 +156,28 @@ class _RecordingClient:
     retry options to SDK constructors without making network calls.
     """
 
-    def __init__(self, **kwargs):
-        self.kwargs = dict(kwargs)
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+def make_fake_ollama_module(client_cls=_RecordingClient):
+    """
+    Return a fake 'ollama' module with Client / AsyncClient mocks that:
+
+    - Are MagicMocks, so tests can use assert_called_once, call_args, etc.
+    - Construct instances of `client_cls` when called, via side_effect.
+    """
+    client_mock = MagicMock()
+    async_client_mock = MagicMock()
+
+    client_mock.side_effect = client_cls
+    async_client_mock.side_effect = client_cls
+
+    return SimpleNamespace(
+        Client=client_mock,
+        AsyncClient=async_client_mock,
+    )
 
 
 ###########
