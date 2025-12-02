@@ -4,9 +4,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 
 def check_valid_test_cases_type(
-    test_cases: Union[
-        List[LLMTestCase], List[ConversationalTestCase]
-    ],
+    test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
 ):
     llm_test_case_count = 0
     conversational_test_case_count = 0

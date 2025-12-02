@@ -83,7 +83,10 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
-        if isinstance(test_case, LLMTestCase) and test_case.is_multimodal is False:
+        if (
+            isinstance(test_case, LLMTestCase)
+            and test_case.is_multimodal is False
+        ):
             api_test_case = LLMApiTestCase(
                 name=name,
                 input=test_case.input,

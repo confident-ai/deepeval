@@ -1,4 +1,4 @@
-from deepeval.test_case import LLMTestCaseParams,LLMTestCase, ToolCall
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCall
 from deepeval.test_case import MLLMImage
 from deepeval.models.mlllms.openai_model import (
     unsupported_log_probs_multimodal_gpt_models,
@@ -12,13 +12,13 @@ from typing import List, Union
 
 
 G_EVAL_PARAMS = {
-   LLMTestCaseParams.INPUT: "Input",
-   LLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
-   LLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
-   LLMTestCaseParams.CONTEXT: "Context",
-   LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
-   LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
-   LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
+    LLMTestCaseParams.INPUT: "Input",
+    LLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
+    LLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
+    LLMTestCaseParams.CONTEXT: "Context",
+    LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
+    LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
+    LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
 }
 
 
@@ -39,7 +39,7 @@ def construct_g_eval_params_string(
 
 
 def construct_test_case_list(
-    evaluation_params: List[LLMTestCaseParams], test_case:LLMTestCase
+    evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
 ) -> List[Union[str, MLLMImage]]:
     test_case_list = []
     for param in evaluation_params:

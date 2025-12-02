@@ -165,19 +165,22 @@ class ConversationalTestCase(BaseModel):
     @model_validator(mode="after")
     def set_is_multimodal(self):
         import re
+
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-        self.is_multimodal = (
-            any(
-                [
-                    re.search(pattern, turn.content) is not None, 
-                ] for turn in self.turns
-            )
+        self.is_multimodal = any(
+            [
+                re.search(pattern, turn.content) is not None,
+            ]
+            for turn in self.turns
         )
         if self.is_multimodal:
             for turn in self.turns:
                 turn.content = MLLMImage.parse_multimodal_string(turn.content)
                 if turn.retrieval_context:
-                    turn.retrieval_context = [MLLMImage.parse_multimodal_string(context) for context in turn.retrieval_context]
+                    turn.retrieval_context = [
+                        MLLMImage.parse_multimodal_string(context)
+                        for context in turn.retrieval_context
+                    ]
 
         return self
 

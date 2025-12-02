@@ -3,7 +3,7 @@ from .llm_test_case import (
     LLMTestCaseParams,
     ToolCall,
     ToolCallParams,
-    MLLMImage
+    MLLMImage,
 )
 from .conversational_test_case import (
     ConversationalTestCase,

@@ -70,9 +70,7 @@ from deepeval.evaluate.execute import (
 
 
 def assert_test(
-    test_case: Optional[
-        Union[LLMTestCase, ConversationalTestCase]
-    ] = None,
+    test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
     metrics: Optional[
         Union[
             List[BaseMetric],
@@ -187,9 +185,7 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: Union[
-        List[LLMTestCase], List[ConversationalTestCase]
-    ],
+    test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     metrics: Optional[
         Union[
             List[BaseMetric],

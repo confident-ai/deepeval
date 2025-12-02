@@ -26,6 +26,7 @@ from deepeval.test_case.mcp import (
 
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
 
+
 @dataclass
 class MLLMImage:
     dataBase64: Optional[str] = None
@@ -115,31 +116,32 @@ class MLLMImage:
 
     def parse_multimodal_string(s: str):
         import re
+
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-        
+
         matches = list(re.finditer(pattern, s))
-        
+
         result = []
         last_end = 0
 
         for m in matches:
             start, end = m.span()
-            
+
             # Add preceding text if present
             if start > last_end:
                 result.append(s[last_end:start])
-            
+
             img_id = m.group(1)
             img_obj = _MLLM_IMAGE_REGISTRY[img_id]
-            
+
             result.append(img_obj)
-            
+
             last_end = end
-        
+
         # Add trailing text if any
         if last_end < len(s):
             result.append(s[last_end:])
-        
+
         return result
 
     def as_data_uri(self) -> Optional[str]:
@@ -361,12 +363,13 @@ class LLMTestCase(BaseModel):
     @model_validator(mode="after")
     def set_is_multimodal(self):
         import re
+
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
         self.is_multimodal = (
             any(
                 [
-                    re.search(pattern, self.input) is not None, 
-                    re.search(pattern, self.actual_output) is not None
+                    re.search(pattern, self.input) is not None,
+                    re.search(pattern, self.actual_output) is not None,
                 ]
             )
             if isinstance(self.input, str)
@@ -374,13 +377,23 @@ class LLMTestCase(BaseModel):
         )
         if self.is_multimodal:
             self.input = MLLMImage.parse_multimodal_string(self.input)
-            self.actual_output = MLLMImage.parse_multimodal_string(self.actual_output)
+            self.actual_output = MLLMImage.parse_multimodal_string(
+                self.actual_output
+            )
             if self.expected_output:
-                self.expected_output = MLLMImage.parse_multimodal_string(self.expected_output)
+                self.expected_output = MLLMImage.parse_multimodal_string(
+                    self.expected_output
+                )
             if self.retrieval_context:
-                self.retrieval_context = [MLLMImage.parse_multimodal_string(context) for context in self.retrieval_context]
+                self.retrieval_context = [
+                    MLLMImage.parse_multimodal_string(context)
+                    for context in self.retrieval_context
+                ]
             if self.context:
-                self.context = [MLLMImage.parse_multimodal_string(context) for context in self.context]
+                self.context = [
+                    MLLMImage.parse_multimodal_string(context)
+                    for context in self.context
+                ]
 
         return self
 
