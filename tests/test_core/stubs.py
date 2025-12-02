@@ -180,6 +180,33 @@ def make_fake_ollama_module(client_cls=_RecordingClient):
     )
 
 
+def _make_fake_genai_module():
+    """
+    Return a fake 'google.genai' module where require_dependency directly returns an instance of _RecordingClient.
+    """
+    # Define the mock types
+    fake_types = SimpleNamespace(
+        SafetySetting=MagicMock(),
+        HarmCategory=SimpleNamespace(
+            HARM_CATEGORY_DANGEROUS_CONTENT="dangerous",
+            HARM_CATEGORY_HARASSMENT="harassment",
+            HARM_CATEGORY_HATE_SPEECH="hate_speech",
+            HARM_CATEGORY_SEXUALLY_EXPLICIT="sexually_explicit",
+        ),
+        HarmBlockThreshold=SimpleNamespace(
+            BLOCK_NONE="block_none",
+            BLOCK_ONLY_HIGH="block_only_high",  # Ensure this is included
+        ),
+    )
+
+    # Return the fake genai module with the actual instances
+    return SimpleNamespace(
+        Client=_RecordingClient,
+        AsyncClient=_RecordingClient,
+        types=fake_types,
+    )
+
+
 ###########
 # Metrics #
 ###########

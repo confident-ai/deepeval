@@ -1,38 +1,9 @@
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from pydantic import SecretStr
 
-from deepeval.config.settings import reset_settings
 from deepeval.models.llms.gemini_model import GeminiModel
-from tests.test_core.stubs import _RecordingClient
-
-
-def _make_fake_genai_module():
-    """Return a minimal fake google.genai module for tests."""
-
-    class FakeSafetySetting:
-        def __init__(self, *args, **kwargs):
-            self.args = args
-            self.kwargs = kwargs
-
-    fake_types = SimpleNamespace(
-        SafetySetting=FakeSafetySetting,
-        HarmCategory=SimpleNamespace(
-            HARM_CATEGORY_DANGEROUS_CONTENT="dangerous",
-            HARM_CATEGORY_HARASSMENT="harassment",
-            HARM_CATEGORY_HATE_SPEECH="hate_speech",
-            HARM_CATEGORY_SEXUALLY_EXPLICIT="sexually_explicit",
-        ),
-        HarmBlockThreshold=SimpleNamespace(
-            BLOCK_NONE="block_none",
-        ),
-    )
-
-    return SimpleNamespace(
-        Client=_RecordingClient,
-        types=fake_types,
-    )
+from tests.test_core.stubs import _make_fake_genai_module
 
 
 ##########################
@@ -55,9 +26,6 @@ def test_gemini_model_uses_explicit_key_over_settings_and_passes_plain_str(
     # Seed env so Settings sees GOOGLE_API_KEY
     with settings.edit(persist=False):
         settings.GOOGLE_API_KEY = "env-secret-key"
-
-    # Rebuild Settings from env
-    reset_settings(reload_dotenv=False)
 
     # Settings should expose this as a SecretStr
     assert isinstance(settings.GOOGLE_API_KEY, SecretStr)
@@ -92,9 +60,6 @@ def test_gemini_model_defaults_key_from_settings_and_unwraps_secret(
     # Seed env so Settings picks up GOOGLE_API_KEY
     with settings.edit(persist=False):
         settings.GOOGLE_API_KEY = "env-secret-key"
-
-    # Rebuild Settings from env
-    reset_settings(reload_dotenv=False)
 
     # Settings should expose this as a SecretStr
     assert isinstance(settings.GOOGLE_API_KEY, SecretStr)
