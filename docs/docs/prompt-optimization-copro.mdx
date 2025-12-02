@@ -4,13 +4,6 @@ title: COPRO
 sidebar_label: COPRO
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/prompt-optimization-copro"
-  />
-</head>
-
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
@@ -40,7 +33,7 @@ When you call:
 
 ```python
 optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
-````
+```
 
 COPRO uses the full list of `goldens` in two ways:
 
@@ -118,7 +111,6 @@ Each proposal goes through the same steps:
 - Otherwise, build a new `PromptConfiguration` for the child.
 - Score the child on the same minibatch using `minibatch_score`.
 - If the child’s score improves on the parent’s mean minibatch score by at least `min_delta` (plus a small jitter), accept the child:
-
   - add the child configuration to the population,
   - update its running mean minibatch score, and
   - record the iteration in the optimization report.
@@ -132,7 +124,7 @@ After accepting any children, `_add_prompt_configuration` enforces the `populati
 A minimal configuration looks like this:
 
 ```python
-from deepeval.optimization.copro.configs import COPROConfig
+from deepeval.optimizer.copro.configs import COPROConfig
 
 config = COPROConfig()
 ```
@@ -151,9 +143,9 @@ You can let `PromptOptimizer` manage the runner and select COPRO via its `algori
 The pattern below shows how to plug in a custom `COPROConfig` and attach a COPRO runner to your optimizer:
 
 ```python
-from deepeval.optimization import PromptOptimizer
-from deepeval.optimization.copro.configs import COPROConfig
-from deepeval.optimization.copro.loop import COPRORunner
+from deepeval.optimizer import PromptOptimizer
+from deepeval.optimizer.copro.configs import COPROConfig
+from deepeval.optimizer.copro.loop import COPRORunner
 
 ...
 

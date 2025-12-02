@@ -4,17 +4,10 @@ title: MIPROv2
 sidebar_label: MIPROv2
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/prompt-optimization-miprov2"
-  />
-</head>
-
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-`deepeval`’s optimizer also supports a zero shot MIPRO style algorithm, adapted from the MIPROv2 optimizer in the DSPy ecosystem. In our setting, MIPROv2 treats prompt optimization as a search over a pool of candidate prompts using mini batch scores as a surrogate objective.
+`deepeval`’s optimizer also supports a zero shot MIPROv2 style algorithm, adapted from the MIPROv2 optimizer in the DSPy ecosystem. In our setting, MIPROv2 treats prompt optimization as a search over a pool of candidate prompts using mini batch scores as a surrogate objective.
 
 ## What Is MIPROv2?
 
@@ -39,7 +32,7 @@ When you call:
 
 ```python
 optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
-````
+```
 
 MIPROv2 uses the full list of `goldens` in two ways:
 
@@ -118,14 +111,14 @@ If the improvement is smaller than `min_delta`, the child is rejected and the ca
 A minimal configuration looks like this:
 
 ```python
-from deepeval.optimization.miprov2.configs import MIPROConfig
+from deepeval.optimizer.miprov2.configs import MIPROConfig
 
 config = MIPROConfig()
 ```
 
 There are **TEN** optional parameters when creating a `MIPROConfig`:
 
-- [Optional] `iterations`: total number of MIPRO trials or prompt proposals. Higher values give more search at higher evaluation cost. Default is `5`.
+- [Optional] `iterations`: total number of MIPROv2 trials or prompt proposals. Higher values give more search at higher evaluation cost. Default is `5`.
 - [Optional] `minibatch_size`: fixed mini batch size drawn from the full golden set. When set, this overrides dynamic sizing. Default is `None`.
 - [Optional] `minibatch_min_size`: hard lower bound on mini batch size when dynamic sizing is in effect. Default is `4`.
 - [Optional] `minibatch_max_size`: hard upper bound on mini batch size when dynamic sizing is in effect. Default is `32`.
@@ -143,9 +136,9 @@ You can let `PromptOptimizer` manage the runner and just select MIPROv2 via its 
 The pattern below shows how to plug in a custom `MIPROConfig`, a scoring adapter, and a custom aggregator:
 
 ```python
-from deepeval.optimization import PromptOptimizer
-from deepeval.optimization.miprov2.configs import MIPROConfig
-from deepeval.optimization.miprov2.loop import MIPRORunner
+from deepeval.optimizer import PromptOptimizer
+from deepeval.optimizer.miprov2.configs import MIPROConfig
+from deepeval.optimizer.miprov2.loop import MIPRORunner
 
 ...
 

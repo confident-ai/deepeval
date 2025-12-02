@@ -3,12 +3,6 @@ id: prompt-optimization-gepa
 title: GEPA
 sidebar_label: GEPA
 ---
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/prompt-optimization-gepa"
-  />
-</head>
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
@@ -36,7 +30,7 @@ When you call:
 
 ```python
 optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
-````
+```
 
 GEPA first splits your goldens into two disjoint subsets:
 
@@ -120,36 +114,36 @@ You can inspect these score vectors later via the optimization report to underst
 A minimal configuration looks like this:
 
 ```python
-from deepeval.optimization.gepa.configs import GEPAConfig
+from deepeval.optimizer.gepa.configs import GEPAConfig
 
 config = GEPAConfig()
-````
+```
 
 There are **TEN** optional parameters when creating a `GEPAConfig`:
 
-* [Optional] `iterations`: total number of mutation attempts. Higher values give more search but cost more evaluations.
-* [Optional] `pareto_size`: number of goldens in `D_pareto`. This controls the cost of scoring each candidate on the stable set.
-* [Optional] `minibatch_size`: fixed minibatch size drawn from `D_feedback` on each iteration. If set, this value is used directly (bounded by `len(goldens)`).
-* [Optional] `minibatch_min_size`: lower bound on the dynamic minibatch size when `minibatch_size` is not set.
-* [Optional] `minibatch_max_size`: upper bound on the dynamic minibatch size when `minibatch_size` is not set.
-* [Optional] `minibatch_ratio`: fraction of `D_feedback` used to compute a dynamic minibatch size when `minibatch_size` is not set. The resulting size is then clamped between `minibatch_min_size` and `minibatch_max_size`.
-* [Optional] `random_seed`: seed used for all GEPA randomness, including the Pareto/feedback split and minibatch sampling. Use this to make runs reproducible.
-* [Optional] `min_delta`: minimum improvement required for a child to be considered clearly better than its parent on the minibatch aggregate.
-* [Optional] `tie_tolerance`: tolerance for treating two prompts as “tied” on the aggregate score. If candidates differ by less than this value, they are considered tied.
-* [Optional] `tie_breaker`: policy used to break ties when candidates are within `tie_tolerance`. Controls whether GEPA prefers the parent, the child, or another consistent strategy.
+- [Optional] `iterations`: total number of mutation attempts. Higher values give more search but cost more evaluations.
+- [Optional] `pareto_size`: number of goldens in `D_pareto`. This controls the cost of scoring each candidate on the stable set.
+- [Optional] `minibatch_size`: fixed minibatch size drawn from `D_feedback` on each iteration. If set, this value is used directly (bounded by `len(goldens)`).
+- [Optional] `minibatch_min_size`: lower bound on the dynamic minibatch size when `minibatch_size` is not set.
+- [Optional] `minibatch_max_size`: upper bound on the dynamic minibatch size when `minibatch_size` is not set.
+- [Optional] `minibatch_ratio`: fraction of `D_feedback` used to compute a dynamic minibatch size when `minibatch_size` is not set. The resulting size is then clamped between `minibatch_min_size` and `minibatch_max_size`.
+- [Optional] `random_seed`: seed used for all GEPA randomness, including the Pareto/feedback split and minibatch sampling. Use this to make runs reproducible.
+- [Optional] `min_delta`: minimum improvement required for a child to be considered clearly better than its parent on the minibatch aggregate.
+- [Optional] `tie_tolerance`: tolerance for treating two prompts as “tied” on the aggregate score. If candidates differ by less than this value, they are considered tied.
+- [Optional] `tie_breaker`: policy used to break ties when candidates are within `tie_tolerance`. Controls whether GEPA prefers the parent, the child, or another consistent strategy.
 
 When you want more control, you can construct a `GEPAConfig`, pass it to a `GEPARunner`, and attach that runner to your `PromptOptimizer`. For example, to use a weighted scalar objective:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.optimization import PromptOptimizer
-from deepeval.optimization.adapters.deepeval_scoring_adapter import (
+from deepeval.optimizer import PromptOptimizer
+from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
     DeepEvalScoringAdapter,
 )
-from deepeval.optimization.aggregates import median_of_all
-from deepeval.optimization.gepa.configs import GEPAConfig
-from deepeval.optimization.gepa.loop import GEPARunner
-from deepeval.optimization.types import WeightedObjective
+from deepeval.optimizer.aggregates import median_of_all
+from deepeval.optimizer.gepa.configs import GEPAConfig
+from deepeval.optimizer.gepa.loop import GEPARunner
+from deepeval.optimizer.types import WeightedObjective
 
 
 async def model_callback(prompt_text: str):
@@ -200,4 +194,3 @@ You can log or store this report alongside your prompt to compare different opti
 
 For how to wire GEPA into your own system, see the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For details on callback structure and available kwargs, refer to the "Create An Optimizer" section on that page and the discussion of `model_callback`.
 :::
-
