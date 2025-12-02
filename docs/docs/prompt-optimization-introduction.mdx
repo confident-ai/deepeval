@@ -1,0 +1,227 @@
+---
+id: prompt-optimization-introduction
+title: Introduction to Prompt Optimization
+sidebar_label: Introduction
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/prompt-optimization" />
+</head>
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval`'s `PromptOptimizer` allows you to automatically improve your AI application's prompts based on evaluation results of 50+ SOTA metrics - instead of repeatedly running evals, eyeballing failures, and manually tweaking prompts, which is slow and can introduce regressions.
+
+`deepeval` offers the following algorithms to optimize your prompts:
+
+- [GEPA](/docs/prompt-optimization-gepa) – multi-objective genetic–Pareto search that maintains a Pareto frontier of prompts using metric-driven feedback on a split golden set.
+- [miprov2](/docs/prompt-optimization-miprov2) – zero-shot surrogate-based search over an unbounded pool of prompts using epsilon-greedy selection on minibatch scores and periodic full evaluations.
+- [copro](/docs/prompt-optimization-copro) – cooperative variant of MIPROv2 that proposes multiple children per iteration and keeps a bounded population of high-performing prompts.
+
+
+## Quick Summary
+
+At a high level, you give `deepeval` a prompt you want to improve, a list of goldens that describe the behaviour you care about, one or more metrics, and a `model_callback` that calls your app; `deepeval` then calls your system on those goldens, scores the outputs with your metrics, and runs the **GEPA** algorithm to propose and evaluate new prompt variants until it returns an optimized `Prompt` plus an `OptimizationReport`.
+
+```python title="main.py"
+from deepeval.dataset import Golden
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.prompt import Prompt
+from deepeval.optimization import PromptOptimizer
+
+# Define goldens
+goldens = [Golden(input="What is Saturn?", expected_output="Saturn is a car brand."), ...,]
+
+# Define model callback
+async def model_callback(prompt_text: str):
+    # However your app receives prompt text and returns a response.
+    return await YourApp(prompt_text)
+
+# Run optimization
+optimizer = PromptOptimizer(metrics=[AnswerRelevancyMetric()], model_callback=model_callback)
+optimized_prompt = optimizer.optimize(prompt=Prompt(text_template="Respond to the query."), goldens=goldens,)
+print("Optimized prompt:", optimized_prompt.text_template)
+```
+
+Run the script to get the optimized prompt:
+
+```bash
+python main.py
+```
+
+Congratulations 🎉🥳! You've just optimized your first prompt.
+
+:::tip Next Steps
+
+To go deeper:
+
+- Read [GEPA](/docs/prompt-optimization-gepa) for a high-level walkthrough of how the default algorithm works.
+- Make sure your evaluation setup is solid:
+
+  - [Single-Turn Test Cases](/docs/evaluation-test-cases),
+  - [Metrics Introduction](/docs/metrics-introduction),
+  - [Evaluation Datasets](/docs/evaluation-datasets).
+
+Once you are satisfied with your goldens and metrics, you are ready to rely on prompt optimization in your production workflow.
+:::
+
+## Create An Optimizer
+
+First, create a `PromptOptimizer` with the metrics you care about and a `model_callback` that calls your LLM application.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.optimization import PromptOptimizer
+
+async def model_callback(prompt_text: str):
+    # However your app receives prompt text and returns a response.
+    return await YourApp(prompt_text)
+
+optimizer = PromptOptimizer(metrics=[AnswerRelevancyMetric()], model_callback=model_callback,)
+```
+
+There are **TWO** required parameters and **FIVE** optional parameters when creating a `PromptOptimizer`:
+
+- `metrics`: list of DeepEval metrics used for scoring and feedback.
+- `model_callback`: callable that receives `prompt_text` and returns your model or app’s response.
+- [Optional] `async_config`: `AsyncConfig` controlling concurrency.
+- [Optional] `display_config`: `OptimizerDisplayConfig` controlling CLI progress display.
+- [Optional] `list_input_role`: string role used when appending golden input to LIST-style prompts. Default is "user".
+- [Optional] `prompt_list_mutation_config`: `PromptListMutationConfig` controlling which message is rewritten in LIST-style prompts.
+- [Optional] `algorithm`: optimization algorithm name.
+
+:::info
+If you want full control over algorithm-specific settings (for example, GEPA’s `iterations`, minibatch sizing, or tie-breaking), construct a runner such as `GEPARunner` with a `GEPAConfig` and attach it via `optimizer.set_runner(...)`. The [GEPA page](/docs/prompt-optimization-gepa) covers those fields in detail.
+:::
+
+### Model Callback
+
+```python title="main.py"
+async def model_callback(prompt_text: str):
+    # For example: call a provider SDK, a gateway, or your internal app.
+    return await YourApp(prompt_text)
+```
+
+There are **SEVEN** optional keyword arguments your `model_callback` can accept:
+
+- [Optional] `prompt_text`: a string prompt intended for your LLM app, set **only** when prompt_type is `"TEXT"`.
+- [Optional] `prompt_messages`: a list of `PromptMessage` objects for your LLM app, set **only** when prompt_type is '"LIST"'.
+- [Optional] `hook`: short label for the current phase (for example `"score_generate"` or `"prompt_rewrite"`).
+- [Optional] `golden`: the current `Golden` or `ConversationalGolden` being scored.
+- [Optional] `prompt`: the current `Prompt` candidate being evaluated or rewritten.
+- [Optional] `feedback_text`: natural language feedback derived from your metrics during rewriting.
+
+Exactly one of prompt_text or prompt_messages is populated on each callback, depending on the prompt type. The optimizer inspects your callback’s signature and only passes the parameters you declare, so you can start with just prompt_text and add more parameters later as you need extra context.
+
+:::note Callback Inputs And Outputs
+
+All prompt optimization algorithms in `deepeval` call your `model_callback` and expect one of:
+
+- a `str` (generated text),
+- a provider-specific `dict`,
+- `(result, cost)` where `result` is `str | dict` and `cost` is a `float`.
+
+Internally, the optimizer normalizes these results to text in the same way `DeepEvalBaseLLM.generate()` does, regardless of whether the callback received `prompt_text` or `prompt_messages`.
+:::
+
+
+## Optimize Your First Prompt
+
+Once you've created an optimizer, you can optimize any `Prompt` against a relevant set of goldens:
+
+```python
+from deepeval.dataset import Golden
+from deepeval.prompt import Prompt
+
+optimizer = PromptOptimizer(metrics=[AnswerRelevancyMetric()], model_callback=model_callback)
+
+optimized_prompt = optimizer.optimize(
+    prompt=Prompt(text_template="Respond to the query."),
+    goldens=[
+        Golden(
+            input="What is Saturn?",
+            expected_output="Saturn is a car brand.",
+            context=["We mean the car brand, not the planet."],
+        ),
+        Golden(
+            input="What is Mercury?",
+            expected_output="Mercury is a planet.",
+            context=["We mean the planet, not the element or car brand."],
+        ),
+    ],
+)
+
+print("Optimized prompt:")
+print(optimized_prompt.text_template)
+
+print("\nOptimization report:")
+print(optimized_prompt.optimization_report)
+```
+
+There are **TWO** mandatory parameters when calling `optimizer.optimize(...)`:
+
+- `prompt`: the `Prompt` to optimize.
+- `goldens`: a list of `Golden` (or `ConversationalGolden`) instances to evaluate against.
+
+:::info
+The result is:
+
+- an updated `Prompt` whose `text_template` you can drop directly into your app, and
+- an `optimization_report` attached to that prompt describing how the run went.
+
+The report includes a unique optimization id, the accepted prompt candidates, and score summaries over time so that you can audit or compare runs later.
+:::
+
+### Optimization Report
+
+Every optimized prompt returned by `optimizer.optimize(...)` has an `optimization_report` attached:
+
+```python
+print(optimized_prompt.optimization_report)
+````
+
+The `OptimizationReport` exposes **SIX** top-level fields:
+
+| Field                   | Type                              | Description                                                                                                                                                        |
+| ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `optimization_id`       | `str`                             | Unique string identifier for this optimization run.                                                                                                                |
+| `best_id`               | `str`                             | Internal id of the final best-performing prompt configuration.                                                                                                     |
+| `accepted_iterations`   | `List[AcceptedIteration]`         | List of accepted child configurations. Each item records the `parent` and `child` ids, the `module` id, and the scalar `before` and `after` scores.                |
+| `pareto_scores`         | `Dict[str, List[float]]`          | Mapping from configuration id to a list of scores on the Pareto subset of goldens. GEPA uses this table to maintain the Pareto front during the search.            |
+| `parents`               | `Dict[str, Optional[str]]`        | Mapping from each configuration id to its parent id (or `None` for the root configuration). This forms the ancestry tree of all explored prompt variants.          |
+| `prompt_configurations` | `Dict[str, PromptConfigSnapshot]` | Mapping from each configuration id to a lightweight snapshot of the prompts at that node. Each snapshot records the parent id and per-module TEXT or LIST prompts. |
+
+In most workflows you will use `optimized_prompt.text_template` (or `messages_template`) directly and optionally log `optimized_prompt.optimization_report.optimization_id`. These report fields are helpful when you want to go deeper, such as reconstructing the search tree, visualizing how prompts evolved across iterations, or debugging why a particular configuration was selected as `best_id`.
+
+## PromptOptimizer Configs
+
+Most applications can rely on the defaults you saw earlier. If you need more control, you can pass configuration objects into `PromptOptimizer`:
+
+```python
+from deepeval.optimization import PromptOptimizer
+from deepeval.optimization.configs import OptimizerDisplayConfig, PromptListMutationConfig
+
+optimizer = PromptOptimizer(
+    ...,
+    display_config=OptimizerDisplayConfig(show_indicator=True, announce_ties=True,),
+    prompt_list_mutation_config=PromptListMutationConfig(),
+)
+```
+
+### Display Config
+
+There are **TWO** optional parameters when creating an `OptimizerDisplayConfig`:
+
+- [Optional] `show_indicator`: boolean that controls whether a CLI progress indicator is shown while optimization runs. Default is `True`.
+- [Optional] `announce_ties`: boolean that prints a one-line message when GEPA detects a tie between prompt configurations. Default is `False`.
+
+### Prompt List Mutation Config
+
+There are **THREE** optional parameters when creating a `PromptListMutationConfig`:
+
+- [Optional] `target_type`: `PromptListMutationTargetType` indicating which message in a LIST-style prompt is eligible for mutation. Options are `"random"`, or `"fixed_index"`. Default is `"random"`.
+- [Optional] `target_role`: string role filter. When set, only messages with this role (case insensitive) are considered as mutation targets. Default is `None`.
+- [Optional] `target_index`: zero-based index used when `target_type` is `"fixed_index"`. Default is `0`.
+
+These configs let you fine-tune how optimization behaves without changing your metrics or callback. You can start with the defaults and only override the specific fields you need for your use case.
