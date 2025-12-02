@@ -134,7 +134,7 @@ def generate_module_id(prompt: Prompt, index: int, existing: Set[str]) -> str:
 
 
 def normalize_seed_prompts(
-    seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]]
+    seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
 ) -> Dict[ModuleId, Prompt]:
     """
     Accept either {module_id: Prompt} or List[Prompt].

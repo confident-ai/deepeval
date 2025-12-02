@@ -582,6 +582,8 @@ class StubScoringAdapter:
     async def a_minibatch_score(self, prompt_configuration, minibatch):
         self.a_score_calls.append((prompt_configuration, list(minibatch)))
         return self.minibatch_score(prompt_configuration, minibatch)
+
+
 ##################
 # File I/O stubs #
 ##################

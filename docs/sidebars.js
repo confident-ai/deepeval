@@ -172,23 +172,23 @@ module.exports = {
       ],
       collapsed: false,
     },
-    {
-      type: "category",
-      label: "Prompt Optimization",
-      className: "sidebar-item-icon-prompt-optimization",
-      collapsed: false,
-      items: [
-        "prompt-optimization-introduction",
-        {
-          type: "category",
-          label: "Optimization Algorithms",
-          collapsed: false,
-          items: [
-            "prompt-optimization-gepa",
-          ],
-        }
-      ],
-    },
+    // {
+    //   type: "category",
+    //   label: "Prompt Optimization",
+    //   className: "sidebar-item-icon-prompt-optimization",
+    //   collapsed: false,
+    //   items: [
+    //     "prompt-optimization-introduction",
+    //     {
+    //       type: "category",
+    //       label: "Optimization Algorithms",
+    //       collapsed: false,
+    //       items: [
+    //         "prompt-optimization-gepa",
+    //       ],
+    //     }
+    //   ],
+    // },
     {
       type: "category",
       label: "Synthetic Data Generation",
