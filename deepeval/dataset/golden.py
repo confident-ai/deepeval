@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from typing import Optional, Dict, List
-from deepeval.test_case import ToolCall, Turn
+from deepeval.test_case import ToolCall, Turn, MLLMImage
 
 
 class Golden(BaseModel):
@@ -32,9 +32,36 @@ class Golden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
+    multimodal: bool = False
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def set_is_multimodal(self):
+        import re
+
+        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        self.multimodal = (
+            any(
+                [
+                    (
+                        re.search(pattern, self.input) is not None
+                        if self.input
+                        else False
+                    ),
+                    (
+                        re.search(pattern, self.actual_output) is not None
+                        if self.actual_output
+                        else False
+                    ),
+                ]
+            )
+            if isinstance(self.input, str)
+            else self.multimodal
+        )
+
+        return self
 
 
 class ConversationalGolden(BaseModel):
@@ -55,6 +82,20 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     turns: Optional[List[Turn]] = Field(default=None)
+    multimodal: bool = False
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def set_is_multimodal(self):
+        import re
+
+        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        self.multimodal = any(
+            [
+                re.search(pattern, turn.content) is not None for turn in self.turns 
+            ] if self.turns else None
+        )
+
+        return self

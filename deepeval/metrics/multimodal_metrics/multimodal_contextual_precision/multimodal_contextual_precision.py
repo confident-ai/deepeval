@@ -5,7 +5,7 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.template import (
     MultiModalContextualPrecisionTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -71,15 +71,18 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
                     )
                 )
             else:
+                input = convert_to_multi_modal_array(test_case.input)
+                expected_output = convert_to_multi_modal_array(test_case.expected_output)
+                retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
                 self.verdicts: List[mcpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
-                        test_case.input,
-                        test_case.expected_output,
-                        test_case.retrieval_context,
+                        input,
+                        expected_output,
+                        retrieval_context,
                     )
                 )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.input)
+                self.reason = self._generate_reason(input)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -109,15 +112,18 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            input = convert_to_multi_modal_array(test_case.input)
+            expected_output = convert_to_multi_modal_array(test_case.actual_output)
+            retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
             self.verdicts: List[mcpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
-                    test_case.input,
-                    test_case.expected_output,
-                    test_case.retrieval_context,
+                    input,
+                    expected_output,
+                    retrieval_context,
                 )
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
+            self.reason = await self._a_generate_reason(input)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,

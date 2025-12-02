@@ -156,7 +156,7 @@ class ConversationalTestCase(BaseModel):
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
-    is_multimodal: bool = False
+    multimodal: bool = False
 
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
@@ -167,20 +167,11 @@ class ConversationalTestCase(BaseModel):
         import re
 
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-        self.is_multimodal = any(
+        self.multimodal = any(
             [
-                re.search(pattern, turn.content) is not None,
+                re.search(pattern, turn.content) is not None for turn in self.turns
             ]
-            for turn in self.turns
         )
-        if self.is_multimodal:
-            for turn in self.turns:
-                turn.content = MLLMImage.parse_multimodal_string(turn.content)
-                if turn.retrieval_context:
-                    turn.retrieval_context = [
-                        MLLMImage.parse_multimodal_string(context)
-                        for context in turn.retrieval_context
-                    ]
 
         return self
 

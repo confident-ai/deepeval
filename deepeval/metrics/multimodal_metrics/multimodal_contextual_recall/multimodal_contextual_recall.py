@@ -5,7 +5,7 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_recall.template import (
     MultimodalContextualRecallTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -69,13 +69,15 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
                     )
                 )
             else:
+                expected_output = convert_to_multi_modal_array(test_case.expected_output)
+                retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
                 self.verdicts: List[ContextualRecallVerdict] = (
                     self._generate_verdicts(
-                        test_case.expected_output, test_case.retrieval_context
+                        expected_output, retrieval_context
                     )
                 )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.expected_output)
+                self.reason = self._generate_reason(expected_output)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -105,14 +107,16 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            expected_output = convert_to_multi_modal_array(test_case.expected_output)
+            retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
             self.verdicts: List[ContextualRecallVerdict] = (
                 await self._a_generate_verdicts(
-                    test_case.expected_output, test_case.retrieval_context
+                    expected_output, retrieval_context
                 )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(
-                test_case.expected_output
+                expected_output
             )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(

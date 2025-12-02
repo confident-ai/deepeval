@@ -5,7 +5,7 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.template import (
     MultimodalAnswerRelevancyTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -68,14 +68,16 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
                     )
                 )
             else:
+                input = convert_to_multi_modal_array(test_case.input)
+                actual_output = convert_to_multi_modal_array(test_case.actual_output)
                 self.statements: List[str] = self._generate_statements(
-                    test_case.actual_output
+                    actual_output
                 )
                 self.verdicts: List[AnswerRelevancyVerdict] = (
-                    self._generate_verdicts(test_case.input)
+                    self._generate_verdicts(input)
                 )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.input)
+                self.reason = self._generate_reason(input)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -106,14 +108,16 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            input = convert_to_multi_modal_array(test_case.input)
+            actual_output = convert_to_multi_modal_array(test_case.actual_output)
             self.statements: List[str] = await self._a_generate_statements(
-                test_case.actual_output
+                actual_output
             )
             self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(test_case.input)
+                await self._a_generate_verdicts(input)
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
+            self.reason = await self._a_generate_reason(input)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,

@@ -338,7 +338,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="completionTime",
         validation_alias=AliasChoices("completionTime", "completion_time"),
     )
-    is_multimodal: bool = False
+    multimodal: bool = False
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
@@ -365,7 +365,7 @@ class LLMTestCase(BaseModel):
         import re
 
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-        self.is_multimodal = (
+        self.multimodal = (
             any(
                 [
                     (
@@ -381,27 +381,8 @@ class LLMTestCase(BaseModel):
                 ]
             )
             if isinstance(self.input, str)
-            else False
+            else self.multimodal
         )
-        if self.is_multimodal:
-            self.input = MLLMImage.parse_multimodal_string(self.input)
-            self.actual_output = MLLMImage.parse_multimodal_string(
-                self.actual_output
-            )
-            if self.expected_output:
-                self.expected_output = MLLMImage.parse_multimodal_string(
-                    self.expected_output
-                )
-            if self.retrieval_context:
-                self.retrieval_context = [
-                    MLLMImage.parse_multimodal_string(context)
-                    for context in self.retrieval_context
-                ]
-            if self.context:
-                self.context = [
-                    MLLMImage.parse_multimodal_string(context)
-                    for context in self.context
-                ]
 
         return self
 

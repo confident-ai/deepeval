@@ -9,6 +9,7 @@ from deepeval.errors import (
     MissingTestCaseParamsError,
     MismatchedTestCaseInputsError,
 )
+from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
@@ -295,7 +296,7 @@ def check_mllm_test_case_params(
 ):
     if input_image_count:
         count = 0
-        for ele in test_case.input:
+        for ele in convert_to_multi_modal_array(test_case.input):
             if isinstance(ele, MLLMImage):
                 count += 1
         if count != input_image_count:
@@ -304,7 +305,7 @@ def check_mllm_test_case_params(
 
     if actual_output_image_count:
         count = 0
-        for ele in test_case.actual_output:
+        for ele in convert_to_multi_modal_array(test_case.actual_output):
             if isinstance(ele, MLLMImage):
                 count += 1
         if count != actual_output_image_count:

@@ -8,7 +8,7 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
 )
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -63,9 +63,11 @@ class TextToImageMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                input_texts, _ = self.separate_images_from_text(test_case.input)
+                input = convert_to_multi_modal_array(test_case.input)
+                actual_output = convert_to_multi_modal_array(test_case.actual_output)
+                input_texts, _ = self.separate_images_from_text(input)
                 _, output_images = self.separate_images_from_text(
-                    test_case.actual_output
+                    actual_output
                 )
 
                 self.SC_scores, self.SC_reasoning = (
@@ -112,9 +114,11 @@ class TextToImageMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            input_texts, _ = self.separate_images_from_text(test_case.input)
+            input = convert_to_multi_modal_array(test_case.input)
+            actual_output = convert_to_multi_modal_array(test_case.actual_output)
+            input_texts, _ = self.separate_images_from_text(input)
             _, output_images = self.separate_images_from_text(
-                test_case.actual_output
+                actual_output
             )
             (self.SC_scores, self.SC_reasoning), (
                 self.PQ_scores,
