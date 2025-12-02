@@ -2,27 +2,24 @@ from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel, Field, conint
 from typing import Optional
+from deepeval.evaluate.configs import AsyncConfig
 
 
-class OptimizerDisplayConfig(BaseModel):
-    """Display controls used by PromptOptimizer for all algorithms."""
-
+class DisplayConfig(BaseModel):
     show_indicator: bool = True
     announce_ties: bool = Field(
         False, description="Print a one-line note when a tie is detected"
     )
 
 
-class PromptListMutationTargetType(Enum):
+class MutationTargetType(Enum):
     RANDOM = "random"
     FIXED_INDEX = "fixed_index"
 
 
 # default all messages
-class PromptListMutationConfig(BaseModel):
-    target_type: PromptListMutationTargetType = (
-        PromptListMutationTargetType.RANDOM
-    )
+class MutationConfig(BaseModel):
+    target_type: MutationTargetType = MutationTargetType.RANDOM
     # should be list
     target_role: Optional[str] = Field(
         default=None,

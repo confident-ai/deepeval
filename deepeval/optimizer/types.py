@@ -4,7 +4,6 @@ import uuid
 from dataclasses import dataclass
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Literal,
@@ -16,7 +15,12 @@ from typing import (
     Union,
 )
 from enum import Enum
-from pydantic import BaseModel as PydanticBaseModel, Field, AliasChoices
+from pydantic import (
+    BaseModel as PydanticBaseModel,
+    Field,
+    AliasChoices,
+    BaseModel,
+)
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.models.base_model import DeepEvalBaseLLM
@@ -54,11 +58,11 @@ class ScoringAdapter(Protocol):
     Runners call into this adapter to:
     - compute scores per-instance on some subset (score_on_pareto),
     - compute minibatch means for selection and acceptance,
-    - generate feedback text used by the PromptRewriter.
+    - generate feedback text used by the Rewriter.
     """
 
     # Sync
-    def score_on_pareto(
+    def score_pareto(
         self,
         prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
@@ -66,7 +70,7 @@ class ScoringAdapter(Protocol):
         """Return per-instance scores on D_pareto."""
         ...
 
-    def minibatch_score(
+    def score_minibatch(
         self,
         prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
@@ -74,7 +78,7 @@ class ScoringAdapter(Protocol):
         """Return average score μ on a minibatch from D_feedback."""
         ...
 
-    def minibatch_feedback(
+    def get_minibatch_feedback(
         self,
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
@@ -90,17 +94,17 @@ class ScoringAdapter(Protocol):
         ...
 
     # Async
-    async def a_score_on_pareto(
+    async def a_score_pareto(
         self,
         prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> ScoreVector: ...
-    async def a_minibatch_score(
+    async def a_score_minibatch(
         self,
         prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float: ...
-    async def a_minibatch_feedback(
+    async def a_get_minibatch_feedback(
         self,
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
@@ -111,23 +115,12 @@ class ScoringAdapter(Protocol):
     ) -> ModuleId: ...
 
 
-class PromptRewriterProtocol(Protocol):
+class RewriterProtocol(Protocol):
     def rewrite(
         self,
         *,
+        optimizer_model: DeepEvalBaseLLM,
         module_id: ModuleId,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt: ...
@@ -135,19 +128,8 @@ class PromptRewriterProtocol(Protocol):
     async def a_rewrite(
         self,
         *,
+        optimizer_model: DeepEvalBaseLLM,
         module_id: ModuleId,
-        model: Optional[DeepEvalBaseLLM] = None,
-        model_schema: Optional[PydanticBaseModel] = None,
-        model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None,
         old_prompt: Prompt,
         feedback_text: str,
     ) -> Prompt: ...
@@ -172,7 +154,7 @@ class RunnerStatusCallbackProtocol(Protocol):
     ) -> None: ...
 
 
-class RunnerProtocol(Protocol):
+class BaseAlgorithm(BaseModel):
     """
     Contract for prompt optimization runners used by PromptOptimizer.
 
@@ -183,17 +165,12 @@ class RunnerProtocol(Protocol):
     # status_callback is injected by PromptOptimizer
     # A runner may call this to report:
     # progress, ties, or errors during execution.
+    name: str
     status_callback: Optional[RunnerStatusCallbackProtocol]
-    model_callback: Optional[
-        Callable[
-            ...,
-            Union[
-                str,
-                Dict,
-                Tuple[Union[str, Dict], float],
-            ],
-        ]
-    ]
+
+    # optimizer_model is used internally by the optimizer for prompt rewriting.
+    # This is separate from the user's model_callback which is used for scoring.
+    optimizer_model: Optional[DeepEvalBaseLLM]
 
     scoring_adapter: Optional[ScoringAdapter]
 
@@ -202,14 +179,16 @@ class RunnerProtocol(Protocol):
         *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]: ...
+    ) -> Tuple[Prompt, Dict]:
+        raise NotImplementedError
 
     async def a_execute(
         self,
         *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]: ...
+    ) -> Tuple[Prompt, Dict]:
+        raise NotImplementedError
 
 
 class Objective(Protocol):

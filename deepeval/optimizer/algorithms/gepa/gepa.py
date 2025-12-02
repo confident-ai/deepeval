@@ -14,10 +14,13 @@ from typing import (
     Optional,
 )
 
+from deepeval.models.base_model import DeepEvalBaseLLM
+
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.aggregates import Aggregator, mean_of_all
-from deepeval.optimization.types import (
+from deepeval.optimizer.utils import Aggregator, mean_of_all
+from deepeval.optimizer.types import (
     AcceptedIterationDict,
+    BaseAlgorithm,
     PromptConfiguration,
     PromptConfigurationId,
     ModuleId,
@@ -27,41 +30,39 @@ from deepeval.optimization.types import (
     RunnerStatusType,
     RunnerStatusCallbackProtocol,
 )
-from deepeval.optimization.utils import (
+from deepeval.optimizer.utils import (
     split_goldens,
     build_prompt_config_snapshots,
 )
-from deepeval.optimization.policies import (
+from deepeval.optimizer.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimization.mutations.prompt_rewriter import (
-    PromptRewriter,
-)
-from .configs import GEPAConfig
+from deepeval.optimizer.rewriter import Rewriter
+from deepeval.optimizer.algorithms.configs import GEPAConfig
 
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
-class GEPARunner:
+class GEPA(BaseAlgorithm):
     """
     GEPA loop with sync/async execution.
 
     This runner is intentionally low level and does not know about metrics,
     models, or async configs. It relies on a preconfigured
-    ScoringAdapter and PromptRewriter, which are typically constructed by
+    ScoringAdapter and Rewriter, which are typically constructed by
     the higher-level PromptOptimizer.
     """
 
+    name = "GEPA"
     SINGLE_MODULE_ID: ModuleId = "__module__"
 
     def __init__(
         self,
-        *,
         config: GEPAConfig,
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
@@ -80,20 +81,12 @@ class GEPARunner:
         #   (kind, step_index, total_steps, detail) -> None
         self.status_callback: Optional[RunnerStatusCallbackProtocol] = None
 
-        # Model callback used by the rewriter set by PromptOptimizer.
-        self.model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None
+        # Optimizer model used by the rewriter for prompt mutation.
+        # Set by PromptOptimizer.
+        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
 
         # lazy loaded
-        self._rewriter: Optional[PromptRewriter] = None
+        self._rewriter: Optional[Rewriter] = None
 
     ##############
     # Public API #
@@ -101,7 +94,6 @@ class GEPARunner:
 
     def execute(
         self,
-        *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
@@ -115,7 +107,6 @@ class GEPARunner:
             )
 
         self._ensure_scoring_adapter()
-        self._ensure_rewriter()
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
@@ -139,7 +130,7 @@ class GEPARunner:
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
                 self.pareto_score_table[root_prompt_configuration.id] = (
-                    self.scoring_adapter.score_on_pareto(
+                    self.scoring_adapter.score_pareto(
                         root_prompt_configuration, d_pareto
                     )
                 )
@@ -154,7 +145,7 @@ class GEPARunner:
             minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
-            feedback_text = self.scoring_adapter.minibatch_feedback(
+            feedback_text = self.scoring_adapter.get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -172,10 +163,10 @@ class GEPARunner:
             )
 
             # 7. Evaluate parent/child on minibatch
-            parent_score = self.scoring_adapter.minibatch_score(
+            parent_score = self.scoring_adapter.score_minibatch(
                 parent_prompt_configuration, minibatch
             )
-            child_score = self.scoring_adapter.minibatch_score(
+            child_score = self.scoring_adapter.score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -211,7 +202,6 @@ class GEPARunner:
 
     async def a_execute(
         self,
-        *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
@@ -225,7 +215,6 @@ class GEPARunner:
             )
 
         self._ensure_scoring_adapter()
-        self._ensure_rewriter()
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
@@ -249,7 +238,7 @@ class GEPARunner:
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
                 self.pareto_score_table[root_prompt_configuration.id] = (
-                    await self.scoring_adapter.a_score_on_pareto(
+                    await self.scoring_adapter.a_score_pareto(
                         root_prompt_configuration, d_pareto
                     )
                 )
@@ -264,7 +253,7 @@ class GEPARunner:
             minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
-            feedback_text = await self.scoring_adapter.a_minibatch_feedback(
+            feedback_text = await self.scoring_adapter.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -282,10 +271,10 @@ class GEPARunner:
             )
 
             # 7. Evaluate parent/child on minibatch
-            parent_score = await self.scoring_adapter.a_minibatch_score(
+            parent_score = await self.scoring_adapter.a_score_minibatch(
                 parent_prompt_configuration, minibatch
             )
-            child_score = await self.scoring_adapter.a_minibatch_score(
+            child_score = await self.scoring_adapter.a_score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -336,18 +325,9 @@ class GEPARunner:
         if self.scoring_adapter is None:
             raise DeepEvalError(
                 "GEPARunner requires a `scoring_adapter`. "
-                "Construct one (for example, DeepEvalScoringAdapter) in "
+                "Construct one (for example, Scorer) in "
                 "PromptOptimizer and assign it to `runner.scoring_adapter`."
             )
-
-    def _ensure_rewriter(self) -> None:
-        if self._rewriter is not None:
-            return
-
-        # For now, always use the basic PromptRewriter. Additional
-        # variants (e.g. for GEPA Alg. 4 crossover) can be introduced
-        # later
-        self._rewriter = PromptRewriter()
 
     def _prompts_equivalent(
         self, old_prompt: Prompt, new_prompt: Prompt
@@ -479,7 +459,6 @@ class GEPARunner:
         )
 
         new_prompt = await self._rewriter.a_rewrite(
-            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,
@@ -504,7 +483,6 @@ class GEPARunner:
         )
 
         new_prompt = self._rewriter.rewrite(
-            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,
@@ -548,7 +526,7 @@ class GEPARunner:
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            self.scoring_adapter.score_on_pareto(
+            self.scoring_adapter.score_pareto(
                 child_prompt_configuration, d_pareto
             )
         )
@@ -572,7 +550,7 @@ class GEPARunner:
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            await self.scoring_adapter.a_score_on_pareto(
+            await self.scoring_adapter.a_score_pareto(
                 child_prompt_configuration, d_pareto
             )
         )

@@ -1,13 +1,13 @@
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.configs import OptimizerDisplayConfig
-from deepeval.optimization.prompt_optimizer import PromptOptimizer
-from deepeval.optimization.adapters.deepeval_scoring_adapter import (
+from deepeval.optimizer.configs import OptimizerDisplayConfig
+from deepeval.optimizer.prompt_optimizer import PromptOptimizer
+from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
     DeepEvalScoringAdapter,
 )
-from deepeval.optimization.gepa.loop import GEPARunner
-from deepeval.optimization.types import (
+from deepeval.optimizer.gepa.loop import GEPARunner
+from deepeval.optimizer.types import (
     OptimizationReport,
     RunnerStatusType,
 )

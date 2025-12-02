@@ -5,15 +5,15 @@ import random
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.mutations.prompt_rewriter import (
+from deepeval.optimizer.rewriter.rewriter import (
     _compose_prompt_messages,
     _normalize_llm_output_to_text,
-    PromptRewriter,
+    Rewriter,
     MetricAwareLLMRewriter,
 )
-from deepeval.optimization.configs import (
-    PromptListMutationConfig,
-    PromptListMutationTargetType,
+from deepeval.optimizer.configs import (
+    MutationConfig,
+    MutationTargetType,
 )
 from deepeval.prompt.api import PromptMessage
 from deepeval.prompt.prompt import Prompt
@@ -87,12 +87,12 @@ def test_normalize_llm_output_to_text_unserializable_falls_back_to_str():
 
 
 #########################
-# PromptRewriter (sync) #
+# Rewriter (sync) #
 #########################
 
 
-def test_prompt_rewriter_requires_model_callback():
-    rewriter = PromptRewriter()
+def test_rewriter_requires_model_callback():
+    rewriter = Rewriter()
     old = Prompt(text_template="Original prompt")
 
     # Passing model_callback=None should be rejected by validate_callback
@@ -105,8 +105,8 @@ def test_prompt_rewriter_requires_model_callback():
         )
 
 
-def test_prompt_rewriter_returns_old_prompt_when_feedback_empty():
-    rewriter = PromptRewriter()
+def test_rewriter_returns_old_prompt_when_feedback_empty():
+    rewriter = Rewriter()
     old = Prompt(text_template="Keep me")
 
     called = {"count": 0}
@@ -127,8 +127,8 @@ def test_prompt_rewriter_returns_old_prompt_when_feedback_empty():
     assert called["count"] == 0  # callback was never used
 
 
-def test_prompt_rewriter_uses_model_callback_and_merges_context():
-    rewriter = PromptRewriter()
+def test_rewriter_uses_model_callback_and_merges_context():
+    rewriter = Rewriter()
     old = Prompt(text_template="Original prompt text")
     feedback = "Please be more specific."
 
@@ -167,8 +167,8 @@ def test_prompt_rewriter_uses_model_callback_and_merges_context():
     assert feedback_text == feedback
 
 
-def test_prompt_rewriter_returns_old_prompt_if_new_text_empty_after_trim():
-    rewriter = PromptRewriter()
+def test_rewriter_returns_old_prompt_if_new_text_empty_after_trim():
+    rewriter = Rewriter()
     old = Prompt(text_template="Original prompt")
     feedback = "Try to improve this."
 
@@ -187,12 +187,12 @@ def test_prompt_rewriter_returns_old_prompt_if_new_text_empty_after_trim():
     assert new is old
 
 
-def test_prompt_rewriter_list_default_mutates_random_message():
+def test_rewriter_list_default_mutates_random_message():
     """
     With default PromptListMutationConfig (RANDOM, no role),
     exactly one message in the list is rewritten and roles are preserved.
     """
-    rewriter = PromptRewriter()
+    rewriter = Rewriter()
     old = Prompt(
         messages_template=[
             PromptMessage(role="user", content="m0"),
@@ -232,16 +232,16 @@ def test_prompt_rewriter_list_default_mutates_random_message():
         assert old_msg.role == new_msg.role
 
 
-def test_prompt_rewriter_list_random_uses_random_state_and_role_filter():
+def test_rewriter_list_random_uses_random_state_and_role_filter():
     """
     RANDOM mode with a seeded RNG + target_role should pick among the
     matching-role messages only, deterministically.
     """
-    cfg = PromptListMutationConfig(
-        target_type=PromptListMutationTargetType.RANDOM,
+    cfg = MutationConfig(
+        target_type=MutationTargetType.RANDOM,
         target_role="assistant",
     )
-    rewriter = PromptRewriter(
+    rewriter = Rewriter(
         list_mutation_config=cfg,
         random_state=random.Random(0),
     )
@@ -273,18 +273,18 @@ def test_prompt_rewriter_list_random_uses_random_state_and_role_filter():
 
 
 @pytest.mark.parametrize("target_index", [0, 1, 2])
-def test_prompt_rewriter_list_fixed_index_mutates_selected_message(
+def test_rewriter_list_fixed_index_mutates_selected_message(
     target_index: int,
 ):
     """
     When target_type == FIXED_INDEX, the message at target_index is rewritten
     and all other messages remain unchanged. Roles are preserved.
     """
-    cfg = PromptListMutationConfig(
-        target_type=PromptListMutationTargetType.FIXED_INDEX,
+    cfg = MutationConfig(
+        target_type=MutationTargetType.FIXED_INDEX,
         target_index=target_index,
     )
-    rewriter = PromptRewriter(list_mutation_config=cfg)
+    rewriter = Rewriter(list_mutation_config=cfg)
 
     old = Prompt(
         messages_template=[
@@ -322,12 +322,12 @@ def test_prompt_rewriter_list_fixed_index_mutates_selected_message(
             assert new_msg.content == old_msg.content
 
 
-def test_prompt_rewriter_fixed_index_out_of_range_raises():
-    cfg = PromptListMutationConfig(
-        target_type=PromptListMutationTargetType.FIXED_INDEX,
+def test_rewriter_fixed_index_out_of_range_raises():
+    cfg = MutationConfig(
+        target_type=MutationTargetType.FIXED_INDEX,
         target_index=10,
     )
-    rewriter = PromptRewriter(list_mutation_config=cfg)
+    rewriter = Rewriter(list_mutation_config=cfg)
     old = Prompt(messages_template=[PromptMessage(role="user", content="m0")])
 
     def model_callback(**kwargs):
@@ -342,23 +342,23 @@ def test_prompt_rewriter_fixed_index_out_of_range_raises():
         )
 
 
-def test_prompt_rewriter_accepts_int_random_seed_and_converts_to_random():
+def test_rewriter_accepts_int_random_seed_and_converts_to_random():
     """
     Passing an int seed for random_state should be accepted and
     converted into a random.Random instance.
     """
-    rewriter = PromptRewriter(random_state=123)
+    rewriter = Rewriter(random_state=123)
     assert isinstance(rewriter.random_state, random.Random)
 
 
 ##########################
-# PromptRewriter (async) #
+# Rewriter (async) #
 ##########################
 
 
 @pytest.mark.asyncio
 async def test_prompt_rewriter_async_uses_model_callback():
-    rewriter = PromptRewriter()
+    rewriter = Rewriter()
     old = Prompt(text_template="Original async prompt")
     feedback = "Async feedback."
 

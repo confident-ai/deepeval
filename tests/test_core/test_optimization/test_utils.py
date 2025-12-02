@@ -6,8 +6,8 @@ import pytest
 from tests.test_core.stubs import StubProvider, StubModelSettings, StubPrompt
 from deepeval.prompt.prompt import Prompt, PromptMessage
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.types import PromptConfiguration, OptimizationReport
-from deepeval.optimization.utils import (
+from deepeval.optimizer.types import PromptConfiguration, OptimizationReport
+from deepeval.optimizer.utils import (
     a_invoke_model_callback,
     build_model_callback_kwargs,
     generate_module_id,

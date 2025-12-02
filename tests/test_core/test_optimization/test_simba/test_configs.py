@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from deepeval.optimization.copro.configs import COPROConfig
-from deepeval.optimization.simba.configs import SIMBAConfig
+from deepeval.optimizer.copro.configs import COPROConfig
+from deepeval.optimizer.simba.configs import SIMBAConfig
 
 
 def test_simba_config_inherits_copro_defaults():
@@ -13,7 +13,7 @@ def test_simba_config_inherits_copro_defaults():
     """
     cfg = SIMBAConfig()
 
-    # Inherited from MIPRO / COPRO
+    # Inherited from MIPROV2 / COPRO
     assert isinstance(cfg, COPROConfig)
     assert cfg.iterations == 5
     assert cfg.population_size == 4

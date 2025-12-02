@@ -3,7 +3,7 @@ from typing import Dict, List, Sequence
 import random
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.types import PromptConfigurationId, ScoreTable
+from deepeval.optimizer.types import PromptConfigurationId, ScoreTable
 
 
 def _is_dominated(

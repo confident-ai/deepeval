@@ -4,7 +4,7 @@ from enum import Enum
 import random
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.types import PromptConfigurationId
+from deepeval.optimizer.types import PromptConfigurationId
 
 
 class TieBreaker(str, Enum):

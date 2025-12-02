@@ -1,4 +1,4 @@
-from deepeval.optimization.configs import OptimizerDisplayConfig
+from deepeval.optimizer.configs import OptimizerDisplayConfig
 
 
 def test_optimizer_display_config_defaults():

@@ -7,7 +7,7 @@ from typing import Callable, List, Optional, Protocol, runtime_checkable
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.models.retry_policy import create_retry_decorator
-from deepeval.optimization.types import ModuleId
+from deepeval.optimizer.types import ModuleId
 from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import TraceSpanStatus
 
@@ -348,7 +348,7 @@ class _FakeTrace:
 
 class _DummyRewriter:
     """
-    Minimal object satisfying the PromptRewriterProtocol at runtime.
+    Minimal object satisfying the Rewriter at runtime.
     Used to verify set_rewriter/get_rewriter wiring.
     """
 
@@ -552,7 +552,7 @@ class StubScoringAdapter:
     def _get_prompt_text(self, prompt_configuration):
         if not getattr(prompt_configuration, "prompts", None):
             return ""
-        # For GEPA/MIPRO we expect a single module id in `prompts`.
+        # For GEPA/MIPROV2 we expect a single module id in `prompts`.
         prompt = next(iter(prompt_configuration.prompts.values()))
         return (prompt.text_template or "").strip()
 

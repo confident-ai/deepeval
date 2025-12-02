@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from deepeval.optimization.gepa.configs import GEPAConfig
-from deepeval.optimization.policies.tie_breaker import TieBreaker
+from deepeval.optimizer.algorithms.configs import GEPAConfig
+from deepeval.optimizer.policies.tie_breaker import TieBreaker
 
 
 def test_gepa_config_defaults_sanity():

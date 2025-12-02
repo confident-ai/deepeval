@@ -3,7 +3,7 @@
 #   - Maintains an unbounded pool of candidate prompts.
 #   - At each iteration:
 #       - Select a parent via epsilon-greedy on mean minibatch score.
-#       - Propose a single child prompt via PromptRewriter.
+#       - Propose a single child prompt via Rewriter.
 #       - Accept the child if its minibatch score improves on the parent
 #         by at least `min_delta`, and add it to the pool.
 #   - Uses `full_eval_every` (if set) to periodically re-score the current
@@ -26,10 +26,13 @@ from typing import (
     Optional,
 )
 
+from deepeval.models.base_model import DeepEvalBaseLLM
+
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.aggregates import Aggregator, mean_of_all
-from deepeval.optimization.types import (
+from deepeval.optimizer.utils import Aggregator, mean_of_all
+from deepeval.optimizer.types import (
     AcceptedIterationDict,
+    BaseAlgorithm,
     PromptConfiguration,
     PromptConfigurationId,
     ModuleId,
@@ -39,25 +42,25 @@ from deepeval.optimization.types import (
     RunnerStatusType,
     RunnerStatusCallbackProtocol,
 )
-from deepeval.optimization.utils import (
+from deepeval.optimizer.utils import (
     build_prompt_config_snapshots,
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
-from deepeval.optimization.mutations.prompt_rewriter import PromptRewriter
-from .configs import MIPROConfig
+from deepeval.optimizer.rewriter import Rewriter
+from deepeval.optimizer.algorithms.configs import MIPROV2Config
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
-class MIPRORunner:
+class MIPROV2(BaseAlgorithm):
     """
-    0-shot MIPRO-style loop with sync/async execution.
+    0-shot MIPROV2-style loop with sync/async execution.
 
     This runner is intentionally low level and does not know about metrics,
     models, or async configs. It relies on a preconfigured ScoringAdapter and
-    PromptRewriter, which are typically constructed by PromptOptimizer.
+    Rewriter, which are typically constructed by PromptOptimizer.
 
     - Optimizes a single Prompt (instruction) against a list of Goldens.
     - Uses mini-batches of goldens for trial scoring and simple selection over
@@ -65,12 +68,12 @@ class MIPRORunner:
       implementation.
     """
 
+    name = "MIPROv2"
     SINGLE_MODULE_ID: ModuleId = "__module__"
 
     def __init__(
         self,
-        *,
-        config: MIPROConfig,
+        config: MIPROV2Config,
         aggregate_instances: Aggregator = mean_of_all,
         scoring_adapter: Optional[ScoringAdapter] = None,
     ) -> None:
@@ -88,20 +91,12 @@ class MIPRORunner:
         #   (kind, step_index, total_steps, detail) -> None
         self.status_callback: Optional[RunnerStatusCallbackProtocol] = None
 
-        # Model callback used by the rewriter set by PromptOptimizer.
-        self.model_callback: Optional[
-            Callable[
-                ...,
-                Union[
-                    str,
-                    Dict,
-                    Tuple[Union[str, Dict], float],
-                ],
-            ]
-        ] = None
+        # Optimizer model used by the rewriter for prompt mutation.
+        # Set by PromptOptimizer.
+        self.optimizer_model: Optional["DeepEvalBaseLLM"] = None
 
-        # Lazy-loaded PromptRewriter (can be overridden by PromptOptimizer)
-        self._rewriter: Optional[PromptRewriter] = None
+        # Lazy-loaded Rewriter (can be overridden by PromptOptimizer)
+        self._rewriter: Optional[Rewriter] = None
 
     ##############
     # Public API #
@@ -109,12 +104,11 @@ class MIPRORunner:
 
     def execute(
         self,
-        *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
         """
-        Synchronous MIPRO run from a full list of goldens.
+        Synchronous MIPROV2 run from a full list of goldens.
 
         The full goldens set is used both for mini-batched scoring during
         optimization and for a final full evaluation of the best candidate.
@@ -122,13 +116,12 @@ class MIPRORunner:
         total_goldens = len(goldens)
         if total_goldens < 1:
             raise DeepEvalError(
-                "MIPRO prompt optimization requires at least 1 golden, but "
+                "MIPROV2 prompt optimization requires at least 1 golden, but "
                 f"received {total_goldens}. Provide at least one golden to run "
                 "the optimizer."
             )
 
         self._ensure_scoring_adapter()
-        self._ensure_rewriter()
         self.reset_state()
 
         # Seed candidate pool with the root prompt configuration.
@@ -154,7 +147,7 @@ class MIPRORunner:
             # candidate on the first iteration.
             if not self._minibatch_score_counts:
                 seed_minibatch = self._draw_minibatch(goldens)
-                root_score = self.scoring_adapter.minibatch_score(
+                root_score = self.scoring_adapter.score_minibatch(
                     root_prompt_configuration, seed_minibatch
                 )
                 self._record_minibatch_score(
@@ -167,7 +160,7 @@ class MIPRORunner:
 
             minibatch = self._draw_minibatch(goldens)
 
-            feedback_text = self.scoring_adapter.minibatch_feedback(
+            feedback_text = self.scoring_adapter.get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -188,7 +181,7 @@ class MIPRORunner:
                 child_prompt,
             )
 
-            child_score = self.scoring_adapter.minibatch_score(
+            child_score = self.scoring_adapter.score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -248,7 +241,6 @@ class MIPRORunner:
 
     async def a_execute(
         self,
-        *,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Tuple[Prompt, Dict]:
@@ -258,13 +250,12 @@ class MIPRORunner:
         total_goldens = len(goldens)
         if total_goldens < 1:
             raise DeepEvalError(
-                "MIPRO prompt optimization requires at least 1 golden, but "
+                "MIPROV2 prompt optimization requires at least 1 golden, but "
                 f"received {total_goldens}. Provide at least one golden to run "
                 "the optimizer."
             )
 
         self._ensure_scoring_adapter()
-        self._ensure_rewriter()
         self.reset_state()
 
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
@@ -289,7 +280,7 @@ class MIPRORunner:
             # candidate on the first iteration.
             if not self._minibatch_score_counts:
                 seed_minibatch = self._draw_minibatch(goldens)
-                root_score = await self.scoring_adapter.a_minibatch_score(
+                root_score = await self.scoring_adapter.a_score_minibatch(
                     root_prompt_configuration, seed_minibatch
                 )
                 self._record_minibatch_score(
@@ -301,7 +292,7 @@ class MIPRORunner:
 
             minibatch = self._draw_minibatch(goldens)
 
-            feedback_text = await self.scoring_adapter.a_minibatch_feedback(
+            feedback_text = await self.scoring_adapter.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -320,7 +311,7 @@ class MIPRORunner:
                 child_prompt,
             )
 
-            child_score = await self.scoring_adapter.a_minibatch_score(
+            child_score = await self.scoring_adapter.a_score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -389,7 +380,7 @@ class MIPRORunner:
         self.parents_by_id: Dict[
             PromptConfigurationId, Optional[PromptConfigurationId]
         ] = {}
-        # For MIPRO we reuse the same field name as GEPA for full-eval scores.
+        # For MIPROV2 we reuse the same field name as GEPA for full-eval scores.
         self.pareto_score_table: ScoreTable = {}
 
         # Surrogate stats: running mean minibatch scores per candidate.
@@ -403,20 +394,9 @@ class MIPRORunner:
         if self.scoring_adapter is None:
             raise DeepEvalError(
                 "MIPRORunner requires a `scoring_adapter`. "
-                "Construct one (for example, DeepEvalScoringAdapter) in "
+                "Construct one (for example, Scorer) in "
                 "PromptOptimizer and assign it to `runner.scoring_adapter`."
             )
-
-    def _ensure_rewriter(self) -> None:
-        if self._rewriter is not None:
-            return
-
-        # Default basic PromptRewriter; PromptOptimizer can override this and
-        # pass a configured instance
-        self._rewriter = PromptRewriter(
-            max_chars=self.config.rewrite_instruction_max_chars,
-            random_state=self.random_state,
-        )
 
     def _prompts_equivalent(
         self,
@@ -603,7 +583,7 @@ class MIPRORunner:
         if best.id in self.pareto_score_table:
             return
 
-        scores = await self.scoring_adapter.a_score_on_pareto(best, goldens)
+        scores = await self.scoring_adapter.a_score_pareto(best, goldens)
         self.pareto_score_table[best.id] = scores
 
     def _full_evaluate_best(
@@ -617,7 +597,7 @@ class MIPRORunner:
         if best.id in self.pareto_score_table:
             return
 
-        scores = self.scoring_adapter.score_on_pareto(best, goldens)
+        scores = self.scoring_adapter.score_pareto(best, goldens)
         self.pareto_score_table[best.id] = scores
 
     async def _a_generate_child_prompt(
@@ -636,7 +616,6 @@ class MIPRORunner:
             ) from exc
 
         new_prompt = await self._rewriter.a_rewrite(
-            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,
@@ -666,7 +645,6 @@ class MIPRORunner:
             ) from exc
 
         new_prompt = self._rewriter.rewrite(
-            model_callback=self.model_callback,
             module_id=selected_module_id,
             old_prompt=old_prompt,
             feedback_text=feedback_text,

@@ -1,9 +1,9 @@
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.miprov2.configs import MIPROConfig
-from deepeval.optimization.miprov2.loop import MIPRORunner
-from deepeval.optimization.types import PromptConfiguration
+from deepeval.optimizer.miprov2.configs import MIPROConfig
+from deepeval.optimizer.miprov2.loop import MIPRORunner
+from deepeval.optimizer.types import PromptConfiguration
 from deepeval.prompt.prompt import Prompt
 from tests.test_core.stubs import StubScoringAdapter, SuffixRewriter
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from deepeval.optimization.copro.configs import COPROConfig
+from deepeval.optimizer.copro.configs import COPROConfig
 
 
 def test_copro_config_defaults_inherit_mipro_fields():

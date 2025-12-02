@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from deepeval.optimization.miprov2.configs import MIPROConfig
+from deepeval.optimizer.miprov2.configs import MIPROConfig
 
 
 def test_miproconfig_defaults():

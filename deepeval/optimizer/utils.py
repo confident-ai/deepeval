@@ -2,11 +2,14 @@ from __future__ import annotations
 import inspect
 import random
 import re
+import statistics
 from typing import (
     Any,
     Callable,
     List,
     Optional,
+    Protocol,
+    Sequence,
     Tuple,
     TYPE_CHECKING,
     Union,
@@ -17,8 +20,11 @@ from typing import (
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
-from deepeval.prompt.api import PromptType, PromptMessage
-from deepeval.optimization.types import (
+from deepeval.prompt.api import (
+    PromptType,
+    PromptMessage,
+)  # PromptMessage needed for inflate_prompts_from_report
+from deepeval.optimizer.types import (
     ModuleId,
     PromptConfigurationId,
     PromptConfiguration,
@@ -151,87 +157,22 @@ def normalize_seed_prompts(
     return mapping
 
 
-def build_model_callback_kwargs(
-    *,
-    # scoring context
-    golden: Optional[Union["Golden", "ConversationalGolden"]] = None,
-    # rewriter context
-    feedback_text: Optional[str] = None,
-    # shared
-    prompt: Optional[Prompt] = None,
-    prompt_type: Optional[str] = None,
-    prompt_text: Optional[str] = None,
-    prompt_messages: Optional[List["PromptMessage"]] = None,
-) -> Dict[str, Any]:
-    """
-    Build a superset of kwargs for GEPA model callbacks.
-
-    All keys are present in the dict so callbacks can declare any subset of:
-
-        hook: str           # injected by (a_)invoke_model_callback
-        prompt: Prompt
-        prompt_type: str
-        prompt_text: str
-        prompt_messages: List[PromptMessage]
-        golden: Golden | ConversationalGolden
-        feedback_text: str
-
-    Non applicable fields are set to None.
-    """
-    return {
-        # scoring context
-        "golden": golden,
-        # rewriter context
-        "feedback_text": feedback_text,
-        # shared
-        "prompt": prompt,
-        "prompt_text": prompt_text,
-        "prompt_messages": prompt_messages,
-    }
-
-
 def invoke_model_callback(
     *,
-    hook: str,
-    model_callback: Callable[
-        ...,
-        Union[
-            str,
-            Dict,
-            Tuple[Union[str, Dict], float],
-        ],
-    ],
-    candidate_kwargs: Dict[str, Any],
-) -> Union[
-    str,
-    Dict,
-    Tuple[Union[str, Dict], float],
-]:
+    model_callback: Callable[..., str],
+    prompt: Prompt,
+    golden: Union["Golden", "ConversationalGolden"],
+) -> str:
     """
     Call a user provided model_callback in a synchronous context.
 
-    - Filters kwargs to only those the callback accepts.
-    - Injects `hook` if the callback declares it.
-    - Raises if the callback returns an awaitable; callers must use async
-      helpers for async callbacks.
+    Raises if the callback returns an awaitable.
     """
-    sig = inspect.signature(model_callback)
-    supported = set(sig.parameters.keys())
-
-    filtered = {
-        key: value
-        for key, value in candidate_kwargs.items()
-        if key in supported
-    }
-
-    if "hook" in supported:
-        filtered["hook"] = hook
-
-    result = model_callback(**filtered)
+    result = model_callback(prompt, golden)
     if inspect.isawaitable(result):
         raise DeepEvalError(
             "model_callback returned an awaitable from a synchronous context. "
-            "Either declare the callback as `async def` and use async GEPA, or call "
+            "Either declare the callback as `async def` and use async optimization, or call "
             "`model.generate(...)` instead of `model.a_generate(...)` inside a sync callback."
         )
     return result
@@ -239,41 +180,16 @@ def invoke_model_callback(
 
 async def a_invoke_model_callback(
     *,
-    hook: str,
-    model_callback: Callable[
-        ...,
-        Union[
-            str,
-            Dict,
-            Tuple[Union[str, Dict], float],
-        ],
-    ],
-    candidate_kwargs: Dict[str, Any],
-) -> Union[
-    str,
-    Dict,
-    Tuple[Union[str, Dict], float],
-]:
+    model_callback: Callable[..., str],
+    prompt: Prompt,
+    golden: Union["Golden", "ConversationalGolden"],
+) -> str:
     """
     Call a user provided model_callback in an async context.
 
-    - Filters kwargs to only those the callback accepts.
-    - Injects `hook` if the callback declares it.
-    - Supports both sync and async callbacks.
+    Supports both sync and async callbacks.
     """
-    sig = inspect.signature(model_callback)
-    supported = set(sig.parameters.keys())
-
-    filtered = {
-        key: value
-        for key, value in candidate_kwargs.items()
-        if key in supported
-    }
-
-    if "hook" in supported:
-        filtered["hook"] = hook
-
-    result = model_callback(**filtered)
+    result = model_callback(prompt, golden)
     if inspect.isawaitable(result):
         return await result
     return result
@@ -494,17 +410,8 @@ def validate_sequence_of(
 def validate_callback(
     *,
     component: str,
-    model_callback: Optional[
-        Callable[
-            ...,
-            Union[
-                str,
-                Dict,
-                Tuple[Union[str, Dict], float],
-            ],
-        ]
-    ],
-) -> Callable[..., Union[str, Dict, Tuple[Union[str, Dict], float]]]:
+    model_callback: Optional[Callable[..., str]],
+) -> Callable[..., str]:
     """
     Ensure that `model_callback` is provided.
 
@@ -596,3 +503,20 @@ def validate_int_in_range(
         )
 
     return value
+
+
+##############
+# Aggregates #
+##############
+
+
+class Aggregator(Protocol):
+    def __call__(self, scores: Sequence[float]) -> float: ...
+
+
+def mean_of_all(scores: Sequence[float]) -> float:
+    return statistics.fmean(scores) if scores else 0.0
+
+
+def median_of_all(scores: Sequence[float]) -> float:
+    return statistics.median(scores) if scores else 0.0

@@ -4,7 +4,7 @@ import json
 import os
 
 from enum import Enum
-from typing import Optional, List, Dict, Type, Literal, TYPE_CHECKING
+from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 from pydantic import BaseModel, ValidationError
@@ -33,10 +33,6 @@ from deepeval.prompt.utils import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
-
-
-if TYPE_CHECKING:
-    from deepeval.optimization.types import OptimizationReport
 
 logger = logging.getLogger(__name__)
 
@@ -144,9 +140,6 @@ class Prompt:
             self.type = PromptType.TEXT
         elif messages_template:
             self.type = PromptType.LIST
-
-        # updated after optimization runs
-        self.optimization_report: Optional["OptimizationReport"] = None
 
     def __del__(self):
         """Cleanup polling tasks when instance is destroyed"""

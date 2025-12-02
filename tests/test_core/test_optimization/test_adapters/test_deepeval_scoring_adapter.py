@@ -6,7 +6,7 @@ import pytest
 
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.errors import DeepEvalError
-from deepeval.optimization.adapters.deepeval_scoring_adapter import (
+from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
     DeepEvalScoringAdapter,
 )
 from deepeval.prompt.api import PromptType, PromptMessage

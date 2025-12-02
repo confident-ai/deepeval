@@ -5,9 +5,9 @@ import pytest
 from deepeval.errors import DeepEvalError
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
-from deepeval.optimization.types import PromptConfiguration
-from deepeval.optimization.copro.configs import COPROConfig
-from deepeval.optimization.copro.loop import COPRORunner
+from deepeval.optimizer.types import PromptConfiguration
+from deepeval.optimizer.copro.configs import COPROConfig
+from deepeval.optimizer.copro.loop import COPRORunner
 
 from tests.test_core.stubs import (
     StubScoringAdapter,
