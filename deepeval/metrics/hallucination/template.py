@@ -17,12 +17,12 @@ Example:
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "The actual output agrees with the provided context which states that Einstein won the Nobel Prize for his discovery of the photoelectric effect."
+            "reason": "The actual output agrees with the provided context which states that Einstein won the Nobel Prize for his discovery of the photoelectric effect.",
+            "verdict": "yes"
         }},
         {{
-            "verdict": "no",
-            "reason": "The actual output contradicts the provided context which states that Einstein won the Nobel Prize in 1968, not 1969."
+            "reason": "The actual output contradicts the provided context which states that Einstein won the Nobel Prize in 1968, not 1969.",
+            "verdict": "no"
         }}
     ]  
 }}

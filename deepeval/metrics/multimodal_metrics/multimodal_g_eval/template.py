@@ -92,8 +92,8 @@ class MultimodalGEvalTemplate:
                 ---
                 **Example JSON:**
                 {{
-                    "score": {score_range[0]},
-                    "reason": "your concise and informative reason here"
+                    "reason": "your concise and informative reason here",
+                    "score": {score_range[0]}
                 }}
 
                 JSON:
@@ -136,8 +136,8 @@ class MultimodalGEvalTemplate:
 
                 Example JSON:
                 {{
-                    "score": 0,
-                    "reason": "The text does not follow the evaluation steps provided."
+                    "reason": "The text does not follow the evaluation steps provided.",
+                    "score": 0
                 }}
                 **
 

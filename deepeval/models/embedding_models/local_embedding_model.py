@@ -1,7 +1,9 @@
 from openai import OpenAI, AsyncOpenAI
 from typing import Dict, List, Optional
+from pydantic import SecretStr
 
-from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
+from deepeval.config.settings import get_settings
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -23,15 +25,19 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
         generation_kwargs: Optional[Dict] = None,
         **client_kwargs,
     ):
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
+        settings = get_settings()
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.api_key: SecretStr | None = SecretStr(api_key)
+        else:
+            self.api_key = get_settings().LOCAL_EMBEDDING_API_KEY
+
+        self.base_url = (
+            base_url
+            or settings.LOCAL_EMBEDDING_BASE_URL is not None
+            and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
-        )
-        self.model_name = model or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
-        )
+        self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
         self.client_kwargs = client_kwargs or {}
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(self.model_name)
@@ -81,12 +87,19 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncOpenAI)
 
     def _build_client(self, cls):
+        api_key = require_secret_api_key(
+            self.api_key,
+            provider_label="OpenAI",
+            env_var_name="LOCAL_EMBEDDING_API_KEY",
+            param_hint="`api_key` to LocalEmbeddingModel(...)",
+        )
+
         client_kwargs = self.client_kwargs.copy()
         if not sdk_retries_for(PS.LOCAL):
             client_kwargs["max_retries"] = 0
 
         client_init_kwargs = dict(
-            api_key=self.api_key,
+            api_key=api_key,
             base_url=self.base_url,
             **client_kwargs,
         )

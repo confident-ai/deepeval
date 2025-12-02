@@ -189,17 +189,35 @@ class EvaluationDataset:
         test_case._dataset_alias = self._alias
         test_case._dataset_id = self._id
         if isinstance(test_case, LLMTestCase):
+            if self._conversational_goldens or self._conversational_test_cases:
+                raise TypeError(
+                    "You cannot add 'LLMTestCase' to a multi-turn dataset."
+                )
             test_case._dataset_rank = len(self._llm_test_cases)
             self._llm_test_cases.append(test_case)
         elif isinstance(test_case, ConversationalTestCase):
+            if self._goldens or self._llm_test_cases:
+                raise TypeError(
+                    "You cannot add 'ConversationalTestCase' to a single-turn dataset."
+                )
+            self._multi_turn = True
             test_case._dataset_rank = len(self._conversational_test_cases)
             self._conversational_test_cases.append(test_case)
 
     def add_golden(self, golden: Union[Golden, ConversationalGolden]):
-        if self._multi_turn:
-            self._add_conversational_golden(golden)
-        else:
+        if isinstance(golden, Golden):
+            if self._conversational_goldens or self._conversational_test_cases:
+                raise TypeError(
+                    "You cannot add 'Golden' to a multi-turn dataset."
+                )
             self._add_golden(golden)
+        else:
+            if self._goldens or self._llm_test_cases:
+                raise TypeError(
+                    "You cannot add 'ConversationalGolden' to a single-turn dataset."
+                )
+            self._multi_turn = True
+            self._add_conversational_golden(golden)
 
     def _add_golden(self, golden: Union[Golden, ConversationalGolden]):
         if isinstance(golden, Golden):
@@ -224,16 +242,16 @@ class EvaluationDataset:
         file_path: str,
         input_col_name: str,
         actual_output_col_name: str,
-        expected_output_col_name: Optional[str] = None,
-        context_col_name: Optional[str] = None,
+        expected_output_col_name: Optional[str] = "expected_output",
+        context_col_name: Optional[str] = "context",
         context_col_delimiter: str = ";",
-        retrieval_context_col_name: Optional[str] = None,
+        retrieval_context_col_name: Optional[str] = "retrieval_context",
         retrieval_context_col_delimiter: str = ";",
-        tools_called_col_name: Optional[str] = None,
+        tools_called_col_name: Optional[str] = "tools_called",
         tools_called_col_delimiter: str = ";",
-        expected_tools_col_name: Optional[str] = None,
+        expected_tools_col_name: Optional[str] = "expected_tools",
         expected_tools_col_delimiter: str = ";",
-        additional_metadata_col_name: Optional[str] = None,
+        additional_metadata_col_name: Optional[str] = "additional_metadata",
     ):
         """
         Load test cases from a CSV file.
@@ -379,6 +397,7 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = None,
         tools_called_key_name: Optional[str] = None,
         expected_tools_key_name: Optional[str] = None,
+        addtional_metadata_key_name: Optional[str] = None,
         encoding_type: str = "utf-8",
     ):
         """
@@ -431,6 +450,7 @@ class EvaluationDataset:
             tools_called = [ToolCall(**tool) for tool in tools_called_data]
             expected_tools_data = json_obj.get(expected_tools_key_name, [])
             expected_tools = [ToolCall(**tool) for tool in expected_tools_data]
+            # additional_metadata = json_obj.get(addtional_metadata_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -441,6 +461,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
+                    # additional_metadata=additional_metadata,
                 )
             )
 
@@ -460,8 +481,8 @@ class EvaluationDataset:
         expected_tools_col_delimiter: str = ";",
         comments_key_name: str = "comments",
         name_key_name: str = "name",
-        source_file_col_name: Optional[str] = None,
-        additional_metadata_col_name: Optional[str] = None,
+        source_file_col_name: Optional[str] = "source_file",
+        additional_metadata_col_name: Optional[str] = "additional_metadata",
         scenario_col_name: Optional[str] = "scenario",
         turns_col_name: Optional[str] = "turns",
         expected_outcome_col_name: Optional[str] = "expected_outcome",
@@ -587,6 +608,7 @@ class EvaluationDataset:
                         context=context,
                         comments=comments,
                         name=name,
+                        additional_metadata=additional_metadata,
                     )
                 )
             else:
@@ -645,6 +667,7 @@ class EvaluationDataset:
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
+                additional_metadata = json_obj.get(additional_metadata_key_name)
 
                 self._multi_turn = True
                 self.goldens.append(
@@ -656,6 +679,7 @@ class EvaluationDataset:
                         context=context,
                         comments=comments,
                         name=name,
+                        additional_metadata=additional_metadata,
                     )
                 )
             else:

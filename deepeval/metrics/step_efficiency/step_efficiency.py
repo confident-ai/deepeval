@@ -231,4 +231,4 @@ class StepEfficiencyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Execution Efficiency"
+        return "Step Efficiency"

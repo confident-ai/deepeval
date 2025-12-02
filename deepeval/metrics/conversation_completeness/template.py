@@ -86,8 +86,8 @@ User wants to tell the assistant something.
 
 Example JSON:
 {{
-    "verdict": "no",
-    "reason": "The user wanted to tell the assistant something but the LLM not only refused to answer but replied 'Oh ok, in that case should you need anything just let me know!', which is completely irrelevant and doesn't satisfy the user at all. "
+    "reason": "The user wanted to tell the assistant something but the LLM not only refused to answer but replied 'Oh ok, in that case should you need anything just let me know!', which is completely irrelevant and doesn't satisfy the user at all.",
+    "verdict": "no"
 }}
 ===== END OF EXAMPLE ======
 

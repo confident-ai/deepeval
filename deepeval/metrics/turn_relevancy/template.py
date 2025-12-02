@@ -33,8 +33,8 @@ Example Messages:
 
 Example JSON:
 {{
-    "verdict": "no",
-    "reason": "The LLM responded 'isn't it a nice day today' to a message that asked about how to treat a sore throat, which is completely irrelevant."
+    "reason": "The LLM responded 'isn't it a nice day today' to a message that asked about how to treat a sore throat, which is completely irrelevant.",
+    "verdict": "no"
 }}
 ===== END OF EXAMPLE ======
 You MUST ONLY provide a verdict for the LAST message on the list but MUST USE context from the previous messages.

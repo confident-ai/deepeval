@@ -83,12 +83,12 @@ Expected JSON format:
             "verdict": "yes"
         }},
         {{
-            "verdict": "no",
-            "reason": <explanation_for_contradiction>
+            "reason": <explanation_for_contradiction>,
+            "verdict": "no"
         }},
         {{
-            "verdict": "idk",
-            "reason": <explanation_for_uncertainty>
+            "reason": <explanation_for_uncertainty>,
+            "verdict": "idk"
         }}
     ]  
 }}

@@ -55,8 +55,8 @@ IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' k
 {{
     "verdicts": [
         {{
-            "verdict": "yes",
-            "reason": "..."
+            "reason": "...",
+            "verdict": "yes"
         }},
         ...
     ]  

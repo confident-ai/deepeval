@@ -32,10 +32,10 @@ Thank you and come ask any questions or discuss any new PRs you have in mind on 
 
 ## Issue lifecycle & staleness policy
 
-* **Stale closure:** We close issues with no activity for **≥ 12 months**.
-* **Reopening:** If your issue is still relevant:
+- **Stale closure:** We close issues with no activity for **≥ 12 months**.
+- **Reopening:** If your issue is still relevant:
 
-  1. Leave a comment mentioning `@confident-ai/maintainers` and include any new details (version, repro steps, logs).
+  1. Leave a comment mentioning one or more maintainers from [MAINTAINERS.md](./MAINTAINERS.md) and include any new details (version, repro steps, logs).
   2. If you don’t get a response in a few days, open a **new issue** and reference the old one.
 
 **Exclusions:** Labeled issues.

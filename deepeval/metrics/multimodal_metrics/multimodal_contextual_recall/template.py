@@ -66,8 +66,8 @@ class MultimodalContextualRecallTemplate:
                     {{
                         "verdicts": [
                             {{
-                                "verdict": "yes",
-                                "reason": "..."
+                                "reason": "...",
+                                "verdict": "yes"
                             }},
                             ...
                         ]  

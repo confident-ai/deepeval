@@ -367,6 +367,8 @@ class Prompt:
                 f.seek(0)
                 f.truncate()
                 json.dump(cache_data, f, cls=CustomEncoder)
+                f.flush()
+                os.fsync(f.fileno())
         except portalocker.exceptions.LockException:
             # If we can't acquire the lock, silently skip caching
             pass

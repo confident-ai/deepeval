@@ -70,8 +70,8 @@ class ArgumentCorrectnessTemplate:
                         "verdict": "yes"
                     }},
                     {{
-                        "verdict": "no",
-                        "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023."
+                        "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023.",
+                        "verdict": "no"
                     }}
                 ]  
             }}

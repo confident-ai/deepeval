@@ -21,6 +21,7 @@ from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
     MultimodalOllamaModel,
     MultimodalGeminiModel,
+    MultimodalAzureOpenAIMLLMModel,
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
@@ -48,6 +49,7 @@ __all__ = [
     "MultimodalOpenAIModel",
     "MultimodalOllamaModel",
     "MultimodalGeminiModel",
+    "MultimodalAzureOpenAIMLLMModel",
     "OpenAIEmbeddingModel",
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",
