@@ -210,9 +210,7 @@ def test_test_case_imports():
         LLMTestCase,
         ConversationalTestCase,
         ArenaTestCase,
-        MLLMTestCase,
         Turn,
-        MLLMTestCaseParams,
         MLLMImage,
         ToolCall,
         ToolCallParams,
@@ -227,9 +225,7 @@ def test_test_case_imports():
     assert LLMTestCase is not None
     assert ConversationalTestCase is not None
     assert ArenaTestCase is not None
-    assert MLLMTestCase is not None
     assert Turn is not None
-    assert MLLMTestCaseParams is not None
     assert MLLMImage is not None
     assert ToolCall is not None
     assert ToolCallParams is not None
