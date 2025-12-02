@@ -17,7 +17,10 @@ from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
     ReasonScore,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.utils import get_or_create_event_loop, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    convert_to_multi_modal_array,
+)
 
 
 class ImageCoherenceMetric(BaseMultimodalMetric):
@@ -68,7 +71,9 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                actual_output = convert_to_multi_modal_array(test_case.actual_output)
+                actual_output = convert_to_multi_modal_array(
+                    test_case.actual_output
+                )
                 self.contexts_above = []
                 self.contexts_below = []
                 self.scores = []
@@ -160,7 +165,9 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            actual_output = convert_to_multi_modal_array(test_case.actual_output)
+            actual_output = convert_to_multi_modal_array(
+                test_case.actual_output
+            )
             self.contexts_above = []
             self.contexts_below = []
             self.scores = []

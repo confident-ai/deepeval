@@ -169,7 +169,8 @@ class ConversationalTestCase(BaseModel):
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
         self.multimodal = any(
             [
-                re.search(pattern, turn.content) is not None for turn in self.turns
+                re.search(pattern, turn.content) is not None
+                for turn in self.turns
             ]
         )
 

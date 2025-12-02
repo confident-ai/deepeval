@@ -6,7 +6,11 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_faithfulness.template import (
     MultimodalFaithfulnessTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -76,8 +80,12 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
-                actual_output = convert_to_multi_modal_array(test_case.actual_output)
+                retrieval_context = convert_to_multi_modal_array(
+                    test_case.retrieval_context
+                )
+                actual_output = convert_to_multi_modal_array(
+                    test_case.actual_output
+                )
                 self.truths = self._generate_truths(retrieval_context)
                 self.claims = self._generate_claims(actual_output)
                 self.verdicts = self._generate_verdicts()
@@ -114,8 +122,12 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
-            actual_output = convert_to_multi_modal_array(test_case.actual_output)
+            retrieval_context = convert_to_multi_modal_array(
+                test_case.retrieval_context
+            )
+            actual_output = convert_to_multi_modal_array(
+                test_case.actual_output
+            )
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(retrieval_context),
                 self._a_generate_claims(actual_output),

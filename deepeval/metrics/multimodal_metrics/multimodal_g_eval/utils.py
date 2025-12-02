@@ -42,7 +42,7 @@ def construct_test_case_list(
     evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
 ) -> List[Union[str, MLLMImage]]:
     from deepeval.utils import convert_to_multi_modal_array
-    
+
     test_case_list = []
     for param in evaluation_params:
         test_case_param_list = [f"\n\n\n{G_EVAL_PARAMS[param]}:\n"]

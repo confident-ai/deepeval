@@ -535,6 +535,7 @@ def shorten(
         return suffix[:max_len]
     return stext[:cut] + suffix
 
+
 def convert_to_multi_modal_array(input: Union[str, List[str]]):
     from deepeval.test_case import MLLMImage
 

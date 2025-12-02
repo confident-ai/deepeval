@@ -94,8 +94,11 @@ class ConversationalGolden(BaseModel):
         pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
         self.multimodal = any(
             [
-                re.search(pattern, turn.content) is not None for turn in self.turns 
-            ] if self.turns else None
+                re.search(pattern, turn.content) is not None
+                for turn in self.turns
+            ]
+            if self.turns
+            else None
         )
 
         return self

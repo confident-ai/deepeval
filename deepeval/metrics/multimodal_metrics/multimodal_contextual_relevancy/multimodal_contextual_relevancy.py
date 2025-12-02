@@ -6,7 +6,11 @@ from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_relevancy.template import (
     MultimodalContextualRelevancyTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -71,7 +75,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
                 )
             else:
                 input = convert_to_multi_modal_array(test_case.input)
-                retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
+                retrieval_context = convert_to_multi_modal_array(
+                    test_case.retrieval_context
+                )
                 self.verdicts_list: List[ContextualRelevancyVerdicts] = [
                     (self._generate_verdicts(input, context))
                     for context in retrieval_context
@@ -108,7 +114,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
             _in_component=_in_component,
         ):
             input = convert_to_multi_modal_array(test_case.input)
-            retrieval_context = convert_to_multi_modal_array(test_case.retrieval_context)
+            retrieval_context = convert_to_multi_modal_array(
+                test_case.retrieval_context
+            )
             self.verdicts_list: List[ContextualRelevancyVerdicts] = (
                 await asyncio.gather(
                     *[
