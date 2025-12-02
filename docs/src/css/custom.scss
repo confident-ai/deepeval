@@ -395,6 +395,7 @@ video {
 .sidebar-item-getting-started > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-llm-eval > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-metrics > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-prompt-optimization > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-synthetic-data > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-red-teaming > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-benchmarks > .menu__list-item-collapsible > a::before,
@@ -405,6 +406,7 @@ video {
 
 .sidebar-item-getting-started ul:not(:first-child),
 .sidebar-item-icon-llm-eval ul:not(:first-child),
+.sidebar-item-icon-prompt-optimization ul:not(:first-child),
 .sidebar-item-icon-synthetic-data ul:not(:first-child),
 .sidebar-item-icon-metrics ul:not(:first-child),
 .sidebar-item-icon-red-teaming ul:not(:first-child),
@@ -416,6 +418,7 @@ video {
 
 html[data-theme="dark"] .sidebar-item-getting-started > ul,
 html[data-theme="dark"] .sidebar-item-icon-llm-eval > ul,
+html[data-theme="dark"] .sidebar-item-icon-prompt-optimization > ul,
 html[data-theme="dark"] .sidebar-item-icon-synthetic-data > ul,
 html[data-theme="dark"] .sidebar-item-icon-metrics > ul,
 html[data-theme="dark"] .sidebar-item-icon-red-teaming > ul,
@@ -450,6 +453,7 @@ html[data-theme="dark"] .sidebar-icon {
 /* Adjust color for light/dark modes */
 html[data-theme="light"] .sidebar-item-getting-started > a::before,
 html[data-theme="light"] .sidebar-item-icon-llm-eval > a::before,
+html[data-theme="light"] .sidebar-item-icon-prompt-optimization > a::before,
 html[data-theme="light"] .sidebar-item-icon-synthetic-data > a::before,
 html[data-theme="light"] .sidebar-item-icon-red-teaming > a::before,
 html[data-theme="light"] .sidebar-item-icon-benchmarks > a::before,
@@ -460,6 +464,7 @@ html[data-theme="light"] .sidebar-item-icon-others > a::before {
 
 html[data-theme="dark"] .sidebar-item-getting-started > a::before,
 html[data-theme="dark"] .sidebar-item-icon-llm-eval > a::before,
+html[data-theme="dark"] .sidebar-item-icon-prompt-optimization > a::before,
 html[data-theme="dark"] .sidebar-item-icon-synthetic-data > a::before,
 html[data-theme="dark"] .sidebar-item-icon-red-teaming > a::before,
 html[data-theme="dark"] .sidebar-item-icon-benchmarks > a::before,
