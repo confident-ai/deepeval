@@ -40,9 +40,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
     tr = TestRun(identifier="persist-on-cancel")
     trm.set_test_run(tr)
 
-    test_case = LLMTestCase(
-        input="ping", actual_output="pong", is_multimodal=True
-    )
+    test_case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
     metrics = [metric]
 
     # run the MLLM async case and timeout quickly
@@ -125,7 +123,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
     )
 
     # build the test case and run the sync flow
-    case = LLMTestCase(input="ping", actual_output="pong", is_multimodal=True)
+    case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
 
     # run_async=False ensures we go down sync codepath
     # cache_config=CacheConfig(write_cache=False) required to avoid reading from hidden dir
@@ -190,7 +188,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
     )
 
     # build the test case and run the sync flow
-    case = LLMTestCase(input="ping", actual_output="pong", is_multimodal=True)
+    case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
 
     with pytest.raises(asyncio.TimeoutError):
         # run_async=False ensures we go down sync codepath

@@ -222,7 +222,7 @@ def validate_assert_test_inputs(
 
     if test_case and metrics:
         if (
-            isinstance(test_case, LLMTestCase) and not test_case.is_multimodal
+            isinstance(test_case, LLMTestCase) and not test_case.multimodal
         ) and not all(isinstance(metric, BaseMetric) for metric in metrics):
             raise ValueError(
                 "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
@@ -234,7 +234,7 @@ def validate_assert_test_inputs(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
             )
         if (
-            isinstance(test_case, LLMTestCase) and test_case.is_multimodal
+            isinstance(test_case, LLMTestCase) and test_case.multimodal
         ) and not all(
             isinstance(metric, BaseMultimodalMetric) for metric in metrics
         ):
@@ -293,7 +293,7 @@ def validate_evaluate_inputs(
             for metric in metrics:
                 if (
                     isinstance(test_case, LLMTestCase)
-                    and not test_case.is_multimodal
+                    and not test_case.multimodal
                 ) and not isinstance(metric, BaseMetric):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
@@ -306,8 +306,7 @@ def validate_evaluate_inputs(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )
                 if (
-                    isinstance(test_case, LLMTestCase)
-                    and test_case.is_multimodal
+                    isinstance(test_case, LLMTestCase) and test_case.multimodal
                 ) and not isinstance(metric, BaseMultimodalMetric):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for multi-modal LLMTestCase."
