@@ -19,7 +19,6 @@ import random
 import atexit
 import queue
 import uuid
-from anthropic import Anthropic
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -74,6 +73,7 @@ from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
+    from anthropic import Anthropic
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -154,7 +154,7 @@ class TraceManager:
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
         confident_api_key: Optional[str] = None,
-        anthropic_client: Optional[Anthropic] = None,
+        anthropic_client: Optional["Anthropic"] = None,
         openai_client: Optional[OpenAI] = None,
         tracing_enabled: Optional[bool] = None,
     ) -> None:

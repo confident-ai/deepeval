@@ -838,7 +838,7 @@ try:
 
     module = require_dependency(
         "anthropic",
-        provider_label="AnthropicModel",
+        provider_label="retry_policy",
         install_hint="Install it with `pip install anthropic`.",
     )
 
@@ -869,7 +869,7 @@ except Exception:  # Anthropic optional
 try:
     module = require_dependency(
         "google.genai",
-        provider_label="GeminiModel",
+        provider_label="retry_policy",
         install_hint="Install it with `pip install google-genai`.",
     )
 

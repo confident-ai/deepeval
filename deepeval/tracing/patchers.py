@@ -1,11 +1,16 @@
 import functools
 
-from anthropic import Anthropic
+from typing import TYPE_CHECKING
+
 from openai import OpenAI
 
 from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import LlmSpan
+
+
+if TYPE_CHECKING:
+    from anthropic import Anthropic
 
 
 def patch_openai_client(client: OpenAI):
@@ -61,7 +66,7 @@ def patch_openai_client(client: OpenAI):
                     output = None
                     try:
                         output = response.choices[0].message.content
-                    except Exception as e:
+                    except Exception:
                         pass
 
                     # extract input output token counts
@@ -70,7 +75,7 @@ def patch_openai_client(client: OpenAI):
                     try:
                         input_token_count = response.usage.prompt_tokens
                         output_token_count = response.usage.completion_tokens
-                    except Exception as e:
+                    except Exception:
                         pass
 
                     update_current_span(
@@ -86,7 +91,7 @@ def patch_openai_client(client: OpenAI):
             setattr(current_obj, method_name, wrapped_method)
 
 
-def patch_anthropic_client(client: Anthropic):
+def patch_anthropic_client(client: "Anthropic"):
     """
     Patch an Anthropic client instance to add tracing capabilities.
 
