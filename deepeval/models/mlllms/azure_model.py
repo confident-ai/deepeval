@@ -55,7 +55,7 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
         )
         self.azure_endpoint = (
             azure_endpoint
-            or settings.AZURE_OPENAI_ENDPOINT is not None
+            or settings.AZURE_OPENAI_ENDPOINT
             and str(settings.AZURE_OPENAI_ENDPOINT)
         )
         if temperature < 0:
