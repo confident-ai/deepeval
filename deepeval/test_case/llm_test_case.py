@@ -9,7 +9,11 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
-
+from dataclasses import dataclass, field
+import os
+import mimetypes
+import base64
+from urllib.parse import urlparse, unquote
 from deepeval.utils import make_model_config
 
 from deepeval.test_case.mcp import (
@@ -19,6 +23,130 @@ from deepeval.test_case.mcp import (
     MCPToolCall,
     validate_mcp_servers,
 )
+
+_MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
+
+@dataclass
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+    _id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+    def __post_init__(self):
+
+        if not self.url and not self.dataBase64:
+            raise ValueError(
+                "You must provide either a 'url' or both 'dataBase64' and 'mimeType' to create an MLLMImage."
+            )
+
+        if self.dataBase64 is not None:
+            if self.mimeType is None:
+                raise ValueError(
+                    "mimeType must be provided when initializing from Base64 data."
+                )
+        else:
+            is_local = self.is_local_path(self.url)
+            if self.local is not None:
+                assert self.local == is_local, "Local path mismatch"
+            else:
+                self.local = is_local
+
+            # compute filename, mime_type, and Base64 data
+            if self.local:
+                path = self.process_url(self.url)
+                self.filename = os.path.basename(path)
+                self.mimeType = (
+                    mimetypes.guess_type(path)[0] or "application/octet-stream"
+                )
+                with open(path, "rb") as f:
+                    raw = f.read()
+                self.dataBase64 = base64.b64encode(raw).decode("ascii")
+            else:
+                self.filename = None
+                self.mimeType = None
+                self.dataBase64 = None
+
+        _MLLM_IMAGE_REGISTRY[self._id] = self
+
+    def _placeholder(self) -> str:
+        return f"[DEEPEVAL:IMAGE:{self._id}]"
+
+    def __str__(self) -> str:
+        return self._placeholder()
+
+    def __repr__(self) -> str:
+        return self._placeholder()
+
+    def __format__(self, format_spec: str) -> str:
+        return self._placeholder()
+
+    @staticmethod
+    def process_url(url: str) -> str:
+        if os.path.exists(url):
+            return url
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return path
+        return url
+
+    @staticmethod
+    def is_local_path(url: str) -> bool:
+        if os.path.exists(url):
+            return True
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return os.path.exists(path)
+        return False
+
+    def parse_multimodal_string(s: str):
+        import re
+        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        
+        matches = list(re.finditer(pattern, s))
+        
+        result = []
+        last_end = 0
+
+        for m in matches:
+            start, end = m.span()
+            
+            # Add preceding text if present
+            if start > last_end:
+                result.append(s[last_end:start])
+            
+            img_id = m.group(1)
+            img_obj = _MLLM_IMAGE_REGISTRY[img_id]
+            
+            result.append(img_obj)
+            
+            last_end = end
+        
+        # Add trailing text if any
+        if last_end < len(s):
+            result.append(s[last_end:])
+        
+        return result
+
+    def as_data_uri(self) -> Optional[str]:
+        """Return the image as a data URI string, if Base64 data is available."""
+        if not self.dataBase64 or not self.mimeType:
+            return None
+        return f"data:{self.mimeType};base64,{self.dataBase64}"
 
 
 class LLMTestCaseParams(Enum):
@@ -208,6 +336,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="completionTime",
         validation_alias=AliasChoices("completionTime", "completion_time"),
     )
+    is_multimodal: bool = False
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
@@ -228,6 +357,32 @@ class LLMTestCase(BaseModel):
     _identifier: Optional[str] = PrivateAttr(
         default_factory=lambda: str(uuid.uuid4())
     )
+
+    @model_validator(mode="after")
+    def set_is_multimodal(self):
+        import re
+        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        self.is_multimodal = (
+            any(
+                [
+                    re.search(pattern, self.input) is not None, 
+                    re.search(pattern, self.actual_output) is not None
+                ]
+            )
+            if isinstance(self.input, str)
+            else False
+        )
+        if self.is_multimodal:
+            self.input = MLLMImage.parse_multimodal_string(self.input)
+            self.actual_output = MLLMImage.parse_multimodal_string(self.actual_output)
+            if self.expected_output:
+                self.expected_output = MLLMImage.parse_multimodal_string(self.expected_output)
+            if self.retrieval_context:
+                self.retrieval_context = [MLLMImage.parse_multimodal_string(context) for context in self.retrieval_context]
+            if self.context:
+                self.context = [MLLMImage.parse_multimodal_string(context) for context in self.context]
+
+        return self
 
     @model_validator(mode="before")
     def validate_input(cls, data):

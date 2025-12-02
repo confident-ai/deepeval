@@ -10,7 +10,6 @@ from deepeval.test_run.api import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
     Turn,
 )
 from deepeval.constants import PYTEST_RUN_TEST_NAME
@@ -29,7 +28,7 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
 
 
 def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
@@ -84,7 +83,7 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
-        if isinstance(test_case, LLMTestCase):
+        if isinstance(test_case, LLMTestCase) and test_case.is_multimodal is False:
             api_test_case = LLMApiTestCase(
                 name=name,
                 input=test_case.input,
@@ -106,7 +105,7 @@ def create_api_test_case(
                 comments=test_case.comments,
                 trace=trace,
             )
-        elif isinstance(test_case, MLLMTestCase):
+        elif isinstance(test_case, LLMTestCase) and test_case.is_multimodal:
             api_test_case = LLMApiTestCase(
                 name=name,
                 input="",
