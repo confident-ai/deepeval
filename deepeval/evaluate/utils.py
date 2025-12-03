@@ -236,7 +236,11 @@ def validate_assert_test_inputs(
         if (
             isinstance(test_case, LLMTestCase) and test_case.multimodal
         ) and not all(
-            isinstance(metric, BaseMultimodalMetric) for metric in metrics
+            (
+                isinstance(metric, BaseMultimodalMetric)
+                or isinstance(metric, BaseMetric)
+            )
+            for metric in metrics
         ):
             raise ValueError(
                 "All 'metrics' for multi-modal LLMTestCase must be instances of 'BaseMultimodalMetric' only."
