@@ -111,19 +111,11 @@ def create_api_test_case(
             api_test_case = LLMApiTestCase(
                 name=name,
                 input="",
-                multimodalInput=convert_to_multi_modal_array(test_case.input),
-                multimodalActualOutput=convert_to_multi_modal_array(
-                    test_case.actual_output
-                ),
-                multimodalExpectedOutput=convert_to_multi_modal_array(
-                    test_case.expected_output
-                ),
-                multimodalRetrievalContext=convert_to_multi_modal_array(
-                    test_case.retrieval_context
-                ),
-                multimodalContext=convert_to_multi_modal_array(
-                    test_case.context
-                ),
+                multimodalInput=test_case.input,
+                multimodalActualOutput=test_case.actual_output,
+                multimodalExpectedOutput=test_case.expected_output,
+                multimodalRetrievalContext=test_case.retrieval_context,
+                multimodalContext=test_case.context,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
