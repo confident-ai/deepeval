@@ -1,11 +1,13 @@
 from typing import Optional, List, Type, Union
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_llm_test_case_params,
+    check_mllm_test_case_params,
     initialize_model,
+    initialize_multimodal_model
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -40,8 +42,7 @@ class ContextualRecallMetric(BaseMetric):
         ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.model = model
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -55,7 +56,18 @@ class ContextualRecallMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+
+        if multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
+            self.model, self.using_native_model = initialize_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -72,13 +84,24 @@ class ContextualRecallMetric(BaseMetric):
                     )
                 )
             else:
+                if multimodal:
+                    expected_output = convert_to_multi_modal_array(
+                        test_case.expected_output
+                    )
+                    retrieval_context = convert_to_multi_modal_array(
+                        test_case.retrieval_context
+                    )
+                else:
+                    expected_output = test_case.expected_output
+                    retrieval_context = test_case.retrieval_context
+
                 self.verdicts: List[ContextualRecallVerdict] = (
                     self._generate_verdicts(
-                        test_case.expected_output, test_case.retrieval_context
+                        expected_output, retrieval_context, multimodal
                     )
                 )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.expected_output)
+                self.reason = self._generate_reason(expected_output, multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -101,7 +124,18 @@ class ContextualRecallMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+
+        if multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
+            self.model, self.using_native_model = initialize_model(self.model)
+            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -110,14 +144,25 @@ class ContextualRecallMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if multimodal:
+                expected_output = convert_to_multi_modal_array(
+                    test_case.expected_output
+                )
+                retrieval_context = convert_to_multi_modal_array(
+                    test_case.retrieval_context
+                )
+            else:
+                expected_output = test_case.expected_output
+                retrieval_context = test_case.retrieval_context
+
             self.verdicts: List[ContextualRecallVerdict] = (
                 await self._a_generate_verdicts(
-                    test_case.expected_output, test_case.retrieval_context
+                    expected_output, retrieval_context, multimodal
                 )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(
-                test_case.expected_output
+                expected_output, multimodal
             )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
@@ -133,7 +178,7 @@ class ContextualRecallMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, expected_output: str):
+    async def _a_generate_reason(self, expected_output: str, multimodal: bool):
         if self.include_reason is False:
             return None
 
@@ -144,13 +189,21 @@ class ContextualRecallMetric(BaseMetric):
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
-
-        prompt = self.evaluation_template.generate_reason(
-            expected_output=expected_output,
-            supportive_reasons=supportive_reasons,
-            unsupportive_reasons=unsupportive_reasons,
-            score=format(self.score, ".2f"),
-        )
+            
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                expected_output=expected_output,
+                supportive_reasons=supportive_reasons,
+                unsupportive_reasons=unsupportive_reasons,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                expected_output=expected_output,
+                supportive_reasons=supportive_reasons,
+                unsupportive_reasons=unsupportive_reasons,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -169,7 +222,7 @@ class ContextualRecallMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self, expected_output: str):
+    def _generate_reason(self, expected_output: str, multimodal: bool):
         if self.include_reason is False:
             return None
 
@@ -181,12 +234,20 @@ class ContextualRecallMetric(BaseMetric):
             else:
                 unsupportive_reasons.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
-            expected_output=expected_output,
-            supportive_reasons=supportive_reasons,
-            unsupportive_reasons=unsupportive_reasons,
-            score=format(self.score, ".2f"),
-        )
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                expected_output=expected_output,
+                supportive_reasons=supportive_reasons,
+                unsupportive_reasons=unsupportive_reasons,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                expected_output=expected_output,
+                supportive_reasons=supportive_reasons,
+                unsupportive_reasons=unsupportive_reasons,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -219,11 +280,16 @@ class ContextualRecallMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
-        self, expected_output: str, retrieval_context: List[str]
+        self, expected_output: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRecallVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
-            expected_output=expected_output, retrieval_context=retrieval_context
-        )
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                expected_output=expected_output, retrieval_context=retrieval_context
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                expected_output=expected_output, retrieval_context=retrieval_context
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -245,11 +311,16 @@ class ContextualRecallMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(
-        self, expected_output: str, retrieval_context: List[str]
+        self, expected_output: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRecallVerdict]:
-        prompt = self.evaluation_template.generate_verdicts(
-            expected_output=expected_output, retrieval_context=retrieval_context
-        )
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                expected_output=expected_output, retrieval_context=retrieval_context
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                expected_output=expected_output, retrieval_context=retrieval_context
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
