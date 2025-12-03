@@ -95,7 +95,7 @@ def test_grok_model_defaults_from_settings(monkeypatch):
 
 
 def test_grok_model_accepts_legacy_model_keyword_and_maps_to_model_name(
-    settings,
+    monkeypatch, settings
 ):
     """
     Using the legacy `model` keyword should still work:
@@ -104,6 +104,9 @@ def test_grok_model_accepts_legacy_model_keyword_and_maps_to_model_name(
     """
     with settings.edit(persist=False):
         settings.GROK_API_KEY = "test-key"
+
+    # Prevent __init__ from importing xai_sdk
+    _stub_load_model(monkeypatch)
 
     model = GrokModel(model="grok-3")
 
