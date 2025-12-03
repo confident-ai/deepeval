@@ -77,13 +77,17 @@ def test_openai_embedding_model_defaults_from_settings(monkeypatch):
 ########################################################
 
 
-def test_openai_embedding_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+def test_openai_embedding_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+    monkeypatch,
+):
     """
     Using the legacy `model` keyword should still work:
     - It should populate `model_name`
     - It should not be forwarded through `model.kwargs`
     """
 
+    # Seed env so Settings picks up OPENAI_API_KEY
+    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
     model = OpenAIEmbeddingModel(model="text-embedding-3-small")
 
     # legacy keyword mapped to canonical parameter

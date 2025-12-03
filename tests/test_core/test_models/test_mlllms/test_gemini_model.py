@@ -22,12 +22,6 @@ def test_multimodal_gemini_direct_uses_explicit_api_key_over_settings(
         api_key="ctor-google-api-key",
     )
 
-    # Force the direct Gemini path regardless of how should_use_vertexai is implemented
-    model.should_use_vertexai = lambda: False
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
     mock_client_cls.assert_called_once()
     kwargs = mock_client_cls.call_args.kwargs
 
@@ -55,12 +49,6 @@ def test_multimodal_gemini_direct_defaults_api_key_from_settings(
 
     model = MultimodalGeminiModel()
 
-    # Force direct Gemini path
-    model.should_use_vertexai = lambda: False
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
     mock_client_cls.assert_called_once()
     kwargs = mock_client_cls.call_args.kwargs
 
@@ -85,16 +73,10 @@ def test_multimodal_gemini_vertexai_uses_explicit_project_and_location_over_sett
         settings.GOOGLE_CLOUD_PROJECT = "settings-project"
         settings.GOOGLE_CLOUD_LOCATION = "settings-location"
 
-    model = MultimodalGeminiModel(
+    MultimodalGeminiModel(
         project="ctor-project",
         location="ctor-location",
     )
-
-    # Force the Vertex AI path
-    model.should_use_vertexai = lambda: True
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
 
     mock_client_cls.assert_called_once()
     kwargs = mock_client_cls.call_args.kwargs
@@ -121,13 +103,7 @@ def test_multimodal_gemini_vertexai_defaults_project_and_location_from_settings(
         settings.GOOGLE_CLOUD_PROJECT = "settings-project"
         settings.GOOGLE_CLOUD_LOCATION = "settings-location"
 
-    model = MultimodalGeminiModel()
-
-    # Force the Vertex AI path
-    model.should_use_vertexai = lambda: True
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
+    MultimodalGeminiModel()
 
     mock_client_cls.assert_called_once()
     kwargs = mock_client_cls.call_args.kwargs

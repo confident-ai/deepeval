@@ -120,7 +120,7 @@ class GeminiModel(DeepEvalBaseLLM):
             ),
         ]
 
-        super().__init__(model_name, **kwargs)
+        super().__init__(model_name, **self.kwargs)
 
     def should_use_vertexai(self) -> bool:
         """Checks if the model should use Vertex AI for generation.

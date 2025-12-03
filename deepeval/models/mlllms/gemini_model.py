@@ -58,7 +58,6 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         temperature: float = 0,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        *args,
         **kwargs,
     ):
         settings = get_settings()
@@ -84,7 +83,6 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         self.use_vertexai = settings.GOOGLE_GENAI_USE_VERTEXAI
 
         # Keep any extra kwargs for the underlying genai.Client
-        self.args = args
         self.kwargs = kwargs
 
         # Configure default model generation settings
@@ -111,7 +109,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
 
-        super().__init__(model_name, *args, **kwargs)
+        super().__init__(model_name, **self.kwargs)
 
     def should_use_vertexai(self):
         """Checks if the model should use Vertex AI for generation.

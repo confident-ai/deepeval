@@ -68,7 +68,6 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         self,
         model_name: Optional[str] = None,
         api_key: Optional[str] = None,
-        *args,
         **kwargs,
     ):
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
@@ -76,6 +75,9 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
             kwargs,
             _ALIAS_MAP,
         )
+        from rich import print
+
+        print("normalized_kwargs: ", normalized_kwargs)
 
         # re-map depricated keywords to re-named positional args
         if model_name is None and "model_name" in alias_values:
@@ -103,10 +105,9 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         else:
             self.api_key = settings.OPENAI_API_KEY
 
-        self.args = args
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        super().__init__(model_name, *args, **kwargs)
+        super().__init__(model_name, **self.kwargs)
 
     ###############################################
     # Generate functions
