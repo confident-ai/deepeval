@@ -58,12 +58,6 @@ def test_metrics_imports():
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
         MultimodalGEval,
     )
 
@@ -116,12 +110,6 @@ def test_metrics_imports():
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
         MultimodalGEval,
     ]
 
