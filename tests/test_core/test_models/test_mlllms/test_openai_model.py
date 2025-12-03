@@ -120,13 +120,18 @@ def test_multimodal_openai_model_defaults_model_from_settings(settings):
     assert model.model_name == "gpt-4o"
 
 
-def test_multimodal_openai_model_uses_default_when_no_model_config(monkeypatch):
+def test_multimodal_openai_model_uses_default_when_no_model_config(
+    settings, monkeypatch
+):
     """
     If both ctor `model` and Settings.OPENAI_MODEL_NAME are None,
     MultimodalOpenAIModel should use default_multimodal_gpt_model.
     """
     # Ensure no model name is available from env-backed settings
     monkeypatch.delenv("OPENAI_MODEL_NAME", raising=False)
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "gpt-4o"
+
     # API key can be absent for this test
     reset_settings(reload_dotenv=False)
 
@@ -139,12 +144,16 @@ def test_multimodal_openai_model_uses_default_when_no_model_config(monkeypatch):
 ########################################################
 
 
-def test_multimodal_openai_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+def test_multimodal_openai_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+    settings,
+):
     """
     Using the legacy `model` keyword should still work:
     - It should populate `model_name`
     - It should not be forwarded through `model.kwargs`
     """
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
 
     model = MultimodalOpenAIModel(model="gpt-4o")
 
