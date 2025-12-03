@@ -377,7 +377,7 @@ class LLMTestCase(BaseModel):
                 ]
             )
             if isinstance(self.input, str)
-            else False
+            else self.multimodal
         )
 
         self.multimodal = auto_detect
