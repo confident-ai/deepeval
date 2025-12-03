@@ -1,6 +1,10 @@
 from typing import Optional, List, Type, Union
 
-from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -57,14 +61,16 @@ class ContextualPrecisionMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        
+
         multimodal = test_case.multimodal
 
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -87,9 +93,7 @@ class ContextualPrecisionMetric(BaseMetric):
                 )
             else:
                 if multimodal:
-                    input = convert_to_multi_modal_array(
-                        test_case.input
-                    )
+                    input = convert_to_multi_modal_array(test_case.input)
                     expected_output = convert_to_multi_modal_array(
                         test_case.expected_output
                     )
@@ -139,7 +143,9 @@ class ContextualPrecisionMetric(BaseMetric):
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -154,9 +160,7 @@ class ContextualPrecisionMetric(BaseMetric):
             _in_component=_in_component,
         ):
             if multimodal:
-                input = convert_to_multi_modal_array(
-                    test_case.input
-                )
+                input = convert_to_multi_modal_array(test_case.input)
                 expected_output = convert_to_multi_modal_array(
                     test_case.expected_output
                 )
@@ -170,10 +174,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
             self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
-                    input,
-                    expected_output,
-                    retrieval_context,
-                    multimodal
+                    input, expected_output, retrieval_context, multimodal
                 )
             )
             self.score = self._calculate_score()
@@ -273,7 +274,11 @@ class ContextualPrecisionMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(
-        self, input: str, expected_output: str, retrieval_context: List[str], multimodal: bool
+        self,
+        input: str,
+        expected_output: str,
+        retrieval_context: List[str],
+        multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
         if multimodal:
             prompt = self.evaluation_template.generate_multimodal_verdicts(
@@ -311,7 +316,11 @@ class ContextualPrecisionMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(
-        self, input: str, expected_output: str, retrieval_context: List[str], multimodal: bool
+        self,
+        input: str,
+        expected_output: str,
+        retrieval_context: List[str],
+        multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
         if multimodal:
             prompt = self.evaluation_template.generate_multimodal_verdicts(

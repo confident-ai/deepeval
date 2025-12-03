@@ -109,7 +109,7 @@ Input:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_multimodal_statements(actual_output: List[str]):
 
@@ -225,4 +225,3 @@ JSON:
             JSON:
             """
         )
-

@@ -77,7 +77,7 @@ Context:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_multimodal_reason(
         input: List[Union[str, MLLMImage]],
@@ -173,4 +173,3 @@ JSON:
             ]
             + [context]
         )
-

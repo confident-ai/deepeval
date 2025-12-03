@@ -1,6 +1,10 @@
 from typing import Optional, List, Type, Union
 
-from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -9,11 +13,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     initialize_multimodal_model,
 )
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    MLLMImage
-)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
@@ -55,14 +55,16 @@ class AnswerRelevancyMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        
+
         multimodal = test_case.multimodal
 
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -85,9 +87,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 )
             else:
                 if multimodal:
-                    input = convert_to_multi_modal_array(
-                        test_case.input
-                    )
+                    input = convert_to_multi_modal_array(test_case.input)
                     actual_output = convert_to_multi_modal_array(
                         test_case.actual_output
                     )
@@ -126,14 +126,16 @@ class AnswerRelevancyMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        
+
         multimodal = test_case.multimodal
 
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -148,9 +150,7 @@ class AnswerRelevancyMetric(BaseMetric):
             _in_component=_in_component,
         ):
             if multimodal:
-                input = convert_to_multi_modal_array(
-                    test_case.input
-                )
+                input = convert_to_multi_modal_array(test_case.input)
                 actual_output = convert_to_multi_modal_array(
                     test_case.actual_output
                 )
@@ -293,7 +293,9 @@ class AnswerRelevancyMetric(BaseMetric):
                     AnswerRelevancyVerdict(**item) for item in data["verdicts"]
                 ]
 
-    def _generate_verdicts(self, input: str, multimodal: bool) -> List[AnswerRelevancyVerdict]:
+    def _generate_verdicts(
+        self, input: str, multimodal: bool
+    ) -> List[AnswerRelevancyVerdict]:
         if len(self.statements) == 0:
             return []
 
@@ -335,7 +337,9 @@ class AnswerRelevancyMetric(BaseMetric):
                 ],
             )
             if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt, schema=Statements)
+                res, cost = await self.model.a_generate(
+                    prompt, schema=Statements
+                )
                 self.evaluation_cost += cost
                 statements: List[str] = res.statements + [
                     ele for ele in actual_output if isinstance(ele, MLLMImage)
@@ -347,14 +351,18 @@ class AnswerRelevancyMetric(BaseMetric):
                         prompt, schema=Statements
                     )
                     statements: List[str] = res.statements + [
-                        ele for ele in actual_output if isinstance(ele, MLLMImage)
+                        ele
+                        for ele in actual_output
+                        if isinstance(ele, MLLMImage)
                     ]
                     return statements
                 except TypeError:
                     res = await self.model.a_generate(prompt)
                     data = trimAndLoadJson(res, self)
                     statements = data["statements"] + [
-                        ele for ele in actual_output if isinstance(ele, MLLMImage)
+                        ele
+                        for ele in actual_output
+                        if isinstance(ele, MLLMImage)
                     ]
                     return statements
         else:
@@ -362,7 +370,9 @@ class AnswerRelevancyMetric(BaseMetric):
                 actual_output=actual_output,
             )
             if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt, schema=Statements)
+                res, cost = await self.model.a_generate(
+                    prompt, schema=Statements
+                )
                 self.evaluation_cost += cost
                 return res.statements
             else:
@@ -396,16 +406,22 @@ class AnswerRelevancyMetric(BaseMetric):
                 return statements
             else:
                 try:
-                    res: Statements = self.model.generate(prompt, schema=Statements)
+                    res: Statements = self.model.generate(
+                        prompt, schema=Statements
+                    )
                     statements = res.statements + [
-                        ele for ele in actual_output if isinstance(ele, MLLMImage)
+                        ele
+                        for ele in actual_output
+                        if isinstance(ele, MLLMImage)
                     ]
                     return statements
                 except TypeError:
                     res = self.model.generate(prompt)
                     data = trimAndLoadJson(res, self)
                     statements = data["statements"] + [
-                        ele for ele in actual_output if isinstance(ele, MLLMImage)
+                        ele
+                        for ele in actual_output
+                        if isinstance(ele, MLLMImage)
                     ]
                     return statements
         else:
@@ -418,7 +434,9 @@ class AnswerRelevancyMetric(BaseMetric):
                 return res.statements
             else:
                 try:
-                    res: Statements = self.model.generate(prompt, schema=Statements)
+                    res: Statements = self.model.generate(
+                        prompt, schema=Statements
+                    )
                     return res.statements
                 except TypeError:
                     res = self.model.generate(prompt)

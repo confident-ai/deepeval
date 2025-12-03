@@ -1,7 +1,11 @@
 from typing import Optional, List, Type, Union
 import asyncio
 
-from deepeval.utils import get_or_create_event_loop, prettify_list, convert_to_multi_modal_array
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -57,14 +61,16 @@ class ContextualRelevancyMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        
+
         multimodal = test_case.multimodal
 
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -88,9 +94,7 @@ class ContextualRelevancyMetric(BaseMetric):
             else:
 
                 if multimodal:
-                    input = convert_to_multi_modal_array(
-                        test_case.input
-                    )
+                    input = convert_to_multi_modal_array(test_case.input)
                     retrieval_context = convert_to_multi_modal_array(
                         test_case.retrieval_context
                     )
@@ -133,7 +137,9 @@ class ContextualRelevancyMetric(BaseMetric):
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(self.model)
+            self.model, self.using_native_model = initialize_multimodal_model(
+                self.model
+            )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -148,9 +154,7 @@ class ContextualRelevancyMetric(BaseMetric):
             _in_component=_in_component,
         ):
             if multimodal:
-                input = convert_to_multi_modal_array(
-                    test_case.input
-                )
+                input = convert_to_multi_modal_array(test_case.input)
                 retrieval_context = convert_to_multi_modal_array(
                     test_case.retrieval_context
                 )

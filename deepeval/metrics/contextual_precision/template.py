@@ -84,7 +84,7 @@ Retrieval Contexts:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_multimodal_verdicts(
         input: List[Union[str, MLLMImage]],
@@ -156,7 +156,9 @@ JSON:
         )
 
     @staticmethod
-    def generate_multimodal_reason(input, verdicts, score) -> List[Union[str, MLLMImage]]:
+    def generate_multimodal_reason(
+        input, verdicts, score
+    ) -> List[Union[str, MLLMImage]]:
         # given the input and retrieval context for this input, where the verdict is whether ... and the node is the ..., give a reason for the score
         return (
             [
@@ -210,4 +212,3 @@ JSON:
                 annotated_retrieval_context.append(f"Node {i + 1}:")
                 annotated_retrieval_context.append(context)
         return annotated_retrieval_context
-

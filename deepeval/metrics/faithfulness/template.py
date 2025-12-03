@@ -1,6 +1,7 @@
 from typing import Optional, List
 import textwrap
 
+
 class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(actual_output: str):
@@ -138,7 +139,7 @@ Contradictions:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_multimodal_claims(excerpt):
         return (
@@ -180,7 +181,9 @@ JSON:
         )
 
     @staticmethod
-    def generate_multimodal_truths(excerpt, extraction_limit: Optional[int] = None):
+    def generate_multimodal_truths(
+        excerpt, extraction_limit: Optional[int] = None
+    ):
         if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
         elif extraction_limit == 1:

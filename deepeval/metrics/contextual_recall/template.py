@@ -75,7 +75,7 @@ Retrieval Context:
 
 JSON:
 """
-    
+
     @staticmethod
     def generate_multimodal_reason(
         expected_output, supportive_reasons, unsupportive_reasons, score
@@ -159,9 +159,7 @@ JSON:
                     """
                 )
             ]
-            + ContextualRecallTemplate.id_retrieval_context(
-                retrieval_context
-            )
+            + ContextualRecallTemplate.id_retrieval_context(retrieval_context)
             + [
                 textwrap.dedent(
                     """
