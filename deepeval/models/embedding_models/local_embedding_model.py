@@ -34,7 +34,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         self.base_url = (
             base_url
-            or settings.LOCAL_EMBEDDING_BASE_URL is not None
+            or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
         self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME

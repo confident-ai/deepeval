@@ -27,7 +27,7 @@ class OllamaModel(DeepEvalBaseLLM):
         self.base_url = (
             base_url
             or (
-                settings.LOCAL_MODEL_BASE_URL is not None
+                settings.LOCAL_MODEL_BASE_URL
                 and str(settings.LOCAL_MODEL_BASE_URL)
             )
             or "http://localhost:11434"
