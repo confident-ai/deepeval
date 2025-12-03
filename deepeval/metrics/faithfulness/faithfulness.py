@@ -69,9 +69,9 @@ class FaithfulnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         
-        self.multimodal = test_case.multimodal
+        multimodal = test_case.multimodal
 
-        if self.multimodal:
+        if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
@@ -97,7 +97,7 @@ class FaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
-                if self.multimodal:
+                if multimodal:
                     retrieval_context = convert_to_multi_modal_array(
                         test_case.retrieval_context
                     )
@@ -108,11 +108,11 @@ class FaithfulnessMetric(BaseMetric):
                     retrieval_context = test_case.retrieval_context
                     actual_output = test_case.actual_output
 
-                self.truths = self._generate_truths(retrieval_context)
-                self.claims = self._generate_claims(actual_output)
-                self.verdicts = self._generate_verdicts()
+                self.truths = self._generate_truths(retrieval_context, multimodal)
+                self.claims = self._generate_claims(actual_output, multimodal)
+                self.verdicts = self._generate_verdicts(multimodal)
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason()
+                self.reason = self._generate_reason(multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -138,9 +138,9 @@ class FaithfulnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        self.multimodal = test_case.multimodal
+        multimodal = test_case.multimodal
 
-        if self.multimodal:
+        if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
@@ -158,7 +158,7 @@ class FaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if self.multimodal:
+            if multimodal:
                 retrieval_context = convert_to_multi_modal_array(
                     test_case.retrieval_context
                 )
@@ -170,12 +170,12 @@ class FaithfulnessMetric(BaseMetric):
                 actual_output = test_case.actual_output
             
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_truths(retrieval_context),
-                self._a_generate_claims(actual_output),
+                self._a_generate_truths(retrieval_context, multimodal),
+                self._a_generate_claims(actual_output, multimodal),
             )
-            self.verdicts = await self._a_generate_verdicts()
+            self.verdicts = await self._a_generate_verdicts(multimodal)
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
+            self.reason = await self._a_generate_reason(multimodal)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -192,7 +192,7 @@ class FaithfulnessMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -201,7 +201,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        if self.multimodal:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_reason(
                 contradictions=contradictions,
                 score=format(self.score, ".2f"),
@@ -229,7 +229,7 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -238,7 +238,7 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        if self.multimodal:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_reason(
                 contradictions=contradictions,
                 score=format(self.score, ".2f"),
@@ -266,13 +266,13 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
+    async def _a_generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
 
-        if self.multimodal:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_verdicts(
                 claims=self.claims, retrieval_context="\n\n".join(self.truths)
             )
@@ -301,13 +301,13 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
+    def _generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
 
-        if self.multimodal:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_verdicts(
                 claims=self.claims, retrieval_context="\n\n".join(self.truths)
             )
@@ -334,8 +334,8 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        if self.multimodal:
+    async def _a_generate_truths(self, retrieval_context: str, multimodal: bool) -> List[str]:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_truths(
                 excerpt=retrieval_context,
                 extraction_limit=self.truths_extraction_limit,
@@ -358,8 +358,8 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    def _generate_truths(self, retrieval_context: str) -> List[str]:
-        if self.multimodal:
+    def _generate_truths(self, retrieval_context: str, multimodal: bool) -> List[str]:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_truths(
                 excerpt=retrieval_context,
                 extraction_limit=self.truths_extraction_limit,
@@ -382,8 +382,8 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        if self.multimodal:
+    async def _a_generate_claims(self, actual_output: str, multimodal: bool) -> List[str]:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_claims(
                 excerpt=actual_output
             )
@@ -404,8 +404,8 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: str) -> List[str]:
-        if self.multimodal:
+    def _generate_claims(self, actual_output: str, multimodal: bool) -> List[str]:
+        if multimodal:
             prompt = self.evaluation_template.generate_multimodal_claims(
                 excerpt=actual_output
             )
