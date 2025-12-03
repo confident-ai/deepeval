@@ -51,7 +51,7 @@ def test_grok_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # ctor api_key should win over Settings.GROK_API_KEY
     model = GrokModel(
-        model="grok-3",
+        model_name="grok-3",
         api_key="ctor-secret-key",
     )
 
@@ -87,3 +87,28 @@ def test_grok_model_defaults_from_settings(monkeypatch):
     # Client sees the env/Settings value
     assert kw.get("api_key") == "env-secret-key"
     # Model name from Settings
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_grok_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "test-key"
+
+    model = GrokModel(model="grok-3")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "grok-3"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs

@@ -14,7 +14,11 @@ from deepeval.models.llms.openai_model import (
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.test_case import MLLMImage
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    parse_model_name,
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -53,19 +57,36 @@ unsupported_log_probs_multimodal_gpt_models = [
     "o4-mini",
 ]
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+    "api_key": ["_openai_api_key"],
+}
+
 
 class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
-        _openai_api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
         *args,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "MultimodalOpenAIModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+
         settings = get_settings()
-        model_name = None
-        if isinstance(model, str):
-            model_name = parse_model_name(model)
+
+        if model_name is not None:
+            model_name = parse_model_name(model_name)
             if model_name not in valid_multimodal_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available Multimodal GPT models: "
@@ -73,18 +94,18 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
                 )
         elif settings.OPENAI_MODEL_NAME is not None:
             model_name = settings.OPENAI_MODEL_NAME
-        elif model is None:
+        elif model_name is None:
             model_name = default_multimodal_gpt_model
 
-        if _openai_api_key is not None:
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and aolike
-            self._openai_api_key: SecretStr | None = SecretStr(_openai_api_key)
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self._openai_api_key = settings.OPENAI_API_KEY
+            self.api_key = settings.OPENAI_API_KEY
 
         self.args = args
-        self.kwargs = kwargs
-
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         super().__init__(model_name, *args, **kwargs)
 
     ###############################################
@@ -285,10 +306,10 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self._openai_api_key,
+            self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`_openai_api_key` to MultimodalOpenAIModel(...)",
+            param_hint="`api_key` to MultimodalOpenAIModel(...)",
         )
 
         kw = dict(

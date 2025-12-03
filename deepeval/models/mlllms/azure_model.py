@@ -19,42 +19,61 @@ from deepeval.models.retry_policy import (
 )
 
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    parse_model_name,
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.constants import ProviderSlug as PS
 
 
 retry_azure = create_retry_decorator(PS.AZURE)
 
+_ALIAS_MAP = {
+    "api_key": ["azure_openai_api_key"],
+    "base_url": ["azure_endpoint"],
+}
+
 
 class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
     def __init__(
         self,
-        deployment_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        azure_openai_api_key: Optional[str] = None,
-        openai_api_version: Optional[str] = None,
-        azure_endpoint: Optional[str] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
         temperature: float = 0,
+        deployment_name: Optional[str] = None,
+        openai_api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "MultimodalAzureOpenAIMLLMModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
         settings = get_settings()
         # fetch Azure deployment parameters
         model_name = model_name or settings.AZURE_MODEL_NAME
         self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
-        if azure_openai_api_key is not None:
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.azure_openai_api_key: SecretStr | None = SecretStr(
-                azure_openai_api_key
-            )
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self.azure_openai_api_key = settings.AZURE_OPENAI_API_KEY
+            self.api_key = settings.AZURE_OPENAI_API_KEY
 
         self.openai_api_version = (
             openai_api_version or settings.OPENAI_API_VERSION
         )
-        self.azure_endpoint = (
-            azure_endpoint
+        self.base_url = (
+            base_url
             or settings.AZURE_OPENAI_ENDPOINT
             and str(settings.AZURE_OPENAI_ENDPOINT)
         )
@@ -62,8 +81,8 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
 
-        # args and kwargs will be passed to the underlying model, in load_model function
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(parse_model_name(model_name))
 
@@ -113,8 +132,6 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-        print("Loading model client:")
-        print(client.base_url)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": prompt}],
@@ -320,7 +337,7 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self.azure_openai_api_key,
+            self.api_key,
             provider_label="AzureOpenAI",
             env_var_name="AZURE_OPENAI_API_KEY",
             param_hint="`azure_openai_api_key` to MultimodalAzureOpenAIMLLMModel(...)",
@@ -329,7 +346,7 @@ class MultimodalAzureOpenAIMLLMModel(DeepEvalBaseMLLM):
         kw = dict(
             api_key=api_key,
             api_version=self.openai_api_version,
-            azure_endpoint=self.azure_endpoint,
+            azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **self._client_kwargs(),
         )

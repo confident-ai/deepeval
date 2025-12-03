@@ -27,7 +27,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
 
     # build a normal metric instance, then monkeypatch its a_measure to cause a hang
     metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
+        model=MultimodalOpenAIModel(model_name="gpt-4.1")
     )
 
     async def sleepy_a_measure(*args, **kwargs):
@@ -98,7 +98,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
 
     # Metric whose sync path blocks
     metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
+        model=MultimodalOpenAIModel(model_name="gpt-4.1")
     )
 
     def sleepy_measure(*args, **kwargs):
@@ -163,7 +163,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
 
     # Metric whose sync path blocks
     metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
+        model=MultimodalOpenAIModel(model_name="gpt-4.1")
     )
 
     def sleepy_measure(*args, **kwargs):

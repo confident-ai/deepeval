@@ -46,7 +46,7 @@ def test_local_model_uses_explicit_params_over_settings_and_strips_secret(
 
     # Explicit ctor args should override everything from Settings
     model = LocalModel(
-        model="ctor-model",
+        model_name="ctor-model",
         api_key="ctor-secret-key",
         base_url="http://ctor-host:11434/v1",
         format="ctor-format",
@@ -141,3 +141,28 @@ def test_local_model_build_client_unwraps_secret_from_settings(monkeypatch):
     base_url = kw.get("base_url")
     assert base_url is not None
     assert base_url.rstrip("/") == "http://settings-host:11434/v1"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_local_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.LOCAL_MODEL_API_KEY = "test-key"
+
+    model = LocalModel(model="test-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "test-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs

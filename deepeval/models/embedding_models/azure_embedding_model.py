@@ -9,45 +9,69 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.constants import ProviderSlug as PS
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 
 
 retry_azure = create_retry_decorator(PS.AZURE)
+
+_ALIAS_MAP = {
+    "api_key": ["openai_api_key"],
+    "base_url": ["azure_endpoint"],
+    "deployment_name": ["azure_deployment"],
+}
 
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
-        openai_api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        deployment_name: Optional[str] = None,
         openai_api_version: Optional[str] = None,
-        azure_endpoint: Optional[str] = None,
-        azure_deployment: Optional[str] = None,
-        model: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
-        **client_kwargs,
+        **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "AzureOpenAIEmbeddingModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+        if deployment_name is None and "deployment_name" in alias_values:
+            deployment_name = alias_values["deployment_name"]
+
         settings = get_settings()
 
-        if openai_api_key is not None:
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.openai_api_key: SecretStr | None = SecretStr(openai_api_key)
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self.openai_api_key = settings.AZURE_OPENAI_API_KEY
+            self.api_key = settings.AZURE_OPENAI_API_KEY
 
         self.openai_api_version = (
             openai_api_version or settings.OPENAI_API_VERSION
         )
-        self.azure_endpoint = (
-            azure_endpoint
+        self.base_url = (
+            base_url
             or settings.AZURE_OPENAI_ENDPOINT
             and str(settings.AZURE_OPENAI_ENDPOINT)
         )
 
-        self.azure_deployment = (
-            azure_deployment or settings.AZURE_EMBEDDING_DEPLOYMENT_NAME
+        self.deployment_name = (
+            deployment_name or settings.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
-        self.client_kwargs = client_kwargs or {}
-        self.model_name = model or self.azure_deployment
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
+        self.model_name = model_name or self.deployment_name
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(self.model_name)
 
@@ -93,21 +117,21 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self.openai_api_key,
+            self.api_key,
             provider_label="AzureOpenAI",
             env_var_name="AZURE_OPENAI_API_KEY",
-            param_hint="`openai_api_key` to AzureOpenAIEmbeddingModel(...)",
+            param_hint="`api_key` to AzureOpenAIEmbeddingModel(...)",
         )
 
-        client_kwargs = self.client_kwargs.copy()
+        client_kwargs = self.kwargs.copy()
         if not sdk_retries_for(PS.AZURE):
             client_kwargs["max_retries"] = 0
 
         client_init_kwargs = dict(
             api_key=api_key,
             api_version=self.openai_api_version,
-            azure_endpoint=self.azure_endpoint,
-            azure_deployment=self.azure_deployment,
+            azure_endpoint=self.base_url,
+            azure_deployment=self.deployment_name,
             **client_kwargs,
         )
         try:

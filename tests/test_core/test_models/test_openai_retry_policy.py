@@ -56,7 +56,7 @@ def gpt_model_retryable(monkeypatch):
         return AlwaysRetryableClient(counter)
 
     monkeypatch.setattr(GPTModel, "load_model", _fake_loader, raising=True)
-    return GPTModel(model="gpt-4o-mini"), counter
+    return GPTModel(model_name="gpt-4o-mini"), counter
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ def gpt_model_length_limit(monkeypatch, settings):
         settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
 
     monkeypatch.setattr(GPTModel, "load_model", _fake_loader, raising=True)
-    return GPTModel(model="gpt-4o-mini"), counter
+    return GPTModel(model_name="gpt-4o-mini"), counter
 
 
 def test_retry_respects_max_attempts(

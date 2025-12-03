@@ -5,7 +5,9 @@ from google.genai import types, Client
 from typing import Optional, Dict
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -52,10 +54,10 @@ class GeminiModel(DeepEvalBaseLLM):
         self,
         model_name: Optional[str] = None,
         api_key: Optional[str] = None,
+        temperature: float = 0,
         project: Optional[str] = None,
         location: Optional[str] = None,
         service_account_key: Optional[Dict[str, str]] = None,
-        temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):

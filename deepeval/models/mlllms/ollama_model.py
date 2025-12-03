@@ -1,12 +1,15 @@
-from typing import Optional, Tuple, List, Union, Dict
-from ollama import Client, AsyncClient, ChatResponse
-from pydantic import BaseModel
 import requests
 import base64
 import io
+from typing import Optional, Tuple, List, Union, Dict
+from ollama import Client, AsyncClient, ChatResponse
+from pydantic import BaseModel
 
 from deepeval.models.retry_policy import (
     create_retry_decorator,
+)
+from deepeval.models.utils import (
+    normalize_kwargs_and_extract_aliases,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
@@ -16,36 +19,49 @@ from deepeval.constants import ProviderSlug as PS
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
+_ALIAS_MAP = {"model_name": ["model"], "base_url": ["host"]}
+
 
 class MultimodalOllamaModel(DeepEvalBaseMLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
-        host: Optional[str] = None,
+        model_name: Optional[str] = None,
+        base_url: Optional[str] = None,
         **kwargs,
     ):
         """
         Multimodal Ollama model.
 
-        - `model`: Ollama model name (e.g. "llava").
-        - `host`: Ollama base URL (e.g. "http://localhost:11434").
+        - `model_name`: Ollama model name (e.g. "llava").
+        - `base_url`: Ollama base URL (e.g. "http://localhost:11434").
         - extra **kwargs are passed through to the underlying Client.
         """
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "MultimodalOllamaModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
         settings = get_settings()
 
         # Resolve host/base URL
         self.base_url = (
-            host
+            base_url
             or settings.LOCAL_MODEL_BASE_URL
             and str(settings.LOCAL_MODEL_BASE_URL)
         )
 
         # Resolve model name
-        model_name = model or settings.LOCAL_MODEL_NAME
+        model_name = model_name or settings.LOCAL_MODEL_NAME
 
-        # Client kwargs
-        self.kwargs = kwargs or {}
-
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         super().__init__(model_name)
 
     @retry_ollama

@@ -38,7 +38,7 @@ def test_local_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     model = LocalEmbeddingModel(
         api_key="ctor-secret-key",
         base_url="http://ctor-host:11434/v1",
-        model="ctor-embedding-model",
+        model_name="ctor-embedding-model",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -98,3 +98,28 @@ def test_local_embedding_model_defaults_from_settings(monkeypatch):
 
     # Model name should also come from Settings
     assert model.model_name == "settings-embedding-model"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_local_embedding_accepts_legacy_model_keyword_and_maps_to_model_name(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.LOCAL_EMBEDDING_API_KEY = "test-key"
+
+    model = LocalEmbeddingModel(model="test-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "test-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs

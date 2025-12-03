@@ -24,7 +24,7 @@ def test_ollama_model_uses_explicit_model_and_base_url_over_settings(
 
     # Instantiate with explicit overrides
     model = OllamaModel(
-        model="ctor-model",
+        model_name="ctor-model",
         base_url="http://ctor-host:11434",
     )
 
@@ -68,3 +68,23 @@ def test_ollama_model_defaults_model_and_base_url_from_settings(
     host = kwargs.get("host")
     assert host is not None
     assert host.rstrip("/") == "http://settings-host:11434"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_ollama_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    model = OllamaModel(model="ctor-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "ctor-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs

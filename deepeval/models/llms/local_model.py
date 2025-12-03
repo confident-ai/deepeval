@@ -9,7 +9,10 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -17,21 +20,35 @@ from deepeval.constants import ProviderSlug as PS
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
+
 
 class LocalModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
-        base_url: Optional[str] = None,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
         temperature: float = 0,
         format: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "LocalModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
         settings = get_settings()
 
-        model_name = model or settings.LOCAL_MODEL_NAME
+        model_name = model_name or settings.LOCAL_MODEL_NAME
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
             self.local_model_api_key: SecretStr | None = SecretStr(api_key)
@@ -47,7 +64,8 @@ class LocalModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 

@@ -55,6 +55,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         self,
         model_name: Optional[str] = None,
         api_key: Optional[str] = None,
+        temperature: float = 0,
         project: Optional[str] = None,
         location: Optional[str] = None,
         *args,
@@ -105,7 +106,10 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
         ]
-        self.model_temperature = 0.0
+
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
 
         super().__init__(model_name, *args, **kwargs)
 
@@ -198,7 +202,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.parsed, 0
@@ -208,7 +212,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.text, 0
@@ -239,7 +243,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.parsed, 0
@@ -249,7 +253,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.text, 0

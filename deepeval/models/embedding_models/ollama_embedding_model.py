@@ -3,6 +3,9 @@ from typing import List, Optional, Dict
 
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseEmbeddingModel
+from deepeval.models.utils import (
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -11,24 +14,39 @@ from deepeval.constants import ProviderSlug as PS
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
+_ALIAS_MAP = {"model_name": ["model"], "base_url": ["host"]}
+
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
-        model: Optional[str] = None,
-        host: Optional[str] = None,
+        model_name: Optional[str] = None,
+        base_url: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
-        **client_kwargs,
+        **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "OllamaEmbeddingModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
         settings = get_settings()
 
-        self.host = (
-            host
+        self.base_url = (
+            base_url
             or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
-        self.client_kwargs = client_kwargs or {}
+        self.model_name = model_name or settings.LOCAL_EMBEDDING_MODEL_NAME
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(self.model_name)
 
@@ -74,7 +92,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncClient)
 
     def _build_client(self, cls):
-        return cls(host=self.host, **self.client_kwargs)
+        return cls(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

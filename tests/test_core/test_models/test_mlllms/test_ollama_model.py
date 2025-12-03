@@ -19,8 +19,8 @@ def test_multimodal_ollama_model_uses_explicit_params_over_settings(
 
     # Explicit ctor args should override everything from Settings
     model = MultimodalOllamaModel(
-        model="ctor-llm-model",
-        host="http://ctor-host:11434",
+        model_name="ctor-llm-model",
+        base_url="http://ctor-host:11434",
         timeout=30,  # client kwarg, should pass through to the client
     )
 
@@ -66,3 +66,38 @@ def test_multimodal_ollama_model_defaults_from_settings(monkeypatch):
 
     # Model name should also come from Settings
     assert model.model_name == "settings-llm-model"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_multimodal_ollama_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    model = MultimodalOllamaModel(model="ctor-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "ctor-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
+
+
+def test_multimodal_ollama_model_accepts_legacy_host_keyword_and_maps_to_base_url():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    model = MultimodalOllamaModel(host="ctor-host")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.base_url == "ctor-host"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "host" not in model.kwargs

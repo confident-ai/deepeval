@@ -33,8 +33,8 @@ def test_multimodal_openai_model_uses_explicit_key_over_settings_and_strips_secr
 
     # Construct the model with an explicit key
     model = MultimodalOpenAIModel(
-        model="gpt-4o",
-        _openai_api_key="ctor-secret-key",
+        model_name="gpt-4o",
+        api_key="ctor-secret-key",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -63,7 +63,7 @@ def test_multimodal_openai_model_defaults_key_from_settings(monkeypatch):
     assert isinstance(settings.OPENAI_API_KEY, SecretStr)
 
     # No ctor key: everything should come from Settings
-    model = MultimodalOpenAIModel(model="gpt-4o")
+    model = MultimodalOpenAIModel(model_name="gpt-4o")
 
     client = model._build_client(_RecordingClient)
     kw = client.kwargs
@@ -94,7 +94,7 @@ def test_multimodal_openai_model_uses_explicit_model_over_settings(monkeypatch):
     assert settings.OPENAI_MODEL_NAME == "gpt-4o"
 
     # Explicit model should win over Settings.OPENAI_MODEL_NAME
-    model = MultimodalOpenAIModel(model="gpt-4.1")
+    model = MultimodalOpenAIModel(model_name="gpt-4.1")
 
     # Parsed/validated model name should match ctor value
     assert model.model_name == "gpt-4.1"
@@ -133,3 +133,40 @@ def test_multimodal_openai_model_uses_default_when_no_model_config(monkeypatch):
 
     model = MultimodalOpenAIModel()
     assert model.model_name == default_multimodal_gpt_model
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_multimodal_openai_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+
+    model = MultimodalOpenAIModel(model="gpt-4o")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "gpt-4o"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
+
+
+def test_multimodal_openai_model_accepts_legacy__openai_api_key_keyword_and_maps_to_api_key():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+
+    model = MultimodalOpenAIModel(_openai_api_key="test-key")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.api_key and model.api_key.get_secret_value() == "test-key"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "api_key" not in model.kwargs

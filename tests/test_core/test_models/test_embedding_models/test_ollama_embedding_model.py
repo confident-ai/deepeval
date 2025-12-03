@@ -23,8 +23,8 @@ def test_ollama_embedding_model_uses_explicit_params_over_settings(monkeypatch):
 
     # Explicit ctor args should override everything from Settings
     model = OllamaEmbeddingModel(
-        model="ctor-embedding-model",
-        host="http://ctor-host:11434",
+        model_name="ctor-embedding-model",
+        base_url="http://ctor-host:11434",
     )
 
     # Directly exercise _build_client to verify resolved kwargs
@@ -67,3 +67,38 @@ def test_ollama_embedding_model_defaults_from_settings(monkeypatch):
 
     # Model name should also come from Settings
     assert model.model_name == "settings-embedding-model"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_ollama_embedding_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    model = OllamaEmbeddingModel(model="ctor-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "ctor-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
+
+
+def test_ollama_embedding_model_accepts_legacy_host_keyword_and_maps_to_base_url():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    model = OllamaEmbeddingModel(host="ctor-host")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.base_url == "ctor-host"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "host" not in model.kwargs

@@ -29,7 +29,7 @@ from deepeval.models import AnthropicModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AnthropicModel(
-    model="claude-3-7-sonnet-latest",
+    model_name="claude-3-7-sonnet-latest",
     temperature=0
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)

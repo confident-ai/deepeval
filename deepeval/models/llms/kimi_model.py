@@ -8,7 +8,10 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -70,19 +73,33 @@ model_pricing = {
     },
 }
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
+
 
 class KimiModel(DeepEvalBaseLLM):
     def __init__(
         self,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
-        model: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "KimiModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
         settings = get_settings()
 
-        model_name = model or settings.MOONSHOT_MODEL_NAME
+        model_name = model_name or settings.MOONSHOT_MODEL_NAME
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
@@ -103,7 +120,8 @@ class KimiModel(DeepEvalBaseLLM):
             self.api_key = settings.MOONSHOT_API_KEY
 
         self.base_url = "https://api.moonshot.cn/v1"
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 

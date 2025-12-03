@@ -10,7 +10,10 @@ from tenacity import (
 )
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 
@@ -27,6 +30,11 @@ retryable_exceptions = (
     Exception,  # LiteLLM handles specific exceptions internally
 )
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+    "base_url": ["api_base"],
+}
+
 
 class LiteLLMModel(DeepEvalBaseLLM):
     EXP_BASE: int = 2
@@ -37,17 +45,29 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
     def __init__(
         self,
-        model: Optional[str] = None,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
+        base_url: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
 
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "LiteLLMModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
         settings = get_settings()
         # Get model name from parameter or key file
-        model_name = model or settings.LITELLM_MODEL_NAME
+        model_name = model_name or settings.LITELLM_MODEL_NAME
         if not model_name:
             raise ValueError(
                 "Model name must be provided either through parameter or set-litellm command"
@@ -67,8 +87,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
             )
 
         # Get API base from parameter, key file, or environment variable
-        self.api_base = (
-            api_base
+        self.base_url = (
+            base_url
             or (
                 str(settings.LITELLM_API_BASE)
                 if settings.LITELLM_API_BASE is not None
@@ -84,7 +104,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
         super().__init__(model_name)
@@ -116,8 +137,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params["api_key"] = api_key
-        if self.api_base:
-            completion_params["api_base"] = self.api_base
+        if self.base_url:
+            completion_params["api_base"] = self.base_url
 
         # Add schema if provided
         if schema:
@@ -171,8 +192,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params["api_key"] = api_key
-        if self.api_base:
-            completion_params["api_base"] = self.api_base
+        if self.base_url:
+            completion_params["api_base"] = self.base_url
 
         # Add schema if provided
         if schema:
@@ -226,7 +247,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
             }
@@ -267,7 +288,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
             }
@@ -307,7 +328,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "temperature": temperature,
                 "n": n,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
             }
             completion_params.update(self.kwargs)
 

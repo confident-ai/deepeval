@@ -4,27 +4,52 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyUrl, SecretStr
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import require_param
+
+
+def _request_timeout_seconds() -> float:
+    timeout = float(get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
+    return timeout if timeout > 0 else 30.0
+
+
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
 
 
 class PortkeyModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[AnyUrl] = None,
         provider: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
+        **kwargs,
     ):
-        settings = get_settings()
-        model = model or settings.PORTKEY_MODEL_NAME
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "PortkeyModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
 
-        self.model = require_param(
-            model,
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
+        settings = get_settings()
+        model_name = model_name or settings.PORTKEY_MODEL_NAME
+
+        self.model_name = require_param(
+            model_name,
             provider_label="Portkey",
             env_var_name="PORTKEY_MODEL_NAME",
-            param_hint="model",
+            param_hint="model_name",
         )
 
         if api_key is not None:
@@ -52,6 +77,9 @@ class PortkeyModel(DeepEvalBaseLLM):
             env_var_name="PORTKEY_PROVIDER_NAME",
             param_hint="provider",
         )
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
+        self.generation_kwargs = generation_kwargs or {}
 
     def _headers(self) -> Dict[str, str]:
         api_key = require_secret_api_key(
@@ -70,10 +98,13 @@ class PortkeyModel(DeepEvalBaseLLM):
         return headers
 
     def _payload(self, prompt: str) -> Dict[str, Any]:
-        return {
-            "model": self.model,
+        payload = {
+            "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if self.generation_kwargs:
+            payload.update(self.generation_kwargs)
+        return payload
 
     def _extract_content(self, data: Dict[str, Any]) -> str:
         choices: Union[List[Dict[str, Any]], None] = data.get("choices")
@@ -126,7 +157,7 @@ class PortkeyModel(DeepEvalBaseLLM):
                 return self._extract_content(data)
 
     def get_model_name(self) -> str:
-        return f"Portkey ({self.model})"
+        return f"Portkey ({self.model_name})"
 
     def load_model(self):
         return None
