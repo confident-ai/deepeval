@@ -1,6 +1,5 @@
 from typing import Optional, List
 import textwrap
-from deepeval.test_case import MLLMImage
 
 class FaithfulnessTemplate:
     @staticmethod
