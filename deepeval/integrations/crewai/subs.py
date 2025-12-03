@@ -46,6 +46,15 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
 
 
 # Create the classes
-DeepEvalCrew = create_deepeval_class(Crew, "DeepEvalCrew")
-DeepEvalAgent = create_deepeval_class(Agent, "DeepEvalAgent")
-DeepEvalLLM = create_deepeval_class(LLM, "DeepEvalLLM")
+if is_crewai_installed():
+    DeepEvalCrew = create_deepeval_class(Crew, "DeepEvalCrew")
+    DeepEvalAgent = create_deepeval_class(Agent, "DeepEvalAgent")
+    DeepEvalLLM = create_deepeval_class(LLM, "DeepEvalLLM")
+else:
+    # Define placeholders to avoid NameError in __init__.py
+    class DeepEvalCrew:
+        pass
+    class DeepEvalAgent:
+        pass
+    class DeepEvalLLM:
+        pass
