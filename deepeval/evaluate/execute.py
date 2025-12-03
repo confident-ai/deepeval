@@ -64,7 +64,7 @@ from deepeval.metrics import (
     ContextualRelevancyMetric,
     AnswerRelevancyMetric,
     FaithfulnessMetric,
-    ToolCorrectnessMetric
+    ToolCorrectnessMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -122,8 +122,9 @@ MLLM_SUPPORTED_METRICS = [
     ContextualRelevancyMetric,
     AnswerRelevancyMetric,
     FaithfulnessMetric,
-    ToolCorrectnessMetric
+    ToolCorrectnessMetric,
 ]
+
 
 def _skip_metrics_for_error(
     span: Optional[BaseSpan] = None,

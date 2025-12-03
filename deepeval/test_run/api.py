@@ -18,11 +18,9 @@ class LLMApiTestCase(BaseModel):
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     completion_time: Optional[float] = Field(None, alias="completionTime")
     tags: Optional[List[str]] = Field(None)
-    multimodal_input: Optional[str] = Field(
-        None, alias="multimodalInput"
-    )
-    multimodal_input_actual_output: Optional[str] = (
-        Field(None, alias="multimodalActualOutput")
+    multimodal_input: Optional[str] = Field(None, alias="multimodalInput")
+    multimodal_input_actual_output: Optional[str] = Field(
+        None, alias="multimodalActualOutput"
     )
     multimodal_expected_output: Optional[str] = Field(
         None, alias="multimodalExpectedOutput"
