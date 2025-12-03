@@ -36,7 +36,7 @@ from deepeval.optimizer.types import (
     PromptConfigurationId,
     ModuleId,
     ScoreTable,
-    OptimizationResult,
+    OptimizationReport,
     RunnerStatusType,
     RunnerStatusCallback,
 )
@@ -48,7 +48,7 @@ from deepeval.optimizer.utils import (
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.rewriter import Rewriter
-from deepeval.optimizer.algorithms.configs import MIPROV2Config
+from deepeval.optimizer.algorithms.configs import MIPROV2_MIN_DELTA
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
@@ -62,10 +62,18 @@ class MIPROV2(BaseAlgorithm):
     models, or async configs. It relies on a preconfigured Scorer and
     Rewriter, which are typically constructed by PromptOptimizer.
 
-    - Optimizes a single Prompt (instruction) against a list of Goldens.
-    - Uses mini-batches of goldens for trial scoring and simple selection over
-      prompt candidates based on mean minibatch scores instead of a full TPE
-      implementation.
+    Parameters
+    ----------
+    iterations : int
+        Total number of optimization trials. Default is 5.
+    minibatch_size : int
+        Number of examples drawn per iteration. Default is 8.
+    random_seed : int, optional
+        RNG seed for reproducibility. If None, derived from time.time_ns().
+    exploration_probability : float
+        Epsilon greedy exploration rate. Default is 0.2.
+    full_eval_every : int, optional
+        Fully evaluate best candidate every N trials. Default is 5.
     """
 
     name = "MIPROv2"
@@ -73,16 +81,38 @@ class MIPROV2(BaseAlgorithm):
 
     def __init__(
         self,
-        config: MIPROV2Config = MIPROV2Config(),
+        iterations: int = 5,
+        minibatch_size: int = 8,
+        random_seed: Optional[int] = None,
+        exploration_probability: float = 0.2,
+        full_eval_every: Optional[int] = 5,
         aggregate_instances: Aggregator = mean_of_all,
         scorer: Optional[BaseScorer] = None,
     ) -> None:
-        self.config = config
+        # Validate parameters
+        if iterations < 1:
+            raise ValueError("iterations must be >= 1")
+        if minibatch_size < 1:
+            raise ValueError("minibatch_size must be >= 1")
+        if exploration_probability < 0.0 or exploration_probability > 1.0:
+            raise ValueError(
+                "exploration_probability must be >= 0.0 and <= 1.0"
+            )
+        if full_eval_every is not None and full_eval_every < 1:
+            raise ValueError("full_eval_every must be >= 1")
+
+        self.iterations = iterations
+        self.minibatch_size = minibatch_size
+        self.exploration_probability = exploration_probability
+        self.full_eval_every = full_eval_every
         self.aggregate_instances = aggregate_instances
         self.scorer = scorer
 
-        # Random seeded from config is used for minibatch sampling and candidate selection.
-        self.random_state = random.Random(config.random_seed)
+        # If no seed provided, use time-based seed
+        if random_seed is None:
+            random_seed = time.time_ns()
+        self.random_seed = random_seed
+        self.random_state = random.Random(random_seed)
 
         # Runtime state to be reset between runs
         self.reset_state()
@@ -106,7 +136,7 @@ class MIPROV2(BaseAlgorithm):
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """
         Synchronous MIPROV2 run from a full list of goldens.
 
@@ -191,7 +221,7 @@ class MIPROV2(BaseAlgorithm):
 
             # 3. Evaluate & decide whether to accept the child
             jitter = 1e-6
-            if child_score >= before_mean + max(self.config.min_delta, jitter):
+            if child_score >= before_mean + max(MIPROV2_MIN_DELTA, jitter):
                 # Accept: add to pool, update minibatch-score history for this candidate,
                 # and record the iteration.
                 self._add_prompt_configuration(child_prompt_configuration)
@@ -212,8 +242,8 @@ class MIPROV2(BaseAlgorithm):
 
             self.trial_index += 1
             if (
-                self.config.full_eval_every is not None
-                and self.trial_index % self.config.full_eval_every == 0
+                self.full_eval_every is not None
+                and self.trial_index % self.full_eval_every == 0
             ):
                 self._full_evaluate_best(goldens)
 
@@ -229,7 +259,7 @@ class MIPROV2(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -237,13 +267,13 @@ class MIPROV2(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     async def a_execute(
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """
         Asynchronous twin of execute().
         """
@@ -321,7 +351,7 @@ class MIPROV2(BaseAlgorithm):
 
             # 3. Evaluate & decide whether to accept the child
             jitter = 1e-6
-            if child_score >= before_mean + max(self.config.min_delta, jitter):
+            if child_score >= before_mean + max(MIPROV2_MIN_DELTA, jitter):
                 # Accept: add to pool, update minibatch-score history for this candidate,
                 # and record the iteration.
                 self._add_prompt_configuration(child_prompt_configuration)
@@ -342,8 +372,8 @@ class MIPROV2(BaseAlgorithm):
 
             self.trial_index += 1
             if (
-                self.config.full_eval_every is not None
-                and self.trial_index % self.config.full_eval_every == 0
+                self.full_eval_every is not None
+                and self.trial_index % self.full_eval_every == 0
             ):
                 await self._a_full_evaluate_best(goldens)
 
@@ -358,7 +388,7 @@ class MIPROV2(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -366,7 +396,7 @@ class MIPROV2(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     ###################
     # State & helpers #
@@ -539,7 +569,7 @@ class MIPROV2(BaseAlgorithm):
                 "MIPRORunner has an empty candidate pool; this should not happen."
             )
 
-        eps = float(self.config.exploration_probability)
+        eps = float(self.exploration_probability)
         if eps > 0.0 and self.random_state.random() < eps:
             chosen_id = self.random_state.choice(candidate_ids)
         else:
@@ -552,23 +582,14 @@ class MIPROV2(BaseAlgorithm):
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Union[List["Golden"], List["ConversationalGolden"]]:
         """
-        Determine effective minibatch size from MIPROConfig, bounded by the
-        available goldens, and sample with replacement.
+        Determine effective minibatch size, bounded by the available goldens,
+        and sample with replacement.
         """
         n = len(goldens)
         if n <= 0:
             return []
 
-        if self.config.minibatch_size is not None:
-            size = self.config.minibatch_size
-        else:
-            dynamic = max(1, int(round(n * self.config.minibatch_ratio)))
-            size = max(
-                self.config.minibatch_min_size,
-                min(dynamic, self.config.minibatch_max_size),
-            )
-
-        size = max(1, min(size, n))
+        size = min(self.minibatch_size, n)
 
         return [goldens[self.random_state.randrange(0, n)] for _ in range(size)]
 
@@ -714,7 +735,7 @@ class MIPROV2(BaseAlgorithm):
         self,
         mipro_iteration: Callable[[], bool],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
         self._update_progress(
@@ -740,7 +761,7 @@ class MIPROV2(BaseAlgorithm):
         self,
         a_mipro_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
         self._update_progress(

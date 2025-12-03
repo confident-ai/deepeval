@@ -43,16 +43,9 @@ There is no distinction between `D_pareto` and `D_feedback`. All sampling happen
 
 :::info Minibatch Sizing
 
-On each trial, `MIPRORunner` draws a mini batch from the full golden set. The effective size is chosen from four fields in `MIPROConfig`:
+On each trial, `MIPRORunner` draws a mini batch from the full golden set. The size is controlled by `minibatch_size` in `MIPROConfig` (default: 8). If your dataset has fewer examples than the configured size, the runner automatically clamps to the available data.
 
-- `minibatch_size` is a fixed size. When set, it is used directly, bounded by `len(goldens)`.
-- `minibatch_min_size` is a hard lower bound used when dynamic sizing is in effect.
-- `minibatch_max_size` is a hard upper bound used when dynamic sizing is in effect.
-- `minibatch_ratio` is a fraction of `len(goldens)` used to compute a dynamic mini batch size when `minibatch_size` is not set.
-
-Conceptually, if `minibatch_size` is not set, the dynamic size is derived from `minibatch_ratio` and then clamped between `minibatch_min_size` and `minibatch_max_size`. Sampling is done with replacement, so the same golden may appear more than once within or across mini batches.
-
-Larger mini batches give a more stable signal per trial at higher cost. Smaller mini batches are cheaper but noisier.
+Sampling is done with replacement, so the same golden may appear more than once within or across mini batches. Larger mini batches give a more stable signal per trial at higher cost. Smaller mini batches are cheaper but noisier.
 :::
 
 Mini batch scores drive local decisions. Full evaluations are used for more reliable selection at checkpoints. Every time the internal trial counter is divisible by `full_eval_every`, the runner selects the current best candidate by mean mini batch score, evaluates it on the full golden set, and stores its per instance metric score vector in `pareto_score_table`. At the end of the run, if no full evaluation has been performed yet, the runner forces a full evaluation of the best candidate by mean mini batch score.
@@ -96,13 +89,13 @@ MIPROv2 maintains its pool of candidates using `PromptConfiguration` objects. Ea
 
 On the first trial, the runner lazily evaluates the root candidate on a mini batch and records its mini batch score. After that, each new trial either adds an accepted child to the pool or leaves the pool unchanged.
 
-The acceptance test is controlled by `min_delta` in `MIPROConfig`. When the child’s mini batch score improves on the parent’s mean mini batch score by at least `min_delta` (plus a small jitter), the child is accepted:
+When the child's mini batch score improves on the parent's mean mini batch score (plus a small jitter), the child is accepted:
 
 - the child configuration is added to the pool,
-- the child’s mini batch score is recorded and folded into its running mean, and
+- the child's mini batch score is recorded and folded into its running mean, and
 - the iteration is recorded in the optimization report.
 
-If the improvement is smaller than `min_delta`, the child is rejected and the candidate pool stays as it was.
+If there is no improvement, the child is rejected and the candidate pool stays as it was.
 
 ## MIPROv2 Configuration
 
@@ -116,18 +109,13 @@ from deepeval.optimizer.miprov2.configs import MIPROConfig
 config = MIPROConfig()
 ```
 
-There are **TEN** optional parameters when creating a `MIPROConfig`:
+There are **FIVE** optional parameters when creating a `MIPROConfig`:
 
 - [Optional] `iterations`: total number of MIPROv2 trials or prompt proposals. Higher values give more search at higher evaluation cost. Default is `5`.
-- [Optional] `minibatch_size`: fixed mini batch size drawn from the full golden set. When set, this overrides dynamic sizing. Default is `None`.
-- [Optional] `minibatch_min_size`: hard lower bound on mini batch size when dynamic sizing is in effect. Default is `4`.
-- [Optional] `minibatch_max_size`: hard upper bound on mini batch size when dynamic sizing is in effect. Default is `32`.
-- [Optional] `minibatch_ratio`: target fraction of `len(goldens)` used to compute a dynamic mini batch size when `minibatch_size` is not set. The resulting size is bounded between `minibatch_min_size` and `minibatch_max_size`. Default is `0.05`.
-- [Optional] `random_seed`: integer seed used for all randomness in the runner, including mini batch sampling and epsilon greedy candidate selection. If set to `None`, the config derives a seed from `time.time_ns()`. Default is `0`.
-- [Optional] `min_delta`: minimum improvement in mini batch score required for a child prompt to be accepted over its parent. If the child does not improve the parent’s mean mini batch score by at least this amount, it is rejected. Default is `0.0`.
+- [Optional] `minibatch_size`: number of examples drawn from the golden set per iteration. Automatically clamped to available data size if larger. Default is `8`.
+- [Optional] `random_seed`: integer seed used for all randomness in the runner, including mini batch sampling and epsilon greedy candidate selection. If set to `None`, the config derives a seed from `time.time_ns()`.
 - [Optional] `exploration_probability`: probability of sampling a random candidate instead of the best by mean mini batch score. This controls the balance between exploration and exploitation. Default is `0.2`.
 - [Optional] `full_eval_every`: if set, the runner fully evaluates the current best candidate on the full golden set every `full_eval_every` trials. If `None`, only a single full evaluation is performed at the end of the run. Default is `5`.
-- [Optional] `rewrite_instruction_max_chars`: maximum number of characters from the prompt, feedback, and related text that the `PromptRewriter` will include in rewrite instructions. Default is `4096`.
 
 ### Using MIPROv2 With PromptOptimizer
 

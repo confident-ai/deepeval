@@ -1,8 +1,7 @@
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.miprov2.configs import MIPROConfig
-from deepeval.optimizer.miprov2.loop import MIPRORunner
+from deepeval.optimizer.algorithms import MIPROV2
 from deepeval.optimizer.types import PromptConfiguration
 from deepeval.prompt.prompt import Prompt
 from tests.test_core.stubs import StubScoringAdapter, SuffixRewriter
@@ -11,26 +10,24 @@ from tests.test_core.stubs import StubScoringAdapter, SuffixRewriter
 def _make_runner(
     *,
     iterations: int = 3,
-    min_delta: float = 0.0,
     exploration_probability: float = 0.0,
     full_eval_every=None,
-) -> MIPRORunner:
+) -> MIPROV2:
     """
-    Helper that constructs a MIPRORunner wired with the shared test stubs.
+    Helper that constructs a MIPROV2 runner wired with the shared test stubs.
 
     - StubScoringAdapter: scores prompts with "CHILD" higher than the root.
     - SuffixRewriter: appends " CHILD" to the prompt text.
     """
-    config = MIPROConfig(
+    scorer = StubScoringAdapter()
+    runner = MIPROV2(
         iterations=iterations,
-        min_delta=min_delta,
         exploration_probability=exploration_probability,
         full_eval_every=full_eval_every,
+        scorer=scorer,
     )
-    scorer = StubScoringAdapter()
-    runner = MIPRORunner(config=config, scorer=scorer)
 
-    # Attach a deterministic rewriter that always produces a strictly “better”
+    # Attach a deterministic rewriter that always produces a strictly "better"
     # child by appending " CHILD" to the text template.
     runner._rewriter = SuffixRewriter(suffix=" CHILD")
 
@@ -38,7 +35,7 @@ def _make_runner(
 
 
 def test_execute_requires_at_least_one_golden():
-    """MIPRORunner.execute must reject an empty golden list."""
+    """MIPROV2.execute must reject an empty golden list."""
     runner = _make_runner()
     prompt = Prompt(text_template="ROOT")
 
@@ -48,7 +45,7 @@ def test_execute_requires_at_least_one_golden():
 
 @pytest.mark.asyncio
 async def test_a_execute_requires_at_least_one_golden():
-    """MIPRORunner.a_execute must reject an empty golden list."""
+    """MIPROV2.a_execute must reject an empty golden list."""
     runner = _make_runner()
     prompt = Prompt(text_template="ROOT")
 
@@ -63,7 +60,6 @@ def test_execute_accepts_improving_children_and_returns_best():
     """
     runner = _make_runner(
         iterations=4,
-        min_delta=0.0,
         exploration_probability=0.0,
         full_eval_every=None,  # rely on final full_eval at the end
     )
@@ -87,7 +83,6 @@ async def test_a_execute_uses_async_paths_and_accepts_children():
     """
     runner = _make_runner(
         iterations=4,
-        min_delta=0.0,
         exploration_probability=0.0,
         full_eval_every=None,
     )
@@ -116,45 +111,25 @@ async def test_a_execute_uses_async_paths_and_accepts_children():
     assert scorer.a_feedback_calls, "expected async feedback calls"
 
 
-def test_draw_minibatch_with_dynamic_ratio_respects_bounds():
+def test_draw_minibatch_respects_minibatch_size():
     """
-    _draw_minibatch should respect minibatch_min_size/minibatch_max_size and
-    the dynamic ratio, clamping the effective size between these bounds and
-    the number of available goldens.
+    _draw_minibatch should use minibatch_size, clamped by the number of goldens.
     """
-    cfg = MIPROConfig(
-        minibatch_size=None,
-        minibatch_ratio=0.1,
-        minibatch_min_size=4,
-        minibatch_max_size=16,
-    )
-    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
+    runner = MIPROV2(minibatch_size=3, scorer=StubScoringAdapter())
 
-    goldens = list(range(50))
+    goldens = list(range(10))
     batch = runner._draw_minibatch(goldens)
-
-    assert 4 <= len(batch) <= 16
+    assert len(batch) == 3
     # We sample *with* replacement, so duplicates are allowed, but all
     # elements must be drawn from the original collection.
     assert all(item in goldens for item in batch)
 
 
-def test_draw_minibatch_respects_fixed_minibatch_size():
+def test_draw_minibatch_clamps_to_available_data():
     """
-    When minibatch_size is set, _draw_minibatch should use that value,
-    clamped by the number of goldens.
+    When minibatch_size exceeds available goldens, clamp to the number of goldens.
     """
-    cfg = MIPROConfig(
-        minibatch_size=3,
-        minibatch_ratio=0.5,  # ignored
-        minibatch_min_size=1,
-        minibatch_max_size=10,
-    )
-    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
-
-    goldens = list(range(10))
-    batch = runner._draw_minibatch(goldens)
-    assert len(batch) == 3
+    runner = MIPROV2(minibatch_size=10, scorer=StubScoringAdapter())
 
     # If we have fewer goldens than minibatch_size, we clamp to n.
     goldens_small = list(range(2))
@@ -167,11 +142,11 @@ def test_select_candidate_prefers_best_by_minibatch_when_eps_zero():
     With exploration_probability = 0.0, _select_candidate should always pick
     the candidate with the highest mean minibatch score.
     """
-    cfg = MIPROConfig(
+    runner = MIPROV2(
         iterations=1,
         exploration_probability=0.0,
+        scorer=StubScoringAdapter(),
     )
-    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
 
     # Two candidates: one "ROOT", one "ROOT CHILD" (better).
     root_prompt = Prompt(text_template="ROOT")
@@ -200,8 +175,7 @@ def test_prompts_equivalent_for_text_templates():
     _prompts_equivalent should ignore leading/trailing whitespace for TEXT
     prompts and treat identical normalized texts as equivalent.
     """
-    cfg = MIPROConfig()
-    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
+    runner = MIPROV2(scorer=StubScoringAdapter())
 
     p1 = Prompt(text_template="  Do the thing.  ")
     p2 = Prompt(text_template="Do the thing.")

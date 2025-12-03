@@ -20,14 +20,12 @@ from typing import (
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
-from deepeval.prompt.api import (
-    PromptType,
-    PromptMessage,
-)  # PromptMessage needed for inflate_prompts_from_report
+from deepeval.prompt.api import PromptMessage
 from deepeval.optimizer.types import (
     ModuleId,
     PromptConfigurationId,
     PromptConfiguration,
+    PromptConfigSnapshot,
     OptimizationReport,
 )
 
@@ -60,7 +58,7 @@ def split_goldens(
         pareto_size: Number of items to allocate to the Pareto set bound between [0, len(goldens)].
         random_state: A shared `random.Random` instance that provides the source
             of randomness. For reproducible runs, pass the same object used by
-            the GEPA loop constructed from `GEPAConfig.random_seed`
+            the GEPA loop constructed from `GEPA.random_seed`
 
     Returns:
         (d_feedback, d_pareto)
@@ -204,58 +202,17 @@ def build_prompt_config_snapshots(
     prompt_configurations_by_id: Dict[
         PromptConfigurationId, "PromptConfiguration"
     ],
-) -> Dict[PromptConfigurationId, Dict[str, Any]]:
+) -> Dict[PromptConfigurationId, PromptConfigSnapshot]:
     """
-    Build a serializable snapshot of all prompt configurations.
-
-    Shape matches the docs for `prompt_configurations`:
-
-    {
-      "<config_id>": {
-        "parent": "<parent_id or None>",
-        "prompts": {
-          "<module_id>": {
-            "type": "TEXT",
-            "text_template": "...",
-          }
-          # or
-          "<module_id>": {
-            "type": "LIST",
-            "messages": [
-              {"role": "system", "content": "..."},
-              ...
-            ],
-          },
-        },
-      },
-      ...
-    }
+    Build snapshots of all prompt configurations.
     """
-    snapshots: Dict[PromptConfigurationId, Dict[str, Any]] = {}
+    snapshots: Dict[PromptConfigurationId, PromptConfigSnapshot] = {}
 
     for cfg_id, cfg in prompt_configurations_by_id.items():
-        prompts_snapshot: Dict[str, Any] = {}
-
-        for module_id, prompt in cfg.prompts.items():
-            if prompt.type is PromptType.LIST:
-                messages = [
-                    {"role": msg.role, "content": (msg.content or "")}
-                    for msg in (prompt.messages_template or [])
-                ]
-                prompts_snapshot[module_id] = {
-                    "type": "LIST",
-                    "messages": messages,
-                }
-            else:
-                prompts_snapshot[module_id] = {
-                    "type": "TEXT",
-                    "text_template": (prompt.text_template or ""),
-                }
-
-        snapshots[cfg_id] = {
-            "parent": cfg.parent,
-            "prompts": prompts_snapshot,
-        }
+        snapshots[cfg_id] = PromptConfigSnapshot(
+            parent=cfg.parent,
+            prompts=dict(cfg.prompts),
+        )
 
     return snapshots
 

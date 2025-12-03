@@ -97,7 +97,7 @@ There are **TWO** required parameters and **FIVE** optional parameters when crea
 - [Optional] `mutation_config`: `MutationConfig` controlling which message is rewritten in LIST-style prompts.
 
 :::info
-If you want full control over algorithm-specific settings (for example, GEPA’s `iterations`, minibatch sizing, or tie-breaking), construct a runner such as `GEPARunner` with a `GEPAConfig` and attach it via `optimizer.set_runner(...)`. The [GEPA page](/docs/prompt-optimization-gepa) covers those fields in detail.
+If you want full control over algorithm-specific settings (for example, GEPA's `iterations`, minibatch sizing, or tie-breaking), construct a `GEPA` instance with custom parameters and pass it via the `algorithm` argument. The [GEPA page](/docs/prompt-optimization-gepa) covers those fields in detail.
 :::
 
 ### Model Callback

@@ -9,7 +9,6 @@ from deepeval.errors import DeepEvalError
 from deepeval.optimizer.types import PromptConfiguration, OptimizationReport
 from deepeval.optimizer.utils import (
     a_invoke_model_callback,
-    build_model_callback_kwargs,
     generate_module_id,
     invoke_model_callback,
     normalize_seed_prompts,
@@ -220,51 +219,6 @@ def test_validate_callback_returns_same_callable() -> None:
     )
 
     assert result is cb
-
-
-###############################
-# build_model_callback_kwargs #
-###############################
-
-
-def test_build_model_callback_kwargs_populates_all_fields() -> None:
-    prompt = StubPrompt(alias="alias")
-    golden = object()
-    feedback_text = "feedback"
-    prompt_text = "pt"
-    prompt_messages = ["m1", "m2"]
-
-    kwargs = build_model_callback_kwargs(
-        prompt=prompt,
-        prompt_text=prompt_text,
-        prompt_messages=prompt_messages,
-        golden=golden,
-        feedback_text=feedback_text,
-    )
-
-    assert kwargs["prompt"] is prompt
-    assert kwargs["prompt_text"] == prompt_text
-    assert kwargs["prompt_messages"] == prompt_messages
-    assert kwargs["golden"] is golden
-    assert kwargs["feedback_text"] == feedback_text
-
-    assert set(kwargs.keys()) == {
-        "prompt",
-        "prompt_text",
-        "prompt_messages",
-        "golden",
-        "feedback_text",
-    }
-
-
-def test_build_model_callback_kwargs_defaults_missing_fields_to_none() -> None:
-    kwargs = build_model_callback_kwargs()
-
-    assert kwargs["prompt"] is None
-    assert kwargs["prompt_text"] is None
-    assert kwargs["prompt_messages"] is None
-    assert kwargs["golden"] is None
-    assert kwargs["feedback_text"] is None
 
 
 ###################################################
@@ -499,7 +453,7 @@ def test_inflate_prompts_from_report_reconstructs_prompts() -> None:
         },
     }
 
-    report = OptimizationReport.from_runtime(runtime)
+    report = OptimizationReport(**runtime)
     inflated = inflate_prompts_from_report(report)
 
     assert "cfg-best" in inflated

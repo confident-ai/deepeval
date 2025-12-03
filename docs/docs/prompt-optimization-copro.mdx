@@ -19,7 +19,7 @@ In broad strokes:
 2. Maintain a population of candidate prompts that always includes the original prompt.
 3. On each iteration, pick a parent prompt from the population using an epsilon greedy rule on mean minibatch score.
 4. Draw a single minibatch, compute feedback for the parent once, and reuse that feedback to propose multiple child prompts cooperatively.
-5. Score each child on the same minibatch and accept any that improve on the parent by at least `min_delta`, adding them to the population.
+5. Score each child on the same minibatch and accept any that improve on the parent, adding them to the population.
 6. If the population exceeds `population_size`, prune low-scoring candidates so only the best remain.
 7. Periodically, and at the end, fully evaluate the current best candidate on the full golden set.
 
@@ -44,16 +44,9 @@ There is no separate `D_pareto` or `D_feedback` split. All sampling happens from
 
 :::info Minibatch Sizing
 
-On each iteration, `COPRORunner` draws a minibatch from the full golden set. The effective size is chosen from four fields in `COPROConfig` (inherited from `MIPROConfig`):
+On each iteration, `COPRORunner` draws a minibatch from the full golden set. The size is controlled by `minibatch_size` in `COPROConfig` (default: 8). If your dataset has fewer examples than the configured size, the runner automatically clamps to the available data.
 
-- `minibatch_size` is a fixed size. When set, it is used directly, bounded by `len(goldens)`.
-- `minibatch_min_size` is a hard lower bound used when dynamic sizing is in effect.
-- `minibatch_max_size` is a hard upper bound used when dynamic sizing is in effect.
-- `minibatch_ratio` is a fraction of `len(goldens)` used to compute a dynamic minibatch size when `minibatch_size` is not set.
-
-Conceptually, if `minibatch_size` is not set, the dynamic size is derived from `minibatch_ratio` and then clamped between `minibatch_min_size` and `minibatch_max_size`. Sampling is done with replacement, so the same golden may appear more than once within or across minibatches.
-
-Larger minibatches give a more stable signal per iteration at higher cost. Smaller minibatches are cheaper but noisier.
+Sampling is done with replacement, so the same golden may appear more than once within or across minibatches. Larger minibatches give a more stable signal per iteration at higher cost. Smaller minibatches are cheaper but noisier.
 :::
 
 Minibatch scores drive local decisions. Full evaluations are used for more reliable selection at checkpoints. Every time the internal trial counter is divisible by `full_eval_every`, the runner selects the current best candidate by mean minibatch score, evaluates it on the full golden set, and stores its per-instance metric score vector in `pareto_score_table`. At the end of the run, if no full evaluation has been performed yet, the runner forces a full evaluation of the best candidate by mean minibatch score.
@@ -87,7 +80,7 @@ Once the root candidate is seeded and scored on a minibatch, COPRO enters its ma
 2. Draw a fresh minibatch from the full golden set.
 3. Compute a shared `feedback_text` for the parent and minibatch using your app and metrics.
 4. Propose multiple child prompts cooperatively from the same parent using the shared feedback.
-5. Score each child on the minibatch and accept any that improve on the parent by at least `min_delta`.
+5. Score each child on the minibatch and accept any that improve on the parent.
 6. If the population exceeds `population_size`, prune the worst-scoring candidates while preserving the best.
 7. Optionally, if `full_eval_every` divides the current trial index, run a full evaluation of the current best candidate.
 
@@ -110,7 +103,7 @@ Each proposal goes through the same steps:
 - If the child is a no-change proposal or changes the prompt type, ignore it.
 - Otherwise, build a new `PromptConfiguration` for the child.
 - Score the child on the same minibatch using `minibatch_score`.
-- If the child’s score improves on the parent’s mean minibatch score by at least `min_delta` (plus a small jitter), accept the child:
+- If the child's score improves on the parent's mean minibatch score (plus a small jitter), accept the child:
   - add the child configuration to the population,
   - update its running mean minibatch score, and
   - record the iteration in the optimization report.
@@ -134,7 +127,7 @@ There are **TWO** additional optional parameters beyond those in `MIPROConfig`:
 - [Optional] `population_size`: maximum number of prompt candidates maintained in the active population. When this limit is exceeded, COPRO prunes lower-scoring candidates based on mean minibatch score while preserving the current best. Default is `4`.
 - [Optional] `proposals_per_step`: number of child prompts proposed cooperatively from the same parent in each optimization iteration. Higher values increase diversity per iteration at higher cost. Default is `4`.
 
-All other fields such as `iterations`, minibatch sizing parameters, `min_delta`, `exploration_probability`, `full_eval_every`, and `rewrite_instruction_max_chars` are inherited from `MIPROConfig` and behave identically to the MIPROv2 runner.
+All other fields such as `iterations`, `minibatch_size`, `exploration_probability`, and `full_eval_every` are inherited from `MIPROConfig` and behave identically to the MIPROv2 runner.
 
 ### Using COPRO With PromptOptimizer
 

@@ -1,36 +1,32 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
 
-from deepeval.optimizer.copro.configs import COPROConfig
+from deepeval.optimizer.algorithms import COPRO
 
 
-def test_copro_config_defaults_inherit_mipro_fields():
-    cfg = COPROConfig()
+def test_copro_defaults():
+    algo = COPRO()
 
-    # Inherited MIPROConfig defaults
-    assert cfg.iterations == 5
-    assert cfg.minibatch_min_size == 4
-    assert cfg.minibatch_max_size == 32
-    assert cfg.minibatch_ratio == 0.05
-    assert cfg.min_delta == 0.0
-    assert cfg.exploration_probability == 0.2
-    assert cfg.full_eval_every == 5
-    assert isinstance(cfg.random_seed, int)
+    # Base defaults
+    assert algo.iterations == 5
+    assert algo.minibatch_size == 8
+    assert algo.exploration_probability == 0.2
+    assert algo.full_eval_every == 5
+    assert isinstance(algo.random_seed, int)
 
     # COPRO-specific defaults
-    assert cfg.population_size == 4
-    assert cfg.proposals_per_step == 4
+    assert algo.population_size == 4
+    assert algo.proposals_per_step == 4
 
 
 @pytest.mark.parametrize("value", [0, -1])
-def test_copro_config_rejects_non_positive_population_size(value: int):
-    with pytest.raises(ValidationError):
-        COPROConfig(population_size=value)
+def test_copro_rejects_non_positive_population_size(value: int):
+    with pytest.raises(ValueError):
+        COPRO(population_size=value)
 
 
 @pytest.mark.parametrize("value", [0, -3])
-def test_copro_config_rejects_non_positive_proposals_per_step(value: int):
-    with pytest.raises(ValidationError):
-        COPROConfig(proposals_per_step=value)
+def test_copro_rejects_non_positive_proposals_per_step(value: int):
+    with pytest.raises(ValueError):
+        COPRO(proposals_per_step=value)

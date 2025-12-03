@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import (
     Callable,
     Dict,
@@ -7,7 +8,13 @@ from typing import (
     Union,
 )
 
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    BarColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.errors import DeepEvalError
@@ -17,7 +24,6 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.optimizer.scorer import Scorer
 from deepeval.optimizer.rewriter import Rewriter
 from deepeval.optimizer.types import (
-    OptimizationReport,
     RunnerStatusType,
 )
 from deepeval.optimizer.utils import (
@@ -36,6 +42,10 @@ from deepeval.optimizer.algorithms import (
     MIPROV2,
     COPRO,
     SIMBA,
+)
+from deepeval.optimizer.algorithms.configs import (
+    GEPA_REWRITE_INSTRUCTION_MAX_CHARS,
+    MIPROV2_REWRITE_INSTRUCTION_MAX_CHARS,
 )
 
 
@@ -90,6 +100,7 @@ class PromptOptimizer:
         self.display_config = display_config
         self.mutation_config = mutation_config
         self.algorithm = algorithm
+        self.optimization_report = None
         self._configure_algorithm()
 
         # Internal state used only when a progress indicator is active.
@@ -103,84 +114,38 @@ class PromptOptimizer:
     def optimize(
         self,
         prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
+        goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Prompt:
-        """
-        Run the configured optimization algorithm and return an optimized Prompt.
-
-        The returned Prompt will have an OptimizationReport attached as
-        `prompt.optimization_report`.
-        """
-        # DEBUG: Log original prompt
-        print(f"\n[DEBUG] Starting optimization with {self.algorithm.name}")
-        print(
-            f"[DEBUG] Original prompt: {prompt.text_template[:200] if prompt.text_template else prompt.messages_template}..."
-        )
-        print(f"[DEBUG] Number of goldens: {len(goldens)}")
-
-        if not self.display_config.show_indicator:
-            best_prompt, report_dict = (
-                self._run_optimization_with_error_handling(
-                    prompt=prompt,
-                    goldens=goldens,
-                )
+        if self.async_config.run_async:
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(
+                self.a_optimize(prompt=prompt, goldens=goldens)
             )
-        else:
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                BarColumn(bar_width=60),
-                TextColumn("[progress.description]{task.description}"),
-                transient=True,
-            ) as progress:
-                # Total will be provided by the algorithm via the
-                # progress status_callback. Start at 0 and update later.
-                task = progress.add_task(
-                    f"Optimizing prompt with {self.algorithm.name}..."
-                )
-                self._progress_state = (progress, task)
 
-                try:
-                    best_prompt, report_dict = (
-                        self._run_optimization_with_error_handling(
-                            prompt=prompt,
-                            goldens=goldens,
-                        )
+        try:
+            with self._progress_context():
+                best_prompt, self.optimization_report = self.algorithm.execute(
+                    prompt=prompt, goldens=goldens
+                )
+        except Exception as exc:
+            self._handle_optimization_error(exc)
+
+        return best_prompt
+
+    async def a_optimize(
+        self,
+        prompt: Prompt,
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+    ) -> Prompt:
+        try:
+            with self._progress_context():
+                best_prompt, self.optimization_report = (
+                    await self.algorithm.a_execute(
+                        prompt=prompt, goldens=goldens
                     )
-                finally:
-                    # Clear progress state even if an error occurs
-                    self._progress_state = None
-
-        best_prompt.optimization_report = OptimizationReport.from_runtime(
-            report_dict
-        )
-
-        # DEBUG: Log optimization results
-        accepted_count = len(report_dict.get("accepted_iterations", []))
-        print(f"\n[DEBUG] Optimization complete!")
-        print(
-            f"[DEBUG] Accepted iterations (children that beat parent): {accepted_count}"
-        )
-        print(
-            f"[DEBUG] Total prompt configurations explored: {len(report_dict.get('prompt_configurations', {}))}"
-        )
-        print(
-            f"[DEBUG] Best prompt: {best_prompt.text_template[:200] if best_prompt.text_template else best_prompt.messages_template}..."
-        )
-
-        # Check if prompt changed
-        original_text = prompt.text_template or str(prompt.messages_template)
-        best_text = best_prompt.text_template or str(
-            best_prompt.messages_template
-        )
-        if original_text.strip() == best_text.strip():
-            print(
-                f"[DEBUG] ⚠️  WARNING: Optimized prompt is IDENTICAL to original!"
-            )
-            print(
-                f"[DEBUG] This can happen if: (1) no child prompts scored higher than parent, or (2) rewriter returned same prompt"
-            )
-        else:
-            print(f"[DEBUG] ✓ Prompt was modified during optimization")
+                )
+        except Exception as exc:
+            self._handle_optimization_error(exc)
 
         return best_prompt
 
@@ -198,9 +163,14 @@ class PromptOptimizer:
         )
 
         # Attach rewriter for mutation behavior
+        # GEPA uses internal constant; other algorithms use MIPROV2 constant
+        if isinstance(self.algorithm, GEPA):
+            max_chars = GEPA_REWRITE_INSTRUCTION_MAX_CHARS
+        else:
+            max_chars = MIPROV2_REWRITE_INSTRUCTION_MAX_CHARS
         self.algorithm._rewriter = Rewriter(
             optimizer_model=self.optimizer_model,
-            max_chars=self.algorithm.config.rewrite_instruction_max_chars,
+            max_chars=max_chars,
             list_mutation_config=self.mutation_config,
             random_state=self.algorithm.random_state,
         )
@@ -208,62 +178,53 @@ class PromptOptimizer:
         # Set status callback
         self.algorithm.status_callback = self._on_status
 
-    def _run_optimization(
-        self,
-        prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
-        if self.async_config.run_async:
-            loop = get_or_create_event_loop()
-            return loop.run_until_complete(
-                self.algorithm.a_execute(prompt=prompt, goldens=goldens)
-            )
-        return self.algorithm.execute(prompt=prompt, goldens=goldens)
+    @contextmanager
+    def _progress_context(self):
+        """Context manager that sets up progress indicator if enabled."""
+        if not self.display_config.show_indicator:
+            yield
+            return
 
-    def _run_optimization_with_error_handling(
-        self,
-        prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+        with Progress(
+            SpinnerColumn(style="rgb(106,0,255)"),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(bar_width=40),
+            TimeElapsedColumn(),
+            transient=True,
+        ) as progress:
+            task = progress.add_task(
+                f"Optimizing prompt with {self.algorithm.name}..."
+            )
+            self._progress_state = (progress, task)
+            try:
+                yield
+            finally:
+                self._progress_state = None
+
+    def _handle_optimization_error(self, exc: Exception) -> None:
         """
-        Run optimization and convert uncaught exceptions into a concise
-        user facing error message.
-
-        This is a fallback for errors that occur before the algorithm
-        enters its main iteration loop, which would otherwise surface
-        as a full traceback.
+        Handle optimization errors by formatting and raising a user-friendly message.
         """
-        try:
-            return self._run_optimization(prompt=prompt, goldens=goldens)
-        except Exception as exc:
-            # Try to recover iteration count from the algorithm config
-            total_steps: Optional[int] = None
-            iterations: Optional[int] = None
-            if self.algorithm.config is not None:
-                iterations = getattr(self.algorithm.config, "iterations", None)
-                if iterations is not None:
-                    total_steps = int(iterations)
+        total_steps: Optional[int] = None
+        iterations: Optional[int] = getattr(self.algorithm, "iterations", None)
+        if iterations is not None:
+            total_steps = int(iterations)
 
-            prefix = (
-                f"(iterations={iterations}) " if iterations is not None else ""
-            )
-            detail = (
-                f"{prefix}• error {exc.__class__.__name__}: {exc} "
-                "• halted before first iteration"
-            )
+        prefix = f"(iterations={iterations}) " if iterations is not None else ""
+        detail = (
+            f"{prefix}• error {exc.__class__.__name__}: {exc} "
+            "• halted before first iteration"
+        )
 
-            self._on_status(
-                RunnerStatusType.ERROR,
-                detail=detail,
-                step_index=None,
-                total_steps=total_steps,
-            )
+        self._on_status(
+            RunnerStatusType.ERROR,
+            detail=detail,
+            step_index=None,
+            total_steps=total_steps,
+        )
 
-            algo = self.algorithm.name
-
-            # using `from None` avoids a long chained stack trace while keeping
-            # the error message readable.
-            raise DeepEvalError(f"[{algo}] {detail}") from None
+        algo = self.algorithm.name
+        raise DeepEvalError(f"[{algo}] {detail}") from None
 
     def _on_status(
         self,
@@ -281,25 +242,16 @@ class PromptOptimizer:
         """
         algo = self.algorithm.name
 
-        # ERROR: always print, optionally update progress bar
         if kind is RunnerStatusType.ERROR:
-            if (
-                self.display_config.show_indicator
-                and self._progress_state is not None
-            ):
+            if self._progress_state is not None:
                 progress, task = self._progress_state
-
                 if total_steps is not None:
                     progress.update(task, total=total_steps)
-
                 description = self._format_progress_description(detail)
                 progress.update(task, description=description)
-
-            # Print a concise, error line regardless of indicator state
             print(f"[{algo}] {detail}")
             return
 
-        # TIE: optional one line message, no progress bar changes
         if kind is RunnerStatusType.TIE:
             if not self.display_config.announce_ties:
                 return
@@ -309,19 +261,14 @@ class PromptOptimizer:
         if kind is not RunnerStatusType.PROGRESS:
             return
 
-        if not self.display_config.show_indicator:
-            return
-
         if self._progress_state is None:
             return
 
         progress, task = self._progress_state
 
-        # Allow the algorithm to set or update the total steps.
         if total_steps is not None:
             progress.update(task, total=total_steps)
 
-        # iteration 0 shouldn't advance the bar
         if step_index is not None and step_index > 0:
             progress.advance(task, 1)
 

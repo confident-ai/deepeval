@@ -24,7 +24,7 @@ from deepeval.optimizer.types import (
     PromptConfigurationId,
     ModuleId,
     ScoreTable,
-    OptimizationResult,
+    OptimizationReport,
     RunnerStatusType,
     RunnerStatusCallback,
 )
@@ -37,11 +37,18 @@ from deepeval.optimizer.utils import (
 from deepeval.optimizer.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
+    frequency_weights,
+    pareto_frontier,
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.rewriter import Rewriter
-from deepeval.optimizer.algorithms.configs import GEPAConfig
+from deepeval.optimizer.policies import TieBreaker
+from deepeval.optimizer.algorithms.configs import (
+    GEPA_MIN_DELTA,
+    GEPA_TIE_TOLERANCE,
+    GEPA_REWRITE_INSTRUCTION_MAX_CHARS,
+)
 
 
 if TYPE_CHECKING:
@@ -56,23 +63,55 @@ class GEPA(BaseAlgorithm):
     models, or async configs. It relies on a preconfigured
     Scorer and Rewriter, which are typically constructed by
     the higher-level PromptOptimizer.
+
+    Parameters
+    ----------
+    iterations : int
+        Total number of GEPA loop iterations (mutation attempts). Default is 5.
+    minibatch_size : int
+        Number of examples drawn from D_feedback per iteration. Default is 8.
+    pareto_size : int
+        Size of the Pareto validation subset D_pareto. Default is 3.
+    random_seed : int, optional
+        RNG seed for reproducibility. If None, derived from time.time_ns().
+    tie_breaker : TieBreaker
+        Policy for breaking ties. Default is TieBreaker.PREFER_CHILD.
     """
 
     name = "GEPA"
     SINGLE_MODULE_ID: ModuleId = "__module__"
+    TieBreaker = TieBreaker
 
     def __init__(
         self,
-        config: GEPAConfig = GEPAConfig(),
+        iterations: int = 5,
+        minibatch_size: int = 8,
+        pareto_size: int = 3,
+        random_seed: Optional[int] = None,
+        tie_breaker: TieBreaker = TieBreaker.PREFER_CHILD,
         aggregate_instances: Aggregator = mean_of_all,
         scorer: Optional[BaseScorer] = None,
     ) -> None:
-        self.config = config
+        # Validate parameters
+        if iterations < 1:
+            raise ValueError("iterations must be >= 1")
+        if minibatch_size < 1:
+            raise ValueError("minibatch_size must be >= 1")
+        if pareto_size < 1:
+            raise ValueError("pareto_size must be >= 1")
+
+        self.iterations = iterations
+        self.minibatch_size = minibatch_size
+        self.pareto_size = pareto_size
+        self.tie_breaker = tie_breaker
         self.aggregate_instances = aggregate_instances
         self.scorer = scorer
 
-        # random seeded from config is used for splits, sampling, and tie-breaking.
-        self.random_state = random.Random(config.random_seed)
+        # If no seed provided, use time-based seed
+        if random_seed is None:
+            random_seed = time.time_ns()
+        self.random_seed = random_seed
+        self.random_state = random.Random(random_seed)
 
         # runtime state to be reset between runs
         self.reset_state()
@@ -96,7 +135,7 @@ class GEPA(BaseAlgorithm):
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """Synchronous GEPA run from a full list of goldens (splits internally)."""
         total_goldens = len(goldens)
         if total_goldens < 2:
@@ -110,7 +149,7 @@ class GEPA(BaseAlgorithm):
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
-            goldens, self.config.pareto_size, random_state=self.random_state
+            goldens, self.pareto_size, random_state=self.random_state
         )
 
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
@@ -155,9 +194,6 @@ class GEPA(BaseAlgorithm):
             )
             if child_prompt is None:
                 # Child prompt matched parent; skip this iteration.
-                print(
-                    f"[DEBUG] Iteration skipped: rewriter returned same prompt as parent"
-                )
                 return True
 
             # 6. Child prompt_configuration
@@ -175,9 +211,6 @@ class GEPA(BaseAlgorithm):
 
             # 8. Acceptance test
             accepted = self._should_accept_child(parent_score, child_score)
-            print(
-                f"[DEBUG] Scores - parent: {parent_score:.4f}, child: {child_score:.4f} -> {'ACCEPTED' if accepted else 'REJECTED'}"
-            )
             if accepted:
                 accepted_iterations.append(
                     self._accept_child(
@@ -197,7 +230,7 @@ class GEPA(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -205,13 +238,13 @@ class GEPA(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     async def a_execute(
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """Asynchronous twin of execute_gepa()."""
         total_goldens = len(goldens)
         if total_goldens < 2:
@@ -225,7 +258,7 @@ class GEPA(BaseAlgorithm):
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
-            goldens, self.config.pareto_size, random_state=self.random_state
+            goldens, self.pareto_size, random_state=self.random_state
         )
 
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
@@ -242,12 +275,18 @@ class GEPA(BaseAlgorithm):
             if not d_feedback:
                 return False
 
+            iter_start = time.perf_counter()
+
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
+                t0 = time.perf_counter()
                 self.pareto_score_table[root_prompt_configuration.id] = (
                     await self.scorer.a_score_pareto(
                         root_prompt_configuration, d_pareto
                     )
+                )
+                print(
+                    f"[DEBUG] Initial pareto scoring ({len(d_pareto)} goldens): {time.perf_counter() - t0:.2f}s"
                 )
 
             # 1. Pick prompt_configuration via Pareto
@@ -258,21 +297,23 @@ class GEPA(BaseAlgorithm):
 
             # 3. Draw minibatch
             minibatch = self._draw_minibatch(d_feedback)
+            print(f"[DEBUG] Minibatch size: {len(minibatch)}")
 
             # 4. Feedback
+            t0 = time.perf_counter()
             feedback_text = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
+            print(f"[DEBUG] Get feedback: {time.perf_counter() - t0:.2f}s")
 
             # 5. Rewrite
+            t0 = time.perf_counter()
             child_prompt = await self._a_generate_child_prompt(
                 selected_module_id, parent_prompt_configuration, feedback_text
             )
+            print(f"[DEBUG] Rewrite prompt: {time.perf_counter() - t0:.2f}s")
             if child_prompt is None:
-                # Child prompt matched parent; skip this iteration.
-                print(
-                    f"[DEBUG] Iteration skipped: rewriter returned same prompt as parent"
-                )
+                print(f"[DEBUG] Child prompt same as parent, skipping")
                 return True
 
             # 6. Child prompt_configuration
@@ -281,19 +322,29 @@ class GEPA(BaseAlgorithm):
             )
 
             # 7. Evaluate parent/child on minibatch
+            t0 = time.perf_counter()
             parent_score = await self.scorer.a_score_minibatch(
                 parent_prompt_configuration, minibatch
             )
+            print(
+                f"[DEBUG] Score parent on minibatch: {time.perf_counter() - t0:.2f}s (score={parent_score:.4f})"
+            )
+
+            t0 = time.perf_counter()
             child_score = await self.scorer.a_score_minibatch(
                 child_prompt_configuration, minibatch
+            )
+            print(
+                f"[DEBUG] Score child on minibatch: {time.perf_counter() - t0:.2f}s (score={child_score:.4f})"
             )
 
             # 8. Acceptance test
             accepted = self._should_accept_child(parent_score, child_score)
             print(
-                f"[DEBUG] Scores - parent: {parent_score:.4f}, child: {child_score:.4f} -> {'ACCEPTED' if accepted else 'REJECTED'}"
+                f"[DEBUG] Acceptance: {'ACCEPTED' if accepted else 'REJECTED'}"
             )
             if accepted:
+                t0 = time.perf_counter()
                 accepted_iterations.append(
                     await self._a_accept_child(
                         selected_module_id,
@@ -304,6 +355,13 @@ class GEPA(BaseAlgorithm):
                         child_score,
                     )
                 )
+                print(
+                    f"[DEBUG] Accept child (pareto scoring): {time.perf_counter() - t0:.2f}s"
+                )
+
+            print(
+                f"[DEBUG] Total iteration time: {time.perf_counter() - iter_start:.2f}s\n"
+            )
             return True
 
         await self._a_run_loop_iteration(_one_iteration)
@@ -311,7 +369,7 @@ class GEPA(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -319,7 +377,7 @@ class GEPA(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     ###################
     # State & helpers #
@@ -407,17 +465,16 @@ class GEPA(BaseAlgorithm):
             totals,
             self.parents_by_id,
             random_state=self.random_state,
-            tie_tolerance=float(self.config.tie_tolerance),
-            policy=self.config.tie_breaker,
+            tie_tolerance=GEPA_TIE_TOLERANCE,
+            policy=self.tie_breaker,
         )
         if self.status_callback is not None and len(tied) > 1:
             msg = (
                 f"tie on aggregate={max_val:.4f} among {len(tied)} "
                 f"prompt_configurations; using tie_breaker="
-                f"{self.config.tie_breaker.value!r} selected {chosen}. "
-                f"To change, set GEPAConfig.tie_breaker to one of: "
-                f"{[t.value for t in self.config.TieBreaker]} "
-                f"(tie_tolerance={float(self.config.tie_tolerance):g})."
+                f"{self.tie_breaker.value!r} selected {chosen}. "
+                f"To change, set GEPA tie_breaker to one of: "
+                f"{[t.value for t in self.TieBreaker]}."
             )
             self.status_callback(
                 RunnerStatusType.TIE,
@@ -427,9 +484,43 @@ class GEPA(BaseAlgorithm):
         return self.prompt_configurations_by_id[chosen]
 
     def _pick_prompt_configuration(self) -> PromptConfiguration:
+        # Log Pareto selection details
+        all_candidates = list(self.pareto_score_table.keys())
+        print(f"[DEBUG] Pareto Selection:")
+        print(f"  - Total candidates in pool: {len(all_candidates)}")
+
+        # Show score table
+        print(f"  - Score table (per-instance scores):")
+        for cid, scores in self.pareto_score_table.items():
+            is_root = self.parents_by_id.get(cid) is None
+            label = (
+                "(root)"
+                if is_root
+                else f"(child of {self.parents_by_id.get(cid)[:8]}...)"
+            )
+            mean_score = sum(scores) / len(scores) if scores else 0
+            print(
+                f"      {cid[:8]}... {label}: {[round(s, 3) for s in scores]} (mean={mean_score:.3f})"
+            )
+
+        # Show Pareto frontier
+        frontier = pareto_frontier(all_candidates, self.pareto_score_table)
+        print(f"  - Pareto frontier ({len(frontier)} non-dominated):")
+        for cid in frontier:
+            print(f"      {cid[:8]}...")
+
+        # Show frequency weights
+        freq = frequency_weights(self.pareto_score_table)
+        print(f"  - Frequency weights (how often each wins an instance):")
+        for cid, weight in freq.items():
+            print(f"      {cid[:8]}...: {weight}")
+
+        # Do the selection
         selected_prompt_configuration_id = select_prompt_configuration_pareto(
             self.pareto_score_table, random_state=self.random_state
         )
+        print(f"  - Selected: {selected_prompt_configuration_id[:8]}...\n")
+
         return self.prompt_configurations_by_id[
             selected_prompt_configuration_id
         ]
@@ -437,25 +528,13 @@ class GEPA(BaseAlgorithm):
     def _draw_minibatch(
         self, d_feedback: Union[List["Golden"], List["ConversationalGolden"]]
     ) -> Union[List["Golden"], List["ConversationalGolden"]]:
-        # Determine effective minibatch size from GEPAConfig, bounded by the
+        # Determine effective minibatch size, bounded by the
         # available feedback set.
         n_feedback = len(d_feedback)
         if n_feedback <= 0:
             return []
 
-        if self.config.minibatch_size is not None:
-            size = self.config.minibatch_size
-        else:
-            # Dynamic sizing from ratio, bounded between min and max.
-            dynamic = max(
-                1, int(round(n_feedback * self.config.minibatch_ratio))
-            )
-            size = max(
-                self.config.minibatch_min_size,
-                min(dynamic, self.config.minibatch_max_size),
-            )
-
-        size = max(1, min(size, n_feedback))
+        size = min(self.minibatch_size, n_feedback)
 
         return [
             d_feedback[self.random_state.randrange(0, n_feedback)]
@@ -527,7 +606,7 @@ class GEPA(BaseAlgorithm):
         self, parent_score: float, child_score: float
     ) -> bool:
         jitter = 1e-6
-        return child_score >= parent_score + max(self.config.min_delta, jitter)
+        return child_score >= parent_score + max(GEPA_MIN_DELTA, jitter)
 
     def _accept_child(
         self,
@@ -580,13 +659,12 @@ class GEPA(BaseAlgorithm):
         total_iterations: int,
         iteration: int,
         remaining_iterations: int,
-        elapsed: float,
     ):
         if self.status_callback is not None:
             detail = (
                 f"(iterations={total_iterations}) "
                 f"• iteration {iteration}/{total_iterations} "
-                f"• {elapsed:.2f}s • remaining={remaining_iterations}"
+                f"• remaining={remaining_iterations}"
             )
             self.status_callback(
                 RunnerStatusType.PROGRESS,
@@ -616,52 +694,44 @@ class GEPA(BaseAlgorithm):
         self,
         gepa_iteration: Callable[[], bool],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0
-        )
+        self._update_progress(total_iterations, iteration, remaining_iterations)
         while remaining_iterations > 0:
             iteration += 1
-            start_time = time.perf_counter()
             try:
                 ok = gepa_iteration()
             except Exception as exc:
                 # Report a user facing error event and halt optimization.
                 self._update_error(total_iterations, iteration, exc)
                 break
-            elapsed = time.perf_counter() - start_time
             if not ok:
                 break
             remaining_iterations -= 1
             self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
+                total_iterations, iteration, remaining_iterations
             )
 
     async def _a_run_loop_iteration(
         self,
         a_gepa_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
-        self._update_progress(
-            total_iterations, iteration, remaining_iterations, 0
-        )
+        self._update_progress(total_iterations, iteration, remaining_iterations)
         while remaining_iterations > 0:
             iteration += 1
-            start_time = time.perf_counter()
             try:
                 ok = await a_gepa_iteration()
             except Exception as exc:
                 # Report a user facing error event and halt optimization.
                 self._update_error(total_iterations, iteration, exc)
                 break
-            elapsed = time.perf_counter() - start_time
             if not ok:
                 break
             remaining_iterations -= 1
             self._update_progress(
-                total_iterations, iteration, remaining_iterations, elapsed
+                total_iterations, iteration, remaining_iterations
             )

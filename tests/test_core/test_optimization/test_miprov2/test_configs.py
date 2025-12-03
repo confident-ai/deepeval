@@ -1,57 +1,35 @@
 import pytest
-from pydantic import ValidationError
 
-from deepeval.optimizer.miprov2.configs import MIPROConfig
-
-
-def test_miproconfig_defaults():
-    cfg = MIPROConfig()
-
-    assert cfg.iterations == 5
-    assert cfg.minibatch_size is None
-    assert cfg.minibatch_min_size == 4
-    assert cfg.minibatch_max_size == 32
-    assert cfg.minibatch_ratio == 0.05
-    assert cfg.random_seed == 0
-    assert cfg.min_delta == 0.0
-    assert cfg.exploration_probability == 0.2
-    assert cfg.full_eval_every == 5
-    assert cfg.rewrite_instruction_max_chars == 4096
+from deepeval.optimizer.algorithms import MIPROV2
 
 
-def test_miproconfig_coerces_none_random_seed_to_int():
-    cfg = MIPROConfig(random_seed=None)
+def test_miprov2_defaults():
+    algo = MIPROV2()
 
-    # Validator should replace None with an integer seed derived from time.time_ns()
-    assert isinstance(cfg.random_seed, int)
-    assert cfg.random_seed != 0  # very unlikely to conflict with the default
-
-
-def test_miproconfig_rejects_invalid_minibatch_and_ratio():
-    # minibatch_min_size must be >= 1
-    with pytest.raises(ValidationError):
-        MIPROConfig(minibatch_min_size=0)
-
-    # minibatch_max_size must be >= 1
-    with pytest.raises(ValidationError):
-        MIPROConfig(minibatch_max_size=0)
-
-    # minibatch_ratio must be > 0 and <= 1
-    with pytest.raises(ValidationError):
-        MIPROConfig(minibatch_ratio=0.0)
-
-    with pytest.raises(ValidationError):
-        MIPROConfig(minibatch_ratio=1.5)
+    assert algo.iterations == 5
+    assert algo.minibatch_size == 8
+    assert isinstance(algo.random_seed, int)
+    assert algo.exploration_probability == 0.2
+    assert algo.full_eval_every == 5
 
 
-def test_miproconfig_rejects_invalid_probabilities_and_min_delta():
+def test_miprov2_coerces_none_random_seed_to_int():
+    algo = MIPROV2(random_seed=None)
+
+    # Should replace None with an integer seed derived from time.time_ns()
+    assert isinstance(algo.random_seed, int)
+
+
+def test_miprov2_rejects_invalid_minibatch_size():
+    # minibatch_size must be >= 1
+    with pytest.raises(ValueError):
+        MIPROV2(minibatch_size=0)
+
+
+def test_miprov2_rejects_invalid_probabilities():
     # exploration_probability must be in [0, 1]
-    with pytest.raises(ValidationError):
-        MIPROConfig(exploration_probability=-0.1)
+    with pytest.raises(ValueError):
+        MIPROV2(exploration_probability=-0.1)
 
-    with pytest.raises(ValidationError):
-        MIPROConfig(exploration_probability=1.1)
-
-    # min_delta must be >= 0
-    with pytest.raises(ValidationError):
-        MIPROConfig(min_delta=-0.001)
+    with pytest.raises(ValueError):
+        MIPROV2(exploration_probability=1.1)

@@ -37,7 +37,7 @@ from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
     AcceptedIterationDict,
     ModuleId,
-    OptimizationResult,
+    OptimizationReport,
     PromptConfiguration,
     PromptConfigurationId,
     RunnerStatusCallback,
@@ -51,7 +51,7 @@ from deepeval.optimizer.utils import (
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.rewriter import Rewriter
-from deepeval.optimizer.algorithms.configs import COPROConfig
+from deepeval.optimizer.algorithms.configs import MIPROV2_MIN_DELTA
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
 
 if TYPE_CHECKING:  # pragma: no cover - type-checking only
@@ -66,16 +66,22 @@ class COPRO(BaseAlgorithm):
     models, or async configs. It relies on a preconfigured Scorer and
     Rewriter, which are typically constructed by PromptOptimizer.
 
-    - Optimizes a single Prompt (instruction) against a list of Goldens.
-    - Uses mini-batches of goldens for trial scoring and epsilon-greedy
-      selection over prompt candidates based on mean minibatch scores,
-      extended with cooperative proposals:
-        - At each iteration, a parent candidate is selected.
-        - A shared feedback string is computed on a minibatch.
-        - Multiple child prompts are proposed from that parent using the
-          same feedback but different LLM samples.
-        - Any child whose minibatch score improves over the parent by at
-          least ``min_delta`` is added to the candidate pool.
+    Parameters
+    ----------
+    iterations : int
+        Total number of optimization trials. Default is 5.
+    minibatch_size : int
+        Number of examples drawn per iteration. Default is 8.
+    random_seed : int, optional
+        RNG seed for reproducibility. If None, derived from time.time_ns().
+    exploration_probability : float
+        Epsilon greedy exploration rate. Default is 0.2.
+    full_eval_every : int, optional
+        Fully evaluate best candidate every N trials. Default is 5.
+    population_size : int
+        Maximum number of candidates in the pool. Default is 4.
+    proposals_per_step : int
+        Number of child prompts proposed per iteration. Default is 4.
     """
 
     name = "COPRO"
@@ -83,19 +89,46 @@ class COPRO(BaseAlgorithm):
 
     def __init__(
         self,
-        config: COPROConfig = COPROConfig(),
+        iterations: int = 5,
+        minibatch_size: int = 8,
+        random_seed: Optional[int] = None,
+        exploration_probability: float = 0.2,
+        full_eval_every: Optional[int] = 5,
+        population_size: int = 4,
+        proposals_per_step: int = 4,
         aggregate_instances: Aggregator = mean_of_all,
         scorer: Optional[BaseScorer] = None,
     ) -> None:
-        self.config = config
+        # Validate parameters
+        if iterations < 1:
+            raise ValueError("iterations must be >= 1")
+        if minibatch_size < 1:
+            raise ValueError("minibatch_size must be >= 1")
+        if exploration_probability < 0.0 or exploration_probability > 1.0:
+            raise ValueError(
+                "exploration_probability must be >= 0.0 and <= 1.0"
+            )
+        if full_eval_every is not None and full_eval_every < 1:
+            raise ValueError("full_eval_every must be >= 1")
+        if population_size < 1:
+            raise ValueError("population_size must be >= 1")
+        if proposals_per_step < 1:
+            raise ValueError("proposals_per_step must be >= 1")
+
+        self.iterations = iterations
+        self.minibatch_size = minibatch_size
+        self.exploration_probability = exploration_probability
+        self.full_eval_every = full_eval_every
+        self.population_size = population_size
+        self.proposals_per_step = proposals_per_step
         self.aggregate_instances = aggregate_instances
         self.scorer = scorer
 
-        # Random seeded from config is used for minibatch sampling and
-        # epsilon-greedy candidate selection.
-        self.random_state = random.Random(config.random_seed)
-
-        self.random_state = random.Random(config.random_seed)
+        # If no seed provided, use time-based seed
+        if random_seed is None:
+            random_seed = time.time_ns()
+        self.random_seed = random_seed
+        self.random_state = random.Random(random_seed)
 
         # Runtime state to be reset between runs
         self.reset_state()
@@ -119,7 +152,7 @@ class COPRO(BaseAlgorithm):
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """
         Synchronous COPRO run from a full list of goldens.
 
@@ -183,10 +216,10 @@ class COPRO(BaseAlgorithm):
                 parent_prompt_configuration.id
             )
             jitter = 1e-6
-            min_delta = max(self.config.min_delta, jitter)
+            min_delta = max(MIPROV2_MIN_DELTA, jitter)
 
             # 2. Generate multiple cooperative child prompts and evaluate them.
-            num_proposals = int(self.config.proposals_per_step)
+            num_proposals = int(self.proposals_per_step)
             for _ in range(num_proposals):
                 child_prompt = self._generate_child_prompt(
                     selected_module_id,
@@ -228,8 +261,8 @@ class COPRO(BaseAlgorithm):
 
             self.trial_index += 1
             if (
-                self.config.full_eval_every is not None
-                and self.trial_index % self.config.full_eval_every == 0
+                self.full_eval_every is not None
+                and self.trial_index % self.full_eval_every == 0
             ):
                 self._full_evaluate_best(goldens)
 
@@ -245,7 +278,7 @@ class COPRO(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -253,13 +286,13 @@ class COPRO(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     async def a_execute(
         self,
         prompt: Prompt,
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
+    ) -> Tuple[Prompt, OptimizationReport]:
         """
         Asynchronous twin of execute().
         """
@@ -316,9 +349,9 @@ class COPRO(BaseAlgorithm):
                 parent_prompt_configuration.id
             )
             jitter = 1e-6
-            min_delta = max(self.config.min_delta, jitter)
+            min_delta = max(MIPROV2_MIN_DELTA, jitter)
 
-            num_proposals = int(self.config.proposals_per_step)
+            num_proposals = int(self.proposals_per_step)
             for _ in range(num_proposals):
                 child_prompt = await self._a_generate_child_prompt(
                     selected_module_id,
@@ -356,8 +389,8 @@ class COPRO(BaseAlgorithm):
 
             self.trial_index += 1
             if (
-                self.config.full_eval_every is not None
-                and self.trial_index % self.config.full_eval_every == 0
+                self.full_eval_every is not None
+                and self.trial_index % self.full_eval_every == 0
             ):
                 await self._a_full_evaluate_best(goldens)
 
@@ -372,7 +405,7 @@ class COPRO(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        report = OptimizationResult(
+        report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
             accepted_iterations=accepted_iterations,
@@ -380,7 +413,7 @@ class COPRO(BaseAlgorithm):
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
         )
-        return best.prompts[self.SINGLE_MODULE_ID], report.as_dict()
+        return best.prompts[self.SINGLE_MODULE_ID], report
 
     ###################
     # State & helpers #
@@ -463,9 +496,7 @@ class COPRO(BaseAlgorithm):
 
         # If we exceed the population size, iteratively prune the worst
         # (by mean minibatch score), never removing the current best.
-        while (
-            len(self.prompt_configurations_by_id) > self.config.population_size
-        ):
+        while len(self.prompt_configurations_by_id) > self.population_size:
             best_id: Optional[PromptConfigurationId] = None
             best_score = float("-inf")
             for cand_id in self.prompt_configurations_by_id.keys():
@@ -590,7 +621,7 @@ class COPRO(BaseAlgorithm):
                 "COPRORunner has an empty candidate pool; this should not happen."
             )
 
-        eps = float(self.config.exploration_probability)
+        eps = float(self.exploration_probability)
         if eps > 0.0 and self.random_state.random() < eps:
             chosen_id = self.random_state.choice(candidate_ids)
         else:
@@ -603,23 +634,14 @@ class COPRO(BaseAlgorithm):
         goldens: Union[List["Golden"], List["ConversationalGolden"]],
     ) -> Union[List["Golden"], List["ConversationalGolden"]]:
         """
-        Determine effective minibatch size from COPROConfig, bounded by the
-        available goldens, and sample with replacement.
+        Determine effective minibatch size, bounded by the available goldens,
+        and sample with replacement.
         """
         n = len(goldens)
         if n <= 0:
             return []
 
-        if self.config.minibatch_size is not None:
-            size = self.config.minibatch_size
-        else:
-            dynamic = max(1, int(round(n * self.config.minibatch_ratio)))
-            size = max(
-                self.config.minibatch_min_size,
-                min(dynamic, self.config.minibatch_max_size),
-            )
-
-        size = max(1, min(size, n))
+        size = min(self.minibatch_size, n)
 
         return [goldens[self.random_state.randrange(0, n)] for _ in range(size)]
 
@@ -765,7 +787,7 @@ class COPRO(BaseAlgorithm):
         self,
         copro_iteration: Callable[[], bool],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
         self._update_progress(
@@ -791,7 +813,7 @@ class COPRO(BaseAlgorithm):
         self,
         a_copro_iteration: Callable[[], Awaitable[bool]],
     ) -> None:
-        total_iterations = self.config.iterations
+        total_iterations = self.iterations
         remaining_iterations = total_iterations
         iteration = 0
         self._update_progress(

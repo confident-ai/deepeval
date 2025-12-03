@@ -61,11 +61,16 @@ goldens = [
 # Define metrics to optimize for
 metrics = [AnswerRelevancyMetric(threshold=0.7)]
 
+from deepeval.optimizer.configs import DisplayConfig
+from deepeval.optimizer.algorithms import GEPA
+
 # Create the optimizer
 optimizer = PromptOptimizer(
     model_callback=model_callback,
     metrics=metrics,
     optimizer_model="gpt-4o",  # Model used for rewriting prompts
+    display_config=DisplayConfig(announce_ties=True),
+    algorithm=GEPA(iterations=1),
 )
 
 # Run optimization

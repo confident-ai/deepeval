@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Union, List, Dict, Tuple
 
 from deepeval.models.base_model import DeepEvalBaseLLM
-from deepeval.optimizer.types import BaseScorer
+from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.prompt.prompt import Prompt
 from deepeval.dataset.golden import Golden, ConversationalGolden
 
