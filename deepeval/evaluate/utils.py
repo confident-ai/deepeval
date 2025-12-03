@@ -307,7 +307,7 @@ def validate_evaluate_inputs(
                     )
                 if (
                     isinstance(test_case, LLMTestCase) and test_case.multimodal
-                ) and not isinstance(metric, BaseMultimodalMetric):
+                ) and not (isinstance(metric, BaseMultimodalMetric) or isinstance(metric, BaseMetric)):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for multi-modal LLMTestCase."
                     )

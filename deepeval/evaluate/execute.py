@@ -58,6 +58,13 @@ from deepeval.metrics import (
     BaseConversationalMetric,
     BaseMultimodalMetric,
     TaskCompletionMetric,
+    # RAG metrics that support both single-turn and multimodal
+    ContextualPrecisionMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+    AnswerRelevancyMetric,
+    FaithfulnessMetric,
+    ToolCorrectnessMetric
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -109,6 +116,14 @@ from deepeval.test_run.hyperparameters import (
 
 logger = logging.getLogger(__name__)
 
+MLLM_SUPPORTED_METRICS = [
+    ContextualPrecisionMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+    AnswerRelevancyMetric,
+    FaithfulnessMetric,
+    ToolCorrectnessMetric
+]
 
 def _skip_metrics_for_error(
     span: Optional[BaseSpan] = None,
@@ -304,6 +319,8 @@ def execute_test_cases(
         metric.async_mode = False
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
+            if type(metric) in MLLM_SUPPORTED_METRICS:
+                mllm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
         elif isinstance(metric, BaseMultimodalMetric):
@@ -618,6 +635,8 @@ async def a_execute_test_cases(
     for metric in metrics:
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
+            if type(metric) in MLLM_SUPPORTED_METRICS:
+                mllm_metrics.append(metric)
         elif isinstance(metric, BaseMultimodalMetric):
             mllm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
