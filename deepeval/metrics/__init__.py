@@ -55,12 +55,6 @@ from .multimodal_metrics import (
     ImageCoherenceMetric,
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
-    MultimodalContextualRecallMetric,
-    MultimodalContextualRelevancyMetric,
-    MultimodalContextualPrecisionMetric,
-    MultimodalAnswerRelevancyMetric,
-    MultimodalFaithfulnessMetric,
-    MultimodalToolCorrectnessMetric,
     MultimodalGEval,
 )
 
@@ -125,11 +119,5 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
-    "MultimodalContextualRecallMetric",
-    "MultimodalContextualRelevancyMetric",
-    "MultimodalContextualPrecisionMetric",
-    "MultimodalAnswerRelevancyMetric",
-    "MultimodalFaithfulnessMetric",
-    "MultimodalToolCorrectnessMetric",
     "MultimodalGEval",
 ]
