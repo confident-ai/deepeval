@@ -38,7 +38,7 @@ def _make_runner(
         minibatch_size=2,  # keep minibatch behaviour deterministic in tests
     )
     scoring = StubScoringAdapter()
-    runner = COPRORunner(config=config, scoring_adapter=scoring)
+    runner = COPRORunner(config=config, scorer=scoring)
     runner._rewriter = SuffixRewriter(suffix=" CHILD")
     return runner, scoring
 
@@ -62,13 +62,13 @@ async def test_a_execute_requires_at_least_one_golden():
         await runner.a_execute(prompt=prompt, goldens=[])
 
 
-def test_execute_requires_scoring_adapter():
+def test_execute_requires_scorer():
     """
-    If no scoring_adapter is attached, COPRORunner.execute must fail
-    via _ensure_scoring_adapter.
+    If no scorer is attached, COPRORunner.execute must fail
+    via _ensure_scorer.
     """
     config = COPROConfig()
-    runner = COPRORunner(config=config, scoring_adapter=None)
+    runner = COPRORunner(config=config, scorer=None)
     prompt = Prompt(text_template="ROOT")
     goldens = ["g1"]
 
@@ -86,7 +86,7 @@ def test_add_prompt_configuration_prunes_worst_candidate():
         iterations=1,
         random_seed=0,
     )
-    runner = COPRORunner(config=config, scoring_adapter=None)
+    runner = COPRORunner(config=config, scorer=None)
 
     # Three candidates with different mean scores
     c1 = PromptConfiguration.new(
@@ -199,7 +199,7 @@ def test_prompts_equivalent_detects_text_and_list_prompts():
     (or identical LIST messages) as equivalent, and different ones as not.
     """
     cfg = COPROConfig()
-    runner = COPRORunner(config=cfg, scoring_adapter=None)
+    runner = COPRORunner(config=cfg, scorer=None)
 
     # TEXT prompts
     p1 = Prompt(text_template="  hello world  ")
@@ -239,7 +239,7 @@ def test_update_progress_and_error_use_status_callback():
     the status_callback, allowing PromptOptimizer to drive a progress bar.
     """
     cfg = COPROConfig(iterations=2)
-    runner = COPRORunner(config=cfg, scoring_adapter=None)
+    runner = COPRORunner(config=cfg, scorer=None)
 
     progress = DummyProgress()
 

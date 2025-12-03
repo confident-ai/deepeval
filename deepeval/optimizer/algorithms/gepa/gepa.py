@@ -20,16 +20,16 @@ from deepeval.errors import DeepEvalError
 from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
     AcceptedIterationDict,
-    BaseAlgorithm,
     PromptConfiguration,
     PromptConfigurationId,
     ModuleId,
     ScoreTable,
-    ScoringAdapter,
+    BaseScorer,
     OptimizationResult,
     RunnerStatusType,
-    RunnerStatusCallbackProtocol,
+    RunnerStatusCallback,
 )
+from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import (
     split_goldens,
     build_prompt_config_snapshots,
@@ -54,7 +54,7 @@ class GEPA(BaseAlgorithm):
 
     This runner is intentionally low level and does not know about metrics,
     models, or async configs. It relies on a preconfigured
-    ScoringAdapter and Rewriter, which are typically constructed by
+    Scorer and Rewriter, which are typically constructed by
     the higher-level PromptOptimizer.
     """
 
@@ -63,13 +63,13 @@ class GEPA(BaseAlgorithm):
 
     def __init__(
         self,
-        config: GEPAConfig,
+        config: GEPAConfig = GEPAConfig(),
         aggregate_instances: Aggregator = mean_of_all,
-        scoring_adapter: Optional[ScoringAdapter] = None,
+        scorer: Optional[BaseScorer] = None,
     ) -> None:
         self.config = config
         self.aggregate_instances = aggregate_instances
-        self.scoring_adapter = scoring_adapter
+        self.scorer = scorer
 
         # random seeded from config is used for splits, sampling, and tie-breaking.
         self.random_state = random.Random(config.random_seed)
@@ -79,7 +79,7 @@ class GEPA(BaseAlgorithm):
 
         # Status callback set by PromptOptimizer:
         #   (kind, step_index, total_steps, detail) -> None
-        self.status_callback: Optional[RunnerStatusCallbackProtocol] = None
+        self.status_callback: Optional[RunnerStatusCallback] = None
 
         # Optimizer model used by the rewriter for prompt mutation.
         # Set by PromptOptimizer.
@@ -106,7 +106,7 @@ class GEPA(BaseAlgorithm):
                 "run the optimizer."
             )
 
-        self._ensure_scoring_adapter()
+        self._ensure_scorer()
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
@@ -130,7 +130,7 @@ class GEPA(BaseAlgorithm):
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
                 self.pareto_score_table[root_prompt_configuration.id] = (
-                    self.scoring_adapter.score_pareto(
+                    self.scorer.score_pareto(
                         root_prompt_configuration, d_pareto
                     )
                 )
@@ -145,7 +145,7 @@ class GEPA(BaseAlgorithm):
             minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
-            feedback_text = self.scoring_adapter.get_minibatch_feedback(
+            feedback_text = self.scorer.get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -155,6 +155,9 @@ class GEPA(BaseAlgorithm):
             )
             if child_prompt is None:
                 # Child prompt matched parent; skip this iteration.
+                print(
+                    f"[DEBUG] Iteration skipped: rewriter returned same prompt as parent"
+                )
                 return True
 
             # 6. Child prompt_configuration
@@ -163,15 +166,19 @@ class GEPA(BaseAlgorithm):
             )
 
             # 7. Evaluate parent/child on minibatch
-            parent_score = self.scoring_adapter.score_minibatch(
+            parent_score = self.scorer.score_minibatch(
                 parent_prompt_configuration, minibatch
             )
-            child_score = self.scoring_adapter.score_minibatch(
+            child_score = self.scorer.score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
             # 8. Acceptance test
-            if self._should_accept_child(parent_score, child_score):
+            accepted = self._should_accept_child(parent_score, child_score)
+            print(
+                f"[DEBUG] Scores - parent: {parent_score:.4f}, child: {child_score:.4f} -> {'ACCEPTED' if accepted else 'REJECTED'}"
+            )
+            if accepted:
                 accepted_iterations.append(
                     self._accept_child(
                         selected_module_id,
@@ -214,7 +221,7 @@ class GEPA(BaseAlgorithm):
                 "run the optimizer."
             )
 
-        self._ensure_scoring_adapter()
+        self._ensure_scorer()
         self.reset_state()
 
         d_feedback, d_pareto = split_goldens(
@@ -238,7 +245,7 @@ class GEPA(BaseAlgorithm):
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
                 self.pareto_score_table[root_prompt_configuration.id] = (
-                    await self.scoring_adapter.a_score_pareto(
+                    await self.scorer.a_score_pareto(
                         root_prompt_configuration, d_pareto
                     )
                 )
@@ -253,7 +260,7 @@ class GEPA(BaseAlgorithm):
             minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
-            feedback_text = await self.scoring_adapter.a_get_minibatch_feedback(
+            feedback_text = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -263,6 +270,9 @@ class GEPA(BaseAlgorithm):
             )
             if child_prompt is None:
                 # Child prompt matched parent; skip this iteration.
+                print(
+                    f"[DEBUG] Iteration skipped: rewriter returned same prompt as parent"
+                )
                 return True
 
             # 6. Child prompt_configuration
@@ -271,15 +281,19 @@ class GEPA(BaseAlgorithm):
             )
 
             # 7. Evaluate parent/child on minibatch
-            parent_score = await self.scoring_adapter.a_score_minibatch(
+            parent_score = await self.scorer.a_score_minibatch(
                 parent_prompt_configuration, minibatch
             )
-            child_score = await self.scoring_adapter.a_score_minibatch(
+            child_score = await self.scorer.a_score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
             # 8. Acceptance test
-            if self._should_accept_child(parent_score, child_score):
+            accepted = self._should_accept_child(parent_score, child_score)
+            print(
+                f"[DEBUG] Scores - parent: {parent_score:.4f}, child: {child_score:.4f} -> {'ACCEPTED' if accepted else 'REJECTED'}"
+            )
+            if accepted:
                 accepted_iterations.append(
                     await self._a_accept_child(
                         selected_module_id,
@@ -321,12 +335,12 @@ class GEPA(BaseAlgorithm):
         ] = {}
         self.pareto_score_table: ScoreTable = {}
 
-    def _ensure_scoring_adapter(self) -> None:
-        if self.scoring_adapter is None:
+    def _ensure_scorer(self) -> None:
+        if self.scorer is None:
             raise DeepEvalError(
-                "GEPARunner requires a `scoring_adapter`. "
+                "GEPARunner requires a `scorer`. "
                 "Construct one (for example, Scorer) in "
-                "PromptOptimizer and assign it to `runner.scoring_adapter`."
+                "PromptOptimizer and assign it to `runner.scorer`."
             )
 
     def _prompts_equivalent(
@@ -526,9 +540,7 @@ class GEPA(BaseAlgorithm):
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            self.scoring_adapter.score_pareto(
-                child_prompt_configuration, d_pareto
-            )
+            self.scorer.score_pareto(child_prompt_configuration, d_pareto)
         )
 
         return AcceptedIterationDict(
@@ -550,7 +562,7 @@ class GEPA(BaseAlgorithm):
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
         self.pareto_score_table[child_prompt_configuration.id] = (
-            await self.scoring_adapter.a_score_pareto(
+            await self.scorer.a_score_pareto(
                 child_prompt_configuration, d_pareto
             )
         )

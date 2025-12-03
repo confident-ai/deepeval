@@ -113,6 +113,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -125,7 +126,9 @@ class Prompt:
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
         self.label: Optional[str] = None
-        self.interpolation_type: Optional[PromptInterpolationType] = None
+        self.interpolation_type: PromptInterpolationType = (
+            interpolation_type or PromptInterpolationType.FSTRING
+        )
 
         self._version = None
         self._prompt_version_id: Optional[str] = None

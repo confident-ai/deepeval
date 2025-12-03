@@ -137,7 +137,7 @@ When you want more control, you can construct a `GEPAConfig`, pass it to a `GEPA
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.optimizer import PromptOptimizer
-from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
+from deepeval.optimizer.adapters.deepeval_scorer import (
     DeepEvalScoringAdapter,
 )
 from deepeval.optimizer.aggregates import median_of_all
@@ -168,7 +168,7 @@ optimizer.set_runner(
             minibatch_size=4,
         ),
         aggregate_instances=median_of_all,
-        scoring_adapter = DeepEvalScoringAdapter(
+        scorer = DeepEvalScoringAdapter(
             # Emphasize AnswerRelevancy 1.5x relative to Bias.
             objective_scalar = WeightedObjective(
                 weights_by_metric={

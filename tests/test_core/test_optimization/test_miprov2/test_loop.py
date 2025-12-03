@@ -27,8 +27,8 @@ def _make_runner(
         exploration_probability=exploration_probability,
         full_eval_every=full_eval_every,
     )
-    scoring_adapter = StubScoringAdapter()
-    runner = MIPRORunner(config=config, scoring_adapter=scoring_adapter)
+    scorer = StubScoringAdapter()
+    runner = MIPRORunner(config=config, scorer=scorer)
 
     # Attach a deterministic rewriter that always produces a strictly “better”
     # child by appending " CHILD" to the text template.
@@ -93,8 +93,8 @@ async def test_a_execute_uses_async_paths_and_accepts_children():
     )
 
     # Swap in the shared StubScoringAdapter explicitly so we can inspect calls.
-    scoring_adapter = StubScoringAdapter()
-    runner.scoring_adapter = scoring_adapter
+    scorer = StubScoringAdapter()
+    runner.scorer = scorer
 
     # Re-attach the SuffixRewriter to guarantee an improving child.
     runner._rewriter = SuffixRewriter(suffix=" CHILD")
@@ -111,11 +111,9 @@ async def test_a_execute_uses_async_paths_and_accepts_children():
     assert report["best_id"] in report["pareto_scores"]
 
     # Confirm that async scoring/feedback paths were actually exercised.
-    assert scoring_adapter.a_score_calls, "expected async minibatch_score calls"
-    assert (
-        scoring_adapter.a_pareto_calls
-    ), "expected async score_on_pareto calls"
-    assert scoring_adapter.a_feedback_calls, "expected async feedback calls"
+    assert scorer.a_score_calls, "expected async minibatch_score calls"
+    assert scorer.a_pareto_calls, "expected async score_on_pareto calls"
+    assert scorer.a_feedback_calls, "expected async feedback calls"
 
 
 def test_draw_minibatch_with_dynamic_ratio_respects_bounds():
@@ -130,7 +128,7 @@ def test_draw_minibatch_with_dynamic_ratio_respects_bounds():
         minibatch_min_size=4,
         minibatch_max_size=16,
     )
-    runner = MIPRORunner(config=cfg, scoring_adapter=StubScoringAdapter())
+    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
 
     goldens = list(range(50))
     batch = runner._draw_minibatch(goldens)
@@ -152,7 +150,7 @@ def test_draw_minibatch_respects_fixed_minibatch_size():
         minibatch_min_size=1,
         minibatch_max_size=10,
     )
-    runner = MIPRORunner(config=cfg, scoring_adapter=StubScoringAdapter())
+    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
 
     goldens = list(range(10))
     batch = runner._draw_minibatch(goldens)
@@ -173,7 +171,7 @@ def test_select_candidate_prefers_best_by_minibatch_when_eps_zero():
         iterations=1,
         exploration_probability=0.0,
     )
-    runner = MIPRORunner(config=cfg, scoring_adapter=StubScoringAdapter())
+    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
 
     # Two candidates: one "ROOT", one "ROOT CHILD" (better).
     root_prompt = Prompt(text_template="ROOT")
@@ -203,7 +201,7 @@ def test_prompts_equivalent_for_text_templates():
     prompts and treat identical normalized texts as equivalent.
     """
     cfg = MIPROConfig()
-    runner = MIPRORunner(config=cfg, scoring_adapter=StubScoringAdapter())
+    runner = MIPRORunner(config=cfg, scorer=StubScoringAdapter())
 
     p1 = Prompt(text_template="  Do the thing.  ")
     p2 = Prompt(text_template="Do the thing.")

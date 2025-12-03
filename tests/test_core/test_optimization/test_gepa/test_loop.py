@@ -19,7 +19,7 @@ from deepeval.prompt.prompt import Prompt
 
 def test_execute_requires_at_least_two_goldens() -> None:
     config = GEPAConfig(iterations=1, minibatch_size=1, pareto_size=1)
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
     prompt = Prompt(text_template="base")
 
     with pytest.raises(DeepEvalError, match="requires at least 2 goldens"):
@@ -29,20 +29,20 @@ def test_execute_requires_at_least_two_goldens() -> None:
 @pytest.mark.asyncio
 async def test_a_execute_requires_at_least_two_goldens() -> None:
     config = GEPAConfig(iterations=1, minibatch_size=1, pareto_size=1)
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
     prompt = Prompt(text_template="base")
 
     with pytest.raises(DeepEvalError, match="requires at least 2 goldens"):
         await runner.a_execute(prompt=prompt, goldens=[object()])
 
 
-def test_execute_raises_without_scoring_adapter() -> None:
+def test_execute_raises_without_scorer() -> None:
     config = GEPAConfig(iterations=1, minibatch_size=1, pareto_size=1)
-    runner = GEPA(config=config, scoring_adapter=None)
+    runner = GEPA(config=config, scorer=None)
     prompt = Prompt(text_template="base")
     goldens = [object(), object()]
 
-    with pytest.raises(DeepEvalError, match="requires a `scoring_adapter`"):
+    with pytest.raises(DeepEvalError, match="requires a `scorer`"):
         runner.execute(prompt=prompt, goldens=goldens)
 
 
@@ -61,7 +61,7 @@ def test_execute_end_to_end_accepts_improved_child_prompt() -> None:
         random_seed=0,
     )
     scoring = StubScoringAdapter()
-    runner = GEPA(config=config, scoring_adapter=scoring)
+    runner = GEPA(config=config, scorer=scoring)
 
     # Use a deterministic rewriter that always improves the text.
     runner._rewriter = SuffixRewriter(" CHILD")
@@ -107,7 +107,7 @@ async def test_a_execute_end_to_end_accepts_improved_child_prompt() -> None:
         random_seed=0,
     )
     scoring = StubScoringAdapter()
-    runner = GEPA(config=config, scoring_adapter=scoring)
+    runner = GEPA(config=config, scorer=scoring)
     runner._rewriter = SuffixRewriter(" CHILD")
 
     prompt = Prompt(text_template="base")
@@ -147,7 +147,7 @@ def test_draw_minibatch_respects_fixed_minibatch_size() -> None:
         pareto_size=1,
         random_seed=0,
     )
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
     d_feedback = list(range(10))
 
     batch = runner._draw_minibatch(d_feedback)
@@ -166,7 +166,7 @@ def test_draw_minibatch_dynamic_size_within_bounds() -> None:
         pareto_size=1,
         random_seed=0,
     )
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     d_feedback_large = list(range(100))
     batch_large = runner._draw_minibatch(d_feedback_large)
@@ -181,9 +181,7 @@ def test_draw_minibatch_dynamic_size_within_bounds() -> None:
 
 def test_should_accept_child_respects_min_delta_and_jitter() -> None:
     # min_delta = 0.0 -> jitter (1e-6) still applies
-    runner = GEPA(
-        config=GEPAConfig(min_delta=0.0), scoring_adapter=StubScoringAdapter()
-    )
+    runner = GEPA(config=GEPAConfig(min_delta=0.0), scorer=StubScoringAdapter())
 
     assert runner._should_accept_child(1.0, 1.0) is False
     assert runner._should_accept_child(1.0, 1.0 + 1e-7) is False
@@ -192,7 +190,7 @@ def test_should_accept_child_respects_min_delta_and_jitter() -> None:
     # Larger explicit min_delta dominates jitter
     runner2 = GEPA(
         config=GEPAConfig(min_delta=0.1),
-        scoring_adapter=StubScoringAdapter(),
+        scorer=StubScoringAdapter(),
     )
 
     assert runner2._should_accept_child(0.5, 0.5 + 0.05) is False
@@ -211,7 +209,7 @@ def _make_prompt_config(text: str) -> PromptConfiguration:
 
 
 def test_generate_child_prompt_returns_none_when_text_unchanged() -> None:
-    runner = GEPA(config=GEPAConfig(), scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=GEPAConfig(), scorer=StubScoringAdapter())
     parent = _make_prompt_config("  Hello ")
     runner._rewriter = _DummyRewriter()
 
@@ -222,7 +220,7 @@ def test_generate_child_prompt_returns_none_when_text_unchanged() -> None:
 
 
 def test_generate_child_prompt_returns_new_prompt_when_text_changes() -> None:
-    runner = GEPA(config=GEPAConfig(), scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=GEPAConfig(), scorer=StubScoringAdapter())
     parent = _make_prompt_config("Hello")
     runner._rewriter = SuffixRewriter(" CHILD")
 
@@ -235,7 +233,7 @@ def test_generate_child_prompt_returns_new_prompt_when_text_changes() -> None:
 
 @pytest.mark.asyncio
 async def test_a_generate_child_prompt_async_mirrors_sync_behavior() -> None:
-    runner = GEPA(config=GEPAConfig(), scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=GEPAConfig(), scorer=StubScoringAdapter())
     parent = _make_prompt_config("Hello")
     runner._rewriter = SuffixRewriter(" CHILD")
 
@@ -247,7 +245,7 @@ async def test_a_generate_child_prompt_async_mirrors_sync_behavior() -> None:
 
 
 def test_make_child_clones_parent_and_sets_parent_id() -> None:
-    runner = GEPA(config=GEPAConfig(), scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=GEPAConfig(), scorer=StubScoringAdapter())
     parent_prompt = Prompt(text_template="root")
     parent_conf = PromptConfiguration.new(
         prompts={GEPA.SINGLE_MODULE_ID: parent_prompt}
@@ -266,7 +264,7 @@ def test_make_child_clones_parent_and_sets_parent_id() -> None:
 
 def test_accept_child_updates_state_and_returns_iteration_dict() -> None:
     config = GEPAConfig()
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     parent_prompt = Prompt(text_template="root")
     child_prompt = Prompt(text_template="root CHILD")
@@ -307,7 +305,7 @@ async def test_a_accept_child_updates_state_and_returns_iteration_dict() -> (
     None
 ):
     config = GEPAConfig()
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     parent_prompt = Prompt(text_template="root")
     child_prompt = Prompt(text_template="root CHILD")
@@ -351,7 +349,7 @@ def test_best_by_aggregate_prefers_child_and_emits_tie_status() -> None:
       - emit a TIE status when multiple configs share the best total
     """
     config = GEPAConfig()
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     root_prompt = Prompt(text_template="root")
     child_prompt = Prompt(text_template="root CHILD")
@@ -400,7 +398,7 @@ def test_run_loop_iteration_reports_progress_and_stops_on_false() -> None:
       - stop when the iteration callback returns False
     """
     config = GEPAConfig(iterations=3)
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     events = []
 
@@ -435,7 +433,7 @@ async def test_a_run_loop_iteration_reports_error_and_stops() -> None:
       - stop without propagating the exception
     """
     config = GEPAConfig(iterations=3)
-    runner = GEPA(config=config, scoring_adapter=StubScoringAdapter())
+    runner = GEPA(config=config, scorer=StubScoringAdapter())
 
     events = []
 

@@ -32,7 +32,7 @@ from deepeval.optimizer.types import (
     Objective,
     MeanObjective,
     ModuleId,
-    ScoringAdapter,
+    BaseScorer,
 )
 from deepeval.optimizer.utils import (
     validate_callback,
@@ -40,18 +40,16 @@ from deepeval.optimizer.utils import (
     invoke_model_callback,
     a_invoke_model_callback,
 )
-from deepeval.optimizer.adapters.utils import (
+from deepeval.optimizer.scorer.utils import (
     _measure_no_indicator,
     _a_measure_no_indicator,
 )
 
 
-class Scorer(ScoringAdapter):
+class Scorer(BaseScorer):
     """
     Scores prompts by running model_callback, building test cases,
     running metrics, and aggregating scores.
-
-    Implements ScoringAdapter protocol.
     """
 
     DEFAULT_MODULE_ID: ModuleId = "__module__"
@@ -144,7 +142,7 @@ class Scorer(ScoringAdapter):
             actual = self.generate(prompt_configuration.prompts, golden)
             test_case = self._golden_to_test_case(golden, actual)
             for metric in copy_metrics(self.metrics):
-                _ = _measure_no_indicator(metric, test_case)
+                _measure_no_indicator(metric=metric, test_case=test_case)
                 if metric.reason:
                     reasons.append(str(metric.reason))
         if not reasons:
@@ -196,7 +194,7 @@ class Scorer(ScoringAdapter):
             test_case = self._golden_to_test_case(golden, actual)
             out: List[str] = []
             for metric in metrics:
-                _ = await _a_measure_no_indicator(metric, test_case)
+                await _a_measure_no_indicator(metric, test_case)
                 if metric.reason:
                     out.append(str(metric.reason))
             return out
@@ -261,9 +259,25 @@ class Scorer(ScoringAdapter):
         metrics = copy_metrics(self.metrics)
         actual = await self.a_generate(prompt_configuration.prompts, golden)
         test_case = self._golden_to_test_case(golden, actual)
+
+        # DEBUG: Show what we're scoring
+        print(f"\n[DEBUG] Scoring golden input: {golden.input[:50]}...")
+        print(
+            f"[DEBUG] Model actual_output: {actual[:100] if actual else 'None'}..."
+        )
+        print(
+            f"[DEBUG] Test case input: {test_case.input[:50] if test_case.input else 'None'}..."
+        )
+        print(
+            f"[DEBUG] Test case actual_output: {test_case.actual_output[:100] if test_case.actual_output else 'None'}..."
+        )
+
         per_metric: Dict[str, float] = {}
         for metric in metrics:
             score = await _a_measure_no_indicator(metric, test_case)
+            print(
+                f"[DEBUG] Metric {metric.__class__.__name__} score: {score}, reason: {metric.reason[:100] if metric.reason else 'None'}..."
+            )
             per_metric[metric.__class__.__name__] = float(score)
         return self.objective_scalar.scalarize(per_metric)
 
@@ -275,9 +289,25 @@ class Scorer(ScoringAdapter):
         metrics = copy_metrics(self.metrics)
         actual = self.generate(prompt_configuration.prompts, golden)
         test_case = self._golden_to_test_case(golden, actual)
+
+        # DEBUG: Show what we're scoring
+        print(f"\n[DEBUG] Scoring golden input: {golden.input[:50]}...")
+        print(
+            f"[DEBUG] Model actual_output: {actual[:100] if actual else 'None'}..."
+        )
+        print(
+            f"[DEBUG] Test case input: {test_case.input[:50] if test_case.input else 'None'}..."
+        )
+        print(
+            f"[DEBUG] Test case actual_output: {test_case.actual_output[:100] if test_case.actual_output else 'None'}..."
+        )
+
         per_metric: Dict[str, float] = {}
         for metric in metrics:
             score = _measure_no_indicator(metric, test_case)
+            print(
+                f"[DEBUG] Metric {metric.__class__.__name__} score: {score}, reason: {metric.reason[:100] if metric.reason else 'None'}..."
+            )
             per_metric[metric.__class__.__name__] = float(score)
         return self.objective_scalar.scalarize(per_metric)
 

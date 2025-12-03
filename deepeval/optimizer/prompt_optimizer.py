@@ -111,6 +111,12 @@ class PromptOptimizer:
         The returned Prompt will have an OptimizationReport attached as
         `prompt.optimization_report`.
         """
+        # DEBUG: Log original prompt
+        print(f"\n[DEBUG] Starting optimization with {self.algorithm.name}")
+        print(
+            f"[DEBUG] Original prompt: {prompt.text_template[:200] if prompt.text_template else prompt.messages_template}..."
+        )
+        print(f"[DEBUG] Number of goldens: {len(goldens)}")
 
         if not self.display_config.show_indicator:
             best_prompt, report_dict = (
@@ -147,6 +153,35 @@ class PromptOptimizer:
         best_prompt.optimization_report = OptimizationReport.from_runtime(
             report_dict
         )
+
+        # DEBUG: Log optimization results
+        accepted_count = len(report_dict.get("accepted_iterations", []))
+        print(f"\n[DEBUG] Optimization complete!")
+        print(
+            f"[DEBUG] Accepted iterations (children that beat parent): {accepted_count}"
+        )
+        print(
+            f"[DEBUG] Total prompt configurations explored: {len(report_dict.get('prompt_configurations', {}))}"
+        )
+        print(
+            f"[DEBUG] Best prompt: {best_prompt.text_template[:200] if best_prompt.text_template else best_prompt.messages_template}..."
+        )
+
+        # Check if prompt changed
+        original_text = prompt.text_template or str(prompt.messages_template)
+        best_text = best_prompt.text_template or str(
+            best_prompt.messages_template
+        )
+        if original_text.strip() == best_text.strip():
+            print(
+                f"[DEBUG] ⚠️  WARNING: Optimized prompt is IDENTICAL to original!"
+            )
+            print(
+                f"[DEBUG] This can happen if: (1) no child prompts scored higher than parent, or (2) rewriter returned same prompt"
+            )
+        else:
+            print(f"[DEBUG] ✓ Prompt was modified during optimization")
+
         return best_prompt
 
     ####################
@@ -154,8 +189,8 @@ class PromptOptimizer:
     ####################
 
     def _configure_algorithm(self) -> None:
-        """Configure the algorithm with scoring adapter, rewriter, and callbacks."""
-        self.algorithm.scoring_adapter = Scorer(
+        """Configure the algorithm with scorer, rewriter, and callbacks."""
+        self.algorithm.scorer = Scorer(
             model_callback=self.model_callback,
             metrics=self.metrics,
             max_concurrent=self.async_config.max_concurrent,

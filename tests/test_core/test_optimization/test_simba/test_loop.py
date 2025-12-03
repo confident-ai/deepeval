@@ -44,7 +44,7 @@ def _make_runner(
         demo_input_max_chars=demo_input_max_chars,
     )
     scoring = StubScoringAdapter()
-    runner = SIMBARunner(config=config, scoring_adapter=scoring)
+    runner = SIMBARunner(config=config, scorer=scoring)
     runner._rewriter = SuffixRewriter(suffix=" CHILD")
     return runner, scoring
 
@@ -73,13 +73,13 @@ async def test_a_execute_requires_at_least_one_golden():
         await runner.a_execute(prompt=prompt, goldens=[])
 
 
-def test_execute_requires_scoring_adapter():
+def test_execute_requires_scorer():
     """
-    If no scoring_adapter is attached, SIMBARunner.execute must fail
-    via _ensure_scoring_adapter.
+    If no scorer is attached, SIMBARunner.execute must fail
+    via _ensure_scorer.
     """
     config = SIMBAConfig()
-    runner = SIMBARunner(config=config, scoring_adapter=None)
+    runner = SIMBARunner(config=config, scorer=None)
     prompt = Prompt(text_template="ROOT")
     goldens = ["g1"]
 
@@ -102,7 +102,7 @@ def test_add_prompt_configuration_prunes_worst_candidate():
         iterations=1,
         random_seed=0,
     )
-    runner = SIMBARunner(config=config, scoring_adapter=None)
+    runner = SIMBARunner(config=config, scorer=None)
 
     # Three candidates with different mean scores
     c1 = PromptConfiguration.new(
@@ -229,7 +229,7 @@ def test_prompts_equivalent_detects_text_and_list_prompts():
     (or identical LIST messages) as equivalent, and different ones as not.
     """
     cfg = SIMBAConfig()
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
 
     # TEXT prompts
     p1 = Prompt(text_template="  hello world  ")
@@ -274,7 +274,7 @@ def test_generate_child_prompt_rejects_equivalent_and_type_changes():
             return kwargs["old_prompt"]
 
     cfg = SIMBAConfig()
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
     runner._rewriter = EchoRewriter()
 
     parent = PromptConfiguration.new(
@@ -322,14 +322,14 @@ def test_simba_initializes_strategies_based_on_max_demos():
     and APPEND_RULE; when it is 0, only APPEND_RULE should be active.
     """
     cfg_demo = SIMBAConfig(max_demos_per_proposal=2)
-    runner_demo = SIMBARunner(config=cfg_demo, scoring_adapter=None)
+    runner_demo = SIMBARunner(config=cfg_demo, scorer=None)
     assert set(runner_demo._strategies) == {
         SIMBAStrategy.APPEND_DEMO,
         SIMBAStrategy.APPEND_RULE,
     }
 
     cfg_rule_only = SIMBAConfig(max_demos_per_proposal=0)
-    runner_rule_only = SIMBARunner(config=cfg_rule_only, scoring_adapter=None)
+    runner_rule_only = SIMBARunner(config=cfg_rule_only, scorer=None)
     assert runner_rule_only._strategies == [SIMBAStrategy.APPEND_RULE]
 
 
@@ -339,13 +339,13 @@ def test_sample_strategy_respects_configured_strategies():
     and must always return one of the configured strategies otherwise.
     """
     cfg_rule_only = SIMBAConfig(max_demos_per_proposal=0)
-    runner_rule_only = SIMBARunner(config=cfg_rule_only, scoring_adapter=None)
+    runner_rule_only = SIMBARunner(config=cfg_rule_only, scorer=None)
 
     for _ in range(10):
         assert runner_rule_only._sample_strategy() is SIMBAStrategy.APPEND_RULE
 
     cfg_both = SIMBAConfig(max_demos_per_proposal=3, random_seed=0)
-    runner_both = SIMBARunner(config=cfg_both, scoring_adapter=None)
+    runner_both = SIMBARunner(config=cfg_both, scorer=None)
     for _ in range(10):
         s = runner_both._sample_strategy()
         assert s in runner_both._strategies
@@ -360,7 +360,7 @@ def test_build_demo_block_uses_golden_shapes_and_truncates():
         max_demos_per_proposal=2,
         demo_input_max_chars=5,
     )
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
 
     g1 = Golden(input="hello world", expected_output="long expected output")
     g2 = ConversationalGolden(
@@ -387,7 +387,7 @@ def test_build_feedback_for_strategy_append_rule():
     instructions and the evaluation feedback text.
     """
     cfg = SIMBAConfig()
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
 
     feedback = "The answers were too verbose."
     text = runner._build_feedback_for_strategy(
@@ -407,7 +407,7 @@ def test_build_feedback_for_strategy_append_demo_includes_demos():
     strategy instructions and a demo block built from the minibatch.
     """
     cfg = SIMBAConfig(max_demos_per_proposal=1, demo_input_max_chars=50)
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
 
     g = Golden(input="question", expected_output="answer")
     text = runner._build_feedback_for_strategy(
@@ -435,7 +435,7 @@ def test_update_progress_and_error_use_status_callback():
     the status_callback, allowing PromptOptimizer to drive a progress bar.
     """
     cfg = SIMBAConfig(iterations=2)
-    runner = SIMBARunner(config=cfg, scoring_adapter=None)
+    runner = SIMBARunner(config=cfg, scorer=None)
 
     progress = DummyProgress()
 

@@ -1,12 +1,12 @@
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.configs import OptimizerDisplayConfig
+from deepeval.optimizer.configs import DisplayConfig
 from deepeval.optimizer.prompt_optimizer import PromptOptimizer
-from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
-    DeepEvalScoringAdapter,
+from deepeval.optimizer.scorer.scorer import (
+    Scorer,
 )
-from deepeval.optimizer.gepa.loop import GEPARunner
+from deepeval.optimizer.algorithms import GEPA
 from deepeval.optimizer.types import (
     OptimizationReport,
     RunnerStatusType,
@@ -32,16 +32,16 @@ def _dummy_model_callback(**_kwargs):
     return "ok"
 
 
-def test_build_default_scoring_adapter_requires_metrics():
+def test_build_default_scorer_requires_metrics():
     with pytest.raises(DeepEvalError, match="requires a `metrics`"):
         PromptOptimizer(
             model_callback=_dummy_model_callback,
             metrics=None,
-            display_config=OptimizerDisplayConfig(show_indicator=False),
+            display_config=DisplayConfig(show_indicator=False),
         )
 
 
-def test_build_default_scoring_adapter_rejects_non_metric_types():
+def test_build_default_scorer_rejects_non_metric_types():
     # metrics must be BaseMetric, BaseConversationalMetric subclasses
     with pytest.raises(
         DeepEvalError,
@@ -50,7 +50,7 @@ def test_build_default_scoring_adapter_rejects_non_metric_types():
         PromptOptimizer(
             model_callback=_dummy_model_callback,
             metrics=[object()],
-            display_config=OptimizerDisplayConfig(show_indicator=False),
+            display_config=DisplayConfig(show_indicator=False),
         )
 
 
@@ -64,7 +64,7 @@ def test_prompt_optimizer_init_rejects_invalid_async_config_type():
             model_callback=_dummy_model_callback,
             metrics=[_DummyMetric()],
             async_config=object(),
-            display_config=OptimizerDisplayConfig(show_indicator=False),
+            display_config=DisplayConfig(show_indicator=False),
         )
 
 
@@ -72,7 +72,7 @@ def test_prompt_optimizer_init_rejects_invalid_display_config_type():
     # display_config must be an OptimizerDisplayConfig instance if provided
     with pytest.raises(
         DeepEvalError,
-        match="PromptOptimizer.__init__ expected `display_config` to be an instance of OptimizerDisplayConfig",
+        match="PromptOptimizer.__init__ expected `display_config` to be an instance of DisplayConfig",
     ):
         PromptOptimizer(
             model_callback=_dummy_model_callback,
@@ -90,7 +90,7 @@ def test_prompt_optimizer_init_rejects_unsupported_algorithm():
         PromptOptimizer(
             model_callback=_dummy_model_callback,
             metrics=[_DummyMetric()],
-            display_config=OptimizerDisplayConfig(show_indicator=False),
+            display_config=DisplayConfig(show_indicator=False),
             algorithm="not-gepa",
         )
 
@@ -100,19 +100,19 @@ def test_build_default_runner_constructs_gepa_runner_and_sets_callbacks():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[metric],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
         algorithm="gepa",
     )
 
     runner = optimizer._build_default_runner()
 
-    assert isinstance(runner, GEPARunner)
+    assert isinstance(runner, GEPA)
 
     # scoring adapter should be a DeepEvalScoringAdapter with our metric
-    scoring_adapter = runner.scoring_adapter
-    assert isinstance(scoring_adapter, DeepEvalScoringAdapter)
-    assert getattr(scoring_adapter, "metrics", None) is not None
-    assert any(isinstance(m, _DummyMetric) for m in scoring_adapter.metrics)
+    scorer = runner.scorer
+    assert isinstance(scorer, Scorer)
+    assert getattr(scorer, "metrics", None) is not None
+    assert any(isinstance(m, _DummyMetric) for m in scorer.metrics)
 
     # callbacks must be wired to the optimizer; status_callback is a bound method
     cb = runner.status_callback
@@ -130,7 +130,7 @@ def test_set_runner_wires_callbacks():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     runner = DummyRunner()
@@ -154,7 +154,7 @@ def test_optimize_with_custom_runner_attaches_report_and_returns_prompt():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
     # Ensure optimize() uses the synchronous execute() path
     optimizer.async_config.run_async = False
@@ -190,7 +190,7 @@ def test_optimize_rejects_non_prompt_type():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     # goldens can be an empty list; we're only exercising prompt validation here
@@ -205,7 +205,7 @@ def test_optimize_rejects_non_list_goldens():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     prompt = Prompt(text_template="base")
@@ -221,7 +221,7 @@ def test_optimize_rejects_invalid_golden_elements():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     prompt = Prompt(text_template="base")
@@ -241,7 +241,7 @@ def test_run_optimization_uses_sync_execute_when_run_async_false():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
     runner = SyncDummyRunner()
     optimizer.runner = runner
@@ -265,7 +265,7 @@ def test_run_optimization_uses_async_execute_when_run_async_true():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
     runner = AsyncDummyRunner()
     optimizer.runner = runner
@@ -292,7 +292,7 @@ def test_on_status_error_prints_message_when_indicator_disabled(capsys):
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     optimizer._on_status(
@@ -311,9 +311,7 @@ def test_on_status_tie_respects_announce_ties_flag(capsys):
     opt_quiet = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(
-            show_indicator=False, announce_ties=False
-        ),
+        display_config=DisplayConfig(show_indicator=False, announce_ties=False),
     )
     opt_quiet._on_status(
         RunnerStatusType.TIE,
@@ -328,9 +326,7 @@ def test_on_status_tie_respects_announce_ties_flag(capsys):
     opt_verbose = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(
-            show_indicator=False, announce_ties=True
-        ),
+        display_config=DisplayConfig(show_indicator=False, announce_ties=True),
     )
     opt_verbose._on_status(
         RunnerStatusType.TIE,
@@ -346,7 +342,7 @@ def test_on_status_progress_updates_progress_when_indicator_enabled():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=True),
+        display_config=DisplayConfig(show_indicator=True),
     )
 
     progress = DummyProgress()
@@ -387,7 +383,7 @@ def test_format_progress_description_includes_colored_detail():
     optimizer = PromptOptimizer(
         model_callback=_dummy_model_callback,
         metrics=[_DummyMetric()],
-        display_config=OptimizerDisplayConfig(show_indicator=False),
+        display_config=DisplayConfig(show_indicator=False),
     )
 
     text = optimizer._format_progress_description("details here")

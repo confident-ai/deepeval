@@ -32,16 +32,16 @@ from deepeval.errors import DeepEvalError
 from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
     AcceptedIterationDict,
-    BaseAlgorithm,
     PromptConfiguration,
     PromptConfigurationId,
     ModuleId,
     ScoreTable,
-    ScoringAdapter,
+    BaseScorer,
     OptimizationResult,
     RunnerStatusType,
-    RunnerStatusCallbackProtocol,
+    RunnerStatusCallback,
 )
+from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import (
     build_prompt_config_snapshots,
 )
@@ -59,7 +59,7 @@ class MIPROV2(BaseAlgorithm):
     0-shot MIPROV2-style loop with sync/async execution.
 
     This runner is intentionally low level and does not know about metrics,
-    models, or async configs. It relies on a preconfigured ScoringAdapter and
+    models, or async configs. It relies on a preconfigured Scorer and
     Rewriter, which are typically constructed by PromptOptimizer.
 
     - Optimizes a single Prompt (instruction) against a list of Goldens.
@@ -73,13 +73,13 @@ class MIPROV2(BaseAlgorithm):
 
     def __init__(
         self,
-        config: MIPROV2Config,
+        config: MIPROV2Config = MIPROV2Config(),
         aggregate_instances: Aggregator = mean_of_all,
-        scoring_adapter: Optional[ScoringAdapter] = None,
+        scorer: Optional[BaseScorer] = None,
     ) -> None:
         self.config = config
         self.aggregate_instances = aggregate_instances
-        self.scoring_adapter = scoring_adapter
+        self.scorer = scorer
 
         # Random seeded from config is used for minibatch sampling and candidate selection.
         self.random_state = random.Random(config.random_seed)
@@ -89,7 +89,7 @@ class MIPROV2(BaseAlgorithm):
 
         # Status callback set by PromptOptimizer:
         #   (kind, step_index, total_steps, detail) -> None
-        self.status_callback: Optional[RunnerStatusCallbackProtocol] = None
+        self.status_callback: Optional[RunnerStatusCallback] = None
 
         # Optimizer model used by the rewriter for prompt mutation.
         # Set by PromptOptimizer.
@@ -121,7 +121,7 @@ class MIPROV2(BaseAlgorithm):
                 "the optimizer."
             )
 
-        self._ensure_scoring_adapter()
+        self._ensure_scorer()
         self.reset_state()
 
         # Seed candidate pool with the root prompt configuration.
@@ -147,7 +147,7 @@ class MIPROV2(BaseAlgorithm):
             # candidate on the first iteration.
             if not self._minibatch_score_counts:
                 seed_minibatch = self._draw_minibatch(goldens)
-                root_score = self.scoring_adapter.score_minibatch(
+                root_score = self.scorer.score_minibatch(
                     root_prompt_configuration, seed_minibatch
                 )
                 self._record_minibatch_score(
@@ -160,7 +160,7 @@ class MIPROV2(BaseAlgorithm):
 
             minibatch = self._draw_minibatch(goldens)
 
-            feedback_text = self.scoring_adapter.get_minibatch_feedback(
+            feedback_text = self.scorer.get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -181,7 +181,7 @@ class MIPROV2(BaseAlgorithm):
                 child_prompt,
             )
 
-            child_score = self.scoring_adapter.score_minibatch(
+            child_score = self.scorer.score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -255,7 +255,7 @@ class MIPROV2(BaseAlgorithm):
                 "the optimizer."
             )
 
-        self._ensure_scoring_adapter()
+        self._ensure_scorer()
         self.reset_state()
 
         seed_prompts_by_module = {self.SINGLE_MODULE_ID: prompt}
@@ -280,7 +280,7 @@ class MIPROV2(BaseAlgorithm):
             # candidate on the first iteration.
             if not self._minibatch_score_counts:
                 seed_minibatch = self._draw_minibatch(goldens)
-                root_score = await self.scoring_adapter.a_score_minibatch(
+                root_score = await self.scorer.a_score_minibatch(
                     root_prompt_configuration, seed_minibatch
                 )
                 self._record_minibatch_score(
@@ -292,7 +292,7 @@ class MIPROV2(BaseAlgorithm):
 
             minibatch = self._draw_minibatch(goldens)
 
-            feedback_text = await self.scoring_adapter.a_get_minibatch_feedback(
+            feedback_text = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
 
@@ -311,7 +311,7 @@ class MIPROV2(BaseAlgorithm):
                 child_prompt,
             )
 
-            child_score = await self.scoring_adapter.a_score_minibatch(
+            child_score = await self.scorer.a_score_minibatch(
                 child_prompt_configuration, minibatch
             )
 
@@ -390,12 +390,12 @@ class MIPROV2(BaseAlgorithm):
         # Trial counter (used for full_eval_every).
         self.trial_index: int = 0
 
-    def _ensure_scoring_adapter(self) -> None:
-        if self.scoring_adapter is None:
+    def _ensure_scorer(self) -> None:
+        if self.scorer is None:
             raise DeepEvalError(
-                "MIPRORunner requires a `scoring_adapter`. "
+                "MIPRORunner requires a `scorer`. "
                 "Construct one (for example, Scorer) in "
-                "PromptOptimizer and assign it to `runner.scoring_adapter`."
+                "PromptOptimizer and assign it to `runner.scorer`."
             )
 
     def _prompts_equivalent(
@@ -583,7 +583,7 @@ class MIPROV2(BaseAlgorithm):
         if best.id in self.pareto_score_table:
             return
 
-        scores = await self.scoring_adapter.a_score_pareto(best, goldens)
+        scores = await self.scorer.a_score_pareto(best, goldens)
         self.pareto_score_table[best.id] = scores
 
     def _full_evaluate_best(
@@ -597,7 +597,7 @@ class MIPROV2(BaseAlgorithm):
         if best.id in self.pareto_score_table:
             return
 
-        scores = self.scoring_adapter.score_pareto(best, goldens)
+        scores = self.scorer.score_pareto(best, goldens)
         self.pareto_score_table[best.id] = scores
 
     async def _a_generate_child_prompt(

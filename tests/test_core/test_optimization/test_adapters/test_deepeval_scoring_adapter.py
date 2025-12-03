@@ -6,8 +6,8 @@ import pytest
 
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.adapters.deepeval_scoring_adapter import (
-    DeepEvalScoringAdapter,
+from deepeval.optimizer.scorer.scorer import (
+    Scorer,
 )
 from deepeval.prompt.api import PromptType, PromptMessage
 from deepeval.prompt.prompt import Prompt
@@ -25,7 +25,7 @@ from deepeval.test_case import (
 
 
 def test_primary_input_from_golden_uses_input_for_golden():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
     golden = Golden(input="plain input", scenario="should_be_ignored")
 
     primary = adapter._primary_input_from_golden(golden)
@@ -34,7 +34,7 @@ def test_primary_input_from_golden_uses_input_for_golden():
 
 
 def test_primary_input_from_golden_uses_scenario_for_conversational_golden():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
     conv = ConversationalGolden(
         scenario="conversational scenario",
         input="should_be_ignored",
@@ -46,7 +46,7 @@ def test_primary_input_from_golden_uses_scenario_for_conversational_golden():
 
 
 def test_primary_input_from_golden_rejects_unknown_type():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
     with pytest.raises(DeepEvalError):
         adapter._primary_input_from_golden(object())
 
@@ -57,7 +57,7 @@ def test_primary_input_from_golden_rejects_unknown_type():
 
 
 def test_compile_prompt_text_appends_input_when_present():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     prompt = Prompt(text_template="Base prompt")
     # Be explicit about type to avoid depending on Prompt internals.
@@ -71,7 +71,7 @@ def test_compile_prompt_text_appends_input_when_present():
 
 
 def test_compile_prompt_text_returns_base_when_input_empty():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     prompt = Prompt(text_template="Base prompt")
     prompt.type = PromptType.TEXT
@@ -89,7 +89,7 @@ def test_compile_prompt_text_returns_base_when_input_empty():
 
 
 def test_compile_prompt_messages_appends_input_with_configured_role():
-    adapter = DeepEvalScoringAdapter(list_input_role="end_user")
+    adapter = Scorer(list_input_role="end_user")
 
     prompt = Prompt(
         messages_template=[
@@ -120,7 +120,7 @@ def test_compile_prompt_messages_appends_input_with_configured_role():
 
 
 def test_default_build_test_case_for_golden_maps_core_fields():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     golden = Golden(
         input="Q?",
@@ -152,7 +152,7 @@ def test_default_build_test_case_for_golden_maps_core_fields():
 
 
 def test_default_build_test_case_conversational_no_turns_synthesizes_two_turns():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     conv = ConversationalGolden(
         scenario="user scenario",
@@ -188,7 +188,7 @@ def test_default_build_test_case_conversational_no_turns_synthesizes_two_turns()
 
 
 def test_default_build_test_case_conversational_replaces_last_assistant_turn():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     turns: List[Turn] = [
         Turn(role="user", content="hi"),
@@ -220,7 +220,7 @@ def test_default_build_test_case_conversational_replaces_last_assistant_turn():
 
 
 def test_default_build_test_case_conversational_appends_assistant_when_last_not_assistant():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     turns: List[Turn] = [Turn(role="user", content="only user so far")]
     conv = ConversationalGolden(
@@ -260,7 +260,7 @@ def _make_text_prompt(text: str) -> Prompt:
 
 
 def test_select_module_prefers_default_module_id():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     p_default = _make_text_prompt("default")
     p_other = _make_text_prompt("other")
@@ -276,7 +276,7 @@ def test_select_module_prefers_default_module_id():
 
 
 def test_select_module_falls_back_to_first_key_when_default_missing():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     p_a = _make_text_prompt("A")
     p_b = _make_text_prompt("B")
@@ -293,7 +293,7 @@ def test_select_module_falls_back_to_first_key_when_default_missing():
 
 
 def test_select_module_raises_for_empty_prompts_dict():
-    adapter = DeepEvalScoringAdapter()
+    adapter = Scorer()
 
     with pytest.raises(DeepEvalError):
         adapter._select_module_id_from_prompts({})

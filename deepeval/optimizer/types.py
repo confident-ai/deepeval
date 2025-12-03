@@ -1,14 +1,15 @@
 from __future__ import annotations
 import uuid
+from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
 from typing import (
     Any,
+    Callable,
     Dict,
     List,
     Literal,
     Optional,
-    Protocol,
     TYPE_CHECKING,
     TypedDict,
     Tuple,
@@ -17,6 +18,7 @@ from typing import (
 from enum import Enum
 from pydantic import (
     BaseModel as PydanticBaseModel,
+    ConfigDict,
     Field,
     AliasChoices,
     BaseModel,
@@ -51,9 +53,9 @@ class PromptConfiguration:
         )
 
 
-class ScoringAdapter(Protocol):
+class BaseScorer(ABC):
     """
-    Scoring adapter contract used by optimization runners.
+    Base scorer contract used by optimization runners.
 
     Runners call into this adapter to:
     - compute scores per-instance on some subset (score_on_pareto),
@@ -62,22 +64,25 @@ class ScoringAdapter(Protocol):
     """
 
     # Sync
+    @abstractmethod
     def score_pareto(
         self,
         prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
     ) -> ScoreVector:
         """Return per-instance scores on D_pareto."""
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     def score_minibatch(
         self,
         prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> float:
         """Return average score μ on a minibatch from D_feedback."""
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     def get_minibatch_feedback(
         self,
         prompt_configuration: PromptConfiguration,
@@ -85,37 +90,50 @@ class ScoringAdapter(Protocol):
         minibatch: Union[List[Golden], List[ConversationalGolden]],
     ) -> str:
         """Return μ_f text for the module (metric.reason + traces, etc.)."""
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     def select_module(
         self, prompt_configuration: PromptConfiguration
     ) -> ModuleId:
         """Pick a module to mutate."""
-        ...
+        raise NotImplementedError
 
     # Async
+    @abstractmethod
     async def a_score_pareto(
         self,
         prompt_configuration: PromptConfiguration,
         d_pareto: Union[List[Golden], List[ConversationalGolden]],
-    ) -> ScoreVector: ...
+    ) -> ScoreVector:
+        raise NotImplementedError
+
+    @abstractmethod
     async def a_score_minibatch(
         self,
         prompt_configuration: PromptConfiguration,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> float: ...
+    ) -> float:
+        raise NotImplementedError
+
+    @abstractmethod
     async def a_get_minibatch_feedback(
         self,
         prompt_configuration: PromptConfiguration,
         module: ModuleId,
         minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str: ...
+    ) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
     async def a_select_module(
         self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId: ...
+    ) -> ModuleId:
+        raise NotImplementedError
 
 
-class RewriterProtocol(Protocol):
+class RewriterProtocol(ABC):
+    @abstractmethod
     def rewrite(
         self,
         *,
@@ -123,8 +141,10 @@ class RewriterProtocol(Protocol):
         module_id: ModuleId,
         old_prompt: Prompt,
         feedback_text: str,
-    ) -> Prompt: ...
+    ) -> Prompt:
+        raise NotImplementedError
 
+    @abstractmethod
     async def a_rewrite(
         self,
         *,
@@ -132,7 +152,8 @@ class RewriterProtocol(Protocol):
         module_id: ModuleId,
         old_prompt: Prompt,
         feedback_text: str,
-    ) -> Prompt: ...
+    ) -> Prompt:
+        raise NotImplementedError
 
 
 class RunnerStatusType(str, Enum):
@@ -143,55 +164,11 @@ class RunnerStatusType(str, Enum):
     ERROR = "error"
 
 
-class RunnerStatusCallbackProtocol(Protocol):
-    def __call__(
-        self,
-        kind: RunnerStatusType,
-        *,
-        detail: str,
-        step_index: Optional[int] = None,
-        total_steps: Optional[int] = None,
-    ) -> None: ...
+# Type alias for status callback function
+RunnerStatusCallback = Callable[..., None]
 
 
-class BaseAlgorithm(BaseModel):
-    """
-    Contract for prompt optimization runners used by PromptOptimizer.
-
-    Runners are responsible for executing the optimization algorithm
-    and returning an optimized Prompt plus a report dict.
-    """
-
-    # status_callback is injected by PromptOptimizer
-    # A runner may call this to report:
-    # progress, ties, or errors during execution.
-    name: str
-    status_callback: Optional[RunnerStatusCallbackProtocol]
-
-    # optimizer_model is used internally by the optimizer for prompt rewriting.
-    # This is separate from the user's model_callback which is used for scoring.
-    optimizer_model: Optional[DeepEvalBaseLLM]
-
-    scoring_adapter: Optional[ScoringAdapter]
-
-    def execute(
-        self,
-        *,
-        prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
-        raise NotImplementedError
-
-    async def a_execute(
-        self,
-        *,
-        prompt: Prompt,
-        goldens: Union[List["Golden"], List["ConversationalGolden"]],
-    ) -> Tuple[Prompt, Dict]:
-        raise NotImplementedError
-
-
-class Objective(Protocol):
+class Objective(ABC):
     """Strategy for reducing scores per-metric to a single scalar value.
 
     Implementations receive a mapping from metric name to score
@@ -199,7 +176,9 @@ class Objective(Protocol):
     single float used for comparisons inside the optimizer.
     """
 
-    def scalarize(self, scores_by_metric: Dict[str, float]) -> float: ...
+    @abstractmethod
+    def scalarize(self, scores_by_metric: Dict[str, float]) -> float:
+        raise NotImplementedError
 
 
 class MeanObjective(Objective):

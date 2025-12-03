@@ -9,7 +9,6 @@ from deepeval.optimizer.rewriter.rewriter import (
     _compose_prompt_messages,
     _normalize_llm_output_to_text,
     Rewriter,
-    MetricAwareLLMRewriter,
 )
 from deepeval.optimizer.configs import (
     MutationConfig,
@@ -17,23 +16,6 @@ from deepeval.optimizer.configs import (
 )
 from deepeval.prompt.api import PromptMessage
 from deepeval.prompt.prompt import Prompt
-
-
-########################
-# Helper test doubles  #
-########################
-
-
-@dataclass
-class StubMetricInfo:
-    """
-    Minimal stand-in for MetricInfo, using only the attributes
-    MetricAwareLLMRewriter actually accesses.
-    """
-
-    name: str
-    rubric: str | None = None
-
 
 ###############################
 # _compose_prompt_messages    #
@@ -404,94 +386,3 @@ async def test_prompt_rewriter_async_uses_model_callback():
     assert "Original async prompt" in prompt_text
     assert "Async feedback." in prompt_text
     assert feedback_text == feedback
-
-
-#####################################
-# MetricAwareLLMRewriter._compose   #
-#####################################
-
-
-def test_metric_aware_rewriter_compose_messages_without_metrics():
-    rewriter = MetricAwareLLMRewriter(metrics_info=None)
-    prompt = Prompt(text_template="Base prompt")
-    feedback = "Some issues found."
-
-    system, user = rewriter._compose_messages(
-        module_id="__module__",
-        old_prompt=prompt,
-        feedback_text=feedback,
-    )
-
-    assert "multi-step LLM pipeline" in system
-    assert "[Module]" in user
-    assert "__module__" in user
-    assert "[Current Prompt]" in user
-    assert "Base prompt" in user
-    assert "[Feedback]" in user
-    assert "Some issues found." in user
-    # No explicit [Metric Rubrics] block when metrics_info is empty/None
-    assert "[Metric Rubrics]" not in user
-
-
-def test_metric_aware_rewriter_compose_messages_with_rubrics_and_defaults():
-    metrics_info = [
-        StubMetricInfo(
-            name="AnswerRelevancy",
-            rubric="Focus on relevant answers.",
-        ),
-        StubMetricInfo(
-            name="Toxicity",
-            rubric="",  # empty rubric -> default text
-        ),
-    ]
-    rewriter = MetricAwareLLMRewriter(
-        metrics_info=metrics_info,
-        max_chars=4000,
-        max_metrics_in_prompt=10,
-    )
-
-    prompt = Prompt(text_template="Base prompt")
-    feedback = "Some issues found."
-
-    system, user = rewriter._compose_messages(
-        module_id="__module__",
-        old_prompt=prompt,
-        feedback_text=feedback,
-    )
-
-    # System message still describes metric-aware refinement
-    assert "metric rubrics" in system
-
-    # Rubric block should include both metrics, with custom + default text
-    assert "[Metric Rubrics]" in user
-    assert "- AnswerRelevancy: Focus on relevant answers." in user
-    assert "- Toxicity: Optimize for this metric’s quality criteria." in user
-
-
-def test_metric_aware_rewriter_respects_max_metrics_in_prompt():
-    metrics_info = [
-        StubMetricInfo(name=f"Metric{i}", rubric=f"Rubric {i}")
-        for i in range(10)
-    ]
-    rewriter = MetricAwareLLMRewriter(
-        metrics_info=metrics_info,
-        max_chars=4000,
-        max_metrics_in_prompt=3,
-    )
-
-    prompt = Prompt(text_template="Base prompt")
-    feedback = "Some issues found."
-
-    _, user = rewriter._compose_messages(
-        module_id="__module__",
-        old_prompt=prompt,
-        feedback_text=feedback,
-    )
-
-    # Only the first 3 metrics should appear
-    for i in range(3):
-        assert f"- Metric{i}: Rubric {i}" in user
-
-    # Later metrics must not be included
-    for i in range(3, 10):
-        assert f"Metric{i}" not in user

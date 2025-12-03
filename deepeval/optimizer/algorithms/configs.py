@@ -1,12 +1,9 @@
 from pydantic import (
     BaseModel,
     Field,
-    conint,
-    PositiveInt,
-    confloat,
     field_validator,
-    Optional,
 )
+from typing import Optional
 import time
 
 from deepeval.optimizer.policies import (
@@ -31,28 +28,28 @@ class GEPAConfig(BaseModel):
     See individual field descriptions for precise behavior.
     """
 
-    iterations: PositiveInt = Field(
+    iterations: int = Field(
         default=5,
         description="Total number of GEPA loop iterations (mutation attempts). "
         "This acts as the optimization budget B in the GEPA paper.",
     )
-    minibatch_size: Optional[conint(ge=1)] = Field(
+    minibatch_size: Optional[int] = Field(
         default=None,
         description="Fixed minibatch size drawn from D_feedback. When set, this "
         "overrides dynamic sizing based on `minibatch_ratio`, "
         "`minibatch_min_size`, and `minibatch_max_size`.",
     )
-    minibatch_min_size: conint(ge=1) = Field(
+    minibatch_min_size: int = Field(
         default=4,
         description="Hard lower bound on the minibatch size used for D_feedback "
         "when dynamic sizing is in effect.",
     )
-    minibatch_max_size: PositiveInt = Field(
+    minibatch_max_size: int = Field(
         default=32,
         description="Hard upper bound on the minibatch size used for D_feedback "
         "when dynamic sizing is in effect.",
     )
-    minibatch_ratio: confloat(gt=0.0, le=1.0) = Field(
+    minibatch_ratio: float = Field(
         default=0.05,
         description=(
             "Target fraction of |D_feedback| used to compute a dynamic "
@@ -64,37 +61,36 @@ class GEPAConfig(BaseModel):
             "`split_goldens(...)`."
         ),
     )
-    pareto_size: conint(ge=1) = Field(
+    pareto_size: int = Field(
         default=3,
         description="Size of the Pareto validation subset D_pareto. The splitter "
         "will bind this between [0, len(goldens)], and the runner requires "
         "at least 2 total goldens to run GEPA.",
     )
-    random_seed: conint(ge=0) = Field(
-        default=0,
+    random_seed: Optional[int] = Field(
+        default=None,
         description="Non-negative RNG seed for reproducibility. "
-        "If you explicitly pass None, it is replaced with a seed "
-        "derived from time.time_ns() via the field validator.",
+        "If None (the default), a seed is derived from time.time_ns() "
+        "so each run gets a different random split.",
     )
-    min_delta: confloat(ge=0.0) = Field(
+    min_delta: float = Field(
         default=0.0,
         description="Minimum improvement required for a child configuration to be "
         "accepted, e.g. σ_child >= σ_parent + min_delta. A small jitter "
         "is applied internally to avoid floating-point edge cases.",
     )
-    # Two candidates are considered tied if their aggregate scores are within tie_tolerance.
-    tie_tolerance: confloat(ge=0.0) = Field(
-        1e-9,
+    tie_tolerance: float = Field(
+        default=1e-9,
         description="Two candidates are considered tied on aggregate score if "
         "their values differ by at most this tolerance.",
     )
     tie_breaker: TieBreakerPolicy = Field(
-        TieBreakerPolicy.PREFER_CHILD,
+        default=TieBreakerPolicy.PREFER_CHILD,
         description="Policy used to break ties when multiple prompt configurations "
         "share the best aggregate score. See `GEPAConfig.TieBreaker` "
         "for the available options. ",
     )
-    rewrite_instruction_max_chars: PositiveInt = Field(
+    rewrite_instruction_max_chars: int = Field(
         default=4096,
         description=(
             "Maximum number of characters from prompt, feedback, and related text "
@@ -107,8 +103,41 @@ class GEPAConfig(BaseModel):
     def _coerce_random_seed(cls, seed):
         if seed is None:
             return time.time_ns()
-        else:
-            return seed
+        return seed
+
+    @field_validator("minibatch_size")
+    @classmethod
+    def _validate_minibatch_size(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("minibatch_size must be >= 1")
+        return v
+
+    @field_validator(
+        "iterations",
+        "minibatch_min_size",
+        "minibatch_max_size",
+        "pareto_size",
+        "rewrite_instruction_max_chars",
+    )
+    @classmethod
+    def _validate_positive_int(cls, v):
+        if v < 1:
+            raise ValueError("Value must be >= 1")
+        return v
+
+    @field_validator("minibatch_ratio")
+    @classmethod
+    def _validate_minibatch_ratio(cls, v):
+        if v <= 0.0 or v > 1.0:
+            raise ValueError("minibatch_ratio must be > 0.0 and <= 1.0")
+        return v
+
+    @field_validator("min_delta", "tie_tolerance")
+    @classmethod
+    def _validate_non_negative_float(cls, v):
+        if v < 0.0:
+            raise ValueError("Value must be >= 0.0")
+        return v
 
 
 GEPAConfig.TieBreaker = TieBreakerPolicy
@@ -169,49 +198,52 @@ class MIPROV2Config(BaseModel):
         configuration to be accepted over its parent.
     """
 
-    iterations: PositiveInt = Field(
+    iterations: int = Field(
         default=5,
         description="Total number of MIPROV2 trials or prompt proposals.",
     )
-    minibatch_size: Optional[conint(ge=1)] = Field(
+    minibatch_size: Optional[int] = Field(
         default=None,
         description=(
             "Fixed minibatch size for goldens; when set, overrides dynamic sizing."
         ),
     )
-    minibatch_min_size: conint(ge=1) = Field(
+    minibatch_min_size: int = Field(
         default=4,
         description="Hard lower bound on minibatch size.",
     )
-    minibatch_max_size: PositiveInt = Field(
+    minibatch_max_size: int = Field(
         default=32,
         description="Hard upper bound on minibatch size.",
     )
-    minibatch_ratio: confloat(gt=0.0, le=1.0) = Field(
+    minibatch_ratio: float = Field(
         default=0.05,
         description=(
             "Target fraction of len(goldens) used to compute a dynamic minibatch "
             "size; bounded between minibatch_min_size and minibatch_max_size."
         ),
     )
-    random_seed: conint(ge=0) = 0
-    min_delta: confloat(ge=0.0) = Field(
+    random_seed: Optional[int] = Field(
+        default=None,
+        description="Non-negative RNG seed for reproducibility. "
+        "If None (the default), a seed is derived from time.time_ns() "
+        "so each run gets a different random split.",
+    )
+    min_delta: float = Field(
         default=0.0,
         description=(
             "Minimum improvement in minibatch score required for a child "
             "prompt to be accepted over its parent."
         ),
     )
-
-    exploration_probability: confloat(ge=0.0, le=1.0) = Field(
+    exploration_probability: float = Field(
         default=0.2,
         description=(
             "Probability of sampling a random candidate instead of "
             "the best-by-mean minibatch score."
         ),
     )
-
-    full_eval_every: Optional[PositiveInt] = Field(
+    full_eval_every: Optional[int] = Field(
         default=5,
         description=(
             "If set, the runner fully evaluates the current best candidate on the "
@@ -219,8 +251,7 @@ class MIPROV2Config(BaseModel):
             "is performed at the end."
         ),
     )
-
-    rewrite_instruction_max_chars: PositiveInt = Field(
+    rewrite_instruction_max_chars: int = Field(
         default=4096,
         description=(
             "Maximum number of characters from prompt, feedback, and related "
@@ -235,6 +266,48 @@ class MIPROV2Config(BaseModel):
             return time.time_ns()
         return seed
 
+    @field_validator("minibatch_size", "full_eval_every")
+    @classmethod
+    def _validate_optional_positive_int(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("Value must be >= 1")
+        return v
+
+    @field_validator(
+        "iterations",
+        "minibatch_min_size",
+        "minibatch_max_size",
+        "rewrite_instruction_max_chars",
+    )
+    @classmethod
+    def _validate_positive_int(cls, v):
+        if v < 1:
+            raise ValueError("Value must be >= 1")
+        return v
+
+    @field_validator("minibatch_ratio")
+    @classmethod
+    def _validate_minibatch_ratio(cls, v):
+        if v <= 0.0 or v > 1.0:
+            raise ValueError("minibatch_ratio must be > 0.0 and <= 1.0")
+        return v
+
+    @field_validator("min_delta")
+    @classmethod
+    def _validate_min_delta(cls, v):
+        if v < 0.0:
+            raise ValueError("min_delta must be >= 0.0")
+        return v
+
+    @field_validator("exploration_probability")
+    @classmethod
+    def _validate_exploration_probability(cls, v):
+        if v < 0.0 or v > 1.0:
+            raise ValueError(
+                "exploration_probability must be >= 0.0 and <= 1.0"
+            )
+        return v
+
 
 class COPROConfig(MIPROV2Config):
     """
@@ -246,21 +319,27 @@ class COPROConfig(MIPROV2Config):
     The core MIPROV2Config fields behave exactly the same as in MIPROv2.
     """
 
-    population_size: conint(ge=1) = Field(
+    population_size: int = Field(
         default=4,
         description=(
             "Maximum number of prompt candidates maintained in the active pool. "
             "Once this limit is exceeded, lower scoring candidates are pruned."
         ),
     )
-
-    proposals_per_step: conint(ge=1) = Field(
+    proposals_per_step: int = Field(
         default=4,
         description=(
             "Number of child prompts proposed cooperatively from the same "
             "parent in each optimization iteration."
         ),
     )
+
+    @field_validator("population_size", "proposals_per_step")
+    @classmethod
+    def _validate_positive_int(cls, v):
+        if v < 1:
+            raise ValueError("Value must be >= 1")
+        return v
 
 
 class SIMBAConfig(COPROConfig):
@@ -274,7 +353,7 @@ class SIMBAConfig(COPROConfig):
         `demo_input_max_chars`).
     """
 
-    max_demos_per_proposal: conint(ge=0) = Field(
+    max_demos_per_proposal: int = Field(
         default=3,
         description=(
             "Maximum number of goldens from the current minibatch that are "
@@ -282,11 +361,24 @@ class SIMBAConfig(COPROConfig):
             "APPEND_DEMO strategy."
         ),
     )
-
-    demo_input_max_chars: PositiveInt = Field(
+    demo_input_max_chars: int = Field(
         default=256,
         description=(
             "Maximum number of characters taken from the golden input and "
             "expected output when constructing demo snippets for APPEND_DEMO."
         ),
     )
+
+    @field_validator("max_demos_per_proposal")
+    @classmethod
+    def _validate_max_demos(cls, v):
+        if v < 0:
+            raise ValueError("max_demos_per_proposal must be >= 0")
+        return v
+
+    @field_validator("demo_input_max_chars")
+    @classmethod
+    def _validate_demo_input_max_chars(cls, v):
+        if v < 1:
+            raise ValueError("demo_input_max_chars must be >= 1")
+        return v
