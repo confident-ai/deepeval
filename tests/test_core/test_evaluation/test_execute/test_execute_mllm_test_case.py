@@ -8,7 +8,7 @@ from deepeval.evaluate.execute import _a_execute_mllm_test_cases
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, ErrorConfig
 from deepeval.test_run.test_run import TestRun, TestRunManager
-from deepeval.metrics.multimodal_metrics import MultimodalAnswerRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.models.mlllms.openai_model import MultimodalOpenAIModel
 
 
@@ -26,7 +26,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
     """
 
     # build a normal metric instance, then monkeypatch its a_measure to cause a hang
-    metric = MultimodalAnswerRelevancyMetric(
+    metric = AnswerRelevancyMetric(
         model=MultimodalOpenAIModel(model="gpt-4.1")
     )
 
@@ -97,7 +97,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = MultimodalAnswerRelevancyMetric(
+    metric = AnswerRelevancyMetric(
         model=MultimodalOpenAIModel(model="gpt-4.1")
     )
 
@@ -162,7 +162,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = MultimodalAnswerRelevancyMetric(
+    metric = AnswerRelevancyMetric(
         model=MultimodalOpenAIModel(model="gpt-4.1")
     )
 
