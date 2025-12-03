@@ -43,8 +43,8 @@ from deepeval.optimizer.types import (
     RunnerStatusCallback,
     RunnerStatusType,
     ScoreTable,
-    BaseScorer,
 )
+from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.optimizer.utils import (
     build_prompt_config_snapshots,
 )

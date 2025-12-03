@@ -32,8 +32,8 @@ from deepeval.optimizer.types import (
     Objective,
     MeanObjective,
     ModuleId,
-    BaseScorer,
 )
+from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.optimizer.utils import (
     validate_callback,
     validate_metrics,

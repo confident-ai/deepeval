@@ -24,11 +24,11 @@ from deepeval.optimizer.types import (
     PromptConfigurationId,
     ModuleId,
     ScoreTable,
-    BaseScorer,
     OptimizationResult,
     RunnerStatusType,
     RunnerStatusCallback,
 )
+from deepeval.optimizer.scorer.base import BaseScorer
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import (
     split_goldens,

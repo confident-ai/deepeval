@@ -10,26 +10,16 @@ from typing import (
     List,
     Literal,
     Optional,
-    TYPE_CHECKING,
     TypedDict,
-    Tuple,
-    Union,
 )
 from enum import Enum
 from pydantic import (
     BaseModel as PydanticBaseModel,
-    ConfigDict,
     Field,
     AliasChoices,
-    BaseModel,
 )
 
 from deepeval.prompt.prompt import Prompt
-from deepeval.models.base_model import DeepEvalBaseLLM
-
-
-if TYPE_CHECKING:
-    from deepeval.dataset.golden import Golden, ConversationalGolden
 
 PromptConfigurationId = str
 ModuleId = str
@@ -51,109 +41,6 @@ class PromptConfiguration:
         return PromptConfiguration(
             id=str(uuid.uuid4()), parent=parent, prompts=dict(prompts)
         )
-
-
-class BaseScorer(ABC):
-    """
-    Base scorer contract used by optimization runners.
-
-    Runners call into this adapter to:
-    - compute scores per-instance on some subset (score_on_pareto),
-    - compute minibatch means for selection and acceptance,
-    - generate feedback text used by the Rewriter.
-    """
-
-    # Sync
-    @abstractmethod
-    def score_pareto(
-        self,
-        prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List[Golden], List[ConversationalGolden]],
-    ) -> ScoreVector:
-        """Return per-instance scores on D_pareto."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def score_minibatch(
-        self,
-        prompt_configuration: PromptConfiguration,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> float:
-        """Return average score μ on a minibatch from D_feedback."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_minibatch_feedback(
-        self,
-        prompt_configuration: PromptConfiguration,
-        module: ModuleId,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        """Return μ_f text for the module (metric.reason + traces, etc.)."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        """Pick a module to mutate."""
-        raise NotImplementedError
-
-    # Async
-    @abstractmethod
-    async def a_score_pareto(
-        self,
-        prompt_configuration: PromptConfiguration,
-        d_pareto: Union[List[Golden], List[ConversationalGolden]],
-    ) -> ScoreVector:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def a_score_minibatch(
-        self,
-        prompt_configuration: PromptConfiguration,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> float:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def a_get_minibatch_feedback(
-        self,
-        prompt_configuration: PromptConfiguration,
-        module: ModuleId,
-        minibatch: Union[List[Golden], List[ConversationalGolden]],
-    ) -> str:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def a_select_module(
-        self, prompt_configuration: PromptConfiguration
-    ) -> ModuleId:
-        raise NotImplementedError
-
-
-class RewriterProtocol(ABC):
-    @abstractmethod
-    def rewrite(
-        self,
-        *,
-        optimizer_model: DeepEvalBaseLLM,
-        module_id: ModuleId,
-        old_prompt: Prompt,
-        feedback_text: str,
-    ) -> Prompt:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def a_rewrite(
-        self,
-        *,
-        optimizer_model: DeepEvalBaseLLM,
-        module_id: ModuleId,
-        old_prompt: Prompt,
-        feedback_text: str,
-    ) -> Prompt:
-        raise NotImplementedError
 
 
 class RunnerStatusType(str, Enum):
@@ -223,12 +110,6 @@ class WeightedObjective(Objective):
             self.weights_by_metric.get(name, self.default_weight) * score
             for name, score in scores_by_metric.items()
         )
-
-
-@dataclass
-class MetricInfo:
-    name: str
-    rubric: Optional[str] = None
 
 
 class AcceptedIterationDict(TypedDict):

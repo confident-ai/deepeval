@@ -1,10 +1,9 @@
 from __future__ import annotations
 import random
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.optimizer.types import (
-    MetricInfo,
     ModuleId,
 )
 from deepeval.optimizer.configs import (
