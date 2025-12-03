@@ -75,9 +75,6 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
             kwargs,
             _ALIAS_MAP,
         )
-        from rich import print
-
-        print("normalized_kwargs: ", normalized_kwargs)
 
         # re-map depricated keywords to re-named positional args
         if model_name is None and "model_name" in alias_values:
