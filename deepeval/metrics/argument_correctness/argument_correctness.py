@@ -3,8 +3,9 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
+    a_gen_and_extract,
+    gen_and_extract,
     initialize_model,
 )
 from deepeval.test_case import (
@@ -18,7 +19,7 @@ from deepeval.metrics.argument_correctness.template import (
     ArgumentCorrectnessTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.argument_correctness.schema import *
+import deepeval.metrics.argument_correctness.schema as acschema
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -75,11 +76,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 )
             else:
                 if len(test_case.tools_called) == 0:
-                    self.verdicts = []
+                    self.verdicts: List[acschema.ArgumentCorrectnessVerdict] = (
+                        []
+                    )
                     self.score = 1.0
                     self.reason = "No tool calls provided"
                 else:
-                    self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                    self.verdicts: List[acschema.ArgumentCorrectnessVerdict] = (
                         self._generate_verdicts(
                             test_case.input, test_case.tools_called
                         )
@@ -118,11 +121,11 @@ class ArgumentCorrectnessMetric(BaseMetric):
             _in_component=_in_component,
         ):
             if len(test_case.tools_called) == 0:
-                self.verdicts = []
+                self.verdicts: List[acschema.ArgumentCorrectnessVerdict] = []
                 self.score = 1.0
                 self.reason = "No tool calls provided"
             else:
-                self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                self.verdicts: List[acschema.ArgumentCorrectnessVerdict] = (
                     await self._a_generate_verdicts(
                         test_case.input, test_case.tools_called
                     )
@@ -143,40 +146,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, input: str) -> str:
-        if self.include_reason is False:
-            return None
-
-        incorrect_tool_calls_reasons = []
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                incorrect_tool_calls_reasons.append(verdict.reason)
-
-        prompt = self.evaluation_template.generate_reason(
-            incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
-            input=input,
-            score=format(self.score, ".2f"),
-        )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = (
-                    await self.model.a_generate(
-                        prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
-
-    def _generate_reason(self, input: str) -> str:
+    async def _a_generate_reason(self, input: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -191,74 +161,78 @@ class ArgumentCorrectnessMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = self.model.generate(
-                    prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            acschema.ArgumentCorrectnessScoreReason,
+            extract_schema=lambda r: r.reason,
+            extract_json=lambda d: d["reason"],
+        )
+
+    def _generate_reason(self, input: str) -> Optional[str]:
+        if self.include_reason is False:
+            return None
+
+        incorrect_tool_calls_reasons = []
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "no":
+                incorrect_tool_calls_reasons.append(verdict.reason)
+
+        prompt = self.evaluation_template.generate_reason(
+            incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
+            input=input,
+            score=format(self.score, ".2f"),
+        )
+
+        return gen_and_extract(
+            self,
+            prompt,
+            acschema.ArgumentCorrectnessScoreReason,
+            extract_schema=lambda r: r.reason,
+            extract_json=lambda d: d["reason"],
+        )
 
     async def _a_generate_verdicts(
         self,
         input: str,
         tools_called: List[ToolCall],
-    ) -> List[ArgumentCorrectnessVerdict]:
+    ) -> List[acschema.ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
             tools_called=tools_called,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            acschema.Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda d: [
+                acschema.ArgumentCorrectnessVerdict(**item)
+                for item in d["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(
         self,
         input: str,
         tools_called: List[ToolCall],
-    ) -> List[ArgumentCorrectnessVerdict]:
+    ) -> List[acschema.ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
             tools_called=tools_called,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return gen_and_extract(
+            self,
+            prompt,
+            acschema.Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda d: [
+                acschema.ArgumentCorrectnessVerdict(**item)
+                for item in d["verdicts"]
+            ],
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -279,7 +253,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
