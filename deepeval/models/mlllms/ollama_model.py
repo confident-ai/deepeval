@@ -36,7 +36,7 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
         # Resolve host/base URL
         self.base_url = (
             host
-            or settings.LOCAL_MODEL_BASE_URL is not None
+            or settings.LOCAL_MODEL_BASE_URL
             and str(settings.LOCAL_MODEL_BASE_URL)
         )
 

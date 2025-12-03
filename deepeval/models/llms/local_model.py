@@ -40,7 +40,7 @@ class LocalModel(DeepEvalBaseLLM):
 
         self.base_url = (
             base_url
-            or settings.LOCAL_MODEL_BASE_URL is not None
+            or settings.LOCAL_MODEL_BASE_URL
             and str(settings.LOCAL_MODEL_BASE_URL)
         )
         self.format = format or settings.LOCAL_MODEL_FORMAT

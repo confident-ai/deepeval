@@ -370,6 +370,12 @@ class Settings(BaseSettings):
     OPENAI_MODEL_NAME: Optional[str] = None
     OPENAI_COST_PER_INPUT_TOKEN: Optional[float] = None
     OPENAI_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    # PortKey
+    USE_PORTKEY_MODEL: Optional[bool] = None
+    PORTKEY_API_KEY: Optional[SecretStr] = None
+    PORTKEY_MODEL_NAME: Optional[str] = None
+    PORTKEY_BASE_URL: Optional[AnyUrl] = None
+    PORTKEY_PROVIDER_NAME: Optional[str] = None
     # Vertex AI
     VERTEX_AI_MODEL_NAME: Optional[str] = None
     # VLLM
@@ -595,29 +601,30 @@ class Settings(BaseSettings):
         "CONFIDENT_OPEN_BROWSER",
         "CONFIDENT_TRACE_FLUSH",
         "CONFIDENT_TRACE_VERBOSE",
+        "CUDA_LAUNCH_BLOCKING",
+        "DEEPEVAL_VERBOSE_MODE",
+        "DEEPEVAL_GRPC_LOGGING",
+        "DEEPEVAL_DISABLE_DOTENV",
+        "DEEPEVAL_TELEMETRY_OPT_OUT",
+        "DEEPEVAL_UPDATE_WARNING_OPT_IN",
+        "ENABLE_DEEPEVAL_CACHE",
+        "ERROR_REPORTING",
+        "GOOGLE_GENAI_USE_VERTEXAI",
+        "IGNORE_DEEPEVAL_ERRORS",
+        "SKIP_DEEPEVAL_MISSING_PARAMS",
+        "TOKENIZERS_PARALLELISM",
+        "TRANSFORMERS_NO_ADVISORY_WARNINGS",
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
         "USE_GEMINI_MODEL",
-        "GOOGLE_GENAI_USE_VERTEXAI",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
         "USE_DEEPSEEK_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
-        "DEEPEVAL_GRPC_LOGGING",
-        "DEEPEVAL_DISABLE_DOTENV",
-        "DEEPEVAL_TELEMETRY_OPT_OUT",
-        "DEEPEVAL_UPDATE_WARNING_OPT_IN",
-        "TOKENIZERS_PARALLELISM",
-        "TRANSFORMERS_NO_ADVISORY_WARNINGS",
-        "CUDA_LAUNCH_BLOCKING",
-        "ERROR_REPORTING",
-        "IGNORE_DEEPEVAL_ERRORS",
-        "SKIP_DEEPEVAL_MISSING_PARAMS",
-        "DEEPEVAL_VERBOSE_MODE",
-        "ENABLE_DEEPEVAL_CACHE",
+        "USE_PORTKEY_MODEL",
         mode="before",
     )
     @classmethod
