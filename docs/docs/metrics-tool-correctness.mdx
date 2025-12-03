@@ -13,6 +13,8 @@ sidebar_label: Tool Correctness
 
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 <MetricTagsDisplayer
   singleTurn={true}
@@ -40,7 +42,10 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 ## Usage
 
-The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
+
+<Tabs>
+<TabItem value="text-based" label="Text Based">
 
 ```python
 from deepeval import evaluate
@@ -62,6 +67,37 @@ metric = ToolCorrectnessMetric()
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+</TabItem>
+
+<TabItem value="multimodal" label="Multimodal">
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval.metrics import ToolCorrectnessMetric
+
+metric = ToolCorrectnessMetric(
+    threshold=0.7,
+    model="gpt-4.1",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input=f"What's in this image? {MLLMImage(...)}",
+    actual_output=f"The image shows a pair of running shoes."
+    tools_called=[ToolCall(name="ImageAnalysis"), ToolCall(name="ToolQuery")],
+    expected_tools=[ToolCall(name="ImageAnalysis")],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+</TabItem>
+</Tabs>
 
 There are **EIGHT** optional parameters when creating a `ToolCorrectnessMetric`:
 
