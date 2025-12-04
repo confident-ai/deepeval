@@ -23,9 +23,9 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(model_name="gpt-4o")
+        model = GPTModel(model="gpt-4o")
         assert model.generation_kwargs == {}
-        assert model.model_name == "gpt-4o"
+        assert model.name == "gpt-4o"
 
     def test_init_with_generation_kwargs(self, settings):
         with settings.edit(persist=False):
@@ -37,10 +37,10 @@ class TestGPTModelCompletionKwargs:
             "seed": 42,
         }
         model = GPTModel(
-            model_name="gpt-5-mini", generation_kwargs=generation_kwargs
+            model="gpt-5-mini", generation_kwargs=generation_kwargs
         )
         assert model.generation_kwargs == generation_kwargs
-        assert model.model_name == "gpt-5-mini"
+        assert model.name == "gpt-5-mini"
 
     def test_init_with_both_client_and_generation_kwargs(self, settings):
         with settings.edit(persist=False):
@@ -48,7 +48,7 @@ class TestGPTModelCompletionKwargs:
 
         generation_kwargs = {"reasoning_effort": "medium"}
         model = GPTModel(
-            model_name="gpt-4o",
+            model="gpt-4o",
             timeout=30,  # client kwarg
             max_retries=5,  # client kwarg
             generation_kwargs=generation_kwargs,
@@ -71,7 +71,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         model = GPTModel(
-            model_name="gpt-5",
+            model="gpt-5",
             generation_kwargs={"reasoning_effort": "high", "seed": 123},
         )
 
@@ -104,7 +104,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
 
-        model = GPTModel(model_name="gpt-4o")
+        model = GPTModel(model="gpt-4o")
 
         # Call generate without generation_kwargs
         output, cost = model.generate("test prompt")
@@ -139,7 +139,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         model = GPTModel(
-            model_name="gpt-4o",  # Supports structured output
+            model="gpt-4o",  # Supports structured output
             generation_kwargs={"reasoning_effort": "low", "top_p": 0.9},
         )
 
@@ -184,7 +184,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         model = GPTModel(
-            model_name="gpt-5-nano",
+            model="gpt-5-nano",
             generation_kwargs={
                 "reasoning_effort": "medium",
                 "max_tokens": 1500,
@@ -236,7 +236,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         model = GPTModel(
-            model_name="gpt-4o",  # Supports structured output
+            model="gpt-4o",  # Supports structured output
             generation_kwargs={"reasoning_effort": "high", "seed": 42},
         )
 
@@ -273,7 +273,7 @@ class TestGPTModelCompletionKwargs:
             settings.OPENAI_API_KEY = "test-key"
 
         model = GPTModel(
-            model_name="gpt-4o",
+            model="gpt-4o",
             generation_kwargs={
                 "reasoning_effort": "high",
                 "presence_penalty": 0.5,
@@ -314,7 +314,7 @@ class TestGPTModelCompletionKwargs:
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
         model = GPTModel(
-            model_name="gpt-4o", generation_kwargs={"reasoning_effort": "low"}
+            model="gpt-4o", generation_kwargs={"reasoning_effort": "low"}
         )
 
         # Call generate_samples
@@ -336,9 +336,9 @@ class TestGPTModelCompletionKwargs:
 
         # This should work exactly as before
         model = GPTModel(
-            model_name="gpt-4o", temperature=0.5, timeout=30  # client kwarg
+            model="gpt-4o", temperature=0.5, timeout=30  # client kwarg
         )
-        assert model.model_name == "gpt-4o"
+        assert model.name == "gpt-4o"
         assert model.temperature == 0.5
         assert model.kwargs == {"timeout": 30}
         assert model.generation_kwargs == {}
@@ -353,7 +353,7 @@ class TestGPTModelCompletionKwargs:
 
         for model_name in gpt5_models:
             model = GPTModel(
-                model_name=model_name,
+                model=model_name,
                 temperature=0,  # Should be auto-adjusted to 1
                 generation_kwargs={"reasoning_effort": "high"},
             )
@@ -365,13 +365,13 @@ class TestGPTModelCompletionKwargs:
     def test_empty_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model_name="gpt-4o", generation_kwargs={})
+        model = GPTModel(model="gpt-4o", generation_kwargs={})
         assert model.generation_kwargs == {}
 
     def test_none_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
-        model = GPTModel(model_name="gpt-4o", generation_kwargs=None)
+        model = GPTModel(model="gpt-4o", generation_kwargs=None)
         assert model.generation_kwargs == {}
 
 
@@ -380,12 +380,12 @@ class TestGPTModelCompletionKwargs:
 ########################################################
 
 
-def test_openai_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+def test_openai_model_accepts_legacy_model_keyword_and_maps_to_model(
     settings,
 ):
     """
     Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
+    - It should populate `model`
     - It should not be forwarded through `model.kwargs`
     """
     with settings.edit(persist=False):
@@ -394,7 +394,7 @@ def test_openai_model_accepts_legacy_model_keyword_and_maps_to_model_name(
     model = GPTModel(model="gpt-4o")
 
     # legacy keyword mapped to canonical parameter
-    assert model.model_name == "gpt-4o"
+    assert model.name == "gpt-4o"
 
     # legacy key should not be forwarded to the client kwargs
     assert "model" not in model.kwargs
@@ -425,7 +425,7 @@ def test_openai_model_accepts_legacy_openai_api_key_keyword_and_uses_it(
 
     # Construct GPTModel with the legacy key name
     model = GPTModel(
-        model_name="gpt-4.1",
+        model="gpt-4.1",
         _openai_api_key="constructor-key",
     )
 
@@ -467,7 +467,7 @@ def test_openai_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # Construct GPTModel with an explicit key
     model = GPTModel(
-        model_name="gpt-4.1",
+        model="gpt-4.1",
         api_key="constructor-key",
     )
 
@@ -494,7 +494,7 @@ def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
         settings.OPENAI_MODEL_NAME = "gpt-4o-mini"
 
     model = GPTModel()
-    assert model.model_name == "gpt-4o-mini"
+    assert model.name == "gpt-4o-mini"
 
 
 def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
@@ -515,7 +515,7 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     openai_mod.model_pricing.pop("gpt-5-chat-latest", None)
 
     model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
-    assert model.model_name == "gpt-5-chat-latest"
+    assert model.name == "gpt-5-chat-latest"
 
     pricing = openai_mod.model_pricing["gpt-5-chat-latest"]
     assert pricing["input"] == 0.123

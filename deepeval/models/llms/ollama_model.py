@@ -20,32 +20,18 @@ from deepeval.constants import ProviderSlug as PS
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
-_ALIAS_MAP = {
-    "model_name": ["model"],
-}
-
 
 class OllamaModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "OllamaModel",
-            kwargs,
-            _ALIAS_MAP,
-        )
-
-        # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
-
         settings = get_settings()
-        model_name = model_name or settings.LOCAL_MODEL_NAME
+        model = model or settings.LOCAL_MODEL_NAME
         self.base_url = (
             base_url
             or (
@@ -58,9 +44,9 @@ class OllamaModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
-        self.kwargs = normalized_kwargs
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -80,7 +66,7 @@ class OllamaModel(DeepEvalBaseLLM):
         print(messages)
 
         response: ChatResponse = chat_model.chat(
-            model=self.model_name,
+            model=self.name,
             messages=messages,
             format=schema.model_json_schema() if schema else None,
             options={
@@ -110,7 +96,7 @@ class OllamaModel(DeepEvalBaseLLM):
             messages = [{"role": "user", "content": prompt}]
 
         response: ChatResponse = await chat_model.chat(
-            model=self.model_name,
+            model=self.name,
             messages=messages,
             format=schema.model_json_schema() if schema else None,
             options={
@@ -207,4 +193,4 @@ class OllamaModel(DeepEvalBaseLLM):
         return cls(**kw)
 
     def get_model_name(self):
-        return f"{self.model_name} (Ollama)"
+        return f"{self.name} (Ollama)"

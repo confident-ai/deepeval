@@ -38,7 +38,7 @@ def test_local_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     model = LocalEmbeddingModel(
         api_key="ctor-secret-key",
         base_url="http://ctor-host:11434/v1",
-        model_name="ctor-embedding-model",
+        model="ctor-embedding-model",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -56,13 +56,13 @@ def test_local_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     assert base_url.rstrip("/") == "http://ctor-host:11434/v1"
 
     # Model name should match the ctor-provided model
-    assert model.model_name == "ctor-embedding-model"
+    assert model.name == "ctor-embedding-model"
 
 
 def test_local_embedding_model_defaults_from_settings(monkeypatch):
     """
     When no ctor args are provided, LocalEmbeddingModel should pull its
-    configuration (API key, base_url, model_name) from Settings, which
+    configuration (API key, base_url, model) from Settings, which
     in turn are backed by env vars.
     """
     # Seed env so Settings picks up all Local-embedding-related values
@@ -97,29 +97,4 @@ def test_local_embedding_model_defaults_from_settings(monkeypatch):
     assert base_url.rstrip("/") == "http://settings-host:11434/v1"
 
     # Model name should also come from Settings
-    assert model.model_name == "settings-embedding-model"
-
-
-########################################################
-# Test legacy keyword backwards compatability behavior #
-########################################################
-
-
-def test_local_embedding_accepts_legacy_model_keyword_and_maps_to_model_name(
-    settings,
-):
-    """
-    Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
-    - It should not be forwarded through `model.kwargs`
-    """
-    with settings.edit(persist=False):
-        settings.LOCAL_EMBEDDING_API_KEY = "test-key"
-
-    model = LocalEmbeddingModel(model="test-model")
-
-    # legacy keyword mapped to canonical parameter
-    assert model.model_name == "test-model"
-
-    # legacy key should not be forwarded to the client kwargs
-    assert "model" not in model.kwargs
+    assert model.name == "settings-embedding-model"

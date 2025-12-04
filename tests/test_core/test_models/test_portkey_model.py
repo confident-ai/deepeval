@@ -19,14 +19,14 @@ def test_portkey_model_prefers_explicit_params_over_settings(settings):
         settings.PORTKEY_API_KEY = "portkey-secret"
 
     model = PortkeyModel(
-        model_name="explicit-model",
+        model="explicit-model",
         api_key="explicit-secret",
         base_url="https://explicit.example.com/",
         provider="explicit-provider",
     )
 
     # Explicit params should win over settings
-    assert model.model_name == "explicit-model"
+    assert model.name == "explicit-model"
     assert (
         model.base_url == "https://explicit.example.com"
     )  # trailing slash stripped
@@ -47,7 +47,7 @@ def test_portkey_model_uses_settings_when_params_missing(settings):
 
     model = PortkeyModel()
 
-    assert model.model_name == "gpt-4o-mini"
+    assert model.name == "gpt-4o-mini"
     assert model.base_url == "https://api.portkey.ai/v1"
     assert model.provider == "openai"
 
@@ -66,7 +66,7 @@ def test_portkey_model_raises_if_model_missing(settings):
         settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
-        PortkeyModel(model_name=None)
+        PortkeyModel(model=None)
 
     msg = str(exc.value)
     assert "Portkey is missing a required parameter" in msg
@@ -83,7 +83,7 @@ def test_portkey_model_raises_if_base_url_missing(settings):
         settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
-        PortkeyModel(model_name="gpt-4o-mini", base_url=None)
+        PortkeyModel(model="gpt-4o-mini", base_url=None)
 
     msg = str(exc.value)
     assert "Portkey is missing a required parameter" in msg
@@ -101,7 +101,7 @@ def test_portkey_model_raises_if_provider_missing(settings):
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(
-            model_name="gpt-4o-mini", base_url="https://api.portkey.ai/v1"
+            model="gpt-4o-mini", base_url="https://api.portkey.ai/v1"
         )
 
     msg = str(exc.value)
@@ -220,30 +220,3 @@ async def test_portkey_a_generate_sends_request_and_returns_content(
     assert headers["x-portkey-api-key"] == "portkey-secret"
     assert headers["x-portkey-provider"] == "openai"
     assert headers["Content-Type"] == "application/json"
-
-
-########################################################
-# Test legacy keyword backwards compatability behavior #
-########################################################
-
-
-def test_portkey_model_accepts_legacy_model_keyword_and_maps_to_model_name(
-    settings,
-):
-    """
-    Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
-    - It should not be forwarded through `model.kwargs`
-    """
-    with settings.edit(persist=False):
-        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
-        settings.PORTKEY_PROVIDER_NAME = "openai"
-        settings.PORTKEY_API_KEY = "portkey-secret"
-
-    model = PortkeyModel(model="test-model")
-
-    # legacy keyword mapped to canonical parameter
-    assert model.model_name == "test-model"
-
-    # legacy key should not be forwarded to the client kwargs
-    assert "model" not in model.kwargs

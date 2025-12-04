@@ -24,7 +24,7 @@ def test_ollama_model_uses_explicit_model_and_base_url_over_settings(
 
     # Instantiate with explicit overrides
     model = OllamaModel(
-        model_name="ctor-model",
+        model="ctor-model",
         base_url="http://ctor-host:11434",
     )
 
@@ -32,9 +32,9 @@ def test_ollama_model_uses_explicit_model_and_base_url_over_settings(
     mock_client_cls.assert_called_once()
     _, kwargs = mock_client_cls.call_args
 
-    # Client must see the ctor host, and model_name must be the ctor model
+    # Client must see the ctor host, and model must be the ctor model
     assert kwargs.get("host") == "http://ctor-host:11434"
-    assert model.model_name == "ctor-model"
+    assert model.name == "ctor-model"
 
 
 @patch("deepeval.models.llms.ollama_model.Client")
@@ -64,27 +64,7 @@ def test_ollama_model_defaults_model_and_base_url_from_settings(
     _, kwargs = mock_client_cls.call_args
 
     # Model name and host must match the Settings values (ignoring trailing slash normalization)
-    assert model.model_name == "settings-model"
+    assert model.name == "settings-model"
     host = kwargs.get("host")
     assert host is not None
     assert host.rstrip("/") == "http://settings-host:11434"
-
-
-########################################################
-# Test legacy keyword backwards compatability behavior #
-########################################################
-
-
-def test_ollama_model_accepts_legacy_model_keyword_and_maps_to_model_name():
-    """
-    Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
-    - It should not be forwarded through `model.kwargs`
-    """
-    model = OllamaModel(model="ctor-model")
-
-    # legacy keyword mapped to canonical parameter
-    assert model.model_name == "ctor-model"
-
-    # legacy key should not be forwarded to the client kwargs
-    assert "model" not in model.kwargs

@@ -17,39 +17,24 @@ def _request_timeout_seconds() -> float:
     return timeout if timeout > 0 else 30.0
 
 
-_ALIAS_MAP = {
-    "model_name": ["model"],
-}
-
-
 class PortkeyModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[AnyUrl] = None,
         provider: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "PortkeyModel",
-            kwargs,
-            _ALIAS_MAP,
-        )
-
-        # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
-
         settings = get_settings()
-        model_name = model_name or settings.PORTKEY_MODEL_NAME
+        model = model or settings.PORTKEY_MODEL_NAME
 
-        self.model_name = require_param(
-            model_name,
+        self.name = require_param(
+            model,
             provider_label="Portkey",
             env_var_name="PORTKEY_MODEL_NAME",
-            param_hint="model_name",
+            param_hint="model",
         )
 
         if api_key is not None:
@@ -78,7 +63,7 @@ class PortkeyModel(DeepEvalBaseLLM):
             param_hint="provider",
         )
         # Keep sanitized kwargs for client call to strip legacy keys
-        self.kwargs = normalized_kwargs
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
 
     def _headers(self) -> Dict[str, str]:
@@ -99,7 +84,7 @@ class PortkeyModel(DeepEvalBaseLLM):
 
     def _payload(self, prompt: str) -> Dict[str, Any]:
         payload = {
-            "model": self.model_name,
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
         }
         if self.generation_kwargs:
@@ -155,9 +140,6 @@ class PortkeyModel(DeepEvalBaseLLM):
                     )
                 data = await response.json()
                 return self._extract_content(data)
-
-    def get_model_name(self) -> str:
-        return f"Portkey ({self.model_name})"
 
     def load_model(self):
         return None

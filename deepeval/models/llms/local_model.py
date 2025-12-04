@@ -20,15 +20,11 @@ from deepeval.constants import ProviderSlug as PS
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
 
-_ALIAS_MAP = {
-    "model_name": ["model"],
-}
-
 
 class LocalModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
@@ -36,19 +32,9 @@ class LocalModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "LocalModel",
-            kwargs,
-            _ALIAS_MAP,
-        )
-
-        # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
-
         settings = get_settings()
 
-        model_name = model_name or settings.LOCAL_MODEL_NAME
+        model = model or settings.LOCAL_MODEL_NAME
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
             self.local_model_api_key: SecretStr | None = SecretStr(api_key)
@@ -65,9 +51,9 @@ class LocalModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
-        self.kwargs = normalized_kwargs
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -79,7 +65,7 @@ class LocalModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
         response: ChatCompletion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -98,7 +84,7 @@ class LocalModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=True)
         response: ChatCompletion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -116,7 +102,7 @@ class LocalModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        return f"{self.model_name} (Local Model)"
+        return f"{self.name} (Local Model)"
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

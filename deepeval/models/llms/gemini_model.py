@@ -8,6 +8,7 @@ from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,    
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -32,7 +33,7 @@ class GeminiModel(DeepEvalBaseLLM):
     To use Vertex AI API, set project and location attributes.
 
     Attributes:
-        model_name: Name of the Gemini model to use
+        model: Name of the Gemini model to use
         api_key: Google API key for authentication
         project: Google Cloud project ID
         location: Google Cloud location
@@ -43,7 +44,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         # Initialize the model
         model = GeminiModel(
-            model_name="gemini-1.5-pro-001",
+            model="gemini-1.5-pro-001",
             api_key="your-api-key"
         )
 
@@ -54,7 +55,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: float = 0,
         project: Optional[str] = None,
@@ -63,11 +64,11 @@ class GeminiModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-
+        
         settings = get_settings()
 
-        model_name = (
-            model_name or settings.GEMINI_MODEL_NAME or default_gemini_model
+        model = (
+            model or settings.GEMINI_MODEL_NAME or default_gemini_model
         )
 
         # Get API key from settings if not provided
@@ -122,7 +123,7 @@ class GeminiModel(DeepEvalBaseLLM):
             ),
         ]
 
-        super().__init__(model_name, **self.kwargs)
+        super().__init__(model)
 
     def should_use_vertexai(self) -> bool:
         """Checks if the model should use Vertex AI for generation.
@@ -208,7 +209,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if schema is not None:
             response = client.models.generate_content(
-                model=self.model_name,
+                model=self.name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -221,7 +222,7 @@ class GeminiModel(DeepEvalBaseLLM):
             return response.parsed, 0
         else:
             response = client.models.generate_content(
-                model=self.model_name,
+                model=self.name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
@@ -252,7 +253,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if schema is not None:
             response = await client.aio.models.generate_content(
-                model=self.model_name,
+                model=self.name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -265,7 +266,7 @@ class GeminiModel(DeepEvalBaseLLM):
             return response.parsed, 0
         else:
             response = await client.aio.models.generate_content(
-                model=self.model_name,
+                model=self.name,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
@@ -279,11 +280,7 @@ class GeminiModel(DeepEvalBaseLLM):
     # Model #
     #########
 
-    def get_model_name(self) -> str:
-        """Returns the name of the Gemini model being used."""
-        return self.model_name
-
-    def load_model(self, *args, **kwargs):
+    def load_model(self):
         """Creates a client.
         With Gen AI SDK, model is set at inference time, so there is no
         model to load and initialize.
@@ -292,7 +289,7 @@ class GeminiModel(DeepEvalBaseLLM):
         Returns:
             A GenerativeModel instance configured for evaluation.
         """
-        return self._build_client(**kwargs)
+        return self._build_client()
 
     def _client_kwargs(self, **override_kwargs) -> Dict:
         """Merge ctor kwargs with any overrides passed at load_model time."""
@@ -301,8 +298,8 @@ class GeminiModel(DeepEvalBaseLLM):
             client_kwargs.update(override_kwargs)
         return client_kwargs
 
-    def _build_client(self, **override_kwargs) -> Client:
-        client_kwargs = self._client_kwargs(**override_kwargs)
+    def _build_client(self) -> Client:
+        client_kwargs = self._client_kwargs(**self.kwargs)
 
         if self.should_use_vertexai():
             if not self.project or not self.location:

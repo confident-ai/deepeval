@@ -73,34 +73,20 @@ model_pricing = {
     },
 }
 
-_ALIAS_MAP = {
-    "model_name": ["model"],
-}
-
 
 class KimiModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "KimiModel",
-            kwargs,
-            _ALIAS_MAP,
-        )
-
-        # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
-
         settings = get_settings()
 
-        model_name = model_name or settings.MOONSHOT_MODEL_NAME
-        if model_name not in model_pricing:
+        model = model or settings.MOONSHOT_MODEL_NAME
+        if model not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
             )
@@ -121,9 +107,9 @@ class KimiModel(DeepEvalBaseLLM):
 
         self.base_url = "https://api.moonshot.cn/v1"
         # Keep sanitized kwargs for client call to strip legacy keys
-        self.kwargs = normalized_kwargs
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -134,9 +120,9 @@ class KimiModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
-        if schema and self.model_name in json_mode_models:
+        if schema and self.name in json_mode_models:
             completion = client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -152,7 +138,7 @@ class KimiModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             **self.generation_kwargs,
         )
@@ -172,9 +158,9 @@ class KimiModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=True)
-        if schema and self.model_name in json_mode_models:
+        if schema and self.name in json_mode_models:
             completion = await client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -190,7 +176,7 @@ class KimiModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             **self.generation_kwargs,
         )
@@ -214,7 +200,7 @@ class KimiModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -260,6 +246,3 @@ class KimiModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
-
-    def get_model_name(self):
-        return f"{self.model_name}"

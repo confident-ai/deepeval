@@ -230,7 +230,6 @@ def _request_timeout_seconds() -> float:
 
 
 _ALIAS_MAP = {
-    "model_name": ["model"],
     "api_key": ["_openai_api_key"],
 }
 
@@ -238,7 +237,7 @@ _ALIAS_MAP = {
 class GPTModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
@@ -254,13 +253,11 @@ class GPTModel(DeepEvalBaseLLM):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 
         settings = get_settings()
-        model_name = model_name or settings.OPENAI_MODEL_NAME
+        model = model or settings.OPENAI_MODEL_NAME
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
@@ -272,26 +269,26 @@ class GPTModel(DeepEvalBaseLLM):
             else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
-        if model_name is None:
-            model_name = default_gpt_model
+        if model is None:
+            model = default_gpt_model
 
-        if isinstance(model_name, str):
-            model_name = parse_model_name(model_name)
-            if model_name not in valid_gpt_models:
+        if isinstance(model, str):
+            model = parse_model_name(model)
+            if model not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
 
-        if model_name not in model_pricing:
+        if model not in model_pricing:
             if cost_per_input_token is None or cost_per_output_token is None:
                 raise ValueError(
-                    f"No pricing available for `{model_name}`. "
+                    f"No pricing available for `{model}`. "
                     "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
                     "or set them via the CLI:\n"
                     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
                 )
             else:
-                model_pricing[model_name] = {
+                model_pricing[model] = {
                     "input": float(cost_per_input_token),
                     "output": float(cost_per_output_token),
                 }
@@ -306,7 +303,7 @@ class GPTModel(DeepEvalBaseLLM):
         # args and kwargs will be passed to the underlying model, in load_model function
 
         # Auto-adjust temperature for models that require it
-        if model_name in models_requiring_temperature_1:
+        if model in models_requiring_temperature_1:
             temperature = 1
 
         if temperature < 0:
@@ -315,7 +312,7 @@ class GPTModel(DeepEvalBaseLLM):
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -332,9 +329,9 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -350,9 +347,9 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -370,7 +367,7 @@ class GPTModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -396,9 +393,9 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -414,9 +411,9 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -434,7 +431,7 @@ class GPTModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -465,7 +462,7 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -491,7 +488,7 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -514,7 +511,7 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         response = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             n=n,
             temperature=temperature,
@@ -529,7 +526,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         # TODO: consider loggin a warning instead of defaulting to whole model pricing
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -572,9 +569,6 @@ class GPTModel(DeepEvalBaseLLM):
         image_bytes = image_buffer.getvalue()
         base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
         return base64_encoded_image
-
-    def get_model_name(self):
-        return self.model_name
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

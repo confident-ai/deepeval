@@ -35,7 +35,6 @@ model_pricing = {
 }
 
 _ALIAS_MAP = {
-    "model_name": ["model"],
     "api_key": ["_anthropic_api_key"],
 }
 
@@ -43,7 +42,7 @@ _ALIAS_MAP = {
 class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: str = "claude-3-7-sonnet-latest",
+        model: str = "claude-3-7-sonnet-latest",
         api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
@@ -56,12 +55,10 @@ class AnthropicModel(DeepEvalBaseLLM):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
+        if model is None and "model" in alias_values:
+            model = alias_values["model"]
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
-
-        model_name = parse_model_name(model_name)
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -76,7 +73,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -95,7 +92,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                     "content": prompt,
                 }
             ],
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -121,7 +118,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                     "content": prompt,
                 }
             ],
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -140,7 +137,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.model_name)
+        pricing = model_pricing.get(self.name)
 
         if pricing is None:
             # Calculate average cost from all known models
@@ -153,7 +150,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             pricing = {"input": avg_input_cost, "output": avg_output_cost}
 
             warnings.warn(
-                f"[Warning] Pricing not defined for model '{self.model_name}'. "
+                f"[Warning] Pricing not defined for model '{self.name}'. "
                 "Using average input/output token costs from existing model_pricing."
             )
 
@@ -169,9 +166,6 @@ class AnthropicModel(DeepEvalBaseLLM):
         if not async_mode:
             return self._build_client(Anthropic)
         return self._build_client(AsyncAnthropic)
-
-    def get_model_name(self):
-        return f"{self.model_name}"
 
     def _client_kwargs(self) -> Dict:
         kwargs = dict(self.kwargs or {})

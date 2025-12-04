@@ -31,7 +31,6 @@ retryable_exceptions = (
 )
 
 _ALIAS_MAP = {
-    "model_name": ["model"],
     "base_url": ["api_base"],
 }
 
@@ -45,7 +44,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
@@ -60,15 +59,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
         if base_url is None and "base_url" in alias_values:
             base_url = alias_values["base_url"]
 
         settings = get_settings()
         # Get model name from parameter or key file
-        model_name = model_name or settings.LITELLM_MODEL_NAME
-        if not model_name:
+        model = model or settings.LITELLM_MODEL_NAME
+        if not model:
             raise ValueError(
                 "Model name must be provided either through parameter or set-litellm command"
             )
@@ -108,7 +105,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
-        super().__init__(model_name)
+        super().__init__(model)
 
     @retry(
         wait=wait_exponential_jitter(
@@ -124,7 +121,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         from litellm import completion
 
         completion_params = {
-            "model": self.model_name,
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
         }
@@ -179,7 +176,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         from litellm import acompletion
 
         completion_params = {
-            "model": self.model_name,
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
         }
@@ -243,7 +240,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
@@ -284,7 +281,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
@@ -323,7 +320,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": temperature,
                 "n": n,
@@ -374,8 +371,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def get_model_name(self) -> str:
         from litellm import get_llm_provider
 
-        provider = get_llm_provider(self.model_name)
-        return f"{self.model_name} ({provider})"
+        provider = get_llm_provider(self.name)
+        return f"{self.name} ({provider})"
 
     def load_model(self, async_mode: bool = False):
         """

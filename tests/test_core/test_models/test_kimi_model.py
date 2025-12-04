@@ -44,7 +44,7 @@ def test_kimi_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # Construct the model with an explicit key
     model = KimiModel(
-        model_name="moonshot-v1-8k",
+        model="moonshot-v1-8k",
         api_key="ctor-secret-key",
     )
 
@@ -88,7 +88,7 @@ def test_kimi_model_defaults_from_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.moonshot.cn/v1"
 
     # Model name should also come from Settings
-    assert model.model_name == "moonshot-v1-8k"
+    assert model.name == "moonshot-v1-8k"
 
 
 def test_kimi_model_ctor_args_override_settings(monkeypatch):
@@ -108,7 +108,7 @@ def test_kimi_model_ctor_args_override_settings(monkeypatch):
     # Explicit ctor args should override everything from Settings
     model = KimiModel(
         api_key="ctor-secret-key",
-        model_name="moonshot-v1-32k",
+        model="moonshot-v1-32k",
         temperature=0.5,
     )
 
@@ -121,32 +121,7 @@ def test_kimi_model_ctor_args_override_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.moonshot.cn/v1"
 
     # Model name should match ctor value
-    assert model.model_name == "moonshot-v1-32k"
+    assert model.name == "moonshot-v1-32k"
     # And the temperature should respect the ctor argument (assuming no
     # TEMPERATURE override from Settings)
     assert model.temperature == 0.5
-
-
-########################################################
-# Test legacy keyword backwards compatability behavior #
-########################################################
-
-
-def test_kimi_model_accepts_legacy_model_keyword_and_maps_to_model_name(
-    settings,
-):
-    """
-    Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
-    - It should not be forwarded through `model.kwargs`
-    """
-    with settings.edit(persist=False):
-        settings.MOONSHOT_API_KEY = "test-key"
-
-    model = KimiModel(model="moonshot-v1-32k")
-
-    # legacy keyword mapped to canonical parameter
-    assert model.model_name == "moonshot-v1-32k"
-
-    # legacy key should not be forwarded to the client kwargs
-    assert "model" not in model.kwargs

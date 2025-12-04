@@ -85,7 +85,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model_name="gpt-4",
+            model="gpt-4",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
@@ -120,7 +120,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model_name="gpt-4",
+            model="gpt-4",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
@@ -145,7 +145,7 @@ class TestAzureOpenAIModelGenerationKwargs:
 
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model_name="gpt-4",
+            model="gpt-4",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
@@ -284,7 +284,7 @@ def test_azure_openai_model_defaults_from_settings(monkeypatch):
     assert kw.get("api_version") == "2024-02-15-preview"
 
     # Model name should also come from Settings
-    assert model.model_name == "settings-model"
+    assert model.name == "settings-model"
 
 
 def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
@@ -308,7 +308,7 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
     # Explicit ctor args should override everything from Settings
     model = AzureOpenAIModel(
         deployment_name="ctor-deployment",
-        model_name="ctor-model",
+        model="ctor-model",
         api_key="ctor-secret-key",
         openai_api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
@@ -326,7 +326,7 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
     assert kw.get("api_version") == "2099-01-01-preview"
 
     # Model name should match ctor value
-    assert model.model_name == "ctor-model"
+    assert model.name == "ctor-model"
 
 
 ########################################################
@@ -339,7 +339,7 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
 ):
     """
     Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
+    - It should populate `model`
     - It should not be forwarded through `model.kwargs`
     """
     with settings.edit(persist=False):
@@ -382,7 +382,7 @@ def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
 
     # Construct AzureOpenAIModel with the legacy key name
     model = AzureOpenAIModel(
-        model_name="claude-3-7-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         azure_openai_api_key="constructor-key",
     )
 

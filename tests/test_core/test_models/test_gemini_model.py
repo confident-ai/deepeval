@@ -33,7 +33,7 @@ def test_gemini_model_uses_explicit_key_over_settings_and_passes_plain_str(
 
     # Construct with an explicit api_key – this must win over Settings
     model = GeminiModel(
-        model_name="gemini-1.5-pro",
+        model="gemini-1.5-pro",
         api_key="ctor-secret-key",
     )
 
@@ -68,7 +68,7 @@ def test_gemini_model_defaults_key_from_settings_and_unwraps_secret(
 
     # No ctor api_key, it must come from Settings.GOOGLE_API_KEY
     model = GeminiModel(
-        model_name="gemini-1.5-pro",
+        model="gemini-1.5-pro",
     )
 
     client = model.model

@@ -38,7 +38,7 @@ _ALIAS_MAP = {
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
@@ -62,7 +62,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         # fetch Azure deployment parameters
-        model_name = model_name or settings.AZURE_MODEL_NAME
+        model = model or settings.AZURE_MODEL_NAME
         self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
 
         if api_key is not None:
@@ -87,7 +87,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(parse_model_name(model_name))
+        super().__init__(parse_model_name(model))
 
     ###############################################
     # Other generate functions
@@ -104,7 +104,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": prompt}],
@@ -119,7 +119,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[
@@ -166,7 +166,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": prompt}],
@@ -181,7 +181,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[
@@ -317,7 +317,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing["gpt-4.1"])
+        pricing = model_pricing.get(self.name, model_pricing["gpt-4.1"])
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -325,9 +325,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
     # Model
     ###############################################
-
-    def get_model_name(self):
-        return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

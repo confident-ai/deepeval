@@ -22,9 +22,10 @@ valid_openai_embedding_models = [
     "text-embedding-3-large",
     "text-embedding-ada-002",
 ]
+
 default_openai_embedding_model = "text-embedding-3-small"
+
 _ALIAS_MAP = {
-    "model_name": ["model"],
     "api_key": ["openai_api_key"],
 }
 
@@ -33,7 +34,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -45,8 +46,6 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 
@@ -56,22 +55,22 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         else:
             self.api_key = get_settings().OPENAI_API_KEY
 
-        self.model_name = (
-            model_name if model_name else default_openai_embedding_model
+        model = (
+            model if model else default_openai_embedding_model
         )
-        if self.model_name not in valid_openai_embedding_models:
+        if model not in valid_openai_embedding_models:
             raise ValueError(
                 f"Invalid model. Available OpenAI Embedding models: {', '.join(valid_openai_embedding_models)}"
             )
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(self.model_name)
+        super().__init__(model)
 
     @retry_openai
     def embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
-            input=text, model=self.model_name, **self.generation_kwargs
+            input=text, model=self.name, **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -79,7 +78,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
-            input=texts, model=self.model_name, **self.generation_kwargs
+            input=texts, model=self.name, **self.generation_kwargs
         )
         return [item.embedding for item in response.data]
 
@@ -87,7 +86,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
-            input=text, model=self.model_name, **self.generation_kwargs
+            input=text, model=self.name, **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -95,16 +94,13 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
-            input=texts, model=self.model_name, **self.generation_kwargs
+            input=texts, model=self.name, **self.generation_kwargs
         )
         return [item.embedding for item in response.data]
 
     ###############################################
     # Model
     ###############################################
-
-    def get_model_name(self):
-        return self.model_name
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

@@ -43,7 +43,7 @@ def test_azure_embedding_model_uses_explicit_params_over_settings_and_strips_sec
         openai_api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
         deployment_name="ctor-deployment",
-        model_name="ctor-model",
+        model="ctor-model",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -61,7 +61,7 @@ def test_azure_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     assert kw.get("azure_deployment") == "ctor-deployment"
 
     # Model name should match the ctor-provided model
-    assert model.model_name == "ctor-model"
+    assert model.name == "ctor-model"
 
 
 def test_azure_embedding_model_defaults_from_settings(monkeypatch):
@@ -107,7 +107,7 @@ def test_azure_embedding_model_defaults_from_settings(monkeypatch):
     assert kw.get("azure_deployment") == "settings-embed-deployment"
 
     # Model name should default to the Azure embedding deployment
-    assert model.model_name == "settings-embed-deployment"
+    assert model.name == "settings-embed-deployment"
 
 
 ########################################################
@@ -120,7 +120,7 @@ def test_azure_embedding_model_accepts_legacy_azure_endpoint_keyword_and_maps_to
 ):
     """
     Using the legacy `model` keyword should still work:
-    - It should populate `model_name`
+    - It should populate `model`
     - It should not be forwarded through `model.kwargs`
     """
     with settings.edit(persist=False):
@@ -163,7 +163,7 @@ def test_azure_embedding_model_accepts_legacy_api_key_keyword_and_uses_it(
 
     # Construct AzureOpenAIModel with the legacy key name
     model = AzureOpenAIEmbeddingModel(
-        model_name="claude-3-7-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         openai_api_key="constructor-key",
     )
 

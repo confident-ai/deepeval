@@ -27,7 +27,7 @@ _ALIAS_MAP = {
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         deployment_name: Optional[str] = None,
@@ -71,15 +71,15 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         )
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.model_name = model_name or self.deployment_name
+        model = model or self.deployment_name
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(self.model_name)
+        super().__init__(model)
 
     @retry_azure
     def embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
-            input=text, model=self.model_name, **self.generation_kwargs
+            input=text, model=self.name, **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -87,7 +87,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
-            input=texts, model=self.model_name, **self.generation_kwargs
+            input=texts, model=self.name, **self.generation_kwargs
         )
         return [item.embedding for item in response.data]
 
@@ -95,7 +95,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
-            input=text, model=self.model_name, **self.generation_kwargs
+            input=text, model=self.name, **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -103,12 +103,9 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
-            input=texts, model=self.model_name, **self.generation_kwargs
+            input=texts, model=self.name, **self.generation_kwargs
         )
         return [item.embedding for item in response.data]
-
-    def get_model_name(self) -> str:
-        return self.model_name
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

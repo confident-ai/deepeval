@@ -13,28 +13,6 @@ from tests.test_core.stubs import _RecordingClient
 # Legacy keyword backwards compatibility behavior      #
 ########################################################
 
-
-def test_anthropic_model_accepts_legacy_model_keyword_and_maps_to_model_name(
-    settings,
-):
-    """
-    Using the legacy `model` keyword should still work:
-
-    - It should populate `model_name`
-    - It should not be forwarded through `model.kwargs`
-    """
-    with settings.edit(persist=False):
-        settings.ANTHROPIC_API_KEY = "test-key"
-
-    model = AnthropicModel(model="claude-3-7-sonnet-latest")
-
-    # legacy keyword mapped to canonical parameter
-    assert model.model_name == "claude-3-7-sonnet-latest"
-
-    # legacy key should not be forwarded to the client kwargs
-    assert "model" not in model.kwargs
-
-
 def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
     monkeypatch,
 ):
@@ -63,7 +41,7 @@ def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
 
     # Construct AnthropicModel with the legacy key name
     model = AnthropicModel(
-        model_name="claude-3-7-sonnet-latest",
+        name="claude-3-7-sonnet-latest",
         _anthropic_api_key="constructor-key",
     )
 
@@ -110,7 +88,7 @@ def test_anthropic_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # Construct AnthropicModel with an explicit key
     model = AnthropicModel(
-        model_name="claude-3-7-sonnet-latest",
+        name="claude-3-7-sonnet-latest",
         api_key="constructor-key",
     )
 
@@ -138,7 +116,7 @@ def test_anthropic_model_uses_settings_key_when_no_explicit_key(monkeypatch):
         anthropic_mod, "Anthropic", _RecordingClient, raising=True
     )
 
-    model = AnthropicModel(model_name="claude-3-7-sonnet-latest")
+    model = AnthropicModel(name="claude-3-7-sonnet-latest")
     client = model.model
     assert client.kwargs["api_key"] == "env-only-key"
 
@@ -155,7 +133,7 @@ def test_anthropic_model_uses_explicit_key_when_settings_missing(monkeypatch):
     )
 
     model = AnthropicModel(
-        model_name="claude-3-7-sonnet-latest",
+        name="claude-3-7-sonnet-latest",
         api_key="explicit-key",
     )
     client = model.model
@@ -173,7 +151,7 @@ def test_anthropic_model_raises_when_no_key_configured(monkeypatch):
     )
 
     with pytest.raises(DeepEvalError, match="not configured"):
-        AnthropicModel(model_name="claude-3-7-sonnet-latest")
+        AnthropicModel(name="claude-3-7-sonnet-latest")
 
 
 def test_anthropic_model_raises_when_explicit_key_empty(monkeypatch):
@@ -186,7 +164,7 @@ def test_anthropic_model_raises_when_explicit_key_empty(monkeypatch):
 
     with pytest.raises(DeepEvalError, match="empty"):
         AnthropicModel(
-            model_name="claude-3-7-sonnet-latest",
+            name="claude-3-7-sonnet-latest",
             api_key="",
         )
 
@@ -204,4 +182,4 @@ def test_anthropic_model_raises_when_settings_key_empty(monkeypatch):
     )
 
     with pytest.raises(DeepEvalError, match="empty"):
-        AnthropicModel(model_name="claude-3-7-sonnet-latest")
+        AnthropicModel(name="claude-3-7-sonnet-latest")

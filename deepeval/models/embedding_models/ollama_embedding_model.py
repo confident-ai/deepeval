@@ -14,13 +14,13 @@ from deepeval.constants import ProviderSlug as PS
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
-_ALIAS_MAP = {"model_name": ["model"], "base_url": ["host"]}
+_ALIAS_MAP = {"base_url": ["host"]}
 
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         base_url: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -32,8 +32,6 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
         if base_url is None and "base_url" in alias_values:
             base_url = alias_values["base_url"]
 
@@ -44,17 +42,17 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
             or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.model_name = model_name or settings.LOCAL_EMBEDDING_MODEL_NAME
+        model = model or settings.LOCAL_EMBEDDING_MODEL_NAME
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(self.model_name)
+        super().__init__(model)
 
     @retry_ollama
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         response = embedding_model.embed(
-            model=self.model_name, input=text, **self.generation_kwargs
+            model=self.name, input=text, **self.generation_kwargs
         )
         return response["embeddings"][0]
 
@@ -62,7 +60,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         response = embedding_model.embed(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return response["embeddings"]
 
@@ -70,7 +68,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embed(
-            model=self.model_name, input=text, **self.generation_kwargs
+            model=self.name, input=text, **self.generation_kwargs
         )
         return response["embeddings"][0]
 
@@ -78,7 +76,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embed(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return response["embeddings"]
 
@@ -95,4 +93,4 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return cls(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
-        return f"{self.model_name} (Ollama)"
+        return f"{self.name} (Ollama)"

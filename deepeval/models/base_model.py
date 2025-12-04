@@ -31,9 +31,9 @@ class DeepEvalBaseModel(ABC):
 
 
 class DeepEvalBaseLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model_name: Optional[str] = None):
+        self.name = parse_model_name(model_name)
+        self.model = self.load_model()
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
@@ -72,18 +72,17 @@ class DeepEvalBaseLLM(ABC):
             "batch_generate is not implemented for this model"
         )
 
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    def get_model_name(self) -> str:
+        return self.name
 
 
 class DeepEvalBaseMLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
-    def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
+    def load_model(self) -> "DeepEvalBaseLLM":
         """Loads a model, that will be responsible for scoring.
 
         Returns:
@@ -108,20 +107,18 @@ class DeepEvalBaseMLLM(ABC):
             A string.
         """
         pass
-
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    
+    def get_model_name(self) -> str:
+        return self.name
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
-    def load_model(self, *args, **kwargs) -> "DeepEvalBaseEmbeddingModel":
+    def load_model(self) -> "DeepEvalBaseEmbeddingModel":
         """Loads a model, that will be responsible for generating text embeddings.
 
         Returns:
@@ -165,6 +162,5 @@ class DeepEvalBaseEmbeddingModel(ABC):
         """
         pass
 
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    def get_model_name(self) -> str:
+        return self.name

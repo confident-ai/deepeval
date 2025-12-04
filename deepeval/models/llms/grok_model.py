@@ -54,35 +54,22 @@ model_pricing = {
     },
 }
 
-_ALIAS_MAP = {
-    "model_name": ["model"],
-}
-
 
 class GrokModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
-            "GrokModel",
-            kwargs,
-            _ALIAS_MAP,
-        )
-
-        # re-map depricated keywords to re-named positional args
-        if model_name is None and "model_name" in alias_values:
-            model_name = alias_values["model_name"]
 
         settings = get_settings()
 
-        model_name = model_name or settings.GROK_MODEL_NAME
+        model = model or settings.GROK_MODEL_NAME
 
-        if model_name not in model_pricing:
+        if model not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
             )
@@ -101,9 +88,9 @@ class GrokModel(DeepEvalBaseLLM):
             self.api_key = settings.GROK_API_KEY
 
         # Keep sanitized kwargs for client call to strip legacy keys
-        self.kwargs = normalized_kwargs
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -121,13 +108,13 @@ class GrokModel(DeepEvalBaseLLM):
             )
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
         chat.append(user(prompt))
 
-        if schema and self.model_name in structured_outputs_models:
+        if schema and self.name in structured_outputs_models:
             response, structured_output = chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -159,13 +146,13 @@ class GrokModel(DeepEvalBaseLLM):
             )
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
         chat.append(user(prompt))
 
-        if schema and self.model_name in structured_outputs_models:
+        if schema and self.name in structured_outputs_models:
             response, structured_output = await chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -194,7 +181,7 @@ class GrokModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -215,9 +202,6 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
-
-    def get_model_name(self):
-        return f"{self.model_name}"
 
     def _client_kwargs(self) -> Dict:
         """
