@@ -84,6 +84,15 @@ unsupported_log_probs_gpt_models = [
     "gpt-5-chat-latest",
 ]
 
+unsupported_log_probs_multimodal_gpt_models = [
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "gpt-4.5-preview-2025-02-27",
+    "o4-mini",
+]
+
 structured_outputs_models = [
     "gpt-4o",
     "gpt-4o-2024-05-13",
