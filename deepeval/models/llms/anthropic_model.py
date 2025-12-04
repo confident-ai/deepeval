@@ -11,7 +11,6 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.utils import (
-    parse_model_name,
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )

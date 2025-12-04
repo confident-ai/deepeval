@@ -8,7 +8,6 @@ from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
-    normalize_kwargs_and_extract_aliases,    
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -64,12 +63,10 @@ class GeminiModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        
+
         settings = get_settings()
 
-        model = (
-            model or settings.GEMINI_MODEL_NAME or default_gemini_model
-        )
+        model = model or settings.GEMINI_MODEL_NAME or default_gemini_model
 
         # Get API key from settings if not provided
         if api_key is not None:

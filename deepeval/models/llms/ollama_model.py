@@ -11,9 +11,6 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.test_case import MLLMImage
-from deepeval.models.utils import (
-    normalize_kwargs_and_extract_aliases,
-)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 

@@ -6,7 +6,6 @@ from deepeval.config.settings import get_settings
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     require_secret_api_key,
-    normalize_kwargs_and_extract_aliases,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.retry_policy import (

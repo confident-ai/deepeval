@@ -5,7 +5,6 @@ from pydantic import SecretStr
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
-    normalize_kwargs_and_extract_aliases,
 )
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (

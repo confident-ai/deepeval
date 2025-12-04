@@ -38,7 +38,7 @@ def safe_asyncio_run(coro):
                 return loop.run_until_complete(future)
             else:
                 return loop.run_until_complete(coro)
-        except Exception as inner_e:
+        except Exception:
             raise
-    except Exception as e:
+    except Exception:
         raise

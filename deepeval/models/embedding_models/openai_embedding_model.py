@@ -55,9 +55,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         else:
             self.api_key = get_settings().OPENAI_API_KEY
 
-        model = (
-            model if model else default_openai_embedding_model
-        )
+        model = model if model else default_openai_embedding_model
         if model not in valid_openai_embedding_models:
             raise ValueError(
                 f"Invalid model. Available OpenAI Embedding models: {', '.join(valid_openai_embedding_models)}"
