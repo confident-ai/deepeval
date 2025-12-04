@@ -152,7 +152,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         for verdict in self.verdicts:
             verdict_field = getattr(verdict, "verdict", None)
             if not isinstance(verdict_field, str):
-                # fixes #2327
                 # gaurd against non-string / None verdice
                 continue
             if verdict_field.strip().lower() == "no":
@@ -191,7 +190,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         for verdict in self.verdicts:
             verdict_field = getattr(verdict, "verdict", None)
             if not isinstance(verdict_field, str):
-                # fixes #2327
                 # gaurd against non-string / None verdice
                 continue
             if verdict_field.strip().lower() == "no":
@@ -319,7 +317,6 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         for verdict in self.verdicts:
             verdict_field = getattr(verdict, "verdict", None)
             if not isinstance(verdict_field, str):
-                # fixes #2327
                 # gaurd against non-string / None verdice
                 continue
             if verdict_field.strip().lower() != "no":
