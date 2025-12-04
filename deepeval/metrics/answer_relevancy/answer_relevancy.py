@@ -3,7 +3,6 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
-    convert_to_multi_modal_array,
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -11,7 +10,6 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     check_mllm_test_case_params,
     initialize_model,
-    initialize_multimodal_model,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
 from deepeval.metrics import BaseMetric
@@ -41,7 +39,8 @@ class AnswerRelevancyMetric(BaseMetric):
         ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.eval_model = model
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -57,21 +56,12 @@ class AnswerRelevancyMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -88,14 +78,8 @@ class AnswerRelevancyMetric(BaseMetric):
                     )
                 )
             else:
-                if multimodal:
-                    input = convert_to_multi_modal_array(test_case.input)
-                    actual_output = convert_to_multi_modal_array(
-                        test_case.actual_output
-                    )
-                else:
-                    input = test_case.input
-                    actual_output = test_case.actual_output
+                input = test_case.input
+                actual_output = test_case.actual_output
 
                 self.statements: List[str] = self._generate_statements(
                     actual_output, multimodal
@@ -130,21 +114,12 @@ class AnswerRelevancyMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -153,14 +128,8 @@ class AnswerRelevancyMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if multimodal:
-                input = convert_to_multi_modal_array(test_case.input)
-                actual_output = convert_to_multi_modal_array(
-                    test_case.actual_output
-                )
-            else:
-                input = test_case.input
-                actual_output = test_case.actual_output
+            input = test_case.input
+            actual_output = test_case.actual_output
 
             self.statements: List[str] = await self._a_generate_statements(
                 actual_output, multimodal

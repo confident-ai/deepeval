@@ -6,7 +6,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
-    convert_to_multi_modal_array,
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -14,7 +13,6 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     check_mllm_test_case_params,
     initialize_model,
-    initialize_multimodal_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -49,7 +47,8 @@ class FaithfulnessMetric(BaseMetric):
         evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.eval_model = model
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -70,21 +69,12 @@ class FaithfulnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -101,16 +91,8 @@ class FaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
-                if multimodal:
-                    retrieval_context = convert_to_multi_modal_array(
-                        test_case.retrieval_context
-                    )
-                    actual_output = convert_to_multi_modal_array(
-                        test_case.actual_output
-                    )
-                else:
-                    retrieval_context = test_case.retrieval_context
-                    actual_output = test_case.actual_output
+                retrieval_context = test_case.retrieval_context
+                actual_output = test_case.actual_output
 
                 self.truths = self._generate_truths(
                     retrieval_context, multimodal
@@ -145,21 +127,12 @@ class FaithfulnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-
         if multimodal:
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -168,16 +141,8 @@ class FaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if multimodal:
-                retrieval_context = convert_to_multi_modal_array(
-                    test_case.retrieval_context
-                )
-                actual_output = convert_to_multi_modal_array(
-                    test_case.actual_output
-                )
-            else:
-                retrieval_context = test_case.retrieval_context
-                actual_output = test_case.actual_output
+            retrieval_context = test_case.retrieval_context
+            actual_output = test_case.actual_output
 
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(retrieval_context, multimodal),

@@ -48,7 +48,8 @@ class ContextualPrecisionMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
-        self.eval_model = model
+        self.model, self.using_native_model = initialize_model(model)
+        self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
@@ -68,16 +69,8 @@ class ContextualPrecisionMetric(BaseMetric):
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -145,16 +138,8 @@ class ContextualPrecisionMetric(BaseMetric):
             check_mllm_test_case_params(
                 test_case, self._required_params, None, None, self
             )
-            self.model, self.using_native_model = initialize_multimodal_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(
-                self.eval_model
-            )
-            self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

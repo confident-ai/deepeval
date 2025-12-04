@@ -142,42 +142,34 @@ JSON:
 
     @staticmethod
     def generate_multimodal_claims(excerpt):
-        return (
-            [
-                textwrap.dedent(
-                    f"""Based on the given excerpt, which contains text and possibly images, please generate a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text and images.
+        return textwrap.dedent(
+            f"""Based on the given excerpt, which contains text and possibly images, please generate a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text and images.
 
-                    Example:
-                    Example Excerpt: 
-                    "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+            Example:
+            Example Excerpt: 
+            "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
 
-                    Example JSON: 
-                    {{
-                        "claims": [
-                            "Einstein won the noble prize for his discovery of the photoelectric effect.",
-                            "Einstein won the noble prize in 1968."
-                        ]  
-                    }}
-                    ===== END OF EXAMPLE ======
+            Example JSON: 
+            {{
+                "claims": [
+                    "Einstein won the noble prize for his discovery of the photoelectric effect.",
+                    "Einstein won the noble prize in 1968."
+                ]  
+            }}
+            ===== END OF EXAMPLE ======
 
-                    **
-                    IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
-                    Only include claims that are factual, and the claims you extract should include the full context it was presented in, NOT cherry picked facts.
-                    You should NOT include any prior knowledge, and take the text at face value when extracting claims.
-                    **
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
+            Only include claims that are factual, and the claims you extract should include the full context it was presented in, NOT cherry picked facts.
+            You should NOT include any prior knowledge, and take the text at face value when extracting claims.
+            **
 
-                    Text:
-                    """
-                )
-            ]
-            + excerpt
-            + [
-                textwrap.dedent(
-                    f"""
-                    JSON:
-                    """
-                )
-            ]
+            Text:
+            
+            {excerpt}
+
+            JSON:
+            """
         )
 
     @staticmethod
@@ -190,41 +182,33 @@ JSON:
             limit = " the single most important FACTUAL, undisputed truth"
         else:
             limit = f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
-        return (
-            [
-                textwrap.dedent(
-                    f"""Based on the given excerpt (text and images), please generate a comprehensive list of{limit}, that can inferred from the provided excerpt.
+        return textwrap.dedent(
+            f"""Based on the given excerpt (text and images), please generate a comprehensive list of{limit}, that can inferred from the provided excerpt.
 
-                    Example:
-                    Example Excerpt: 
-                    "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
+            Example:
+            Example Excerpt: 
+            "Einstein won the noble prize in 1968 for his discovery of the photoelectric effect."
 
-                    Example JSON: 
-                    {{
-                        "truths": [
-                            "Einstein won the noble prize for his discovery of the photoelectric effect.",
-                            "Einstein won the noble prize in 1968."
-                        ]  
-                    }}
-                    ===== END OF EXAMPLE ======
+            Example JSON: 
+            {{
+                "truths": [
+                    "Einstein won the noble prize for his discovery of the photoelectric effect.",
+                    "Einstein won the noble prize in 1968."
+                ]  
+            }}
+            ===== END OF EXAMPLE ======
 
-                    **
-                    IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
-                    Only include truths that are factual.
-                    **
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
+            Only include truths that are factual.
+            **
 
-                    Excerpt:
-                    """
-                )
-            ]
-            + excerpt
-            + [
-                textwrap.dedent(
-                    f"""
-                    JSON:
-                    """
-                )
-            ]
+            Excerpt:
+            
+            {excerpt}
+
+            JSON:
+            """
         )
 
     @staticmethod
