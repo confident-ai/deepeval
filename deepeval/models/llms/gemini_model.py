@@ -131,7 +131,7 @@ class GeminiModel(DeepEvalBaseLLM):
             True if the model should use Vertex AI, False otherwise
         """
         if self.use_vertexai is not None:
-            return self.use_vertexai.lower() == "yes"
+            return self.use_vertexai
         if self.project and self.location:
             return True
         else:
