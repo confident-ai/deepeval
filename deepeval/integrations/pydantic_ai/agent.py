@@ -11,7 +11,7 @@ except ImportError:
         """Dummy fallback so imports don't crash when pydantic-ai is missing."""
 
         def __init__(self, *args: Any, **kwargs: Any) -> None:
-            # No-op: for compatability
+            # No-op: for compatibility
             pass
 
         
