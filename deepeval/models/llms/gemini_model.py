@@ -138,7 +138,7 @@ class GeminiModel(DeepEvalBaseLLM):
             return True
         else:
             return False
-        
+
     @retry_gemini
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []

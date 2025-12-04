@@ -83,7 +83,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
-            
+
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
@@ -255,7 +255,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(input_tokens, output_tokens)
 
         return completion, cost
-    
+
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):

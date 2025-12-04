@@ -548,7 +548,8 @@ def convert_to_multi_modal_array(input: Union[str, List[str]]):
             parsed_array = MLLMImage.parse_multimodal_string(context)
             new_list.extend(parsed_array)
         return new_list
-    
+
+
 def check_if_multimodal(input: str):
     pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
     matches = list(re.finditer(pattern, input))

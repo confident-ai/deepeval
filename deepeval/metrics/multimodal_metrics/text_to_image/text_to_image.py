@@ -182,9 +182,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             {images}
         """
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, ReasonScore
-            )
+            res, cost = await self.model.a_generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
@@ -194,9 +192,7 @@ class TextToImageMetric(BaseMultimodalMetric):
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(
-                    prompt, input_text=prompt
-                )
+                res = await self.model.a_generate(prompt, input_text=prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -243,9 +239,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             {images}
         """
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, ReasonScore
-            )
+            res, cost = await self.model.a_generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:

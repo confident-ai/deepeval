@@ -3,10 +3,7 @@ from deepeval.test_case import MLLMImage
 from deepeval.models.llms.openai_model import (
     unsupported_log_probs_multimodal_gpt_models,
 )
-from deepeval.models import (
-    DeepEvalBaseMLLM,
-    GPTModel
-)
+from deepeval.models import DeepEvalBaseMLLM, GPTModel
 
 from typing import List, Union
 

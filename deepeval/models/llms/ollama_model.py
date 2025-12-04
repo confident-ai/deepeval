@@ -59,7 +59,7 @@ class OllamaModel(DeepEvalBaseLLM):
             prompt = convert_to_multi_modal_array(prompt)
             messages = self.generate_messages(prompt)
         else:
-            messages=[{"role": "user", "content": prompt}]
+            messages = [{"role": "user", "content": prompt}]
         print(messages)
 
         response: ChatResponse = chat_model.chat(
@@ -90,8 +90,8 @@ class OllamaModel(DeepEvalBaseLLM):
             prompt = convert_to_multi_modal_array(prompt)
             messages = self.generate_messages(prompt)
         else:
-            messages=[{"role": "user", "content": prompt}]
-            
+            messages = [{"role": "user", "content": prompt}]
+
         response: ChatResponse = await chat_model.chat(
             model=self.model_name,
             messages=messages,
@@ -109,7 +109,7 @@ class OllamaModel(DeepEvalBaseLLM):
             ),
             0,
         )
-    
+
     def generate_messages(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
