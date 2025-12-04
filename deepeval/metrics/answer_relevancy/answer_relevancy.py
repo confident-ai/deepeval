@@ -41,7 +41,7 @@ class AnswerRelevancyMetric(BaseMetric):
         ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model = model
+        self.eval_model = model
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -63,12 +63,14 @@ class AnswerRelevancyMetric(BaseMetric):
                 test_case, self._required_params, None, None, self
             )
             self.model, self.using_native_model = initialize_multimodal_model(
-                self.model
+                self.eval_model
             )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(self.model)
+            self.model, self.using_native_model = initialize_model(
+                self.eval_model
+            )
             self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -134,12 +136,14 @@ class AnswerRelevancyMetric(BaseMetric):
                 test_case, self._required_params, None, None, self
             )
             self.model, self.using_native_model = initialize_multimodal_model(
-                self.model
+                self.eval_model
             )
             self.evaluation_model = self.model.get_model_name()
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
-            self.model, self.using_native_model = initialize_model(self.model)
+            self.model, self.using_native_model = initialize_model(
+                self.eval_model
+            )
             self.evaluation_model = self.model.get_model_name()
 
         self.evaluation_cost = 0 if self.using_native_model else None
