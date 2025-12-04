@@ -1,11 +1,16 @@
 from ollama import Client, AsyncClient, ChatResponse
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
+import requests
+import base64
+import io
 
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
+from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
+from deepeval.test_case import MLLMImage
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -49,9 +54,17 @@ class OllamaModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         chat_model = self.load_model()
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(prompt)
+            messages = self.generate_messages(prompt)
+        else:
+            messages=[{"role": "user", "content": prompt}]
+        print(messages)
+
         response: ChatResponse = chat_model.chat(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             format=schema.model_json_schema() if schema else None,
             options={
                 **{"temperature": self.temperature},
@@ -72,9 +85,16 @@ class OllamaModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
         chat_model = self.load_model(async_mode=True)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(prompt)
+            messages = self.generate_messages(prompt)
+        else:
+            messages=[{"role": "user", "content": prompt}]
+            
         response: ChatResponse = await chat_model.chat(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             format=schema.model_json_schema() if schema else None,
             options={
                 **{"temperature": self.temperature},
@@ -89,6 +109,65 @@ class OllamaModel(DeepEvalBaseLLM):
             ),
             0,
         )
+    
+    def generate_messages(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        messages = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": ele,
+                    }
+                )
+            elif isinstance(ele, MLLMImage):
+                img_b64 = self.convert_to_base64(ele.url, ele.local)
+                if img_b64 is not None:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "images": [img_b64],
+                        }
+                    )
+        return messages
+
+    ###############################################
+    # Utilities
+    ###############################################
+
+    def convert_to_base64(self, image_source: str, is_local: bool) -> str:
+        from PIL import Image
+
+        settings = get_settings()
+        try:
+            if not is_local:
+                response = requests.get(
+                    image_source,
+                    stream=True,
+                    timeout=(
+                        settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                        settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                    ),
+                )
+                response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+                image = Image.open(io.BytesIO(response.content))
+            else:
+                image = Image.open(image_source)
+
+            buffered = io.BytesIO()
+            image.save(buffered, format="JPEG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            return img_str
+
+        except (requests.exceptions.RequestException, OSError) as e:
+            # Log, then rethrow so @retry_ollama can retry generate_messages() on network failures
+            print(f"Image fetch/encode failed: {e}")
+            raise
+        except Exception as e:
+            print(f"Error converting image to base64: {e}")
+            return None
 
     ###############################################
     # Model

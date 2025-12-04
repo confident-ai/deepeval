@@ -1,7 +1,9 @@
+import base64
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
+from io import BytesIO
 
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM
@@ -14,7 +16,8 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-
+from deepeval.test_case import MLLMImage
+from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.constants import ProviderSlug as PS
@@ -76,13 +79,16 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(prompt)
+            prompt = self.generate_prompt(prompt)
+            
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.deployment_name,
-                    messages=[
-                        {"role": "user", "content": prompt},
-                    ],
+                    messages=[{"role": "user", "content": prompt}],
                     response_format=schema,
                     temperature=self.temperature,
                 )
@@ -135,13 +141,16 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(prompt)
+            prompt = self.generate_prompt(prompt)
+
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.deployment_name,
-                    messages=[
-                        {"role": "user", "content": prompt},
-                    ],
+                    messages=[{"role": "user", "content": prompt}],
                     response_format=schema,
                     temperature=self.temperature,
                 )
@@ -203,6 +212,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": prompt}],
@@ -226,6 +238,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": prompt}],
@@ -240,6 +255,43 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(input_tokens, output_tokens)
 
         return completion, cost
+    
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        """Convert multimodal input into the proper message format for Azure OpenAI."""
+        prompt = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                if ele.local:
+                    import PIL.Image
+
+                    image = PIL.Image.open(ele.url)
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
+                        },
+                    }
+                else:
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {"url": ele.url},
+                    }
+                prompt.append(visual_dict)
+        return prompt
+
+    def encode_pil_image(self, pil_image):
+        """Encode a PIL image to base64 string."""
+        image_buffer = BytesIO()
+        if pil_image.mode in ("RGBA", "LA", "P"):
+            pil_image = pil_image.convert("RGB")
+        pil_image.save(image_buffer, format="JPEG")
+        image_bytes = image_buffer.getvalue()
+        base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        return base64_encoded_image
 
     ###############################################
     # Utilities
