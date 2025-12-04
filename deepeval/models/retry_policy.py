@@ -55,6 +55,7 @@ from tenacity.stop import stop_base
 from tenacity.wait import wait_base
 from contextvars import ContextVar, copy_context
 
+from deepeval.utils import require_dependency
 from deepeval.constants import (
     ProviderSlug as PS,
     slugify,
@@ -829,25 +830,23 @@ try:
 except Exception:  # botocore not present (aiobotocore optional)
     BEDROCK_ERROR_POLICY = None
 
-
 ####################
 # Anthropic Policy #
 ####################
 
 try:
-    from anthropic import (
-        AuthenticationError,
-        RateLimitError,
-        APIConnectionError,
-        APITimeoutError,
-        APIStatusError,
+
+    module = require_dependency(
+        "anthropic",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install anthropic`.",
     )
 
     ANTHROPIC_ERROR_POLICY = ErrorPolicy(
-        auth_excs=(AuthenticationError,),
-        rate_limit_excs=(RateLimitError,),
-        network_excs=(APIConnectionError, APITimeoutError),
-        http_excs=(APIStatusError,),
+        auth_excs=(module.AuthenticationError,),
+        rate_limit_excs=(module.RateLimitError,),
+        network_excs=(module.APIConnectionError, module.APITimeoutError),
+        http_excs=(module.APIStatusError,),
         non_retryable_codes=frozenset(),  # update if we learn of hard quota codes
         message_markers={},
     )
@@ -868,7 +867,11 @@ except Exception:  # Anthropic optional
 # and gate retries using message markers (code sniffing).
 # See: https://github.com/googleapis/python-genai?tab=readme-ov-file#error-handling
 try:
-    from google.genai import errors as gerrors
+    module = require_dependency(
+        "google.genai",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install google-genai`.",
+    )
 
     _HTTPX_NET_EXCS = _httpx_net_excs()
     _REQUESTS_EXCS = _requests_net_excs()
@@ -887,9 +890,9 @@ try:
     GOOGLE_ERROR_POLICY = ErrorPolicy(
         auth_excs=(),  # we will classify 401/403 via markers below (see non-retryable codes)
         rate_limit_excs=(
-            gerrors.ClientError,
+            module.gerrors.ClientError,
         ),  # includes 429; markers decide retry vs not
-        network_excs=(gerrors.ServerError,)
+        network_excs=(module.gerrors.ServerError,)
         + _HTTPX_NET_EXCS
         + _REQUESTS_EXCS,  # treat 5xx as transient
         http_excs=(),  # no reliable .status_code on exceptions; handled above

@@ -1,25 +1,35 @@
-"""Tests for OllamaEmbeddingModel settings/host + model handling."""
+from unittest.mock import patch
 
 from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.embedding_models.ollama_embedding_model import (
     OllamaEmbeddingModel,
 )
-from tests.test_core.stubs import _RecordingClient
+from tests.test_core.stubs import _RecordingClient, make_fake_ollama_module
 
 
-def test_ollama_embedding_model_uses_explicit_params_over_settings(monkeypatch):
+@patch(
+    "deepeval.models.embedding_models.ollama_embedding_model.require_dependency"
+)
+def test_ollama_embedding_model_uses_explicit_params_over_settings(
+    mock_require_dep, settings
+):
     """
-    Explicit ctor host/model must override Settings.*, and _build_client
-    should receive the ctor host even if Settings provides defaults.
+    Explicit ctor host/model must override Settings.*, and the underlying
+    Ollama client must be constructed with the ctor host even if Settings
+    provides defaults.
     """
     # Seed env so Settings sees baseline values
-    monkeypatch.setenv("LOCAL_EMBEDDING_BASE_URL", "http://settings-host:11434")
-    monkeypatch.setenv("LOCAL_EMBEDDING_MODEL_NAME", "settings-embedding-model")
+    with settings.edit(persist=False):
+        settings.LOCAL_EMBEDDING_BASE_URL = "http://settings-host:11434"
+        settings.LOCAL_EMBEDDING_MODEL_NAME = "settings-embedding-model"
 
-    # Rebuild Settings from env (not strictly required for these tests,
-    # but keeps behavior consistent with other embedding tests)
+    # Rebuild Settings from env
     reset_settings(reload_dotenv=False)
     _ = get_settings()
+
+    # Fake ollama module returned by require_dependency
+    fake_ollama = make_fake_ollama_module(_RecordingClient)
+    mock_require_dep.return_value = fake_ollama
 
     # Explicit ctor args should override everything from Settings
     model = OllamaEmbeddingModel(
@@ -27,8 +37,8 @@ def test_ollama_embedding_model_uses_explicit_params_over_settings(monkeypatch):
         base_url="http://ctor-host:11434",
     )
 
-    # Directly exercise _build_client to verify resolved kwargs
-    client = model._build_client(_RecordingClient)
+    # Exercise load_model() so we go through require_dependency + _build_client
+    client = model.load_model()
     kw = client.kwargs
 
     # Host should come from ctor, not Settings
@@ -39,25 +49,43 @@ def test_ollama_embedding_model_uses_explicit_params_over_settings(monkeypatch):
     # Model name should be the ctor-provided value
     assert model.name == "ctor-embedding-model"
 
+    # ensure we actually called require_dependency
+    mock_require_dep.assert_any_call(
+        "ollama",
+        provider_label="OllamaEmbeddingModel",
+        install_hint="Install it with `pip install ollama`.",
+    )
 
-def test_ollama_embedding_model_defaults_from_settings(monkeypatch):
+
+@patch(
+    "deepeval.models.embedding_models.ollama_embedding_model.require_dependency"
+)
+def test_ollama_embedding_model_defaults_from_settings(
+    mock_require_dep,
+    settings,
+):
     """
     When no ctor args are provided, OllamaEmbeddingModel should pull host
     and model from Settings, which are backed by env vars.
     """
     # Seed env so Settings picks up Ollama-related defaults
-    monkeypatch.setenv("LOCAL_EMBEDDING_BASE_URL", "http://settings-host:11434")
-    monkeypatch.setenv("LOCAL_EMBEDDING_MODEL_NAME", "settings-embedding-model")
+    with settings.edit(persist=False):
+        settings.LOCAL_EMBEDDING_BASE_URL = "http://settings-host:11434"
+        settings.LOCAL_EMBEDDING_MODEL_NAME = "settings-embedding-model"
 
     # Rebuild Settings from env
     reset_settings(reload_dotenv=False)
     _ = get_settings()
 
+    # Fake ollama module returned by require_dependency
+    fake_ollama = make_fake_ollama_module(_RecordingClient)
+    mock_require_dep.return_value = fake_ollama
+
     # No ctor args: everything should come from Settings
     model = OllamaEmbeddingModel()
 
-    # Directly exercise _build_client to verify resolved kwargs
-    client = model._build_client(_RecordingClient)
+    # Exercise load_model() so we go through require_dependency + _build_client
+    client = model.load_model()
     kw = client.kwargs
 
     # Host comes from Settings (allow for trailing slash differences)
@@ -67,6 +95,12 @@ def test_ollama_embedding_model_defaults_from_settings(monkeypatch):
 
     # Model name should also come from Settings
     assert model.name == "settings-embedding-model"
+
+    mock_require_dep.assert_any_call(
+        "ollama",
+        provider_label="OllamaEmbeddingModel",
+        install_hint="Install it with `pip install ollama`.",
+    )
 
 
 ########################################################

@@ -1,6 +1,7 @@
 import io
 import time
 import asyncio
+from unittest.mock import MagicMock
 from types import SimpleNamespace
 from typing import Callable, List, Optional, Protocol, runtime_checkable
 
@@ -155,8 +156,55 @@ class _RecordingClient:
     retry options to SDK constructors without making network calls.
     """
 
-    def __init__(self, **kwargs):
-        self.kwargs = dict(kwargs)
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+
+def make_fake_ollama_module(client_cls=_RecordingClient):
+    """
+    Return a fake 'ollama' module with Client / AsyncClient mocks that:
+
+    - Are MagicMocks, so tests can use assert_called_once, call_args, etc.
+    - Construct instances of `client_cls` when called, via side_effect.
+    """
+    client_mock = MagicMock()
+    async_client_mock = MagicMock()
+
+    client_mock.side_effect = client_cls
+    async_client_mock.side_effect = client_cls
+
+    return SimpleNamespace(
+        Client=client_mock,
+        AsyncClient=async_client_mock,
+    )
+
+
+def _make_fake_genai_module():
+    """
+    Return a fake 'google.genai' module where require_dependency directly returns an instance of _RecordingClient.
+    """
+    # Define the mock types
+    fake_types = SimpleNamespace(
+        SafetySetting=MagicMock(),
+        HarmCategory=SimpleNamespace(
+            HARM_CATEGORY_DANGEROUS_CONTENT="dangerous",
+            HARM_CATEGORY_HARASSMENT="harassment",
+            HARM_CATEGORY_HATE_SPEECH="hate_speech",
+            HARM_CATEGORY_SEXUALLY_EXPLICIT="sexually_explicit",
+        ),
+        HarmBlockThreshold=SimpleNamespace(
+            BLOCK_NONE="block_none",
+            BLOCK_ONLY_HIGH="block_only_high",  # Ensure this is included
+        ),
+    )
+
+    # Return the fake genai module with the actual instances
+    return SimpleNamespace(
+        Client=_RecordingClient,
+        AsyncClient=_RecordingClient,
+        types=fake_types,
+    )
 
 
 ###########

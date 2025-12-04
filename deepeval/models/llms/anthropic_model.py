@@ -1,7 +1,6 @@
 import warnings
 
-from typing import Optional, Tuple, Union, Dict
-from anthropic import Anthropic, AsyncAnthropic
+from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
 
 from deepeval.models import DeepEvalBaseLLM
@@ -16,7 +15,11 @@ from deepeval.models.utils import (
 )
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
+from deepeval.utils import require_dependency
 
+
+if TYPE_CHECKING:
+    pass
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
@@ -162,9 +165,15 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
+        module = require_dependency(
+            "anthropic",
+            provider_label="AnthropicModel",
+            install_hint="Install it with `pip install anthropic`.",
+        )
+
         if not async_mode:
-            return self._build_client(Anthropic)
-        return self._build_client(AsyncAnthropic)
+            return self._build_client(module.Anthropic)
+        return self._build_client(module.AsyncAnthropic)
 
     def _client_kwargs(self) -> Dict:
         kwargs = dict(self.kwargs or {})

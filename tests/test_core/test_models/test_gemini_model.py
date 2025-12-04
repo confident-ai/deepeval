@@ -2,10 +2,8 @@ from unittest.mock import patch
 
 from pydantic import SecretStr
 
-
-from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.llms.gemini_model import GeminiModel
-from tests.test_core.stubs import _RecordingClient
+from tests.test_core.stubs import _make_fake_genai_module
 
 
 ##########################
@@ -13,20 +11,21 @@ from tests.test_core.stubs import _RecordingClient
 ##########################
 
 
-@patch("deepeval.models.llms.gemini_model.Client", new=_RecordingClient)
+@patch("deepeval.models.llms.gemini_model.require_dependency")
 def test_gemini_model_uses_explicit_key_over_settings_and_passes_plain_str(
-    monkeypatch,
+    mock_require_dep,
+    settings,
 ):
     """
     Explicit ctor `api_key` must override Settings.GOOGLE_API_KEY, and the
     underlying Client must see a plain string (not SecretStr).
     """
-    # Seed env so Settings sees GOOGLE_API_KEY
-    monkeypatch.setenv("GOOGLE_API_KEY", "env-secret-key")
+    # When GeminiModel calls require_dependency(...), return our fake module
+    mock_require_dep.return_value = _make_fake_genai_module()
 
-    # Rebuild Settings from env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed env so Settings sees GOOGLE_API_KEY
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "env-secret-key"
 
     # Settings should expose this as a SecretStr
     assert isinstance(settings.GOOGLE_API_KEY, SecretStr)
@@ -46,21 +45,21 @@ def test_gemini_model_uses_explicit_key_over_settings_and_passes_plain_str(
     assert api_key == "ctor-secret-key"
 
 
-@patch("deepeval.models.llms.gemini_model.Client", new=_RecordingClient)
+@patch("deepeval.models.llms.gemini_model.require_dependency")
 def test_gemini_model_defaults_key_from_settings_and_unwraps_secret(
-    monkeypatch,
+    mock_require_dep,
+    settings,
 ):
     """
     When no ctor `api_key` is provided, GeminiModel should pull the key
     from Settings.GOOGLE_API_KEY and unwrap it to a plain string for the
     underlying Client.
     """
-    # Seed env so Settings picks up GOOGLE_API_KEY
-    monkeypatch.setenv("GOOGLE_API_KEY", "env-secret-key")
+    mock_require_dep.return_value = _make_fake_genai_module()
 
-    # Rebuild Settings from env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed env so Settings picks up GOOGLE_API_KEY
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "env-secret-key"
 
     # Settings should expose this as a SecretStr
     assert isinstance(settings.GOOGLE_API_KEY, SecretStr)
