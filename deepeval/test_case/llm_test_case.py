@@ -9,10 +9,11 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
-from dataclasses import dataclass, field
+import re
 import os
 import mimetypes
 import base64
+from dataclasses import dataclass, field
 from urllib.parse import urlparse, unquote
 from deepeval.utils import make_model_config
 
@@ -113,35 +114,31 @@ class MLLMImage:
             path = unquote(raw_path)
             return os.path.exists(path)
         return False
-
+    
     def parse_multimodal_string(s: str):
-        import re
-
-        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
-
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         matches = list(re.finditer(pattern, s))
-
+        
         result = []
         last_end = 0
 
         for m in matches:
             start, end = m.span()
 
-            # Add preceding text if present
             if start > last_end:
                 result.append(s[last_end:start])
 
             img_id = m.group(1)
-            img_obj = _MLLM_IMAGE_REGISTRY[img_id]
 
-            result.append(img_obj)
+            if img_id not in _MLLM_IMAGE_REGISTRY:
+                MLLMImage(url=img_id, _id=img_id)
 
+            result.append(_MLLM_IMAGE_REGISTRY[img_id])
             last_end = end
-
-        # Add trailing text if any
+        
         if last_end < len(s):
             result.append(s[last_end:])
-
+        
         return result
 
     def as_data_uri(self) -> Optional[str]:
@@ -367,7 +364,7 @@ class LLMTestCase(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
 
         auto_detect = (
             any(
