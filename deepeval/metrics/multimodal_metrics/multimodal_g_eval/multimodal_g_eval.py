@@ -17,7 +17,7 @@ from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
-    initialize_multimodal_model,
+    initialize_model,
     check_mllm_test_case_params,
     construct_verbose_logs,
     trimAndLoadJson,
@@ -62,7 +62,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         self.evaluation_params = evaluation_params
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
             evaluation_steps
@@ -185,15 +185,15 @@ class MultimodalGEval(BaseMultimodalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate([prompt], schema=Steps)
+            res, cost = await self.model.a_generate(prompt, schema=Steps)
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = await self.model.a_generate([prompt], schema=Steps)
+                res: Steps = await self.model.a_generate(prompt, schema=Steps)
                 return res.steps
             except TypeError:
-                res = await self.model.a_generate([prompt])
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 
@@ -208,15 +208,15 @@ class MultimodalGEval(BaseMultimodalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = self.model.generate([prompt], schema=Steps)
+            res, cost = self.model.generate(prompt, schema=Steps)
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = self.model.generate([prompt], schema=Steps)
+                res: Steps = self.model.generate(prompt, schema=Steps)
                 return res.steps
             except TypeError:
-                res = self.model.generate([prompt])
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 

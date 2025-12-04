@@ -10,7 +10,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_mllm_test_case_params,
-    initialize_multimodal_model,
+    initialize_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.image_helpfulness.schema import (
@@ -39,7 +39,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
@@ -261,7 +261,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
+        prompt = f"{instructions} \nImages: {image}"
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost
@@ -286,7 +286,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
+        prompt = f"{instructions} \nImages: {image}"
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost

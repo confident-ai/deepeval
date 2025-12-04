@@ -16,7 +16,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_mllm_test_case_params,
-    initialize_multimodal_model,
+    initialize_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
@@ -37,7 +37,7 @@ class TextToImageMetric(BaseMultimodalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
@@ -172,26 +172,30 @@ class TextToImageMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.append(actual_image_output)
-        prompt = [
-            TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                    text_prompt=text_prompt
+                )
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt + images, ReasonScore
+                prompt, ReasonScore
             )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
                 res = await self.model.a_generate(
-                    prompt + images, input_text=prompt
+                    prompt, input_text=prompt
                 )
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
@@ -203,23 +207,27 @@ class TextToImageMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.append(actual_image_output)
-        prompt = [
-            TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                    text_prompt=text_prompt
+                )
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images, ReasonScore)
+            res, cost = self.model.generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -227,23 +235,27 @@ class TextToImageMetric(BaseMultimodalMetric):
         self, actual_image_output: MLLMImage
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
-        prompt = [
-            TextToImageTemplate.generate_perceptual_quality_evaluation_results()
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt + images, ReasonScore
+                prompt, ReasonScore
             )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(prompt + images)
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -251,9 +263,13 @@ class TextToImageMetric(BaseMultimodalMetric):
         self, actual_image_output: MLLMImage
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
-        prompt = [
-            TextToImageTemplate.generate_perceptual_quality_evaluation_results()
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
             res, cost = self.model.generate(prompt + images, ReasonScore)
             self.evaluation_cost += cost
@@ -261,11 +277,11 @@ class TextToImageMetric(BaseMultimodalMetric):
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 

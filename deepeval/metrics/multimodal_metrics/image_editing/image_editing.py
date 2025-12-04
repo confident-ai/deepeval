@@ -16,7 +16,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_mllm_test_case_params,
-    initialize_multimodal_model,
+    initialize_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
@@ -38,7 +38,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode

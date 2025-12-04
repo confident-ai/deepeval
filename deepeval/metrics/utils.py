@@ -23,10 +23,6 @@ from deepeval.models import (
     OllamaEmbeddingModel,
     LocalEmbeddingModel,
     GeminiModel,
-    MultimodalOpenAIModel,
-    MultimodalGeminiModel,
-    MultimodalOllamaModel,
-    MultimodalAzureOpenAIMLLMModel,
     AmazonBedrockModel,
     LiteLLMModel,
     KimiModel,
@@ -493,42 +489,6 @@ def is_native_model(
 ###############################################
 # Multimodal Model
 ###############################################
-
-
-def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
-    """
-    Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
-    """
-    if is_native_mllm(model):
-        return model, True
-    if isinstance(model, DeepEvalBaseMLLM):
-        return model, False
-    if should_use_gemini_model():
-        return MultimodalGeminiModel(), True
-    if should_use_ollama_model():
-        return MultimodalOllamaModel(), True
-    elif should_use_azure_openai():
-        return MultimodalAzureOpenAIMLLMModel(model_name=model), True
-    elif isinstance(model, str) or model is None:
-        return MultimodalOpenAIModel(model=model), True
-    raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalOllamaModel."
-    )
-
-
-def is_native_mllm(
-    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-) -> bool:
-    if (
-        isinstance(model, MultimodalOpenAIModel)
-        or isinstance(model, MultimodalOllamaModel)
-        or isinstance(model, MultimodalGeminiModel)
-    ):
-        return True
-    else:
-        return False
 
 
 ###############################################

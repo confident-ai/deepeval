@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     check_mllm_test_case_params,
     initialize_model,
-    initialize_multimodal_model,
 )
 from deepeval.test_case import (
     LLMTestCase,
