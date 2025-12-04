@@ -1,6 +1,6 @@
 from pydantic import SecretStr
 
-from deepeval.config.settings import get_settings, reset_settings
+from deepeval.config.settings import reset_settings
 from deepeval.models.mlllms.openai_model import (
     MultimodalOpenAIModel,
     default_multimodal_gpt_model,
@@ -14,19 +14,16 @@ from tests.test_core.stubs import _RecordingClient
 
 
 def test_multimodal_openai_model_uses_explicit_key_over_settings_and_strips_secret(
-    monkeypatch,
+    settings,
 ):
     """
     Explicit ctor `_openai_api_key` must override Settings.OPENAI_API_KEY, and
     _build_client should see a plain string even though Settings stores a
     SecretStr.
     """
-    # Seed env so Settings sees an OPENAI_API_KEY
-    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
-
-    # Rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed settings with OPENAI_API_KEY
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
 
     # Sanity check: Settings should expose this as a SecretStr
     assert isinstance(settings.OPENAI_API_KEY, SecretStr)
@@ -46,18 +43,15 @@ def test_multimodal_openai_model_uses_explicit_key_over_settings_and_strips_secr
     assert api_key == "ctor-secret-key"
 
 
-def test_multimodal_openai_model_defaults_key_from_settings(monkeypatch):
+def test_multimodal_openai_model_defaults_key_from_settings(settings):
     """
     When no ctor `_openai_api_key` is provided, MultimodalOpenAIModel should
     pull the API key from Settings.OPENAI_API_KEY (backed by env) and unwrap
     it to a plain string for the client.
     """
-    # Seed env so Settings picks up OPENAI_API_KEY
-    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
-
-    # Rebuild settings from env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed settings with OPENAI_API_KEY
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
 
     # Sanity: Settings should expose this as a SecretStr
     assert isinstance(settings.OPENAI_API_KEY, SecretStr)
@@ -79,16 +73,14 @@ def test_multimodal_openai_model_defaults_key_from_settings(monkeypatch):
 ################################
 
 
-def test_multimodal_openai_model_uses_explicit_model_over_settings(monkeypatch):
+def test_multimodal_openai_model_uses_explicit_model_over_settings(settings):
     """
     Explicit ctor `model` must override Settings.OPENAI_MODEL_NAME.
     """
-    # Seed env for both API key + MLLM model
-    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
-    monkeypatch.setenv("OPENAI_MODEL_NAME", "gpt-4o")
-
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed settings
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
+        settings.OPENAI_MODEL_NAME = "gpt-4o"
 
     # Sanity: settings contains our seeded model name
     assert settings.OPENAI_MODEL_NAME == "gpt-4o"
@@ -100,17 +92,15 @@ def test_multimodal_openai_model_uses_explicit_model_over_settings(monkeypatch):
     assert model.model_name == "gpt-4.1"
 
 
-def test_multimodal_openai_model_defaults_model_from_settings(monkeypatch):
+def test_multimodal_openai_model_defaults_model_from_settings(settings):
     """
     When ctor `model` is None, MultimodalOpenAIModel should pull the model
     name from Settings.OPENAI_MODEL_NAME.
     """
-    # Seed env so Settings picks up the MLLM model name and API key
-    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
-    monkeypatch.setenv("OPENAI_MODEL_NAME", "gpt-4o")
-
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Seed settings
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
+        settings.OPENAI_MODEL_NAME = "gpt-4o"
 
     # Sanity: settings contains our seeded model name
     assert settings.OPENAI_MODEL_NAME == "gpt-4o"
@@ -121,11 +111,18 @@ def test_multimodal_openai_model_defaults_model_from_settings(monkeypatch):
     assert model.model_name == "gpt-4o"
 
 
-def test_multimodal_openai_model_uses_default_when_no_model_config(monkeypatch):
+def test_multimodal_openai_model_uses_default_when_no_model_config(
+    monkeypatch, settings
+):
     """
     If both ctor `model` and Settings.OPENAI_MODEL_NAME are None,
     MultimodalOpenAIModel should use default_multimodal_gpt_model.
     """
+
+    # Seed settings
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "env-secret-key"
+
     # Ensure no model name is available from env-backed settings
     monkeypatch.delenv("OPENAI_MODEL_NAME", raising=False)
     # API key can be absent for this test

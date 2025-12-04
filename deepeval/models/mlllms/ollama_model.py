@@ -1,10 +1,10 @@
-from typing import Optional, Tuple, List, Union, Dict
-from ollama import Client, AsyncClient, ChatResponse
+from typing import TYPE_CHECKING, Optional, Tuple, List, Union, Dict
 from pydantic import BaseModel
 import requests
 import base64
 import io
 
+from deepeval.utils import require_dependency
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -13,6 +13,9 @@ from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 
+
+if TYPE_CHECKING:
+    from ollama import ChatResponse
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
@@ -42,6 +45,7 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
 
         # Resolve model name
         model_name = model or settings.LOCAL_MODEL_NAME
+        self._module = self._require_module()
 
         # Client kwargs
         self.kwargs = kwargs or {}
@@ -155,10 +159,17 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
     # Model
     ###############################################
 
+    def _require_module(self):
+        return require_dependency(
+            "ollama",
+            provider_label="MultimodalOllamaModel",
+            install_hint="Install it with `pip install ollama`.",
+        )
+
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return self._build_client(Client)
-        return self._build_client(AsyncClient)
+            return self._build_client(self._module.Client)
+        return self._build_client(self._module.AsyncClient)
 
     def _client_kwargs(self) -> Dict:
         """

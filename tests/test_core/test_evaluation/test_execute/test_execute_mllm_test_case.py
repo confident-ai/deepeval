@@ -1,5 +1,6 @@
 import asyncio
 import importlib
+import os
 import pytest
 import time
 
@@ -13,6 +14,11 @@ from deepeval.models.mlllms.openai_model import MultimodalOpenAIModel
 
 
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
 
 
 @pytest.mark.asyncio

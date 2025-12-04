@@ -1,11 +1,13 @@
 from unittest.mock import patch
+from pydantic import SecretStr
 
 from deepeval.models.mlllms.gemini_model import MultimodalGeminiModel
+from tests.test_core.stubs import _make_fake_genai_module
 
 
-@patch("deepeval.models.mlllms.gemini_model.genai.Client")
+@patch("deepeval.models.mlllms.gemini_model.require_dependency")
 def test_multimodal_gemini_direct_uses_explicit_api_key_over_settings(
-    mock_client_cls, settings
+    mock_require_dep, settings
 ):
     """
     Explicit ctor `api_key` must override Settings.GOOGLE_API_KEY when using the
@@ -16,20 +18,20 @@ def test_multimodal_gemini_direct_uses_explicit_api_key_over_settings(
         settings.GEMINI_MODEL_NAME = "settings-gemini-model"
         settings.GOOGLE_API_KEY = "env-google-api-key"
 
+    # When MultimodalGeminiModel calls require_dependency, return our fake module
+    mock_require_dep.return_value = _make_fake_genai_module()
+
+    # Settings should expose this as a SecretStr
+    assert isinstance(settings.GOOGLE_API_KEY, SecretStr)
+
     # Explicit ctor args should win over Settings.*
     model = MultimodalGeminiModel(
         model_name="ctor-gemini-model",
         api_key="ctor-google-api-key",
     )
 
-    # Force the direct Gemini path regardless of how should_use_vertexai is implemented
-    model.should_use_vertexai = lambda: False
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
-    mock_client_cls.assert_called_once()
-    kwargs = mock_client_cls.call_args.kwargs
+    client = model.model
+    kwargs = client.kwargs
 
     # Client must see the ctor api_key, not the one from Settings
     assert kwargs.get("api_key") == "ctor-google-api-key"
@@ -40,9 +42,9 @@ def test_multimodal_gemini_direct_uses_explicit_api_key_over_settings(
     assert model.model_name == "ctor-gemini-model"
 
 
-@patch("deepeval.models.mlllms.gemini_model.genai.Client")
+@patch("deepeval.models.mlllms.gemini_model.require_dependency")
 def test_multimodal_gemini_direct_defaults_api_key_from_settings(
-    mock_client_cls, settings
+    mock_require_dep, settings
 ):
     """
     When no ctor `api_key` is provided, MultimodalGeminiModel should pull the
@@ -53,16 +55,13 @@ def test_multimodal_gemini_direct_defaults_api_key_from_settings(
         settings.GEMINI_MODEL_NAME = "settings-gemini-model"
         settings.GOOGLE_API_KEY = "env-google-api-key"
 
+    # When MultimodalGeminiModel calls require_dependency, return our fake module
+    mock_require_dep.return_value = _make_fake_genai_module()
+
     model = MultimodalGeminiModel()
 
-    # Force direct Gemini path
-    model.should_use_vertexai = lambda: False
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
-    mock_client_cls.assert_called_once()
-    kwargs = mock_client_cls.call_args.kwargs
+    client = model.model
+    kwargs = client.kwargs
 
     # API key comes from Settings
     assert kwargs.get("api_key") == "env-google-api-key"
@@ -71,9 +70,9 @@ def test_multimodal_gemini_direct_defaults_api_key_from_settings(
     assert model.model_name == "settings-gemini-model"
 
 
-@patch("deepeval.models.mlllms.gemini_model.genai.Client")
+@patch("deepeval.models.mlllms.gemini_model.require_dependency")
 def test_multimodal_gemini_vertexai_uses_explicit_project_and_location_over_settings(
-    mock_client_cls, settings
+    mock_require_dep, settings
 ):
     """
     When Vertex AI is used, explicit ctor `project` and `location` must override
@@ -85,19 +84,16 @@ def test_multimodal_gemini_vertexai_uses_explicit_project_and_location_over_sett
         settings.GOOGLE_CLOUD_PROJECT = "settings-project"
         settings.GOOGLE_CLOUD_LOCATION = "settings-location"
 
+    # When MultimodalGeminiModel calls require_dependency, return our fake module
+    mock_require_dep.return_value = _make_fake_genai_module()
+
     model = MultimodalGeminiModel(
         project="ctor-project",
         location="ctor-location",
     )
 
-    # Force the Vertex AI path
-    model.should_use_vertexai = lambda: True
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
-    mock_client_cls.assert_called_once()
-    kwargs = mock_client_cls.call_args.kwargs
+    client = model.model
+    kwargs = client.kwargs
 
     # Vertex AI mode should be enabled
     assert kwargs.get("vertexai") is True
@@ -107,9 +103,9 @@ def test_multimodal_gemini_vertexai_uses_explicit_project_and_location_over_sett
     assert kwargs.get("location") == "ctor-location"
 
 
-@patch("deepeval.models.mlllms.gemini_model.genai.Client")
+@patch("deepeval.models.mlllms.gemini_model.require_dependency")
 def test_multimodal_gemini_vertexai_defaults_project_and_location_from_settings(
-    mock_client_cls, settings
+    mock_require_dep, settings
 ):
     """
     When Vertex AI is used and no ctor project/location are provided,
@@ -121,16 +117,13 @@ def test_multimodal_gemini_vertexai_defaults_project_and_location_from_settings(
         settings.GOOGLE_CLOUD_PROJECT = "settings-project"
         settings.GOOGLE_CLOUD_LOCATION = "settings-location"
 
+    # When MultimodalGeminiModel calls require_dependency, return our fake module
+    mock_require_dep.return_value = _make_fake_genai_module()
+
     model = MultimodalGeminiModel()
 
-    # Force the Vertex AI path
-    model.should_use_vertexai = lambda: True
-
-    client = model._build_client()
-    assert client is mock_client_cls.return_value
-
-    mock_client_cls.assert_called_once()
-    kwargs = mock_client_cls.call_args.kwargs
+    client = model.model
+    kwargs = client.kwargs
 
     # Vertex AI mode should be enabled
     assert kwargs.get("vertexai") is True

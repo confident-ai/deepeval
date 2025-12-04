@@ -1,10 +1,9 @@
 import requests
 from typing import Optional, List, Union
 from pydantic import BaseModel, SecretStr
-from google.genai import types
-from google import genai
 
 from deepeval.config.settings import get_settings
+from deepeval.utils import require_dependency
 from deepeval.models.utils import require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -86,23 +85,24 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         self.args = args
         self.kwargs = kwargs
 
+        self._module = self._require_module()
         # Configure default model generation settings
         self.model_safety_settings = [
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
         ]
         self.model_temperature = 0.0
@@ -164,7 +164,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                     response.raise_for_status()
                     image_data = response.content
 
-                image_part = types.Part.from_bytes(
+                image_part = self._module.types.Part.from_bytes(
                     data=image_data, mime_type="image/jpeg"
                 )
                 prompt.append(image_part)
@@ -194,7 +194,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             response = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
@@ -206,7 +206,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             response = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.model_temperature,
                 ),
@@ -235,7 +235,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             response = await client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
@@ -247,7 +247,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             response = await client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.model_temperature,
                 ),
@@ -257,6 +257,13 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
     #########
     # Model #
     #########
+
+    def _require_module(self):
+        return require_dependency(
+            "google.genai",
+            provider_label="MultimodalGeminiModel",
+            install_hint="Install it with `pip install google-genai`.",
+        )
 
     def get_model_name(self) -> str:
         """Returns the name of the Gemini model being used."""
@@ -284,6 +291,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
 
     def _build_client(self, **override_kwargs):
         """Build and return a genai.Client for either Gemini API or Vertex AI."""
+
         client_kwargs = self._client_kwargs(**override_kwargs)
 
         if self.should_use_vertexai():
@@ -295,19 +303,22 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 )
 
             # Create client for Vertex AI
-            return genai.Client(
+            client = self._module.Client(
                 vertexai=True,
                 project=self.project,
                 location=self.location,
                 **client_kwargs,
             )
 
-        api_key = require_secret_api_key(
-            self.api_key,
-            provider_label="Google Gemini",
-            env_var_name="GOOGLE_API_KEY",
-            param_hint="`api_key` to MultimodalGeminiModel(...)",
-        )
+        else:
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="Google Gemini",
+                env_var_name="GOOGLE_API_KEY",
+                param_hint="`api_key` to MultimodalGeminiModel(...)",
+            )
 
-        # Create client for Gemini API
-        return genai.Client(api_key=api_key, **client_kwargs)
+            # Create client for Gemini API
+            client = self._module.Client(api_key=api_key, **client_kwargs)
+
+        return client
