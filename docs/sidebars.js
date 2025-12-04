@@ -186,7 +186,7 @@ module.exports = {
           items: [
             "prompt-optimization-gepa",
             "prompt-optimization-miprov2",
-            "prompt-optimization-copro",
+            // "prompt-optimization-copro",
           ],
         }
       ],

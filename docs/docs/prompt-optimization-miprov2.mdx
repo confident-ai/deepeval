@@ -7,150 +7,187 @@ sidebar_label: MIPROv2
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-`deepeval`’s optimizer also supports a zero shot MIPROv2 style algorithm, adapted from the MIPROv2 optimizer in the DSPy ecosystem. In our setting, MIPROv2 treats prompt optimization as a search over a pool of candidate prompts using mini batch scores as a surrogate objective.
+**MIPROv2 (Multiprompt Instruction PRoposal Optimizer Version 2)** is a prompt optimization algorithm within `deepeval` adapted from the DSPy paper [Optimizing Instructions and Demonstrations for Multi-Stage Language Model Programs](https://arxiv.org/pdf/2406.11695). It combines intelligent instruction proposal with few-shot demonstration bootstrapping and uses Bayesian Optimization to find the optimal prompt configuration.
 
-## What Is MIPROv2?
+The core insight is that both the **instruction** (what the LLM should do) and the **demonstrations** (few-shot examples) significantly impact performance—and finding the best combination requires systematic search rather than manual tuning.
 
-Each MIPROv2 run starts from your current prompt and a set of goldens, then proposes and evaluates new prompts over a fixed number of trials.
+:::info
+MIPROv2 requires the `optuna` package for Bayesian Optimization. Install it with:
 
-In broad strokes:
-
-1. Start from your current prompt and the full set of goldens.
-2. Maintain a pool of candidate prompts that always includes the original prompt.
-3. On each trial, pick a parent prompt from the pool using an epsilon greedy rule on mean mini batch score.
-4. Rewrite the parent using metric driven feedback on a mini batch of goldens.
-5. Score the child on the same mini batch and decide whether to accept it into the pool.
-6. Periodically, and at the end, fully evaluate the best candidate on the full golden set.
-
-The result is an optimized `Prompt` plus an `OptimizationReport` that you can log or inspect later.
-
-Unlike GEPA, there is no separate Pareto split. MIPROv2 uses a single golden set both for mini batch scoring and for full evaluations of the best candidate.
-
-## Goldens And Minibatches
-
-When you call:
-
-```python
-optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
+```bash
+pip install optuna
 ```
 
-MIPROv2 uses the full list of `goldens` in two ways:
-
-- to draw mini batches for fast, noisy scoring during optimization, and
-- to run full evaluations of the current best candidate at checkpoints and at the end of the run.
-
-There is no distinction between `D_pareto` and `D_feedback`. All sampling happens from the same golden set.
-
-:::info Minibatch Sizing
-
-On each trial, `MIPRORunner` draws a mini batch from the full golden set. The size is controlled by `minibatch_size` in `MIPROConfig` (default: 8). If your dataset has fewer examples than the configured size, the runner automatically clamps to the available data.
-
-Sampling is done with replacement, so the same golden may appear more than once within or across mini batches. Larger mini batches give a more stable signal per trial at higher cost. Smaller mini batches are cheaper but noisier.
 :::
 
-Mini batch scores drive local decisions. Full evaluations are used for more reliable selection at checkpoints. Every time the internal trial counter is divisible by `full_eval_every`, the runner selects the current best candidate by mean mini batch score, evaluates it on the full golden set, and stores its per instance metric score vector in `pareto_score_table`. At the end of the run, if no full evaluation has been performed yet, the runner forces a full evaluation of the best candidate by mean mini batch score.
+## Optimize Prompts With MIPROv2
 
-The best final prompt is chosen by aggregating these full evaluation score vectors into a scalar using `aggregate_instances` (which defaults to `mean_of_all`). If no full evaluation scores are available, the runner falls back to selecting the best candidate by mean mini batch score.
-
-## Scoring & Feedback
-
-MIPROv2 uses your metrics in the same way as GEPA.
-
-On mini batches, it calls your metrics through a `ScoringAdapter` to obtain numeric scores for each candidate and to extract natural language feedback that describes how the model behaved. The numeric scores contribute to a running mean mini batch score per candidate. The feedback strings are combined into a single `feedback_text` used for rewriting.
-
-On full evaluations, it calls the same adapter on the full golden set to produce per instance metric scores for the current best candidate. These full evaluation scores are stored in `pareto_score_table` and later aggregated to select the final prompt.
-
-During each trial, the runner:
-
-1. Draws a mini batch from the full list of goldens.
-2. Calls your app through `model_callback` for that batch.
-3. Scores the outputs with your metrics via `minibatch_score`.
-4. Collects metric reasons into a single `feedback_text` string via `minibatch_feedback`.
-
-This `feedback_text` is passed to the internal `PromptRewriter`, which proposes a new child prompt. If the rewriter returns a prompt that is equivalent to the parent, or if the type changes from TEXT to LIST or the reverse, the iteration is treated as a no change step. The trial still counts toward the budget, but the candidate pool is not updated.
-
-## How Does It Work
-
-Once the root candidate is seeded and scored on a mini batch, MIPROv2 enters its main loop. Each trial does the following:
-
-1. Select a parent candidate from the pool using epsilon greedy selection on mean mini batch score.
-2. Draw a fresh mini batch from the full golden set.
-3. Run your app and metrics on that mini batch to compute `feedback_text`.
-4. Call the prompt rewriter with the parent prompt plus `feedback_text` to generate a child prompt.
-5. Score the child prompt on the same mini batch using `minibatch_score`.
-6. Compare the child score to the parent’s mean mini batch score and decide whether to accept the child.
-7. Optionally, if `full_eval_every` divides the current trial index, run a full evaluation of the current best candidate.
-
-MIPROv2 maintains its pool of candidates using `PromptConfiguration` objects. Each configuration has:
-
-- a unique internal id,
-- a reference to its parent configuration id, and
-- a `prompts` mapping keyed by module id. In the current integration there is a single hard coded module id, so each configuration holds exactly one `Prompt`.
-
-On the first trial, the runner lazily evaluates the root candidate on a mini batch and records its mini batch score. After that, each new trial either adds an accepted child to the pool or leaves the pool unchanged.
-
-When the child's mini batch score improves on the parent's mean mini batch score (plus a small jitter), the child is accepted:
-
-- the child configuration is added to the pool,
-- the child's mini batch score is recorded and folded into its running mean, and
-- the iteration is recorded in the optimization report.
-
-If there is no improvement, the child is rejected and the candidate pool stays as it was.
-
-## MIPROv2 Configuration
-
-`MIPROConfig` holds the main settings for how MIPROv2 behaves. Most users can start with the defaults and only tune a few fields as needed.
-
-A minimal configuration looks like this:
+To optimize a prompt using MIPROv2, simply provide a `MIPROV2` algorithm instance to the `optimize()` method:
 
 ```python
-from deepeval.optimizer.miprov2.configs import MIPROConfig
-
-config = MIPROConfig()
-```
-
-There are **FIVE** optional parameters when creating a `MIPROConfig`:
-
-- [Optional] `iterations`: total number of MIPROv2 trials or prompt proposals. Higher values give more search at higher evaluation cost. Default is `5`.
-- [Optional] `minibatch_size`: number of examples drawn from the golden set per iteration. Automatically clamped to available data size if larger. Default is `8`.
-- [Optional] `random_seed`: integer seed used for all randomness in the runner, including mini batch sampling and epsilon greedy candidate selection. If set to `None`, the config derives a seed from `time.time_ns()`.
-- [Optional] `exploration_probability`: probability of sampling a random candidate instead of the best by mean mini batch score. This controls the balance between exploration and exploitation. Default is `0.2`.
-- [Optional] `full_eval_every`: if set, the runner fully evaluates the current best candidate on the full golden set every `full_eval_every` trials. If `None`, only a single full evaluation is performed at the end of the run. Default is `5`.
-
-### Using MIPROv2 With PromptOptimizer
-
-You can let `PromptOptimizer` manage the runner and just select MIPROv2 via its `algorithm` settings, or you can construct a `MIPRORunner` directly for finer control.
-
-The pattern below shows how to plug in a custom `MIPROConfig`, a scoring adapter, and a custom aggregator:
-
-```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.prompt import Prompt
 from deepeval.optimizer import PromptOptimizer
-from deepeval.optimizer.miprov2.configs import MIPROConfig
-from deepeval.optimizer.miprov2.loop import MIPRORunner
+from deepeval.optimizer.algorithms import MIPROV2
 
-...
+prompt = Prompt(text_template="You are a helpful assistant - now answer this. {input}")
 
-optimizer = PromptOptimizer(...)
-optimizer.set_runner(MIPRORunner(config=MIPROConfig(),))
+def model_callback(prompt: Prompt, golden) -> str:
+    prompt_to_llm = prompt.interpolate(input=golden.input)
+    return your_llm(prompt_to_llm)
+
+optimizer = PromptOptimizer(
+    algorithm=MIPROV2(), # Provide MIPROv2 here as the algorithm
+    model_callback=model_callback
+)
+
+optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens, metrics=[AnswerRelevancyMetric()])
 ```
 
-This setup keeps the same `PromptOptimizer` API while giving you explicit control over MIPROv2’s search behaviour.
+Done ✅. You just used `MIPROv2` to run a prompt optimization.
 
-## What MIPROv2 Returns
+## Customize MIPROv2
 
-After the configured number of iterations, MIPROv2 selects a best prompt and returns it as a regular `Prompt`:
+You can customize MIPROv2's behavior by passing parameters directly to the `MIPROV2` constructor:
 
-- `optimized_prompt.text_template` is the optimized prompt string that you can use directly in your app.
-- `optimized_prompt.optimization_report` is an `OptimizationReport` that captures how the run progressed.
+```python
+from deepeval.optimizer.algorithms import MIPROV2
 
-The `OptimizationReport` produced by MIPROv2 has the same structure as the one described in the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For MIPROv2 specifically:
+miprov2 = MIPROV2(
+    num_candidates=10,
+    num_trials=20,
+    minibatch_size=25,
+    max_bootstrapped_demos=4,
+    max_labeled_demos=4,
+    num_demo_sets=5
+)
+```
 
-- `pareto_scores` contains full evaluation scores for each fully evaluated candidate on the complete golden set. The field name matches GEPA’s report format, but here it always refers to full set scores rather than a separate Pareto subset.
-- `accepted_iterations`, `parents`, and `prompt_configurations` let you reconstruct the candidate pool, see which children were accepted when, and rebuild prompts for further analysis.
+There are **EIGHT** optional parameters when creating a `MIPROV2` instance:
 
-You can log or persist this report alongside your prompt to understand how MIPROv2 explored the search space, and to reproduce or compare optimization runs later.
+- [Optional] `num_candidates`: number of diverse instruction candidates to generate in the proposal phase. Defaulted to `10`.
+- [Optional] `num_trials`: number of Bayesian Optimization trials to run. Each trial evaluates a different (instruction, demo_set) combination. Defaulted to `20`.
+- [Optional] `minibatch_size`: number of goldens sampled per trial for evaluation. Larger batches give more reliable scores but cost more. Defaulted to `25`.
+- [Optional] `minibatch_full_eval_steps`: run a full evaluation on all goldens every N trials. This provides accurate score estimates periodically. Defaulted to `10`.
+- [Optional] `max_bootstrapped_demos`: maximum number of bootstrapped demonstrations (model-generated outputs that passed validation) per demo set. Defaulted to `4`.
+- [Optional] `max_labeled_demos`: maximum number of labeled demonstrations (from `expected_output` in your goldens) per demo set. Defaulted to `4`.
+- [Optional] `num_demo_sets`: number of different demo set configurations to create. More sets provide more variety for the optimizer to explore. Defaulted to `5`.
+- [Optional] `random_seed`: seed for reproducibility. Controls randomness in candidate generation, demo bootstrapping, and trial sampling. Set a fixed value (e.g., `42`) to get identical results across runs. Defaulted to `time.time_ns()`.
 
-:::info Where To Go Next
+## How Does MIPROv2 Work?
 
-For a high level overview of prompt optimization in `deepeval`, including configuration of `PromptOptimizer` and `model_callback`, see the [Prompt Optimization Introduction](/docs/prompt-optimization-introduction). For details on GEPA and its Pareto based search, see the [GEPA page](/docs/prompt-optimization-gepa).
+MIPROv2 works in **two phases**: a **Proposal Phase** that generates candidates upfront, followed by an **Optimization Phase** that uses Bayesian Optimization to find the best combination.
+
+Unlike GEPA which evolves prompts iteratively through mutations, MIPROv2 generates all instruction candidates at once and then intelligently searches the space of (instruction, demonstration) combinations.
+
+### Phase 1: Proposal
+
+The proposal phase runs once at the start and consists of two parallel tasks:
+
+1. **Instruction Proposal** — Generate N diverse instruction candidates
+2. **Demo Bootstrapping** — Create M demo sets from training examples
+
+#### Step 1a: Instruction Proposal
+
+The instruction proposer generates `num_candidates` diverse instruction variations using the optimizer's LLM. Each candidate is generated with a different "tip" to encourage diversity:
+
+| Tip Example                          | Effect                                                 |
+| ------------------------------------ | ------------------------------------------------------ |
+| "Be concise and direct"              | Generates shorter, focused instructions                |
+| "Use step-by-step reasoning"         | Generates instructions that emphasize chain-of-thought |
+| "Focus on clarity and precision"     | Generates explicit, unambiguous instructions           |
+| "Consider edge cases and exceptions" | Generates robust, defensive instructions               |
+
+The original prompt is always included as candidate #0 (baseline), so you always have a reference point.
+
+#### Step 1b: Demo Bootstrapping
+
+The bootstrapper creates `num_demo_sets` different few-shot demonstration sets. Each set contains a mix of:
+
+- **Bootstrapped demos**: Generated by running the prompt on training examples and keeping outputs that pass validation
+- **Labeled demos**: Taken directly from `expected_output` in your goldens
+
+A **0-shot option** (empty demo set) is always included, allowing the optimizer to test whether few-shot examples help or hurt performance.
+
+:::tip
+Demo bootstrapping is particularly powerful when your task benefits from examples. For complex reasoning or formatting tasks, the right few-shot demos can dramatically improve performance.
 :::
+
+### Phase 2: Bayesian Optimization
+
+After the proposal phase creates the candidate space, MIPROv2 uses **Bayesian Optimization** (via Optuna's TPE sampler) to efficiently search for the best (instruction, demo_set) combination.
+
+#### What is Bayesian Optimization?
+
+Bayesian Optimization is a sample-efficient strategy for finding the maximum of expensive-to-evaluate functions. Instead of exhaustively testing every combination:
+
+1. **Build a surrogate model** of the objective function based on observed trials
+2. **Use the surrogate** to predict which untried combinations are most promising
+3. **Evaluate the most promising combination** and update the surrogate
+4. **Repeat** until the budget (`num_trials`) is exhausted
+
+:::info
+**TPE (Tree-structured Parzen Estimator)** is Optuna's default sampler. It models the probability of good vs. bad results for each parameter value and samples configurations that are likely to improve on the best seen so far.
+:::
+
+#### Trial Evaluation
+
+Each trial in the optimization phase:
+
+1. **Samples** an instruction index and demo set index (guided by the TPE sampler)
+2. **Renders** the prompt with the selected demos
+3. **Evaluates** on a minibatch of goldens (size = `minibatch_size`)
+4. **Reports** the score back to Optuna to update the surrogate model
+
+Minibatch evaluation provides a noisy but fast estimate of prompt quality. Every `minibatch_full_eval_steps` trials, the current best combination is evaluated on the **full** dataset to get an accurate score.
+
+#### Example: Trial Progression
+
+Here's what a typical optimization might look like with `num_candidates=5` and `num_demo_sets=4`:
+
+| Trial | Instruction  | Demo Set   | Score    | Notes                           |
+| ----- | ------------ | ---------- | -------- | ------------------------------- |
+| 1     | 0 (original) | 0 (0-shot) | 0.65     | Baseline                        |
+| 2     | 2            | 3          | 0.72     | Early exploration               |
+| 3     | 4            | 1          | 0.68     | Trying different combo          |
+| 4     | 2            | 3          | 0.74     | TPE returns to promising region |
+| 5     | 2            | 2          | 0.71     | Exploring nearby                |
+| ...   | ...          | ...        | ...      | ...                             |
+| 20    | 2            | 3          | **0.78** | Best combination found          |
+
+Notice how TPE tends to revisit promising combinations (instruction 2, demo set 3) while still exploring alternatives.
+
+### Final Selection
+
+After all trials complete:
+
+1. **Identify** the (instruction, demo_set) combination with the highest score
+2. **Run full evaluation** if not already cached
+3. **Return** the optimized prompt with demos rendered inline
+
+The returned prompt includes both the best instruction and the best demonstrations, ready to use in production.
+
+## When to Use MIPROv2
+
+MIPROv2 is particularly effective when:
+
+| Scenario                     | Why MIPROv2 Helps                                             |
+| ---------------------------- | ------------------------------------------------------------- |
+| **Few-shot examples matter** | MIPROv2 jointly optimizes instructions AND demos              |
+| **Large search space**       | Bayesian optimization efficiently navigates many combinations |
+| **Expensive evaluations**    | Minibatch sampling reduces costs while maintaining signal     |
+| **Need reproducibility**     | Fixed random seed gives identical results                     |
+
+## MIPROv2 vs GEPA
+
+| Aspect                   | MIPROv2                           | GEPA                             |
+| ------------------------ | --------------------------------- | -------------------------------- |
+| **Search strategy**      | Bayesian Optimization (TPE)       | Pareto-based evolutionary        |
+| **Candidate generation** | All upfront (proposal phase)      | Iterative mutations              |
+| **Few-shot demos**       | Jointly optimized                 | Not included                     |
+| **Diversity mechanism**  | Diverse tips + multiple demo sets | Pareto frontier sampling         |
+| **Best for**             | Tasks where examples help         | Tasks with diverse problem types |
+
+Choose **MIPROv2** when few-shot demonstrations are important for your task, or when you have a large candidate space to explore efficiently.
+
+Choose **GEPA** when you need to maintain diversity across different problem types, or when the task doesn't benefit from few-shot examples.
