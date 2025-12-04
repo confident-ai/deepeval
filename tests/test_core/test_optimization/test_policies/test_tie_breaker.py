@@ -3,7 +3,7 @@ import random
 import pytest
 
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.policies.tie_breaker import (
+from deepeval.optimizer.policies import (
     TieBreaker,
     pick_best_with_ties,
 )
