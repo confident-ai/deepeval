@@ -21,7 +21,7 @@ class TestDeepSeekModelGenerationKwargs:
         """DeepSeekModel should store generation_kwargs when provided."""
         model = DeepSeekModel(
             api_key="test-key",
-            model="deepseek-chat",
+            model_name="deepseek-chat",
             generation_kwargs={"top_p": 0.9, "max_tokens": 123},
         )
         assert model.generation_kwargs == {"top_p": 0.9, "max_tokens": 123}
@@ -30,7 +30,7 @@ class TestDeepSeekModelGenerationKwargs:
         """DeepSeekModel should default generation_kwargs to an empty dict."""
         model = DeepSeekModel(
             api_key="test-key",
-            model="deepseek-chat",
+            model_name="deepseek-chat",
             generation_kwargs=None,
         )
         assert model.generation_kwargs == {}
@@ -52,7 +52,7 @@ class TestDeepSeekModelGenerationKwargs:
 
         model = DeepSeekModel(
             api_key="test-key",
-            model="deepseek-chat",
+            model_name="deepseek-chat",
             generation_kwargs={"top_p": 0.9},
         )
 
@@ -102,7 +102,7 @@ def test_deepseek_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # Construct the model with an explicit key
     model = DeepSeekModel(
-        model="deepseek-chat",
+        model_name="deepseek-chat",
         api_key="ctor-secret-key",
     )
 
@@ -172,7 +172,7 @@ def test_deepseek_model_ctor_args_override_settings(monkeypatch):
     # Explicit ctor args should override everything from Settings
     model = DeepSeekModel(
         api_key="ctor-secret-key",
-        model="deepseek-reasoner",
+        model_name="deepseek-reasoner",
         temperature=0.5,
     )
 
@@ -188,6 +188,31 @@ def test_deepseek_model_ctor_args_override_settings(monkeypatch):
     assert model.model_name == "deepseek-reasoner"
     # And the temperature should respect the ctor argument
     assert model.temperature == 0.5
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_deepseek_model_accepts_legacy_model_keyword_and_maps_to_model_name(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.DEEPSEEK_API_KEY = "test-key"
+
+    model = DeepSeekModel(model="deepseek-reasoner")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "deepseek-reasoner"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
 
 
 if __name__ == "__main__":

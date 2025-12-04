@@ -11,24 +11,41 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.test_case import MLLMImage
+from deepeval.models.utils import (
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
+
 
 class OllamaModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
+        model_name: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "OllamaModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
         settings = get_settings()
-        model_name = model or settings.LOCAL_MODEL_NAME
+        model_name = model_name or settings.LOCAL_MODEL_NAME
         self.base_url = (
             base_url
             or (
@@ -40,8 +57,8 @@ class OllamaModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        # Raw kwargs destined for the underlying Ollama client
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 

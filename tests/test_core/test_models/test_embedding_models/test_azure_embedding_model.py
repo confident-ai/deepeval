@@ -1,5 +1,7 @@
 from pydantic import SecretStr
 
+import deepeval.models.embedding_models.azure_embedding_model as azure_mod
+
 from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.embedding_models.azure_embedding_model import (
     AzureOpenAIEmbeddingModel,
@@ -37,11 +39,11 @@ def test_azure_embedding_model_uses_explicit_params_over_settings_and_strips_sec
 
     # Explicit ctor args should override everything from Settings
     model = AzureOpenAIEmbeddingModel(
-        openai_api_key="ctor-secret-key",
+        api_key="ctor-secret-key",
         openai_api_version="2099-01-01-preview",
-        azure_endpoint="https://ctor-endpoint",
-        azure_deployment="ctor-deployment",
-        model="ctor-model",
+        base_url="https://ctor-endpoint",
+        deployment_name="ctor-deployment",
+        model_name="ctor-model",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -106,3 +108,72 @@ def test_azure_embedding_model_defaults_from_settings(monkeypatch):
 
     # Model name should default to the Azure embedding deployment
     assert model.model_name == "settings-embed-deployment"
+
+
+########################################################
+# Legacy keyword backwards compatibility behavior      #
+########################################################
+
+
+def test_azure_embedding_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_base_url(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "test-key"
+        settings.OPENAI_API_VERSION = "4.1"
+
+    model = AzureOpenAIEmbeddingModel(azure_endpoint="https://example.com")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.base_url == "https://example.com"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "azure_endpoint" not in model.kwargs
+
+
+def test_azure_embedding_model_accepts_legacy_api_key_keyword_and_uses_it(
+    monkeypatch,
+):
+    """
+    Using the legacy `azure_openai_api_key` keyword should:
+    - Populate the canonical `api_key` (via SecretStr)
+    - Result in the underlying client receiving the correct `api_key` value
+    - Not forward `azure_openai_api_key` in model.kwargs
+    """
+    # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+
+    # rebuild the Settings singleton from the current env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
+
+    # Stub the Azure SDK clients so we don't make any real calls
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # Construct AzureOpenAIModel with the legacy key name
+    model = AzureOpenAIEmbeddingModel(
+        model_name="claude-3-7-sonnet-latest",
+        openai_api_key="constructor-key",
+    )
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    api_key = client.kwargs.get("api_key")
+
+    # The client should see a plain string API key coming from the legacy param
+    assert isinstance(api_key, str)
+    assert api_key == "constructor-key"
+
+    # And the legacy key should not be present in the model's kwargs
+    assert "openai_api_key" not in model.kwargs

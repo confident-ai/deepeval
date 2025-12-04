@@ -86,8 +86,8 @@ class TestAzureOpenAIModelGenerationKwargs:
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
-            azure_openai_api_key="test-key",
-            azure_endpoint="test-endpoint",
+            api_key="test-key",
+            base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
             generation_kwargs={"max_tokens": 1000, "top_p": 0.9},
         )
@@ -121,8 +121,8 @@ class TestAzureOpenAIModelGenerationKwargs:
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
-            azure_openai_api_key="test-key",
-            azure_endpoint="test-endpoint",
+            api_key="test-key",
+            base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
         )
 
@@ -146,8 +146,8 @@ class TestAzureOpenAIModelGenerationKwargs:
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
             model_name="gpt-4",
-            azure_openai_api_key="test-key",
-            azure_endpoint="test-endpoint",
+            api_key="test-key",
+            base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
             timeout=30,
             max_retries=5,  # user-provided, but we should override it to 0
@@ -234,7 +234,7 @@ def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
     # Construct the model with an explicit key
     model = AzureOpenAIModel(
         model="gpt-4.1",
-        azure_openai_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`
@@ -277,7 +277,7 @@ def test_azure_openai_model_defaults_from_settings(monkeypatch):
 
     # Client kwargs pulled from Settings
     assert kw.get("api_key") == "env-secret-key"
-    endpoint = kw.get("azure_endpoint")
+    endpoint = kw.get("base_url")
     assert endpoint is not None
     assert endpoint.rstrip("/") == "https://azure.example.com"
     assert kw.get("azure_deployment") == "settings-deployment"
@@ -309,9 +309,9 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
     model = AzureOpenAIModel(
         deployment_name="ctor-deployment",
         model_name="ctor-model",
-        azure_openai_api_key="ctor-secret-key",
+        api_key="ctor-secret-key",
         openai_api_version="2099-01-01-preview",
-        azure_endpoint="https://ctor-endpoint",
+        base_url="https://ctor-endpoint",
     )
 
     client = model.model
@@ -320,13 +320,82 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
     # API key should come from ctor, not Settings
     assert kw.get("api_key") == "ctor-secret-key"
     # Endpoint & deployment from ctor
-    assert kw.get("azure_endpoint") == "https://ctor-endpoint"
+    assert kw.get("base_url") == "https://ctor-endpoint"
     assert kw.get("azure_deployment") == "ctor-deployment"
     # API version from ctor
     assert kw.get("api_version") == "2099-01-01-preview"
 
     # Model name should match ctor value
     assert model.model_name == "ctor-model"
+
+
+########################################################
+# Legacy keyword backwards compatibility behavior      #
+########################################################
+
+
+def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_base_url(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "test-key"
+        settings.OPENAI_API_VERSION = "4.1"
+
+    model = AzureOpenAIModel(azure_endpoint="https://example.com")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.base_url == "https://example.com"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "azure_endpoint" not in model.kwargs
+
+
+def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
+    monkeypatch,
+):
+    """
+    Using the legacy `azure_openai_api_key` keyword should:
+    - Populate the canonical `api_key` (via SecretStr)
+    - Result in the underlying client receiving the correct `api_key` value
+    - Not forward `azure_openai_api_key` in model.kwargs
+    """
+    # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+
+    # rebuild the Settings singleton from the current env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
+
+    # Stub the Azure SDK clients so we don't make any real calls
+    monkeypatch.setattr(
+        azure_mod, "AzureOpenAI", _RecordingClient, raising=True
+    )
+    monkeypatch.setattr(
+        azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True
+    )
+
+    # Construct AzureOpenAIModel with the legacy key name
+    model = AzureOpenAIModel(
+        model_name="claude-3-7-sonnet-latest",
+        azure_openai_api_key="constructor-key",
+    )
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    api_key = client.kwargs.get("api_key")
+
+    # The client should see a plain string API key coming from the legacy param
+    assert isinstance(api_key, str)
+    assert api_key == "constructor-key"
+
+    # And the legacy key should not be present in the model's kwargs
+    assert "azure_openai_api_key" not in model.kwargs
 
 
 if __name__ == "__main__":

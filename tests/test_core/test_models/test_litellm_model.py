@@ -44,17 +44,17 @@ def test_litellm_explicit_overrides_settings_and_env(monkeypatch, settings):
 
     # Explicit ctor values must win over both Settings and environment
     model = LiteLLMModel(
-        model="ctor-model",
+        model_name="ctor-model",
         api_key="ctor-api-key",
-        api_base="http://ctor-base",
+        base_url="http://ctor-base",
     )
 
     # Model name and connection parameters should come from ctor arguments
     assert model.model_name == "ctor-model"
     assert isinstance(model.api_key, SecretStr)
     assert model.api_key.get_secret_value() == "ctor-api-key"
-    assert model.api_base is not None
-    assert model.api_base.rstrip("/") == "http://ctor-base"
+    assert model.base_url is not None
+    assert model.base_url.rstrip("/") == "http://ctor-base"
 
 
 def test_litellm_defaults_model_api_key_and_base_from_settings(settings):
@@ -79,8 +79,8 @@ def test_litellm_defaults_model_api_key_and_base_from_settings(settings):
     assert model.model_name == "settings-model"
     assert isinstance(model.api_key, SecretStr)
     assert model.api_key.get_secret_value() == "settings-api-key"
-    assert model.api_base is not None
-    assert model.api_base.rstrip("/") == "http://settings-base"
+    assert model.base_url is not None
+    assert model.base_url.rstrip("/") == "http://settings-base"
 
 
 def test_litellm_raises_when_model_missing(settings):
@@ -94,3 +94,45 @@ def test_litellm_raises_when_model_missing(settings):
 
     with pytest.raises(ValueError):
         LiteLLMModel()
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_litellm_model_accepts_legacy_model_keyword_and_maps_to_model_name():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+
+    model = LiteLLMModel(model="ctor-model")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.model_name == "ctor-model"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
+
+
+def test_litellm_model_accepts_legacy_api_base_keyword_and_maps_to_base_url(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model_name`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.LITELLM_MODEL_NAME = "settings-model"
+        settings.LITELLM_API_KEY = "settings-api-key"
+
+    model = LiteLLMModel(api_base="http://ctor-base")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.base_url == "http://ctor-base"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "api_base" not in model.kwargs

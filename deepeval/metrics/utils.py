@@ -2,12 +2,10 @@ import inspect
 import json
 import re
 import sys
-import itertools
 from typing import Any, Dict, Optional, List, Union, Tuple
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
-    MismatchedTestCaseInputsError,
 )
 from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
@@ -42,7 +40,6 @@ from deepeval.metrics import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
-    Turn,
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
@@ -451,13 +448,13 @@ def initialize_model(
     elif should_use_azure_openai():
         return AzureOpenAIModel(model_name=model), True
     elif should_use_moonshot_model():
-        return KimiModel(model=model), True
+        return KimiModel(model_name=model), True
     elif should_use_grok_model():
-        return GrokModel(model=model), True
+        return GrokModel(model_name=model), True
     elif should_use_deepseek_model():
-        return DeepSeekModel(model=model), True
+        return DeepSeekModel(model_name=model), True
     elif isinstance(model, str) or model is None:
-        return GPTModel(model=model), True
+        return GPTModel(model_name=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
@@ -527,7 +524,7 @@ def initialize_embedding_model(
     elif should_use_azure_openai_embedding():
         return AzureOpenAIEmbeddingModel()
     elif isinstance(model, str) or model is None:
-        return OpenAIEmbeddingModel(model=model)
+        return OpenAIEmbeddingModel(model_name=model)
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(

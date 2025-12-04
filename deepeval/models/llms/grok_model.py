@@ -7,7 +7,10 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -51,19 +54,33 @@ model_pricing = {
     },
 }
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
+
 
 class GrokModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "GrokModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
         settings = get_settings()
 
-        model_name = model or settings.GROK_MODEL_NAME
+        model_name = model_name or settings.GROK_MODEL_NAME
 
         if model_name not in model_pricing:
             raise ValueError(
@@ -83,7 +100,8 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.GROK_API_KEY
 
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 

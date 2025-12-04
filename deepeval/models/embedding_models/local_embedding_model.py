@@ -3,7 +3,10 @@ from typing import Dict, List, Optional
 from pydantic import SecretStr
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -15,16 +18,30 @@ from deepeval.constants import ProviderSlug as PS
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+}
+
 
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
+        model_name: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        model: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
-        **client_kwargs,
+        **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "LocalEmbeddingModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+
         settings = get_settings()
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -37,8 +54,9 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
             or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
-        self.client_kwargs = client_kwargs or {}
+        self.model_name = model_name or settings.LOCAL_EMBEDDING_MODEL_NAME
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(self.model_name)
 
@@ -94,7 +112,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
             param_hint="`api_key` to LocalEmbeddingModel(...)",
         )
 
-        client_kwargs = self.client_kwargs.copy()
+        client_kwargs = self.kwargs.copy()
         if not sdk_retries_for(PS.LOCAL):
             client_kwargs["max_retries"] = 0
 

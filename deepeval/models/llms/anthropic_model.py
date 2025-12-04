@@ -10,7 +10,11 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    parse_model_name,
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 
@@ -30,31 +34,47 @@ model_pricing = {
     "claude-instant-1.2": {"input": 0.80 / 1e6, "output": 2.40 / 1e6},
 }
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+    "api_key": ["_anthropic_api_key"],
+}
+
 
 class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: str = "claude-3-7-sonnet-latest",
+        model_name: str = "claude-3-7-sonnet-latest",
+        api_key: Optional[str] = None,
         temperature: float = 0,
-        _anthropic_api_key: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = parse_model_name(model)
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "AnthropicModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
 
-        if _anthropic_api_key is not None:
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+
+        model_name = parse_model_name(model_name)
+
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self._anthropic_api_key: SecretStr | None = SecretStr(
-                _anthropic_api_key
-            )
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self._anthropic_api_key = get_settings().ANTHROPIC_API_KEY
+            self.api_key = get_settings().ANTHROPIC_API_KEY
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
 
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
@@ -163,10 +183,10 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self._anthropic_api_key,
+            self.api_key,
             provider_label="Anthropic",
             env_var_name="ANTHROPIC_API_KEY",
-            param_hint="`_anthropic_api_key` to AnthropicModel(...)",
+            param_hint="`api_key` to AnthropicModel(...)",
         )
         kw = dict(
             api_key=api_key,

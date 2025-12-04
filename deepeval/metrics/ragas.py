@@ -10,7 +10,7 @@ from deepeval.telemetry import capture_metric_type
 
 # check langchain availability
 try:
-    import langchain_core
+    import langchain_core  # noqa: F401
     from langchain_core.language_models import BaseChatModel
     from langchain_core.embeddings import Embeddings
 
@@ -69,7 +69,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = GPTModel(model_name=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -151,7 +151,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = GPTModel(model_name=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -222,7 +222,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = GPTModel(model_name=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -294,7 +294,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
 #         # Set LLM model
 #         if isinstance(self.model, str):
-#             chat_model = GPTModel(model=self.model).load_model()
+#             chat_model = GPTModel(model_name=self.model).load_model()
 #         else:
 #             chat_model = self.model
 
@@ -371,7 +371,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = GPTModel(model_name=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -446,7 +446,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = GPTModel(model_name=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -501,7 +501,7 @@ class RagasMetric(BaseMetric):
     def measure(self, test_case: LLMTestCase):
         # sends to server
         try:
-            from ragas import evaluate
+            from ragas import evaluate  # noqa: F401
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install ragas to use this metric. `pip install ragas`."
@@ -509,7 +509,7 @@ class RagasMetric(BaseMetric):
 
         try:
             # How do i make sure this isn't just huggingface dataset
-            from datasets import Dataset
+            from datasets import Dataset  # noqa: F401
         except ModuleNotFoundError:
             raise ModuleNotFoundError("Please install dataset")
 

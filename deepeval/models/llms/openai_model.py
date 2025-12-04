@@ -13,7 +13,11 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    parse_model_name,
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -225,21 +229,38 @@ def _request_timeout_seconds() -> float:
     return timeout if timeout > 0 else 30.0
 
 
+_ALIAS_MAP = {
+    "model_name": ["model"],
+    "api_key": ["_openai_api_key"],
+}
+
+
 class GPTModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: Optional[str] = None,
-        _openai_api_key: Optional[str] = None,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        temperature: float = 0,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
-        temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "GPTModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if model_name is None and "model_name" in alias_values:
+            model_name = alias_values["model_name"]
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+
         settings = get_settings()
-        model_name = None
-        model = model or settings.OPENAI_MODEL_NAME
+        model_name = model_name or settings.OPENAI_MODEL_NAME
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
@@ -251,14 +272,15 @@ class GPTModel(DeepEvalBaseLLM):
             else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
-        if isinstance(model, str):
-            model_name = parse_model_name(model)
+        if model_name is None:
+            model_name = default_gpt_model
+
+        if isinstance(model_name, str):
+            model_name = parse_model_name(model_name)
             if model_name not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
-        elif model is None:
-            model_name = default_gpt_model
 
         if model_name not in model_pricing:
             if cost_per_input_token is None or cost_per_output_token is None:
@@ -274,14 +296,11 @@ class GPTModel(DeepEvalBaseLLM):
                     "output": float(cost_per_output_token),
                 }
 
-        elif model is None:
-            model_name = default_gpt_model
-
-        if _openai_api_key is not None:
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self._openai_api_key: SecretStr | None = SecretStr(_openai_api_key)
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self._openai_api_key = get_settings().OPENAI_API_KEY
+            self.api_key = get_settings().OPENAI_API_KEY
 
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
@@ -293,7 +312,8 @@ class GPTModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
@@ -577,10 +597,10 @@ class GPTModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self._openai_api_key,
+            self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`_openai_api_key` to GPTModel(...)",
+            param_hint="`api_key` to GPTModel(...)",
         )
 
         kw = dict(

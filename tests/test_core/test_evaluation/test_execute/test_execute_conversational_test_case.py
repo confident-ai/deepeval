@@ -37,7 +37,7 @@ async def test_conversational_async_persists_metric_on_cancel(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=GPTModel(model_name="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 
@@ -118,7 +118,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_true(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=GPTModel(model_name="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 
@@ -191,7 +191,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_false(
     metric = ConversationalGEval(
         name="Coherence",
         criteria="The assistant should respond coherently.",
-        model=GPTModel(model="gpt-5"),
+        model=GPTModel(model_name="gpt-5"),
         async_mode=False,  # ensure sync path
     )
 
