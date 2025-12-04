@@ -24,7 +24,7 @@ The Text to Image metric achieves scores **comparable to human evaluations** whe
 
 ## Required Arguments
 
-To use the `TextToImageMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
+To use the `TextToImageMetric`, you'll have to provide the following arguments when creating a [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
 - `actual_output`
@@ -33,23 +33,23 @@ To use the `TextToImageMetric`, you'll have to provide the following arguments w
 The input should contain exactly **0 images**, and the output should contain exactly **1 image**.
 :::
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
 ```python
 from deepeval import evaluate
 from deepeval.metrics import TextToImageMetric
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 
 metric = TextToImageMetric(
     threshold=0.7,
     include_reason=True,
 )
-m_test_case = MLLMTestCase(
-    input=["Generate an image of a blue pair of shoes."],
+m_test_case = LLMTestCase(
+    input=f"Generate an image of a blue pair of shoes.",
     # Replace with your MLLM app output
-    actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)],
+    actual_output=f"{MLLMImage(url='https://shoe-images.com/edited-shoes', local=False)}",
 )
 
 
