@@ -9,7 +9,11 @@ from deepeval.models.utils import require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal, require_dependency
+from deepeval.utils import (
+    convert_to_multi_modal_array,
+    check_if_multimodal,
+    require_dependency,
+)
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -310,7 +314,7 @@ class GeminiModel(DeepEvalBaseLLM):
             client_kwargs.update(override_kwargs)
         return client_kwargs
 
-    def _build_client(self) -> Client:
+    def _build_client(self) -> "Client":
         client_kwargs = self._client_kwargs(**self.kwargs)
 
         if self.should_use_vertexai():

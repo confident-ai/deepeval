@@ -76,6 +76,7 @@ def test_openai_embedding_model_defaults_from_settings(monkeypatch):
 # Test legacy keyword backwards compatability behavior #
 ########################################################
 
+
 def test_openai_embedding_model_accepts_legacy__openai_api_key_keyword_and_maps_to_api_key():
     """
     Using the legacy `model` keyword should still work:

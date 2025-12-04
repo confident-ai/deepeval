@@ -100,6 +100,7 @@ def test_litellm_raises_when_model_missing(settings):
 # Test legacy keyword backwards compatability behavior #
 ########################################################
 
+
 def test_litellm_model_accepts_legacy_api_base_keyword_and_maps_to_base_url(
     settings,
 ):

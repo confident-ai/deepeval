@@ -1,6 +1,6 @@
 import warnings
 
-from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
 
 from deepeval.models import DeepEvalBaseLLM
@@ -16,10 +16,6 @@ from deepeval.models.utils import (
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
-
-
-if TYPE_CHECKING:
-    pass
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
@@ -57,8 +53,6 @@ class AnthropicModel(DeepEvalBaseLLM):
         )
 
         # re-map depricated keywords to re-named positional args
-        if model is None and "model" in alias_values:
-            model = alias_values["model"]
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 

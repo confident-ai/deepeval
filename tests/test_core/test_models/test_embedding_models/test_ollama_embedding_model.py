@@ -107,6 +107,7 @@ def test_ollama_embedding_model_defaults_from_settings(
 # Test legacy keyword backwards compatability behavior #
 ########################################################
 
+
 def test_ollama_embedding_model_accepts_legacy_host_keyword_and_maps_to_base_url():
     """
     Using the legacy `model` keyword should still work:

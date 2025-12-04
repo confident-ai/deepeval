@@ -10,12 +10,18 @@ from pydantic import SecretStr
 from tests.test_core.stubs import _RecordingClient
 
 
+
+
+
 ########################################################
 # Legacy keyword backwards compatibility behavior      #
 ########################################################
 
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
-    monkeypatch,
+    mock_require_dep,
+    settings,
 ):
     """
     Using the legacy `_anthropic_api_key` keyword should:
@@ -25,24 +31,24 @@ def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
     - Not forward `_anthropic_api_key` in model.kwargs
     """
     # Put ANTHROPIC_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "env-secret-key")
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "env-secret-key"
 
     # rebuild the Settings singleton from the current env
     reset_settings(reload_dotenv=False)
     settings = get_settings()
     assert isinstance(settings.ANTHROPIC_API_KEY, SecretStr)
 
-    # Stub the Anthropic SDK clients so we don't make any real calls
-    monkeypatch.setattr(
-        anthropic_mod, "Anthropic", _RecordingClient, raising=True
+    # Fake anthropic module returned by require_dependency
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
     )
-    monkeypatch.setattr(
-        anthropic_mod, "AsyncAnthropic", _RecordingClient, raising=True
-    )
+    mock_require_dep.return_value = fake_anthropic_module
 
     # Construct AnthropicModel with the legacy key name
     model = AnthropicModel(
-        name="claude-3-7-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         _anthropic_api_key="constructor-key",
     )
 
@@ -90,7 +96,7 @@ def test_anthropic_model_uses_explicit_key_over_settings_and_strips_secret(
 
     # Construct AnthropicModel with an explicit key
     model = AnthropicModel(
-        name="claude-3-7-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         api_key="constructor-key",
     )
 
@@ -150,7 +156,7 @@ def test_anthropic_model_uses_explicit_key_when_settings_missing(
     mock_require_dep.return_value = fake_anthropic_module
 
     model = AnthropicModel(
-        name="claude-3-7-sonnet-latest",
+        model="claude-3-7-sonnet-latest",
         api_key="explicit-key",
     )
     client = model.model
@@ -175,7 +181,7 @@ def test_anthropic_model_raises_when_no_key_configured(
     # Error should come from require_secret_api_key / DeepEvalError,
     # not from missing anthropic dependency.
     with pytest.raises(DeepEvalError, match="not configured"):
-        AnthropicModel(name="claude-3-7-sonnet-latest")
+        AnthropicModel(model="claude-3-7-sonnet-latest")
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
@@ -194,7 +200,7 @@ def test_anthropic_model_raises_when_explicit_key_empty(
 
     with pytest.raises(DeepEvalError, match="empty"):
         AnthropicModel(
-            name="claude-3-7-sonnet-latest",
+            model="claude-3-7-sonnet-latest",
             api_key="",
         )
 
@@ -218,4 +224,4 @@ def test_anthropic_model_raises_when_settings_key_empty(
     mock_require_dep.return_value = fake_anthropic_module
 
     with pytest.raises(DeepEvalError, match="empty"):
-        AnthropicModel(name="claude-3-7-sonnet-latest")
+        AnthropicModel(model="claude-3-7-sonnet-latest")

@@ -100,9 +100,7 @@ def test_portkey_model_raises_if_provider_missing(settings):
         settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
-        PortkeyModel(
-            model="gpt-4o-mini", base_url="https://api.portkey.ai/v1"
-        )
+        PortkeyModel(model="gpt-4o-mini", base_url="https://api.portkey.ai/v1")
 
     msg = str(exc.value)
     assert "Portkey is missing a required parameter" in msg

@@ -31,12 +31,12 @@ class DeepEvalBaseModel(ABC):
 
 
 class DeepEvalBaseLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None):
-        self.name = parse_model_name(model_name)
+    def __init__(self, model: Optional[str] = None):
+        self.name = parse_model_name(model)
         self.model = self.load_model()
 
     @abstractmethod
-    def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
+    def load_model(self) -> "DeepEvalBaseLLM":
         """Loads a model, that will be responsible for scoring.
 
         Returns:
@@ -107,7 +107,7 @@ class DeepEvalBaseMLLM(ABC):
             A string.
         """
         pass
-    
+
     def get_model_name(self) -> str:
         return self.name
 
