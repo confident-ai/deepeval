@@ -9,7 +9,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, ErrorConfig
 from deepeval.test_run.test_run import TestRun, TestRunManager
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.models.mlllms.openai_model import MultimodalOpenAIModel
+from deepeval.models import GPTModel
 
 
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
@@ -26,7 +26,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
     """
 
     # build a normal metric instance, then monkeypatch its a_measure to cause a hang
-    metric = AnswerRelevancyMetric(model=MultimodalOpenAIModel(model="gpt-4.1"))
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     async def sleepy_a_measure(*args, **kwargs):
         # simulate a hung provider call
@@ -95,7 +95,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = AnswerRelevancyMetric(model=MultimodalOpenAIModel(model="gpt-4.1"))
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     def sleepy_measure(*args, **kwargs):
         # simulate a stuck provider call
@@ -158,7 +158,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = AnswerRelevancyMetric(model=MultimodalOpenAIModel(model="gpt-4.1"))
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     def sleepy_measure(*args, **kwargs):
         # simulate a stuck provider call
