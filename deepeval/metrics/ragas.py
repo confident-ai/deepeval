@@ -69,7 +69,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model_name=self.model).load_model()
+            chat_model = GPTModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -151,7 +151,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model_name=self.model).load_model()
+            chat_model = GPTModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -222,7 +222,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model_name=self.model).load_model()
+            chat_model = GPTModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -294,7 +294,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
 #         # Set LLM model
 #         if isinstance(self.model, str):
-#             chat_model = GPTModel(model_name=self.model).load_model()
+#             chat_model = GPTModel(model=self.model).load_model()
 #         else:
 #             chat_model = self.model
 
@@ -371,7 +371,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model_name=self.model).load_model()
+            chat_model = GPTModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -446,7 +446,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model_name=self.model).load_model()
+            chat_model = GPTModel(model=self.model).load_model()
         else:
             chat_model = self.model
 

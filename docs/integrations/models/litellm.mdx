@@ -69,7 +69,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 # OpenAI model
 model = LiteLLMModel(
-    model_name="openai/gpt-3.5-turbo",  # Provider must be specified
+    model="openai/gpt-3.5-turbo",  # Provider must be specified
     api_key="your-api-key",  # optional, can be set via environment variable
     base_url="your-api-base",  # optional, for custom endpoints
     temperature=0
@@ -158,20 +158,20 @@ from deepeval.models import LiteLLMModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 # OpenAI
-model = LiteLLMModel(model_name="openai/gpt-3.5-turbo")
+model = LiteLLMModel(model="openai/gpt-3.5-turbo")
 metric = AnswerRelevancyMetric(model=model)
 
 # Anthropic
-model = LiteLLMModel(model_name="anthropic/claude-3-opus")
+model = LiteLLMModel(model="anthropic/claude-3-opus")
 metric = AnswerRelevancyMetric(model=model)
 
 # Google
-model = LiteLLMModel(model_name="google/gemini-pro")
+model = LiteLLMModel(model="google/gemini-pro")
 metric = AnswerRelevancyMetric(model=model)
 
 # LM Studio
 model = LiteLLMModel(
-    model_name="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
+    model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
     base_url="http://localhost:1234/v1",  # LM Studio default URL
     api_key="lm-studio"  # LM Studio uses a fixed API key
 )
@@ -179,7 +179,7 @@ metric = AnswerRelevancyMetric(model=model)
 
 # Ollama
 model = LiteLLMModel(
-    model_name="ollama/llama2",
+    model="ollama/llama2",
     base_url="http://localhost:11434/v1",  # Ollama default URL
     api_key="ollama"  # Ollama uses a fixed API key
 )
@@ -189,7 +189,7 @@ metric = AnswerRelevancyMetric(model=model)
 #### Using Custom Endpoint
 ```python
 model = LiteLLMModel(
-    model_name="custom/your-model-name",  # Provider must be specified
+    model="custom/your-model-name",  # Provider must be specified
     base_url="https://your-custom-endpoint.com",
     api_key="your-api-key"
 )
@@ -204,7 +204,7 @@ class ResponseSchema(BaseModel):
     reason: str
 
 # OpenAI
-model = LiteLLMModel(model_name="openai/gpt-3.5-turbo")
+model = LiteLLMModel(model="openai/gpt-3.5-turbo")
 response, cost = model.generate(
     "Rate this answer: 'The capital of France is Paris'",
     schema=ResponseSchema
@@ -212,7 +212,7 @@ response, cost = model.generate(
 
 # LM Studio
 model = LiteLLMModel(
-    model_name="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
+    model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
     base_url="http://localhost:1234/v1",
     api_key="lm-studio"
 )
@@ -223,7 +223,7 @@ response, cost = model.generate(
 
 # Ollama
 model = LiteLLMModel(
-    model_name="ollama/llama2",
+    model="ollama/llama2",
     base_url="http://localhost:11434/v1",
     api_key="ollama"
 )

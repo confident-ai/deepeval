@@ -84,7 +84,7 @@ def test_openai_embedding_model_accepts_legacy__openai_api_key_keyword_and_maps_
     - It should not be forwarded through `model.kwargs`
     """
 
-    model = OpenAIEmbeddingModel(openai_api_key="test-key")
+    model = OpenAIEmbeddingModel(api_key="test-key")
 
     # legacy keyword mapped to canonical parameter
     assert model.api_key and model.api_key.get_secret_value() == "test-key"

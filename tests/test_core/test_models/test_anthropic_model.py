@@ -49,7 +49,7 @@ def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
     # Construct AnthropicModel with the legacy key name
     model = AnthropicModel(
         model="claude-3-7-sonnet-latest",
-        _anthropic_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`

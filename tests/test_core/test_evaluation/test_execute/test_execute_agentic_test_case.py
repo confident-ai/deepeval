@@ -30,7 +30,7 @@ async def test_agentic_async_persists_metric_on_cancel(
     """
 
     # build a metric and patch its a_measure to hang
-    metric = AnswerRelevancyMetric(model=GPTModel(model_name="gpt-5"))
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-5"))
 
     async def sleepy_a_measure(*args, **kwargs):
         await asyncio.sleep(10)

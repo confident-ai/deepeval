@@ -108,7 +108,7 @@ def test_litellm_model_accepts_legacy_api_base_keyword_and_maps_to_base_url(
         settings.LITELLM_MODEL_NAME = "settings-model"
         settings.LITELLM_API_KEY = "settings-api-key"
 
-    model = LiteLLMModel(api_base="http://ctor-base")
+    model = LiteLLMModel(base_url="http://ctor-base")
 
     # legacy keyword mapped to canonical parameter
     assert model.base_url == "http://ctor-base"

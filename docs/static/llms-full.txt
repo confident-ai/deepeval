@@ -85,7 +85,7 @@ from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GeminiModel(
-    model_name="gemini-1.5-pro",
+    model="gemini-1.5-pro",
     api_key="Your Gemini API Key",
     temperature=0
 )
@@ -1678,7 +1678,7 @@ from deepeval.models import AnthropicModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AnthropicModel(
-    model_name="claude-3-7-sonnet-latest",
+    model="claude-3-7-sonnet-latest",
     temperature=0
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
@@ -3533,7 +3533,7 @@ from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GPTModel(
-    model_name="o1",
+    model="o1",
     temperature=0
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
@@ -7941,11 +7941,11 @@ from deepeval.models import AzureOpenAIModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AzureOpenAIModel(
-    model_name="gpt-4o",
+    model="gpt-4o",
     deployment_name="Test Deployment",
-    azure_openai_api_key="Your Azure OpenAI API Key",
+    api_key="Your Azure OpenAI API Key",
     openai_api_version="2025-01-01-preview",
-    azure_endpoint="https://example-resource.azure.openai.com/",
+    base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
 

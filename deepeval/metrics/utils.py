@@ -446,15 +446,15 @@ def initialize_model(
     elif should_use_local_model():
         return LocalModel(), True
     elif should_use_azure_openai():
-        return AzureOpenAIModel(model_name=model), True
+        return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
-        return KimiModel(model_name=model), True
+        return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(model_name=model), True
+        return GrokModel(model=model), True
     elif should_use_deepseek_model():
-        return DeepSeekModel(model_name=model), True
+        return DeepSeekModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return GPTModel(model_name=model), True
+        return GPTModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
@@ -524,7 +524,7 @@ def initialize_embedding_model(
     elif should_use_azure_openai_embedding():
         return AzureOpenAIEmbeddingModel()
     elif isinstance(model, str) or model is None:
-        return OpenAIEmbeddingModel(model_name=model)
+        return OpenAIEmbeddingModel(model=model)
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(

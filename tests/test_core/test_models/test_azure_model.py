@@ -346,7 +346,7 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
         settings.AZURE_OPENAI_API_KEY = "test-key"
         settings.OPENAI_API_VERSION = "4.1"
 
-    model = AzureOpenAIModel(azure_endpoint="https://example.com")
+    model = AzureOpenAIModel(base_url="https://example.com")
 
     # legacy keyword mapped to canonical parameter
     assert model.base_url == "https://example.com"
@@ -383,7 +383,7 @@ def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
     # Construct AzureOpenAIModel with the legacy key name
     model = AzureOpenAIModel(
         model="claude-3-7-sonnet-latest",
-        azure_openai_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`

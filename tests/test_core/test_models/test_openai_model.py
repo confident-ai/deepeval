@@ -426,7 +426,7 @@ def test_openai_model_accepts_legacy_openai_api_key_keyword_and_uses_it(
     # Construct GPTModel with the legacy key name
     model = GPTModel(
         model="gpt-4.1",
-        _openai_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`
