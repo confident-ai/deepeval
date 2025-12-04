@@ -114,11 +114,11 @@ class MLLMImage:
             path = unquote(raw_path)
             return os.path.exists(path)
         return False
-    
+
     def parse_multimodal_string(s: str):
         pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         matches = list(re.finditer(pattern, s))
-        
+
         result = []
         last_end = 0
 
@@ -135,10 +135,10 @@ class MLLMImage:
 
             result.append(_MLLM_IMAGE_REGISTRY[img_id])
             last_end = end
-        
+
         if last_end < len(s):
             result.append(s[last_end:])
-        
+
         return result
 
     def as_data_uri(self) -> Optional[str]:

@@ -312,9 +312,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 actual_output=actual_output,
             )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=Statements
-            )
+            res, cost = await self.model.a_generate(prompt, schema=Statements)
             self.evaluation_cost += cost
             statements: List[str] = res.statements + [
                 ele for ele in actual_output if isinstance(ele, MLLMImage)
@@ -326,18 +324,14 @@ class AnswerRelevancyMetric(BaseMetric):
                     prompt, schema=Statements
                 )
                 statements: List[str] = res.statements + [
-                    ele
-                    for ele in actual_output
-                    if isinstance(ele, MLLMImage)
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 statements = data["statements"] + [
-                    ele
-                    for ele in actual_output
-                    if isinstance(ele, MLLMImage)
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
 
@@ -363,22 +357,16 @@ class AnswerRelevancyMetric(BaseMetric):
             return statements
         else:
             try:
-                res: Statements = self.model.generate(
-                    prompt, schema=Statements
-                )
+                res: Statements = self.model.generate(prompt, schema=Statements)
                 statements = res.statements + [
-                    ele
-                    for ele in actual_output
-                    if isinstance(ele, MLLMImage)
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 statements = data["statements"] + [
-                    ele
-                    for ele in actual_output
-                    if isinstance(ele, MLLMImage)
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
 
