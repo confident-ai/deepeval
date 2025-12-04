@@ -10,9 +10,6 @@ from pydantic import SecretStr
 from tests.test_core.stubs import _RecordingClient
 
 
-
-
-
 ########################################################
 # Legacy keyword backwards compatibility behavior      #
 ########################################################
