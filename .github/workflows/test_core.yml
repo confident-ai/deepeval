@@ -17,7 +17,7 @@ jobs:
       #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v4
@@ -47,20 +47,8 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --only main
-      #----------------------------------------------
-      # install your root project, if required
-      #----------------------------------------------
+        run: poetry install --extras all --no-interaction --no-root --only main
 
-      - name: Install project
-        run: poetry install --no-interaction --only main
-
-      #----------------------------------------------
-      #    install dev dependencies (including chromadb and model deps)
-      #----------------------------------------------
-      - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
-        
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
@@ -83,6 +71,12 @@ jobs:
           --ignore=tests/test_core/test_datasets/                                   \
           --ignore=tests/test_core/test_tracing/test_dataset_iterator.py            \
           --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
+
+      #----------------------------------------------
+      #    install dev dependencies
+      #----------------------------------------------
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
 
       # Dev tests (with secrets)
       - name: Run dev tests
