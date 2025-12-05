@@ -1,22 +1,29 @@
-[tool.poetry]
+[project]
 name = "deepeval"
 version = "3.7.4"
 description = "The LLM Evaluation Framework"
-authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
-license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/confident-ai/deepeval"
-documentation = "https://deepeval.com"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Jeffrey Ip", email = "jeffreyip@confident-ai.com" },
+]
+requires-python = ">=3.9,<4.0"
+dynamic = ["dependencies"]
+
+[project.urls]
+Repository = "https://github.com/confident-ai/deepeval"
+Documentation = "https://deepeval.com"
+
+[tool.poetry]
 exclude = ["tests/*", "tracing_tests/*"]
 
-[tool.poetry.scripts]
+[project.scripts]
 deepeval = 'deepeval.cli.main:app'
 
-[tool.poetry.plugins."pytest11"]
+[project.entry-points."pytest11"]
 deepeval = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <4.0"
 requests = "^2.31.0"
 tqdm = "^4.66.1"
 pytest = "*"
@@ -62,9 +69,6 @@ pandas = "*"
 pysqlite3-binary = "^0.5.4"
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
-ollama = "*"
-anthropic = "*"
-google-genai = "^1.9.0"
 
 [tool.black]
 line-length = 80
@@ -85,14 +89,42 @@ markers = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.poetry.group.integrations]
-optional = true
+[project.optional-dependencies]
+ollama = ["ollama",]
+anthropic = ["anthropic",]
+"google-genai" = ["google-genai>=1.9.0,<2.0.0",]
+crewai = ["crewai; python_version >= '3.10' and python_version < '3.11'",]
+"pydantic-ai" = ["pydantic-ai>=1.0.18,<2.0.0; python_version >= '3.10' and python_version < '3.11'",]
+langgraph = ["langgraph>=0.6.10,<0.7.0",]
+"llama-index" = ["llama-index>=0.14.4,<0.15.0",]
+"langchain-openai" = ["langchain-openai>=0.3.35,<0.4.0",]
+"openai-agents" = ["openai-agents>=0.3.3,<0.4.0",]
+langchain = ["langchain>=0.3.27,<0.4.0",]
 
-[tool.poetry.group.integrations.dependencies]
-crewai = { version = "*", python = ">=3.10,<3.11" }
-pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.11" }
-langgraph = "^0.6.10"
-llama-index = "^0.14.4"
-langchain_openai = "^0.3.35"
-openai-agents = "^0.3.3"
-langchain = "^0.3.27"
+# common alias to install all optional deps
+all = [
+  "ollama",
+  "anthropic",
+  "google-genai>=1.9.0,<2.0.0",
+  "crewai; python_version >= '3.10' and python_version < '3.11'",
+  "pydantic-ai>=1.0.18,<2.0.0; python_version >= '3.10' and python_version < '3.11'",
+  "langgraph>=0.6.10,<0.7.0",
+  "llama-index>=0.14.4,<0.15.0",
+  "langchain-openai>=0.3.35,<0.4.0",
+  "openai-agents>=0.3.3,<0.4.0",
+  "langchain>=0.3.27,<0.4.0",
+]
+
+# an alias for all that we are already use to
+integrations = [
+  "ollama",
+  "anthropic",
+  "google-genai>=1.9.0,<2.0.0",
+  "crewai; python_version >= '3.10' and python_version < '3.11'",
+  "pydantic-ai>=1.0.18,<2.0.0; python_version >= '3.10' and python_version < '3.11'",
+  "langgraph>=0.6.10,<0.7.0",
+  "llama-index>=0.14.4,<0.15.0",
+  "langchain-openai>=0.3.35,<0.4.0",
+  "openai-agents>=0.3.3,<0.4.0",
+  "langchain>=0.3.27,<0.4.0",
+]

@@ -78,13 +78,8 @@ jobs:
       # Core deps only (main)
       - name: Install dependencies (main)
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root --only main
+        run: poetry install --extras all --no-interaction --no-root --only main
 
-      - name: Install project (main)
-        run: poetry install --no-interaction --only main
-      # Install dev dependencies
-      - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
@@ -98,9 +93,11 @@ jobs:
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/
 
+      # Install dev dependencies
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
       - name: Run dev tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
           poetry run pytest \
             tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
-
