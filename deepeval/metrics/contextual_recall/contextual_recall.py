@@ -191,7 +191,7 @@ class ContextualRecallMetric(BaseMetric):
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -228,7 +228,7 @@ class ContextualRecallMetric(BaseMetric):
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -270,7 +270,7 @@ class ContextualRecallMetric(BaseMetric):
         prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output,
             retrieval_context=retrieval_context,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -301,7 +301,7 @@ class ContextualRecallMetric(BaseMetric):
         prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output,
             retrieval_context=retrieval_context,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)

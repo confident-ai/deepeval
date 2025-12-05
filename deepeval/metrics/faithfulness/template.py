@@ -8,7 +8,7 @@ class FaithfulnessTemplate:
         multimodal_instruction = ""
         if multimodal:
             multimodal_instruction = " The excerpt may contain both text and images, so extract claims from all provided content."
-        
+
         return textwrap.dedent(
             f"""Based on the given {'excerpt' if multimodal else 'text'}, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided actual AI output. {multimodal_instruction}
             These truths, MUST BE COHERENT, and CANNOT be taken out of context.
@@ -42,9 +42,9 @@ class FaithfulnessTemplate:
 
     @staticmethod
     def generate_truths(
-        retrieval_context: str, 
+        retrieval_context: str,
         extraction_limit: Optional[int] = None,
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
@@ -52,11 +52,13 @@ class FaithfulnessTemplate:
             limit = " the single most important FACTUAL, undisputed truth"
         else:
             limit = f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
-        
+
         multimodal_instruction = ""
         if multimodal:
-            multimodal_instruction = " The excerpt may contain both text and images."
-        
+            multimodal_instruction = (
+                " The excerpt may contain both text and images."
+            )
+
         return textwrap.dedent(
             f"""Based on the given {'excerpt (text and images)' if multimodal else 'text'}, please generate a comprehensive list of{limit}, that can inferred from the provided {'excerpt' if multimodal else 'text'}.{multimodal_instruction}
             These truths, MUST BE COHERENT. They must NOT be taken out of context.
@@ -87,9 +89,7 @@ class FaithfulnessTemplate:
 
     @staticmethod
     def generate_verdicts(
-        claims: List[str], 
-        retrieval_context: str,
-        multimodal: bool = False
+        claims: List[str], retrieval_context: str, multimodal: bool = False
     ):
         example_section = ""
         if multimodal:
@@ -125,7 +125,7 @@ class FaithfulnessTemplate:
                 ===== END OF EXAMPLE ======
                 """
             )
-        
+
         format_instruction = textwrap.dedent(
             """
             Expected JSON format:
@@ -146,7 +146,7 @@ class FaithfulnessTemplate:
             }}
             """
         )
-        
+
         guidelines = ""
         if multimodal:
             guidelines = textwrap.dedent(
@@ -169,7 +169,7 @@ class FaithfulnessTemplate:
                 Vague/speculative language in claims (e.g. 'may have', 'possibility') does NOT count as contradiction.
                 """
             )
-        
+
         return textwrap.dedent(
             f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
             The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
@@ -195,9 +195,7 @@ class FaithfulnessTemplate:
 
     @staticmethod
     def generate_reason(
-        score: float, 
-        contradictions: List[str],
-        multimodal: bool = False
+        score: float, contradictions: List[str], multimodal: bool = False
     ):
         return textwrap.dedent(
             f"""Below is a list of Contradictions. It is a list of strings explaining why the 'actual output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.

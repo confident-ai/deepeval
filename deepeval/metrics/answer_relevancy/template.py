@@ -8,7 +8,7 @@ class AnswerRelevancyTemplate:
         multimodal_instruction = ""
         example_text = ""
         example_json = ""
-        
+
         if multimodal:
             multimodal_instruction = " The text may contain images as well."
             example_text = "Shoes. The shoes can be refunded at no extra cost. Thanks for asking the question!"
@@ -34,9 +34,13 @@ class AnswerRelevancyTemplate:
                 }}
                 """
             )
-        
-        coherence_note = "" if multimodal else " Ambiguous statements and single words can be considered as statements, but only if outside of a coherent statement."
-        
+
+        coherence_note = (
+            ""
+            if multimodal
+            else " Ambiguous statements and single words can be considered as statements, but only if outside of a coherent statement."
+        )
+
         return textwrap.dedent(
             f"""Given the text, breakdown and generate a list of statements presented.{coherence_note}{multimodal_instruction}
 
@@ -60,13 +64,15 @@ class AnswerRelevancyTemplate:
 
     @staticmethod
     def generate_verdicts(
-        input: str, 
-        statements: str,
-        multimodal: bool = False
+        input: str, statements: str, multimodal: bool = False
     ):
-        content_type = "statements (which can contain images)" if multimodal else "list of statements"
+        content_type = (
+            "statements (which can contain images)"
+            if multimodal
+            else "list of statements"
+        )
         statement_or_image = "statement or image" if multimodal else "statement"
-        
+
         format_instruction = textwrap.dedent(
             """
             Expected JSON format:
@@ -87,7 +93,7 @@ class AnswerRelevancyTemplate:
             }}
             """
         )
-        
+
         example_section = ""
         if multimodal:
             example_section = textwrap.dedent(
@@ -116,7 +122,7 @@ class AnswerRelevancyTemplate:
                 }}
                 """
             )
-        
+
         guidelines = ""
         if multimodal:
             guidelines = textwrap.dedent(
@@ -135,7 +141,7 @@ class AnswerRelevancyTemplate:
                 Provide 'reason' ONLY for 'no' or 'idk' verdicts.
                 """
             )
-        
+
         return textwrap.dedent(
             f"""For the provided {content_type}, determine whether each {statement_or_image} is relevant to address the input.
             {'Please generate a list of JSON with two keys: `verdict` and `reason`.' if multimodal else 'Generate JSON objects with \'verdict\' and \'reason\' fields.'}
@@ -164,10 +170,10 @@ class AnswerRelevancyTemplate:
 
     @staticmethod
     def generate_reason(
-        irrelevant_statements: List[str], 
-        input: str, 
+        irrelevant_statements: List[str],
+        input: str,
         score: float,
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         return textwrap.dedent(
             f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.

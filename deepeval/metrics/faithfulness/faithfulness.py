@@ -179,7 +179,7 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -211,7 +211,7 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_reason(
             contradictions=contradictions,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -240,9 +240,9 @@ class FaithfulnessMetric(BaseMetric):
         verdicts: List[FaithfulnessVerdict] = []
 
         prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, 
+            claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -272,9 +272,9 @@ class FaithfulnessMetric(BaseMetric):
         verdicts: List[FaithfulnessVerdict] = []
 
         prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, 
+            claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -301,7 +301,7 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_truths(
             retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Truths)
@@ -322,7 +322,7 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_truths(
             retrieval_context="\n\n".join(retrieval_context),
             extraction_limit=self.truths_extraction_limit,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Truths)
@@ -341,8 +341,7 @@ class FaithfulnessMetric(BaseMetric):
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output,
-            multimodal=multimodal
+            actual_output=actual_output, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
@@ -361,8 +360,7 @@ class FaithfulnessMetric(BaseMetric):
         self, actual_output: str, multimodal: bool
     ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output,
-            multimodal=multimodal
+            actual_output=actual_output, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)

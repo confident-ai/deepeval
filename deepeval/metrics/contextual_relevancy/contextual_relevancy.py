@@ -192,7 +192,7 @@ class ContextualRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -232,7 +232,7 @@ class ContextualRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -271,8 +271,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self, input: str, context: List[str], multimodal: bool
     ) -> ContextualRelevancyVerdicts:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input, context=context,
-            multimodal=multimodal
+            input=input, context=context, multimodal=multimodal
         )
 
         if self.using_native_model:
@@ -296,8 +295,7 @@ class ContextualRelevancyMetric(BaseMetric):
         self, input: str, context: str, multimodal: bool
     ) -> ContextualRelevancyVerdicts:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input, context=context,
-            multimodal=multimodal
+            input=input, context=context, multimodal=multimodal
         )
 
         if self.using_native_model:

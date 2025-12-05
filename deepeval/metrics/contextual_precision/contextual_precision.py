@@ -193,7 +193,7 @@ class ContextualPrecisionMetric(BaseMetric):
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -227,7 +227,7 @@ class ContextualPrecisionMetric(BaseMetric):
             input=input,
             verdicts=retrieval_contexts_verdicts,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -260,7 +260,7 @@ class ContextualPrecisionMetric(BaseMetric):
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -296,7 +296,7 @@ class ContextualPrecisionMetric(BaseMetric):
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=cpschema.Verdicts)

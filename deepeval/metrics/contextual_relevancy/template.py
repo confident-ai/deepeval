@@ -10,7 +10,7 @@ class ContextualRelevancyTemplate:
         irrelevant_statements: List[str],
         relevant_statements: List[str],
         score: float,
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         # Note: irrelevancies parameter name in multimodal version is kept as irrelevant_statements for consistency
         return textwrap.dedent(
@@ -48,11 +48,11 @@ class ContextualRelevancyTemplate:
     def generate_verdicts(
         input: Union[str, List[Union[str, MLLMImage]]],
         context: Union[str, List[Union[str, MLLMImage]]],
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         context_type = "context (image or string)" if multimodal else "context"
         statement_or_image = "statement or image" if multimodal else "statement"
-        
+
         # Conditional instructions based on mode
         extraction_instructions = ""
         if multimodal:
@@ -64,12 +64,12 @@ class ContextualRelevancyTemplate:
             ).strip()
         else:
             extraction_instructions = "You should first extract statements found in the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement."
-        
+
         # Additional instruction for empty context (only in non-multimodal)
         empty_context_instruction = ""
         if not multimodal:
             empty_context_instruction = '\nIf provided context contains no actual content or statements then: give "no" as a "verdict",\nput context into "statement", and "No statements found in provided context." into "reason".'
-        
+
         return textwrap.dedent(
             f"""Based on the input and {context_type}, please generate a JSON object to indicate whether {'the context' if multimodal else 'each statement found in the context'} is relevant to the provided input. The JSON will be a list of 'verdicts', with 2 mandatory fields: 'verdict' and 'statement', and 1 optional field: 'reason'.
             {extraction_instructions}

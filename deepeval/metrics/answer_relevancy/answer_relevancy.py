@@ -167,7 +167,7 @@ class AnswerRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -200,7 +200,7 @@ class AnswerRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -227,9 +227,7 @@ class AnswerRelevancyMetric(BaseMetric):
             return []
 
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            statements=self.statements,
-            multimodal=multimodal
+            input=input, statements=self.statements, multimodal=multimodal
         )
 
         if self.using_native_model:
@@ -256,9 +254,7 @@ class AnswerRelevancyMetric(BaseMetric):
             return []
 
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            statements=self.statements,
-            multimodal=multimodal
+            input=input, statements=self.statements, multimodal=multimodal
         )
 
         if self.using_native_model:
@@ -282,8 +278,7 @@ class AnswerRelevancyMetric(BaseMetric):
         multimodal: bool,
     ) -> List[str]:
         prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output,
-            multimodal=multimodal
+            actual_output=actual_output, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Statements)
@@ -315,8 +310,7 @@ class AnswerRelevancyMetric(BaseMetric):
         multimodal: bool,
     ) -> List[str]:
         prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output,
-            multimodal=multimodal
+            actual_output=actual_output, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Statements)

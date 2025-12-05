@@ -9,19 +9,21 @@ class ContextualPrecisionTemplate:
         input: Union[str, List[Union[str, MLLMImage]]],
         expected_output: Union[str, List[Union[str, MLLMImage]]],
         retrieval_context: List[Union[str, MLLMImage]],
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
-        
+
         # For multimodal, we need to annotate the retrieval context with node IDs
         context_to_display = (
             ContextualPrecisionTemplate.id_retrieval_context(retrieval_context)
             if multimodal
             else retrieval_context
         )
-        
-        multimodal_note = " (which can be text or an image)" if multimodal else ""
-        
+
+        multimodal_note = (
+            " (which can be text or an image)" if multimodal else ""
+        )
+
         prompt_template = textwrap.dedent(
             f"""Given the input, expected output, and retrieval context, please generate a list of JSON objects to determine whether each node in the retrieval context was remotely useful in arriving at the expected output.
 
@@ -63,7 +65,7 @@ class ContextualPrecisionTemplate:
             JSON:
             """
         )
-        
+
         return prompt_template
 
     @staticmethod
@@ -71,7 +73,7 @@ class ContextualPrecisionTemplate:
         input: Union[str, List[Union[str, MLLMImage]]],
         score: float,
         verdicts: List[Dict[str, str]],
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         return textwrap.dedent(
             f"""Given the input, retrieval contexts, and contextual precision score, provide a CONCISE {'summarize' if multimodal else 'summary'} for the score. Explain why it is not higher, but also why it is at its current score.
@@ -112,10 +114,10 @@ class ContextualPrecisionTemplate:
     ) -> List[Union[str, MLLMImage]]:
         """
         Annotates retrieval context with node IDs for multimodal processing.
-        
+
         Args:
             retrieval_context: List of contexts (can be strings or MLLMImages)
-            
+
         Returns:
             Annotated list with "Node X:" prefixes
         """

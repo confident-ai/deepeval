@@ -10,10 +10,10 @@ class ContextualRecallTemplate:
         supportive_reasons: str,
         unsupportive_reasons: str,
         score: float,
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         content_type = "sentence or image" if multimodal else "sentence"
-        
+
         return textwrap.dedent(
             f"""Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons ({'which is' if multimodal else 'which are'} deduced directly from the {'\'expected output\'' if multimodal else 'original expected output'}), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
             A supportive reason is the reason why a certain {content_type} in the original expected output can be attributed to the node in the retrieval context.
@@ -51,23 +51,25 @@ class ContextualRecallTemplate:
     def generate_verdicts(
         expected_output: Union[str, List[Union[str, MLLMImage]]],
         retrieval_context: List[Union[str, MLLMImage]],
-        multimodal: bool = False
+        multimodal: bool = False,
     ):
         content_type = "sentence and image" if multimodal else "sentence"
-        content_type_plural = "sentences and images" if multimodal else "sentences"
+        content_type_plural = (
+            "sentences and images" if multimodal else "sentences"
+        )
         content_or = "sentence or image" if multimodal else "sentence"
-        
+
         # For multimodal, we need to annotate the retrieval context with node IDs
         context_to_display = (
             ContextualRecallTemplate.id_retrieval_context(retrieval_context)
             if multimodal
             else retrieval_context
         )
-        
+
         node_instruction = ""
         if multimodal:
             node_instruction = " A node is either a string or image, but not both (so do not group images and texts in the same nodes)."
-        
+
         return textwrap.dedent(
             f"""For EACH {content_type} in the given expected output below, determine whether the {content_or} can be attributed to the nodes of retrieval contexts. Please generate a list of JSON with two keys: `verdict` and `reason`.
             The `verdict` key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the {content_or} can be attributed to any parts of the retrieval context, else answer 'no'.
@@ -105,10 +107,10 @@ class ContextualRecallTemplate:
     ) -> List[Union[str, MLLMImage]]:
         """
         Annotates retrieval context with node IDs for multimodal processing.
-        
+
         Args:
             retrieval_context: List of contexts (can be strings or MLLMImages)
-            
+
         Returns:
             Annotated list with "Node X:" prefixes
         """
