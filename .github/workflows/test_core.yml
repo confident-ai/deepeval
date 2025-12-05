@@ -56,6 +56,12 @@ jobs:
         run: poetry install --no-interaction --only main
 
       #----------------------------------------------
+      #    install dev dependencies (including chromadb and model deps)
+      #----------------------------------------------
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
+        
+      #----------------------------------------------
       #              run test suite
       #----------------------------------------------
 
@@ -77,12 +83,6 @@ jobs:
           --ignore=tests/test_core/test_datasets/                                   \
           --ignore=tests/test_core/test_tracing/test_dataset_iterator.py            \
           --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
-
-      #----------------------------------------------
-      #    install dev dependencies (including chromadb) and run synthesizer tests
-      #----------------------------------------------
-      - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
 
       # Dev tests (with secrets)
       - name: Run dev tests

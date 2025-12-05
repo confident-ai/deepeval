@@ -50,7 +50,9 @@ jobs:
 
       - name: Install project
         run: poetry install --no-interaction --only main
-
+      # Install dev dependencies
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
