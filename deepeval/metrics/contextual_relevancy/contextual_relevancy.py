@@ -187,20 +187,13 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        if multimodal:
-            prompt: dict = self.evaluation_template.generate_multimodal_reason(
-                input=input,
-                irrelevancies=irrelevant_statements,
-                relevant_statements=relevant_statements,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt: dict = self.evaluation_template.generate_reason(
-                input=input,
-                irrelevant_statements=irrelevant_statements,
-                relevant_statements=relevant_statements,
-                score=format(self.score, ".2f"),
-            )
+        prompt: dict = self.evaluation_template.generate_reason(
+            input=input,
+            irrelevant_statements=irrelevant_statements,
+            relevant_statements=relevant_statements,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -234,20 +227,13 @@ class ContextualRelevancyMetric(BaseMetric):
                 else:
                     relevant_statements.append(verdict.statement)
 
-        if multimodal:
-            prompt: dict = self.evaluation_template.generate_multimodal_reason(
-                input=input,
-                irrelevancies=irrelevant_statements,
-                relevant_statements=relevant_statements,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt: dict = self.evaluation_template.generate_reason(
-                input=input,
-                irrelevant_statements=irrelevant_statements,
-                relevant_statements=relevant_statements,
-                score=format(self.score, ".2f"),
-            )
+        prompt: dict = self.evaluation_template.generate_reason(
+            input=input,
+            irrelevant_statements=irrelevant_statements,
+            relevant_statements=relevant_statements,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -284,14 +270,10 @@ class ContextualRelevancyMetric(BaseMetric):
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input, context=context
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input, context=context
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, context=context,
+            multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -313,14 +295,10 @@ class ContextualRelevancyMetric(BaseMetric):
     def _generate_verdicts(
         self, input: str, context: str, multimodal: bool
     ) -> ContextualRelevancyVerdicts:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input, context=context
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input, context=context
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, context=context,
+            multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = self.model.generate(
