@@ -103,7 +103,7 @@ class ContextualRecallTemplate:
 
     @staticmethod
     def id_retrieval_context(
-        retrieval_context: List[Union[str, MLLMImage]]
+        retrieval_context: List[Union[str, MLLMImage]],
     ) -> List[Union[str, MLLMImage]]:
         """
         Annotates retrieval context with node IDs for multimodal processing.
