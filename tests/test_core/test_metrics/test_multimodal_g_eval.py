@@ -51,7 +51,7 @@ class MyMMTemplate(MultimodalGEvalTemplate):
             score_range=score_range,
             _additional_context=_additional_context,
         )
-        return [{"role": "system", "content": MyMMTemplate.MARK}] + list(base)
+        return f"{MyMMTemplate.MARK}\n{base}"
 
     @staticmethod
     def generate_strict_evaluation_results(
@@ -65,7 +65,7 @@ class MyMMTemplate(MultimodalGEvalTemplate):
             parameters=parameters,
             _additional_context=_additional_context,
         )
-        return [{"role": "system", "content": MyMMTemplate.MARK}] + list(base)
+        return f"{MyMMTemplate.MARK}\n{base}"
 
 
 # import deepeval.openai
