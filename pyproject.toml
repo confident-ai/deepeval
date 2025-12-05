@@ -62,6 +62,9 @@ pandas = "*"
 pysqlite3-binary = "^0.5.4"
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
+ollama = "*"
+anthropic = "*"
+google-genai = "^1.9.0"
 
 [tool.black]
 line-length = 80
