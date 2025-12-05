@@ -1,7 +1,7 @@
-from ollama import Client, AsyncClient
 from typing import List, Optional, Dict
 
 from deepeval.config.settings import get_settings
+from deepeval.utils import require_dependency
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -69,9 +69,15 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
+        ollama = require_dependency(
+            "ollama",
+            provider_label="OllamaEmbeddingModel",
+            install_hint="Install it with `pip install ollama`.",
+        )
+
         if not async_mode:
-            return self._build_client(Client)
-        return self._build_client(AsyncClient)
+            return self._build_client(ollama.Client)
+        return self._build_client(ollama.AsyncClient)
 
     def _build_client(self, cls):
         return cls(host=self.host, **self.client_kwargs)

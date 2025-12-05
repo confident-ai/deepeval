@@ -1,11 +1,12 @@
 from ollama import Client, AsyncClient, ChatResponse
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Optional, Tuple, Union, Dict, List, TYPE_CHECKING
 from pydantic import BaseModel
 import requests
 import base64
 import io
 
 from deepeval.config.settings import get_settings
+from deepeval.utils import require_dependency
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -14,6 +15,9 @@ from deepeval.test_case import MLLMImage
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
+
+if TYPE_CHECKING:
+    from ollama import ChatResponse
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
@@ -174,9 +178,14 @@ class OllamaModel(DeepEvalBaseLLM):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
+        ollama = require_dependency(
+            "ollama",
+            provider_label="OllamaModel",
+            install_hint="Install it with `pip install ollama`.",
+        )
         if not async_mode:
-            return self._build_client(Client)
-        return self._build_client(AsyncClient)
+            return self._build_client(ollama.Client)
+        return self._build_client(ollama.AsyncClient)
 
     def _client_kwargs(self) -> Dict:
         """Return kwargs forwarded to the underlying Ollama Client/AsyncClient."""

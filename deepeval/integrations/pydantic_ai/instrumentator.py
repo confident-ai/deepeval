@@ -1,40 +1,58 @@
+from __future__ import annotations
+
 import json
 import logging
 import os
 from time import perf_counter
-from typing import Literal, Optional, List
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import get_confident_api_key
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.prompt import Prompt
 from deepeval.tracing.context import current_trace_context
-from deepeval.tracing.types import Trace
-from deepeval.tracing.otel.utils import to_hex_string
-from deepeval.tracing.tracing import trace_manager
-from deepeval.tracing.otel.utils import normalize_pydantic_ai_messages
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
-
+from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.otel.utils import (
+    normalize_pydantic_ai_messages,
+    to_hex_string,
+)
+from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.types import (
+    AgentSpan,
+    Trace,
+    TraceSpanStatus,
+    ToolCall,
+)
 
 logger = logging.getLogger(__name__)
 
-
 try:
-    from pydantic_ai.models.instrumented import InstrumentationSettings
-    from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
+    # Optional dependencies
+    from opentelemetry.sdk.trace import (
+        ReadableSpan as _ReadableSpan,
+        SpanProcessor as _SpanProcessor,
+        TracerProvider,
+    )
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
-    from opentelemetry.sdk.trace import ReadableSpan
+    from pydantic_ai.models.instrumented import (
+        InstrumentationSettings as _BaseInstrumentationSettings,
+    )
 
     dependency_installed = True
 except ImportError as e:
+    dependency_installed = False
+
+    # Preserve previous behavior: only log when verbose mode is enabled.
     if get_settings().DEEPEVAL_VERBOSE_MODE:
         if isinstance(e, ModuleNotFoundError):
             logger.warning(
                 "Optional tracing dependency not installed: %s",
-                e.name,
+                getattr(e, "name", repr(e)),
                 stacklevel=2,
             )
         else:
@@ -43,26 +61,47 @@ except ImportError as e:
                 e,
                 stacklevel=2,
             )
-    dependency_installed = False
+
+    # Dummy fallbacks so imports and class definitions don't crash when
+    # optional deps are missing. Actual use is still guarded by
+    # is_dependency_installed().
+    class _BaseInstrumentationSettings:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+    class _SpanProcessor:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def on_start(self, span: Any, parent_context: Any) -> None:
+            pass
+
+        def on_end(self, span: Any) -> None:
+            pass
+
+    class _ReadableSpan:
+        pass
 
 
-def is_dependency_installed():
+def is_dependency_installed() -> bool:
     if not dependency_installed:
         raise ImportError(
-            "Dependencies are not installed. Please install it with `pip install pydantic-ai opentelemetry-sdk opentelemetry-exporter-otlp-proto-http`."
+            "Dependencies are not installed. Please install it with "
+            "`pip install pydantic-ai opentelemetry-sdk "
+            "opentelemetry-exporter-otlp-proto-http`."
         )
     return True
 
 
-from deepeval.tracing.types import AgentSpan
-from deepeval.confident.api import get_confident_api_key
-from deepeval.prompt import Prompt
-from deepeval.tracing.otel.test_exporter import test_exporter
-from deepeval.tracing.context import current_trace_context
-from deepeval.tracing.types import Trace
-from deepeval.tracing.otel.utils import to_hex_string
-from deepeval.tracing.types import TraceSpanStatus, ToolCall
-from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
+if TYPE_CHECKING:
+    # For type checkers, use real types
+    from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor
+    from pydantic_ai.models.instrumented import InstrumentationSettings
+else:
+    # At runtime we always have something to subclass / annotate with
+    InstrumentationSettings = _BaseInstrumentationSettings
+    SpanProcessor = _SpanProcessor
+    ReadableSpan = _ReadableSpan
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"

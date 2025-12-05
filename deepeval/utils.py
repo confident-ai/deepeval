@@ -14,6 +14,7 @@ import logging
 
 from contextvars import ContextVar
 from enum import Enum
+from importlib import import_module
 from typing import Any, Dict, List, Optional, Protocol, Sequence, Union
 from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
@@ -848,7 +849,22 @@ def require_param(
     env_var_name: str,
     param_hint: str,
 ) -> Any:
+    """
+    Ensures that a required parameter is provided. If the parameter is `None`, raises a
+    `DeepEvalError` with a helpful message indicating the missing parameter and how to resolve it.
 
+    Args:
+        param (Optional[Any]): The parameter to validate.
+        provider_label (str): A label for the provider to be used in the error message.
+        env_var_name (str): The name of the environment variable where the parameter can be set.
+        param_hint (str): A hint for the parameter, usually the name of the argument.
+
+    Raises:
+        DeepEvalError: If the `param` is `None`, indicating that a required parameter is missing.
+
+    Returns:
+        Any: The value of `param` if it is provided.
+    """
     if param is None:
         raise DeepEvalError(
             f"{provider_label} is missing a required parameter. "
@@ -857,3 +873,33 @@ def require_param(
         )
 
     return param
+
+
+def require_dependency(
+    module_name: str,
+    *,
+    provider_label: str,
+    install_hint: Optional[str] = None,
+) -> Any:
+    """
+    Imports an optional dependency module or raises a `DeepEvalError` if the module is not found.
+    The error message includes a suggestion on how to install the missing module.
+
+    Args:
+        module_name (str): The name of the module to import.
+        provider_label (str): A label for the provider to be used in the error message.
+        install_hint (Optional[str]): A hint on how to install the missing module, usually a pip command.
+
+    Raises:
+        DeepEvalError: If the module cannot be imported, indicating that the dependency is missing.
+
+    Returns:
+        Any: The imported module if successful.
+    """
+    try:
+        return import_module(module_name)
+    except ImportError as exc:
+        hint = install_hint or f"Install it with `pip install {module_name}`."
+        raise DeepEvalError(
+            f"{provider_label} requires the `{module_name}` package. {hint}"
+        ) from exc

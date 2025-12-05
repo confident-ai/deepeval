@@ -2,10 +2,11 @@ import json
 import requests
 from pydantic import BaseModel, SecretStr
 from google.genai import types, Client
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, TYPE_CHECKING
 
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
+from deepeval.utils import require_dependency
 from deepeval.models.utils import require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -13,7 +14,10 @@ from deepeval.models.retry_policy import (
 from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from google.oauth2 import service_account
+
+
+if TYPE_CHECKING:
+    from google.genai import Client
 
 default_gemini_model = "gemini-1.5-pro"
 
@@ -100,23 +104,24 @@ class GeminiModel(DeepEvalBaseLLM):
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
 
+        self._module = self._require_module()
         # Configure default model generation settings
         self.model_safety_settings = [
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_NONE,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_NONE,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_NONE,
             ),
-            types.SafetySetting(
-                category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold=types.HarmBlockThreshold.BLOCK_NONE,
+            self._module.types.SafetySetting(
+                category=self._module.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                threshold=self._module.types.HarmBlockThreshold.BLOCK_NONE,
             ),
         ]
 
@@ -208,7 +213,7 @@ class GeminiModel(DeepEvalBaseLLM):
             response = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
@@ -221,7 +226,7 @@ class GeminiModel(DeepEvalBaseLLM):
             response = client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -252,7 +257,7 @@ class GeminiModel(DeepEvalBaseLLM):
             response = await client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
@@ -265,7 +270,7 @@ class GeminiModel(DeepEvalBaseLLM):
             response = await client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
                     **self.generation_kwargs,
@@ -292,6 +297,20 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         return self._build_client(**kwargs)
 
+    def _require_oauth2(self):
+        return require_dependency(
+            "google.oauth2",
+            provider_label="GeminiModel",
+            install_hint="Install it with `pip install google-auth`.",
+        )
+
+    def _require_module(self):
+        return require_dependency(
+            "google.genai",
+            provider_label="GeminiModel",
+            install_hint="Install it with `pip install google-genai`.",
+        )
+
     def _client_kwargs(self, **override_kwargs) -> Dict:
         """Merge ctor kwargs with any overrides passed at load_model time."""
         client_kwargs = dict(self.kwargs or {})
@@ -299,7 +318,7 @@ class GeminiModel(DeepEvalBaseLLM):
             client_kwargs.update(override_kwargs)
         return client_kwargs
 
-    def _build_client(self, **override_kwargs) -> Client:
+    def _build_client(self, **override_kwargs) -> "Client":
         client_kwargs = self._client_kwargs(**override_kwargs)
 
         if self.should_use_vertexai():
@@ -310,8 +329,9 @@ class GeminiModel(DeepEvalBaseLLM):
                     "GOOGLE_CLOUD_LOCATION in your DeepEval configuration."
                 )
 
+            oauth2 = self._require_oauth2()
             credentials = (
-                service_account.Credentials.from_service_account_info(
+                oauth2.service_account.Credentials.from_service_account_info(
                     self.service_account_key,
                     scopes=[
                         "https://www.googleapis.com/auth/cloud-platform",
@@ -321,7 +341,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 else None
             )
 
-            client = Client(
+            client = self._module.Client(
                 vertexai=True,
                 project=self.project,
                 location=self.location,
@@ -336,6 +356,6 @@ class GeminiModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to GeminiModel(...)",
             )
 
-            client = Client(api_key=api_key, **client_kwargs)
+            client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
