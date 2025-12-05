@@ -5,9 +5,8 @@ import pytest
 from deepeval.errors import DeepEvalError
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
-from deepeval.optimization.types import PromptConfiguration
-from deepeval.optimization.copro.configs import COPROConfig
-from deepeval.optimization.copro.loop import COPRORunner
+from deepeval.optimizer.types import PromptConfiguration
+from deepeval.optimizer.algorithms import COPRO
 
 from tests.test_core.stubs import (
     StubScoringAdapter,
@@ -24,27 +23,27 @@ def _make_runner(
     full_eval_every: int | None = 2,
 ):
     """
-    Helper to construct a COPRORunner wired with the shared stubs:
+    Helper to construct a COPRO runner wired with the shared stubs:
 
     - StubScoringAdapter: scores prompts with 'CHILD' higher than root.
     - SuffixRewriter: appends ' CHILD' to the prompt text.
     """
-    config = COPROConfig(
+    scoring = StubScoringAdapter()
+    runner = COPRO(
         iterations=iterations,
         population_size=population_size,
         proposals_per_step=proposals_per_step,
         full_eval_every=full_eval_every,
         random_seed=0,
         minibatch_size=2,  # keep minibatch behaviour deterministic in tests
+        scorer=scoring,
     )
-    scoring = StubScoringAdapter()
-    runner = COPRORunner(config=config, scoring_adapter=scoring)
     runner._rewriter = SuffixRewriter(suffix=" CHILD")
     return runner, scoring
 
 
 def test_execute_requires_at_least_one_golden():
-    """COPRORunner.execute must reject an empty golden list."""
+    """COPRO.execute must reject an empty golden list."""
     runner, _ = _make_runner()
     prompt = Prompt(text_template="ROOT")
 
@@ -54,7 +53,7 @@ def test_execute_requires_at_least_one_golden():
 
 @pytest.mark.asyncio
 async def test_a_execute_requires_at_least_one_golden():
-    """COPRORunner.a_execute must reject an empty golden list."""
+    """COPRO.a_execute must reject an empty golden list."""
     runner, _ = _make_runner()
     prompt = Prompt(text_template="ROOT")
 
@@ -62,13 +61,12 @@ async def test_a_execute_requires_at_least_one_golden():
         await runner.a_execute(prompt=prompt, goldens=[])
 
 
-def test_execute_requires_scoring_adapter():
+def test_execute_requires_scorer():
     """
-    If no scoring_adapter is attached, COPRORunner.execute must fail
-    via _ensure_scoring_adapter.
+    If no scorer is attached, COPRO.execute must fail
+    via _ensure_scorer.
     """
-    config = COPROConfig()
-    runner = COPRORunner(config=config, scoring_adapter=None)
+    runner = COPRO(scorer=None)
     prompt = Prompt(text_template="ROOT")
     goldens = ["g1"]
 
@@ -81,22 +79,22 @@ def test_add_prompt_configuration_prunes_worst_candidate():
     _add_prompt_configuration must enforce population_size by pruning
     the worst-scoring candidate while always keeping the best.
     """
-    config = COPROConfig(
+    runner = COPRO(
         population_size=2,
         iterations=1,
         random_seed=0,
+        scorer=None,
     )
-    runner = COPRORunner(config=config, scoring_adapter=None)
 
     # Three candidates with different mean scores
     c1 = PromptConfiguration.new(
-        prompts={COPRORunner.SINGLE_MODULE_ID: Prompt(text_template="C1")}
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C1")}
     )
     c2 = PromptConfiguration.new(
-        prompts={COPRORunner.SINGLE_MODULE_ID: Prompt(text_template="C2")}
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C2")}
     )
     c3 = PromptConfiguration.new(
-        prompts={COPRORunner.SINGLE_MODULE_ID: Prompt(text_template="C3")}
+        prompts={COPRO.SINGLE_MODULE_ID: Prompt(text_template="C3")}
     )
 
     # Seed surrogate stats BEFORE adding, so pruning logic sees real scores
@@ -151,9 +149,7 @@ def test_execute_accepts_children_and_respects_population():
     assert "accepted_iterations" in report
 
     # Population bound respected
-    assert (
-        len(runner.prompt_configurations_by_id) <= runner.config.population_size
-    )
+    assert len(runner.prompt_configurations_by_id) <= runner.population_size
 
     # Surrogate stats should have been populated
     assert runner._minibatch_score_counts
@@ -198,8 +194,7 @@ def test_prompts_equivalent_detects_text_and_list_prompts():
     _prompts_equivalent should treat prompts with identical trimmed text
     (or identical LIST messages) as equivalent, and different ones as not.
     """
-    cfg = COPROConfig()
-    runner = COPRORunner(config=cfg, scoring_adapter=None)
+    runner = COPRO(scorer=None)
 
     # TEXT prompts
     p1 = Prompt(text_template="  hello world  ")
@@ -238,8 +233,7 @@ def test_update_progress_and_error_use_status_callback():
     _update_progress and _update_error should forward structured events to
     the status_callback, allowing PromptOptimizer to drive a progress bar.
     """
-    cfg = COPROConfig(iterations=2)
-    runner = COPRORunner(config=cfg, scoring_adapter=None)
+    runner = COPRO(iterations=2, scorer=None)
 
     progress = DummyProgress()
 
