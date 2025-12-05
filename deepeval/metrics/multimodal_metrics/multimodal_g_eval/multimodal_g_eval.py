@@ -1,7 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Type, Union
-from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
     LLMTestCaseParams,
@@ -46,7 +46,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
-        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         top_logprobs: int = 20,
         async_mode: bool = True,

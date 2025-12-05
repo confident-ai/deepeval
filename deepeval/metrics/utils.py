@@ -12,7 +12,6 @@ from deepeval.errors import (
 from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
     DeepEvalBaseLLM,
-    DeepEvalBaseMLLM,
     GPTModel,
     AnthropicModel,
     AzureOpenAIModel,

@@ -18,7 +18,7 @@ from deepeval.metrics.utils import (
     check_mllm_test_case_params,
     initialize_model,
 )
-from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
@@ -32,7 +32,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
 
     def __init__(
         self,
-        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,

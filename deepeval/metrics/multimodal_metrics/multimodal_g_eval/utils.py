@@ -3,7 +3,7 @@ from deepeval.test_case import MLLMImage
 from deepeval.models.llms.openai_model import (
     unsupported_log_probs_multimodal_gpt_models,
 )
-from deepeval.models import DeepEvalBaseMLLM, GPTModel
+from deepeval.models import DeepEvalBaseLLM, GPTModel
 
 from typing import List, Union
 
@@ -53,7 +53,7 @@ def construct_test_case_list(
     return test_case_list
 
 
-def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseMLLM]):
+def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
     if (
         isinstance(model, str)
         and model in unsupported_log_probs_multimodal_gpt_models
