@@ -15,7 +15,7 @@ class ContextualRecallTemplate:
         content_type = "sentence or image" if multimodal else "sentence"
 
         return textwrap.dedent(
-            f"""Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons ({'which is' if multimodal else 'which are'} deduced directly from the {'\'expected output\'' if multimodal else 'original expected output'}), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
+            f"""Given the original expected output, a list of supportive reasons, and a list of unsupportive reasons ({'which is' if multimodal else 'which are'} deduced directly from the {'"expected output"' if multimodal else 'original expected output'}), and a contextual recall score (closer to 1 the better), summarize a CONCISE reason for the score.
             A supportive reason is the reason why a certain {content_type} in the original expected output can be attributed to the node in the retrieval context.
             An unsupportive reason is the reason why a certain {content_type} in the original expected output cannot be attributed to anything in the retrieval context.
             In your reason, you should {'related' if multimodal else 'relate'} supportive/unsupportive reasons to the {content_type} number in expected output, and {'info' if multimodal else 'include info'} regarding the node number in retrieval context to support your final reason. The first mention of "node(s)" should specify "node(s) in retrieval context{')' if multimodal else ''}.

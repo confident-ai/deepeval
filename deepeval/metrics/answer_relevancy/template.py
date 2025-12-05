@@ -144,11 +144,11 @@ class AnswerRelevancyTemplate:
 
         return textwrap.dedent(
             f"""For the provided {content_type}, determine whether each {statement_or_image} is relevant to address the input.
-            {'Please generate a list of JSON with two keys: `verdict` and `reason`.' if multimodal else 'Generate JSON objects with \'verdict\' and \'reason\' fields.'}
-            The 'verdict' {'key ' if multimodal else ''}should {'STRICTLY be either a \'yes\', \'idk\' or \'no\'' if multimodal else 'be \'yes\' (relevant), \'no\' (irrelevant), or \'idk\' (ambiguous/supporting information)'}. {'Answer \'yes\' if the ' + statement_or_image + ' is relevant to addressing the original input, \'no\' if the ' + statement_or_image + ' is irrelevant, and \'idk\' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).' if multimodal else ''}
-            {'The \'reason\' is the reason for the verdict.' if multimodal else ''}
+            {"Please generate a list of JSON with two keys: `verdict` and `reason`." if multimodal else "Generate JSON objects with 'verdict' and 'reason' fields."}
+            The 'verdict' {"key " if multimodal else ''}should {"STRICTLY be either a 'yes', 'idk' or 'no'" if multimodal else "be 'yes' (relevant), 'no' (irrelevant), or 'idk' (ambiguous/supporting information)"}. {"Answer 'yes' if the " + statement_or_image + ' is relevant to addressing the original input, no if the ' + statement_or_image + ' is irrelevant, and "idk" if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).' if multimodal else ""}
+            {"The 'reason' is the reason for the verdict.' if multimodal else '"}
             Provide 'reason' ONLY for 'no' or 'idk' verdicts.
-            The {'provided statements are statements and images' if multimodal else 'statements are from an AI\'s actual output'} generated in the actual output.
+            The {"provided statements are statements and images' if multimodal else 'statements are from an AI's actual output"} generated in the actual output.
 
             **
             IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
@@ -184,12 +184,12 @@ class AnswerRelevancyTemplate:
             **
             IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
 
-            {'Example:' if not multimodal else ''}
+            {"Example:' if not multimodal else '"}
             Example JSON:
             {{
                 "reason": "The score is <answer_relevancy_score> because <your_reason>."
             }}
-            {'===== END OF EXAMPLE ======' if not multimodal else ''}
+            {"===== END OF EXAMPLE ======' if not multimodal else '"}
             **
 
             Answer Relevancy Score:
