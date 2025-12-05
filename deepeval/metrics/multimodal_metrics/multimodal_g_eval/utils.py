@@ -61,7 +61,8 @@ def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseMLLM]):
         return True
     elif (
         isinstance(model, GPTModel)
-        and model.model_name in unsupported_log_probs_multimodal_gpt_models
+        and model.get_model_name()
+        in unsupported_log_probs_multimodal_gpt_models
     ):
         return True
     return False
