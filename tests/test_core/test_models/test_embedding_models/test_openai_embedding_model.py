@@ -33,7 +33,7 @@ def test_openai_embedding_model_uses_explicit_key_over_settings_and_strips_secre
     # Construct the model with an explicit key
     model = OpenAIEmbeddingModel(
         model="text-embedding-3-small",
-        openai_api_key="ctor-secret-key",
+        api_key="ctor-secret-key",
     )
 
     # Directly exercise _build_client with our recording stub
@@ -70,3 +70,24 @@ def test_openai_embedding_model_defaults_from_settings(monkeypatch):
     api_key = kw.get("api_key")
     assert isinstance(api_key, str)
     assert api_key == "env-secret-key"
+
+
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_openai_embedding_model_accepts_legacy__openai_api_key_keyword_and_maps_to_api_key():
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model`
+    - It should not be forwarded through `model.kwargs`
+    """
+
+    model = OpenAIEmbeddingModel(api_key="test-key")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.api_key and model.api_key.get_secret_value() == "test-key"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "api_key" not in model.kwargs

@@ -149,7 +149,7 @@ def test_deepseek_model_defaults_from_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.deepseek.com"
 
     # Model name should also come from Settings
-    assert model.model_name == "deepseek-chat"
+    assert model.name == "deepseek-chat"
 
 
 def test_deepseek_model_ctor_args_override_settings(monkeypatch):
@@ -185,7 +185,7 @@ def test_deepseek_model_ctor_args_override_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.deepseek.com"
 
     # Model name should match ctor value
-    assert model.model_name == "deepseek-reasoner"
+    assert model.name == "deepseek-reasoner"
     # And the temperature should respect the ctor argument
     assert model.temperature == 0.5
 

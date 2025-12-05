@@ -34,10 +34,10 @@ def test_azure_sdk_retries_disabled(monkeypatch):
     # build model with conflicting kwargs, then our override should win.
     m = azure_model.AzureOpenAIModel(
         deployment_name="dummy",
-        model_name="gpt-4o-mini",
-        azure_openai_api_key="x",
+        model="gpt-4o-mini",
+        api_key="x",
         openai_api_version="2024-02-01",
-        azure_endpoint="https://example",
+        base_url="https://example",
         max_retries=5,
     )
     client = m.load_model(async_mode=False)
@@ -88,10 +88,10 @@ def test_azure_sdk_retries_opt_in_respects_user_max_retries(settings):
 
     m = azure_model.AzureOpenAIModel(
         deployment_name="dummy",
-        model_name="gpt-4o-mini",
-        azure_openai_api_key="x",
+        model="gpt-4o-mini",
+        api_key="x",
         openai_api_version="2024-02-01",
-        azure_endpoint="https://example",
+        base_url="https://example",
         max_retries=5,  # should be honored when SDK retries are enabled
     )
     client = m.load_model(async_mode=False)

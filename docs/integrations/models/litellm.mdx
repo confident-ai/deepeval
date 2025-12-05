@@ -71,7 +71,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 model = LiteLLMModel(
     model="openai/gpt-3.5-turbo",  # Provider must be specified
     api_key="your-api-key",  # optional, can be set via environment variable
-    api_base="your-api-base",  # optional, for custom endpoints
+    base_url="your-api-base",  # optional, for custom endpoints
     temperature=0
 )
 
@@ -172,7 +172,7 @@ metric = AnswerRelevancyMetric(model=model)
 # LM Studio
 model = LiteLLMModel(
     model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
-    api_base="http://localhost:1234/v1",  # LM Studio default URL
+    base_url="http://localhost:1234/v1",  # LM Studio default URL
     api_key="lm-studio"  # LM Studio uses a fixed API key
 )
 metric = AnswerRelevancyMetric(model=model)
@@ -180,7 +180,7 @@ metric = AnswerRelevancyMetric(model=model)
 # Ollama
 model = LiteLLMModel(
     model="ollama/llama2",
-    api_base="http://localhost:11434/v1",  # Ollama default URL
+    base_url="http://localhost:11434/v1",  # Ollama default URL
     api_key="ollama"  # Ollama uses a fixed API key
 )
 metric = AnswerRelevancyMetric(model=model)
@@ -190,7 +190,7 @@ metric = AnswerRelevancyMetric(model=model)
 ```python
 model = LiteLLMModel(
     model="custom/your-model-name",  # Provider must be specified
-    api_base="https://your-custom-endpoint.com",
+    base_url="https://your-custom-endpoint.com",
     api_key="your-api-key"
 )
 ```
@@ -213,7 +213,7 @@ response, cost = model.generate(
 # LM Studio
 model = LiteLLMModel(
     model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
-    api_base="http://localhost:1234/v1",
+    base_url="http://localhost:1234/v1",
     api_key="lm-studio"
 )
 response, cost = model.generate(
@@ -224,7 +224,7 @@ response, cost = model.generate(
 # Ollama
 model = LiteLLMModel(
     model="ollama/llama2",
-    api_base="http://localhost:11434/v1",
+    base_url="http://localhost:11434/v1",
     api_key="ollama"
 )
 response, cost = model.generate(

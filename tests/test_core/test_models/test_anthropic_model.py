@@ -10,6 +10,62 @@ from pydantic import SecretStr
 from tests.test_core.stubs import _RecordingClient
 
 
+########################################################
+# Legacy keyword backwards compatibility behavior      #
+########################################################
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
+    mock_require_dep,
+    settings,
+):
+    """
+    Using the legacy `_anthropic_api_key` keyword should:
+
+    - Populate the canonical `api_key` (via SecretStr)
+    - Result in the underlying client receiving the correct `api_key` value
+    - Not forward `_anthropic_api_key` in model.kwargs
+    """
+    # Put ANTHROPIC_API_KEY into the process env so Settings sees it
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "env-secret-key"
+
+    # rebuild the Settings singleton from the current env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    assert isinstance(settings.ANTHROPIC_API_KEY, SecretStr)
+
+    # Fake anthropic module returned by require_dependency
+    fake_anthropic_module = SimpleNamespace(
+        Anthropic=_RecordingClient,
+        AsyncAnthropic=_RecordingClient,
+    )
+    mock_require_dep.return_value = fake_anthropic_module
+
+    # Construct AnthropicModel with the legacy key name
+    model = AnthropicModel(
+        model="claude-3-7-sonnet-latest",
+        api_key="constructor-key",
+    )
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    api_key = client.kwargs.get("api_key")
+
+    # The client should see a plain string API key coming from the legacy param
+    assert isinstance(api_key, str)
+    assert api_key == "constructor-key"
+
+    # And the legacy key should not be present in the model's kwargs
+    assert "_anthropic_api_key" not in model.kwargs
+
+
+##########################
+# Test Secret Management #
+##########################
+
+
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_model_uses_explicit_key_over_settings_and_strips_secret(
     mock_require_dep,
@@ -38,7 +94,7 @@ def test_anthropic_model_uses_explicit_key_over_settings_and_strips_secret(
     # Construct AnthropicModel with an explicit key
     model = AnthropicModel(
         model="claude-3-7-sonnet-latest",
-        _anthropic_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`
@@ -98,7 +154,7 @@ def test_anthropic_model_uses_explicit_key_when_settings_missing(
 
     model = AnthropicModel(
         model="claude-3-7-sonnet-latest",
-        _anthropic_api_key="explicit-key",
+        api_key="explicit-key",
     )
     client = model.model
     assert client.kwargs["api_key"] == "explicit-key"
@@ -142,7 +198,7 @@ def test_anthropic_model_raises_when_explicit_key_empty(
     with pytest.raises(DeepEvalError, match="empty"):
         AnthropicModel(
             model="claude-3-7-sonnet-latest",
-            _anthropic_api_key="",
+            api_key="",
         )
 
 

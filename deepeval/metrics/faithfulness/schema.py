@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 
 class FaithfulnessVerdict(BaseModel):
-    verdict: Literal["yes", "idk", "no"]
+    verdict: Literal["yes", "no", "idk"]
     reason: Optional[str] = Field(default=None)
 
 

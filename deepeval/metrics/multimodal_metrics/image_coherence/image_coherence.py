@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_coherence.template import (
     ImageCoherenceTemplate,
 )
@@ -10,20 +10,23 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_mllm_test_case_params,
-    initialize_multimodal_model,
+    initialize_model,
 )
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
     ReasonScore,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import (
+    get_or_create_event_loop,
+    convert_to_multi_modal_array,
+)
 
 
 class ImageCoherenceMetric(BaseMultimodalMetric):
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -35,7 +38,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
@@ -45,7 +48,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -68,7 +71,9 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                actual_output = test_case.actual_output
+                actual_output = convert_to_multi_modal_array(
+                    test_case.actual_output
+                )
                 self.contexts_above = []
                 self.contexts_below = []
                 self.scores = []
@@ -145,7 +150,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -160,7 +165,9 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            actual_output = test_case.actual_output
+            actual_output = convert_to_multi_modal_array(
+                test_case.actual_output
+            )
             self.contexts_above = []
             self.contexts_below = []
             self.scores = []
@@ -253,7 +260,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
         instructions = ImageCoherenceTemplate.evaluate_image_coherence(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
+        prompt = f"{instructions} \nImages: {image}"
         if self.using_native_model:
             res, cost = self.model.generate(prompt, ReasonScore)
             self.evaluation_cost += cost
@@ -278,7 +285,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
         instructions = ImageCoherenceTemplate.evaluate_image_coherence(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
+        prompt = f"{instructions} \nImages: {image}"
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
             self.evaluation_cost += cost

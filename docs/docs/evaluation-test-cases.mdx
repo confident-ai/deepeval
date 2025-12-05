@@ -440,64 +440,96 @@ from deepeval.test_case import LLMTestCase
 test_case = LLMTestCase(completion_time=7.53, ...)
 ```
 
-## MLLM Test Case
+## Multimodal Test Cases
 
-An `MLLMTestCase` in deepeval is designed to unit test outputs from MLLM (Multimodal Large Language Model) applications. Unlike an `LLMTestCase`, which only handles textual parameters, an `MLLMTestCase` accepts both text and image inputs and outputs. This is particularly useful for evaluating tasks such as text-to-image generation or MLLM-driven image editing.
+`deepeval` supports multimodal inputs and outputs inside `LLMTestCase`s, allowing you to unit test outputs from MLLM (Multimodal Large Language Model) applications. You can seamlessly mix text and images in your test cases using f-strings with `MLLMImage` objects. This is particularly useful for evaluating tasks such as text-to-image generation, image captioning, or MLLM-driven image editing.
 
-:::caution
-You may only evaluate `MLLMTestCase`s using multimodal metrics such as `VIEScore`.
+:::info
+Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can evaluate them using both standard RAG-based metrics (like `FaithfulnessMetric`) and specialized multimodal metrics (like `ImageCoherence`), as metrics now intelligently handle both text-only and multimodal content.
 :::
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 
-mllm_test_case = MLLMTestCase(
+test_case = LLMTestCase(
     # Replace this with your user input
-    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)]
-    # Replace this with your actual MLLM application
-    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+    input=f"Change the color of the shoes to blue. {MLLMImage(url='./shoes.png', local=True)}",
+    # Replace this with your actual MLLM application output
+    actual_output=f"Here's the blue shoes you asked for: {MLLMImage(url='https://shoe-images.com/edited-shoes', local=False)}"
 )
 ```
+
+### MLLM Image
+
+The `MLLMImage` class is specific to `deepeval` and accepts local files, remote urls, and `base64`, `mimeType` data. They can be passed inside test cases to reference an image for evaluations.
+
+```python
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+```
+
+You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when initializing an `MLLMImage`. The `local` attribute should be set to `True` for locally stored images and `False` for images hosted online (default is `False`).
+
 
 ### Input
 
-The `input` mimics a user interacting with your MLLM application. Like an `LLMTestCase` input, an `MLLMTestCase` input is the direct input to your prompt template, and so **SHOULD NOT CONTAIN** your prompt template.
+The `input` mimics a user interacting with your MLLM application. Like an `LLMTestCase` input, an `MLLMTestCase` input is the direct input to your MLLM application, and so it **SHOULD NOT CONTAIN** your prompt template.
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 
-mllm_test_case = MLLMTestCase(
-    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)]
+shoes_image = MLLMImage(url="./shoes.png", local=True)
+
+test_case = LLMTestCase(
+    input=f"Change the color of the shoes to blue. {shoes_image}"
 )
 ```
-
-:::info
-The `input` parameter accepts a list of strings and `MLLMImage`s, which is a class specific `deepeval`. The `MLLMImage` class accepts an image path and automatically sets the `local` attribute to `true` or `false` depending on whether the image is locally stored or hosted online. By default, `local` is set to `false`.
-
-```python
-from deepeval.test_case import MLLMImage
-
-# Example of using the MLLMImage class
-image_input = MLLMImage(image_path="path/to/image.jpg")
-
-# image_input.local will automatically be set to `true` if the image is local
-# and `false` if the image is hosted online.
-```
-
-:::
 
 ### Actual Output
 
-The actual_output is simply what your MLLM application returns for a given input. Similarly, it also accepts a list of strings and `MLLMImage`s.
+The `actual_output` is simply what your MLLM application returns for a given input. Embed `MLLMImage` objects within your text using f-strings, just like with inputs.
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 
-mllm_test_case = MLLMTestCase(
-    input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
-    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+shoes_image = MLLMImage(url="./shoes.png", local=True)
+edited_shoes = MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)
+
+test_case = LLMTestCase(
+    input=f"Change the color of the shoes to blue. {shoes_image}",
+    actual_output=f"The original image of red shoes now shows the shoes in blue. {edited_shoes}"
 )
 ```
+
+### Other Parameters
+
+All other `LLMTestCase` parameters (`expected_output`, `retrieval_context`, `context`, etc.) also support multimodal content using the same f-string approach:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+original = MLLMImage(url="./original.png", local=True)
+edited = MLLMImage(url="./edited.png", local=True)
+reference = MLLMImage(url="./reference.png", local=True)
+
+test_case = LLMTestCase(
+    input=f"Edit this image: {original}",
+    actual_output=f"Here's the edited version: {edited}",
+    expected_output=f"The expected result: {reference}",
+    retrieval_context=[
+        f"Style reference image: {reference}",
+        "Use blue tones for the edit"
+    ]
+)
+```
+
+:::tip
+You can mix text-only and multimodal content freely in your test cases and use them with various multimodal supported metrics like the [RAG metrics](/docs/metrics-answer-relevancy) and [multimodal-specific metrics](/docs/multimodal-metrics-image-coherence).
+:::
 
 ## Label Test Cases For Confident AI
 

@@ -16,7 +16,6 @@ from deepeval.metrics import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
@@ -222,9 +221,9 @@ def validate_assert_test_inputs(
         )
 
     if test_case and metrics:
-        if isinstance(test_case, LLMTestCase) and not all(
-            isinstance(metric, BaseMetric) for metric in metrics
-        ):
+        if (
+            isinstance(test_case, LLMTestCase) and not test_case.multimodal
+        ) and not all(isinstance(metric, BaseMetric) for metric in metrics):
             raise ValueError(
                 "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
             )
@@ -234,11 +233,17 @@ def validate_assert_test_inputs(
             raise ValueError(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
             )
-        if isinstance(test_case, MLLMTestCase) and not all(
-            isinstance(metric, BaseMultimodalMetric) for metric in metrics
+        if (
+            isinstance(test_case, LLMTestCase) and test_case.multimodal
+        ) and not all(
+            (
+                isinstance(metric, BaseMultimodalMetric)
+                or isinstance(metric, BaseMetric)
+            )
+            for metric in metrics
         ):
             raise ValueError(
-                "All 'metrics' for an 'MLLMTestCase' must be instances of 'BaseMultimodalMetric' only."
+                "All 'metrics' for multi-modal LLMTestCase must be instances of 'BaseMultimodalMetric' only."
             )
 
     if not ((golden and observed_callback) or (test_case and metrics)):
@@ -251,9 +256,7 @@ def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     observed_callback: Optional[Callable] = None,
     test_cases: Optional[
-        Union[
-            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
-        ]
+        Union[List[LLMTestCase], List[ConversationalTestCase]]
     ] = None,
     metrics: Optional[
         Union[
@@ -292,9 +295,10 @@ def validate_evaluate_inputs(
     if test_cases and metrics:
         for test_case in test_cases:
             for metric in metrics:
-                if isinstance(test_case, LLMTestCase) and not isinstance(
-                    metric, BaseMetric
-                ):
+                if (
+                    isinstance(test_case, LLMTestCase)
+                    and not test_case.multimodal
+                ) and not isinstance(metric, BaseMetric):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
                     )
@@ -305,11 +309,14 @@ def validate_evaluate_inputs(
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )
-                if isinstance(test_case, MLLMTestCase) and not isinstance(
-                    metric, BaseMultimodalMetric
+                if (
+                    isinstance(test_case, LLMTestCase) and test_case.multimodal
+                ) and not (
+                    isinstance(metric, BaseMultimodalMetric)
+                    or isinstance(metric, BaseMetric)
                 ):
                     raise ValueError(
-                        f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
+                        f"Metric {metric.__name__} is not a valid metric for multi-modal LLMTestCase."
                     )
 
 

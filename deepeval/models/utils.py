@@ -1,7 +1,11 @@
-from typing import Optional
+import logging
+from typing import Any, Dict, Optional, Tuple
 from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_model_name(model_name: Optional[str] = None) -> str:
@@ -74,3 +78,44 @@ def require_secret_api_key(
         )
 
     return api_key
+
+
+def normalize_kwargs_and_extract_aliases(
+    provider_label: str,
+    kwargs: Dict[str, Any],
+    alias_map: Dict[str, list],
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """
+    Normalize legacy keyword argument names according to alias_map.
+
+    alias_map is of the form: {new_name: [old_name1, old_name2, ...]}
+
+    - Returns (normalized_kwargs, extracted_values)
+      where:
+        - normalized_kwargs has all legacy keys removed (to prevent forwarding
+          to downstream SDK clients).
+        - extracted_values maps new_name -> value for any alias that was used.
+
+    - Logs a warning for each legacy keyword used, so callers know they should
+      migrate to the new name.
+    """
+    normalized = dict(kwargs)
+    extracted: Dict[str, Any] = {}
+
+    for new_name, old_names in alias_map.items():
+        for old_name in old_names:
+            if old_name in normalized:
+                value = normalized.pop(old_name)
+
+                logger.warning(
+                    "%s keyword '%s' is deprecated; please use '%s' instead.",
+                    provider_label,
+                    old_name,
+                    new_name,
+                )
+
+                # Only preserve the first alias value we see for a given new_name
+                if new_name not in extracted:
+                    extracted[new_name] = value
+
+    return normalized, extracted

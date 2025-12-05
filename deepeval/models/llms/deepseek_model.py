@@ -4,7 +4,9 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.config.settings import get_settings
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -31,16 +33,16 @@ model_pricing = {
 class DeepSeekModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        api_key: Optional[str] = None,
         model: Optional[str] = None,
+        api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
 
-        model_name = model or settings.DEEPSEEK_MODEL_NAME
-        if model_name not in model_pricing:
+        model = model or settings.DEEPSEEK_MODEL_NAME
+        if model not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available DeepSeek models: {', '.join(model_pricing.keys())}"
             )
@@ -59,9 +61,10 @@ class DeepSeekModel(DeepEvalBaseLLM):
             self.api_key = settings.DEEPSEEK_API_KEY
 
         self.base_url = "https://api.deepseek.com"
+        # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -74,7 +77,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
         if schema:
             completion = client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -90,7 +93,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             completion = client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 **self.generation_kwargs,
             )
@@ -108,7 +111,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
         if schema:
             completion = await client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -124,7 +127,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             completion = await client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 **self.generation_kwargs,
             )
@@ -144,7 +147,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -157,9 +160,6 @@ class DeepSeekModel(DeepEvalBaseLLM):
         if not async_mode:
             return self._build_client(OpenAI)
         return self._build_client(AsyncOpenAI)
-
-    def get_model_name(self):
-        return f"{self.model_name}"
 
     def _client_kwargs(self) -> Dict:
         kwargs = dict(self.kwargs or {})

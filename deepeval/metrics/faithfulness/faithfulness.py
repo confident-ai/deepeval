@@ -1,16 +1,17 @@
 from typing import List, Optional, Union, Type
 import asyncio
 
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-)
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
 from deepeval.metrics import BaseMetric
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_llm_test_case_params,
+    check_mllm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -67,7 +68,13 @@ class FaithfulnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+        if multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -84,11 +91,16 @@ class FaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
-                self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
-                self.verdicts = self._generate_verdicts()
+                retrieval_context = test_case.retrieval_context
+                actual_output = test_case.actual_output
+
+                self.truths = self._generate_truths(
+                    retrieval_context, multimodal
+                )
+                self.claims = self._generate_claims(actual_output, multimodal)
+                self.verdicts = self._generate_verdicts(multimodal)
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason()
+                self.reason = self._generate_reason(multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -114,7 +126,13 @@ class FaithfulnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+        if multimodal:
+            check_mllm_test_case_params(
+                test_case, self._required_params, None, None, self
+            )
+        else:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -123,13 +141,16 @@ class FaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            retrieval_context = test_case.retrieval_context
+            actual_output = test_case.actual_output
+
             self.truths, self.claims = await asyncio.gather(
-                self._a_generate_truths(test_case.retrieval_context),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_truths(retrieval_context, multimodal),
+                self._a_generate_claims(actual_output, multimodal),
             )
-            self.verdicts = await self._a_generate_verdicts()
+            self.verdicts = await self._a_generate_verdicts(multimodal)
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
+            self.reason = await self._a_generate_reason(multimodal)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -146,7 +167,7 @@ class FaithfulnessMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -155,10 +176,16 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
-            contradictions=contradictions,
-            score=format(self.score, ".2f"),
-        )
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -177,7 +204,7 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -186,10 +213,16 @@ class FaithfulnessMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 contradictions.append(verdict.reason)
 
-        prompt = self.evaluation_template.generate_reason(
-            contradictions=contradictions,
-            score=format(self.score, ".2f"),
-        )
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
+        else:
+            prompt = self.evaluation_template.generate_reason(
+                contradictions=contradictions,
+                score=format(self.score, ".2f"),
+            )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -208,14 +241,23 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    async def _a_generate_verdicts(self) -> List[FaithfulnessVerdict]:
+    async def _a_generate_verdicts(
+        self, multimodal: bool
+    ) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, retrieval_context="\n\n".join(self.truths)
-        )
+
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -236,14 +278,21 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    def _generate_verdicts(self) -> List[FaithfulnessVerdict]:
+    def _generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
 
         verdicts: List[FaithfulnessVerdict] = []
-        prompt = self.evaluation_template.generate_verdicts(
-            claims=self.claims, retrieval_context="\n\n".join(self.truths)
-        )
+
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+        else:
+            prompt = self.evaluation_template.generate_verdicts(
+                claims=self.claims, retrieval_context="\n\n".join(self.truths)
+            )
+
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
@@ -262,11 +311,19 @@ class FaithfulnessMetric(BaseMetric):
                 ]
                 return verdicts
 
-    async def _a_generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
-        )
+    async def _a_generate_truths(
+        self, retrieval_context: str, multimodal: bool
+    ) -> List[str]:
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_truths(
+                excerpt=retrieval_context,
+                extraction_limit=self.truths_extraction_limit,
+            )
+        else:
+            prompt = self.evaluation_template.generate_truths(
+                retrieval_context="\n\n".join(retrieval_context),
+                extraction_limit=self.truths_extraction_limit,
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Truths)
             self.evaluation_cost += cost
@@ -280,11 +337,19 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    def _generate_truths(self, retrieval_context: str) -> List[str]:
-        prompt = self.evaluation_template.generate_truths(
-            retrieval_context="\n\n".join(retrieval_context),
-            extraction_limit=self.truths_extraction_limit,
-        )
+    def _generate_truths(
+        self, retrieval_context: str, multimodal: bool
+    ) -> List[str]:
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_truths(
+                excerpt=retrieval_context,
+                extraction_limit=self.truths_extraction_limit,
+            )
+        else:
+            prompt = self.evaluation_template.generate_truths(
+                retrieval_context="\n\n".join(retrieval_context),
+                extraction_limit=self.truths_extraction_limit,
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Truths)
             self.evaluation_cost += cost
@@ -298,10 +363,17 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
-        )
+    async def _a_generate_claims(
+        self, actual_output: str, multimodal: bool
+    ) -> List[str]:
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_claims(
+                excerpt=actual_output
+            )
+        else:
+            prompt = self.evaluation_template.generate_claims(
+                actual_output=actual_output
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -315,10 +387,17 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
-        )
+    def _generate_claims(
+        self, actual_output: str, multimodal: bool
+    ) -> List[str]:
+        if multimodal:
+            prompt = self.evaluation_template.generate_multimodal_claims(
+                excerpt=actual_output
+            )
+        else:
+            prompt = self.evaluation_template.generate_claims(
+                actual_output=actual_output
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost

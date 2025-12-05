@@ -56,13 +56,13 @@ def test_local_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     assert base_url.rstrip("/") == "http://ctor-host:11434/v1"
 
     # Model name should match the ctor-provided model
-    assert model.model_name == "ctor-embedding-model"
+    assert model.name == "ctor-embedding-model"
 
 
 def test_local_embedding_model_defaults_from_settings(monkeypatch):
     """
     When no ctor args are provided, LocalEmbeddingModel should pull its
-    configuration (API key, base_url, model_name) from Settings, which
+    configuration (API key, base_url, model) from Settings, which
     in turn are backed by env vars.
     """
     # Seed env so Settings picks up all Local-embedding-related values
@@ -97,4 +97,4 @@ def test_local_embedding_model_defaults_from_settings(monkeypatch):
     assert base_url.rstrip("/") == "http://settings-host:11434/v1"
 
     # Model name should also come from Settings
-    assert model.model_name == "settings-embedding-model"
+    assert model.name == "settings-embedding-model"
