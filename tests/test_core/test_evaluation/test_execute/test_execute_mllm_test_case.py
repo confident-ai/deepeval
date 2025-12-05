@@ -3,14 +3,15 @@ import importlib
 import os
 import pytest
 import time
+import os
 
 from deepeval.evaluate.evaluate import evaluate as run_evaluate
 from deepeval.evaluate.execute import _a_execute_mllm_test_cases
-from deepeval.test_case import MLLMTestCase
+from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, ErrorConfig
 from deepeval.test_run.test_run import TestRun, TestRunManager
-from deepeval.metrics.multimodal_metrics import MultimodalAnswerRelevancyMetric
-from deepeval.models.mlllms.openai_model import MultimodalOpenAIModel
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GPTModel
 
 
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
@@ -32,9 +33,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
     """
 
     # build a normal metric instance, then monkeypatch its a_measure to cause a hang
-    metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
-    )
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     async def sleepy_a_measure(*args, **kwargs):
         # simulate a hung provider call
@@ -46,7 +45,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
     tr = TestRun(identifier="persist-on-cancel")
     trm.set_test_run(tr)
 
-    test_case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    test_case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
     metrics = [metric]
 
     # run the MLLM async case and timeout quickly
@@ -103,9 +102,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
-    )
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     def sleepy_measure(*args, **kwargs):
         # simulate a stuck provider call
@@ -129,7 +126,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_true(
     )
 
     # build the test case and run the sync flow
-    case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
 
     # run_async=False ensures we go down sync codepath
     # cache_config=CacheConfig(write_cache=False) required to avoid reading from hidden dir
@@ -168,9 +165,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.05
 
     # Metric whose sync path blocks
-    metric = MultimodalAnswerRelevancyMetric(
-        model=MultimodalOpenAIModel(model="gpt-4.1")
-    )
+    metric = AnswerRelevancyMetric(model=GPTModel(model="gpt-4.1"))
 
     def sleepy_measure(*args, **kwargs):
         # simulate a stuck provider call
@@ -194,7 +189,7 @@ def test_mllm_sync_persists_metric_on_timeout_ignore_errors_false(
     )
 
     # build the test case and run the sync flow
-    case = MLLMTestCase(input=["ping"], actual_output=["pong"])
+    case = LLMTestCase(input="ping", actual_output="pong", multimodal=True)
 
     with pytest.raises(asyncio.TimeoutError):
         # run_async=False ensures we go down sync codepath

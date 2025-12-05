@@ -10,9 +10,9 @@ from deepeval.test_run.api import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
     Turn,
 )
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
@@ -29,10 +29,12 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
 
 
 def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
+    from deepeval.utils import convert_to_multi_modal_array
+
     if isinstance(test_case, ConversationalTestCase):
         order = (
             test_case._dataset_rank
@@ -84,7 +86,7 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
-        if isinstance(test_case, LLMTestCase):
+        if isinstance(test_case, LLMTestCase) and test_case.multimodal is False:
             api_test_case = LLMApiTestCase(
                 name=name,
                 input=test_case.input,
@@ -106,15 +108,15 @@ def create_api_test_case(
                 comments=test_case.comments,
                 trace=trace,
             )
-        elif isinstance(test_case, MLLMTestCase):
+        elif isinstance(test_case, LLMTestCase) and test_case.multimodal:
             api_test_case = LLMApiTestCase(
                 name=name,
-                input="",
-                multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
-                multimodalExpectedOutput=test_case.expected_output,
-                multimodalRetrievalContext=test_case.retrieval_context,
-                multimodalContext=test_case.context,
+                input=test_case.input,
+                actualOutput=test_case.actual_output,
+                expectedOutput=test_case.expected_output,
+                retrievalContext=test_case.retrieval_context,
+                context=test_case.context,
+                imagesMapping=_MLLM_IMAGE_REGISTRY,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,

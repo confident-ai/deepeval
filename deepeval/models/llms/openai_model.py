@@ -1,12 +1,14 @@
+import base64
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
+from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
-
+from io import BytesIO
 from openai import (
     OpenAI,
     AsyncOpenAI,
 )
-
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
@@ -80,6 +82,15 @@ unsupported_log_probs_gpt_models = [
     "gpt-5-nano",
     "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
+]
+
+unsupported_log_probs_multimodal_gpt_models = [
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "gpt-4.5-preview-2025-02-27",
+    "o4-mini",
 ]
 
 structured_outputs_models = [
@@ -295,6 +306,11 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
+
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
@@ -354,6 +370,11 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
+
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
@@ -420,6 +441,9 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -443,6 +467,9 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -463,6 +490,9 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[list[str], float]:
         client = self.load_model(async_mode=False)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         response = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -487,6 +517,41 @@ class GPTModel(DeepEvalBaseLLM):
     #########
     # Model #
     #########
+
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        prompt = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                if ele.local:
+                    import PIL.Image
+
+                    image = PIL.Image.open(ele.url)
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
+                        },
+                    }
+                else:
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {"url": ele.url},
+                    }
+                prompt.append(visual_dict)
+        return prompt
+
+    def encode_pil_image(self, pil_image):
+        image_buffer = BytesIO()
+        if pil_image.mode in ("RGBA", "LA", "P"):
+            pil_image = pil_image.convert("RGB")
+        pil_image.save(image_buffer, format="JPEG")
+        image_bytes = image_buffer.getvalue()
+        base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        return base64_encoded_image
 
     def get_model_name(self):
         return self.model_name

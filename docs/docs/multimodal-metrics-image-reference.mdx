@@ -24,21 +24,21 @@ Image Reference evaluates MLLM responses containing text accompanied by retrieve
 
 ## Required Arguments
 
-To use the `ImageReference`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
+To use the `ImageReference`, you'll have to provide the following arguments when creating a [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
 - `actual_output`
 
 :::note
-Remember that the `actual_output` of an `MLLMTestCase` is a list of strings and `Image` objects. If multiple images are provided in the actual output, The final score will be the average of each image's reference score.
+Remember that the `actual_output` of an `LLMTestCase` is a list of strings and `Image` objects. If multiple images are provided in the actual output, The final score will be the average of each image's reference score.
 :::
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageReferenceMetric
 from deepeval import evaluate
 
@@ -46,15 +46,16 @@ metric = ImageReferenceMetric(
     threshold=0.7,
     include_reason=True,
 )
-m_test_case = MLLMTestCase(
-    input=["Provide step-by-step instructions on how to fold a paper airplane."],
+m_test_case = LLMTestCase(
+    input=f"Provide step-by-step instructions on how to fold a paper airplane.",
     # Replace with your MLLM app output
-    actual_output=[
-      "1. Take the sheet of paper and fold it lengthwise",
-      MLLMImage(url="./paper_plane_1", local=True),
-      "2. Unfold the paper. Fold the top left and right corners towards the center.",
-      MLLMImage(url="./paper_plane_2", local=True),
-  ],
+    actual_output=f"""
+        1. Take the sheet of paper and fold it lengthwise:
+        {MLLMImage(url="./paper_plane_1", local=True)}
+        2. Unfold the paper. Fold the top left and right corners towards the center.
+        {MLLMImage(url="./paper_plane_2", local=True)}
+        ...
+    """
 )
 
 
