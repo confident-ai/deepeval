@@ -219,6 +219,8 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
         prompt = []
+        if isinstance(multimodal_input, str):
+            multimodal_input = [multimodal_input]
         for ele in multimodal_input:
             if isinstance(ele, str):
                 prompt.append({"type": "text", "text": ele})
