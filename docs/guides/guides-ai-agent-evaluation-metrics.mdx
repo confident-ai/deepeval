@@ -8,7 +8,9 @@ import Equation from "@site/src/components/Equation";
 
 **AI agent evaluation metrics** are purpose-built measurements that assess how well autonomous LLM systems reason, plan, execute tools, and complete tasks. Unlike traditional LLM metrics that evaluate single input-output pairs, AI agent evaluation metrics analyze the entire execution trace—capturing every reasoning step, tool call, and intermediate decision your agent makes.
 
-These metrics matter because AI agents fail in fundamentally different ways than simple LLM applications. An agent might select the right tool but pass wrong arguments. It might create a brilliant plan but fail to follow it. It might complete the task but waste resources on redundant steps. AI agent evaluation metrics give you the granularity to pinpoint exactly where things go wrong. For a broader overview of AI agent evaluation concepts and strategies, see the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation).
+These metrics matter because AI agents fail in fundamentally different ways than simple LLM applications. An agent might select the right tool but pass wrong arguments. It might create a brilliant plan but fail to follow it. It might complete the task but waste resources on redundant steps. AI agent evaluation metrics give you the granularity to pinpoint exactly where things go wrong.
+
+For a broader overview of AI agent evaluation concepts and strategies, see the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation).
 
 :::info
 AI agent evaluation metrics in `deepeval` operate on **execution traces**—the full record of your agent's reasoning and actions. This requires [setting up tracing](/docs/evaluation-llm-tracing) to capture your agent's behavior.

@@ -16,6 +16,8 @@ Since a successful agent outcome depends entirely on the quality of both reasoni
 
 In a nutshell, **AI agent evaluation** is the process of measuring how well an agent reasons, selects and calls tools, and completes tasks—separately at each layer—so you can pinpoint exactly what's broken.
 
+_For a comprehensive breakdown of each agentic metric, see the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)._
+
 ## Common Pitfalls in AI Agent Pipelines
 
 An AI agent pipeline involves reasoning (planning) and action (tool calling) steps that iterate until task completion. The reasoning layer decides _what_ to do, while the action layer carries out _how_ to do it.
@@ -96,7 +98,7 @@ Here are some questions AI agent evaluation can answer about overall execution:
 
 ## Agent Evals In Development
 
-Evaluating agents in development is all about benchmarking with datasets and metrics. Your metrics will tackle either the reasoning or action layer (see the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics) for a detailed breakdown of each metric), while datasets make sure you're comparing different iterations of your agents on the [same set of goldens.](/docs/evaluation-datasets)
+Evaluating agents in development is all about benchmarking with datasets and metrics. Your metrics will tackle either the reasoning or action layer, while datasets make sure you're comparing different iterations of your agents on the [same set of goldens.](/docs/evaluation-datasets)
 
 Development evals help answer questions like:
 
