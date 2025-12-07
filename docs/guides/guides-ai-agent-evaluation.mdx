@@ -14,6 +14,10 @@ AI agents consist of two layers: the **reasoning layer** (powered by LLMs) handl
 
 Since a successful agent outcome depends entirely on the quality of both reasoning and action, AI agent evaluation focuses on evaluating these layers separately. This allows for easier debugging and to pinpoint issues at the **component-level.**
 
+In a nutshell, **AI agent evaluation** is the process of measuring how well an agent reasons, selects and calls tools, and completes tasks—separately at each layer—so you can pinpoint exactly what's broken.
+
+_For a comprehensive breakdown of each agentic metric, see the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)._
+
 ## Common Pitfalls in AI Agent Pipelines
 
 An AI agent pipeline involves reasoning (planning) and action (tool calling) steps that iterate until task completion. The reasoning layer decides _what_ to do, while the action layer carries out _how_ to do it.
@@ -515,7 +519,8 @@ While `deepeval` handles the metrics and evaluation logic, [Confident AI](https:
 Ready to get started? Here's what to do next:
 
 1. **Login to Confident AI** — Run `deepeval login` in your terminal to connect your account
-2. **Read the full guide** — For a deeper dive into single-turn vs multi-turn agents, common misconceptions, and best practices, check out [AI Agent Evaluation: The Definitive Guide](https://www.confident-ai.com/blog/definitive-ai-agent-evaluation-guide)
-3. **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help!
+2. **Explore the metrics** — Learn how each metric works, including calculation formulas and configuration options, in the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)
+3. **Read the full guide** — For a deeper dive into single-turn vs multi-turn agents, common misconceptions, and best practices, check out [AI Agent Evaluation: The Definitive Guide](https://www.confident-ai.com/blog/definitive-ai-agent-evaluation-guide)
+4. **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help!
 
 **Congratulations 🎉!** You now have the knowledge to build robust evaluation pipelines for your AI agents.
