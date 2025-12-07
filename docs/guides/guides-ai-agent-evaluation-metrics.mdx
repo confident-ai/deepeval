@@ -1,0 +1,439 @@
+---
+id: guides-ai-agent-evaluation-metrics
+title: AI Agent Evaluation Metrics
+sidebar_label: AI Agent Evaluation Metrics
+---
+
+import Equation from "@site/src/components/Equation";
+
+**AI agent evaluation metrics** are purpose-built measurements that assess how well autonomous LLM systems reason, plan, execute tools, and complete tasks. Unlike traditional LLM metrics that evaluate single input-output pairs, AI agent evaluation metrics analyze the entire execution trace—capturing every reasoning step, tool call, and intermediate decision your agent makes.
+
+These metrics matter because AI agents fail in fundamentally different ways than simple LLM applications. An agent might select the right tool but pass wrong arguments. It might create a brilliant plan but fail to follow it. It might complete the task but waste resources on redundant steps. AI agent evaluation metrics give you the granularity to pinpoint exactly where things go wrong.
+
+:::info
+AI agent evaluation metrics in `deepeval` operate on **execution traces**—the full record of your agent's reasoning and actions. This requires [setting up tracing](/docs/evaluation-llm-tracing) to capture your agent's behavior.
+:::
+
+## The Three Layers of AI Agent Evaluation
+
+AI agents consist of interconnected layers that each require distinct evaluation approaches:
+
+| Layer               | What It Does                                        | Key Metrics                                          |
+| ------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| **Reasoning Layer** | Plans tasks, creates strategies, decides what to do | `PlanQualityMetric`, `PlanAdherenceMetric`           |
+| **Action Layer**    | Selects tools, generates arguments, executes calls  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| **Execution Layer** | Orchestrates the full loop, completes objectives    | `TaskCompletionMetric`, `StepEfficiencyMetric`       |
+
+Each metric targets a specific failure mode. Together, they provide comprehensive coverage of everything that can go wrong in an AI agent pipeline.
+
+## Reasoning Layer Metrics
+
+The reasoning layer is where your agent analyzes tasks, formulates plans, and decides on strategies. Poor reasoning leads to cascade failures—even perfect tool execution can't save an agent with a flawed plan.
+
+### Plan Quality Metric
+
+The `PlanQualityMetric` evaluates whether the **plan your agent generates is logical, complete, and efficient** for accomplishing the given task. It extracts the task and plan from your agent's trace and uses an LLM judge to assess plan quality.
+
+```python
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import PlanQualityMetric
+
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+@observe(type="agent")
+def travel_agent(user_input):
+    # Agent reasons: "I need to search for flights first, then book the cheapest"
+    flights = search_flights("NYC", "Paris", "2025-03-15")
+    cheapest = min(flights, key=lambda x: x["price"])
+    return f"Found cheapest flight: {cheapest['id']} for ${cheapest['price']}"
+
+# Initialize metric
+plan_quality = PlanQualityMetric(threshold=0.7, model="gpt-4o")
+
+# Evaluate agent with plan quality metric
+dataset = EvaluationDataset(goldens=[Golden(input="Find me the cheapest flight to Paris")])
+for golden in dataset.evals_iterator(metrics=[plan_quality]):
+    travel_agent(golden.input)
+```
+
+**When to use it:** Use `PlanQualityMetric` when your agent explicitly reasons about how to approach a task before taking action. This is common in agents that use chain-of-thought prompting or expose their planning process.
+
+**How it's calculated:**
+
+<Equation formula="\text{Plan Quality Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
+
+The metric extracts the task (user's goal) and plan (agent's strategy) from the trace, then uses an LLM to score how well the plan addresses the task requirements.
+
+:::note
+If no plan is detectable in the trace—meaning the agent doesn't explicitly reason about its approach—the metric passes with a score of 1 by default.
+:::
+
+**→ [Full Plan Quality documentation](/docs/metrics-plan-quality)**
+
+### Plan Adherence Metric
+
+The `PlanAdherenceMetric` evaluates whether your agent **follows its own plan** during execution. Creating a good plan is only half the battle—an agent that deviates from its strategy mid-execution undermines its own reasoning.
+
+```python
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import PlanAdherenceMetric
+
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+@observe(type="tool")
+def book_flight(flight_id):
+    return {"confirmation": "CONF-789", "flight_id": flight_id}
+
+@observe(type="agent")
+def travel_agent(user_input):
+    # Plan: 1) Search flights, 2) Book the cheapest one
+    flights = search_flights("NYC", "Paris", "2025-03-15")
+    cheapest = min(flights, key=lambda x: x["price"])
+    booking = book_flight(cheapest["id"])
+    return f"Booked flight {cheapest['id']}. Confirmation: {booking['confirmation']}"
+
+# Initialize metric
+plan_adherence = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
+
+# Evaluate whether agent followed its plan
+dataset = EvaluationDataset(goldens=[Golden(input="Book the cheapest flight to Paris")])
+for golden in dataset.evals_iterator(metrics=[plan_adherence]):
+    travel_agent(golden.input)
+```
+
+**When to use it:** Use `PlanAdherenceMetric` alongside `PlanQualityMetric` when evaluating agents with explicit planning phases. If your agent creates multi-step plans, this metric ensures it actually follows through.
+
+**How it's calculated:**
+
+<Equation formula="\text{Plan Adherence Score} = \text{AlignmentScore}(\text{(Task, Plan)}, \text{Execution Steps})" />
+
+The metric extracts the task, plan, and actual execution steps from the trace, then uses an LLM to evaluate how faithfully the agent adhered to its stated plan.
+
+:::tip
+Combine `PlanQualityMetric` and `PlanAdherenceMetric` together—a high-quality plan that's ignored is as problematic as a poor plan that's followed perfectly.
+:::
+
+**→ [Full Plan Adherence documentation](/docs/metrics-plan-adherence)**
+
+## Action Layer Metrics
+
+The action layer is where your agent interacts with external systems through tool calls. This is often where things go wrong—even state-of-the-art LLMs struggle with tool selection, argument generation, and call ordering.
+
+### Tool Correctness Metric
+
+The `ToolCorrectnessMetric` evaluates whether your agent **selects the right tools** and calls them correctly. It compares the tools your agent actually called against a list of expected tools.
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.dataset import Golden, EvaluationDataset, get_current_golden
+from deepeval.metrics import ToolCorrectnessMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+# Initialize metric
+tool_correctness = ToolCorrectnessMetric(threshold=0.7)
+
+@observe(type="tool")
+def get_weather(city):
+    return {"temp": "22°C", "condition": "sunny"}
+
+# Attach metric to the LLM component where tool decisions are made
+@observe(type="llm", metrics=[tool_correctness])
+def call_llm(messages):
+    # LLM decides to call get_weather tool
+    result = get_weather("Paris")
+
+    # Update span with tool calling information for evaluation
+    update_current_span(
+        input=messages[-1]["content"],
+        output=f"The weather is {result['condition']}, {result['temp']}",
+        expected_tools=get_current_golden().expected_tools
+    )
+    return result
+
+@observe(type="agent")
+def weather_agent(user_input):
+    return call_llm([{"role": "user", "content": user_input}])
+
+# Evaluate
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather in Paris?", expected_tools=[ToolCall(name="get_weather")])])
+for golden in dataset.evals_iterator():
+    weather_agent(golden.input)
+```
+
+**When to use it:** Use `ToolCorrectnessMetric` when you have deterministic expectations about which tools should be called for a given task. It's particularly valuable for testing tool selection logic and identifying unnecessary tool calls.
+
+**How it's calculated:**
+
+<Equation formula="\text{Tool Correctness} = \frac{\text{Number of Correctly Used Tools}}{\text{Total Number of Tools Called}}" />
+
+The metric supports configurable strictness:
+
+- **Tool name matching** (default) — considers a call correct if the tool name matches
+- **Input parameter matching** — also requires input arguments to match
+- **Output matching** — additionally requires outputs to match
+- **Ordering consideration** — optionally enforces call sequence
+- **Exact matching** — requires `tools_called` and `expected_tools` to be identical
+
+:::caution
+When `available_tools` is provided, the metric also uses an LLM to evaluate whether your tool selection was optimal given all available options. The final score is the minimum of the deterministic and LLM-based scores.
+:::
+
+**→ [Full Tool Correctness documentation](/docs/metrics-tool-correctness)**
+
+### Argument Correctness Metric
+
+The `ArgumentCorrectnessMetric` evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import ArgumentCorrectnessMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+# Initialize metric
+argument_correctness = ArgumentCorrectnessMetric(threshold=0.7, model="gpt-4o")
+
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+# Attach metric to the LLM component where arguments are generated
+@observe(type="llm", metrics=[argument_correctness])
+def call_llm(user_input):
+    # LLM generates arguments for tool call
+    origin, destination, date = "NYC", "London", "2025-03-15"
+    flights = search_flights(origin, destination, date)
+
+    # Update span with tool calling details for evaluation
+    update_current_span(
+        input=user_input,
+        output=f"Found {len(flights)} flights",
+    )
+    return flights
+
+@observe(type="agent")
+def flight_agent(user_input):
+    return call_llm(user_input)
+
+# Evaluate - metric checks if arguments match what input requested
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Search for flights from NYC to London on March 15th")
+])
+for golden in dataset.evals_iterator():
+    flight_agent(golden.input)
+```
+
+**When to use it:** Use `ArgumentCorrectnessMetric` when correct argument values are critical for task success. This is especially important for agents that interact with APIs, databases, or external services where incorrect arguments cause failures.
+
+**How it's calculated:**
+
+<Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
+
+Unlike `ToolCorrectnessMetric`, this metric is fully LLM-based and referenceless—it evaluates argument correctness based on the input context rather than comparing against expected values.
+
+:::info
+The `ArgumentCorrectnessMetric` uses an LLM to determine correctness, making it ideal for cases where exact argument values aren't predetermined but should be logically derived from the input.
+:::
+
+**→ [Full Argument Correctness documentation](/docs/metrics-argument-correctness)**
+
+## Execution Layer Metrics
+
+The execution layer encompasses the full agent loop—reasoning, acting, observing, and iterating until task completion. These metrics assess the end-to-end quality of your agent's behavior.
+
+### Task Completion Metric
+
+The `TaskCompletionMetric` evaluates whether your agent **successfully accomplishes the intended task**. This is the ultimate measure of agent success—did it do what the user asked?
+
+```python
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import TaskCompletionMetric
+
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+@observe(type="tool")
+def book_flight(flight_id):
+    return {"confirmation": "CONF-789", "flight_id": flight_id}
+
+@observe(type="agent")
+def travel_agent(user_input):
+    flights = search_flights("NYC", "LA", "2025-03-15")
+    cheapest = min(flights, key=lambda x: x["price"])
+    booking = book_flight(cheapest["id"])
+    return f"Booked flight {cheapest['id']} for ${cheapest['price']}. Confirmation: {booking['confirmation']}"
+
+# Initialize metric - task can be auto-inferred or explicitly provided
+task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
+
+# Evaluate whether agent completed the task
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Book the cheapest flight from NYC to LA for tomorrow")
+])
+for golden in dataset.evals_iterator(metrics=[task_completion]):
+    travel_agent(golden.input)
+```
+
+**When to use it:** Use `TaskCompletionMetric` as a top-level success indicator for any agent. It answers the fundamental question: did the agent accomplish its goal?
+
+**How it's calculated:**
+
+<Equation formula="\text{Task Completion Score} = \text{AlignmentScore}(\text{Task}, \text{Outcome})" />
+
+The metric extracts the task (either user-provided or inferred from the trace) and the outcome, then uses an LLM to evaluate alignment. A score of 1 means complete task fulfillment; lower scores indicate partial or failed completion.
+
+**→ [Full Task Completion documentation](/docs/metrics-task-completion)**
+
+### Step Efficiency Metric
+
+The `StepEfficiencyMetric` evaluates whether your agent **completes tasks without unnecessary steps**. An agent might complete a task but waste tokens, time, and resources on redundant or circuitous actions.
+
+```python
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import StepEfficiencyMetric
+
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+@observe(type="tool")
+def book_flight(flight_id):
+    return {"confirmation": "CONF-789"}
+
+@observe(type="agent")
+def inefficient_agent(user_input):
+    # Inefficient: searches twice unnecessarily
+    flights1 = search_flights("NYC", "LA", "2025-03-15")
+    flights2 = search_flights("NYC", "LA", "2025-03-15")  # Redundant!
+    cheapest = min(flights1, key=lambda x: x["price"])
+    booking = book_flight(cheapest["id"])
+    return f"Booked: {booking['confirmation']}"
+
+# Initialize metric
+step_efficiency = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
+
+# Evaluate - metric will penalize the redundant search_flights call
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Book the cheapest flight from NYC to LA")
+])
+for golden in dataset.evals_iterator(metrics=[step_efficiency]):
+    inefficient_agent(golden.input)
+```
+
+**When to use it:** Use `StepEfficiencyMetric` alongside `TaskCompletionMetric` to ensure your agent isn't just successful but also efficient. This is critical for production agents where token costs and latency matter.
+
+**How it's calculated:**
+
+<Equation formula="\text{Step Efficiency Score} = \text{AlignmentScore}(\text{Task}, \text{Execution Steps})" />
+
+The metric extracts the task and all execution steps from the trace, then uses an LLM to evaluate efficiency. It penalizes redundant tool calls, unnecessary reasoning loops, and any actions not strictly required to complete the task.
+
+:::tip
+A high `TaskCompletionMetric` score with a low `StepEfficiencyMetric` score indicates your agent works but needs optimization. Focus on reducing unnecessary steps without sacrificing success rate.
+:::
+
+**→ [Full Step Efficiency documentation](/docs/metrics-step-efficiency)**
+
+## Putting It All Together
+
+Here's a complete example showing how to use AI agent evaluation metrics across all three layers:
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.dataset import Golden, EvaluationDataset, get_current_golden
+from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval.metrics import (
+    TaskCompletionMetric,
+    StepEfficiencyMetric,
+    PlanQualityMetric,
+    PlanAdherenceMetric,
+    ToolCorrectnessMetric,
+    ArgumentCorrectnessMetric
+)
+
+# End-to-end metrics (analyze full agent trace)
+task_completion = TaskCompletionMetric()
+step_efficiency = StepEfficiencyMetric()
+plan_quality = PlanQualityMetric()
+plan_adherence = PlanAdherenceMetric()
+
+# Component-level metrics (analyze specific components)
+tool_correctness = ToolCorrectnessMetric()
+argument_correctness = ArgumentCorrectnessMetric()
+
+# Define tools
+@observe(type="tool")
+def search_flights(origin, destination, date):
+    return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
+
+@observe(type="tool")
+def book_flight(flight_id):
+    return {"confirmation": "CONF-789", "flight_id": flight_id}
+
+# Attach component-level metrics to the LLM component
+@observe(type="llm", metrics=[tool_correctness, argument_correctness])
+def call_llm(user_input):
+    # LLM decides to search flights then book
+    origin, destination, date = "NYC", "Paris", "2025-03-18"
+    flights = search_flights(origin, destination, date)
+    cheapest = min(flights, key=lambda x: x["price"])
+    booking = book_flight(cheapest["id"])
+
+    # Update span with tool info for component-level evaluation
+    update_current_span(
+        input=user_input,
+        output=f"Booked {cheapest['id']}",
+        expected_tools=get_current_golden().expected_tools
+    )
+    return booking
+
+@observe(type="agent")
+def travel_agent(user_input):
+    booking = call_llm(user_input)
+    return f"Flight booked! Confirmation: {booking['confirmation']}"
+
+# Create evaluation dataset
+dataset = EvaluationDataset(goldens=[
+    Golden(input="Book a flight from NYC to Paris for next Tuesday", expected_tools=[ToolCall(name="search_flights"), ToolCall(name="book_flight")])
+])
+
+# Run evaluation with end-to-end metrics
+for golden in dataset.evals_iterator(
+    metrics=[task_completion, step_efficiency, plan_quality, plan_adherence]
+):
+    travel_agent(golden.input)
+```
+
+## Choosing the Right AI Agent Evaluation Metrics
+
+Not every agent needs every metric. Here's a decision framework:
+
+| If Your Agent...                    | Prioritize These Metrics                             |
+| ----------------------------------- | ---------------------------------------------------- |
+| Uses explicit planning/reasoning    | `PlanQualityMetric`, `PlanAdherenceMetric`           |
+| Calls multiple tools                | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| Has complex multi-step workflows    | `StepEfficiencyMetric`, `TaskCompletionMetric`       |
+| Runs in production (cost-sensitive) | `StepEfficiencyMetric`                               |
+| Is task-critical (must succeed)     | `TaskCompletionMetric`                               |
+
+:::info
+All AI agent evaluation metrics in `deepeval` support custom LLM judges, configurable thresholds, strict mode for binary scoring, and detailed reasoning explanations. See each metric's documentation for full configuration options.
+:::
+
+## Next Steps
+
+Now that you understand the available AI agent evaluation metrics, here's where to go next:
+
+- **[Set up tracing](/docs/evaluation-llm-tracing)** — Required for all agent metrics to capture execution traces
+- **[AI Agent Evaluation Guide](/docs/guides-ai-agent-evaluation)** — Deep dive into evaluation strategies for development and production
+- **[End-to-end Evals](/docs/evaluation-end-to-end-llm-evals)** — Learn how to run metrics on full agent traces
+- **[Component-level Evals](/docs/evaluation-component-level-llm-evals)** — Learn how to attach metrics to specific components

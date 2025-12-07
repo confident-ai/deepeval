@@ -5,6 +5,7 @@ module.exports = {
       label: "AI Agents",
       items: [
         "guides-ai-agent-evaluation",
+        "guides-ai-agent-evaluation-metrics",
       ],
       collapsed: false,
     },
