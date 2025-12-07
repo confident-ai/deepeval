@@ -163,18 +163,12 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_reason(
-                irrelevant_statements=irrelevant_statements,
-                input=input,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt = self.evaluation_template.generate_reason(
-                irrelevant_statements=irrelevant_statements,
-                input=input,
-                score=format(self.score, ".2f"),
-            )
+        prompt = self.evaluation_template.generate_reason(
+            irrelevant_statements=irrelevant_statements,
+            input=input,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal,
+        )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -202,18 +196,12 @@ class AnswerRelevancyMetric(BaseMetric):
             if verdict.verdict.strip().lower() == "no":
                 irrelevant_statements.append(verdict.reason)
 
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_reason(
-                irrelevant_statements=irrelevant_statements,
-                input=input,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt = self.evaluation_template.generate_reason(
-                irrelevant_statements=irrelevant_statements,
-                input=input,
-                score=format(self.score, ".2f"),
-            )
+        prompt = self.evaluation_template.generate_reason(
+            irrelevant_statements=irrelevant_statements,
+            input=input,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal,
+        )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -238,16 +226,9 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input,
-                actual_output=self.statements,
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input,
-                statements=self.statements,
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, statements=self.statements, multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -272,16 +253,9 @@ class AnswerRelevancyMetric(BaseMetric):
         if len(self.statements) == 0:
             return []
 
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input,
-                actual_output=self.statements,
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input,
-                statements=self.statements,
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input, statements=self.statements, multimodal=multimodal
+        )
 
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -303,118 +277,62 @@ class AnswerRelevancyMetric(BaseMetric):
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_statements(
-                actual_output=[
-                    ele for ele in actual_output if isinstance(ele, str)
-                ],
-            )
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(
+        prompt = self.evaluation_template.generate_statements(
+            actual_output=actual_output, multimodal=multimodal
+        )
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt, schema=Statements)
+            self.evaluation_cost += cost
+            statements: List[str] = res.statements + [
+                ele for ele in actual_output if isinstance(ele, MLLMImage)
+            ]
+            return statements
+        else:
+            try:
+                res: Statements = await self.model.a_generate(
                     prompt, schema=Statements
                 )
-                self.evaluation_cost += cost
                 statements: List[str] = res.statements + [
                     ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
-            else:
-                try:
-                    res: Statements = await self.model.a_generate(
-                        prompt, schema=Statements
-                    )
-                    statements: List[str] = res.statements + [
-                        ele
-                        for ele in actual_output
-                        if isinstance(ele, MLLMImage)
-                    ]
-                    return statements
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    statements = data["statements"] + [
-                        ele
-                        for ele in actual_output
-                        if isinstance(ele, MLLMImage)
-                    ]
-                    return statements
-        else:
-            prompt = self.evaluation_template.generate_statements(
-                actual_output=actual_output,
-            )
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(
-                    prompt, schema=Statements
-                )
-                self.evaluation_cost += cost
-                return res.statements
-            else:
-                try:
-                    res: Statements = await self.model.a_generate(
-                        prompt, schema=Statements
-                    )
-                    return res.statements
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["statements"]
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                statements = data["statements"] + [
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
+                ]
+                return statements
 
     def _generate_statements(
         self,
         actual_output: str,
         multimodal: bool,
     ) -> List[str]:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_statements(
-                actual_output=[
-                    ele for ele in actual_output if isinstance(ele, str)
-                ],
-            )
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt, schema=Statements)
-                self.evaluation_cost += cost
+        prompt = self.evaluation_template.generate_statements(
+            actual_output=actual_output, multimodal=multimodal
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt, schema=Statements)
+            self.evaluation_cost += cost
+            statements = res.statements + [
+                ele for ele in actual_output if isinstance(ele, MLLMImage)
+            ]
+            return statements
+        else:
+            try:
+                res: Statements = self.model.generate(prompt, schema=Statements)
                 statements = res.statements + [
                     ele for ele in actual_output if isinstance(ele, MLLMImage)
                 ]
                 return statements
-            else:
-                try:
-                    res: Statements = self.model.generate(
-                        prompt, schema=Statements
-                    )
-                    statements = res.statements + [
-                        ele
-                        for ele in actual_output
-                        if isinstance(ele, MLLMImage)
-                    ]
-                    return statements
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    statements = data["statements"] + [
-                        ele
-                        for ele in actual_output
-                        if isinstance(ele, MLLMImage)
-                    ]
-                    return statements
-        else:
-            prompt = self.evaluation_template.generate_statements(
-                actual_output=actual_output,
-            )
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt, schema=Statements)
-                self.evaluation_cost += cost
-                return res.statements
-            else:
-                try:
-                    res: Statements = self.model.generate(
-                        prompt, schema=Statements
-                    )
-                    return res.statements
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["statements"]
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                statements = data["statements"] + [
+                    ele for ele in actual_output if isinstance(ele, MLLMImage)
+                ]
+                return statements
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)

@@ -18,18 +18,21 @@ class LLMApiTestCase(BaseModel):
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     completion_time: Optional[float] = Field(None, alias="completionTime")
     tags: Optional[List[str]] = Field(None)
-    multimodal_input: Optional[str] = Field(None, alias="multimodalInput")
-    multimodal_input_actual_output: Optional[str] = Field(
-        None, alias="multimodalActualOutput"
-    )
-    multimodal_expected_output: Optional[str] = Field(
-        None, alias="multimodalExpectedOutput"
-    )
-    multimodal_retrieval_context: Optional[List[str]] = Field(
-        None, alias="multimodalRetrievalContext"
-    )
-    multimodal_context: Optional[List[str]] = Field(
-        None, alias="multimodalContext"
+    # multimodal_input: Optional[str] = Field(None, alias="multimodalInput")
+    # multimodal_input_actual_output: Optional[str] = Field(
+    #     None, alias="multimodalActualOutput"
+    # )
+    # multimodal_expected_output: Optional[str] = Field(
+    #     None, alias="multimodalExpectedOutput"
+    # )
+    # multimodal_retrieval_context: Optional[List[str]] = Field(
+    #     None, alias="multimodalRetrievalContext"
+    # )
+    # multimodal_context: Optional[List[str]] = Field(
+    #     None, alias="multimodalContext"
+    # )
+    images_mapping: Optional[Dict[str, MLLMImage]] = Field(
+        None, alias="imagesMapping"
     )
 
     # make these optional, not all test cases in a conversation will be evaluated

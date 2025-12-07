@@ -128,17 +128,14 @@ def create_test_result(
             turns=api_test_case.turns,
         )
     else:
-        multimodal = (
-            api_test_case.multimodal_input is not None
-            and api_test_case.multimodal_input_actual_output is not None
-        )
+        multimodal = api_test_case.images_mapping
         if multimodal:
             return TestResult(
                 name=name,
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
-                input=api_test_case.multimodal_input,
-                actual_output=api_test_case.multimodal_input_actual_output,
+                input=api_test_case.input,
+                actual_output=api_test_case.actual_output,
                 conversational=False,
                 multimodal=True,
                 additional_metadata=api_test_case.additional_metadata,

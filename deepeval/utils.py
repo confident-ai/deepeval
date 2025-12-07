@@ -552,7 +552,7 @@ def convert_to_multi_modal_array(input: Union[str, List[str]]):
 
 
 def check_if_multimodal(input: str):
-    pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+    pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
     matches = list(re.finditer(pattern, input))
     return bool(matches)
 

@@ -189,18 +189,12 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_reason(
-                input=input,
-                verdicts=retrieval_contexts_verdicts,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt = self.evaluation_template.generate_reason(
-                input=input,
-                verdicts=retrieval_contexts_verdicts,
-                score=format(self.score, ".2f"),
-            )
+        prompt = self.evaluation_template.generate_reason(
+            input=input,
+            verdicts=retrieval_contexts_verdicts,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal,
+        )
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -229,18 +223,12 @@ class ContextualPrecisionMetric(BaseMetric):
             {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_reason(
-                input=input,
-                verdicts=retrieval_contexts_verdicts,
-                score=format(self.score, ".2f"),
-            )
-        else:
-            prompt = self.evaluation_template.generate_reason(
-                input=input,
-                verdicts=retrieval_contexts_verdicts,
-                score=format(self.score, ".2f"),
-            )
+        prompt = self.evaluation_template.generate_reason(
+            input=input,
+            verdicts=retrieval_contexts_verdicts,
+            score=format(self.score, ".2f"),
+            multimodal=multimodal,
+        )
 
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -268,18 +256,12 @@ class ContextualPrecisionMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input,
+            expected_output=expected_output,
+            retrieval_context=retrieval_context,
+            multimodal=multimodal,
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
                 prompt, schema=cpschema.Verdicts
@@ -310,18 +292,12 @@ class ContextualPrecisionMetric(BaseMetric):
         retrieval_context: List[str],
         multimodal: bool,
     ) -> List[cpschema.ContextualPrecisionVerdict]:
-        if multimodal:
-            prompt = self.evaluation_template.generate_multimodal_verdicts(
-                input=input,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-            )
-        else:
-            prompt = self.evaluation_template.generate_verdicts(
-                input=input,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-            )
+        prompt = self.evaluation_template.generate_verdicts(
+            input=input,
+            expected_output=expected_output,
+            retrieval_context=retrieval_context,
+            multimodal=multimodal,
+        )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=cpschema.Verdicts)
             self.evaluation_cost += cost

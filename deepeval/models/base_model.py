@@ -76,42 +76,6 @@ class DeepEvalBaseLLM(ABC):
         return self.name
 
 
-class DeepEvalBaseMLLM(ABC):
-    def __init__(self, model: Optional[str] = None):
-        self.name = parse_model_name(model)
-        self.model = self.load_model()
-
-    @abstractmethod
-    def load_model(self) -> "DeepEvalBaseLLM":
-        """Loads a model, that will be responsible for scoring.
-
-        Returns:
-            A model object
-        """
-        pass
-
-    @abstractmethod
-    def generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
-
-        Returns:
-            A string.
-        """
-        pass
-
-    @abstractmethod
-    async def a_generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
-
-        Returns:
-            A string.
-        """
-        pass
-
-    def get_model_name(self) -> str:
-        return self.name
-
-
 class DeepEvalBaseEmbeddingModel(ABC):
     def __init__(self, model: Optional[str] = None):
         self.name = parse_model_name(model)

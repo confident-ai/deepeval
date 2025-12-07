@@ -44,7 +44,7 @@ class Golden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         self.multimodal = (
             any(
                 [
@@ -97,7 +97,7 @@ class ConversationalGolden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:([a-zA-Z0-9_-]+)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         self.multimodal = (
             any(
                 [

@@ -264,7 +264,6 @@ def test_models_imports():
     from deepeval.models import (
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,
@@ -287,7 +286,6 @@ def test_models_imports():
     model_classes = [
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,

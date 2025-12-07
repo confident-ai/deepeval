@@ -1,7 +1,6 @@
 from deepeval.models.base_model import (
     DeepEvalBaseModel,
     DeepEvalBaseLLM,
-    DeepEvalBaseMLLM,
     DeepEvalBaseEmbeddingModel,
 )
 from deepeval.models.llms import (
@@ -27,7 +26,6 @@ from deepeval.models.embedding_models import (
 __all__ = [
     "DeepEvalBaseModel",
     "DeepEvalBaseLLM",
-    "DeepEvalBaseMLLM",
     "DeepEvalBaseEmbeddingModel",
     "GPTModel",
     "AzureOpenAIModel",

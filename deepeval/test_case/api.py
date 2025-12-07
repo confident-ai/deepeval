@@ -12,6 +12,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     Turn,
 )
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
@@ -110,12 +111,12 @@ def create_api_test_case(
         elif isinstance(test_case, LLMTestCase) and test_case.multimodal:
             api_test_case = LLMApiTestCase(
                 name=name,
-                input="",
-                multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
-                multimodalExpectedOutput=test_case.expected_output,
-                multimodalRetrievalContext=test_case.retrieval_context,
-                multimodalContext=test_case.context,
+                input=test_case.input,
+                actualOutput=test_case.actual_output,
+                expectedOutput=test_case.expected_output,
+                retrievalContext=test_case.retrieval_context,
+                context=test_case.context,
+                imagesMapping=_MLLM_IMAGE_REGISTRY,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
