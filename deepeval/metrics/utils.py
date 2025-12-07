@@ -389,7 +389,7 @@ ReturnType = TypeVar("ReturnType")
 
 
 def generate_with_schema_and_extract(
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseArenaMetric],
     prompt: Any,
     schema_cls: Type[SchemaType],
     *,
@@ -403,9 +403,13 @@ def generate_with_schema_and_extract(
     - if schema instance -> extract_schema
       else parse JSON -> extract_json
     """
-    result, cost = metric.model.generate_with_schema(prompt, schema=schema_cls)
-    metric._accrue_cost(cost)
-
+    if metric.using_native_model:
+        result, cost = metric.model.generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = metric.model.generate_with_schema(prompt, schema=schema_cls)
     if isinstance(result, schema_cls):
         return extract_schema(result)
     data = trimAndLoadJson(result, metric)
@@ -413,7 +417,7 @@ def generate_with_schema_and_extract(
 
 
 async def a_generate_with_schema_and_extract(
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseArenaMetric],
     prompt: Any,
     schema_cls: Type[SchemaType],
     *,
@@ -423,13 +427,19 @@ async def a_generate_with_schema_and_extract(
     """
     Async wrapper (same idea as gen_and_extract).
     """
-    result, cost = await metric.model.a_generate_with_schema(
-        prompt, schema=schema_cls
-    )
-    metric._accrue_cost(cost)
+    if metric.using_native_model:
+        result, cost = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
 
     if isinstance(result, schema_cls):
         return extract_schema(result)
+
     data = trimAndLoadJson(result, metric)
     return extract_json(data)
 
