@@ -3,9 +3,10 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -18,7 +19,11 @@ from deepeval.metrics.argument_correctness.template import (
     ArgumentCorrectnessTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.argument_correctness.schema import *
+from deepeval.metrics.argument_correctness.schema import (
+    ArgumentCorrectnessVerdict,
+    Verdicts,
+    ArgumentCorrectnessScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -182,24 +187,14 @@ class ArgumentCorrectnessMetric(BaseMetric):
             score=format(self.score, ".2f"),
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = (
-                    await self.model.a_generate(
-                        prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self, input: str, multimodal: bool) -> str:
         if self.include_reason is False:
@@ -217,22 +212,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = self.model.generate(
-                    prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
@@ -240,23 +226,16 @@ class ArgumentCorrectnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_verdicts(
             input=input, tools_called=tools_called, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                ArgumentCorrectnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
@@ -264,21 +243,16 @@ class ArgumentCorrectnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_verdicts(
             input=input, tools_called=tools_called, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                ArgumentCorrectnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -299,7 +273,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
