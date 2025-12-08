@@ -92,7 +92,9 @@ The `TurnContextualPrecisionMetric` score is calculated according to the followi
 The `TurnContextualPrecisionMetric` first constructs unit interactions of `user` and `assistant` exchanges from the entire conversation. For each interaction, it:
 
 1. **Evaluates each retrieval context node** to determine if it was useful in arriving at the expected outcome
-2. **Calculates weighted precision** using the formula: <Equation formula="\text{Weighted Precision} = \frac{1}{\text{Number of Relevant Nodes}} \sum_{k=1}^{n} \left( \frac{\text{Number of Relevant Nodes Up to Position } k}{k} \times r_{k} \right)" inline={true} />
+2. **Calculates weighted precision** where earlier relevant nodes contribute more to the score:
+
+<Equation formula="\text{Contextual Precision} = \frac{1}{\text{Number of Relevant Nodes}} \sum_{k=1}^{n} \left( \frac{\text{Number of Relevant Nodes Up to Position } k}{k} \times r_{k} \right)" />
 
 :::info
 

@@ -45,7 +45,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         evaluation_template: Type[
             TurnContextualPrecisionTemplate
         ] = TurnContextualPrecisionTemplate,
-        window_size: int = 10,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -55,7 +54,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
-        self.window_size = window_size
 
     def measure(
         self,
@@ -353,26 +351,32 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
     def _calculate_interaction_score(
         self, verdicts: List[ContextualPrecisionVerdict]
     ) -> float:
-        weighted_sum = 0
-        total_weight = 0
-
-        for i, verdict in enumerate(verdicts):
-            # Rank starts at 1
-            rank = i + 1
-            # Calculate weight: 1/rank
-            weight = 1 / rank
-
-            if verdict.verdict.strip().lower() == "yes":
-                weighted_sum += weight
-
-            total_weight += weight
-
-        if total_weight == 0:
+        number_of_verdicts = len(verdicts)
+        if number_of_verdicts == 0:
             return 0
 
-        # Weighted precision
-        score = weighted_sum / total_weight
-        return score
+        # Convert verdicts to binary list where 'yes' is 1 and others are 0
+        node_verdicts = [
+            1 if v.verdict.strip().lower() == "yes" else 0
+            for v in verdicts
+        ]
+
+        sum_weighted_precision_at_k = 0.0
+        relevant_nodes_count = 0
+        
+        for k, is_relevant in enumerate(node_verdicts, start=1):
+            # If the item is relevant, update the counter and add weighted precision to sum
+            if is_relevant:
+                relevant_nodes_count += 1
+                precision_at_k = relevant_nodes_count / k
+                sum_weighted_precision_at_k += precision_at_k * is_relevant
+
+        if relevant_nodes_count == 0:
+            return 0
+        
+        # Calculate Average Precision
+        score = sum_weighted_precision_at_k / relevant_nodes_count
+        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_get_interaction_reason(
         self,

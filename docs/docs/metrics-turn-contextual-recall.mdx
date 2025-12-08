@@ -95,4 +95,6 @@ The `TurnContextualRecallMetric` first constructs unit interactions of `user` an
 2. **Evaluates each sentence** to determine if it can be attributed to any node in the retrieval context
 3. **Calculates the interaction score** as the ratio of attributable sentences to total sentences
 
+<Equation formula="\text{Contextual Recall} = \frac{\text{Number of Attributable Statements}}{\text{Total Number of Statements}}" />
+
 The final score is the average of all interaction recall scores across the conversation. This measures whether your retrieval system is providing sufficient information to generate the expected responses.

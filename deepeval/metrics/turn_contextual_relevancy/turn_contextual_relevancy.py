@@ -45,7 +45,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         evaluation_template: Type[
             TurnContextualRelevancyTemplate
         ] = TurnContextualRelevancyTemplate,
-        window_size: int = 10,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -55,7 +54,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
-        self.window_size = window_size
 
     def measure(
         self,

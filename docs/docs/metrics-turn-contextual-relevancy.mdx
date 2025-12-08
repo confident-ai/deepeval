@@ -94,4 +94,6 @@ The `TurnContextualRelevancyMetric` first constructs unit interactions of `user`
 2. **Evaluates each statement** to determine if it is relevant to the user's input
 3. **Calculates the interaction score** as the ratio of relevant statements to total statements
 
+<Equation formula="\text{Contextual Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
+
 The final score is the average of all interaction relevancy scores across the conversation. This measures whether your retrieval system is returning contextually relevant information for each turn.

@@ -49,7 +49,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         evaluation_template: Type[
             TurnFaithfulnessTemplate
         ] = TurnFaithfulnessTemplate,
-        window_size: int = 10,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -60,7 +59,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
-        self.window_size = window_size
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
