@@ -397,7 +397,7 @@ ReturnType = TypeVar("ReturnType")
 
 
 def generate_with_schema_and_extract(
-    metric: Union[BaseMetric, BaseArenaMetric],
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
     schema_cls: Type[SchemaType],
     *,
@@ -425,7 +425,7 @@ def generate_with_schema_and_extract(
 
 
 async def a_generate_with_schema_and_extract(
-    metric: Union[BaseMetric, BaseArenaMetric],
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
     schema_cls: Type[SchemaType],
     *,

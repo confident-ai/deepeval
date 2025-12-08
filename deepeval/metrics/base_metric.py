@@ -68,6 +68,8 @@ class BaseConversationalMetric:
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
 
     @abstractmethod
     def measure(
