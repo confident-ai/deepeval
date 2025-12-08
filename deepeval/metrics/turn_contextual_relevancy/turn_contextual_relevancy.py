@@ -68,6 +68,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             test_case, self._required_test_case_params, self
         )
 
+        multimodal = test_case.multimodal
+
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -85,7 +87,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
                 scores = self._get_contextual_relevancy_scores(
-                    unit_interactions
+                    unit_interactions, multimodal
                 )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
@@ -117,6 +119,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             test_case, self._required_test_case_params, self
         )
 
+        multimodal = test_case.multimodal
+
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
@@ -126,7 +130,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
             scores = await self._a_get_contextual_relevancy_scores(
-                unit_interactions
+                unit_interactions, multimodal
             )
             self.score = self._calculate_score(scores)
             self.success = self.score >= self.threshold
@@ -148,7 +152,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_get_contextual_relevancy_scores(
-        self, unit_interactions: List[List[Turn]]
+        self, unit_interactions: List[List[Turn]], multimodal: bool
     ):
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
@@ -161,10 +165,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
             # Generate verdicts for each retrieval context
             verdicts = await self._a_generate_verdicts(
-                user_content, retrieval_context
+                user_content, retrieval_context, multimodal
             )
             score, reason = await self._a_get_interaction_score_and_reason(
-                user_content, verdicts
+                user_content, verdicts, multimodal
             )
             interaction_score = InteractionContextualRelevancyScore(
                 score=score,
@@ -183,7 +187,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         return final_scores
 
     def _get_contextual_relevancy_scores(
-        self, unit_interactions: List[List[Turn]]
+        self, unit_interactions: List[List[Turn]], multimodal: bool
     ):
         interaction_scores = []
 
@@ -197,9 +201,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     retrieval_context.extend(turn.retrieval_context)
 
             # Generate verdicts for each retrieval context
-            verdicts = self._generate_verdicts(user_content, retrieval_context)
+            verdicts = self._generate_verdicts(user_content, retrieval_context, multimodal)
             score, reason = self._get_interaction_score_and_reason(
-                user_content, verdicts
+                user_content, verdicts, multimodal
             )
             interaction_score = InteractionContextualRelevancyScore(
                 score=score,
@@ -211,7 +215,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         return interaction_scores
 
     async def _a_generate_verdicts(
-        self, input: str, retrieval_context: List[str]
+        self, input: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRelevancyVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -223,7 +227,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             prompt = self.evaluation_template.generate_verdicts(
                 input=input,
                 context=context,
-                multimodal=False,
+                multimodal=multimodal,
             )
 
             if self.using_native_model:
@@ -253,7 +257,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         return verdicts
 
     def _generate_verdicts(
-        self, input: str, retrieval_context: List[str]
+        self, input: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRelevancyVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -265,7 +269,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             prompt = self.evaluation_template.generate_verdicts(
                 input=input,
                 context=context,
-                multimodal=False,
+                multimodal=multimodal,
             )
 
             if self.using_native_model:
@@ -293,13 +297,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         return verdicts
 
     async def _a_get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRelevancyVerdict]
+        self, input: str, verdicts: List[ContextualRelevancyVerdict], multimodal: bool
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = await self._a_get_interaction_reason(input, score, verdicts)
+        reason = await self._a_get_interaction_reason(input, score, verdicts, multimodal)
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -307,13 +311,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         )
 
     def _get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRelevancyVerdict]
+        self, input: str, verdicts: List[ContextualRelevancyVerdict], multimodal: bool
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = self._get_interaction_reason(input, score, verdicts)
+        reason = self._get_interaction_reason(input, score, verdicts, multimodal)
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -340,6 +344,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualRelevancyVerdict],
+        multimodal: bool
     ) -> str:
         if self.include_reason is False:
             return None
@@ -362,7 +367,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(score, ".2f"),
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -389,6 +394,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualRelevancyVerdict],
+        multimodal: bool
     ) -> str:
         if self.include_reason is False:
             return None
@@ -411,7 +417,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(score, ".2f"),
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:

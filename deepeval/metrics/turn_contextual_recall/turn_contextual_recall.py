@@ -71,6 +71,8 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             raise ValueError(
                 "A test case must have the 'expected_outcome' populated to run the 'TurnContextualRecallMetric'"
             )
+        
+        multimodal = test_case.multimodal
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -89,7 +91,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
                 scores = self._get_contextual_recall_scores(
-                    unit_interactions, test_case.expected_outcome
+                    unit_interactions, test_case.expected_outcome, multimodal
                 )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
@@ -124,6 +126,8 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             raise ValueError(
                 "A test case must have the 'expected_outcome' populated to run the 'TurnContextualRecallMetric'"
             )
+        
+        multimodal = test_case.multimodal
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -134,7 +138,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
             scores = await self._a_get_contextual_recall_scores(
-                unit_interactions, test_case.expected_outcome
+                unit_interactions, test_case.expected_outcome, multimodal
             )
             self.score = self._calculate_score(scores)
             self.success = self.score >= self.threshold
@@ -156,7 +160,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_get_contextual_recall_scores(
-        self, unit_interactions: List[List[Turn]], _expected_outcome: str
+        self, unit_interactions: List[List[Turn]], _expected_outcome: str, multimodal: bool
     ):
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
@@ -171,10 +175,10 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                     retrieval_context.extend(turn.retrieval_context)
 
             verdicts = await self._a_generate_verdicts(
-                expected_outcome, retrieval_context
+                expected_outcome, retrieval_context, multimodal
             )
             score, reason = await self._a_get_interaction_score_and_reason(
-                user_content, verdicts
+                user_content, verdicts, multimodal
             )
             interaction_score = InteractionContextualRecallScore(
                 score=score,
@@ -193,7 +197,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         return final_scores
 
     def _get_contextual_recall_scores(
-        self, unit_interactions: List[List[Turn]], _expected_outcome: str
+        self, unit_interactions: List[List[Turn]], _expected_outcome: str, multimodal: bool
     ):
         interaction_scores = []
 
@@ -210,10 +214,10 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                     retrieval_context.extend(turn.retrieval_context)
 
             verdicts = self._generate_verdicts(
-                expected_outcome, retrieval_context
+                expected_outcome, retrieval_context, multimodal
             )
             score, reason = self._get_interaction_score_and_reason(
-                user_content, verdicts
+                user_content, verdicts, multimodal
             )
             interaction_score = InteractionContextualRecallScore(
                 score=score,
@@ -225,7 +229,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         return interaction_scores
 
     async def _a_generate_verdicts(
-        self, expected_outcome: str, retrieval_context: List[str]
+        self, expected_outcome: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRecallVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -235,7 +239,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_verdicts(
             expected_outcome=expected_outcome,
             retrieval_context=retrieval_context,
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -259,7 +263,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                 return verdicts
 
     def _generate_verdicts(
-        self, expected_outcome: str, retrieval_context: List[str]
+        self, expected_outcome: str, retrieval_context: List[str], multimodal: bool
     ) -> List[ContextualRecallVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -269,7 +273,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_verdicts(
             expected_outcome=expected_outcome,
             retrieval_context=retrieval_context,
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -291,13 +295,13 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                 return verdicts
 
     async def _a_get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRecallVerdict]
+        self, input: str, verdicts: List[ContextualRecallVerdict], multimodal: bool
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = await self._a_get_interaction_reason(input, score, verdicts)
+        reason = await self._a_get_interaction_reason(input, score, verdicts, multimodal)
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -305,13 +309,13 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         )
 
     def _get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRecallVerdict]
+        self, input: str, verdicts: List[ContextualRecallVerdict], multimodal: bool
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = self._get_interaction_reason(input, score, verdicts)
+        reason = self._get_interaction_reason(input, score, verdicts, multimodal)
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -347,6 +351,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         expected_outcome: str,
         score: float,
         verdicts: List[ContextualRecallVerdict],
+        multimodal: bool
     ) -> str:
         if self.include_reason is False:
             return None
@@ -365,7 +370,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -390,6 +395,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         expected_outcome: str,
         score: float,
         verdicts: List[ContextualRecallVerdict],
+        multimodal: bool
     ) -> str:
         if self.include_reason is False:
             return None
@@ -408,7 +414,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             supportive_reasons=supportive_reasons,
             unsupportive_reasons=unsupportive_reasons,
             score=format(score, ".2f"),
-            multimodal=False,
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
