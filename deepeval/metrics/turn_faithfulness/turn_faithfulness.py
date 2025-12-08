@@ -2,7 +2,7 @@ from typing import List, Optional, Union, Type, Tuple
 import asyncio
 
 from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
@@ -30,7 +30,7 @@ from deepeval.metrics.turn_faithfulness.schema import (
 from deepeval.metrics.api import metric_data_manager
 
 
-class TurnFaithfulnessMetric(BaseMetric):
+class TurnFaithfulnessMetric(BaseConversationalMetric):
     _required_test_case_params: List[TurnParams] = [
         TurnParams.CONTENT,
         TurnParams.RETRIEVAL_CONTEXT,
@@ -258,7 +258,7 @@ class TurnFaithfulnessMetric(BaseMetric):
         self, user_content: str, assistant_content: str
     ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            user_content=user_content, assistant_output=assistant_content
+            input=user_content, assistant_output=assistant_content
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
@@ -277,7 +277,7 @@ class TurnFaithfulnessMetric(BaseMetric):
         self, user_content: str, assistant_content: str
     ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            user_content=user_content, assistant_output=assistant_content
+            input=user_content, assistant_output=assistant_content
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
