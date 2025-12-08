@@ -43,9 +43,15 @@ from .turn_relevancy.turn_relevancy import (
     TurnRelevancyMetric,
 )
 from .turn_faithfulness.turn_faithfulness import TurnFaithfulnessMetric
-from .turn_contextual_precision.turn_contextual_precision import TurnContextualPrecisionMetric
-from .turn_contextual_recall.turn_contextual_recall import TurnContextualRecallMetric
-from .turn_contextual_relevancy.turn_contextual_relevancy import TurnContextualRelevancyMetric
+from .turn_contextual_precision.turn_contextual_precision import (
+    TurnContextualPrecisionMetric,
+)
+from .turn_contextual_recall.turn_contextual_recall import (
+    TurnContextualRecallMetric,
+)
+from .turn_contextual_relevancy.turn_contextual_relevancy import (
+    TurnContextualRelevancyMetric,
+)
 from .conversation_completeness.conversation_completeness import (
     ConversationCompletenessMetric,
 )
