@@ -3,11 +3,12 @@ import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     get_unit_interactions,
     print_tools_called,
     check_conversational_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
@@ -213,18 +214,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
             user_goal, "\n".join(steps_taken), multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=PlanScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: PlanScore = self.model.generate(prompt, schema=PlanScore)
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return PlanScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=PlanScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: PlanScore(**data),
+        )
 
     async def _a_get_plan_scores(
         self, user_goal, steps_taken, multimodal: bool
@@ -232,20 +228,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
             user_goal, "\n".join(steps_taken), multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=PlanScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: PlanScore = await self.model.a_generate(
-                    prompt, schema=PlanScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return PlanScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=PlanScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: PlanScore(**data),
+        )
 
     def _calculate_score(
         self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
@@ -285,7 +274,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
+            self._accrue_cost(cost)
             return res
         else:
             res = self.model.generate(prompt)
@@ -317,7 +306,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
+            self._accrue_cost(cost)
             return res
         else:
             res = await self.model.a_generate(prompt)
@@ -329,18 +318,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         prompt = GoalAccuracyTemplate.get_accuracy_score(
             user_goal, "\n".join(steps_taken), multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=GoalScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: GoalScore = self.model.generate(prompt, schema=GoalScore)
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return GoalScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=GoalScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: GoalScore(**data),
+        )
 
     async def _a_get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
@@ -348,20 +332,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         prompt = GoalAccuracyTemplate.get_accuracy_score(
             user_goal, "\n".join(steps_taken), multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=GoalScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: GoalScore = await self.model.a_generate(
-                    prompt, schema=GoalScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return GoalScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=GoalScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: GoalScore(**data),
+        )
 
     def print_goals_and_steps_taken(self, goals_and_steps):
         final_goals_and_steps = ""
@@ -378,7 +355,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
