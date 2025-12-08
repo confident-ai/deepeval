@@ -149,11 +149,12 @@ class TurnFaithfulnessMetric(BaseMetric):
                 metric_data_manager.post_metric_if_enabled(
                     self, test_case=test_case
                 )
-            
+
             return self.score
 
-
-    async def _a_get_faithfulness_scores(self, unit_interactions: List[List[Turn]]):
+    async def _a_get_faithfulness_scores(
+        self, unit_interactions: List[List[Turn]]
+    ):
 
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
@@ -166,21 +167,24 @@ class TurnFaithfulnessMetric(BaseMetric):
                     assistant_content += f"\n{turn.content} "
                     retrieval_context.extend(turn.retrieval_context)
             truths = await self._a_generate_truths(retrieval_context)
-            claims = await self._a_generate_claims(user_content, assistant_content)
+            claims = await self._a_generate_claims(
+                user_content, assistant_content
+            )
             verdicts = await self._a_generate_verdicts(claims, truths)
             score, reason = self._get_interaction_score_and_reason(verdicts)
             interaction_score = InteractionFaithfulnessScore(
-                score=score, 
+                score=score,
                 reason=reason,
                 claims=claims,
                 truths=truths,
-                verdicts=verdicts
+                verdicts=verdicts,
             )
             return interaction_score
-        
+
         final_scores = await asyncio.gather(
             *[
-                get_interaction_score(unit_interaction) for unit_interaction in unit_interactions
+                get_interaction_score(unit_interaction)
+                for unit_interaction in unit_interactions
             ]
         )
 
@@ -204,7 +208,7 @@ class TurnFaithfulnessMetric(BaseMetric):
             verdicts = self._generate_verdicts(claims, truths)
             score, reason = self._get_interaction_score_and_reason(verdicts)
             interaction_score = InteractionFaithfulnessScore(
-                score=score, 
+                score=score,
                 reason=reason,
                 claims=claims,
                 truths=truths,
@@ -250,10 +254,11 @@ class TurnFaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, user_content: str, assistant_content: str) -> List[str]:
+    async def _a_generate_claims(
+        self, user_content: str, assistant_content: str
+    ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            user_content=user_content,
-            assistant_output=assistant_content
+            user_content=user_content, assistant_output=assistant_content
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
@@ -268,10 +273,11 @@ class TurnFaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, user_content: str, assistant_content: str) -> List[str]:
+    def _generate_claims(
+        self, user_content: str, assistant_content: str
+    ) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            user_content=user_content,
-            assistant_output=assistant_content
+            user_content=user_content, assistant_output=assistant_content
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
@@ -367,14 +373,16 @@ class TurnFaithfulnessMetric(BaseMetric):
                 faithfulness_count -= 1
 
         score = faithfulness_count / number_of_verdicts
-        reason = self._get_interaction_reason(score, verdicts) 
-        return ( 
-            (0, reason) 
-            if self.strict_mode and score < self.threshold 
-            else (score, reason) 
+        reason = self._get_interaction_reason(score, verdicts)
+        return (
+            (0, reason)
+            if self.strict_mode and score < self.threshold
+            else (score, reason)
         )
-    
-    async def _a_get_interaction_score_and_reason(self, verdicts) -> Tuple[float, str]:
+
+    async def _a_get_interaction_score_and_reason(
+        self, verdicts
+    ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
             return 1
@@ -391,13 +399,13 @@ class TurnFaithfulnessMetric(BaseMetric):
                 faithfulness_count -= 1
 
         score = faithfulness_count / number_of_verdicts
-        reason = await self._a_get_interaction_reason(score, verdicts) 
-        return ( 
-            (0, reason) 
-            if self.strict_mode and score < self.threshold 
-            else (score, reason) 
+        reason = await self._a_get_interaction_reason(score, verdicts)
+        return (
+            (0, reason)
+            if self.strict_mode and score < self.threshold
+            else (score, reason)
         )
-    
+
     async def _a_get_interaction_reason(self, score, verdicts) -> str:
         if self.include_reason is False:
             return None
@@ -459,8 +467,10 @@ class TurnFaithfulnessMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
-            
-    def _get_verbose_steps(self, interaction_scores: List[InteractionFaithfulnessScore]):
+
+    def _get_verbose_steps(
+        self, interaction_scores: List[InteractionFaithfulnessScore]
+    ):
         steps = []
         for index, interaction_score in enumerate(interaction_scores):
             interaction_steps = [
@@ -474,11 +484,13 @@ class TurnFaithfulnessMetric(BaseMetric):
             steps.extend(interaction_steps)
         return steps
 
-    def _generate_reason(self, scores: List[InteractionFaithfulnessScore]) -> str:
+    def _generate_reason(
+        self, scores: List[InteractionFaithfulnessScore]
+    ) -> str:
         reasons = []
         for score in scores:
             reasons.append(score.reason)
-        
+
         prompt = self.evaluation_template.generate_final_reason(
             self.score, self.success, reasons
         )
@@ -490,12 +502,14 @@ class TurnFaithfulnessMetric(BaseMetric):
         else:
             res = self.model.generate(prompt)
             return res
-        
-    async def _a_generate_reason(self, scores: List[InteractionFaithfulnessScore]) -> str:
+
+    async def _a_generate_reason(
+        self, scores: List[InteractionFaithfulnessScore]
+    ) -> str:
         reasons = []
         for score in scores:
             reasons.append(score.reason)
-        
+
         prompt = self.evaluation_template.generate_final_reason(
             self.score, self.success, reasons
         )
@@ -508,8 +522,9 @@ class TurnFaithfulnessMetric(BaseMetric):
             res = await self.model.a_generate(prompt)
             return res
 
-
-    def _calculate_score(self, scores: List[InteractionFaithfulnessScore]) -> float:
+    def _calculate_score(
+        self, scores: List[InteractionFaithfulnessScore]
+    ) -> float:
         number_of_scores = len(scores)
         if number_of_scores == 0:
             return 1

@@ -14,6 +14,7 @@ class Verdicts(BaseModel):
 class ContextualRecallScoreReason(BaseModel):
     reason: str
 
+
 class InteractionContextualRecallScore(BaseModel):
     score: float
     reason: str

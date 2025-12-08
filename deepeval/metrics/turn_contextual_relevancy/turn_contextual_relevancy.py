@@ -234,8 +234,10 @@ class TurnContextualRelevancyMetric(BaseMetric):
                 verdicts.extend([item for item in res.verdicts])
             else:
                 try:
-                    res: ContextualRelevancyVerdicts = await self.model.a_generate(
-                        prompt, schema=ContextualRelevancyVerdicts
+                    res: ContextualRelevancyVerdicts = (
+                        await self.model.a_generate(
+                            prompt, schema=ContextualRelevancyVerdicts
+                        )
                     )
                     verdicts.extend([item for item in res.verdicts])
                 except TypeError:
@@ -267,7 +269,9 @@ class TurnContextualRelevancyMetric(BaseMetric):
             )
 
             if self.using_native_model:
-                res, cost = self.model.generate(prompt, schema=ContextualRelevancyVerdicts)
+                res, cost = self.model.generate(
+                    prompt, schema=ContextualRelevancyVerdicts
+                )
                 self.evaluation_cost += cost
                 verdicts.extend([item for item in res.verdicts])
             else:

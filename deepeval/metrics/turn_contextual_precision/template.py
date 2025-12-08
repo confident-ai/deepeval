@@ -25,7 +25,9 @@ class TurnContextualPrecisionTemplate:
 
         # For multimodal, we need to annotate the retrieval context with node IDs
         context_to_display = (
-            TurnContextualPrecisionTemplate.id_retrieval_context(retrieval_context)
+            TurnContextualPrecisionTemplate.id_retrieval_context(
+                retrieval_context
+            )
             if multimodal
             else retrieval_context
         )
@@ -123,7 +125,9 @@ class TurnContextualPrecisionTemplate:
         )
 
     @staticmethod
-    def generate_final_reason(final_score: float, success: bool, reasons: List[str]):
+    def generate_final_reason(
+        final_score: float, success: bool, reasons: List[str]
+    ):
         return textwrap.dedent(
             f"""You are an AI evaluator producing a single final explanation for the TurnContextualPrecisionMetric result.
 

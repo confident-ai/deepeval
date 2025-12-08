@@ -14,7 +14,9 @@ class TurnFaithfulnessTemplate:
     """
 
     @staticmethod
-    def generate_claims(input: str, assistant_output: str, multimodal: bool = False):
+    def generate_claims(
+        input: str, assistant_output: str, multimodal: bool = False
+    ):
         return textwrap.dedent(
             f"""
             Extract every factual-sounding claim asserted in the ASSISTANT'S OUTPUT.
@@ -48,7 +50,11 @@ class TurnFaithfulnessTemplate:
         )
 
     @staticmethod
-    def generate_truths(reference_context: str, extraction_limit: Optional[int], multimodal: bool = False):
+    def generate_truths(
+        reference_context: str,
+        extraction_limit: Optional[int],
+        multimodal: bool = False,
+    ):
         if extraction_limit is None:
             limit_description = "factual, explicit truths"
         elif extraction_limit == 1:
@@ -84,7 +90,9 @@ class TurnFaithfulnessTemplate:
         )
 
     @staticmethod
-    def generate_verdicts(claims: List[str], reference_context: str, multimodal: bool = False):
+    def generate_verdicts(
+        claims: List[str], reference_context: str, multimodal: bool = False
+    ):
         return textwrap.dedent(
             f"""
             For each claim, determine whether it is supported, contradicted, or not addressed by the reference context.
@@ -134,7 +142,9 @@ class TurnFaithfulnessTemplate:
         )
 
     @staticmethod
-    def generate_reason(score: float, contradictions: List[str], multimodal: bool = False):
+    def generate_reason(
+        score: float, contradictions: List[str], multimodal: bool = False
+    ):
         return textwrap.dedent(
             f"""
             Below is a list of contradictions extracted from verdicts. Write a concise justification of the score.
@@ -166,9 +176,11 @@ class TurnFaithfulnessTemplate:
             JSON:
             """
         )
-    
+
     @staticmethod
-    def generate_final_reason(final_score: float, success: bool, reasons: List[str]):
+    def generate_final_reason(
+        final_score: float, success: bool, reasons: List[str]
+    ):
         return textwrap.dedent(
             f"""You are an AI evaluator producing a single final explanation for the TurnFaithfulnessMetric result.
 

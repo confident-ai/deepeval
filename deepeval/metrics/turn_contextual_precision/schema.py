@@ -14,6 +14,7 @@ class Verdicts(BaseModel):
 class ContextualPrecisionScoreReason(BaseModel):
     reason: str
 
+
 class InteractionContextualPrecisionScore(BaseModel):
     score: float
     reason: str

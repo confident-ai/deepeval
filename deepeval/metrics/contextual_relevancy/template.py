@@ -1,6 +1,7 @@
 from typing import List, Union
 import textwrap
 
+
 class ContextualRelevancyTemplate:
     @staticmethod
     def generate_reason(

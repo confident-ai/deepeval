@@ -32,7 +32,6 @@ class TurnContextualPrecisionMetric(BaseMetric):
     _required_test_case_params: List[TurnParams] = [
         TurnParams.CONTENT,
         TurnParams.RETRIEVAL_CONTEXT,
-        
     ]
 
     def __init__(
@@ -162,7 +161,9 @@ class TurnContextualPrecisionMetric(BaseMetric):
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
             retrieval_context = []
-            expected_outcome = f"Expected Assistant Message: \n{_expected_outcome}"
+            expected_outcome = (
+                f"Expected Assistant Message: \n{_expected_outcome}"
+            )
             for turn in unit_interaction:
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "
@@ -199,7 +200,9 @@ class TurnContextualPrecisionMetric(BaseMetric):
         for unit_interaction in unit_interactions:
             user_content = "User Message: "
             retrieval_context = []
-            expected_outcome = f"Expected Assistant Message: \n{_expected_outcome}"
+            expected_outcome = (
+                f"Expected Assistant Message: \n{_expected_outcome}"
+            )
             for turn in unit_interaction:
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "

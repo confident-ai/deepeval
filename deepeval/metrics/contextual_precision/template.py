@@ -3,6 +3,7 @@ import textwrap
 from deepeval.test_case import MLLMImage
 from deepeval.utils import convert_to_multi_modal_array
 
+
 class ContextualPrecisionTemplate:
     @staticmethod
     def generate_verdicts(
