@@ -432,9 +432,6 @@ async def a_generate_with_schema_and_extract(
     extract_schema: Callable[[SchemaType], ReturnType],
     extract_json: Callable[[Dict[str, Any]], ReturnType],
 ) -> ReturnType:
-    """
-    Async wrapper (same idea as gen_and_extract).
-    """
     if metric.using_native_model:
         result, cost = await metric.model.a_generate_with_schema(
             prompt, schema=schema_cls
