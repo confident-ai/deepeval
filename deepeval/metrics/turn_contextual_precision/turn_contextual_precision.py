@@ -126,7 +126,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             raise ValueError(
                 "A test case must have the 'expected_outcome' populated to run the 'TurnContextualPrecisionMetric'"
             )
-        
+
         multimodal = test_case.multimodal
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -160,7 +160,10 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_get_contextual_precision_scores(
-        self, unit_interactions: List[List[Turn]], _expected_outcome: str, multimodal: bool
+        self,
+        unit_interactions: List[List[Turn]],
+        _expected_outcome: str,
+        multimodal: bool,
     ):
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
@@ -197,7 +200,10 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         return final_scores
 
     def _get_contextual_precision_scores(
-        self, unit_interactions: List[List[Turn]], _expected_outcome: str, multimodal: bool
+        self,
+        unit_interactions: List[List[Turn]],
+        _expected_outcome: str,
+        multimodal: bool,
     ):
         interaction_scores = []
 
@@ -229,7 +235,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         return interaction_scores
 
     async def _a_generate_verdicts(
-        self, input: str, expected_outcome: str, retrieval_context: List[str], multimodal: bool
+        self,
+        input: str,
+        expected_outcome: str,
+        retrieval_context: List[str],
+        multimodal: bool,
     ) -> List[ContextualPrecisionVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -265,7 +275,11 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 return verdicts
 
     def _generate_verdicts(
-        self, input: str, expected_outcome: str, retrieval_context: List[str], multimodal: bool
+        self,
+        input: str,
+        expected_outcome: str,
+        retrieval_context: List[str],
+        multimodal: bool,
     ) -> List[ContextualPrecisionVerdict]:
         if len(retrieval_context) == 0:
             return []
@@ -299,13 +313,18 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 return verdicts
 
     async def _a_get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualPrecisionVerdict], multimodal: bool
+        self,
+        input: str,
+        verdicts: List[ContextualPrecisionVerdict],
+        multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = await self._a_get_interaction_reason(input, score, verdicts, multimodal)
+        reason = await self._a_get_interaction_reason(
+            input, score, verdicts, multimodal
+        )
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -313,13 +332,18 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         )
 
     def _get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualPrecisionVerdict], multimodal: bool
+        self,
+        input: str,
+        verdicts: List[ContextualPrecisionVerdict],
+        multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = self._get_interaction_reason(input, score, verdicts, multimodal)
+        reason = self._get_interaction_reason(
+            input, score, verdicts, multimodal
+        )
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -355,7 +379,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualPrecisionVerdict],
-        multimodal: bool
+        multimodal: bool,
     ) -> str:
         if self.include_reason is False:
             return None
@@ -402,7 +426,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualPrecisionVerdict],
-        multimodal: bool
+        multimodal: bool,
     ) -> str:
         if self.include_reason is False:
             return None

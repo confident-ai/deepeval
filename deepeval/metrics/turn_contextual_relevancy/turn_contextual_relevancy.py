@@ -201,7 +201,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     retrieval_context.extend(turn.retrieval_context)
 
             # Generate verdicts for each retrieval context
-            verdicts = self._generate_verdicts(user_content, retrieval_context, multimodal)
+            verdicts = self._generate_verdicts(
+                user_content, retrieval_context, multimodal
+            )
             score, reason = self._get_interaction_score_and_reason(
                 user_content, verdicts, multimodal
             )
@@ -297,13 +299,18 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         return verdicts
 
     async def _a_get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRelevancyVerdict], multimodal: bool
+        self,
+        input: str,
+        verdicts: List[ContextualRelevancyVerdict],
+        multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = await self._a_get_interaction_reason(input, score, verdicts, multimodal)
+        reason = await self._a_get_interaction_reason(
+            input, score, verdicts, multimodal
+        )
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -311,13 +318,18 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         )
 
     def _get_interaction_score_and_reason(
-        self, input: str, verdicts: List[ContextualRelevancyVerdict], multimodal: bool
+        self,
+        input: str,
+        verdicts: List[ContextualRelevancyVerdict],
+        multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
             return 1, None
 
         score = self._calculate_interaction_score(verdicts)
-        reason = self._get_interaction_reason(input, score, verdicts, multimodal)
+        reason = self._get_interaction_reason(
+            input, score, verdicts, multimodal
+        )
         return (
             (0, reason)
             if self.strict_mode and score < self.threshold
@@ -344,7 +356,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualRelevancyVerdict],
-        multimodal: bool
+        multimodal: bool,
     ) -> str:
         if self.include_reason is False:
             return None
@@ -394,7 +406,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         input: str,
         score: float,
         verdicts: List[ContextualRelevancyVerdict],
-        multimodal: bool
+        multimodal: bool,
     ) -> str:
         if self.include_reason is False:
             return None
