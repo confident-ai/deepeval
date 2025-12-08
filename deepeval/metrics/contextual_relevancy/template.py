@@ -1,12 +1,10 @@
 from typing import List, Union
 import textwrap
-from deepeval.test_case import MLLMImage
-
 
 class ContextualRelevancyTemplate:
     @staticmethod
     def generate_reason(
-        input: Union[str, List[Union[str, MLLMImage]]],
+        input: str,
         irrelevant_statements: List[str],
         relevant_statements: List[str],
         score: float,
@@ -46,8 +44,8 @@ class ContextualRelevancyTemplate:
 
     @staticmethod
     def generate_verdicts(
-        input: Union[str, List[Union[str, MLLMImage]]],
-        context: Union[str, List[Union[str, MLLMImage]]],
+        input: str,
+        context: str,
         multimodal: bool = False,
     ):
         context_type = "context (image or string)" if multimodal else "context"

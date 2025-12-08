@@ -1,14 +1,14 @@
 from typing import List, Dict, Union
 import textwrap
 from deepeval.test_case import MLLMImage
-
+from deepeval.utils import convert_to_multi_modal_array
 
 class ContextualPrecisionTemplate:
     @staticmethod
     def generate_verdicts(
-        input: Union[str, List[Union[str, MLLMImage]]],
-        expected_output: Union[str, List[Union[str, MLLMImage]]],
-        retrieval_context: List[Union[str, MLLMImage]],
+        input: str,
+        expected_output: str,
+        retrieval_context: List[str],
         multimodal: bool = False,
     ):
         document_count_str = f" ({len(retrieval_context)} document{'s' if len(retrieval_context) > 1 else ''})"
@@ -59,7 +59,7 @@ class ContextualPrecisionTemplate:
             Expected output:
             {expected_output}
 
-            Retrieval Context{document_count_str}:
+            Retrieval Context {document_count_str}:
             {context_to_display}
 
             JSON:
@@ -70,7 +70,7 @@ class ContextualPrecisionTemplate:
 
     @staticmethod
     def generate_reason(
-        input: Union[str, List[Union[str, MLLMImage]]],
+        input: str,
         score: float,
         verdicts: List[Dict[str, str]],
         multimodal: bool = False,
@@ -110,8 +110,8 @@ class ContextualPrecisionTemplate:
 
     @staticmethod
     def id_retrieval_context(
-        retrieval_context: List[Union[str, MLLMImage]],
-    ) -> List[Union[str, MLLMImage]]:
+        retrieval_context: List[str],
+    ) -> List[str]:
         """
         Annotates retrieval context with node IDs for multimodal processing.
 
@@ -122,6 +122,7 @@ class ContextualPrecisionTemplate:
             Annotated list with "Node X:" prefixes
         """
         annotated_retrieval_context = []
+        retrieval_context = convert_to_multi_modal_array(retrieval_context)
         for i, context in enumerate(retrieval_context):
             if isinstance(context, str):
                 annotated_retrieval_context.append(f"Node {i + 1}: {context}")

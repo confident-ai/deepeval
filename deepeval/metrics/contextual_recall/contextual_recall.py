@@ -84,16 +84,8 @@ class ContextualRecallMetric(BaseMetric):
                     )
                 )
             else:
-                if multimodal:
-                    expected_output = convert_to_multi_modal_array(
-                        test_case.expected_output
-                    )
-                    retrieval_context = convert_to_multi_modal_array(
-                        test_case.retrieval_context
-                    )
-                else:
-                    expected_output = test_case.expected_output
-                    retrieval_context = test_case.retrieval_context
+                expected_output = test_case.expected_output
+                retrieval_context = test_case.retrieval_context
 
                 self.verdicts: List[ContextualRecallVerdict] = (
                     self._generate_verdicts(
@@ -140,16 +132,8 @@ class ContextualRecallMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if multimodal:
-                expected_output = convert_to_multi_modal_array(
-                    test_case.expected_output
-                )
-                retrieval_context = convert_to_multi_modal_array(
-                    test_case.retrieval_context
-                )
-            else:
-                expected_output = test_case.expected_output
-                retrieval_context = test_case.retrieval_context
+            expected_output = test_case.expected_output
+            retrieval_context = test_case.retrieval_context
 
             self.verdicts: List[ContextualRecallVerdict] = (
                 await self._a_generate_verdicts(

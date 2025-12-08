@@ -1,12 +1,13 @@
 from typing import List, Union
 import textwrap
 from deepeval.test_case import MLLMImage
+from deepeval.utils import convert_to_multi_modal_array
 
 
 class ContextualRecallTemplate:
     @staticmethod
     def generate_reason(
-        expected_output: Union[str, List[Union[str, MLLMImage]]],
+        expected_output: str,
         supportive_reasons: str,
         unsupportive_reasons: str,
         score: float,
@@ -49,8 +50,8 @@ class ContextualRecallTemplate:
 
     @staticmethod
     def generate_verdicts(
-        expected_output: Union[str, List[Union[str, MLLMImage]]],
-        retrieval_context: List[Union[str, MLLMImage]],
+        expected_output: str,
+        retrieval_context: List[str],
         multimodal: bool = False,
     ):
         content_type = "sentence and image" if multimodal else "sentence"
@@ -103,8 +104,8 @@ class ContextualRecallTemplate:
 
     @staticmethod
     def id_retrieval_context(
-        retrieval_context: List[Union[str, MLLMImage]],
-    ) -> List[Union[str, MLLMImage]]:
+        retrieval_context: List[str],
+    ) -> List[str]:
         """
         Annotates retrieval context with node IDs for multimodal processing.
 
@@ -115,6 +116,7 @@ class ContextualRecallTemplate:
             Annotated list with "Node X:" prefixes
         """
         annotated_retrieval_context = []
+        retrieval_context = convert_to_multi_modal_array(retrieval_context)
         for i, context in enumerate(retrieval_context):
             if isinstance(context, str):
                 annotated_retrieval_context.append(f"Node {i + 1}: {context}")

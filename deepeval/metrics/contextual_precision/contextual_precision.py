@@ -3,7 +3,6 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
-    convert_to_multi_modal_array,
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
@@ -86,18 +85,9 @@ class ContextualPrecisionMetric(BaseMetric):
                     )
                 )
             else:
-                if multimodal:
-                    input = convert_to_multi_modal_array(test_case.input)
-                    expected_output = convert_to_multi_modal_array(
-                        test_case.expected_output
-                    )
-                    retrieval_context = convert_to_multi_modal_array(
-                        test_case.retrieval_context
-                    )
-                else:
-                    input = test_case.input
-                    expected_output = test_case.expected_output
-                    retrieval_context = test_case.retrieval_context
+                input = test_case.input
+                expected_output = test_case.expected_output
+                retrieval_context = test_case.retrieval_context
 
                 self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
@@ -147,18 +137,9 @@ class ContextualPrecisionMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if multimodal:
-                input = convert_to_multi_modal_array(test_case.input)
-                expected_output = convert_to_multi_modal_array(
-                    test_case.expected_output
-                )
-                retrieval_context = convert_to_multi_modal_array(
-                    test_case.retrieval_context
-                )
-            else:
-                input = test_case.input
-                expected_output = test_case.expected_output
-                retrieval_context = test_case.retrieval_context
+            input = test_case.input
+            expected_output = test_case.expected_output
+            retrieval_context = test_case.retrieval_context
 
             self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(

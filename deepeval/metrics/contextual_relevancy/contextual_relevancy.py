@@ -87,14 +87,8 @@ class ContextualRelevancyMetric(BaseMetric):
                 )
             else:
 
-                if multimodal:
-                    input = convert_to_multi_modal_array(test_case.input)
-                    retrieval_context = convert_to_multi_modal_array(
-                        test_case.retrieval_context
-                    )
-                else:
-                    input = test_case.input
-                    retrieval_context = test_case.retrieval_context
+                input = test_case.input
+                retrieval_context = test_case.retrieval_context
 
                 self.verdicts_list: List[ContextualRelevancyVerdicts] = [
                     (self._generate_verdicts(input, context, multimodal))
@@ -141,14 +135,8 @@ class ContextualRelevancyMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if multimodal:
-                input = convert_to_multi_modal_array(test_case.input)
-                retrieval_context = convert_to_multi_modal_array(
-                    test_case.retrieval_context
-                )
-            else:
-                input = test_case.input
-                retrieval_context = test_case.retrieval_context
+            input = test_case.input
+            retrieval_context = test_case.retrieval_context
 
             self.verdicts_list: List[ContextualRelevancyVerdicts] = (
                 await asyncio.gather(
