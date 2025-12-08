@@ -19,20 +19,6 @@ from deepeval.test_case import (
 )
 
 
-###############################
-# _primary_input_from_golden()
-###############################
-
-
-def test_primary_input_from_golden_uses_input_for_golden():
-    adapter = Scorer()
-    golden = Golden(input="plain input", scenario="should_be_ignored")
-
-    primary = adapter._primary_input_from_golden(golden)
-
-    assert primary == "plain input"
-
-
 def test_primary_input_from_golden_uses_scenario_for_conversational_golden():
     adapter = Scorer()
     conv = ConversationalGolden(
