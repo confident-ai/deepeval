@@ -31,12 +31,12 @@ class DeepEvalBaseModel(ABC):
 
 
 class DeepEvalBaseLLM(ABC):
-    def __init__(self, model: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
         self.model = self.load_model()
 
     @abstractmethod
-    def load_model(self) -> "DeepEvalBaseLLM":
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
         """Loads a model, that will be responsible for scoring.
 
         Returns:
@@ -72,17 +72,17 @@ class DeepEvalBaseLLM(ABC):
             "batch_generate is not implemented for this model"
         )
 
-    def get_model_name(self) -> str:
+    def get_model_name(self, *args, **kwargs) -> str:
         return self.name
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
-    def __init__(self, model: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
         self.model = self.load_model()
 
     @abstractmethod
-    def load_model(self) -> "DeepEvalBaseEmbeddingModel":
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseEmbeddingModel":
         """Loads a model, that will be responsible for generating text embeddings.
 
         Returns:
@@ -126,5 +126,5 @@ class DeepEvalBaseEmbeddingModel(ABC):
         """
         pass
 
-    def get_model_name(self) -> str:
+    def get_model_name(self, *args, **kwargs) -> str:
         return self.name
