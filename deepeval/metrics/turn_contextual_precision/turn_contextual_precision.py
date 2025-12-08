@@ -357,13 +357,12 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         # Convert verdicts to binary list where 'yes' is 1 and others are 0
         node_verdicts = [
-            1 if v.verdict.strip().lower() == "yes" else 0
-            for v in verdicts
+            1 if v.verdict.strip().lower() == "yes" else 0 for v in verdicts
         ]
 
         sum_weighted_precision_at_k = 0.0
         relevant_nodes_count = 0
-        
+
         for k, is_relevant in enumerate(node_verdicts, start=1):
             # If the item is relevant, update the counter and add weighted precision to sum
             if is_relevant:
@@ -373,7 +372,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
         if relevant_nodes_count == 0:
             return 0
-        
+
         # Calculate Average Precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
