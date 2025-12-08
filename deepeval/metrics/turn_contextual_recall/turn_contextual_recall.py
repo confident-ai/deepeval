@@ -166,22 +166,19 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         multimodal: bool,
     ):
         async def get_interaction_score(unit_interaction: List[Turn]):
-            user_content = "User Message: "
             retrieval_context = []
             expected_outcome = (
                 f"Expected Assistant Message: \n{_expected_outcome}"
             )
             for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
+                if turn.role == "assistant":
                     retrieval_context.extend(turn.retrieval_context)
 
             verdicts = await self._a_generate_verdicts(
                 expected_outcome, retrieval_context, multimodal
             )
             score, reason = await self._a_get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
+                expected_outcome, verdicts, multimodal
             )
             interaction_score = InteractionContextualRecallScore(
                 score=score,
@@ -208,22 +205,19 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         interaction_scores = []
 
         for unit_interaction in unit_interactions:
-            user_content = "User Message: "
             retrieval_context = []
             expected_outcome = (
                 f"Expected Assistant Message: \n{_expected_outcome}"
             )
             for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
+                if turn.role == "assistant":
                     retrieval_context.extend(turn.retrieval_context)
 
             verdicts = self._generate_verdicts(
                 expected_outcome, retrieval_context, multimodal
             )
             score, reason = self._get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
+                expected_outcome, verdicts, multimodal
             )
             interaction_score = InteractionContextualRecallScore(
                 score=score,
@@ -308,7 +302,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
     async def _a_get_interaction_score_and_reason(
         self,
-        input: str,
+        expected_outcome: str,
         verdicts: List[ContextualRecallVerdict],
         multimodal: bool,
     ) -> Tuple[float, str]:
@@ -317,7 +311,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         score = self._calculate_interaction_score(verdicts)
         reason = await self._a_get_interaction_reason(
-            input, score, verdicts, multimodal
+            expected_outcome, score, verdicts, multimodal
         )
         return (
             (0, reason)
@@ -327,7 +321,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
     def _get_interaction_score_and_reason(
         self,
-        input: str,
+        expected_outcome: str,
         verdicts: List[ContextualRecallVerdict],
         multimodal: bool,
     ) -> Tuple[float, str]:
@@ -336,7 +330,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
 
         score = self._calculate_interaction_score(verdicts)
         reason = self._get_interaction_reason(
-            input, score, verdicts, multimodal
+            expected_outcome, score, verdicts, multimodal
         )
         return (
             (0, reason)
@@ -347,25 +341,16 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
     def _calculate_interaction_score(
         self, verdicts: List[ContextualRecallVerdict]
     ) -> float:
-        weighted_sum = 0
-        total_weight = 0
+        number_of_verdicts = len(verdicts)
+        if number_of_verdicts == 0:
+            return 1
 
-        for i, verdict in enumerate(verdicts):
-            # Rank starts at 1
-            rank = i + 1
-            # Calculate weight: 1/rank
-            weight = 1 / rank
-
+        attributable_count = 0
+        for verdict in verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                weighted_sum += weight
+                attributable_count += 1
 
-            total_weight += weight
-
-        if total_weight == 0:
-            return 0
-
-        # Weighted precision
-        score = weighted_sum / total_weight
+        score = attributable_count / number_of_verdicts
         return score
 
     async def _a_get_interaction_reason(
