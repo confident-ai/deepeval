@@ -175,7 +175,7 @@ def assert_test(
                 try:
                     if not metric_data.success:
                         failed_metrics_data.append(metric_data)
-                except:
+                except Exception:
                     failed_metrics_data.append(metric_data)
 
         failed_metrics_str = ", ".join(
@@ -272,6 +272,19 @@ def evaluate(
         test_run.hyperparameters = process_hyperparameters(hyperparameters)
         test_run.prompts = process_prompts(hyperparameters)
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+
+        # In CLI mode (`deepeval test run`), the CLI owns finalization and will
+        # call `wrap_up_test_run()` once after pytest finishes. Finalizing here
+        # as well would double finalize the run and consequently result in
+        # duplicate uploads / local saves and temp file races, so only
+        # do it when we're NOT in CLI mode.
+        if get_is_running_deepeval():
+            return EvaluationResult(
+                test_results=test_results,
+                confident_link=None,
+                test_run_id=None,
+            )
+
         res = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
         )
