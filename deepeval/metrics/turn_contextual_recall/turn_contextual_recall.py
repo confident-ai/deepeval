@@ -349,7 +349,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                 attributable_count += 1
 
         score = attributable_count / number_of_verdicts
-        return score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_get_interaction_reason(
         self,
