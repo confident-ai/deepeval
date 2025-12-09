@@ -58,7 +58,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -83,11 +89,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 else:
                     self.verdicts: List[ArgumentCorrectnessVerdict] = (
                         self._generate_verdicts(
-                            test_case.input, test_case.tools_called, test_case.multimodal
+                            test_case.input,
+                            test_case.tools_called,
+                            test_case.multimodal,
                         )
                     )
                     self.score = self._calculate_score()
-                    self.reason = self._generate_reason(test_case.input, test_case.multimodal)
+                    self.reason = self._generate_reason(
+                        test_case.input, test_case.multimodal
+                    )
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -111,7 +121,13 @@ class ArgumentCorrectnessMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -128,11 +144,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
             else:
                 self.verdicts: List[ArgumentCorrectnessVerdict] = (
                     await self._a_generate_verdicts(
-                        test_case.input, test_case.tools_called, test_case.multimodal
+                        test_case.input,
+                        test_case.tools_called,
+                        test_case.multimodal,
                     )
                 )
                 self.score = self._calculate_score()
-                self.reason = await self._a_generate_reason(test_case.input, test_case.multimodal)
+                self.reason = await self._a_generate_reason(
+                    test_case.input, test_case.multimodal
+                )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -160,7 +180,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -194,7 +214,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
-            multimodal=multimodal
+            multimodal=multimodal,
         )
 
         if self.using_native_model:
@@ -215,15 +235,10 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(
-        self,
-        input: str,
-        tools_called: List[ToolCall],
-        multimodal: bool
+        self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            tools_called=tools_called,
-            multimodal=multimodal
+            input=input, tools_called=tools_called, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -244,15 +259,10 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 ]
 
     def _generate_verdicts(
-        self,
-        input: str,
-        tools_called: List[ToolCall],
-        multimodal: bool
+        self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            tools_called=tools_called,
-            multimodal=multimodal
+            input=input, tools_called=tools_called, multimodal=multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)

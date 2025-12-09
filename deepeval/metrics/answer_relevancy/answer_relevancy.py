@@ -55,7 +55,13 @@ class AnswerRelevancyMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -109,7 +115,13 @@ class AnswerRelevancyMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -129,7 +141,9 @@ class AnswerRelevancyMetric(BaseMetric):
                 await self._a_generate_verdicts(input, test_case.multimodal)
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(input, test_case.multimodal)
+            self.reason = await self._a_generate_reason(
+                input, test_case.multimodal
+            )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,

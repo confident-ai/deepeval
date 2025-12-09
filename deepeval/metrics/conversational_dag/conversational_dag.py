@@ -69,7 +69,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             self,
             False,
             self.model,
-            multimodal
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -116,7 +116,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             self,
             False,
             self.model,
-            multimodal
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

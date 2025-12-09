@@ -6,6 +6,7 @@ multimodal_rules = """
     - If an image is unclear or ambiguous, mark uncertainty explicitly.
 """
 
+
 class PIILeakageTemplate:
 
     @staticmethod

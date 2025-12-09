@@ -8,6 +8,7 @@ multimodal_rules = """
     - If an image is unclear or ambiguous, mark uncertainty explicitly.
 """
 
+
 class ToxicityTemplate:
     @staticmethod
     def generate_opinions(actual_output: str):

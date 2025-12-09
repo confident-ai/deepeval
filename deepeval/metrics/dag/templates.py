@@ -8,6 +8,7 @@ multimodal_rules = """
     - If an image is unclear or ambiguous, mark uncertainty explicitly.
 """
 
+
 class VerdictNodeTemplate:
     @staticmethod
     def generate_reason(verbose_steps: List[str], score: float, name: str):

@@ -200,7 +200,11 @@ class GoalAccuracyTemplate:
 
     @staticmethod
     def get_final_reason(
-        final_score, threshold, goal_evaluations, plan_evalautions, multimodal: bool = False
+        final_score,
+        threshold,
+        goal_evaluations,
+        plan_evalautions,
+        multimodal: bool = False,
     ):
         return textwrap.dedent(
             f"""You are an expert evaluator providing a **final justification** for whether an AI agent has passed or failed an evaluation metric.

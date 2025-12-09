@@ -70,7 +70,7 @@ class DAGMetric(BaseMetric):
             None,
             self,
             self.model,
-            multimodal
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -118,7 +118,7 @@ class DAGMetric(BaseMetric):
             None,
             self,
             self.model,
-            multimodal
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

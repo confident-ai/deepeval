@@ -13,7 +13,9 @@ class ArgumentCorrectnessTemplate:
     """
 
     @staticmethod
-    def generate_verdicts(input: str, tools_called: List[ToolCall], multimodal: bool = False):
+    def generate_verdicts(
+        input: str, tools_called: List[ToolCall], multimodal: bool = False
+    ):
 
         stringified_tools_called = repr(tools_called)
 
@@ -102,7 +104,10 @@ class ArgumentCorrectnessTemplate:
 
     @staticmethod
     def generate_reason(
-        incorrect_tool_calls_reasons: List[str], input: str, score: float, multimodal: bool = False
+        incorrect_tool_calls_reasons: List[str],
+        input: str,
+        score: float,
+        multimodal: bool = False,
     ):
         return textwrap.dedent(
             f"""Given the argument correctness score, the list of reasons of incorrect tool calls, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score. You can mention tool calls or input, but do not mention an output or a response.

@@ -57,9 +57,7 @@ MULTIMODAL_SUPPORTED_MODELS = [
 
 
 def copy_metrics(
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric]
-    ],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
 ) -> List[Union[BaseMetric, BaseConversationalMetric]]:
     copied_metrics = []
     for metric in metrics:
@@ -278,7 +276,7 @@ def check_llm_test_case_params(
             if count != actual_output_image_count:
                 error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
                 raise ValueError(error_str)
-        
+
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
         metric.error = error_str
@@ -329,7 +327,6 @@ def check_arena_test_case_params(
 
     for test_case in cases:
         check_llm_test_case_params(test_case, test_case_params, metric)
-
 
 
 def trimAndLoadJson(

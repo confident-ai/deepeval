@@ -51,7 +51,13 @@ class TextToImageMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
         check_llm_test_case_params(
-            test_case, required_params, 0, 1, self, self.model, test_case.multimodal
+            test_case,
+            required_params,
+            0,
+            1,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -111,7 +117,13 @@ class TextToImageMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
         check_llm_test_case_params(
-            test_case, required_params, 0, 1, self, self.model, test_case.multimodal
+            test_case,
+            required_params,
+            0,
+            1,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

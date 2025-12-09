@@ -335,21 +335,15 @@ def execute_test_cases(
 
             metrics_for_case = (
                 llm_metrics
-                if (
-                    isinstance(test_case, LLMTestCase)
-                )
+                if (isinstance(test_case, LLMTestCase))
                 else conversational_metrics
             )
             api_test_case = create_api_test_case(
                 test_case=test_case,
                 index=(
                     llm_test_case_count + 1
-                    if (
-                        isinstance(test_case, LLMTestCase)
-                    )
-                    else (
-                        conversational_test_case_count + 1
-                    )
+                    if (isinstance(test_case, LLMTestCase))
+                    else (conversational_test_case_count + 1)
                 ),
             )
             emitted = [False] * len(metrics_for_case)
@@ -367,9 +361,7 @@ def execute_test_cases(
                         for metric in metrics:
                             metric.error = None  # Reset metric error
 
-                        if (
-                            isinstance(test_case, LLMTestCase)
-                        ):
+                        if isinstance(test_case, LLMTestCase):
                             llm_test_case_count += 1
                             cached_test_case = None
                             if cache_config.use_cache:
@@ -591,9 +583,7 @@ async def a_execute_test_cases(
         with progress:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
-                    if (
-                        isinstance(test_case, LLMTestCase)
-                    ):
+                    if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
                             update_pbar(progress, pbar_id)
                             continue
@@ -663,9 +653,7 @@ async def a_execute_test_cases(
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
-                if (
-                    isinstance(test_case, LLMTestCase)
-                ):
+                if isinstance(test_case, LLMTestCase):
                     if len(llm_metrics) == 0:
                         continue
                     llm_test_case_counter += 1
@@ -854,9 +842,7 @@ async def _a_execute_llm_test_cases(
 
 
 async def _a_execute_conversational_test_cases(
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric]
-    ],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: ConversationalTestCase,
     test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, LLMTestCase]],

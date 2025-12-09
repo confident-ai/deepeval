@@ -63,7 +63,13 @@ class ToolCorrectnessMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
         self.test_case = test_case
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -168,7 +174,13 @@ class ToolCorrectnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

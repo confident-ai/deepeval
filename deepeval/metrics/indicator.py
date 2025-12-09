@@ -155,9 +155,7 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric]
-    ],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,

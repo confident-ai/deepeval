@@ -56,7 +56,13 @@ class MCPUseMetric(BaseMetric):
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -126,7 +132,13 @@ class MCPUseMetric(BaseMetric):
     ) -> float:
         multimodal = test_case.multimodal
         check_llm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model, multimodal
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

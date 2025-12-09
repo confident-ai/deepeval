@@ -43,7 +43,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(input: str, statements: str, multimodal: bool = False):
+    def generate_verdicts(
+        input: str, statements: str, multimodal: bool = False
+    ):
         return f"""For the provided list of statements, determine whether each statement is relevant to address the input.
 Generate JSON objects with 'verdict' and 'reason' fields.
 The 'verdict' should be 'yes' (relevant), 'no' (irrelevant), or 'idk' (ambiguous/supporting information).
@@ -91,7 +93,10 @@ JSON:
 
     @staticmethod
     def generate_reason(
-        irrelevant_statements: List[str], input: str, score: float, multimodal: bool = False
+        irrelevant_statements: List[str],
+        input: str,
+        score: float,
+        multimodal: bool = False,
     ):
         return f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
 The irrelevant statements represent things in the actual output that is irrelevant to addressing whatever is asked/talked about in the input.

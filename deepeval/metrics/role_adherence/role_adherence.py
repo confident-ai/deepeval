@@ -53,7 +53,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             self,
             True,
             self.model,
-            test_case.multimodal
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -106,7 +106,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             self,
             True,
             self.model,
-            test_case.multimodal
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

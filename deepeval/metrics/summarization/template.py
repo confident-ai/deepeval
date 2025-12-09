@@ -1,4 +1,3 @@
-
 multimodal_rules = """
     --- MULTIMODAL INPUT RULES ---
     - Treat image content as factual evidence.
@@ -6,6 +5,7 @@ multimodal_rules = """
     - Do not infer or guess objects, text, or details not visibly present.
     - If an image is unclear or ambiguous, mark uncertainty explicitly.
 """
+
 
 class SummarizationTemplate:
     @staticmethod

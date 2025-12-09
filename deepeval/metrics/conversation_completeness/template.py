@@ -59,7 +59,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_verdicts(turns: List[Dict], intention: str, multimodal: bool = False):
+    def generate_verdicts(
+        turns: List[Dict], intention: str, multimodal: bool = False
+    ):
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to indicate whether given user intention was satisfied from the conversation messages. The JSON will have 2 fields: 'verdict' and 'reason'.
 
 {ConversationCompletenessTemplate.multimodal_rules if multimodal else ""}
@@ -119,7 +121,9 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(score, incompletenesses, intentions, multimodal: bool = False):
+    def generate_reason(
+        score, incompletenesses, intentions, multimodal: bool = False
+    ):
         return f"""Below is a list of incompletenesses drawn from some messages in a conversation, which you have minimal knowledge of. It is a list of strings explaining why an LLM 'actual_output' is incomplete to satisfy the user `input` for a particular message.
 
 {ConversationCompletenessTemplate.multimodal_rules if multimodal else ""}

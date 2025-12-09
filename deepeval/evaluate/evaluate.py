@@ -188,7 +188,6 @@ def evaluate(
         Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
-            
         ]
     ] = None,
     # Evals on Confident AI

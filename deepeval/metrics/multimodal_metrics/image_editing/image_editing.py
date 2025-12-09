@@ -53,7 +53,13 @@ class ImageEditingMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, self._required_params, 1, 1, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            1,
+            1,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -118,7 +124,13 @@ class ImageEditingMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
-            test_case, self._required_params, 1, 1, self, self.model, test_case.multimodal
+            test_case,
+            self._required_params,
+            1,
+            1,
+            self,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -219,7 +231,9 @@ class ImageEditingMetric(BaseMetric):
             text_prompt=text_prompt
         )
         if self.using_native_model:
-            res, cost = self.model.generate(f"{prompt} {images}", schema=ReasonScore)
+            res, cost = self.model.generate(
+                f"{prompt} {images}", schema=ReasonScore
+            )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
@@ -265,7 +279,9 @@ class ImageEditingMetric(BaseMetric):
             ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
-            res, cost = self.model.generate(f"{prompt} {images}", schema=ReasonScore)
+            res, cost = self.model.generate(
+                f"{prompt} {images}", schema=ReasonScore
+            )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
