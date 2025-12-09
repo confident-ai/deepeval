@@ -6,7 +6,7 @@ import time
 import os
 
 from deepeval.evaluate.evaluate import evaluate as run_evaluate
-from deepeval.evaluate.execute import _a_execute_mllm_test_cases
+from deepeval.evaluate.execute import _a_execute_llm_test_cases
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, ErrorConfig
 from deepeval.test_run.test_run import TestRun, TestRunManager
@@ -29,7 +29,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
 ):
     """
     Even if the test-case coroutine is cancelled (e.g., by a gather/outer timeout),
-    _a_execute_mllm_test_cases must still persist MetricData and update the TestRun.
+    _a_execute_llm_test_cases must still persist MetricData and update the TestRun.
     """
 
     # build a normal metric instance, then monkeypatch its a_measure to cause a hang
@@ -50,11 +50,12 @@ async def test_mlllm_async_persists_metric_on_cancel(
 
     # run the MLLM async case and timeout quickly
     coroutine = asyncio.wait_for(
-        _a_execute_mllm_test_cases(
+        _a_execute_llm_test_cases(
             metrics=metrics,
             test_case=test_case,
             test_run_manager=trm,
             test_results=[],
+            test_run=tr,
             count=0,
             ignore_errors=ignore_errors,
             skip_on_missing_params=False,
@@ -63,6 +64,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
             _is_assert_test=False,
             progress=None,
             pbar_id=None,
+            use_cache=True
         ),
         timeout=0.05,  # short timeout
     )
