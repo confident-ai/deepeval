@@ -2,7 +2,16 @@ from typing import List
 from textwrap import dedent
 
 
+multimodal_rules = """
+    --- MULTIMODAL INPUT RULES ---
+    - Treat image content as factual evidence.
+    - Only reference visual details that are explicitly and clearly visible.
+    - Do not infer or guess objects, text, or details not visibly present.
+    - If an image is unclear or ambiguous, mark uncertainty explicitly.
+"""
+
 class ConversationalVerdictNodeTemplate:
+
     @staticmethod
     def generate_reason(verbose_steps: List[str], score: float, name: str):
         return dedent(
@@ -40,6 +49,8 @@ class ConversationalTaskNodeTemplate:
         return dedent(
             f"""You are given a set of task instructions and a full conversation between a user and an assistant.
 
+                {multimodal_rules}
+
                 Instructions:
                 {instructions}
 
@@ -66,6 +77,8 @@ class ConversationalBinaryJudgementTemplate:
             f"""{criteria}
 
                 Below is the full conversation you should evaluate. Consider dialogue context, speaker roles, and how responses were handled.
+
+                {multimodal_rules}
 
                 Full Conversation:
                 {text}
@@ -95,6 +108,8 @@ class ConversationalNonBinaryJudgementTemplate:
             f"""{criteria}
 
                 You are evaluating the following conversation. Choose one of the options that best reflects the assistant's behavior.
+
+                {multimodal_rules}
 
                 Options: {options}
 

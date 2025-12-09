@@ -11,7 +11,6 @@ from deepeval.metrics import (
     ArenaGEval,
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -219,7 +218,7 @@ def validate_assert_test_inputs(
 
     if test_case and metrics:
         if (
-            isinstance(test_case, LLMTestCase) and not test_case.multimodal
+            isinstance(test_case, LLMTestCase)
         ) and not all(isinstance(metric, BaseMetric) for metric in metrics):
             raise ValueError(
                 "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
@@ -229,18 +228,6 @@ def validate_assert_test_inputs(
         ):
             raise ValueError(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
-            )
-        if (
-            isinstance(test_case, LLMTestCase) and test_case.multimodal
-        ) and not all(
-            (
-                isinstance(metric, BaseMultimodalMetric)
-                or isinstance(metric, BaseMetric)
-            )
-            for metric in metrics
-        ):
-            raise ValueError(
-                "All 'metrics' for multi-modal LLMTestCase must be instances of 'BaseMultimodalMetric' only."
             )
 
     if not ((golden and observed_callback) or (test_case and metrics)):
@@ -259,7 +246,6 @@ def validate_evaluate_inputs(
         Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
-            List[BaseMultimodalMetric],
         ]
     ] = None,
     metric_collection: Optional[str] = None,
@@ -294,7 +280,6 @@ def validate_evaluate_inputs(
             for metric in metrics:
                 if (
                     isinstance(test_case, LLMTestCase)
-                    and not test_case.multimodal
                 ) and not isinstance(metric, BaseMetric):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
@@ -305,15 +290,6 @@ def validate_evaluate_inputs(
                     print(type(metric))
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
-                    )
-                if (
-                    isinstance(test_case, LLMTestCase) and test_case.multimodal
-                ) and not (
-                    isinstance(metric, BaseMultimodalMetric)
-                    or isinstance(metric, BaseMetric)
-                ):
-                    raise ValueError(
-                        f"Metric {metric.__name__} is not a valid metric for multi-modal LLMTestCase."
                     )
 
 

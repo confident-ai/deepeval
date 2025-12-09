@@ -50,7 +50,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, False, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -107,7 +107,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, False, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

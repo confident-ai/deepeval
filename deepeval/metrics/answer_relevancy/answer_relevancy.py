@@ -8,7 +8,6 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_llm_test_case_params,
-    check_mllm_test_case_params,
     initialize_model,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
@@ -55,13 +54,9 @@ class AnswerRelevancyMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        multimodal = test_case.multimodal
-        if multimodal:
-            check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self, self.model
-            )
-        else:
-            check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -82,13 +77,13 @@ class AnswerRelevancyMetric(BaseMetric):
                 actual_output = test_case.actual_output
 
                 self.statements: List[str] = self._generate_statements(
-                    actual_output, multimodal
+                    actual_output, test_case.multimodal
                 )
                 self.verdicts: List[AnswerRelevancyVerdict] = (
-                    self._generate_verdicts(input, multimodal)
+                    self._generate_verdicts(input, test_case.multimodal)
                 )
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(input, multimodal)
+                self.reason = self._generate_reason(input, test_case.multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -113,13 +108,9 @@ class AnswerRelevancyMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        multimodal = test_case.multimodal
-        if multimodal:
-            check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self, self.model
-            )
-        else:
-            check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -132,13 +123,13 @@ class AnswerRelevancyMetric(BaseMetric):
             actual_output = test_case.actual_output
 
             self.statements: List[str] = await self._a_generate_statements(
-                actual_output, multimodal
+                actual_output, test_case.multimodal
             )
             self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(input, multimodal)
+                await self._a_generate_verdicts(input, test_case.multimodal)
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(input, multimodal)
+            self.reason = await self._a_generate_reason(input, test_case.multimodal)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,

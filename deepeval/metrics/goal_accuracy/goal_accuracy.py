@@ -55,8 +55,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ):
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, None, self.model, multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -80,17 +81,17 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 )
                 goal_scores = [
                     self._get_goal_accuracy_score(
-                        task.user_goal, task.steps_taken
+                        task.user_goal, task.steps_taken, multimodal
                     )
                     for task in goal_and_steps_taken
                 ]
                 plan_scores = [
-                    self._get_plan_scores(task.user_goal, task.steps_taken)
+                    self._get_plan_scores(task.user_goal, task.steps_taken, multimodal)
                     for task in goal_and_steps_taken
                 ]
                 self.score = self._calculate_score(goal_scores, plan_scores)
                 self.success = self.score >= self.threshold
-                self.reason = self._generate_reason(goal_scores, plan_scores)
+                self.reason = self._generate_reason(goal_scores, plan_scores, multimodal)
 
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -117,8 +118,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ):
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, None, self.model, multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -134,21 +136,21 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             goal_scores = await asyncio.gather(
                 *[
                     self._a_get_goal_accuracy_score(
-                        task.user_goal, task.steps_taken
+                        task.user_goal, task.steps_taken, multimodal
                     )
                     for task in goal_and_steps_taken
                 ]
             )
             plan_scores = await asyncio.gather(
                 *[
-                    self._a_get_plan_scores(task.user_goal, task.steps_taken)
+                    self._a_get_plan_scores(task.user_goal, task.steps_taken, multimodal)
                     for task in goal_and_steps_taken
                 ]
             )
             self.score = self._calculate_score(goal_scores, plan_scores)
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(
-                goal_scores, plan_scores
+                goal_scores, plan_scores, multimodal
             )
 
             self.verbose_logs = construct_verbose_logs(
@@ -191,9 +193,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             goal_and_steps_taken.append(new_goal_steps)
         return goal_and_steps_taken
 
-    def _get_plan_scores(self, user_goal, steps_taken):
+    def _get_plan_scores(self, user_goal, steps_taken, multimodal: bool):
         prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal, "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken), multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=PlanScore)
@@ -208,9 +210,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return PlanScore(**data)
 
-    async def _a_get_plan_scores(self, user_goal, steps_taken):
+    async def _a_get_plan_scores(self, user_goal, steps_taken, multimodal: bool):
         prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal, "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken), multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=PlanScore)
@@ -240,7 +242,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason(
-        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
+        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore], multimodal: bool
     ):
         goal_evaluations = ""
         for goal_score in goal_scores:
@@ -254,7 +256,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             )
 
         prompt = GoalAccuracyTemplate.get_final_reason(
-            self.score, self.threshold, goal_evaluations, plan_evalautions
+            self.score, self.threshold, goal_evaluations, plan_evalautions, multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -265,7 +267,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             return res
 
     async def _a_generate_reason(
-        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
+        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore], multimodal: bool
     ):
         goal_evaluations = ""
         for goal_score in goal_scores:
@@ -279,7 +281,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             )
 
         prompt = GoalAccuracyTemplate.get_final_reason(
-            self.score, self.threshold, goal_evaluations, plan_evalautions
+            self.score, self.threshold, goal_evaluations, plan_evalautions, multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -289,9 +291,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             res = await self.model.a_generate(prompt)
             return res
 
-    def _get_goal_accuracy_score(self, user_goal, steps_taken):
+    def _get_goal_accuracy_score(self, user_goal, steps_taken, multimodal: bool):
         prompt = GoalAccuracyTemplate.get_accuracy_score(
-            user_goal, "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken), multimodal
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalScore)
@@ -306,9 +308,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return GoalScore(**data)
 
-    async def _a_get_goal_accuracy_score(self, user_goal, steps_taken):
+    async def _a_get_goal_accuracy_score(self, user_goal, steps_taken, multimodal: bool):
         prompt = GoalAccuracyTemplate.get_accuracy_score(
-            user_goal, "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken), multimodal
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=GoalScore)

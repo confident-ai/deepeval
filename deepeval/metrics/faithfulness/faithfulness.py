@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_llm_test_case_params,
-    check_mllm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -69,12 +68,9 @@ class FaithfulnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        if multimodal:
-            check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self, self.model
-            )
-        else:
-            check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case, self._required_params, None, None, self, self.model, multimodal
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -127,12 +123,9 @@ class FaithfulnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        if multimodal:
-            check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self, self.model
-            )
-        else:
-            check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case, self._required_params, None, None, self, self.model, multimodal
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

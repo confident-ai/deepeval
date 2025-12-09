@@ -3,8 +3,16 @@ import textwrap
 
 
 class GoalAccuracyTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
-    def get_accuracy_score(task, steps_taken):
+    def get_accuracy_score(task, steps_taken, multimodal: bool = False):
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **goal accuracy** of an AI assistant's single interaction.
 
@@ -35,6 +43,8 @@ class GoalAccuracyTemplate:
                 5. **Strict bias toward failure**
                 - When uncertain, assume the goal was **not achieved**.
                 - The metric is designed to fail unless the assistant's output is precise, complete, and user-visible.
+
+                {GoalAccuracyTemplate.multimodal_rules if multimodal else ""}
 
                 SCORING GUIDE:
 
@@ -102,7 +112,7 @@ class GoalAccuracyTemplate:
         )
 
     @staticmethod
-    def get_plan_evaluation_score(task, steps_taken):
+    def get_plan_evaluation_score(task, steps_taken, multimodal: bool = False):
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **planning quality** and **plan adherence** of an AI agent tasked with fulfilling a user's request.
 
@@ -131,6 +141,8 @@ class GoalAccuracyTemplate:
                 - If no discernible plan exists, score ≤ 0.5 regardless of task completion.  
                 - Tool use should be coherent within the plan, not ad hoc or speculative.  
                 - This evaluation excludes correctness or efficiency — focus solely on plan and adherence.
+
+                {GoalAccuracyTemplate.multimodal_rules if multimodal else ""}
 
                 SCORING GUIDE:
 
@@ -188,7 +200,7 @@ class GoalAccuracyTemplate:
 
     @staticmethod
     def get_final_reason(
-        final_score, threshold, goal_evaluations, plan_evalautions
+        final_score, threshold, goal_evaluations, plan_evalautions, multimodal: bool = False
     ):
         return textwrap.dedent(
             f"""You are an expert evaluator providing a **final justification** for whether an AI agent has passed or failed an evaluation metric.
@@ -212,6 +224,8 @@ class GoalAccuracyTemplate:
                 - If the agent **passed**, highlight how both task execution and planning were sufficient to meet the goal.
                 - If the agent **failed**, explain which aspects (task or plan or both) led to the failure.
                 - Avoid vague praise or criticism — ground the reason in the actual scores and justifications.
+
+                {GoalAccuracyTemplate.multimodal_rules if multimodal else ""}
 
                 ---
 

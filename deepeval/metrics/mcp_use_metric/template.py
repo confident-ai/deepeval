@@ -3,6 +3,14 @@ import textwrap
 
 
 class MCPUseMetricTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def get_mcp_argument_correctness_prompt(
         test_case: LLMTestCase,
@@ -11,6 +19,8 @@ class MCPUseMetricTemplate:
     ):
         return textwrap.dedent(
             f"""Evaluate whether the arguments passed to each tool (primitive) used by the agent were appropriate and correct for the intended purpose. Focus on whether the input types, formats, and contents match the expectations of the tools and are suitable given the user's request.
+
+            {MCPUseMetricTemplate.multimodal_rules}
 
             You must return a JSON object with exactly two fields: 'score' and 'reason'.
 
@@ -67,6 +77,8 @@ class MCPUseMetricTemplate:
     ):
         return textwrap.dedent(
             f"""Evaluate whether the tools (primitives) selected and used by the agent were appropriate and correct for fulfilling the user’s request. Base your judgment on the user input, the agent’s visible output, and the tools that were available to the agent. You must return a JSON object with exactly two fields: 'score' and 'reason'.
+
+            {MCPUseMetricTemplate.multimodal_rules}
 
             Scoring:
             - 'score' is a float between 0 and 1 inclusive.

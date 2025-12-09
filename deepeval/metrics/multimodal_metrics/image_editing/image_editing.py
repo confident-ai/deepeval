@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple, Union
 import math
 import textwrap
 
-from deepeval.metrics import BaseMultimodalMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_editing.template import (
     ImageEditingTemplate,
@@ -15,7 +15,7 @@ from deepeval.utils import (
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
-    check_mllm_test_case_params,
+    check_llm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -23,7 +23,7 @@ from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
 
-class ImageEditingMetric(BaseMultimodalMetric):
+class ImageEditingMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
@@ -52,8 +52,8 @@ class ImageEditingMetric(BaseMultimodalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, 1, 1, self, self.model
+        check_llm_test_case_params(
+            test_case, self._required_params, 1, 1, self, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -117,8 +117,8 @@ class ImageEditingMetric(BaseMultimodalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, 1, 1, self, self.model
+        check_llm_test_case_params(
+            test_case, self._required_params, 1, 1, self, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -185,26 +185,24 @@ class ImageEditingMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
-        prompt = [
-            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+            text_prompt=text_prompt
+        )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt + images, schema=ReasonScore
+                f"{prompt} {images}", schema=ReasonScore
             )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    f"{prompt} {images}", schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
                 res = await self.model.a_generate(
-                    prompt + images, input_text=prompt
+                    f"{prompt} {images}", input_text=prompt
                 )
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
@@ -217,23 +215,21 @@ class ImageEditingMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
-        prompt = [
-            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+            text_prompt=text_prompt
+        )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images, schema=ReasonScore)
+            res, cost = self.model.generate(f"{prompt} {images}", schema=ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    f"{prompt} {images}", schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(f"{prompt} {images}")
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -246,18 +242,18 @@ class ImageEditingMetric(BaseMultimodalMetric):
         ]
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt + images, schema=ReasonScore
+                f"{prompt} {images}", schema=ReasonScore
             )
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    f"{prompt} {images}", schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(prompt + images)
+                res = await self.model.a_generate(f"{prompt} {images}")
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -269,17 +265,17 @@ class ImageEditingMetric(BaseMultimodalMetric):
             ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images, schema=ReasonScore)
+            res, cost = self.model.generate(f"{prompt} {images}", schema=ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    f"{prompt} {images}", schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(f"{prompt} {images}")
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 

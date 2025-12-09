@@ -51,7 +51,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             test_case,
             self._required_test_case_params,
             self,
-            require_chatbot_role=True,
+            True,
+            self.model,
+            test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -102,7 +104,9 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             test_case,
             self._required_test_case_params,
             self,
-            require_chatbot_role=True,
+            True,
+            self.model,
+            test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

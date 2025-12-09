@@ -3,7 +3,7 @@ from typing import Optional, List, Tuple, Union
 import math
 import textwrap
 
-from deepeval.metrics import BaseMultimodalMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
@@ -15,7 +15,7 @@ from deepeval.utils import (
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
-    check_mllm_test_case_params,
+    check_llm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -28,7 +28,7 @@ required_params: List[LLMTestCaseParams] = [
 ]
 
 
-class TextToImageMetric(BaseMultimodalMetric):
+class TextToImageMetric(BaseMetric):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -50,8 +50,8 @@ class TextToImageMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, required_params, 0, 1, self, self.model
+        check_llm_test_case_params(
+            test_case, required_params, 0, 1, self, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -110,8 +110,8 @@ class TextToImageMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, required_params, 0, 1, self, self.model
+        check_llm_test_case_params(
+            test_case, required_params, 0, 1, self, self.model, test_case.multimodal
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -269,7 +269,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             {images}
         """
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images, ReasonScore)
+            res, cost = self.model.generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:

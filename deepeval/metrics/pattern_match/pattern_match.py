@@ -42,7 +42,9 @@ class PatternMatchMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case, self._required_params, None, None, self, self.model, test_case.multimodal
+        )
 
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component

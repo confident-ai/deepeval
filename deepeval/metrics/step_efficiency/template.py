@@ -4,6 +4,13 @@ from deepeval.tracing.utils import make_json_serializable
 
 
 class StepEfficiencyTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
 
     @staticmethod
     def extract_task_from_trace(trace: dict) -> str:
@@ -41,6 +48,8 @@ class StepEfficiencyTemplate:
 
                 6. Fallback Condition
                 - If the only available information about the task is the raw user input text, return that input verbatim without modification.
+
+                {StepEfficiencyTemplate.multimodal_rules}
 
                 OUTPUT FORMAT:
 
@@ -176,6 +185,8 @@ class StepEfficiencyTemplate:
                 6. When in Doubt
                 - If it is unclear whether an action was required or not, **assume it was unnecessary** and lower the score.
                 - Err on the side of penalizing over generosity.
+
+                {StepEfficiencyTemplate.multimodal_rules}
 
                 SCORING SCALE (STRICT)
 

@@ -2,9 +2,20 @@ from typing import List
 
 
 class HallucinationTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def generate_verdicts(actual_output: str, contexts: List[str]):
         return f"""For each context in contexts, which is a list of strings, please generate a list of JSON objects to indicate whether the given 'actual output' agrees with EACH context. The JSON will have 2 fields: 'verdict' and 'reason'.
+
+{HallucinationTemplate.multimodal_rules}
+
 The 'verdict' key should STRICTLY be either 'yes' or 'no', and states whether the given text agrees with the context. 
 The 'reason' is the reason for the verdict. When the answer is 'no', try to provide a correction in the reason. 
 
@@ -45,6 +56,8 @@ JSON:
         factual_alignments: List[str], contradictions: List[str], score: float
     ):
         return f"""Given a list of factual alignments and contradictions, which highlights alignment/contradictions between the `actual output` and `contexts, use it to provide a reason for the hallucination score in a CONCISELY. Note that The hallucination score ranges from 0 - 1, and the lower the better.
+
+{HallucinationTemplate.multimodal_rules}
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
