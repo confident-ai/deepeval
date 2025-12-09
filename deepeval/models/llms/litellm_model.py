@@ -16,6 +16,8 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.utils import check_if_multimodal
+from deepeval.models.llms.utils import check_multimodal_validity
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -118,6 +120,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+        if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(),
+                self.name, 
+                self.__class__.__name__,
+            )
+
         from litellm import completion
 
         completion_params = {
@@ -173,6 +182,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+        if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(),
+                self.name, 
+                self.__class__.__name__,
+            )
+
         from litellm import acompletion
 
         completion_params = {

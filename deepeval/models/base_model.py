@@ -76,6 +76,9 @@ class DeepEvalBaseLLM(ABC):
             "batch_generate is not implemented for this model"
         )
 
+    def supports_multimodal(self):
+        return False
+
 
 class DeepEvalBaseEmbeddingModel(ABC):
     def __init__(self, model: Optional[str] = None, *args, **kwargs):

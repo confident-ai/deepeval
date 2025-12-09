@@ -18,7 +18,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.test_case import MLLMImage
 from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
-from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.utils import trim_and_load_json, check_multimodal_validity
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
@@ -26,6 +26,13 @@ from deepeval.models.utils import (
 )
 from deepeval.constants import ProviderSlug as PS
 
+valid_multimodal_models = [
+    "gpt-4o",
+    "gpt-4o-mini",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-5",
+]
 
 retry_azure = create_retry_decorator(PS.AZURE)
 
@@ -100,6 +107,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
 
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -162,6 +175,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -232,6 +251,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
@@ -258,6 +283,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=True)
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
@@ -365,6 +396,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        return True
 
     def get_model_name(self):
         return f"{self.name} (Azure)"

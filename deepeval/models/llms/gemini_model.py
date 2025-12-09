@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Optional, Dict, List, Union
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import require_secret_api_key
+from deepeval.models.llms.utils import check_multimodal_validity
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -17,6 +18,13 @@ from deepeval.utils import (
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
+valid_multimodal_models = [
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    # TODO: Add more models later
+]
 
 if TYPE_CHECKING:
     from google.genai import Client
@@ -206,6 +214,12 @@ class GeminiModel(DeepEvalBaseLLM):
         client = self.load_model()
 
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -250,6 +264,12 @@ class GeminiModel(DeepEvalBaseLLM):
         client = self.load_model()
 
         if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(), 
+                self.name, 
+                self.__class__.__name__,
+                valid_multimodal_models
+            )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -355,6 +375,9 @@ class GeminiModel(DeepEvalBaseLLM):
             client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
+    
+    def supports_multimodal(self):
+        return True
 
     def get_model_name(self):
         return f"{self.name} (Gemini)"

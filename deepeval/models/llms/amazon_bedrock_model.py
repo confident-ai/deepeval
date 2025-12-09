@@ -9,6 +9,8 @@ from deepeval.models.retry_policy import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
+from deepeval.utils import check_if_multimodal
+from deepeval.models.llms.utils import check_multimodal_validity
 
 # check aiobotocore availability
 try:
@@ -74,6 +76,13 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        
+        if check_if_multimodal(prompt):
+            check_multimodal_validity(
+                self.supports_multimodal(),
+                self.name, 
+                self.__class__.__name__,
+            )
         try:
             payload = self.get_converse_request_body(prompt)
             client = await self._ensure_client()
