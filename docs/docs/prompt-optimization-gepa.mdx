@@ -19,7 +19,7 @@ Pareto selection in GEPA prevents optimization from converging at a local maximu
 
 ## Optimize Prompts With GEPA
 
-To optimize a prompt using GEPA, first simply provide a `GEPA` algorithm instance to the `optimize()` method:
+To optimize a prompt using GEPA, simply provide a `GEPA` algorithm instance to the `optimize()` method:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -49,7 +49,7 @@ Since `GEPA` is already the default for `algorithm`, unless you wish to configur
 
 ## Customize GEPA
 
-You can customize GEPA's behavior by passing parameters directly to the `GEPA` constructor:
+You can customize GEPA's behavior by passing arguments directly to the `GEPA` constructor:
 
 ```python
 from deepeval.optimizer.algorithms import GEPA
