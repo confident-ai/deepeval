@@ -6,6 +6,8 @@ sidebar_label: AI Agent Evaluation
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
+**AI agent evaluation** is the process of measuring how well an agent reasons, selects and calls tools, and completes tasks—separately at each layer—so you can pinpoint exactly what's broken. But first, what is an AI agent?
+
 An AI agent is an LLM-powered system that autonomously reasons about tasks, creates plans, and executes actions using external tools to accomplish user goals. Unlike simple LLM applications that respond to single prompts, agents operate in loops—reasoning, acting, observing results, and adapting their approach until the task is complete.
 
 :::info
@@ -13,8 +15,6 @@ AI agents consist of two layers: the **reasoning layer** (powered by LLMs) handl
 :::
 
 Since a successful agent outcome depends entirely on the quality of both reasoning and action, AI agent evaluation focuses on evaluating these layers separately. This allows for easier debugging and to pinpoint issues at the **component-level.**
-
-In a nutshell, **AI agent evaluation** is the process of measuring how well an agent reasons, selects and calls tools, and completes tasks—separately at each layer—so you can pinpoint exactly what's broken.
 
 _For a comprehensive breakdown of each agentic metric, see the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)._
 
