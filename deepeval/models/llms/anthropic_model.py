@@ -69,7 +69,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     @retry_anthropic
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         chat_model = self.load_model()
         message = chat_model.messages.create(
@@ -96,7 +96,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     @retry_anthropic
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(

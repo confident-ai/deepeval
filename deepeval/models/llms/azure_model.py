@@ -94,7 +94,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     @retry_azure
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
         if check_if_multimodal(prompt):

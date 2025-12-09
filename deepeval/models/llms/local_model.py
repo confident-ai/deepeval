@@ -61,7 +61,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=False)
         response: ChatCompletion = client.chat.completions.create(
@@ -81,7 +81,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=True)
         response: ChatCompletion = await client.chat.completions.create(

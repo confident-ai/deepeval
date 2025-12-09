@@ -1,7 +1,7 @@
 import json
 import requests
 from pydantic import BaseModel, SecretStr
-from typing import TYPE_CHECKING, Optional, Dict, List, Union
+from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
@@ -194,7 +194,9 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
 
     @retry_gemini
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+    def generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Generates text from a prompt.
 
         Args:
@@ -239,7 +241,7 @@ class GeminiModel(DeepEvalBaseLLM):
     @retry_gemini
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> str:
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Asynchronously generates text from a prompt.
 
         Args:

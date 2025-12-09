@@ -63,7 +63,7 @@ class GrokModel(DeepEvalBaseLLM):
     @retry_grok
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         try:
             from xai_sdk.chat import user
@@ -102,7 +102,7 @@ class GrokModel(DeepEvalBaseLLM):
     @retry_grok
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         try:
             from xai_sdk.chat import user

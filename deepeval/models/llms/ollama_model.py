@@ -56,7 +56,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model()
 
         if check_if_multimodal(prompt):
@@ -86,7 +86,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):

@@ -64,7 +64,7 @@ class KimiModel(DeepEvalBaseLLM):
     @retry_kimi
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=False)
         if schema and self.model_data.supports_json:
@@ -103,7 +103,7 @@ class KimiModel(DeepEvalBaseLLM):
     @retry_kimi
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=True)
         if schema and self.model_data.supports_json:

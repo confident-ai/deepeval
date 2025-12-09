@@ -117,7 +117,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
     )
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Union[str, Dict, Tuple[str, float]]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         from litellm import completion
 
@@ -173,7 +173,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
     )
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Union[str, Dict, Tuple[str, float]]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         from litellm import acompletion
 
