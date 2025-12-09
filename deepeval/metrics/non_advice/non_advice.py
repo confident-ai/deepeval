@@ -7,15 +7,24 @@ from deepeval.test_case import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.metrics.non_advice.template import NonAdviceTemplate
-from deepeval.metrics.non_advice.schema import *
+from deepeval.metrics.non_advice.schema import (
+    NonAdviceVerdict,
+    Verdicts,
+    Advices,
+    NonAdviceScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -159,7 +168,7 @@ class NonAdviceMetric(BaseMetric):
 
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -172,25 +181,15 @@ class NonAdviceMetric(BaseMetric):
             non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=NonAdviceScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=NonAdviceScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: NonAdviceScoreReason = await self.model.a_generate(
-                    prompt, schema=NonAdviceScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
-
-    def _generate_reason(self) -> str:
+    def _generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -203,111 +202,71 @@ class NonAdviceMetric(BaseMetric):
             non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
-
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=NonAdviceScoreReason)
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: NonAdviceScoreReason = self.model.generate(
-                    prompt, schema=NonAdviceScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=NonAdviceScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(self) -> List[NonAdviceVerdict]:
         if len(self.advices) == 0:
             return []
 
-        verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             advices=self.advices
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    NonAdviceVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                NonAdviceVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(self) -> List[NonAdviceVerdict]:
         if len(self.advices) == 0:
             return []
 
-        verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             advices=self.advices
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    NonAdviceVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                NonAdviceVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     async def _a_generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
             actual_output=actual_output, advice_types=self.advice_types
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Advices)
-            self.evaluation_cost += cost
-            return res.advices
-        else:
-            try:
-                res: Advices = await self.model.a_generate(
-                    prompt, schema=Advices
-                )
-                return res.advices
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["advices"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Advices,
+            extract_schema=lambda s: s.advices,
+            extract_json=lambda data: data["advices"],
+        )
 
     def _generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
             actual_output=actual_output, advice_types=self.advice_types
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Advices)
-            self.evaluation_cost += cost
-            return res.advices
-        else:
-            try:
-                res: Advices = self.model.generate(prompt, schema=Advices)
-                return res.advices
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["advices"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Advices,
+            extract_schema=lambda s: s.advices,
+            extract_json=lambda data: data["advices"],
+        )
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -328,7 +287,7 @@ class NonAdviceMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
