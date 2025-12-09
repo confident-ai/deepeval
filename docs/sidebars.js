@@ -146,24 +146,24 @@ module.exports = {
         },
         {
           type: "category",
-          label: "Others",
-          items: [
-            "metrics-summarization",
-            "metrics-prompt-alignment",
-            "metrics-hallucination",
-            "metrics-ragas",
-          ],
-          collapsed: true,
-        },
-        {
-          type: "category",
-          label: "Multimodal",
+          label: "Images",
           items: [
             "multimodal-metrics-image-coherence",
             "multimodal-metrics-image-helpfulness",
             "multimodal-metrics-image-reference",
             "multimodal-metrics-text-to-image",
             "multimodal-metrics-image-editing",
+          ],
+          collapsed: true,
+        },
+        {
+          type: "category",
+          label: "Others",
+          items: [
+            "metrics-summarization",
+            "metrics-prompt-alignment",
+            "metrics-hallucination",
+            "metrics-ragas",
           ],
           collapsed: true,
         },
