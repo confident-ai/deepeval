@@ -3,9 +3,10 @@ from typing import Optional, List, Union, Dict
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
@@ -187,56 +188,37 @@ class PlanQualityMetric(BaseMetric):
         prompt = PlanQualityTemplate.evaluate_plan_quality(
             task, "\n".join(plan)
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=PlanQualityScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = self.model.generate(prompt, schema=PlanQualityScore)
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return PlanQualityScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=PlanQualityScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: PlanQualityScore(**data),
+        )
 
     async def _a_get_plan_quality_score(self, task, plan):
         prompt = PlanQualityTemplate.evaluate_plan_quality(
             task, "\n".join(plan)
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=PlanQualityScore
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = await self.model.a_generate(
-                    prompt, schema=PlanQualityScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return PlanQualityScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=PlanQualityScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: PlanQualityScore(**data),
+        )
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
         prompt = PlanAdherenceTemplate.extract_plan_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=AgentPlan)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = self.model.generate(prompt, schema=AgentPlan)
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return AgentPlan(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=AgentPlan,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: AgentPlan(**data),
+        )
 
     async def _a_extract_plan_from_trace(
         self, test_case: LLMTestCase
@@ -244,54 +226,37 @@ class PlanQualityMetric(BaseMetric):
         prompt = PlanAdherenceTemplate.extract_plan_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=AgentPlan)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = await self.model.a_generate(
-                    prompt, schema=AgentPlan
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return AgentPlan(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=AgentPlan,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: AgentPlan(**data),
+        )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Task)
-            self.evaluation_cost += cost
-            return res.task
-        else:
-            try:
-                res: Task = self.model.generate(prompt, schema=Task)
-                return res.task
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Task)
-            self.evaluation_cost += cost
-            return res.task
-        else:
-            try:
-                res: Task = await self.model.a_generate(prompt, schema=Task)
-                return res.task
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -299,7 +264,7 @@ class PlanQualityMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
