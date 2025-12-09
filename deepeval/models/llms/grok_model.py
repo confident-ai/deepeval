@@ -243,3 +243,6 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Grok)"

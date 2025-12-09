@@ -365,3 +365,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Azure)"

@@ -62,6 +62,10 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
     def batch_generate(self, *args, **kwargs) -> List[str]:
         """Runs the model to output LLM responses.
 
@@ -71,9 +75,6 @@ class DeepEvalBaseLLM(ABC):
         raise NotImplementedError(
             "batch_generate is not implemented for this model"
         )
-
-    def get_model_name(self, *args, **kwargs) -> str:
-        return self.name
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
@@ -126,5 +127,6 @@ class DeepEvalBaseEmbeddingModel(ABC):
         """
         pass
 
+    @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name

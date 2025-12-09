@@ -139,3 +139,6 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 client_init_kwargs.pop("max_retries", None)
                 return cls(**client_init_kwargs)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Azure)"

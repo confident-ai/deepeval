@@ -355,3 +355,6 @@ class GeminiModel(DeepEvalBaseLLM):
             client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
+    
+    def get_model_name(self):
+        return f"{self.name} (Gemini)"
