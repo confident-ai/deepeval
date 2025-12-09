@@ -64,7 +64,7 @@ async def test_mlllm_async_persists_metric_on_cancel(
             _is_assert_test=False,
             progress=None,
             pbar_id=None,
-            use_cache=True
+            use_cache=True,
         ),
         timeout=0.05,  # short timeout
     )
