@@ -32,7 +32,7 @@ class Golden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
-    multimodal: bool = False
+    multimodal: bool = Field(False, exclude=True)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
@@ -85,7 +85,7 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     turns: Optional[List[Turn]] = Field(default=None)
-    multimodal: bool = False
+    multimodal: bool = Field(False, exclude=True)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
