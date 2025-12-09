@@ -18,7 +18,6 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-
 ##############################
 # Validation tests           #
 ##############################
