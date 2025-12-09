@@ -13,7 +13,12 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-<MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
+<MetricTagsDisplayer
+  singleTurn={true}
+  rag={true}
+  referenceless={true}
+  multimodal={true}
+/>
 
 The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -88,8 +93,8 @@ metric = FaithfulnessMetric(
     include_reason=True
 )
 test_case = LLMTestCase(
-    input=f"Tell me about some landmarks in France",
-    actual_output=f"The Eiffel Tower {MLLMImage(...)} is a famous landmark in France"
+    input=f"Tell me about this landmark in France: {MLLMImage(...)}",
+    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
     retrieval_context=retrieval_context
 )
 

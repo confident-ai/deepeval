@@ -30,7 +30,6 @@ Custom metrics allow you to define your **custom criteria** using SOTA implement
 - DAG (Deep Acyclic Graph)
 - Conversational G-Eval
 - Conversational DAG
-- Multi-modal G-Eval
 - Arena G-Eval
 - Do it yourself, 100% self-coded metrics (e.g. if you want to use BLEU, ROUGE)
 
@@ -55,10 +54,14 @@ RAG (retrieval augmented generation) metrics focus on the **retriever and genera
 
 <TabItem value="agents" label="Agents">
 
-Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are two main agentic metrics:
+Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are six main agentic metrics:
 
 - Task Completion
+- Argument Correctness
 - Tool Correctness
+- Step Efficiency
+- Plan Adherence
+- Plan Quality
 
 The task completion metric does not require a test case and will take an LLM trace to evaluate task completion (i.e. you'll have to [setup LLM tracing](/docs/evaluation-llm-tracing)).
 
@@ -92,22 +95,17 @@ For those looking for a full-blown LLM red teaming orchestration frameowork, che
 
 </TabItem>
 
-<TabItem value="multi-modal" label="Multimodal">
+<TabItem value="image" label="Image">
 
-Multimodal metrics in `deepeval` currently supports images, and the RAG metrics but for a multimodal use case. They include:
+Metrics in `deepeval` are multi-modal by default, metrics targetting images are metrics that definitely expects an image in the test case. They include:
 
 - Image Coherence
 - Image Helpfulness
 - Image Reference
 - Text-to-Image
 - Image-Editing
-- Multimodal Answer Relevancy
-- Multimodal Faithfulness
-- Multimodal Contextual Relevancy
-- Multimodal Contextual Recall
-- Multimodal Contextual Precision
 
-Note that multimodal metrics requires `MLLMTestCase`s instead.
+Note that multi-modal metrics requires [`MLLMImage`s](/docs/evaluation-test-cases#mllmimage-data-model) in `LLMTestCase`s.
 
 </TabItem>
 
@@ -209,25 +207,6 @@ print(professionalism_metric.score, professionalism_metric.reason)
 
 </TabItem>
 
-<TabItem value="multimodal" label="Multimodal G-Eval">
-
-```python
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics import MultimodalGEval
-
-m_test_case = MLLMTestCase(input=[...], actual_output=[...])
-text_image_coherence = MultimodalGEval(
-    name="Text-Image Coherence",
-    criteria="Determine whether the images and text is coherence in the actual output.",
-    evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
-)
-
-text_image_coherence.measure(convo_test_case)
-print(text_image_coherence.score, text_image_coherence.reason)
-```
-
-</TabItem>
 </Tabs>
 
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
@@ -321,13 +300,13 @@ print(role_adherence.score, role_adherence.reason)
 
 </TabItem>
 
-<TabItem value="Multimodal" label="Multimodal">
+<TabItem value="Images" label="Images">
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageCoherenceMetric
 
-m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
 image_coherence.measure(m_test_case)

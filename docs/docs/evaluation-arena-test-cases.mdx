@@ -9,7 +9,7 @@ sidebar_label: Arena
 An **arena test case** is a blueprint provided by `deepeval` for you to compare which iteration of your LLM app performed better. It works by comparing each contestants's `LLMTestCase` to run comparisons, and currently only supports the `LLMTestCase` for single-turn, text-based comparisons.
 
 :::info
-Support for `ConversationalTestCase` and `MLLMTestCase` is coming soon.
+Support for `ConversationalTestCase` is coming soon.
 :::
 
 The `ArenaTestCase` currently only runs with the `ArenaGEval` metric, and all that is required is to provide a list of `Contestant`s:

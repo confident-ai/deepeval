@@ -16,7 +16,12 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-<MetricTagsDisplayer singleTurn={true} referenceless={true} rag={true} />
+<MetricTagsDisplayer
+  singleTurn={true}
+  referenceless={true}
+  rag={true}
+  multimodal={true}
+/>
 
 The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -78,9 +83,9 @@ metric = AnswerRelevancyMetric(
     include_reason=True
 )
 test_case = LLMTestCase(
-    input=f"Tell me about some landmarks in France",
+    input=f"Tell me about this landmark in France: {MLLMImage(...)}",
     # Replace this with the output from your LLM app
-    actual_output=f"The Eiffel Tower {MLLMImage(...)} is a famous landmark in France"
+    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
 )
 
 # To run metric as a standalone
