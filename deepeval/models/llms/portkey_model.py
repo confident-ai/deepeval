@@ -142,6 +142,6 @@ class PortkeyModel(DeepEvalBaseLLM):
 
     def load_model(self):
         return None
-    
+
     def get_model_name(self):
         return f"{self.name} (Portkey)"
