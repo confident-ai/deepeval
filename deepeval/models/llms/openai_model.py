@@ -335,10 +335,10 @@ class GPTModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
@@ -405,10 +405,10 @@ class GPTModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
@@ -481,10 +481,10 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
@@ -513,10 +513,10 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)

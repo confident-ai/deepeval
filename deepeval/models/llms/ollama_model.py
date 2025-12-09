@@ -71,10 +71,10 @@ class OllamaModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(prompt)
             messages = self.generate_messages(prompt)
@@ -108,10 +108,10 @@ class OllamaModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(prompt)
             messages = self.generate_messages(prompt)
@@ -219,7 +219,7 @@ class OllamaModel(DeepEvalBaseLLM):
             **self._client_kwargs(),
         )
         return cls(**kw)
-    
+
     def supports_multimodal(self):
         return True
 

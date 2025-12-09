@@ -76,11 +76,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        
+
         if check_if_multimodal(prompt):
             check_multimodal_validity(
                 self.supports_multimodal(),
-                self.name, 
+                self.name,
                 self.__class__.__name__,
             )
         try:

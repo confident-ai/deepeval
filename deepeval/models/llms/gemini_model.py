@@ -215,10 +215,10 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
@@ -265,10 +265,10 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             check_multimodal_validity(
-                self.supports_multimodal(), 
-                self.name, 
+                self.supports_multimodal(),
+                self.name,
                 self.__class__.__name__,
-                valid_multimodal_models
+                valid_multimodal_models,
             )
             prompt = convert_to_multi_modal_array(prompt)
             prompt = self.generate_prompt(prompt)
@@ -375,7 +375,7 @@ class GeminiModel(DeepEvalBaseLLM):
             client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
-    
+
     def supports_multimodal(self):
         return True
 

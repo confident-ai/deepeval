@@ -3,12 +3,8 @@ import re
 import json
 import asyncio
 
-MULTIMODAL_MODELS = [
-    "GPTModel",
-    "AzureModel",
-    "GeminiModel",
-    "OllamaModel"
-]
+MULTIMODAL_MODELS = ["GPTModel", "AzureModel", "GeminiModel", "OllamaModel"]
+
 
 def trim_and_load_json(
     input_string: str,
@@ -51,8 +47,8 @@ def safe_asyncio_run(coro):
 
 
 def check_multimodal_validity(
-    supports_multimodal: bool, 
-    model_name: str, 
+    supports_multimodal: bool,
+    model_name: str,
     class_name: str,
     valid_multimodal_models: Optional[List[str]] = None,
 ):

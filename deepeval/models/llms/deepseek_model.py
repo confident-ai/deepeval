@@ -79,7 +79,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             check_multimodal_validity(
                 self.supports_multimodal(),
-                self.name, 
+                self.name,
                 self.__class__.__name__,
             )
 
@@ -120,7 +120,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             check_multimodal_validity(
                 self.supports_multimodal(),
-                self.name, 
+                self.name,
                 self.__class__.__name__,
             )
 
