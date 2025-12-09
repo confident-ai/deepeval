@@ -1,5 +1,5 @@
 import pytest
-
+import os
 from deepeval.errors import DeepEvalError
 from deepeval.optimizer.configs import DisplayConfig
 from deepeval.optimizer.prompt_optimizer import PromptOptimizer
@@ -10,6 +10,13 @@ from tests.test_core.stubs import (
     _DummyMetric,
     DummyProgress,
 )
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
+
 
 
 ##############################
