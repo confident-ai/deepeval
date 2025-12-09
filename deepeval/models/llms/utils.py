@@ -54,7 +54,6 @@ def check_multimodal_validity(
 ):
     if supports_multimodal:
         if model_name not in valid_multimodal_models:
-            print(model_name, valid_multimodal_models)
             raise ValueError(
                 f"The evaluation model {model_name} does not support multimodal evaluations at the moment. Available multi-modal models for the {class_name} provider includes {', '.join(valid_multimodal_models)}."
             )
