@@ -60,11 +60,11 @@ class BinaryJudgementTemplate:
 {text}
 
 **
-IMPORTANT: Please make sure to only return a json with two keys: `verdict` (True or False), and the 'reason' key providing the reason. The verdict must be a boolean only, either True or False.
+IMPORTANT: Please make sure to only return a json with two keys: `verdict` (true or false), and the 'reason' key providing the reason. The verdict must be a boolean only, either true or false.
 Example JSON:
 {{
     "reason": "...",
-    "verdict": True
+    "verdict": true
 }}
 **
 
