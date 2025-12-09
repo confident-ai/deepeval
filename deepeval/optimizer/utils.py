@@ -22,6 +22,7 @@ from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
 from deepeval.optimizer.types import (
+    ModelCallback,
     ModuleId,
     PromptConfigurationId,
     PromptConfiguration,
@@ -157,7 +158,7 @@ def normalize_seed_prompts(
 
 def invoke_model_callback(
     *,
-    model_callback: Callable[..., str],
+    model_callback: ModelCallback,
     prompt: Prompt,
     golden: Union["Golden", "ConversationalGolden"],
 ) -> str:
@@ -178,7 +179,7 @@ def invoke_model_callback(
 
 async def a_invoke_model_callback(
     *,
-    model_callback: Callable[..., str],
+    model_callback: ModelCallback,
     prompt: Prompt,
     golden: Union["Golden", "ConversationalGolden"],
 ) -> str:
@@ -367,8 +368,8 @@ def validate_sequence_of(
 def validate_callback(
     *,
     component: str,
-    model_callback: Optional[Callable[..., str]],
-) -> Callable[..., str]:
+    model_callback: Optional[ModelCallback],
+) -> ModelCallback:
     """
     Ensure that `model_callback` is provided.
 

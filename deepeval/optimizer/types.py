@@ -4,22 +4,29 @@ from abc import ABC, abstractmethod
 
 from dataclasses import dataclass
 from typing import (
-    Any,
     Callable,
     Dict,
     List,
     Optional,
     TypedDict,
+    TYPE_CHECKING,
+    Union,
 )
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 from deepeval.prompt.prompt import Prompt
 
+if TYPE_CHECKING:
+    from deepeval.dataset.golden import Golden, ConversationalGolden
+
 PromptConfigurationId = str
 ModuleId = str
 ScoreVector = List[float]  # scores per instance on D_pareto, aligned order
 ScoreTable = Dict[PromptConfigurationId, ScoreVector]
+
+# Type alias for model callback function
+ModelCallback = Callable[[Prompt, Union["Golden", "ConversationalGolden"]], str]
 
 
 @dataclass

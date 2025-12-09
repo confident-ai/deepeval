@@ -28,6 +28,7 @@ from deepeval.test_case import (
 from deepeval.prompt.prompt import Prompt
 
 from deepeval.optimizer.types import (
+    ModelCallback,
     PromptConfiguration,
     Objective,
     MeanObjective,
@@ -56,7 +57,7 @@ class Scorer(BaseScorer):
 
     def __init__(
         self,
-        model_callback: Callable[..., str],
+        model_callback: ModelCallback,
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         max_concurrent: int,
         throttle_seconds: float,

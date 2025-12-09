@@ -24,6 +24,7 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.optimizer.scorer import Scorer
 from deepeval.optimizer.rewriter import Rewriter
 from deepeval.optimizer.types import (
+    ModelCallback,
     RunnerStatusType,
 )
 from deepeval.optimizer.utils import (
@@ -50,34 +51,9 @@ from deepeval.optimizer.algorithms.configs import (
 
 
 class PromptOptimizer:
-    """
-    High-level entrypoint for prompt optimization.
-
-    Typical usage:
-
-        optimizer = PromptOptimizer(
-            optimizer_model=GPTModel(),  # for internal prompt rewriting
-            model_callback=my_callback,  # for running your AI app during scoring
-            metrics=[AnswerRelevancyMetric()],
-        )
-
-        optimized_prompt = optimizer.optimize(
-            prompt=Prompt(text_template="Respond to the query."),
-            goldens=goldens,
-        )
-
-    The `optimizer_model` is used internally for prompt rewriting/mutation.
-    The `model_callback` is called during scoring to run your AI app.
-    Your callback receives `prompt` and `golden` - call `prompt.interpolate(...)`
-    with the golden's input to get the final prompt to send to your model.
-
-    By default uses GEPA algorithm. Pass a different algorithm instance
-    (MIPROV2, COPRO, SIMBA) to use a different optimization strategy.
-    """
-
     def __init__(
         self,
-        model_callback: Callable[..., str],
+        model_callback: ModelCallback,
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         optimizer_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         algorithm: Union[GEPA, MIPROV2, COPRO, SIMBA] = GEPA(),
