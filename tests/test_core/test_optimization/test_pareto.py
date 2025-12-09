@@ -1,6 +1,6 @@
 import random
 
-from deepeval.optimization.policies.selection import (
+from deepeval.optimizer.policies import (
     pareto_frontier,
     frequency_weights,
     select_prompt_configuration_pareto,
