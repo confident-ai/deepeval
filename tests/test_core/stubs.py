@@ -536,7 +536,7 @@ class StubScoringAdapter:
     Minimal scoring adapter stub for exercising GEPARunner and other
     single-module optimization runners.
 
-    - score_on_pareto / minibatch_score:
+    - score_pareto / score_minibatch:
         returns higher scores for prompts whose text contains "CHILD"
         so that "improved" children can be accepted.
     """
@@ -556,22 +556,24 @@ class StubScoringAdapter:
         prompt = next(iter(prompt_configuration.prompts.values()))
         return (prompt.text_template or "").strip()
 
-    def score_on_pareto(self, prompt_configuration, d_pareto):
+    def score_pareto(self, prompt_configuration, d_pareto):
         self.pareto_calls.append((prompt_configuration, list(d_pareto)))
         txt = self._get_prompt_text(prompt_configuration)
         return [1.0] if "CHILD" in txt else [0.5]
 
-    async def a_score_on_pareto(self, prompt_configuration, d_pareto):
+    async def a_score_pareto(self, prompt_configuration, d_pareto):
         self.a_pareto_calls.append((prompt_configuration, list(d_pareto)))
-        return self.score_on_pareto(prompt_configuration, d_pareto)
+        return self.score_pareto(prompt_configuration, d_pareto)
 
-    def minibatch_feedback(self, prompt_configuration, module_id, minibatch):
+    def get_minibatch_feedback(
+        self, prompt_configuration, module_id, minibatch
+    ):
         self.feedback_calls.append(
             (prompt_configuration, module_id, list(minibatch))
         )
         return "feedback"
 
-    async def a_minibatch_feedback(
+    async def a_get_minibatch_feedback(
         self, prompt_configuration, module_id, minibatch
     ):
         self.a_feedback_calls.append(
@@ -579,14 +581,14 @@ class StubScoringAdapter:
         )
         return "feedback"
 
-    def minibatch_score(self, prompt_configuration, minibatch):
+    def score_minibatch(self, prompt_configuration, minibatch):
         self.score_calls.append((prompt_configuration, list(minibatch)))
         txt = self._get_prompt_text(prompt_configuration)
         return 1.0 if "CHILD" in txt else 0.5
 
-    async def a_minibatch_score(self, prompt_configuration, minibatch):
+    async def a_score_minibatch(self, prompt_configuration, minibatch):
         self.a_score_calls.append((prompt_configuration, list(minibatch)))
-        return self.minibatch_score(prompt_configuration, minibatch)
+        return self.score_minibatch(prompt_configuration, minibatch)
 
 
 ##################

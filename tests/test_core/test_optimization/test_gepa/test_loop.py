@@ -7,7 +7,11 @@ from tests.test_core.stubs import (
 )
 from deepeval.errors import DeepEvalError
 from deepeval.optimizer.algorithms import GEPA
-from deepeval.optimizer.types import PromptConfiguration, RunnerStatusType
+from deepeval.optimizer.types import (
+    PromptConfiguration,
+    RunnerStatusType,
+    OptimizationReport,
+)
 from deepeval.prompt.prompt import Prompt
 
 
@@ -80,25 +84,23 @@ def test_execute_end_to_end_accepts_improved_child_prompt() -> None:
     assert isinstance(best_prompt, Prompt)
     assert best_prompt.text_template == "base CHILD"
 
-    # Report should be the runtime dict payload
-    assert isinstance(report, dict)
+    # Report should be an OptimizationReport
+    assert isinstance(report, OptimizationReport)
 
     # Reasonable sanity checks on the report payload
-    assert set(report.keys()) >= {
-        "optimization_id",
-        "best_id",
-        "accepted_iterations",
-        "pareto_scores",
-        "parents",
-        "prompt_configurations",
-    }
+    assert report.optimization_id is not None
+    assert report.best_id is not None
+    assert report.accepted_iterations is not None
+    assert report.pareto_scores is not None
+    assert report.parents is not None
+    assert report.prompt_configurations is not None
 
-    assert len(report["accepted_iterations"]) == 1
+    assert len(report.accepted_iterations) == 1
 
     # prompt_configurations should contain at least the best config id
-    prompt_cfgs = report["prompt_configurations"]
+    prompt_cfgs = report.prompt_configurations
     assert isinstance(prompt_cfgs, dict)
-    assert report["best_id"] in prompt_cfgs
+    assert report.best_id in prompt_cfgs
 
 
 @pytest.mark.asyncio
@@ -124,19 +126,17 @@ async def test_a_execute_end_to_end_accepts_improved_child_prompt() -> None:
     assert isinstance(best_prompt, Prompt)
     assert best_prompt.text_template == "base CHILD"
 
-    assert isinstance(report, dict)
-    assert set(report.keys()) >= {
-        "optimization_id",
-        "best_id",
-        "accepted_iterations",
-        "pareto_scores",
-        "parents",
-        "prompt_configurations",
-    }
+    assert isinstance(report, OptimizationReport)
+    assert report.optimization_id is not None
+    assert report.best_id is not None
+    assert report.accepted_iterations is not None
+    assert report.pareto_scores is not None
+    assert report.parents is not None
+    assert report.prompt_configurations is not None
 
-    prompt_cfgs = report["prompt_configurations"]
+    prompt_cfgs = report.prompt_configurations
     assert isinstance(prompt_cfgs, dict)
-    assert report["best_id"] in prompt_cfgs
+    assert report.best_id in prompt_cfgs
 
 
 ##########################

@@ -6,7 +6,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
-from deepeval.optimizer.types import PromptConfiguration
+from deepeval.optimizer.types import PromptConfiguration, OptimizationReport
 from deepeval.optimizer.algorithms import SIMBA
 from deepeval.optimizer.algorithms.simba.types import SIMBAStrategy
 
@@ -165,10 +165,10 @@ def test_execute_accepts_children_and_respects_population():
     assert "CHILD" in (best_prompt.text_template or "")
 
     # Optimization report basic shape
-    assert isinstance(report, dict)
-    assert "best_id" in report
-    assert "optimization_id" in report
-    assert "accepted_iterations" in report
+    assert isinstance(report, OptimizationReport)
+    assert report.best_id is not None
+    assert report.optimization_id is not None
+    assert report.accepted_iterations is not None
 
     # Population bound respected
     assert len(runner.prompt_configurations_by_id) <= runner.population_size
@@ -203,8 +203,8 @@ async def test_a_execute_uses_async_paths_and_accepts_children():
     assert isinstance(best_prompt, Prompt)
     assert "CHILD" in (best_prompt.text_template or "")
 
-    assert isinstance(report, dict)
-    assert "best_id" in report
+    assert isinstance(report, OptimizationReport)
+    assert report.best_id is not None
 
     # Async scoring methods should have been exercised
     assert scoring.a_score_calls  # a_minibatch_score

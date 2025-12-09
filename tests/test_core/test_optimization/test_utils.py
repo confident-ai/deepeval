@@ -1,20 +1,14 @@
-import asyncio
 import random
 
 import pytest
 
 from tests.test_core.stubs import StubProvider, StubModelSettings, StubPrompt
-from deepeval.prompt.prompt import Prompt, PromptMessage
+from deepeval.prompt.prompt import Prompt
 from deepeval.errors import DeepEvalError
-from deepeval.optimizer.types import PromptConfiguration, OptimizationReport
 from deepeval.optimizer.utils import (
-    a_invoke_model_callback,
     generate_module_id,
-    invoke_model_callback,
     normalize_seed_prompts,
     split_goldens,
-    build_prompt_config_snapshots,
-    inflate_prompts_from_report,
     validate_callback,
     validate_instance,
     validate_sequence_of,
@@ -53,7 +47,7 @@ def test_split_goldens_single_all_goes_to_pareto() -> None:
         goldens, pareto_size=3, random_state=rng
     )
 
-    # With a single example, we can’t form a feedback set;
+    # With a single example, we can't form a feedback set;
     # everything goes to D_pareto.
     assert d_feedback == []
     assert d_pareto == ["g0"]
@@ -219,261 +213,6 @@ def test_validate_callback_returns_same_callable() -> None:
     )
 
     assert result is cb
-
-
-###################################################
-# invoke_model_callback / a_invoke_model_callback #
-###################################################
-
-
-def test_invoke_model_callback_filters_kwargs_and_injects_hook() -> None:
-    captured: dict[str, str] = {}
-
-    def cb(prompt_text, hook):
-        captured["prompt_text"] = prompt_text
-        captured["hook"] = hook
-        return "ok"
-
-    candidate_kwargs = {
-        "prompt": "ignored",
-        "prompt_text": "the prompt",
-        "golden": "ignored",
-        "feedback_text": "also ignored",
-    }
-
-    result = invoke_model_callback(
-        hook="score_generate",
-        model_callback=cb,
-        candidate_kwargs=candidate_kwargs,
-    )
-
-    assert result == "ok"
-    assert captured == {
-        "prompt_text": "the prompt",
-        "hook": "score_generate",
-    }
-
-
-def test_invoke_model_callback_does_not_pass_unsupported_kwargs() -> None:
-    captured = {}
-
-    def cb(prompt_text):
-        captured["prompt_text"] = prompt_text
-        return "ok"
-
-    candidate_kwargs = {
-        "prompt": "ignored",
-        "prompt_text": "the prompt",
-        "golden": "ignored",
-        "feedback_text": "ignored",
-    }
-
-    result = invoke_model_callback(
-        hook="score_generate",
-        model_callback=cb,
-        candidate_kwargs=candidate_kwargs,
-    )
-
-    assert result == "ok"
-    assert captured == {"prompt_text": "the prompt"}
-
-
-def test_invoke_model_callback_raises_on_awaitable_returned_in_sync_context() -> (
-    None
-):
-    async def async_cb(prompt_text):
-        return f"async:{prompt_text}"
-
-    candidate_kwargs = {"prompt_text": "the prompt"}
-
-    with pytest.raises(DeepEvalError) as excinfo:
-        invoke_model_callback(
-            hook="score_generate",
-            model_callback=async_cb,
-            candidate_kwargs=candidate_kwargs,
-        )
-
-    msg = str(excinfo.value)
-    assert "returned an awaitable from a synchronous context" in msg
-
-
-def test_a_invoke_model_callback_supports_async_callback_and_injects_hook() -> (
-    None
-):
-    captured: dict[str, str] = {}
-
-    async def async_cb(prompt_text, hook):
-        captured["prompt_text"] = prompt_text
-        captured["hook"] = hook
-        return "ok"
-
-    candidate_kwargs = {
-        "prompt": "ignored",
-        "prompt_text": "the prompt",
-        "golden": "ignored",
-        "feedback_text": "ignored",
-    }
-
-    async def runner():
-        result = await a_invoke_model_callback(
-            hook="score_generate",
-            model_callback=async_cb,
-            candidate_kwargs=candidate_kwargs,
-        )
-        assert result == "ok"
-
-    asyncio.run(runner())
-
-    assert captured == {
-        "prompt_text": "the prompt",
-        "hook": "score_generate",
-    }
-
-
-def test_a_invoke_model_callback_supports_sync_callback() -> None:
-    captured: dict[str, str] = {}
-
-    def cb(prompt_text, hook):
-        captured["prompt_text"] = prompt_text
-        captured["hook"] = hook
-        return "ok"
-
-    candidate_kwargs = {
-        "prompt": "ignored",
-        "prompt_text": "the prompt",
-        "golden": "ignored",
-        "feedback_text": "ignored",
-    }
-
-    async def runner():
-        result = await a_invoke_model_callback(
-            hook="score_generate",
-            model_callback=cb,
-            candidate_kwargs=candidate_kwargs,
-        )
-        assert result == "ok"
-
-    asyncio.run(runner())
-
-    assert captured == {
-        "prompt_text": "the prompt",
-        "hook": "score_generate",
-    }
-
-
-################
-# report utils #
-################
-
-
-def test_build_prompt_config_snapshots_includes_text_and_list_prompts() -> None:
-    """
-    build_prompt_config_snapshots should:
-      - include all configurations by id,
-      - preserve parent relationships,
-      - produce TEXT and LIST snapshots with expected shape.
-    """
-    # Root configuration with one TEXT and one LIST prompt
-    root_cfg = PromptConfiguration.new(
-        prompts={
-            "text-module": Prompt(text_template="Hello, world"),
-            "list-module": Prompt(
-                messages_template=[
-                    PromptMessage(role="system", content="sys"),
-                    PromptMessage(role="user", content="hi"),
-                ]
-            ),
-        }
-    )
-
-    # Child configuration with a different TEXT prompt
-    child_cfg = PromptConfiguration.new(
-        prompts={
-            "text-module": Prompt(text_template="Child prompt"),
-        },
-        parent=root_cfg.id,
-    )
-
-    snapshots = build_prompt_config_snapshots(
-        {root_cfg.id: root_cfg, child_cfg.id: child_cfg}
-    )
-
-    # We should have both configuration ids
-    assert set(snapshots.keys()) == {root_cfg.id, child_cfg.id}
-
-    root_snap = snapshots[root_cfg.id]
-    child_snap = snapshots[child_cfg.id]
-
-    # Parent relationships
-    assert root_snap["parent"] is None
-    assert child_snap["parent"] == root_cfg.id
-
-    # TEXT module snapshot
-    text_mod = root_snap["prompts"]["text-module"]
-    assert text_mod["type"] == "TEXT"
-    assert text_mod["text_template"] == "Hello, world"
-
-    # LIST module snapshot
-    list_mod = root_snap["prompts"]["list-module"]
-    assert list_mod["type"] == "LIST"
-    assert list_mod["messages"] == [
-        {"role": "system", "content": "sys"},
-        {"role": "user", "content": "hi"},
-    ]
-
-
-def test_inflate_prompts_from_report_reconstructs_prompts() -> None:
-    """
-    inflate_prompts_from_report should turn snapshot dicts into real Prompt objects
-    for both TEXT and LIST modules.
-    """
-    runtime = {
-        "optimization_id": "opt-123",
-        "best_id": "cfg-best",
-        "accepted_iterations": [],
-        "pareto_scores": {"cfg-best": [1.0]},
-        "parents": {"cfg-best": None},
-        "prompt_configurations": {
-            "cfg-best": {
-                "parent": None,
-                "prompts": {
-                    "__module__": {
-                        "type": "TEXT",
-                        "text_template": "Base prompt",
-                    },
-                    "chat": {
-                        "type": "LIST",
-                        "messages": [
-                            {"role": "system", "content": "sys"},
-                            {"role": "user", "content": "hi"},
-                        ],
-                    },
-                },
-            }
-        },
-    }
-
-    report = OptimizationReport(**runtime)
-    inflated = inflate_prompts_from_report(report)
-
-    assert "cfg-best" in inflated
-    best_prompts = inflated["cfg-best"]
-
-    # TEXT prompt
-    text_prompt = best_prompts["__module__"]
-    assert isinstance(text_prompt, Prompt)
-    assert text_prompt.text_template == "Base prompt"
-
-    # LIST prompt
-    list_prompt = best_prompts["chat"]
-    assert isinstance(list_prompt, Prompt)
-    assert list_prompt.messages_template is not None
-    assert len(list_prompt.messages_template) == 2
-
-    roles = [m.role for m in list_prompt.messages_template]
-    contents = [m.content for m in list_prompt.messages_template]
-    assert roles == ["system", "user"]
-    assert contents == ["sys", "hi"]
 
 
 ######################
