@@ -56,6 +56,7 @@ MULTIMODAL_SUPPORTED_MODELS = [
     AzureOpenAIModel,
 ]
 
+
 def copy_metrics(
     metrics: List[
         Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
@@ -199,7 +200,7 @@ def check_conversational_test_case_params(
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
     model: Optional[DeepEvalBaseLLM] = None,
-    multimodal: Optional[bool] = False
+    multimodal: Optional[bool] = False,
 ):
     if multimodal:
         if not model or not model.supports_multimodal():

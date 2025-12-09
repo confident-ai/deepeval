@@ -243,7 +243,7 @@ class GPTModel(DeepEvalBaseLLM):
         "gpt-4.1-mini",
         "gpt-5",
     ]
-    
+
     def __init__(
         self,
         model: Optional[str] = None,
