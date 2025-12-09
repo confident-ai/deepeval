@@ -648,4 +648,4 @@ class GPTModel(DeepEvalBaseLLM):
         return True
 
     def get_model_name(self):
-        return f"{self.name} (OpenAI)"
+        return f"{self.name}"
