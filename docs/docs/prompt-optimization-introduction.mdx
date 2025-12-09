@@ -73,7 +73,7 @@ Prompt optimization requires knowledge of existing terminologies in `deepeval`'s
 
 ## Create An Optimizer
 
-To start generating prompts for your, begin by creating a `PromptOptimizer` object:
+To start optimizing prompts, begin by creating a `PromptOptimizer` object:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -101,36 +101,29 @@ If you want full control over algorithm-specific settings (for example, GEPA's `
 
 ### Model Callback
 
-Only the `prompt_text` argument is required when defining your `model_callback`, but you may also define these optional arguments:
+The `model_callback` is a wrapper around your LLM app that will act as a feedback loop for `deepeval` to know whether a rewritten prompt is better or worse than before. It is therefore extremely important that you call your LLM app correctly within your `model_callback`.
 
-- [Optional] `prompt_messages`: a list of `PromptMessage` objects, set **only** when the prompt type is `"LIST"`.
-- [Optional] `hook`: a short label for the current phase (e.g., `"score_generate"` or `"prompt_rewrite"`).
-- [Optional] `golden`: the current `Golden` or `ConversationalGolden` being scored.
-- [Optional] `prompt`: the current `Prompt` candidate being evaluated or rewritten.
-- [Optional] `feedback_text`: natural language feedback derived from your metrics during rewriting.
-
-While `prompt_text` is provided for `"TEXT"`-style prompts, `prompt_messages` is provided instead for `"LIST"`-style prompts. The optimizer inspects your callback's signature and only passes the parameters you declare, so you can start with just `prompt_text` and add more later as needed.
+During optimization, `deepeval` will pass you a `Prompt` instance (the rewritten prompt) and a `Golden` (for you to generate dynamically for a given prompt) that you must accept as arguments.
 
 ```python title="main.py"
-async def model_callback(prompt_text: str, golden: Golden, prompt: Prompt) -> str:
+from deepeval.prompt import Prompt
+from deepeval.datasets import Golden, ConversationalGolden
 
-    # Inspect the golden and prompt
-    print(golden)
-    print(prompt)
+async def model_callback(prompt: Prompt, golden: Union[Golden, ConversationalGolden]) -> str:
+    # Interpolate the prompt with the golden's input or any other field
+    interpolated_prompt = prompt.interpolate(input=golden.input)
 
-    # Replace with your LLM app
-    res = await your_llm_app(prompt_text)
+    # Run your LLM app with the interpolated prompt
+    res = await your_llm_app(interpolated_prompt)
     return res
 ```
 
-:::note
-Your `model_callback` should return one of:
+The `model_callback` accepts **TWO** required arguments:
 
-- a `str` (generated text),
-- a provider-specific `dict`,
-- `(result, cost)` where `result` is `str | dict` and `cost` is a `float`.
+- `prompt`: the current `Prompt` candidate being evaluated. You should use `prompt.interpolate()` to inject the golden's input, or any other field, into the prompt template.
+- `golden`: the current `Golden` or `ConversationalGolden` being scored. This contains the `input` you need to interpolate into the prompt.
 
-:::
+It **MUST** return a string.
 
 ## Optimize Your First Prompt
 
