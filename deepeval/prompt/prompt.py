@@ -4,7 +4,7 @@ import json
 import os
 
 from enum import Enum
-from typing import Optional, List, Dict, Type, Literal, TYPE_CHECKING
+from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 from pydantic import BaseModel, ValidationError
@@ -33,10 +33,6 @@ from deepeval.prompt.utils import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
-
-
-if TYPE_CHECKING:
-    from deepeval.optimization.types import OptimizationReport
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +113,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -129,7 +126,9 @@ class Prompt:
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
         self.label: Optional[str] = None
-        self.interpolation_type: Optional[PromptInterpolationType] = None
+        self.interpolation_type: PromptInterpolationType = (
+            interpolation_type or PromptInterpolationType.FSTRING
+        )
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -144,9 +143,6 @@ class Prompt:
             self.type = PromptType.TEXT
         elif messages_template:
             self.type = PromptType.LIST
-
-        # updated after optimization runs
-        self.optimization_report: Optional["OptimizationReport"] = None
 
     def __del__(self):
         """Cleanup polling tasks when instance is destroyed"""
