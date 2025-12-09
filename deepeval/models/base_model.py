@@ -65,7 +65,7 @@ class DeepEvalBaseLLM(ABC):
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name
-    
+
     def supports_multimodal(self) -> bool:
         return False
 
