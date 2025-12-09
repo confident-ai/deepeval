@@ -83,9 +83,9 @@ metric = AnswerRelevancyMetric(
     include_reason=True
 )
 test_case = LLMTestCase(
-    input=f"Tell me about some landmarks in France",
+    input=f"Tell me about this landmark in France: {MLLMImage(...)}",
     # Replace this with the output from your LLM app
-    actual_output=f"The Eiffel Tower {MLLMImage(...)} is a famous landmark in France"
+    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
 )
 
 # To run metric as a standalone

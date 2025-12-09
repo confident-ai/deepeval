@@ -10,7 +10,7 @@ sidebar_label: G-Eval
 
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
-<MetricTagsDisplayer singleTurn={true} custom={true} />
+<MetricTagsDisplayer singleTurn={true} custom={true} multimodal={true} />
 
 G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
 
@@ -347,7 +347,6 @@ medical_faithfulness = GEval(
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#custom-rag-metrics)
 
-
 ## Customize Your Template
 
 Since `deepeval`'s `GEval` is evaluated by LLM-as-a-judge, you can likely improve your metric accuracy by [overriding `deepeval`'s default prompt templates](/docs/metrics-introduction#customize-metric-prompts). This is especially helpful if:
@@ -372,7 +371,7 @@ class CustomGEvalTemplate(GEvalTemplate):
     def generate_evaluation_steps(parameters: str, criteria: str):
         return textwrap.dedent(
             f"""
-            You are given evaluation criteria for assessing {parameters}. Based on the criteria, 
+            You are given evaluation criteria for assessing {parameters}. Based on the criteria,
             produce 3-4 clear steps that explain how to evaluate the quality of {parameters}.
 
             Criteria:

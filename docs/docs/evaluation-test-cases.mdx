@@ -440,7 +440,7 @@ from deepeval.test_case import LLMTestCase
 test_case = LLMTestCase(completion_time=7.53, ...)
 ```
 
-## Including Images In Test Cases
+## Including Images
 
 By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
 
@@ -461,7 +461,7 @@ test_case = LLMTestCase(
 Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can use them with various multimodal supported metrics like the [RAG metrics](/docs/metrics-answer-relevancy) and [multimodal-specific metrics](/docs/multimodal-metrics-image-coherence).
 :::
 
-### `MLLMImage` data model:
+### `MLLMImage` Data Model
 
 Here's the data model of the `MLLMImage` in `deepeval`:
 

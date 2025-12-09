@@ -62,7 +62,6 @@ module.exports = {
             "metrics-dag",
             "metrics-conversational-g-eval",
             "metrics-conversational-dag",
-            "multimodal-metrics-g-eval",
             "metrics-arena-g-eval",
             "metrics-custom",
           ],

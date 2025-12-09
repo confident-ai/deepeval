@@ -204,7 +204,7 @@ evaluate(dataset, [AnswerRelevancyMetric()])
 
 There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function:
 
-- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
+- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.

@@ -103,8 +103,8 @@ metric = ContextualPrecisionMetric(
     include_reason=True
 )
 test_case = LLMTestCase(
-    input=f"Tell me about some landmarks in France",
-    actual_output=f"The Eiffel Tower {MLLMImage(...)} is a famous landmark in France"
+    input=f"Tell me about this landmark in France: {MLLMImage(...)}",
+    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
     expected_output=f"The Eiffel Tower is located in Paris, France. {MLLMImage(...)}",
     retrieval_context=retrieval_context
 )
