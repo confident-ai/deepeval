@@ -67,7 +67,7 @@ def test_local_model_uses_explicit_params_over_settings_and_strips_secret(
     assert base_url.rstrip("/") == "http://ctor-host:11434/v1"
 
     # Model attributes reflect ctor overrides
-    assert model.model_name == "ctor-model"
+    assert model.name == "ctor-model"
     assert model.format == "ctor-format"
 
 
@@ -107,7 +107,7 @@ def test_local_model_defaults_from_settings(monkeypatch):
     assert base_url.rstrip("/") == "http://settings-host:11434/v1"
 
     # Model name and format should also come from Settings
-    assert model.model_name == "settings-model"
+    assert model.name == "settings-model"
     assert model.format == "settings-format"
 
 

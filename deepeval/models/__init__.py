@@ -1,7 +1,6 @@
 from deepeval.models.base_model import (
     DeepEvalBaseModel,
     DeepEvalBaseLLM,
-    DeepEvalBaseMLLM,
     DeepEvalBaseEmbeddingModel,
 )
 from deepeval.models.llms import (
@@ -17,12 +16,6 @@ from deepeval.models.llms import (
     GrokModel,
     DeepSeekModel,
 )
-from deepeval.models.mlllms import (
-    MultimodalOpenAIModel,
-    MultimodalOllamaModel,
-    MultimodalGeminiModel,
-    MultimodalAzureOpenAIMLLMModel,
-)
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
@@ -33,7 +26,6 @@ from deepeval.models.embedding_models import (
 __all__ = [
     "DeepEvalBaseModel",
     "DeepEvalBaseLLM",
-    "DeepEvalBaseMLLM",
     "DeepEvalBaseEmbeddingModel",
     "GPTModel",
     "AzureOpenAIModel",
@@ -46,10 +38,6 @@ __all__ = [
     "KimiModel",
     "GrokModel",
     "DeepSeekModel",
-    "MultimodalOpenAIModel",
-    "MultimodalOllamaModel",
-    "MultimodalGeminiModel",
-    "MultimodalAzureOpenAIMLLMModel",
     "OpenAIEmbeddingModel",
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",

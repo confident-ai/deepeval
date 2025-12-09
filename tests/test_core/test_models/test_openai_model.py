@@ -25,7 +25,7 @@ class TestGPTModelCompletionKwargs:
 
         model = GPTModel(model="gpt-4o")
         assert model.generation_kwargs == {}
-        assert model.model_name == "gpt-4o"
+        assert model.name == "gpt-4o"
 
     def test_init_with_generation_kwargs(self, settings):
         with settings.edit(persist=False):
@@ -40,7 +40,7 @@ class TestGPTModelCompletionKwargs:
             model="gpt-5-mini", generation_kwargs=generation_kwargs
         )
         assert model.generation_kwargs == generation_kwargs
-        assert model.model_name == "gpt-5-mini"
+        assert model.name == "gpt-5-mini"
 
     def test_init_with_both_client_and_generation_kwargs(self, settings):
         with settings.edit(persist=False):
@@ -338,7 +338,7 @@ class TestGPTModelCompletionKwargs:
         model = GPTModel(
             model="gpt-4o", temperature=0.5, timeout=30  # client kwarg
         )
-        assert model.model_name == "gpt-4o"
+        assert model.name == "gpt-4o"
         assert model.temperature == 0.5
         assert model.kwargs == {"timeout": 30}
         assert model.generation_kwargs == {}
@@ -375,6 +375,72 @@ class TestGPTModelCompletionKwargs:
         assert model.generation_kwargs == {}
 
 
+########################################################
+# Test legacy keyword backwards compatability behavior #
+########################################################
+
+
+def test_openai_model_accepts_legacy_model_keyword_and_maps_to_model(
+    settings,
+):
+    """
+    Using the legacy `model` keyword should still work:
+    - It should populate `model`
+    - It should not be forwarded through `model.kwargs`
+    """
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+
+    model = GPTModel(model="gpt-4o")
+
+    # legacy keyword mapped to canonical parameter
+    assert model.name == "gpt-4o"
+
+    # legacy key should not be forwarded to the client kwargs
+    assert "model" not in model.kwargs
+
+
+def test_openai_model_accepts_legacy_openai_api_key_keyword_and_uses_it(
+    monkeypatch,
+):
+    """
+    Using the legacy `_openai_api_key` keyword should:
+    - Populate the canonical `api_key` (via SecretStr)
+    - Result in the underlying client receiving the correct `api_key` value
+    - Not forward `_openai_api_key` in model.kwargs
+    """
+    # Put OPENAI_API_KEY into the process env so Settings sees it
+    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
+
+    # rebuild the Settings singleton from the current env
+    reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    assert isinstance(settings.OPENAI_API_KEY, SecretStr)
+
+    # Stub the OpenAI SDK clients so we don't make any real calls
+    monkeypatch.setattr(openai_mod, "OpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(
+        openai_mod, "AsyncOpenAI", _RecordingClient, raising=True
+    )
+
+    # Construct GPTModel with the legacy key name
+    model = GPTModel(
+        model="gpt-4.1",
+        api_key="constructor-key",
+    )
+
+    # DeepEvalBaseLLM.__init__ stores the client on `model.model`
+    client = model.model
+    api_key = client.kwargs.get("api_key")
+
+    # The client should see a plain string API key coming from the legacy param
+    assert isinstance(api_key, str)
+    assert api_key == "constructor-key"
+
+    # And the legacy key should not be present in the model's kwargs
+    assert "_openai_api_key" not in model.kwargs
+
+
 ##########################
 # Test Secret Management #
 ##########################
@@ -402,7 +468,7 @@ def test_openai_model_uses_explicit_key_over_settings_and_strips_secret(
     # Construct GPTModel with an explicit key
     model = GPTModel(
         model="gpt-4.1",
-        _openai_api_key="constructor-key",
+        api_key="constructor-key",
     )
 
     # DeepEvalBaseLLM.__init__ stores the client on `model.model`
@@ -428,7 +494,7 @@ def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
         settings.OPENAI_MODEL_NAME = "gpt-4o-mini"
 
     model = GPTModel()
-    assert model.model_name == "gpt-4o-mini"
+    assert model.name == "gpt-4o-mini"
 
 
 def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
@@ -449,7 +515,7 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     openai_mod.model_pricing.pop("gpt-5-chat-latest", None)
 
     model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
-    assert model.model_name == "gpt-5-chat-latest"
+    assert model.name == "gpt-5-chat-latest"
 
     pricing = openai_mod.model_pricing["gpt-5-chat-latest"]
     assert pricing["input"] == 0.123

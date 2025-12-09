@@ -4,9 +4,16 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyUrl, SecretStr
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import require_param
+
+
+def _request_timeout_seconds() -> float:
+    timeout = float(get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
+    return timeout if timeout > 0 else 30.0
 
 
 class PortkeyModel(DeepEvalBaseLLM):
@@ -16,11 +23,13 @@ class PortkeyModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         base_url: Optional[AnyUrl] = None,
         provider: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
+        **kwargs,
     ):
         settings = get_settings()
         model = model or settings.PORTKEY_MODEL_NAME
 
-        self.model = require_param(
+        self.name = require_param(
             model,
             provider_label="Portkey",
             env_var_name="PORTKEY_MODEL_NAME",
@@ -52,6 +61,9 @@ class PortkeyModel(DeepEvalBaseLLM):
             env_var_name="PORTKEY_PROVIDER_NAME",
             param_hint="provider",
         )
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
 
     def _headers(self) -> Dict[str, str]:
         api_key = require_secret_api_key(
@@ -70,10 +82,13 @@ class PortkeyModel(DeepEvalBaseLLM):
         return headers
 
     def _payload(self, prompt: str) -> Dict[str, Any]:
-        return {
-            "model": self.model,
+        payload = {
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if self.generation_kwargs:
+            payload.update(self.generation_kwargs)
+        return payload
 
     def _extract_content(self, data: Dict[str, Any]) -> str:
         choices: Union[List[Dict[str, Any]], None] = data.get("choices")
@@ -88,6 +103,7 @@ class PortkeyModel(DeepEvalBaseLLM):
         return ""
 
     def generate(self, prompt: str) -> str:
+
         try:
             response = requests.post(
                 f"{self.base_url}/chat/completions",
@@ -110,6 +126,7 @@ class PortkeyModel(DeepEvalBaseLLM):
         return self._extract_content(response.json())
 
     async def a_generate(self, prompt: str) -> str:
+
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self.base_url}/chat/completions",
@@ -125,8 +142,8 @@ class PortkeyModel(DeepEvalBaseLLM):
                 data = await response.json()
                 return self._extract_content(data)
 
-    def get_model_name(self) -> str:
-        return f"Portkey ({self.model})"
-
     def load_model(self):
         return None
+
+    def get_model_name(self):
+        return f"{self.name} (Portkey)"

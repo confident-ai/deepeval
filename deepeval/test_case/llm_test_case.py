@@ -9,7 +9,12 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
-
+import re
+import os
+import mimetypes
+import base64
+from dataclasses import dataclass, field
+from urllib.parse import urlparse, unquote
 from deepeval.utils import make_model_config
 
 from deepeval.test_case.mcp import (
@@ -19,6 +24,128 @@ from deepeval.test_case.mcp import (
     MCPToolCall,
     validate_mcp_servers,
 )
+
+_MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
+
+
+@dataclass
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+    _id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+    def __post_init__(self):
+
+        if not self.url and not self.dataBase64:
+            raise ValueError(
+                "You must provide either a 'url' or both 'dataBase64' and 'mimeType' to create an MLLMImage."
+            )
+
+        if self.dataBase64 is not None:
+            if self.mimeType is None:
+                raise ValueError(
+                    "mimeType must be provided when initializing from Base64 data."
+                )
+        else:
+            is_local = self.is_local_path(self.url)
+            if self.local is not None:
+                assert self.local == is_local, "Local path mismatch"
+            else:
+                self.local = is_local
+
+            # compute filename, mime_type, and Base64 data
+            if self.local:
+                path = self.process_url(self.url)
+                self.filename = os.path.basename(path)
+                self.mimeType = (
+                    mimetypes.guess_type(path)[0] or "application/octet-stream"
+                )
+                with open(path, "rb") as f:
+                    raw = f.read()
+                self.dataBase64 = base64.b64encode(raw).decode("ascii")
+            else:
+                self.filename = None
+                self.mimeType = None
+                self.dataBase64 = None
+
+        _MLLM_IMAGE_REGISTRY[self._id] = self
+
+    def _placeholder(self) -> str:
+        return f"[DEEPEVAL:IMAGE:{self._id}]"
+
+    def __str__(self) -> str:
+        return self._placeholder()
+
+    def __repr__(self) -> str:
+        return self._placeholder()
+
+    def __format__(self, format_spec: str) -> str:
+        return self._placeholder()
+
+    @staticmethod
+    def process_url(url: str) -> str:
+        if os.path.exists(url):
+            return url
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return path
+        return url
+
+    @staticmethod
+    def is_local_path(url: str) -> bool:
+        if os.path.exists(url):
+            return True
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return os.path.exists(path)
+        return False
+
+    def parse_multimodal_string(s: str):
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        matches = list(re.finditer(pattern, s))
+
+        result = []
+        last_end = 0
+
+        for m in matches:
+            start, end = m.span()
+
+            if start > last_end:
+                result.append(s[last_end:start])
+
+            img_id = m.group(1)
+
+            if img_id not in _MLLM_IMAGE_REGISTRY:
+                MLLMImage(url=img_id, _id=img_id)
+
+            result.append(_MLLM_IMAGE_REGISTRY[img_id])
+            last_end = end
+
+        if last_end < len(s):
+            result.append(s[last_end:])
+
+        return result
+
+    def as_data_uri(self) -> Optional[str]:
+        """Return the image as a data URI string, if Base64 data is available."""
+        if not self.dataBase64 or not self.mimeType:
+            return None
+        return f"data:{self.mimeType};base64,{self.dataBase64}"
 
 
 class LLMTestCaseParams(Enum):
@@ -208,6 +335,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="completionTime",
         validation_alias=AliasChoices("completionTime", "completion_time"),
     )
+    multimodal: bool = Field(default=False)
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
@@ -228,6 +356,29 @@ class LLMTestCase(BaseModel):
     _identifier: Optional[str] = PrivateAttr(
         default_factory=lambda: str(uuid.uuid4())
     )
+
+    @model_validator(mode="after")
+    def set_is_multimodal(self):
+        import re
+
+        if self.multimodal is True:
+            return self
+
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+
+        auto_detect = (
+            any(
+                [
+                    re.search(pattern, self.input or "") is not None,
+                    re.search(pattern, self.actual_output or "") is not None,
+                ]
+            )
+            if isinstance(self.input, str)
+            else self.multimodal
+        )
+
+        self.multimodal = auto_detect
+        return self
 
     @model_validator(mode="before")
     def validate_input(cls, data):

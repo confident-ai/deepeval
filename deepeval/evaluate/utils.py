@@ -16,7 +16,6 @@ from deepeval.metrics import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
@@ -129,17 +128,14 @@ def create_test_result(
             turns=api_test_case.turns,
         )
     else:
-        multimodal = (
-            api_test_case.multimodal_input is not None
-            and api_test_case.multimodal_input_actual_output is not None
-        )
+        multimodal = api_test_case.images_mapping
         if multimodal:
             return TestResult(
                 name=name,
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
-                input=api_test_case.multimodal_input,
-                actual_output=api_test_case.multimodal_input_actual_output,
+                input=api_test_case.input,
+                actual_output=api_test_case.actual_output,
                 conversational=False,
                 multimodal=True,
                 additional_metadata=api_test_case.additional_metadata,
@@ -222,9 +218,9 @@ def validate_assert_test_inputs(
         )
 
     if test_case and metrics:
-        if isinstance(test_case, LLMTestCase) and not all(
-            isinstance(metric, BaseMetric) for metric in metrics
-        ):
+        if (
+            isinstance(test_case, LLMTestCase) and not test_case.multimodal
+        ) and not all(isinstance(metric, BaseMetric) for metric in metrics):
             raise ValueError(
                 "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
             )
@@ -234,11 +230,17 @@ def validate_assert_test_inputs(
             raise ValueError(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
             )
-        if isinstance(test_case, MLLMTestCase) and not all(
-            isinstance(metric, BaseMultimodalMetric) for metric in metrics
+        if (
+            isinstance(test_case, LLMTestCase) and test_case.multimodal
+        ) and not all(
+            (
+                isinstance(metric, BaseMultimodalMetric)
+                or isinstance(metric, BaseMetric)
+            )
+            for metric in metrics
         ):
             raise ValueError(
-                "All 'metrics' for an 'MLLMTestCase' must be instances of 'BaseMultimodalMetric' only."
+                "All 'metrics' for multi-modal LLMTestCase must be instances of 'BaseMultimodalMetric' only."
             )
 
     if not ((golden and observed_callback) or (test_case and metrics)):
@@ -251,9 +253,7 @@ def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     observed_callback: Optional[Callable] = None,
     test_cases: Optional[
-        Union[
-            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
-        ]
+        Union[List[LLMTestCase], List[ConversationalTestCase]]
     ] = None,
     metrics: Optional[
         Union[
@@ -292,9 +292,10 @@ def validate_evaluate_inputs(
     if test_cases and metrics:
         for test_case in test_cases:
             for metric in metrics:
-                if isinstance(test_case, LLMTestCase) and not isinstance(
-                    metric, BaseMetric
-                ):
+                if (
+                    isinstance(test_case, LLMTestCase)
+                    and not test_case.multimodal
+                ) and not isinstance(metric, BaseMetric):
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
                     )
@@ -305,11 +306,14 @@ def validate_evaluate_inputs(
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )
-                if isinstance(test_case, MLLMTestCase) and not isinstance(
-                    metric, BaseMultimodalMetric
+                if (
+                    isinstance(test_case, LLMTestCase) and test_case.multimodal
+                ) and not (
+                    isinstance(metric, BaseMultimodalMetric)
+                    or isinstance(metric, BaseMetric)
                 ):
                     raise ValueError(
-                        f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
+                        f"Metric {metric.__name__} is not a valid metric for multi-modal LLMTestCase."
                     )
 
 

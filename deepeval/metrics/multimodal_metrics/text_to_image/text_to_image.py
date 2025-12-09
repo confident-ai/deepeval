@@ -4,37 +4,40 @@ import math
 import textwrap
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
 )
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import (
+    get_or_create_event_loop,
+    convert_to_multi_modal_array,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
     check_mllm_test_case_params,
-    initialize_multimodal_model,
+    initialize_model,
 )
-from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 
-required_params: List[MLLMTestCaseParams] = [
-    MLLMTestCaseParams.INPUT,
-    MLLMTestCaseParams.ACTUAL_OUTPUT,
+required_params: List[LLMTestCaseParams] = [
+    LLMTestCaseParams.INPUT,
+    LLMTestCaseParams.ACTUAL_OUTPUT,
 ]
 
 
 class TextToImageMetric(BaseMultimodalMetric):
     def __init__(
         self,
-        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
@@ -43,11 +46,13 @@ class TextToImageMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        check_mllm_test_case_params(
+            test_case, required_params, 0, 1, self, self.model
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -63,10 +68,12 @@ class TextToImageMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                input_texts, _ = self.separate_images_from_text(test_case.input)
-                _, output_images = self.separate_images_from_text(
+                input = convert_to_multi_modal_array(test_case.input)
+                actual_output = convert_to_multi_modal_array(
                     test_case.actual_output
                 )
+                input_texts, _ = self.separate_images_from_text(input)
+                _, output_images = self.separate_images_from_text(actual_output)
 
                 self.SC_scores, self.SC_reasoning = (
                     self._evaluate_semantic_consistency(
@@ -99,11 +106,13 @@ class TextToImageMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        check_mllm_test_case_params(
+            test_case, required_params, 0, 1, self, self.model
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -112,10 +121,12 @@ class TextToImageMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            input_texts, _ = self.separate_images_from_text(test_case.input)
-            _, output_images = self.separate_images_from_text(
+            input = convert_to_multi_modal_array(test_case.input)
+            actual_output = convert_to_multi_modal_array(
                 test_case.actual_output
             )
+            input_texts, _ = self.separate_images_from_text(input)
+            _, output_images = self.separate_images_from_text(actual_output)
             (self.SC_scores, self.SC_reasoning), (
                 self.PQ_scores,
                 self.PQ_reasoning,
@@ -165,27 +176,27 @@ class TextToImageMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.append(actual_image_output)
-        prompt = [
-            TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                    text_prompt=text_prompt
+                )
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt + images, ReasonScore
-            )
+            res, cost = await self.model.a_generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(
-                    prompt + images, input_text=prompt
-                )
+                res = await self.model.a_generate(prompt, input_text=prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -196,23 +207,27 @@ class TextToImageMetric(BaseMultimodalMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.append(actual_image_output)
-        prompt = [
-            TextToImageTemplate.generate_semantic_consistency_evaluation_results(
-                text_prompt=text_prompt
-            )
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_semantic_consistency_evaluation_results(
+                    text_prompt=text_prompt
+                )
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
-            res, cost = self.model.generate(prompt + images, ReasonScore)
+            res, cost = self.model.generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -220,23 +235,25 @@ class TextToImageMetric(BaseMultimodalMetric):
         self, actual_image_output: MLLMImage
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
-        prompt = [
-            TextToImageTemplate.generate_perceptual_quality_evaluation_results()
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt + images, ReasonScore
-            )
+            res, cost = await self.model.a_generate(prompt, ReasonScore)
             self.evaluation_cost += cost
             return res.score, res.reasoning
         else:
             try:
                 res: ReasonScore = await self.model.a_generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = await self.model.a_generate(prompt + images)
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 
@@ -244,9 +261,13 @@ class TextToImageMetric(BaseMultimodalMetric):
         self, actual_image_output: MLLMImage
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = [actual_image_output]
-        prompt = [
-            TextToImageTemplate.generate_perceptual_quality_evaluation_results()
-        ]
+        prompt = f"""
+            {
+                TextToImageTemplate.generate_perceptual_quality_evaluation_results()
+            }
+            Images:
+            {images}
+        """
         if self.using_native_model:
             res, cost = self.model.generate(prompt + images, ReasonScore)
             self.evaluation_cost += cost
@@ -254,11 +275,11 @@ class TextToImageMetric(BaseMultimodalMetric):
         else:
             try:
                 res: ReasonScore = self.model.generate(
-                    prompt + images, schema=ReasonScore
+                    prompt, schema=ReasonScore
                 )
                 return res.score, res.reasoning
             except TypeError:
-                res = self.model.generate(prompt + images)
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["score"], data["reasoning"]
 

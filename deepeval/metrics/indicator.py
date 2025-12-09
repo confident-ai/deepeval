@@ -13,7 +13,7 @@ from deepeval.metrics import (
     BaseMultimodalMetric,
     BaseArenaMetric,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
 from deepeval.utils import update_pbar
@@ -75,7 +75,7 @@ async def measure_metric_task(
     task_id,
     progress,
     metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
-    test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
+    test_case: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
     skip_on_missing_params: bool,
@@ -159,7 +159,7 @@ async def measure_metrics_with_indicator(
     metrics: List[
         Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]
     ],
-    test_case: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
+    test_case: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
     skip_on_missing_params: bool,
@@ -239,7 +239,7 @@ async def measure_metrics_with_indicator(
 
 async def safe_a_measure(
     metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
-    tc: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
+    tc: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
     skip_on_missing_params: bool,
     progress: Optional[Progress] = None,

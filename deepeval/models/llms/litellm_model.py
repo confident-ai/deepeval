@@ -10,7 +10,10 @@ from tenacity import (
 )
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 
@@ -27,6 +30,10 @@ retryable_exceptions = (
     Exception,  # LiteLLM handles specific exceptions internally
 )
 
+_ALIAS_MAP = {
+    "base_url": ["api_base"],
+}
+
 
 class LiteLLMModel(DeepEvalBaseLLM):
     EXP_BASE: int = 2
@@ -39,16 +46,26 @@ class LiteLLMModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        api_base: Optional[str] = None,
+        base_url: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
 
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "LiteLLMModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
         settings = get_settings()
         # Get model name from parameter or key file
-        model_name = model or settings.LITELLM_MODEL_NAME
-        if not model_name:
+        model = model or settings.LITELLM_MODEL_NAME
+        if not model:
             raise ValueError(
                 "Model name must be provided either through parameter or set-litellm command"
             )
@@ -67,8 +84,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
             )
 
         # Get API base from parameter, key file, or environment variable
-        self.api_base = (
-            api_base
+        self.base_url = (
+            base_url
             or (
                 str(settings.LITELLM_API_BASE)
                 if settings.LITELLM_API_BASE is not None
@@ -84,10 +101,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
-        super().__init__(model_name)
+        super().__init__(model)
 
     @retry(
         wait=wait_exponential_jitter(
@@ -100,10 +118,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+
         from litellm import completion
 
         completion_params = {
-            "model": self.model_name,
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
         }
@@ -116,8 +135,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params["api_key"] = api_key
-        if self.api_base:
-            completion_params["api_base"] = self.api_base
+        if self.base_url:
+            completion_params["api_base"] = self.base_url
 
         # Add schema if provided
         if schema:
@@ -155,10 +174,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+
         from litellm import acompletion
 
         completion_params = {
-            "model": self.model_name,
+            "model": self.name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
         }
@@ -171,8 +191,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params["api_key"] = api_key
-        if self.api_base:
-            completion_params["api_base"] = self.api_base
+        if self.base_url:
+            completion_params["api_base"] = self.base_url
 
         # Add schema if provided
         if schema:
@@ -222,11 +242,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
             }
@@ -263,11 +283,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": self.temperature,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
                 "logprobs": True,
                 "top_logprobs": top_logprobs,
             }
@@ -302,12 +322,12 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params = {
-                "model": self.model_name,
+                "model": self.name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": temperature,
                 "n": n,
                 "api_key": api_key,
-                "api_base": self.api_base,
+                "api_base": self.base_url,
             }
             completion_params.update(self.kwargs)
 
@@ -353,8 +373,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def get_model_name(self) -> str:
         from litellm import get_llm_provider
 
-        provider = get_llm_provider(self.model_name)
-        return f"{self.model_name} ({provider})"
+        provider = get_llm_provider(self.name)
+        return f"{self.name} ({provider})"
 
     def load_model(self, async_mode: bool = False):
         """

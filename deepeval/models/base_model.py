@@ -31,9 +31,9 @@ class DeepEvalBaseModel(ABC):
 
 
 class DeepEvalBaseLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
@@ -62,6 +62,13 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
+    def supports_multimodal(self) -> bool:
+        return False
+
     def batch_generate(self, *args, **kwargs) -> List[str]:
         """Runs the model to output LLM responses.
 
@@ -72,53 +79,14 @@ class DeepEvalBaseLLM(ABC):
             "batch_generate is not implemented for this model"
         )
 
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
-
-
-class DeepEvalBaseMLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-        self.model = self.load_model(*args, **kwargs)
-
-    @abstractmethod
-    def load_model(self, *args, **kwargs) -> "DeepEvalBaseMLLM":
-        """Loads a model, that will be responsible for scoring.
-
-        Returns:
-            A model object
-        """
-        pass
-
-    @abstractmethod
-    def generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
-
-        Returns:
-            A string.
-        """
-        pass
-
-    @abstractmethod
-    async def a_generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
-
-        Returns:
-            A string.
-        """
-        pass
-
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    def supports_multimodal(self):
+        return False
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseEmbeddingModel":
@@ -167,4 +135,4 @@ class DeepEvalBaseEmbeddingModel(ABC):
 
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
-        pass
+        return self.name

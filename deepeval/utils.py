@@ -538,6 +538,25 @@ def shorten(
     return stext[:cut] + suffix
 
 
+def convert_to_multi_modal_array(input: Union[str, List[str]]):
+    from deepeval.test_case import MLLMImage
+
+    if isinstance(input, str):
+        return MLLMImage.parse_multimodal_string(input)
+    elif isinstance(input, list):
+        new_list = []
+        for context in input:
+            parsed_array = MLLMImage.parse_multimodal_string(context)
+            new_list.extend(parsed_array)
+        return new_list
+
+
+def check_if_multimodal(input: str):
+    pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+    matches = list(re.finditer(pattern, input))
+    return bool(matches)
+
+
 def format_turn(
     turn: TurnLike,
     *,

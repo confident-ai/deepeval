@@ -2,16 +2,14 @@ import inspect
 import json
 import re
 import sys
-import itertools
 from typing import Any, Dict, Optional, List, Union, Tuple
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
-    MismatchedTestCaseInputsError,
 )
+from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
     DeepEvalBaseLLM,
-    DeepEvalBaseMLLM,
     GPTModel,
     AnthropicModel,
     AzureOpenAIModel,
@@ -22,10 +20,6 @@ from deepeval.models import (
     OllamaEmbeddingModel,
     LocalEmbeddingModel,
     GeminiModel,
-    MultimodalOpenAIModel,
-    MultimodalGeminiModel,
-    MultimodalOllamaModel,
-    MultimodalAzureOpenAIMLLMModel,
     AmazonBedrockModel,
     LiteLLMModel,
     KimiModel,
@@ -45,11 +39,8 @@ from deepeval.metrics import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
-    Turn,
     LLMTestCase,
     LLMTestCaseParams,
-    MLLMTestCase,
-    MLLMTestCaseParams,
     ConversationalTestCase,
     MLLMImage,
     Turn,
@@ -57,6 +48,13 @@ from deepeval.test_case import (
     ToolCall,
     TurnParams,
 )
+
+MULTIMODAL_SUPPORTED_MODELS = [
+    GPTModel,
+    GeminiModel,
+    OllamaModel,
+    AzureOpenAIModel,
+]
 
 
 def copy_metrics(
@@ -201,7 +199,20 @@ def check_conversational_test_case_params(
     test_case_params: List[TurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
+    if multimodal:
+        if not model or not model.supports_multimodal():
+            if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
+                )
+            else:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+                )
+
     if isinstance(test_case, ConversationalTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
         metric.error = error_str
@@ -289,15 +300,26 @@ def check_arena_test_case_params(
 
 
 def check_mllm_test_case_params(
-    test_case: MLLMTestCase,
-    test_case_params: List[MLLMTestCaseParams],
+    test_case: LLMTestCase,
+    test_case_params: List[LLMTestCaseParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: BaseMetric,
+    model: Optional[DeepEvalBaseLLM] = None,
 ):
+    if not model or not model.supports_multimodal():
+        if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
+            raise ValueError(
+                f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
+            )
+        else:
+            raise ValueError(
+                f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+            )
+
     if input_image_count:
         count = 0
-        for ele in test_case.input:
+        for ele in convert_to_multi_modal_array(test_case.input):
             if isinstance(ele, MLLMImage):
                 count += 1
         if count != input_image_count:
@@ -306,17 +328,12 @@ def check_mllm_test_case_params(
 
     if actual_output_image_count:
         count = 0
-        for ele in test_case.actual_output:
+        for ele in convert_to_multi_modal_array(test_case.actual_output):
             if isinstance(ele, MLLMImage):
                 count += 1
         if count != actual_output_image_count:
             error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
             raise ValueError(error_str)
-
-    if isinstance(test_case, MLLMTestCase) is False:
-        error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
-        metric.error = error_str
-        raise ValueError(error_str)
 
     missing_params = []
     for param in test_case_params:
@@ -339,8 +356,8 @@ def check_mllm_test_case_params(
 
 
 def check_mllm_test_cases_params(
-    test_cases: List[MLLMTestCase],
-    test_case_params: List[MLLMTestCaseParams],
+    test_cases: List[LLMTestCase],
+    test_case_params: List[LLMTestCaseParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: BaseMetric,
@@ -459,7 +476,7 @@ def initialize_model(
     elif should_use_local_model():
         return LocalModel(), True
     elif should_use_azure_openai():
-        return AzureOpenAIModel(model_name=model), True
+        return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
@@ -499,42 +516,6 @@ def is_native_model(
 ###############################################
 # Multimodal Model
 ###############################################
-
-
-def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
-    """
-    Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
-    """
-    if is_native_mllm(model):
-        return model, True
-    if isinstance(model, DeepEvalBaseMLLM):
-        return model, False
-    if should_use_gemini_model():
-        return MultimodalGeminiModel(), True
-    if should_use_ollama_model():
-        return MultimodalOllamaModel(), True
-    elif should_use_azure_openai():
-        return MultimodalAzureOpenAIMLLMModel(model_name=model), True
-    elif isinstance(model, str) or model is None:
-        return MultimodalOpenAIModel(model=model), True
-    raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalOllamaModel."
-    )
-
-
-def is_native_mllm(
-    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-) -> bool:
-    if (
-        isinstance(model, MultimodalOpenAIModel)
-        or isinstance(model, MultimodalOllamaModel)
-        or isinstance(model, MultimodalGeminiModel)
-    ):
-        return True
-    else:
-        return False
 
 
 ###############################################

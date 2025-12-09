@@ -1,17 +1,23 @@
+import base64
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
+from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
-
+from io import BytesIO
 from openai import (
     OpenAI,
     AsyncOpenAI,
 )
-
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    parse_model_name,
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -19,6 +25,7 @@ from deepeval.models.retry_policy import (
 
 
 retry_openai = create_retry_decorator(PS.OPENAI)
+
 
 valid_gpt_models = [
     "gpt-3.5-turbo",
@@ -80,6 +87,15 @@ unsupported_log_probs_gpt_models = [
     "gpt-5-nano",
     "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
+]
+
+unsupported_log_probs_multimodal_gpt_models = [
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "gpt-4.5-preview-2025-02-27",
+    "o4-mini",
 ]
 
 structured_outputs_models = [
@@ -214,20 +230,42 @@ def _request_timeout_seconds() -> float:
     return timeout if timeout > 0 else 30.0
 
 
+_ALIAS_MAP = {
+    "api_key": ["_openai_api_key"],
+}
+
+
 class GPTModel(DeepEvalBaseLLM):
+    valid_multimodal_models = [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-5",
+    ]
+
     def __init__(
         self,
         model: Optional[str] = None,
-        _openai_api_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        temperature: float = 0,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
-        temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "GPTModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
+
+        # re-map depricated keywords to re-named positional args
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+
         settings = get_settings()
-        model_name = None
         model = model or settings.OPENAI_MODEL_NAME
         cost_per_input_token = (
             cost_per_input_token
@@ -240,51 +278,50 @@ class GPTModel(DeepEvalBaseLLM):
             else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
+        if model is None:
+            model = default_gpt_model
+
         if isinstance(model, str):
-            model_name = parse_model_name(model)
-            if model_name not in valid_gpt_models:
+            model = parse_model_name(model)
+            if model not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
-        elif model is None:
-            model_name = default_gpt_model
 
-        if model_name not in model_pricing:
+        if model not in model_pricing:
             if cost_per_input_token is None or cost_per_output_token is None:
                 raise ValueError(
-                    f"No pricing available for `{model_name}`. "
+                    f"No pricing available for `{model}`. "
                     "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
                     "or set them via the CLI:\n"
                     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
                 )
             else:
-                model_pricing[model_name] = {
+                model_pricing[model] = {
                     "input": float(cost_per_input_token),
                     "output": float(cost_per_output_token),
                 }
 
-        elif model is None:
-            model_name = default_gpt_model
-
-        if _openai_api_key is not None:
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self._openai_api_key: SecretStr | None = SecretStr(_openai_api_key)
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self._openai_api_key = get_settings().OPENAI_API_KEY
+            self.api_key = get_settings().OPENAI_API_KEY
 
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
 
         # Auto-adjust temperature for models that require it
-        if model_name in models_requiring_temperature_1:
+        if model in models_requiring_temperature_1:
             temperature = 1
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -295,10 +332,15 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
+
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -314,9 +356,9 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -334,7 +376,7 @@ class GPTModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -354,10 +396,15 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
+
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -373,9 +420,9 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -393,7 +440,7 @@ class GPTModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
@@ -420,8 +467,11 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -443,8 +493,11 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -463,8 +516,11 @@ class GPTModel(DeepEvalBaseLLM):
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[list[str], float]:
         client = self.load_model(async_mode=False)
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            prompt = self.generate_prompt(prompt)
         response = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             n=n,
             temperature=temperature,
@@ -479,7 +535,7 @@ class GPTModel(DeepEvalBaseLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         # TODO: consider loggin a warning instead of defaulting to whole model pricing
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -488,8 +544,40 @@ class GPTModel(DeepEvalBaseLLM):
     # Model #
     #########
 
-    def get_model_name(self):
-        return self.model_name
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        prompt = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                if ele.local:
+                    import PIL.Image
+
+                    image = PIL.Image.open(ele.url)
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
+                        },
+                    }
+                else:
+                    visual_dict = {
+                        "type": "image_url",
+                        "image_url": {"url": ele.url},
+                    }
+                prompt.append(visual_dict)
+        return prompt
+
+    def encode_pil_image(self, pil_image):
+        image_buffer = BytesIO()
+        if pil_image.mode in ("RGBA", "LA", "P"):
+            pil_image = pil_image.convert("RGB")
+        pil_image.save(image_buffer, format="JPEG")
+        image_bytes = image_buffer.getvalue()
+        base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        return base64_encoded_image
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
@@ -512,10 +600,10 @@ class GPTModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self._openai_api_key,
+            self.api_key,
             provider_label="OpenAI",
             env_var_name="OPENAI_API_KEY",
-            param_hint="`_openai_api_key` to GPTModel(...)",
+            param_hint="`api_key` to GPTModel(...)",
         )
 
         kw = dict(
@@ -531,3 +619,11 @@ class GPTModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        if self.name in GPTModel.valid_multimodal_models:
+            return True
+        return False
+
+    def get_model_name(self):
+        return f"{self.name}"

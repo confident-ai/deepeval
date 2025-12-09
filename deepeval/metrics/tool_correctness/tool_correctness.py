@@ -83,7 +83,7 @@ class ToolCorrectnessMetric(BaseMetric):
                 self.tools_called: List[ToolCall] = test_case.tools_called
                 self.expected_tools: List[ToolCall] = test_case.expected_tools
                 tool_calling_score = self._calculate_score()
-                if self.available_tools:
+                if self.available_tools and not test_case.multimodal:
                     tool_selection_score = self._get_tool_selection_score(
                         test_case.input,
                         test_case.tools_called,
@@ -177,7 +177,7 @@ class ToolCorrectnessMetric(BaseMetric):
             self.tools_called: List[ToolCall] = test_case.tools_called
             self.expected_tools: List[ToolCall] = test_case.expected_tools
             tool_calling_score = self._calculate_score()
-            if self.available_tools:
+            if self.available_tools and not test_case.multimodal:
                 tool_selection_score = await self._a_get_tool_selection_score(
                     test_case.input,
                     test_case.tools_called,

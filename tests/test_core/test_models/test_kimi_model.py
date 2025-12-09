@@ -88,7 +88,7 @@ def test_kimi_model_defaults_from_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.moonshot.cn/v1"
 
     # Model name should also come from Settings
-    assert model.model_name == "moonshot-v1-8k"
+    assert model.name == "moonshot-v1-8k"
 
 
 def test_kimi_model_ctor_args_override_settings(monkeypatch):
@@ -121,7 +121,7 @@ def test_kimi_model_ctor_args_override_settings(monkeypatch):
     assert kw.get("base_url") == "https://api.moonshot.cn/v1"
 
     # Model name should match ctor value
-    assert model.model_name == "moonshot-v1-32k"
+    assert model.name == "moonshot-v1-32k"
     # And the temperature should respect the ctor argument (assuming no
     # TEMPERATURE override from Settings)
     assert model.temperature == 0.5

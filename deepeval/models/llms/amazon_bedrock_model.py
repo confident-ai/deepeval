@@ -1,5 +1,3 @@
-import asyncio
-
 from typing import Optional, Tuple, Union, Dict
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
@@ -76,6 +74,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         try:
             payload = self.get_converse_request_body(prompt)
             client = await self._ensure_client()

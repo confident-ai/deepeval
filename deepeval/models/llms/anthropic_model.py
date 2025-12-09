@@ -1,6 +1,6 @@
 import warnings
 
-from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
 
 from deepeval.models import DeepEvalBaseLLM
@@ -9,14 +9,13 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.models.utils import parse_model_name, require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
-
-
-if TYPE_CHECKING:
-    pass
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
@@ -33,33 +32,44 @@ model_pricing = {
     "claude-instant-1.2": {"input": 0.80 / 1e6, "output": 2.40 / 1e6},
 }
 
+_ALIAS_MAP = {
+    "api_key": ["_anthropic_api_key"],
+}
+
 
 class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: str = "claude-3-7-sonnet-latest",
+        api_key: Optional[str] = None,
         temperature: float = 0,
-        _anthropic_api_key: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = parse_model_name(model)
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "AnthropicModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
 
-        if _anthropic_api_key is not None:
+        # re-map depricated keywords to re-named positional args
+        if api_key is None and "api_key" in alias_values:
+            api_key = alias_values["api_key"]
+
+        if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self._anthropic_api_key: SecretStr | None = SecretStr(
-                _anthropic_api_key
-            )
+            self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self._anthropic_api_key = get_settings().ANTHROPIC_API_KEY
+            self.api_key = get_settings().ANTHROPIC_API_KEY
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
 
-        self.kwargs = kwargs
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -69,6 +79,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         chat_model = self.load_model()
         message = chat_model.messages.create(
             max_tokens=1024,
@@ -78,7 +89,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                     "content": prompt,
                 }
             ],
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -95,6 +106,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
+
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
             max_tokens=1024,
@@ -104,7 +116,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                     "content": prompt,
                 }
             ],
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -123,7 +135,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.model_name)
+        pricing = model_pricing.get(self.name)
 
         if pricing is None:
             # Calculate average cost from all known models
@@ -136,7 +148,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             pricing = {"input": avg_input_cost, "output": avg_output_cost}
 
             warnings.warn(
-                f"[Warning] Pricing not defined for model '{self.model_name}'. "
+                f"[Warning] Pricing not defined for model '{self.name}'. "
                 "Using average input/output token costs from existing model_pricing."
             )
 
@@ -159,9 +171,6 @@ class AnthropicModel(DeepEvalBaseLLM):
             return self._build_client(module.Anthropic)
         return self._build_client(module.AsyncAnthropic)
 
-    def get_model_name(self):
-        return f"{self.model_name}"
-
     def _client_kwargs(self) -> Dict:
         kwargs = dict(self.kwargs or {})
         # If we are managing retries with Tenacity, force SDK retries off to avoid double retries.
@@ -172,10 +181,10 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         api_key = require_secret_api_key(
-            self._anthropic_api_key,
+            self.api_key,
             provider_label="Anthropic",
             env_var_name="ANTHROPIC_API_KEY",
-            param_hint="`_anthropic_api_key` to AnthropicModel(...)",
+            param_hint="`api_key` to AnthropicModel(...)",
         )
         kw = dict(
             api_key=api_key,
@@ -189,3 +198,6 @@ class AnthropicModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Anthropic)"

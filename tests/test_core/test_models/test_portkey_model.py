@@ -1,22 +1,8 @@
 import pytest
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
-from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.portkey_model import PortkeyModel
-
-
-def make_settings(**overrides):
-    """Return a dummy settings object with PORTKEY defaults."""
-    defaults = dict(
-        PORTKEY_MODEL_NAME="gpt-4o-mini",
-        PORTKEY_API_KEY=SecretStr("portkey-secret"),
-        PORTKEY_BASE_URL="https://api.portkey.ai/v1",
-        PORTKEY_PROVIDER_NAME="openai",
-    )
-    defaults.update(overrides)
-    return SimpleNamespace(**defaults)
 
 
 #####################################
@@ -24,14 +10,13 @@ def make_settings(**overrides):
 #####################################
 
 
-@patch("deepeval.models.llms.portkey_model.get_settings")
-def test_portkey_model_prefers_explicit_params_over_settings(mock_get_settings):
-    mock_get_settings.return_value = make_settings(
-        PORTKEY_MODEL_NAME="from-settings-model",
-        PORTKEY_BASE_URL="https://from-settings.example.com",
-        PORTKEY_PROVIDER_NAME="from-settings-provider",
-        PORTKEY_API_KEY=SecretStr("settings-secret"),
-    )
+def test_portkey_model_prefers_explicit_params_over_settings(settings):
+
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     model = PortkeyModel(
         model="explicit-model",
@@ -41,7 +26,7 @@ def test_portkey_model_prefers_explicit_params_over_settings(mock_get_settings):
     )
 
     # Explicit params should win over settings
-    assert model.model == "explicit-model"
+    assert model.name == "explicit-model"
     assert (
         model.base_url == "https://explicit.example.com"
     )  # trailing slash stripped
@@ -53,13 +38,16 @@ def test_portkey_model_prefers_explicit_params_over_settings(mock_get_settings):
     assert headers["x-portkey-provider"] == "explicit-provider"
 
 
-@patch("deepeval.models.llms.portkey_model.get_settings")
-def test_portkey_model_uses_settings_when_params_missing(mock_get_settings):
-    mock_get_settings.return_value = make_settings()
+def test_portkey_model_uses_settings_when_params_missing(settings):
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     model = PortkeyModel()
 
-    assert model.model == "gpt-4o-mini"
+    assert model.name == "gpt-4o-mini"
     assert model.base_url == "https://api.portkey.ai/v1"
     assert model.provider == "openai"
 
@@ -69,12 +57,13 @@ def test_portkey_model_uses_settings_when_params_missing(mock_get_settings):
     assert headers["x-portkey-provider"] == "openai"
 
 
-@patch("deepeval.models.llms.portkey_model.get_settings")
-def test_portkey_model_raises_if_model_missing(mock_get_settings):
+def test_portkey_model_raises_if_model_missing(settings):
     # Model missing both as arg and in settings
-    mock_get_settings.return_value = make_settings(
-        PORTKEY_MODEL_NAME=None,
-    )
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = None
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model=None)
@@ -85,12 +74,13 @@ def test_portkey_model_raises_if_model_missing(mock_get_settings):
     assert "model" in msg
 
 
-@patch("deepeval.models.llms.portkey_model.get_settings")
-def test_portkey_model_raises_if_base_url_missing(mock_get_settings):
+def test_portkey_model_raises_if_base_url_missing(settings):
     # Model present but base URL missing in both places
-    mock_get_settings.return_value = make_settings(
-        PORTKEY_BASE_URL=None,
-    )
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = None
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model="gpt-4o-mini", base_url=None)
@@ -101,12 +91,13 @@ def test_portkey_model_raises_if_base_url_missing(mock_get_settings):
     assert "base_url" in msg
 
 
-@patch("deepeval.models.llms.portkey_model.get_settings")
-def test_portkey_model_raises_if_provider_missing(mock_get_settings):
+def test_portkey_model_raises_if_provider_missing(settings):
     # Model and base URL present, provider missing
-    mock_get_settings.return_value = make_settings(
-        PORTKEY_PROVIDER_NAME=None,
-    )
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = None
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     with pytest.raises(DeepEvalError) as exc:
         PortkeyModel(model="gpt-4o-mini", base_url="https://api.portkey.ai/v1")
@@ -123,11 +114,14 @@ def test_portkey_model_raises_if_provider_missing(mock_get_settings):
 
 
 @patch("deepeval.models.llms.portkey_model.requests.post")
-@patch("deepeval.models.llms.portkey_model.get_settings")
 def test_portkey_generate_sends_request_and_returns_content(
-    mock_get_settings, mock_post
+    mock_post, settings
 ):
-    mock_get_settings.return_value = make_settings()
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     model = PortkeyModel()
     prompt = "Hello from DeepEval"
@@ -168,11 +162,14 @@ def test_portkey_generate_sends_request_and_returns_content(
 
 
 @pytest.mark.asyncio
-@patch("deepeval.models.llms.portkey_model.get_settings")
 async def test_portkey_a_generate_sends_request_and_returns_content(
-    mock_get_settings,
+    settings,
 ):
-    mock_get_settings.return_value = make_settings()
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
 
     model = PortkeyModel()
     prompt = "Hello from async DeepEval"

@@ -52,18 +52,16 @@ def test_metrics_imports():
         ConversationCompletenessMetric,
         KnowledgeRetentionMetric,
         RoleAdherenceMetric,
+        TurnContextualPrecisionMetric,
+        TurnContextualRecallMetric,
+        TurnContextualRelevancyMetric,
+        TurnFaithfulnessMetric,
         # Multimodal metrics
         TextToImageMetric,
         ImageEditingMetric,
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
         MultimodalGEval,
     )
 
@@ -110,18 +108,16 @@ def test_metrics_imports():
         StepEfficiencyMetric,
         KnowledgeRetentionMetric,
         TurnRelevancyMetric,
+        TurnContextualPrecisionMetric,
+        TurnContextualRecallMetric,
+        TurnContextualRelevancyMetric,
+        TurnFaithfulnessMetric,
         ConversationCompletenessMetric,
         TextToImageMetric,
         ImageEditingMetric,
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
         MultimodalGEval,
     ]
 
@@ -210,9 +206,7 @@ def test_test_case_imports():
         LLMTestCase,
         ConversationalTestCase,
         ArenaTestCase,
-        MLLMTestCase,
         Turn,
-        MLLMTestCaseParams,
         MLLMImage,
         ToolCall,
         ToolCallParams,
@@ -227,9 +221,7 @@ def test_test_case_imports():
     assert LLMTestCase is not None
     assert ConversationalTestCase is not None
     assert ArenaTestCase is not None
-    assert MLLMTestCase is not None
     assert Turn is not None
-    assert MLLMTestCaseParams is not None
     assert MLLMImage is not None
     assert ToolCall is not None
     assert ToolCallParams is not None
@@ -280,7 +272,6 @@ def test_models_imports():
     from deepeval.models import (
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,
@@ -293,9 +284,6 @@ def test_models_imports():
         KimiModel,
         GrokModel,
         DeepSeekModel,
-        MultimodalOpenAIModel,
-        MultimodalOllamaModel,
-        MultimodalGeminiModel,
         OpenAIEmbeddingModel,
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
@@ -306,7 +294,6 @@ def test_models_imports():
     model_classes = [
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,
@@ -319,9 +306,6 @@ def test_models_imports():
         KimiModel,
         GrokModel,
         DeepSeekModel,
-        MultimodalOpenAIModel,
-        MultimodalOllamaModel,
-        MultimodalGeminiModel,
         OpenAIEmbeddingModel,
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,

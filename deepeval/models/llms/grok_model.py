@@ -7,10 +7,11 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-
 
 # consistent retry rules
 retry_grok = create_retry_decorator(PS.GROK)
@@ -61,11 +62,12 @@ class GrokModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+
         settings = get_settings()
 
-        model_name = model or settings.GROK_MODEL_NAME
+        model = model or settings.GROK_MODEL_NAME
 
-        if model_name not in model_pricing:
+        if model not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
             )
@@ -83,9 +85,10 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.GROK_API_KEY
 
+        # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -95,6 +98,7 @@ class GrokModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         try:
             from xai_sdk.chat import user
         except ImportError:
@@ -103,13 +107,13 @@ class GrokModel(DeepEvalBaseLLM):
             )
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
         chat.append(user(prompt))
 
-        if schema and self.model_name in structured_outputs_models:
+        if schema and self.name in structured_outputs_models:
             response, structured_output = chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -133,6 +137,7 @@ class GrokModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         try:
             from xai_sdk.chat import user
         except ImportError:
@@ -141,13 +146,13 @@ class GrokModel(DeepEvalBaseLLM):
             )
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
-            model=self.model_name,
+            model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
         chat.append(user(prompt))
 
-        if schema and self.model_name in structured_outputs_models:
+        if schema and self.name in structured_outputs_models:
             response, structured_output = await chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -176,7 +181,7 @@ class GrokModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -197,9 +202,6 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
-
-    def get_model_name(self):
-        return f"{self.model_name}"
 
     def _client_kwargs(self) -> Dict:
         """
@@ -242,3 +244,6 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Grok)"

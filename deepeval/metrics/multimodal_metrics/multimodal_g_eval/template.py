@@ -53,53 +53,45 @@ class MultimodalGEvalTemplate:
             else ""
         )
 
-        return (
-            [
-                textwrap.dedent(
-                    f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
+        return textwrap.dedent(
+            f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
 
-                - `"score"`: an integer between {score_range[0]} and {score_range[1]}, {score_explanation}.
-                - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+            - `"score"`: an integer between {score_range[0]} and {score_range[1]}, {score_explanation}.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
 
-                Your explanation should:
-                - {reasoning_expectation}
-                - Mention key details from the test case parameters.
-                - Be concise, clear, and focused on the evaluation logic.
+            Your explanation should:
+            - {reasoning_expectation}
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
 
-                Only return valid JSON. Do **not** include any extra commentary or text.
+            Only return valid JSON. Do **not** include any extra commentary or text.
 
-                ---
+            ---
 
-                Evaluation Steps:
-                {evaluation_steps}
+            Evaluation Steps:
+            {evaluation_steps}
 
-                {rubric_text}
-                Test Case:
-                ************************
-                """
-                )
-            ]
-            + test_case_list
-            + [
-                textwrap.dedent(
-                    f"""
-                ************************
-                \n\n\n
-                Parameters:
-                {parameters}
-                {additional_context}
+            {rubric_text}
+            Test Case:
+            ************************
+            
+            {test_case_list}
 
-                ---
-                **Example JSON:**
-                {{
-                    "reason": "your concise and informative reason here",
-                    "score": {score_range[0]}
-                }}
+            ************************
+            \n\n\n
+            Parameters:
+            {parameters}
+            {additional_context}
 
-                JSON:
-                """
-                )
-            ]
+            ---
+            **Example JSON:**
+            {{
+                "reason": "your concise and informative reason here",
+                "score": {score_range[0]}
+            }}
+
+            JSON:
+            """
         )
 
     @staticmethod
@@ -114,35 +106,28 @@ class MultimodalGEvalTemplate:
             if _additional_context
             else ""
         )
-        return (
-            [
-                textwrap.dedent(
-                    f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+        return textwrap.dedent(
+            f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
-                Evaluation Steps:
-                {evaluation_steps}
-                ************************
-                """
-                )
-            ]
-            + test_case_list
-            + [
-                textwrap.dedent(
-                    f"""
-                ************************
-                {additional_context}
-                **
-                IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+            Evaluation Steps:
+            {evaluation_steps}
+            ************************
+            
+            {test_case_list}
+        
+            ************************
+            {additional_context}
 
-                Example JSON:
-                {{
-                    "reason": "The text does not follow the evaluation steps provided.",
-                    "score": 0
-                }}
-                **
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
 
-                JSON:
-                """
-                )
-            ]
+            Example JSON:
+            {{
+                "reason": "The text does not follow the evaluation steps provided.",
+                "score": 0
+            }}
+            **
+
+            JSON:
+            """
         )

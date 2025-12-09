@@ -1,11 +1,11 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Type, Union
-from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
-    MLLMTestCaseParams,
-    MLLMTestCase,
+    LLMTestCaseParams,
+    LLMTestCase,
 )
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import (
     MultimodalGEvalTemplate,
@@ -17,7 +17,7 @@ from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
-    initialize_multimodal_model,
+    initialize_model,
     check_mllm_test_case_params,
     construct_verbose_logs,
     trimAndLoadJson,
@@ -42,11 +42,11 @@ class MultimodalGEval(BaseMultimodalMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[MLLMTestCaseParams],
+        evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
-        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         top_logprobs: int = 20,
         async_mode: bool = True,
@@ -62,7 +62,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         self.evaluation_params = evaluation_params
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
             evaluation_steps
@@ -79,7 +79,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
@@ -87,7 +87,7 @@ class MultimodalGEval(BaseMultimodalMetric):
     ) -> float:
 
         check_mllm_test_case_params(
-            test_case, self.evaluation_params, None, None, self
+            test_case, self.evaluation_params, None, None, self, self.model
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -134,7 +134,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _additional_context: Optional[str] = None,
@@ -142,7 +142,7 @@ class MultimodalGEval(BaseMultimodalMetric):
     ) -> float:
 
         check_mllm_test_case_params(
-            test_case, self.evaluation_params, None, None, self
+            test_case, self.evaluation_params, None, None, self, self.model
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -185,15 +185,15 @@ class MultimodalGEval(BaseMultimodalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate([prompt], schema=Steps)
+            res, cost = await self.model.a_generate(prompt, schema=Steps)
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = await self.model.a_generate([prompt], schema=Steps)
+                res: Steps = await self.model.a_generate(prompt, schema=Steps)
                 return res.steps
             except TypeError:
-                res = await self.model.a_generate([prompt])
+                res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 
@@ -208,20 +208,20 @@ class MultimodalGEval(BaseMultimodalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = self.model.generate([prompt], schema=Steps)
+            res, cost = self.model.generate(prompt, schema=Steps)
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = self.model.generate([prompt], schema=Steps)
+                res: Steps = self.model.generate(prompt, schema=Steps)
                 return res.steps
             except TypeError:
-                res = self.model.generate([prompt])
+                res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list = construct_test_case_list(
             self.evaluation_params, test_case
@@ -296,7 +296,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                     return data["score"], data["reason"]
 
     def _evaluate(
-        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list = construct_test_case_list(
             self.evaluation_params, test_case

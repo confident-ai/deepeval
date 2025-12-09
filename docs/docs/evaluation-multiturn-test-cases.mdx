@@ -146,6 +146,96 @@ test_case = ConversationalTestCase(
 A single-turn `LLMTestCase` also contains `context`.
 :::
 
+
+## Including Images In Test Cases
+
+By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ]
+)
+```
+
+:::info
+Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can use them with almost all the `deepeval` metrics.
+:::
+
+### `MLLMImage` data model:
+
+Here's the data model of the `MLLMImage` in `deepeval`:
+
+```python
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+```
+
+You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when initializing an `MLLMImage`. The `local` attribute should be set to `True` for locally stored images and `False` for images hosted online (default is `False`).
+
+:::note
+
+All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ]
+)
+
+print(test_case.turns[0].content)
+```
+
+This outputs the following:
+
+```
+What's the color of the shoes in this image? [DEEPEVAL:IMAGE:awefv234fvbnhg456]
+```
+
+Users who'd like to access their images themselves for any ETL can use the `convert_to_multi_modal_array` method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+from deepeval.utils import convert_to_multi_modal_array
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ]
+)
+
+print(convert_to_multi_modal_array(test_case.turns[0].content))
+```
+
+This will output the following:
+
+```
+["What's the color of the shoes in this image? ",  [DEEPEVAL:IMAGE:awefv234fvbnhg456]]
+```
+
+The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMImage` you passed inside your test case.
+
+:::
+
 ## Label Test Cases For Confident AI
 
 If you're using Confident AI, these are some additional parameters to help manage your test cases.

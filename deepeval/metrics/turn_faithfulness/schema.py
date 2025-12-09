@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 
 class FaithfulnessVerdict(BaseModel):
-    verdict: str
     reason: Optional[str] = Field(default=None)
+    verdict: Literal["yes", "no", "idk"]
 
 
 class Verdicts(BaseModel):
@@ -19,5 +19,13 @@ class Claims(BaseModel):
     claims: List[str]
 
 
-class MultimodalFaithfulnessScoreReason(BaseModel):
+class FaithfulnessScoreReason(BaseModel):
     reason: str
+
+
+class InteractionFaithfulnessScore(BaseModel):
+    score: float
+    reason: str
+    claims: List[str]
+    truths: List[str]
+    verdicts: List[FaithfulnessVerdict]

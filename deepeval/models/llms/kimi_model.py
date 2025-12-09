@@ -8,7 +8,9 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 
@@ -74,16 +76,16 @@ model_pricing = {
 class KimiModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        api_key: Optional[str] = None,
         model: Optional[str] = None,
+        api_key: Optional[str] = None,
         temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
 
-        model_name = model or settings.MOONSHOT_MODEL_NAME
-        if model_name not in model_pricing:
+        model = model or settings.MOONSHOT_MODEL_NAME
+        if model not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
             )
@@ -103,9 +105,10 @@ class KimiModel(DeepEvalBaseLLM):
             self.api_key = settings.MOONSHOT_API_KEY
 
         self.base_url = "https://api.moonshot.cn/v1"
+        # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+        super().__init__(model)
 
     ###############################################
     # Other generate functions
@@ -115,10 +118,11 @@ class KimiModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         client = self.load_model(async_mode=False)
-        if schema and self.model_name in json_mode_models:
+        if schema and self.name in json_mode_models:
             completion = client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -134,7 +138,7 @@ class KimiModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             **self.generation_kwargs,
         )
@@ -153,10 +157,11 @@ class KimiModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+
         client = self.load_model(async_mode=True)
-        if schema and self.model_name in json_mode_models:
+        if schema and self.name in json_mode_models:
             completion = await client.chat.completions.create(
-                model=self.model_name,
+                model=self.name,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
@@ -172,7 +177,7 @@ class KimiModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             **self.generation_kwargs,
         )
@@ -196,7 +201,7 @@ class KimiModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -244,4 +249,4 @@ class KimiModel(DeepEvalBaseLLM):
             raise
 
     def get_model_name(self):
-        return f"{self.model_name}"
+        return f"{self.name} (KIMI)"

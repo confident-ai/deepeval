@@ -3,7 +3,9 @@ from typing import Dict, List, Optional
 from pydantic import SecretStr
 
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import (
+    require_secret_api_key,
+)
 from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -19,12 +21,13 @@ retry_local = create_retry_decorator(PS.LOCAL)
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        model: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
-        **client_kwargs,
+        **kwargs,
     ):
+
         settings = get_settings()
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -37,16 +40,17 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
             or settings.LOCAL_EMBEDDING_BASE_URL
             and str(settings.LOCAL_EMBEDDING_BASE_URL)
         )
-        self.model_name = model or settings.LOCAL_EMBEDDING_MODEL_NAME
-        self.client_kwargs = client_kwargs or {}
+        model = model or settings.LOCAL_EMBEDDING_MODEL_NAME
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(self.model_name)
+        super().__init__(model)
 
     @retry_local
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         response = embedding_model.embeddings.create(
-            model=self.model_name, input=[text], **self.generation_kwargs
+            model=self.name, input=[text], **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -54,7 +58,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         response = embedding_model.embeddings.create(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return [data.embedding for data in response.data]
 
@@ -62,7 +66,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embeddings.create(
-            model=self.model_name, input=[text], **self.generation_kwargs
+            model=self.name, input=[text], **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -70,16 +74,13 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embeddings.create(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return [data.embedding for data in response.data]
 
     ###############################################
     # Model
     ###############################################
-
-    def get_model_name(self):
-        return self.model_name
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
@@ -94,7 +95,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
             param_hint="`api_key` to LocalEmbeddingModel(...)",
         )
 
-        client_kwargs = self.client_kwargs.copy()
+        client_kwargs = self.kwargs.copy()
         if not sdk_retries_for(PS.LOCAL):
             client_kwargs["max_retries"] = 0
 
@@ -111,3 +112,6 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 client_init_kwargs.pop("max_retries", None)
                 return cls(**client_init_kwargs)
             raise
+
+    def get_model_name(self):
+        return f"{self.name} (Local Model)"

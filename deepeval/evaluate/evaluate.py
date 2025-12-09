@@ -54,7 +54,6 @@ from deepeval.metrics.indicator import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
 )
 from deepeval.test_run import (
     global_test_run_manager,
@@ -71,9 +70,7 @@ from deepeval.evaluate.execute import (
 
 
 def assert_test(
-    test_case: Optional[
-        Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
-    ] = None,
+    test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
     metrics: Optional[
         Union[
             List[BaseMetric],
@@ -188,9 +185,7 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: Union[
-        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
-    ],
+    test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     metrics: Optional[
         Union[
             List[BaseMetric],

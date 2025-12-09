@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
 
-from deepeval.test_case import ToolCall
+from deepeval.test_case import ToolCall, MLLMImage
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,
@@ -156,10 +156,28 @@ class ConversationalTestCase(BaseModel):
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
+    multimodal: bool = False
 
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def set_is_multimodal(self):
+        import re
+
+        if self.multimodal is True:
+            return self
+
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        self.multimodal = any(
+            [
+                re.search(pattern, turn.content) is not None
+                for turn in self.turns
+            ]
+        )
+
+        return self
 
     @model_validator(mode="before")
     def validate_input(cls, data):
