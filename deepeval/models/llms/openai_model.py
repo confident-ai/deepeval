@@ -18,7 +18,6 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
-from deepeval.models.llms.utils import check_multimodal_validity
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -27,13 +26,6 @@ from deepeval.models.retry_policy import (
 
 retry_openai = create_retry_decorator(PS.OPENAI)
 
-valid_multimodal_models = [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-5",
-]
 
 valid_gpt_models = [
     "gpt-3.5-turbo",
@@ -244,6 +236,14 @@ _ALIAS_MAP = {
 
 
 class GPTModel(DeepEvalBaseLLM):
+    valid_multimodal_models = [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-5",
+    ]
+    
     def __init__(
         self,
         model: Optional[str] = None,
@@ -334,12 +334,6 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
 
         if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-                valid_multimodal_models,
-            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -404,12 +398,6 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-                valid_multimodal_models,
-            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
 
@@ -480,12 +468,6 @@ class GPTModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-                valid_multimodal_models,
-            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
@@ -512,12 +494,6 @@ class GPTModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=True)
         if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-                valid_multimodal_models,
-            )
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
@@ -645,7 +621,9 @@ class GPTModel(DeepEvalBaseLLM):
             raise
 
     def supports_multimodal(self):
-        return True
+        if self.name in GPTModel.valid_multimodal_models:
+            return True
+        return False
 
     def get_model_name(self):
         return f"{self.name}"

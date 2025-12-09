@@ -13,8 +13,6 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from deepeval.utils import check_if_multimodal
-from deepeval.models.llms.utils import check_multimodal_validity
 
 
 retry_kimi = create_retry_decorator(PS.KIMI)
@@ -120,12 +118,6 @@ class KimiModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         client = self.load_model(async_mode=False)
         if schema and self.name in json_mode_models:
@@ -165,12 +157,6 @@ class KimiModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         client = self.load_model(async_mode=True)
         if schema and self.name in json_mode_models:

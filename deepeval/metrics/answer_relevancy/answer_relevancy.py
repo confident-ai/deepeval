@@ -58,7 +58,7 @@ class AnswerRelevancyMetric(BaseMetric):
         multimodal = test_case.multimodal
         if multimodal:
             check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self
+                test_case, self._required_params, None, None, self, self.model
             )
         else:
             check_llm_test_case_params(test_case, self._required_params, self)
@@ -116,7 +116,7 @@ class AnswerRelevancyMetric(BaseMetric):
         multimodal = test_case.multimodal
         if multimodal:
             check_mllm_test_case_params(
-                test_case, self._required_params, None, None, self
+                test_case, self._required_params, None, None, self, self.model
             )
         else:
             check_llm_test_case_params(test_case, self._required_params, self)

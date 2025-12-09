@@ -54,7 +54,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
+            test_case, self._required_params, None, None, self, self.model
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -156,7 +156,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
+            test_case, self._required_params, None, None, self, self.model
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

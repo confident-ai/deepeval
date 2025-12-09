@@ -45,19 +45,3 @@ def safe_asyncio_run(coro):
     except Exception:
         raise
 
-
-def check_multimodal_validity(
-    supports_multimodal: bool,
-    model_name: str,
-    class_name: str,
-    valid_multimodal_models: Optional[List[str]] = None,
-):
-    if supports_multimodal:
-        if model_name not in valid_multimodal_models:
-            raise ValueError(
-                f"The evaluation model {model_name} does not support multimodal evaluations at the moment. Available multi-modal models for the {class_name} provider includes {', '.join(valid_multimodal_models)}."
-            )
-    else:
-        raise ValueError(
-            f"The evaluation model {model_name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join(MULTIMODAL_MODELS)}"
-        )

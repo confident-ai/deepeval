@@ -49,6 +49,12 @@ from deepeval.test_case import (
     TurnParams,
 )
 
+MULTIMODAL_SUPPORTED_MODELS = [
+    GPTModel,
+    GeminiModel,
+    OllamaModel,
+    AzureOpenAIModel,
+]
 
 def copy_metrics(
     metrics: List[
@@ -192,7 +198,20 @@ def check_conversational_test_case_params(
     test_case_params: List[TurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False
 ):
+    if multimodal:
+        if not model or not model.supports_multimodal():
+            if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
+                )
+            else:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+                )
+
     if isinstance(test_case, ConversationalTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
         metric.error = error_str
@@ -285,7 +304,18 @@ def check_mllm_test_case_params(
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: BaseMetric,
+    model: Optional[DeepEvalBaseLLM] = None,
 ):
+    if not model or not model.supports_multimodal():
+        if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
+            raise ValueError(
+                f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
+            )
+        else:
+            raise ValueError(
+                f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+            )
+
     if input_image_count:
         count = 0
         for ele in convert_to_multi_modal_array(test_case.input):

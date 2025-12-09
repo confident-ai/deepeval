@@ -16,8 +16,6 @@ from deepeval.models.utils import (
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
-from deepeval.utils import check_if_multimodal
-from deepeval.models.llms.utils import check_multimodal_validity
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
@@ -81,12 +79,6 @@ class AnthropicModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         chat_model = self.load_model()
         message = chat_model.messages.create(
@@ -114,12 +106,6 @@ class AnthropicModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(

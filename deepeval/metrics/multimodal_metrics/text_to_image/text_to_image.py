@@ -50,7 +50,7 @@ class TextToImageMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        check_mllm_test_case_params(test_case, required_params, 0, 1, self, self.model)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -108,7 +108,7 @@ class TextToImageMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(test_case, required_params, 0, 1, self)
+        check_mllm_test_case_params(test_case, required_params, 0, 1, self, self.model)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

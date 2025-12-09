@@ -87,7 +87,7 @@ class MultimodalGEval(BaseMultimodalMetric):
     ) -> float:
 
         check_mllm_test_case_params(
-            test_case, self.evaluation_params, None, None, self
+            test_case, self.evaluation_params, None, None, self, self.model
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -142,7 +142,7 @@ class MultimodalGEval(BaseMultimodalMetric):
     ) -> float:
 
         check_mllm_test_case_params(
-            test_case, self.evaluation_params, None, None, self
+            test_case, self.evaluation_params, None, None, self, self.model
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

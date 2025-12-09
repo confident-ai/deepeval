@@ -9,8 +9,6 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import require_param
-from deepeval.utils import check_if_multimodal
-from deepeval.models.llms.utils import check_multimodal_validity
 
 
 def _request_timeout_seconds() -> float:
@@ -105,12 +103,6 @@ class PortkeyModel(DeepEvalBaseLLM):
         return ""
 
     def generate(self, prompt: str) -> str:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         try:
             response = requests.post(
@@ -134,12 +126,6 @@ class PortkeyModel(DeepEvalBaseLLM):
         return self._extract_content(response.json())
 
     async def a_generate(self, prompt: str) -> str:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         async with aiohttp.ClientSession() as session:
             async with session.post(

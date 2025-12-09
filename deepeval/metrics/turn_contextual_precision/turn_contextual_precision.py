@@ -63,7 +63,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, False, self.model, test_case.multimodal
         )
         if test_case.expected_outcome is None:
             raise ValueError(
@@ -118,7 +118,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case, self._required_test_case_params, self, False, self.model, test_case.multimodal
         )
         if test_case.expected_outcome is None:
             raise ValueError(

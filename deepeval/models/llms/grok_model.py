@@ -12,8 +12,6 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from deepeval.utils import check_if_multimodal
-from deepeval.models.llms.utils import check_multimodal_validity
 
 # consistent retry rules
 retry_grok = create_retry_decorator(PS.GROK)
@@ -100,12 +98,6 @@ class GrokModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         try:
             from xai_sdk.chat import user
@@ -145,12 +137,6 @@ class GrokModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        if check_if_multimodal(prompt):
-            check_multimodal_validity(
-                self.supports_multimodal(),
-                self.name,
-                self.__class__.__name__,
-            )
 
         try:
             from xai_sdk.chat import user
