@@ -32,6 +32,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
     _required_test_case_params: List[TurnParams] = [
         TurnParams.CONTENT,
         TurnParams.RETRIEVAL_CONTEXT,
+        TurnParams.EXPECTED_OUTCOME
     ]
 
     def __init__(
@@ -70,10 +71,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             self.model,
             test_case.multimodal,
         )
-        if test_case.expected_outcome is None:
-            raise ValueError(
-                "A test case must have the 'expected_outcome' populated to run the 'TurnContextualRecallMetric'"
-            )
 
         multimodal = test_case.multimodal
 
@@ -130,10 +127,6 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             self.model,
             test_case.multimodal,
         )
-        if test_case.expected_outcome is None:
-            raise ValueError(
-                "A test case must have the 'expected_outcome' populated to run the 'TurnContextualRecallMetric'"
-            )
 
         multimodal = test_case.multimodal
 
