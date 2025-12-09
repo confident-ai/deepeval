@@ -32,7 +32,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
     _required_test_case_params: List[TurnParams] = [
         TurnParams.CONTENT,
         TurnParams.RETRIEVAL_CONTEXT,
-        TurnParams.EXPECTED_OUTCOME
+        TurnParams.EXPECTED_OUTCOME,
     ]
 
     def __init__(
