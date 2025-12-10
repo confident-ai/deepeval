@@ -48,7 +48,7 @@ class PatternMatchMetric(BaseMetric):
             None,
             None,
             self,
-            self.model,
+            None,
             test_case.multimodal,
         )
 
