@@ -12,7 +12,6 @@ from deepeval.test_case import (
     ConversationalTestCase,
     Turn,
 )
-from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
@@ -47,21 +46,40 @@ def create_api_test_case(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
             )
 
-        api_test_case = ConversationalApiTestCase(
-            name=name,
-            success=True,
-            metricsData=[],
-            runDuration=0,
-            evaluationCost=None,
-            order=order,
-            scenario=test_case.scenario,
-            expectedOutcome=test_case.expected_outcome,
-            userDescription=test_case.user_description,
-            context=test_case.context,
-            tags=test_case.tags,
-            comments=test_case.comments,
-            additionalMetadata=test_case.additional_metadata,
-        )
+        if test_case.multimodal is False:
+            api_test_case = ConversationalApiTestCase(
+                name=name,
+                success=True,
+                metricsData=[],
+                runDuration=0,
+                evaluationCost=None,
+                order=order,
+                scenario=test_case.scenario,
+                expectedOutcome=test_case.expected_outcome,
+                userDescription=test_case.user_description,
+                context=test_case.context,
+                tags=test_case.tags,
+                comments=test_case.comments,
+                additionalMetadata=test_case.additional_metadata,
+            )
+        else:
+            api_test_case = ConversationalApiTestCase(
+                name=name,
+                success=True,
+                metricsData=[],
+                runDuration=0,
+                evaluationCost=None,
+                order=order,
+                scenario=test_case.scenario,
+                expectedOutcome=test_case.expected_outcome,
+                userDescription=test_case.user_description,
+                context=test_case.context,
+                tags=test_case.tags,
+                comments=test_case.comments,
+                imagesMapping=test_case._get_images_mapping(),
+                additionalMetadata=test_case.additional_metadata,
+            )
+
         api_test_case.turns = [
             create_api_turn(
                 turn=turn,
@@ -115,7 +133,7 @@ def create_api_test_case(
                 expectedOutput=test_case.expected_output,
                 retrievalContext=test_case.retrieval_context,
                 context=test_case.context,
-                imagesMapping=_MLLM_IMAGE_REGISTRY,
+                imagesMapping=test_case._get_images_mapping(),
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
