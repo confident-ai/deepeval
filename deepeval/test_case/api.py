@@ -46,39 +46,22 @@ def create_api_test_case(
                 PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
             )
 
-        if test_case.multimodal is False:
-            api_test_case = ConversationalApiTestCase(
-                name=name,
-                success=True,
-                metricsData=[],
-                runDuration=0,
-                evaluationCost=None,
-                order=order,
-                scenario=test_case.scenario,
-                expectedOutcome=test_case.expected_outcome,
-                userDescription=test_case.user_description,
-                context=test_case.context,
-                tags=test_case.tags,
-                comments=test_case.comments,
-                additionalMetadata=test_case.additional_metadata,
-            )
-        else:
-            api_test_case = ConversationalApiTestCase(
-                name=name,
-                success=True,
-                metricsData=[],
-                runDuration=0,
-                evaluationCost=None,
-                order=order,
-                scenario=test_case.scenario,
-                expectedOutcome=test_case.expected_outcome,
-                userDescription=test_case.user_description,
-                context=test_case.context,
-                tags=test_case.tags,
-                comments=test_case.comments,
-                imagesMapping=test_case._get_images_mapping(),
-                additionalMetadata=test_case.additional_metadata,
-            )
+        api_test_case = ConversationalApiTestCase(
+            name=name,
+            success=True,
+            metricsData=[],
+            runDuration=0,
+            evaluationCost=None,
+            order=order,
+            scenario=test_case.scenario,
+            expectedOutcome=test_case.expected_outcome,
+            userDescription=test_case.user_description,
+            context=test_case.context,
+            tags=test_case.tags,
+            comments=test_case.comments,
+            imagesMapping=test_case._get_images_mapping(),
+            additionalMetadata=test_case.additional_metadata,
+        )
 
         api_test_case.turns = [
             create_api_turn(
@@ -103,48 +86,27 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
-        if isinstance(test_case, LLMTestCase) and test_case.multimodal is False:
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                tags=test_case.tags,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-                trace=trace,
-            )
-        elif isinstance(test_case, LLMTestCase) and test_case.multimodal:
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                retrievalContext=test_case.retrieval_context,
-                context=test_case.context,
-                imagesMapping=test_case._get_images_mapping(),
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-            )
+        api_test_case = LLMApiTestCase(
+            name=name,
+            input=test_case.input,
+            actualOutput=test_case.actual_output,
+            expectedOutput=test_case.expected_output,
+            retrievalContext=test_case.retrieval_context,
+            context=test_case.context,
+            imagesMapping=test_case._get_images_mapping(),
+            toolsCalled=test_case.tools_called,
+            expectedTools=test_case.expected_tools,
+            tokenCost=test_case.token_cost,
+            completionTime=test_case.completion_time,
+            success=success,
+            metricsData=metrics_data,
+            runDuration=None,
+            evaluationCost=None,
+            order=order,
+            additionalMetadata=test_case.additional_metadata,
+            comments=test_case.comments,
+            tags=test_case.tags,
+            trace=trace,
+        )
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case

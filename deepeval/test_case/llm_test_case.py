@@ -524,4 +524,4 @@ class LLMTestCase(BaseModel):
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
 
-        return images_mapping
+        return images_mapping if len(images_mapping) > 0 else None
