@@ -10,7 +10,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-BANANA = os.path.join(current_dir, "./images/Banana.jpg")
+CAR = os.path.join(current_dir, "images/car.png")
 
 
 class TestAnswerRelevancyMetric:
@@ -65,13 +65,13 @@ class TestAnswerRelevancyMetric:
         assert test_case.multimodal is False
 
     def test_multimodal_async_metric_measure(self):
-        image = MLLMImage(url=BANANA, local=True)
+        image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a banana",
-            actual_output=f"That is a banana.",
-            retrieval_context=[f"Bananas are good for health {image}"],
-            context=[f"Bananas are good for health {image}"],
+            expected_output=f"That's an image of a car",
+            actual_output=f"That is a car.",
+            retrieval_context=[f"Cars are great to look at {image}"],
+            context=[f"Cars are great to look at {image}"],
             tools_called=[
                 ToolCall(name="ImageAnalysis"),
                 ToolCall(name="ToolQuery"),
@@ -86,13 +86,13 @@ class TestAnswerRelevancyMetric:
         assert test_case.multimodal is True
 
     def test_multimodal_sync_metric_measure(self):
-        image = MLLMImage(url=BANANA, local=True)
+        image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a banana",
-            actual_output=f"That is a banana.",
-            retrieval_context=[f"Bananas are good for health {image}"],
-            context=[f"Bananas are good for health {image}"],
+            expected_output=f"That's an image of a car",
+            actual_output=f"That is a car.",
+            retrieval_context=[f"Cars are great to look at {image}"],
+            context=[f"Cars are great to look at {image}"],
             tools_called=[
                 ToolCall(name="ImageAnalysis"),
                 ToolCall(name="ToolQuery"),
@@ -107,13 +107,13 @@ class TestAnswerRelevancyMetric:
         assert test_case.multimodal is True
 
     def test_invalid_model_throws_error_for_multimodal(self):
-        image = MLLMImage(url=BANANA, local=True)
+        image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a banana",
-            actual_output=f"That is a banana.",
-            retrieval_context=[f"Bananas are good for health {image}"],
-            context=[f"Bananas are good for health {image}"],
+            expected_output=f"That's an image of a car",
+            actual_output=f"That is a car.",
+            retrieval_context=[f"Cars are great to look at {image}"],
+            context=[f"Cars are great to look at {image}"],
             tools_called=[
                 ToolCall(name="ImageAnalysis"),
                 ToolCall(name="ToolQuery"),
