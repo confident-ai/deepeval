@@ -1,7 +1,10 @@
 import React from "react";
 import styles from "./MetricTagsDisplayer.module.css";
 
-const MetricTagsDisplayer = ({ usesLLMs=true, singleTurn=false, multiTurn=false,referenceless=false, referenceBased=false, rag=false, agent=false, chatbot=false, custom=false, safety=false, multimodal=false }) => {
+const MetricTagsDisplayer = ({ usesLLMs=true, singleTurn=false, multiTurn=false,referenceless=false, referenceBased=false, rag=false, agent=false, chatbot=false, custom=false, safety=false, multimodal=true }) => {
+  
+  if (!usesLLMs) multimodal = false;
+
   return (
     <div className={styles.metricTagsDisplayer}>
       {usesLLMs && <div className={`${styles.pill} ${styles.usesLLM}`}>{multimodal ? "M" : ""}LLM-as-a-judge</div>}
