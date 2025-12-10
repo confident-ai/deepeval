@@ -229,34 +229,33 @@ class ConversationalTestCase(BaseModel):
         data["turns"] = copied_turns
 
         return data
-    
+
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
         pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         image_ids = set()
-        
+
         def extract_ids_from_string(s: Optional[str]) -> None:
             """Helper to extract image IDs from a string."""
             if s is not None and isinstance(s, str):
                 matches = re.findall(pattern, s)
                 image_ids.update(matches)
-        
+
         def extract_ids_from_list(lst: Optional[List[str]]) -> None:
             """Helper to extract image IDs from a list of strings."""
             if lst is not None:
                 for item in lst:
                     extract_ids_from_string(item)
-        
+
         extract_ids_from_string(self.scenario)
         extract_ids_from_string(self.expected_outcome)
         extract_ids_from_list(self.context)
         for turn in self.turns:
             extract_ids_from_string(turn.content)
             extract_ids_from_list(turn.retrieval_context)
-        
+
         images_mapping = {}
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
-        
-        return images_mapping
 
+        return images_mapping

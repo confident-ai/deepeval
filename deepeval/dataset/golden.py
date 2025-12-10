@@ -35,7 +35,9 @@ class Golden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     multimodal: bool = Field(False, exclude=True)
-    images_mapping: Dict[str, MLLMImage] = Field(default=None, alias="imagesMapping")
+    images_mapping: Dict[str, MLLMImage] = Field(
+        default=None, alias="imagesMapping"
+    )
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
@@ -70,34 +72,34 @@ class Golden(BaseModel):
             )
 
         return self
-    
+
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
         pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         image_ids = set()
-        
+
         def extract_ids_from_string(s: Optional[str]) -> None:
             """Helper to extract image IDs from a string."""
             if s is not None and isinstance(s, str):
                 matches = re.findall(pattern, s)
                 image_ids.update(matches)
-        
+
         def extract_ids_from_list(lst: Optional[List[str]]) -> None:
             """Helper to extract image IDs from a list of strings."""
             if lst is not None:
                 for item in lst:
                     extract_ids_from_string(item)
-        
+
         extract_ids_from_string(self.input)
         extract_ids_from_string(self.actual_output)
         extract_ids_from_string(self.expected_output)
         extract_ids_from_list(self.context)
         extract_ids_from_list(self.retrieval_context)
-        
+
         images_mapping = {}
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
-        
+
         return images_mapping
 
 
@@ -120,7 +122,9 @@ class ConversationalGolden(BaseModel):
     )
     turns: Optional[List[Turn]] = Field(default=None)
     multimodal: bool = Field(False, exclude=True)
-    images_mapping: Dict[str, MLLMImage] = Field(default=None, alias="imagesMapping")
+    images_mapping: Dict[str, MLLMImage] = Field(
+        default=None, alias="imagesMapping"
+    )
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
@@ -157,19 +161,19 @@ class ConversationalGolden(BaseModel):
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
         pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
         image_ids = set()
-        
+
         def extract_ids_from_string(s: Optional[str]) -> None:
             """Helper to extract image IDs from a string."""
             if s is not None and isinstance(s, str):
                 matches = re.findall(pattern, s)
                 image_ids.update(matches)
-        
+
         def extract_ids_from_list(lst: Optional[List[str]]) -> None:
             """Helper to extract image IDs from a list of strings."""
             if lst is not None:
                 for item in lst:
                     extract_ids_from_string(item)
-        
+
         extract_ids_from_string(self.scenario)
         extract_ids_from_string(self.expected_outcome)
         extract_ids_from_list(self.context)
@@ -177,10 +181,10 @@ class ConversationalGolden(BaseModel):
             for turn in self.turns:
                 extract_ids_from_string(turn.content)
                 extract_ids_from_list(turn.retrieval_context)
-        
+
         images_mapping = {}
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
-        
+
         return images_mapping

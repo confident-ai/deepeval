@@ -99,8 +99,15 @@ class ConversationSimulator:
                     [golden.multimodal for golden in conversational_goldens]
                 )
                 if multimodal:
-                    if not self.simulator_model or not self.simulator_model.supports_multimodal():
-                        if self.simulator_model and type(self.simulator_model) in MULTIMODAL_SUPPORTED_MODELS:
+                    if (
+                        not self.simulator_model
+                        or not self.simulator_model.supports_multimodal()
+                    ):
+                        if (
+                            self.simulator_model
+                            and type(self.simulator_model)
+                            in MULTIMODAL_SUPPORTED_MODELS
+                        ):
                             raise ValueError(
                                 f"The evaluation model {self.simulator_model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {self.simulator_model.__class__.__name__} provider includes {', '.join(self.simulator_model.__class__.valid_multimodal_models)}."
                             )
@@ -138,13 +145,20 @@ class ConversationSimulator:
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
-        
+
         multimodal = any(
             [golden.multimodal for golden in conversational_goldens]
         )
         if multimodal:
-            if not self.simulator_model or not self.simulator_model.supports_multimodal():
-                if self.simulator_model and type(self.simulator_model) in MULTIMODAL_SUPPORTED_MODELS:
+            if (
+                not self.simulator_model
+                or not self.simulator_model.supports_multimodal()
+            ):
+                if (
+                    self.simulator_model
+                    and type(self.simulator_model)
+                    in MULTIMODAL_SUPPORTED_MODELS
+                ):
                     raise ValueError(
                         f"The evaluation model {self.simulator_model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {self.simulator_model.__class__.__name__} provider includes {', '.join(self.simulator_model.__class__.valid_multimodal_models)}."
                     )
@@ -152,7 +166,7 @@ class ConversationSimulator:
                     raise ValueError(
                         f"The evaluation model {self.simulator_model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
                     )
-                        
+
         self.simulation_cost = 0 if self.using_native_model else None
 
         async def simulate_conversations(
