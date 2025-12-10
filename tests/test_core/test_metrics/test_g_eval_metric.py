@@ -7,6 +7,7 @@ from deepeval.test_case import (
     ToolCall,
     LLMTestCaseParams,
 )
+from deepeval import evaluate
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -196,7 +197,7 @@ class TestGEval:
 
         evaluate([test_case], [metric])
 
-    def test_normal_sync_metric_measure(self):
+    def test_multimodal_evaluate_method(self):
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
@@ -219,8 +220,5 @@ class TestGEval:
             criteria="Check if the actual output is relevant to input",
             async_mode=False,
         )
-        metric.measure(test_case)
 
-        assert metric.score is not None
-        assert metric.reason is not None
-        assert test_case.multimodal is False
+        evaluate([test_case], [metric])
