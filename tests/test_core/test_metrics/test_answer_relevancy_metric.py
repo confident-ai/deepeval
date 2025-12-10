@@ -146,7 +146,7 @@ class TestAnswerRelevancyMetric:
         )
 
         metric = AnswerRelevancyMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -167,7 +167,7 @@ class TestAnswerRelevancyMetric:
         )
 
         metric = AnswerRelevancyMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None

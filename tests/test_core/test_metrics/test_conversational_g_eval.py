@@ -1,7 +1,12 @@
 import os
 import pytest
 from deepeval.metrics import ConversationalGEval
-from deepeval.test_case import ConversationalTestCase, MLLMImage, TurnParams, Turn
+from deepeval.test_case import (
+    ConversationalTestCase,
+    MLLMImage,
+    TurnParams,
+    Turn,
+)
 from deepeval import evaluate
 
 pytestmark = pytest.mark.skipif(
@@ -22,21 +27,21 @@ class TestConversationalGEval:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",
             evaluation_params=[TurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(convo_test_case)
 
@@ -49,15 +54,15 @@ class TestConversationalGEval:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",
@@ -74,17 +79,18 @@ class TestConversationalGEval:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",
@@ -101,23 +107,24 @@ class TestConversationalGEval:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",
             evaluation_params=[TurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(convo_test_case)
 
@@ -129,24 +136,25 @@ class TestConversationalGEval:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         with pytest.raises(ValueError):
             metric = ConversationalGEval(
                 name="Testing image",
                 evaluation_params=[TurnParams.CONTENT],
                 criteria="Check if the assistant's turns are relevanct and helpful to users turns",
-                model="gpt-3.5-turbo"
+                model="gpt-3.5-turbo",
             )
             metric.measure(convo_test_case)
 
@@ -155,22 +163,22 @@ class TestConversationalGEval:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",
             evaluation_params=[TurnParams.CONTENT],
             criteria="Check if the assistant's turns are relevanct and helpful to users turns",
         )
-        
+
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None
@@ -179,17 +187,18 @@ class TestConversationalGEval:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = ConversationalGEval(
             name="Testing image",

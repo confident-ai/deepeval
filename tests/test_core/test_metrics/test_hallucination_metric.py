@@ -146,7 +146,7 @@ class TestHallucinationMetric:
         )
 
         metric = HallucinationMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -167,8 +167,7 @@ class TestHallucinationMetric:
         )
 
         metric = HallucinationMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

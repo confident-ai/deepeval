@@ -17,7 +17,6 @@ CAR = os.path.join(current_dir, "images/car.png")
 class TestImageReferenceMetric:
     """Tests for answer relevancy metric"""
 
-
     def test_multimodal_async_metric_measure(self):
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
@@ -80,7 +79,6 @@ class TestImageReferenceMetric:
             )
             metric.measure(test_case)
 
-
     def test_multimodal_evaluate_method(self):
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
@@ -97,7 +95,7 @@ class TestImageReferenceMetric:
         )
 
         metric = ImageReferenceMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None

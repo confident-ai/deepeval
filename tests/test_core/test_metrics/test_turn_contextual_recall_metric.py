@@ -1,7 +1,12 @@
 import os
 import pytest
 from deepeval.metrics import TurnContextualRecallMetric
-from deepeval.test_case import ConversationalTestCase, MLLMImage, TurnParams, Turn
+from deepeval.test_case import (
+    ConversationalTestCase,
+    MLLMImage,
+    TurnParams,
+    Turn,
+)
 from deepeval import evaluate
 
 pytestmark = pytest.mark.skipif(
@@ -22,15 +27,15 @@ class TestTurnContextualRecallMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric(async_mode=False)
         metric.measure(convo_test_case)
@@ -44,15 +49,15 @@ class TestTurnContextualRecallMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric()
         metric.measure(convo_test_case)
@@ -65,17 +70,18 @@ class TestTurnContextualRecallMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric()
         metric.measure(convo_test_case)
@@ -88,17 +94,18 @@ class TestTurnContextualRecallMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric(async_mode=False)
         metric.measure(convo_test_case)
@@ -111,22 +118,21 @@ class TestTurnContextualRecallMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         with pytest.raises(ValueError):
-            metric = TurnContextualRecallMetric(
-                model="gpt-3.5-turbo"
-            )
+            metric = TurnContextualRecallMetric(model="gpt-3.5-turbo")
             metric.measure(convo_test_case)
 
     def test_normal_evaluate_method(self):
@@ -134,18 +140,18 @@ class TestTurnContextualRecallMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric()
-        
+
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None
@@ -154,21 +160,21 @@ class TestTurnContextualRecallMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TurnContextualRecallMetric()
 
-        
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None

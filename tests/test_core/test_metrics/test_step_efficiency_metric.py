@@ -36,10 +36,8 @@ class TestStepEfficiencyMetric:
             restaurants = restaurant_finder(destination)
 
             return itinerary + restaurants
-        
-        golden = Golden(
-            input="List some places from Paris"
-        )
+
+        golden = Golden(input="List some places from Paris")
         dataset = EvaluationDataset(goldens=[golden])
 
         metric = StepEfficiencyMetric(async_mode=False)
@@ -69,10 +67,8 @@ class TestStepEfficiencyMetric:
             restaurants = restaurant_finder(destination)
 
             return itinerary + restaurants
-        
-        golden = Golden(
-            input="List some places from Paris"
-        )
+
+        golden = Golden(input="List some places from Paris")
         dataset = EvaluationDataset(goldens=[golden])
 
         metric = StepEfficiencyMetric()
@@ -86,6 +82,7 @@ class TestStepEfficiencyMetric:
 
     def test_multimodal_async_metric_measure(self):
         image = MLLMImage(url=CAR)
+
         @observe()
         def trip_planner_agent(input):
             destination = "Paris"
@@ -103,7 +100,7 @@ class TestStepEfficiencyMetric:
             restaurants = restaurant_finder(destination)
 
             return itinerary + restaurants
-        
+
         golden = Golden(
             input=f"If this image is a car {image}, list some places from Paris"
         )
@@ -120,6 +117,7 @@ class TestStepEfficiencyMetric:
 
     def test_multimodal_sync_metric_measure(self):
         image = MLLMImage(url=CAR)
+
         @observe()
         def trip_planner_agent(input):
             destination = "Paris"
@@ -137,7 +135,7 @@ class TestStepEfficiencyMetric:
             restaurants = restaurant_finder(destination)
 
             return itinerary + restaurants
-        
+
         golden = Golden(
             input=f"If this image is a car {image}, list some places from Paris"
         )
@@ -154,6 +152,7 @@ class TestStepEfficiencyMetric:
 
     def test_invalid_model_throws_error_for_multimodal(self):
         image = MLLMImage(url=CAR)
+
         @observe()
         def trip_planner_agent(input):
             destination = "Paris"
@@ -171,7 +170,7 @@ class TestStepEfficiencyMetric:
             restaurants = restaurant_finder(destination)
 
             return itinerary + restaurants
-        
+
         golden = Golden(
             input=f"If this image is a car {image}, list some places from Paris"
         )

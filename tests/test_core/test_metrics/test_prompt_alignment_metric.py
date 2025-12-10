@@ -34,7 +34,9 @@ class TestPromptAlignmentMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], async_mode=False)
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"], async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -58,7 +60,9 @@ class TestPromptAlignmentMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], )
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"],
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -79,7 +83,9 @@ class TestPromptAlignmentMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], )
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"],
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -100,7 +106,9 @@ class TestPromptAlignmentMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], async_mode=False)
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"], async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -122,8 +130,10 @@ class TestPromptAlignmentMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], 
-                async_mode=False, model="gpt-3.5-turbo"
+            metric = PromptAlignmentMetric(
+                prompt_instructions=["Reply in all uppercase"],
+                async_mode=False,
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -145,8 +155,10 @@ class TestPromptAlignmentMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], )
-        
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"],
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -166,9 +178,10 @@ class TestPromptAlignmentMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = PromptAlignmentMetric(prompt_instructions=["Reply in all uppercase"], )
-        
+        metric = PromptAlignmentMetric(
+            prompt_instructions=["Reply in all uppercase"],
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

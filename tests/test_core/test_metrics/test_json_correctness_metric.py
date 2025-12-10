@@ -5,6 +5,7 @@ from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
 from pydantic import BaseModel
 
+
 class ExampleSchema(BaseModel):
     name: str
 
@@ -39,7 +40,9 @@ class TestJsonCorrectnessMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, async_mode=False)
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema, async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -63,7 +66,9 @@ class TestJsonCorrectnessMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, )
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema,
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -84,7 +89,9 @@ class TestJsonCorrectnessMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, )
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema,
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -105,7 +112,9 @@ class TestJsonCorrectnessMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, async_mode=False)
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema, async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -127,8 +136,10 @@ class TestJsonCorrectnessMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, 
-                async_mode=False, model="gpt-3.5-turbo"
+            metric = JsonCorrectnessMetric(
+                expected_schema=ExampleSchema,
+                async_mode=False,
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -150,8 +161,10 @@ class TestJsonCorrectnessMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, )
-        
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema,
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -171,9 +184,10 @@ class TestJsonCorrectnessMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = JsonCorrectnessMetric(expected_schema=ExampleSchema, )
-        
+        metric = JsonCorrectnessMetric(
+            expected_schema=ExampleSchema,
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

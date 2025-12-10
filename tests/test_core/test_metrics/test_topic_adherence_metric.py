@@ -22,19 +22,18 @@ class TestTopicAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"],
-            async_mode=False
+            relevant_topics=["Cars and Shoe stores"], async_mode=False
         )
         metric.measure(convo_test_case)
 
@@ -47,19 +46,17 @@ class TestTopicAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
-        metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"]
-        )
+        metric = TopicAdherenceMetric(relevant_topics=["Cars and Shoe stores"])
         metric.measure(convo_test_case)
 
         assert metric.score is not None
@@ -70,21 +67,20 @@ class TestTopicAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
-        metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"]
-        )
+        metric = TopicAdherenceMetric(relevant_topics=["Cars and Shoe stores"])
         metric.measure(convo_test_case)
 
         assert metric.score is not None
@@ -95,21 +91,21 @@ class TestTopicAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"],
-            async_mode=False
+            relevant_topics=["Cars and Shoe stores"], async_mode=False
         )
         metric.measure(convo_test_case)
 
@@ -121,22 +117,22 @@ class TestTopicAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         with pytest.raises(ValueError):
             metric = TopicAdherenceMetric(
-                relevant_topics=["Cars and Shoe stores"],
-                model="gpt-3.5-turbo"
+                relevant_topics=["Cars and Shoe stores"], model="gpt-3.5-turbo"
             )
             metric.measure(convo_test_case)
 
@@ -145,20 +141,18 @@ class TestTopicAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
-        metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"]
-        )
-        
+        metric = TopicAdherenceMetric(relevant_topics=["Cars and Shoe stores"])
+
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None
@@ -167,22 +161,21 @@ class TestTopicAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
-        metric = TopicAdherenceMetric(
-            relevant_topics=["Cars and Shoe stores"]
-        )
-        
+        metric = TopicAdherenceMetric(relevant_topics=["Cars and Shoe stores"])
+
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None

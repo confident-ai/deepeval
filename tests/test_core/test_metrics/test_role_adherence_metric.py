@@ -22,15 +22,15 @@ class TestRoleAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric(async_mode=False)
         metric.measure(convo_test_case)
@@ -44,15 +44,15 @@ class TestRoleAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric()
         metric.measure(convo_test_case)
@@ -65,17 +65,18 @@ class TestRoleAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric()
         metric.measure(convo_test_case)
@@ -88,17 +89,18 @@ class TestRoleAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric(async_mode=False)
         metric.measure(convo_test_case)
@@ -111,22 +113,21 @@ class TestRoleAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         with pytest.raises(ValueError):
-            metric = RoleAdherenceMetric(
-                model="gpt-3.5-turbo"
-            )
+            metric = RoleAdherenceMetric(model="gpt-3.5-turbo")
             metric.measure(convo_test_case)
 
     def test_normal_evaluate_method(self):
@@ -134,18 +135,18 @@ class TestRoleAdherenceMetric:
             turns=[
                 Turn(role="user", content="What if these shoes don't fit?"),
                 Turn(
-                    role="assistant", 
-                    content="We offer a 30-day full refund at no extra cost.", 
+                    role="assistant",
+                    content="We offer a 30-day full refund at no extra cost.",
                     retrieval_context=[
                         "All customers are eligible for a 30 day full refund at no extra cost."
-                    ]
-                )
+                    ],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric()
-        
+
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None
@@ -154,21 +155,21 @@ class TestRoleAdherenceMetric:
         image = MLLMImage(url=CAR)
         convo_test_case = ConversationalTestCase(
             turns=[
-                Turn(role="user", content=f"What's shown in this image? {image}'",),
                 Turn(
-                    role="assistant", 
+                    role="user",
+                    content=f"What's shown in this image? {image}'",
+                ),
+                Turn(
+                    role="assistant",
                     content=f"That's an image of a car",
-                    retrieval_context=[
-                        f"Cars are great to look at {image}"
-                    ]
-                )
+                    retrieval_context=[f"Cars are great to look at {image}"],
+                ),
             ],
             expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
-            chatbot_role="A helpful assistant"
+            chatbot_role="A helpful assistant",
         )
         metric = RoleAdherenceMetric()
 
-        
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None

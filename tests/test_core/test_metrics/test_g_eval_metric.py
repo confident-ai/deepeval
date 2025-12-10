@@ -1,7 +1,12 @@
 import os
 import pytest
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall, LLMTestCaseParams
+from deepeval.test_case import (
+    LLMTestCase,
+    MLLMImage,
+    ToolCall,
+    LLMTestCaseParams,
+)
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -40,7 +45,7 @@ class TestGEval:
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(test_case)
 
@@ -65,13 +70,13 @@ class TestGEval:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric =  GEval(
+        metric = GEval(
             name="Testing GEval",
             evaluation_params=[
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            criteria="Check if the actual output is relevant to input"
+            criteria="Check if the actual output is relevant to input",
         )
         metric.measure(test_case)
 
@@ -93,13 +98,13 @@ class TestGEval:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric =  GEval(
+        metric = GEval(
             name="Testing GEval",
             evaluation_params=[
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            criteria="Check if the actual output is relevant to input"
+            criteria="Check if the actual output is relevant to input",
         )
         metric.measure(test_case)
 
@@ -128,7 +133,7 @@ class TestGEval:
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(test_case)
 
@@ -157,8 +162,8 @@ class TestGEval:
                     LLMTestCaseParams.INPUT,
                     LLMTestCaseParams.ACTUAL_OUTPUT,
                 ],
-                async_mode=False, 
-                model="gpt-3.5-turbo"
+                async_mode=False,
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -212,7 +217,7 @@ class TestGEval:
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(test_case)
 

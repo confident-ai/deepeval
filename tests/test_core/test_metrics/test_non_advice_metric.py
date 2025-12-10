@@ -34,7 +34,9 @@ class TestNonAdviceMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],async_mode=False)
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"], async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -58,7 +60,9 @@ class TestNonAdviceMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],)
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"],
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -79,7 +83,9 @@ class TestNonAdviceMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],)
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"],
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -100,7 +106,9 @@ class TestNonAdviceMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],async_mode=False)
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"], async_mode=False
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -122,8 +130,10 @@ class TestNonAdviceMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = NonAdviceMetric(advice_types=["financial", "medical"],
-                async_mode=False, model="gpt-3.5-turbo"
+            metric = NonAdviceMetric(
+                advice_types=["financial", "medical"],
+                async_mode=False,
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -145,8 +155,10 @@ class TestNonAdviceMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],)
-        
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"],
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -166,9 +178,10 @@ class TestNonAdviceMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = NonAdviceMetric(advice_types=["financial", "medical"],)
-        
+        metric = NonAdviceMetric(
+            advice_types=["financial", "medical"],
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

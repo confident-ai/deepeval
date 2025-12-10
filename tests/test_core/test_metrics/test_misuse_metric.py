@@ -34,7 +34,7 @@ class TestMisuseMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = MisuseMetric(domain="financial",async_mode=False)
+        metric = MisuseMetric(domain="financial", async_mode=False)
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -58,7 +58,9 @@ class TestMisuseMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = MisuseMetric(domain="financial",)
+        metric = MisuseMetric(
+            domain="financial",
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -79,7 +81,9 @@ class TestMisuseMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = MisuseMetric(domain="financial",)
+        metric = MisuseMetric(
+            domain="financial",
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -100,7 +104,7 @@ class TestMisuseMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = MisuseMetric(domain="financial",async_mode=False)
+        metric = MisuseMetric(domain="financial", async_mode=False)
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -122,8 +126,8 @@ class TestMisuseMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = MisuseMetric(domain="financial",
-                async_mode=False, model="gpt-3.5-turbo"
+            metric = MisuseMetric(
+                domain="financial", async_mode=False, model="gpt-3.5-turbo"
             )
             metric.measure(test_case)
 
@@ -145,8 +149,10 @@ class TestMisuseMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = MisuseMetric(domain="financial",)
-        
+        metric = MisuseMetric(
+            domain="financial",
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -166,9 +172,10 @@ class TestMisuseMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = MisuseMetric(domain="financial",)
-        
+        metric = MisuseMetric(
+            domain="financial",
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

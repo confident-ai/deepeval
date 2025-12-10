@@ -41,7 +41,6 @@ class TestExactMatchMetric:
         assert metric.reason is not None
         assert test_case.multimodal is False
 
-
     def test_normal_evaluate_method(self):
         test_case = LLMTestCase(
             input="What if these shoes don't fit?",
@@ -61,9 +60,7 @@ class TestExactMatchMetric:
         )
 
         metric = ExactMatchMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-
-

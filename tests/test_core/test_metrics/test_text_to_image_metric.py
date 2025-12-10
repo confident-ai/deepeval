@@ -17,7 +17,6 @@ CAR = os.path.join(current_dir, "images/car.png")
 class TestTextToImageMetric:
     """Tests for answer relevancy metric"""
 
-
     def test_multimodal_async_metric_measure(self):
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
@@ -75,11 +74,8 @@ class TestTextToImageMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = TextToImageMetric(
-                async_mode=False, model="gpt-3.5-turbo"
-            )
+            metric = TextToImageMetric(async_mode=False, model="gpt-3.5-turbo")
             metric.measure(test_case)
-
 
     def test_multimodal_evaluate_method(self):
         image = MLLMImage(url=CAR)
@@ -97,7 +93,7 @@ class TestTextToImageMetric:
         )
 
         metric = TextToImageMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None

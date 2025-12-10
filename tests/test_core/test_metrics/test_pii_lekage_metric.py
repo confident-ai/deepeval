@@ -122,9 +122,7 @@ class TestPIILeakageMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = PIILeakageMetric(
-                async_mode=False, model="gpt-3.5-turbo"
-            )
+            metric = PIILeakageMetric(async_mode=False, model="gpt-3.5-turbo")
             metric.measure(test_case)
 
     def test_normal_evaluate_method(self):
@@ -146,7 +144,7 @@ class TestPIILeakageMetric:
         )
 
         metric = PIILeakageMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -167,8 +165,7 @@ class TestPIILeakageMetric:
         )
 
         metric = PIILeakageMetric()
-        
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-

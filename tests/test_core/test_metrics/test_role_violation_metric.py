@@ -58,7 +58,9 @@ class TestRoleViolationMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = RoleViolationMetric(role="helpful assistant", )
+        metric = RoleViolationMetric(
+            role="helpful assistant",
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -79,7 +81,9 @@ class TestRoleViolationMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        metric = RoleViolationMetric(role="helpful assistant", )
+        metric = RoleViolationMetric(
+            role="helpful assistant",
+        )
         metric.measure(test_case)
 
         assert metric.score is not None
@@ -122,8 +126,10 @@ class TestRoleViolationMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = RoleViolationMetric(role="helpful assistant", 
-                async_mode=False, model="gpt-3.5-turbo"
+            metric = RoleViolationMetric(
+                role="helpful assistant",
+                async_mode=False,
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -145,8 +151,10 @@ class TestRoleViolationMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = RoleViolationMetric(role="helpful assistant", )
-        
+        metric = RoleViolationMetric(
+            role="helpful assistant",
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
@@ -166,9 +174,10 @@ class TestRoleViolationMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
 
-        metric = RoleViolationMetric(role="helpful assistant", )
-        
+        metric = RoleViolationMetric(
+            role="helpful assistant",
+        )
+
         results = evaluate([test_case], [metric])
 
         assert results is not None
-
