@@ -145,6 +145,10 @@ class ConversationalGolden(BaseModel):
             if re.search(pattern, self.expected_outcome) is not None:
                 self.multimodal = True
                 return self
+        if self.user_description:
+            if re.search(pattern, self.user_description) is not None:
+                self.multimodal = True
+                return self
         if self.turns:
             for turn in self.turns:
                 if re.search(pattern, turn.content) is not None:
@@ -177,6 +181,7 @@ class ConversationalGolden(BaseModel):
         extract_ids_from_string(self.scenario)
         extract_ids_from_string(self.expected_outcome)
         extract_ids_from_list(self.context)
+        extract_ids_from_string(self.user_description)
         if self.turns:
             for turn in self.turns:
                 extract_ids_from_string(turn.content)
