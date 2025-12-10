@@ -159,7 +159,11 @@ test_case = ConversationalTestCase(
     turns=[
         Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
         Turn(role="assistant", content=f"They are blue shoes!")
-    ]
+    ],
+    scenario=f"A person trying to buy shoes online by looking at a customer's photo {shoes}",
+    expected_outcome=f"The assistant must clarify that the shoes in the image {shoes} are blue color.",
+    user_description=f"...",
+    context=[f"..."]
 )
 ```
 
