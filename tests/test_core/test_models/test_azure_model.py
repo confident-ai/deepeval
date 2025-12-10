@@ -221,14 +221,16 @@ class TestAzureOpenAIModelGenerationKwargs:
 
 
 def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
-    monkeypatch,
+    monkeypatch, settings
 ):
-    # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
-
-    # rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Put Azure config into the process env so Settings sees it
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
+        settings.OPENAI_API_VERSION = "2024-02-01"
 
     # Sanity check: Settings should expose this as a SecretStr
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
@@ -353,7 +355,12 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
     - It should not be forwarded through `model.kwargs`
     """
     with settings.edit(persist=False):
-        settings.AZURE_OPENAI_API_KEY = "test-key"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
         settings.OPENAI_API_VERSION = "4.1"
 
     model = AzureOpenAIModel(base_url="https://example.com")
@@ -366,7 +373,7 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
 
 
 def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
-    monkeypatch,
+    monkeypatch, settings
 ):
     """
     Using the legacy `azure_openai_api_key` keyword should:
@@ -375,11 +382,15 @@ def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
     - Not forward `azure_openai_api_key` in model.kwargs
     """
     # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+    with settings.edit(persist=False):
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
+        settings.OPENAI_API_VERSION = "4.1"
 
-    # rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
 
     # Stub the Azure SDK clients so we don't make any real calls
