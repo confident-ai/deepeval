@@ -2,7 +2,17 @@ import inspect
 import json
 import re
 import sys
-from typing import Any, Dict, Optional, List, Union, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
@@ -372,6 +382,56 @@ def trimAndLoadJson(
         raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
+
+
+SchemaType = TypeVar("SchemaType")
+ReturnType = TypeVar("ReturnType")
+
+
+def generate_with_schema_and_extract(
+    metric: BaseMetric,
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Synchronous wrapper:
+    - calls model.generate_with_schema(...)
+    - accrues cost if applicable
+    - if schema instance -> extract_schema
+      else parse JSON -> extract_json
+    """
+    result, cost = metric.model.generate_with_schema(prompt, schema=schema_cls)
+    metric._accrue_cost(cost)
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
+
+
+async def a_generate_with_schema_and_extract(
+    metric: BaseMetric,
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Async wrapper (same idea as gen_and_extract).
+    """
+    result, cost = await metric.model.a_generate_with_schema(
+        prompt, schema=schema_cls
+    )
+    metric._accrue_cost(cost)
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
 
 
 ###############################################

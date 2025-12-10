@@ -121,9 +121,9 @@ class GPTModel(DeepEvalBaseLLM):
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model)
 
-    ###############################################
-    # Generate functions
-    ###############################################
+    ######################
+    # Generate functions #
+    ######################
 
     @retry_openai
     def generate(
@@ -253,9 +253,9 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-    ###############################################
-    # Other generate functions
-    ###############################################
+    ############################
+    # Other generate functions #
+    ############################
 
     @retry_openai
     def generate_raw_response(
@@ -327,15 +327,31 @@ class GPTModel(DeepEvalBaseLLM):
         completions = [choice.message.content for choice in response.choices]
         return completions
 
-    ###############################################
-    # Utilities
-    ###############################################
+    #############
+    # Utilities #
+    #############
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         # TODO: consider loggin a warning instead of defaulting to whole model pricing
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.input_price
         return input_cost + output_cost
+
+    #########################
+    # Capabilities - opt-in #
+    #########################
+
+    def supports_structured_outputs(self) -> bool:
+        """
+        OpenAI models that natively enforce typed structured outputs
+        """
+        return self.model_name in structured_outputs_models
+
+    def supports_json_mode(self) -> bool:
+        """
+        OpenAI models that enforce JSON mode
+        """
+        return self.model_name in json_mode_models
 
     #########
     # Model #
