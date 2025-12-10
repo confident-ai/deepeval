@@ -126,6 +126,9 @@ class ConversationalApiTestCase(BaseModel):
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
+    images_mapping: Optional[Dict[str, MLLMImage]] = Field(
+        None, alias="imagesMapping"
+    )
     tags: Optional[List[str]] = Field(None)
 
     def update_metric_data(self, metrics_data: MetricData):

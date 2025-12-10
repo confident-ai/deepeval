@@ -376,6 +376,16 @@ class LLMTestCase(BaseModel):
             if isinstance(self.input, str)
             else self.multimodal
         )
+        if self.retrieval_context is not None:
+            auto_detect = auto_detect or any(
+                re.search(pattern, context) is not None
+                for context in self.retrieval_context
+            )
+        if self.context is not None:
+            auto_detect = auto_detect or any(
+                re.search(pattern, context) is not None
+                for context in self.context
+            )
 
         self.multimodal = auto_detect
         return self
@@ -486,3 +496,32 @@ class LLMTestCase(BaseModel):
                 )
 
         return data
+
+    def _get_images_mapping(self) -> Dict[str, MLLMImage]:
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        image_ids = set()
+
+        def extract_ids_from_string(s: Optional[str]) -> None:
+            """Helper to extract image IDs from a string."""
+            if s is not None and isinstance(s, str):
+                matches = re.findall(pattern, s)
+                image_ids.update(matches)
+
+        def extract_ids_from_list(lst: Optional[List[str]]) -> None:
+            """Helper to extract image IDs from a list of strings."""
+            if lst is not None:
+                for item in lst:
+                    extract_ids_from_string(item)
+
+        extract_ids_from_string(self.input)
+        extract_ids_from_string(self.actual_output)
+        extract_ids_from_string(self.expected_output)
+        extract_ids_from_list(self.context)
+        extract_ids_from_list(self.retrieval_context)
+
+        images_mapping = {}
+        for img_id in image_ids:
+            if img_id in _MLLM_IMAGE_REGISTRY:
+                images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
+
+        return images_mapping if len(images_mapping) > 0 else None
