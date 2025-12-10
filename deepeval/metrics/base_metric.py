@@ -48,6 +48,10 @@ class BaseMetric:
     def __name__(self):
         return "Base Metric"
 
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost
+
 
 class BaseConversationalMetric:
     threshold: float
@@ -87,6 +91,10 @@ class BaseConversationalMetric:
     def __name__(self):
         return "Base Conversational Metric"
 
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost
+
 
 class BaseArenaMetric:
     reason: Optional[str] = None
@@ -117,3 +125,7 @@ class BaseArenaMetric:
     @property
     def __name__(self):
         return "Base Arena Metric"
+
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost
