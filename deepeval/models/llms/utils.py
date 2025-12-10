@@ -1,9 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Dict
 import re
 import json
 import asyncio
-
-MULTIMODAL_MODELS = ["GPTModel", "AzureModel", "GeminiModel", "OllamaModel"]
 
 
 def trim_and_load_json(
