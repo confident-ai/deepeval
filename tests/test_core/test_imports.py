@@ -4,7 +4,6 @@ def test_metrics_imports():
         # Base classes
         BaseMetric,
         BaseConversationalMetric,
-        BaseMultimodalMetric,
         BaseArenaMetric,
         # Core metrics
         GEval,
@@ -62,14 +61,12 @@ def test_metrics_imports():
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalGEval,
     )
 
     # Verify all imports are not None
     all_metrics = [
         BaseMetric,
         BaseConversationalMetric,
-        BaseMultimodalMetric,
         BaseArenaMetric,
         GEval,
         ArenaGEval,
@@ -118,7 +115,6 @@ def test_metrics_imports():
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalGEval,
     ]
 
     for metric in all_metrics:

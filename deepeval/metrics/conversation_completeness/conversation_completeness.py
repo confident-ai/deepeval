@@ -51,8 +51,15 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ):
+
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case,
+            self._required_test_case_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -71,17 +78,19 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 )
             else:
                 self.user_intentions = self._extract_user_intentions(
-                    test_case.turns
+                    test_case.turns, multimodal=multimodal
                 )
                 self.verdicts = [
                     self._generate_verdict(
-                        turns=test_case.turns, intention=user_intention
+                        turns=test_case.turns,
+                        intention=user_intention,
+                        multimodal=multimodal,
                     )
                     for user_intention in self.user_intentions
                 ]
 
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason()
+                self.reason = self._generate_reason(multimodal=multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -105,28 +114,40 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case,
+            self._required_test_case_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
         ):
             self.user_intentions = await self._a_extract_user_intentions(
-                test_case.turns
+                test_case.turns, multimodal=multimodal
             )
             self.verdicts = await asyncio.gather(
                 *[
                     self._a_generate_verdict(
-                        turns=test_case.turns, intention=user_intention
+                        turns=test_case.turns,
+                        intention=user_intention,
+                        multimodal=multimodal,
                     )
                     for user_intention in self.user_intentions
                 ]
             )
 
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason()
+            self.reason = await self._a_generate_reason(multimodal=multimodal)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -143,7 +164,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self, multimodal: bool) -> str:
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
@@ -153,6 +174,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             score=self.score,
             incompletenesses=incompletenesses,
             intentions=self.user_intentions,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -173,7 +195,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -186,6 +208,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             score=self.score,
             incompletenesses=incompletenesses,
             intentions=self.user_intentions,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -205,11 +228,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return data["reason"]
 
     async def _a_generate_verdict(
-        self, turns: List[Turn], intention: str
+        self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
             turns=[convert_turn_to_dict(turn) for turn in turns],
             intention=intention,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -231,11 +255,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return ConversationCompletenessVerdict(**data)
 
     def _generate_verdict(
-        self, turns: List[Turn], intention: str
+        self, turns: List[Turn], intention: str, multimodal: bool
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
             turns=[convert_turn_to_dict(turn) for turn in turns],
             intention=intention,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -254,9 +279,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return ConversationCompletenessVerdict(**data)
 
-    async def _a_extract_user_intentions(self, turns: List[Turn]) -> List[str]:
+    async def _a_extract_user_intentions(
+        self, turns: List[Turn], multimodal: bool
+    ) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            turns=[convert_turn_to_dict(turn) for turn in turns]
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -275,9 +303,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return UserIntentions(**data).intentions
 
-    def _extract_user_intentions(self, turns: List[Turn]) -> List[str]:
+    def _extract_user_intentions(
+        self, turns: List[Turn], multimodal: bool
+    ) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            turns=[convert_turn_to_dict(turn) for turn in turns]
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=UserIntentions)

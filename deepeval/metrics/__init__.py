@@ -1,7 +1,6 @@
 from .base_metric import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
     BaseArenaMetric,
 )
 
@@ -65,7 +64,6 @@ from .multimodal_metrics import (
     ImageCoherenceMetric,
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
-    MultimodalGEval,
 )
 
 
@@ -73,7 +71,6 @@ __all__ = [
     # Base classes
     "BaseMetric",
     "BaseConversationalMetric",
-    "BaseMultimodalMetric",
     "BaseArenaMetric",
     # Non-LLM metrics
     "ExactMatchMetric",
@@ -133,5 +130,4 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
-    "MultimodalGEval",
 ]

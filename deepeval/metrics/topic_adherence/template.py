@@ -3,6 +3,13 @@ import textwrap
 
 
 class TopicAdherenceTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
 
     @staticmethod
     def get_qa_pairs(
@@ -18,6 +25,8 @@ class TopicAdherenceTemplate:
 
                 Do not infer information beyond what is stated. Ignore irrelevant or conversational turns (e.g. greetings, affirmations) that do not constitute clear QA pairs.
                 If there are multiple questions and multiple answers in a single sentence, break them into separate pairs. Each pair must be standalone, and should not contain more than one question or response.
+
+                {TopicAdherenceTemplate.multimodal_rules}
 
                 OUTPUT Format:
                 Return a **JSON object** with a single 2 keys:
@@ -82,6 +91,8 @@ class TopicAdherenceTemplate:
                 3. Based on both relevance and correctness, assign one of four possible verdicts.
                 4. Give a simple, comprehensive reason explaining why this question-answer pair was assigned this verdict
 
+                {TopicAdherenceTemplate.multimodal_rules}
+
                 VERDICTS:
                 - `"TP"` (True Positive): Question is relevant and the response correctly answers it.
                 - `"FN"` (False Negative): Question is relevant, but the assistant refused to answer or gave an irrelevant response.
@@ -137,6 +148,8 @@ class TopicAdherenceTemplate:
                 You are also given a list of reasons for the truth table values that were used to calculate final score.
                 
                 Your task is to go through these reasons and give a single final explaination that clearly explains why this metric has failed or passed.
+
+                {TopicAdherenceTemplate.multimodal_rules}
 
                 Pass: {success}
                 Score: {score}

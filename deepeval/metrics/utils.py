@@ -34,7 +34,6 @@ from deepeval.key_handler import (
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
     BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
@@ -58,10 +57,8 @@ MULTIMODAL_SUPPORTED_MODELS = [
 
 
 def copy_metrics(
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ],
-) -> List[Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]]:
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+) -> List[Union[BaseMetric, BaseConversationalMetric]]:
     copied_metrics = []
     for metric in metrics:
         metric_class = type(metric)
@@ -245,8 +242,41 @@ def check_conversational_test_case_params(
 def check_llm_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],
+    input_image_count: Optional[int],
+    actual_output_image_count: Optional[int],
     metric: Union[BaseMetric, BaseArenaMetric],
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
+    if multimodal:
+        if not model or not model.supports_multimodal():
+            if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
+                )
+            else:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+                )
+
+        if input_image_count:
+            count = 0
+            for ele in convert_to_multi_modal_array(test_case.input):
+                if isinstance(ele, MLLMImage):
+                    count += 1
+            if count != input_image_count:
+                error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
+                raise ValueError(error_str)
+
+        if actual_output_image_count:
+            count = 0
+            for ele in convert_to_multi_modal_array(test_case.actual_output):
+                if isinstance(ele, MLLMImage):
+                    count += 1
+            if count != actual_output_image_count:
+                error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                raise ValueError(error_str)
+
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
         metric.error = error_str
@@ -297,79 +327,6 @@ def check_arena_test_case_params(
 
     for test_case in cases:
         check_llm_test_case_params(test_case, test_case_params, metric)
-
-
-def check_mllm_test_case_params(
-    test_case: LLMTestCase,
-    test_case_params: List[LLMTestCaseParams],
-    input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
-    metric: BaseMetric,
-    model: Optional[DeepEvalBaseLLM] = None,
-):
-    if not model or not model.supports_multimodal():
-        if model and type(model) in MULTIMODAL_SUPPORTED_MODELS:
-            raise ValueError(
-                f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(model.__class__.valid_multimodal_models)}."
-            )
-        else:
-            raise ValueError(
-                f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
-            )
-
-    if input_image_count:
-        count = 0
-        for ele in convert_to_multi_modal_array(test_case.input):
-            if isinstance(ele, MLLMImage):
-                count += 1
-        if count != input_image_count:
-            error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
-            raise ValueError(error_str)
-
-    if actual_output_image_count:
-        count = 0
-        for ele in convert_to_multi_modal_array(test_case.actual_output):
-            if isinstance(ele, MLLMImage):
-                count += 1
-        if count != actual_output_image_count:
-            error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
-            raise ValueError(error_str)
-
-    missing_params = []
-    for param in test_case_params:
-        if getattr(test_case, param.value) is None:
-            missing_params.append(f"'{param.value}'")
-
-    if missing_params:
-        if len(missing_params) == 1:
-            missing_params_str = missing_params[0]
-        elif len(missing_params) == 2:
-            missing_params_str = " and ".join(missing_params)
-        else:
-            missing_params_str = (
-                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
-            )
-
-        error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
-        metric.error = error_str
-        raise MissingTestCaseParamsError(error_str)
-
-
-def check_mllm_test_cases_params(
-    test_cases: List[LLMTestCase],
-    test_case_params: List[LLMTestCaseParams],
-    input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
-    metric: BaseMetric,
-):
-    for test_case in test_cases:
-        check_mllm_test_case_params(
-            test_case,
-            test_case_params,
-            input_image_count,
-            actual_output_image_count,
-            metric,
-        )
 
 
 def trimAndLoadJson(

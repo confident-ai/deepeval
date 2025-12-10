@@ -4,6 +4,13 @@ from deepeval.tracing.utils import make_json_serializable
 
 
 class PlanQualityTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
 
     @staticmethod
     def evaluate_plan_quality(user_task: str, agent_plan: list) -> str:
@@ -45,6 +52,8 @@ class PlanQualityTemplate:
                 5. Alignment with Task
                 - The plan must explicitly and directly target the user's stated goal.  
                 - If any step diverges from the main objective, the score should drop significantly.
+
+                {PlanQualityTemplate.multimodal_rules}
 
                 ---
 

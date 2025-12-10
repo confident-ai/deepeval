@@ -10,7 +10,6 @@ from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
     BaseArenaMetric,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
@@ -74,7 +73,7 @@ def metric_progress_indicator(
 async def measure_metric_task(
     task_id,
     progress,
-    metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
+    metric: Union[BaseMetric, BaseConversationalMetric],
     test_case: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
@@ -156,9 +155,7 @@ async def measure_metric_task(
 
 
 async def measure_metrics_with_indicator(
-    metrics: List[
-        Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]
-    ],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
@@ -238,7 +235,7 @@ async def measure_metrics_with_indicator(
 
 
 async def safe_a_measure(
-    metric: Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric],
+    metric: Union[BaseMetric, BaseConversationalMetric],
     tc: Union[LLMTestCase, LLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
     skip_on_missing_params: bool,

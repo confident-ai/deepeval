@@ -4,6 +4,14 @@ from deepeval.test_case import MCPServer
 
 
 class MCPTaskCompletionTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def get_args_correctness_score(task: Task, mcp_servers: List[MCPServer]):
         available_tools = [data.available_tools for data in mcp_servers]
@@ -11,6 +19,8 @@ class MCPTaskCompletionTemplate:
         available_prompts = [data.available_prompts for data in mcp_servers]
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the arguments (inputs) provided by the agent to the tools, resources, and prompts were correct and aligned with their respective input schemas. Your job is to determine if the agent supplied appropriate, complete, and well-formatted arguments for each invocation.
+
+{MCPTaskCompletionTemplate.multimodal_rules}
 
 Output a JSON object with exactly two fields: 'score' and 'reason'.
 
@@ -55,6 +65,8 @@ JSON:
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the tools, resources, and prompts used by the agent were appropriate and optimal, based strictly on the list of available tools and resources provided. Your job is to determine whether the agent selected the most suitable tools and prompts for the task at hand. Output a JSON object with exactly two fields: 'score' and 'reason'.
 
+{MCPTaskCompletionTemplate.multimodal_rules}
+
 Scoring:
 - 'score' is a float between 0 and 1 inclusive.
 - Use intermediate values (e.g., 0.25, 0.5, 0.75) to reflect partially appropriate tool use, suboptimal decisions, or missed better alternatives.
@@ -92,6 +104,9 @@ JSON:
     def get_task_completion_score(task: Task):
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the user's task has been successfully completed by the agent, based strictly on what the user can see in the agent's responses. You must return a JSON object with exactly two fields: 'score' and 'reason'.
+
+{MCPTaskCompletionTemplate.multimodal_rules}
+
 Scoring:
 - 'score' is a float between 0 and 1 inclusive.
 - Use intermediate values (e.g., 0.25, 0.5, 0.75) to reflect partial task success or missing/inaccurate information.

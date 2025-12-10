@@ -56,15 +56,7 @@ from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
     TaskCompletionMetric,
-    # RAG metrics that support both single-turn and multimodal
-    ContextualPrecisionMetric,
-    ContextualRecallMetric,
-    ContextualRelevancyMetric,
-    AnswerRelevancyMetric,
-    FaithfulnessMetric,
-    ToolCorrectnessMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -115,15 +107,6 @@ from deepeval.test_run.hyperparameters import (
 )
 
 logger = logging.getLogger(__name__)
-
-MLLM_SUPPORTED_METRICS = [
-    ContextualPrecisionMetric,
-    ContextualRecallMetric,
-    ContextualRelevancyMetric,
-    AnswerRelevancyMetric,
-    FaithfulnessMetric,
-    ToolCorrectnessMetric,
-]
 
 
 def _skip_metrics_for_error(
@@ -282,7 +265,6 @@ def execute_test_cases(
     metrics: Union[
         List[BaseMetric],
         List[BaseConversationalMetric],
-        List[BaseMultimodalMetric],
     ],
     error_config: Optional[ErrorConfig] = ErrorConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -315,17 +297,12 @@ def execute_test_cases(
 
     conversational_metrics: List[BaseConversationalMetric] = []
     llm_metrics: List[BaseMetric] = []
-    mllm_metrics: List[BaseMultimodalMetric] = []
     for metric in metrics:
         metric.async_mode = False
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
-            if type(metric) in MLLM_SUPPORTED_METRICS:
-                mllm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
-        elif isinstance(metric, BaseMultimodalMetric):
-            mllm_metrics.append(metric)
 
     test_results: List[TestResult] = []
 
@@ -333,23 +310,17 @@ def execute_test_cases(
         progress: Optional[Progress] = None, pbar_id: Optional[int] = None
     ):
         llm_test_case_count = -1
-        mllm_test_case_count = -1
         conversational_test_case_count = -1
         show_metric_indicator = (
             display_config.show_indicator and not _use_bar_indicator
         )
         for i, test_case in enumerate(test_cases):
             # skip what we know we won't run
-            if isinstance(test_case, LLMTestCase) and not test_case.multimodal:
+            if isinstance(test_case, LLMTestCase):
                 if not llm_metrics:
                     update_pbar(progress, pbar_id)
                     continue
                 per_case_total = len(llm_metrics)
-            elif isinstance(test_case, LLMTestCase) and test_case.multimodal:
-                if not mllm_metrics:
-                    update_pbar(progress, pbar_id)
-                    continue
-                per_case_total = len(mllm_metrics)
             elif isinstance(test_case, ConversationalTestCase):
                 if not conversational_metrics:
                     update_pbar(progress, pbar_id)
@@ -364,35 +335,15 @@ def execute_test_cases(
 
             metrics_for_case = (
                 llm_metrics
-                if (
-                    isinstance(test_case, LLMTestCase)
-                    and not test_case.multimodal
-                )
-                else (
-                    mllm_metrics
-                    if (
-                        isinstance(test_case, LLMTestCase)
-                        and test_case.multimodal
-                    )
-                    else conversational_metrics
-                )
+                if (isinstance(test_case, LLMTestCase))
+                else conversational_metrics
             )
             api_test_case = create_api_test_case(
                 test_case=test_case,
                 index=(
                     llm_test_case_count + 1
-                    if (
-                        isinstance(test_case, LLMTestCase)
-                        and not test_case.multimodal
-                    )
-                    else (
-                        mllm_test_case_count + 1
-                        if (
-                            isinstance(test_case, LLMTestCase)
-                            and test_case.multimodal
-                        )
-                        else conversational_test_case_count + 1
-                    )
+                    if (isinstance(test_case, LLMTestCase))
+                    else (conversational_test_case_count + 1)
                 ),
             )
             emitted = [False] * len(metrics_for_case)
@@ -405,15 +356,12 @@ def execute_test_cases(
             try:
 
                 def _run_case():
-                    nonlocal new_cached_test_case, current_index, llm_test_case_count, mllm_test_case_count, conversational_test_case_count
+                    nonlocal new_cached_test_case, current_index, llm_test_case_count, conversational_test_case_count
                     with capture_evaluation_run("test case"):
                         for metric in metrics:
                             metric.error = None  # Reset metric error
 
-                        if (
-                            isinstance(test_case, LLMTestCase)
-                            and not test_case.multimodal
-                        ):
+                        if isinstance(test_case, LLMTestCase):
                             llm_test_case_count += 1
                             cached_test_case = None
                             if cache_config.use_cache:
@@ -463,29 +411,6 @@ def execute_test_cases(
                                     new_cached_test_case.cached_metrics_data.append(
                                         updated_cached_metric_data
                                     )
-                                update_pbar(progress, pbar_test_case_id)
-
-                        # No caching and not sending test cases to Confident AI for multimodal metrics yet
-                        elif (
-                            isinstance(test_case, LLMTestCase)
-                            and test_case.multimodal
-                        ):
-                            mllm_test_case_count += 1
-                            for metric in mllm_metrics:
-                                current_index = index_of[id(metric)]
-                                res = _execute_metric(
-                                    metric=metric,
-                                    test_case=test_case,
-                                    show_metric_indicator=show_metric_indicator,
-                                    in_component=False,
-                                    error_config=error_config,
-                                )
-                                if res == "skip":
-                                    continue
-
-                                metric_data = create_metric_data(metric)
-                                api_test_case.update_metric_data(metric_data)
-                                emitted[current_index] = True
                                 update_pbar(progress, pbar_test_case_id)
 
                         # No caching for conversational metrics yet
@@ -597,7 +522,6 @@ async def a_execute_test_cases(
     metrics: Union[
         List[BaseMetric],
         List[BaseConversationalMetric],
-        List[BaseMultimodalMetric],
     ],
     error_config: Optional[ErrorConfig] = ErrorConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -631,20 +555,14 @@ async def a_execute_test_cases(
             metric.verbose_mode = display_config.verbose_mode
 
     llm_metrics: List[BaseMetric] = []
-    mllm_metrics: List[BaseMultimodalMetric] = []
     conversational_metrics: List[BaseConversationalMetric] = []
     for metric in metrics:
         if isinstance(metric, BaseMetric):
             llm_metrics.append(metric)
-            if type(metric) in MLLM_SUPPORTED_METRICS:
-                mllm_metrics.append(metric)
-        elif isinstance(metric, BaseMultimodalMetric):
-            mllm_metrics.append(metric)
         elif isinstance(metric, BaseConversationalMetric):
             conversational_metrics.append(metric)
 
     llm_test_case_counter = -1
-    mllm_test_case_counter = -1
     conversational_test_case_counter = -1
     test_results: List[Union[TestResult, LLMTestCase]] = []
     tasks = []
@@ -665,10 +583,7 @@ async def a_execute_test_cases(
         with progress:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
-                    if (
-                        isinstance(test_case, LLMTestCase)
-                        and not test_case.multimodal
-                    ):
+                    if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
                             update_pbar(progress, pbar_id)
                             continue
@@ -688,31 +603,6 @@ async def a_execute_test_cases(
                             ignore_errors=error_config.ignore_errors,
                             skip_on_missing_params=error_config.skip_on_missing_params,
                             use_cache=cache_config.use_cache,
-                            show_indicator=display_config.show_indicator,
-                            _use_bar_indicator=_use_bar_indicator,
-                            _is_assert_test=_is_assert_test,
-                            progress=progress,
-                            pbar_id=pbar_id,
-                        )
-                        tasks.append(asyncio.create_task(task))
-
-                    elif (
-                        isinstance(test_case, LLMTestCase)
-                        and test_case.multimodal
-                    ):
-                        mllm_test_case_counter += 1
-                        copied_multimodal_metrics: List[
-                            BaseMultimodalMetric
-                        ] = copy_metrics(mllm_metrics)
-                        task = execute_with_semaphore(
-                            func=_a_execute_mllm_test_cases,
-                            metrics=copied_multimodal_metrics,
-                            test_case=test_case,
-                            test_run_manager=test_run_manager,
-                            test_results=test_results,
-                            count=mllm_test_case_counter,
-                            ignore_errors=error_config.ignore_errors,
-                            skip_on_missing_params=error_config.skip_on_missing_params,
                             show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
@@ -763,10 +653,7 @@ async def a_execute_test_cases(
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
-                if (
-                    isinstance(test_case, LLMTestCase)
-                    and not test_case.multimodal
-                ):
+                if isinstance(test_case, LLMTestCase):
                     if len(llm_metrics) == 0:
                         continue
                     llm_test_case_counter += 1
@@ -813,28 +700,6 @@ async def a_execute_test_cases(
                         show_indicator=display_config.show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
-
-                elif (
-                    isinstance(test_case, LLMTestCase) and test_case.multimodal
-                ):
-                    mllm_test_case_counter += 1
-                    copied_multimodal_metrics: List[BaseMultimodalMetric] = (
-                        copy_metrics(mllm_metrics)
-                    )
-                    task = execute_with_semaphore(
-                        func=_a_execute_mllm_test_cases,
-                        metrics=copied_multimodal_metrics,
-                        test_case=test_case,
-                        test_run_manager=test_run_manager,
-                        test_results=test_results,
-                        count=mllm_test_case_counter,
-                        ignore_errors=error_config.ignore_errors,
-                        skip_on_missing_params=error_config.skip_on_missing_params,
-                        _use_bar_indicator=_use_bar_indicator,
-                        _is_assert_test=_is_assert_test,
-                        show_indicator=display_config.show_indicator,
-                    )
-                    tasks.append(asyncio.create_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
 
@@ -976,85 +841,8 @@ async def _a_execute_llm_test_cases(
         update_pbar(progress, pbar_id)
 
 
-async def _a_execute_mllm_test_cases(
-    metrics: List[BaseMultimodalMetric],
-    test_case: LLMTestCase,
-    test_run_manager: TestRunManager,
-    test_results: List[Union[TestResult, LLMTestCase]],
-    count: int,
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
-    _use_bar_indicator: bool,
-    _is_assert_test: bool,
-    progress: Optional[Progress] = None,
-    pbar_id: Optional[int] = None,
-):
-    show_metrics_indicator = show_indicator and not _use_bar_indicator
-    pbar_test_case_id = add_pbar(
-        progress,
-        f"    🎯 Evaluating test case #{count}",
-        total=len(metrics),
-    )
-
-    for metric in metrics:
-        metric.skipped = False
-        metric.error = None  # Reset metric error
-
-    api_test_case: LLMApiTestCase = create_api_test_case(
-        test_case=test_case, index=count if not _is_assert_test else None
-    )
-    test_start_time = time.perf_counter()
-    try:
-        await measure_metrics_with_indicator(
-            metrics=metrics,
-            test_case=test_case,
-            cached_test_case=None,
-            skip_on_missing_params=skip_on_missing_params,
-            ignore_errors=ignore_errors,
-            show_indicator=show_metrics_indicator,
-            pbar_eval_id=pbar_test_case_id,
-            progress=progress,
-        )
-    except asyncio.CancelledError:
-        msg = (
-            "Timed out/cancelled while evaluating metric. "
-            "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
-            "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
-        )
-        for m in metrics:
-            if getattr(m, "skipped", False):
-                continue
-            # If the task never finished and didn't set a terminal state, mark it now
-            if getattr(m, "success", None) is None and not getattr(
-                m, "error", None
-            ):
-                m.success = False
-                m.error = msg
-        if not ignore_errors:
-            raise
-    finally:
-        for metric in metrics:
-            if metric.skipped:
-                continue
-
-            metric_data = create_metric_data(metric)
-            api_test_case.update_metric_data(metric_data)
-
-        test_end_time = time.perf_counter()
-        run_duration = test_end_time - test_start_time
-        api_test_case.update_run_duration(run_duration)
-
-        ### Update Test Run ###
-        test_run_manager.update_test_run(api_test_case, test_case)
-        test_results.append(create_test_result(api_test_case))
-        update_pbar(progress, pbar_id)
-
-
 async def _a_execute_conversational_test_cases(
-    metrics: List[
-        Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]
-    ],
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
     test_case: ConversationalTestCase,
     test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, LLMTestCase]],

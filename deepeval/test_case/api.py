@@ -33,7 +33,6 @@ def create_api_test_case(
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
-    from deepeval.utils import convert_to_multi_modal_array
 
     if isinstance(test_case, ConversationalTestCase):
         order = (

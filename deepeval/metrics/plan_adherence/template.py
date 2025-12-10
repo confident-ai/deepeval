@@ -4,6 +4,13 @@ from deepeval.tracing.utils import make_json_serializable
 
 
 class PlanAdherenceTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
 
     @staticmethod
     def extract_plan_from_trace(trace: dict) -> str:
@@ -35,6 +42,8 @@ class PlanAdherenceTemplate:
                 5. Neutral Language
                 - Reproduce the plan steps in **neutral, minimal paraphrasing**.  
                 - Do not interpret motivation, quality, or success of actions.
+
+                {PlanAdherenceTemplate.multimodal_rules}
 
                 OUTPUT FORMAT:
 
@@ -107,6 +116,8 @@ class PlanAdherenceTemplate:
                 6. Focus Exclusively on Plan Compliance
                 - Ignore task success, reasoning quality, or correctness of outcomes. 
                 - Evaluate *only* whether the trace reflects the exact plan execution.
+
+                {PlanAdherenceTemplate.multimodal_rules}
 
 
                 SCORING SCALE

@@ -46,7 +46,6 @@ from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
 )
 from deepeval.metrics.indicator import (
     format_metric_description,
@@ -75,7 +74,6 @@ def assert_test(
         Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
-            List[BaseMultimodalMetric],
         ]
     ] = None,
     golden: Optional[Golden] = None,
@@ -190,7 +188,6 @@ def evaluate(
         Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
-            List[BaseMultimodalMetric],
         ]
     ] = None,
     # Evals on Confident AI

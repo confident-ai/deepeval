@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional, List, Tuple, Union
 
-from deepeval.metrics import BaseMultimodalMetric
+from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
     ImageHelpfulnessTemplate,
@@ -9,7 +9,7 @@ from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
-    check_mllm_test_case_params,
+    check_llm_test_case_params,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -23,7 +23,7 @@ from deepeval.utils import (
 )
 
 
-class ImageHelpfulnessMetric(BaseMultimodalMetric):
+class ImageHelpfulnessMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
@@ -54,8 +54,14 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -156,8 +162,14 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self, self.model
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

@@ -62,10 +62,15 @@ class DAGMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_llm_test_case_params(
             test_case,
             extract_required_params(self.dag.root_nodes, self.dag.multiturn),
+            None,
+            None,
             self,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -105,10 +110,15 @@ class DAGMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_llm_test_case_params(
             test_case,
             extract_required_params(self.dag.root_nodes, self.dag.multiturn),
+            None,
+            None,
             self,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

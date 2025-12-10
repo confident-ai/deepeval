@@ -89,8 +89,14 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self.evaluation_params, self
+            test_case,
+            self.evaluation_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -143,8 +149,14 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self.evaluation_params, self
+            test_case,
+            self.evaluation_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

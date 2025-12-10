@@ -2,9 +2,19 @@ from typing import List, Dict, Any
 
 
 class KnowledgeRetentionTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def generate_reason(attritions, score):
         return f"""Given a list of attritions, which highlights forgetfulness in the LLM response and knowledge established previously in the conversation, use it to CONCISELY provide a reason for the knowledge retention score. Note that The knowledge retention score ranges from 0 - 1, and the higher the better.
+
+{KnowledgeRetentionTemplate.multimodal_rules}
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
@@ -32,6 +42,8 @@ JSON:
         return f"""You are given an AI-generated message (the "LLM message") and a set of facts previously stated in the conversation (the "Previous Knowledge").
 
 Your task is to determine whether the LLM message **contradicts** or **forgets** any of the known facts.
+
+{KnowledgeRetentionTemplate.multimodal_rules}
 
 ---
 **Output format:**
