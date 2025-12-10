@@ -504,9 +504,7 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=Verdicts
-            )
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
