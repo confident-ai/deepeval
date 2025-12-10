@@ -326,7 +326,9 @@ def check_arena_test_case_params(
             )
 
     for test_case in cases:
-        check_llm_test_case_params(test_case, test_case_params, metric)
+        check_llm_test_case_params(
+            test_case, test_case_params, None, None, metric, metric.model, False
+        )
 
 
 def trimAndLoadJson(
