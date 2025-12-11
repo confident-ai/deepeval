@@ -501,6 +501,7 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     settings,
 ):
     from deepeval.models.llms.constants import OPENAI_MODELS_DATA
+
     """
     When a model is missing from `model_pricing`, GPTModel should populate
     pricing from Settings.OPENAI_COST_PER_INPUT_TOKEN and
