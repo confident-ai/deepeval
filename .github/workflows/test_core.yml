@@ -62,6 +62,12 @@ jobs:
         run: poetry install --no-interaction --with dev
         
       #----------------------------------------------
+      #    Install Pillow without changing poetry.lock
+      #----------------------------------------------
+      - name: Install Pillow (runtime-only)
+        run: poetry run pip install Pillow
+
+      #----------------------------------------------
       #              run test suite
       #----------------------------------------------
 
