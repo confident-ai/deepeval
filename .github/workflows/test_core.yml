@@ -60,7 +60,7 @@ jobs:
       #----------------------------------------------
       - name: Install dev dependencies
         run: poetry install --no-interaction --with dev
-
+      
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
