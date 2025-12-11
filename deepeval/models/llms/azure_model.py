@@ -24,14 +24,6 @@ from deepeval.models.utils import (
 )
 from deepeval.constants import ProviderSlug as PS
 
-valid_multimodal_models = [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-5",
-]
-
 retry_azure = create_retry_decorator(PS.AZURE)
 
 _ALIAS_MAP = {

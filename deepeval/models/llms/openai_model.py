@@ -98,8 +98,8 @@ class GPTModel(DeepEvalBaseLLM):
                     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
                 )
             else:
-                self.model_data.input_price = (float(cost_per_input_token),)
-                self.model_data.output_price = (float(cost_per_output_token),)
+                self.model_data.input_price = (float(cost_per_input_token))
+                self.model_data.output_price = (float(cost_per_output_token))
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
