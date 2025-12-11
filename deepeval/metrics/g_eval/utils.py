@@ -9,8 +9,8 @@ from deepeval.test_case import (
     LLMTestCase,
     ToolCall,
 )
-from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from pydantic import BaseModel, field_validator
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
@@ -114,16 +114,15 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
 
 def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
 
-    if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
-        return True
-    elif (
-        isinstance(model, GPTModel)
-        and model.get_model_name() in unsupported_log_probs_gpt_models
-    ):
+    if isinstance(model, str):
+        model_data = OPENAI_MODELS_DATA.get(model)
+        if not model_data.supports_log_probs:
+            return True
+    elif isinstance(model, GPTModel) and not model.model_data.supports_log_probs:
         return True
     elif (
         isinstance(model, AzureOpenAIModel)
-        and model.get_model_name() in unsupported_log_probs_gpt_models
+        and not model.model_data.supports_log_probs
     ):
         return True
 

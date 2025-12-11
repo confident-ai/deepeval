@@ -116,10 +116,12 @@ class GEval(BaseMetric):
                 )
             else:
                 self.evaluation_steps: List[str] = (
-                    self._generate_evaluation_steps()
+                    self._generate_evaluation_steps(multimodal)
                 )
                 g_score, reason = self._evaluate(
-                    test_case, _additional_context=_additional_context
+                    test_case,
+                    _additional_context=_additional_context,
+                    multimodal=multimodal,
                 )
                 self.score = (
                     (float(g_score) - self.score_range[0])
@@ -176,10 +178,12 @@ class GEval(BaseMetric):
             _in_component=_in_component,
         ):
             self.evaluation_steps: List[str] = (
-                await self._a_generate_evaluation_steps()
+                await self._a_generate_evaluation_steps(multimodal)
             )
             g_score, reason = await self._a_evaluate(
-                test_case, _additional_context=_additional_context
+                test_case,
+                _additional_context=_additional_context,
+                multimodal=multimodal,
             )
             self.score = (
                 (float(g_score) - self.score_range[0]) / self.score_range_span
@@ -205,7 +209,7 @@ class GEval(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_evaluation_steps(self) -> List[str]:
+    async def _a_generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
             return self.evaluation_steps
 
@@ -213,7 +217,9 @@ class GEval(BaseMetric):
             self.evaluation_params
         )
         prompt = self.evaluation_template.generate_evaluation_steps(
-            criteria=self.criteria, parameters=g_eval_params_str
+            criteria=self.criteria,
+            parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -231,7 +237,7 @@ class GEval(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 
-    def _generate_evaluation_steps(self) -> List[str]:
+    def _generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
             return self.evaluation_steps
 
@@ -239,7 +245,9 @@ class GEval(BaseMetric):
             self.evaluation_params
         )
         prompt = self.evaluation_template.generate_evaluation_steps(
-            criteria=self.criteria, parameters=g_eval_params_str
+            criteria=self.criteria,
+            parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -258,7 +266,10 @@ class GEval(BaseMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
+        self,
+        test_case: LLMTestCase,
+        multimodal: bool,
+        _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
             self.evaluation_params, test_case
@@ -275,6 +286,7 @@ class GEval(BaseMetric):
                 rubric=rubric_str,
                 score_range=self.score_range,
                 _additional_context=_additional_context,
+                multimodal=multimodal,
             )
         else:
             prompt = (
@@ -285,6 +297,7 @@ class GEval(BaseMetric):
                     test_case_content=test_case_content,
                     parameters=g_eval_params_str,
                     _additional_context=_additional_context,
+                    multimodal=multimodal,
                 )
             )
         try:
@@ -335,7 +348,10 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def _evaluate(
-        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
+        self,
+        test_case: LLMTestCase,
+        multimodal: bool,
+        _additional_context: Optional[str] = None,
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
             self.evaluation_params, test_case
@@ -353,6 +369,7 @@ class GEval(BaseMetric):
                 rubric=rubric_str,
                 score_range=self.score_range,
                 _additional_context=_additional_context,
+                multimodal=multimodal,
             )
         else:
             prompt = (
@@ -363,6 +380,7 @@ class GEval(BaseMetric):
                     test_case_content=test_case_content,
                     parameters=g_eval_params_str,
                     _additional_context=_additional_context,
+                    multimodal=multimodal,
                 )
             )
 

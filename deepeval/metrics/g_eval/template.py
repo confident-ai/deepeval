@@ -12,11 +12,13 @@ class GEvalTemplate:
     """
 
     @staticmethod
-    def generate_evaluation_steps(parameters: str, criteria: str):
+    def generate_evaluation_steps(
+        parameters: str, criteria: str, multimodal: bool = False
+    ):
         return textwrap.dedent(
             f"""Given an evaluation criteria which outlines how you should judge the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
 
-            {GEvalTemplate.multimodal_rules}
+            {GEvalTemplate.multimodal_rules if multimodal else ""}
 
             Evaluation Criteria:
             {criteria}
@@ -41,6 +43,7 @@ class GEvalTemplate:
         rubric: Optional[str] = None,
         score_range: Tuple[int, int] = (0, 10),
         _additional_context: Optional[str] = None,
+        multimodal: bool = False,
     ):
         rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
         dependencies = (
@@ -72,7 +75,7 @@ class GEvalTemplate:
             - {reasoning_expectation}
             - Mention key details from the test case parameters.
             - Be concise, clear, and focused on the evaluation logic.
-            {GEvalTemplate.multimodal_rules}
+            {GEvalTemplate.multimodal_rules if multimodal else ""}
 
             Only return valid JSON. Do **not** include any extra commentary or text.
 
@@ -106,6 +109,7 @@ class GEvalTemplate:
         test_case_content: str,
         parameters: str,
         _additional_context: Optional[str] = None,
+        multimodal: bool = False,
     ):
         additional_context = (
             f"\n\nAdditional Context:\n{_additional_context}\n"
@@ -115,7 +119,7 @@ class GEvalTemplate:
         return textwrap.dedent(
             f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
-            {GEvalTemplate.multimodal_rules}
+            {GEvalTemplate.multimodal_rules if multimodal else ""}
 
             Evaluation Steps:
             {evaluation_steps}
