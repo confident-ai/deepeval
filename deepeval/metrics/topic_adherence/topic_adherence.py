@@ -3,10 +3,11 @@ from typing import Optional, List, Union
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     get_unit_interactions,
     check_conversational_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import ConversationalTestCase, TurnParams
 from deepeval.metrics import BaseConversationalMetric
@@ -119,14 +120,14 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     self,
                     steps=[
                         f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
-                        f"Truth Table:",
-                        f"\nTrue Positives:",
+                        "Truth Table:",
+                        "\nTrue Positives:",
                         f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n",
-                        f"\nTrue Negatives: ",
+                        "\nTrue Negatives: ",
                         f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n",
-                        f"\nFalse Positives: ",
+                        "\nFalse Positives: ",
                         f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n",
-                        f"\nFalse Negatives: ",
+                        "\nFalse Negatives: ",
                         f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n",
                         f"Final Score: {self.score}",
                         f"Final Reason: {self.reason}",
@@ -198,14 +199,14 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                 self,
                 steps=[
                     f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
-                    f"Truth Table:",
-                    f"\nTrue Positives:",
+                    "Truth Table:",
+                    "\nTrue Positives:",
                     f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n",
-                    f"\nTrue Negatives: ",
+                    "\nTrue Negatives: ",
                     f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n",
-                    f"\nFalse Positives: ",
+                    "\nFalse Positives: ",
                     f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n",
-                    f"\nFalse Negatives: ",
+                    "\nFalse Negatives: ",
                     f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n",
                     f"Final Score: {self.score}",
                     f"Final Reason: {self.reason}",
@@ -259,39 +260,25 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         prompt = TopicAdherenceTemplate.get_qa_pair_verdict(
             self.relevant_topics, qa_pair.question, qa_pair.response
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=RelevancyVerdict)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = self.model.generate(prompt, schema=RelevancyVerdict)
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return RelevancyVerdict(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=RelevancyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: RelevancyVerdict(**data),
+        )
 
     async def _a_get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
         prompt = TopicAdherenceTemplate.get_qa_pair_verdict(
             self.relevant_topics, qa_pair.question, qa_pair.response
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=RelevancyVerdict
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = await self.model.a_generate(
-                    prompt, schema=RelevancyVerdict
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return RelevancyVerdict(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=RelevancyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: RelevancyVerdict(**data),
+        )
 
     def _get_qa_pairs(self, unit_interactions: List) -> List[QAPairs]:
         qa_pairs = []
@@ -303,18 +290,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             prompt = TopicAdherenceTemplate.get_qa_pairs(conversation)
             new_pair = None
 
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt, schema=QAPairs)
-                self.evaluation_cost += cost
-                new_pair = res
-            else:
-                try:
-                    res = self.model.generate(prompt, schema=QAPairs)
-                    new_pair = res
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    new_pair = QAPairs(**data)
+            new_pair = generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=QAPairs,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: QAPairs(**data),
+            )
 
             if new_pair is not None:
                 qa_pairs.append(new_pair)
@@ -331,18 +313,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             prompt = TopicAdherenceTemplate.get_qa_pairs(conversation)
             new_pair = None
 
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt, schema=QAPairs)
-                self.evaluation_cost += cost
-                new_pair = res
-            else:
-                try:
-                    res = await self.model.a_generate(prompt, schema=QAPairs)
-                    new_pair = res
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    new_pair = QAPairs(**data)
+            new_pair = await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=QAPairs,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: QAPairs(**data),
+            )
 
             if new_pair is not None:
                 qa_pairs.append(new_pair)
@@ -355,7 +332,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         else:
             try:
                 self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

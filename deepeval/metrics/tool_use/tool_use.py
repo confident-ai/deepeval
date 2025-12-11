@@ -3,11 +3,11 @@ import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     get_unit_interactions,
-    print_tools_called,
     check_conversational_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     ConversationalTestCase,
@@ -216,22 +216,13 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.tools_called,
             user_and_tools.available_tools,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ArgumentCorrectnessScore
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ArgumentCorrectnessScore = self.model.generate(
-                    prompt, schema=ArgumentCorrectnessScore
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ArgumentCorrectnessScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ArgumentCorrectnessScore(**data),
+        )
 
     async def _a_get_argument_correctness_score(
         self,
@@ -243,22 +234,13 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.tools_called,
             user_and_tools.available_tools,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ArgumentCorrectnessScore
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ArgumentCorrectnessScore = await self.model.a_generate(
-                    prompt, schema=ArgumentCorrectnessScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ArgumentCorrectnessScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ArgumentCorrectnessScore(**data),
+        )
 
     def _get_tool_selection_score(
         self,
@@ -270,20 +252,13 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.tools_called,
             user_and_tools.available_tools,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ToolSelectionScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ToolSelectionScore = self.model.generate(
-                    prompt, schema=ToolSelectionScore
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ToolSelectionScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ToolSelectionScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ToolSelectionScore(**data),
+        )
 
     async def _a_get_tool_selection_score(
         self,
@@ -295,22 +270,13 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.tools_called,
             user_and_tools.available_tools,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ToolSelectionScore
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ToolSelectionScore = await self.model.a_generate(
-                    prompt, schema=ToolSelectionScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ToolSelectionScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ToolSelectionScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ToolSelectionScore(**data),
+        )
 
     def _get_user_input_and_turns(
         self,
