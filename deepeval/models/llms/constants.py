@@ -73,6 +73,14 @@ OPENAI_MODELS_DATA = {
         input_price=2.50 / 1e6,
         output_price=10.00 / 1e6,
     ),
+    "gpt-4": DeepEvalModelData(
+        supports_log_probs=True,
+        supports_multimodal=False,
+        supports_structured_outputs=True,
+        supports_json=True,
+        input_price=30.00 / 1e6,
+        output_price=60.00 / 1e6,
+    ),
     "gpt-4o-2024-05-13": DeepEvalModelData(
         supports_log_probs=True,
         supports_multimodal=True,

@@ -9,7 +9,8 @@ from typer.testing import CliRunner
 from deepeval.cli.main import app
 
 # Model + pricing table we want to get populated
-from deepeval.models.llms.openai_model import GPTModel, model_pricing
+from deepeval.models.llms.openai_model import GPTModel
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 
 SNAPSHOT = "gpt-4o-2024-08-06"
@@ -69,10 +70,10 @@ def test_cli_set_openai_persists_and_enables_snapshot_pricing(tmp_path):
 
     # pricing table should have been populated for the snapshot
     assert (
-        SNAPSHOT in model_pricing
+        SNAPSHOT in OPENAI_MODELS_DATA.keys()
     ), "Snapshot should be inserted into model_pricing"
-    assert model_pricing[SNAPSHOT]["input"] == float(INPUT_PRICE)
-    assert model_pricing[SNAPSHOT]["output"] == float(OUTPUT_PRICE)
+    assert OPENAI_MODELS_DATA.get(SNAPSHOT).input_price == float(INPUT_PRICE)
+    assert OPENAI_MODELS_DATA.get(SNAPSHOT).output_price == float(OUTPUT_PRICE)
 
     # and cost calculation shouldn't KeyError/ValueError
     _ = model.calculate_cost(1000, 2000)
