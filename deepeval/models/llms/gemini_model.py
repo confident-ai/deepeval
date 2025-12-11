@@ -299,6 +299,25 @@ class GeminiModel(DeepEvalBaseLLM):
             )
             return response.text, 0
 
+    #########################
+    # Capabilities          #
+    #########################
+
+    def supports_structured_outputs(self) -> bool:
+        """
+        Gemini via google-genai supports typed structured outputs via
+        GenerateContentConfig(response_schema=...).
+        Our generate(...) already uses this when a schema is provided.
+        """
+        return True
+
+    def supports_json_mode(self) -> bool:
+        """
+        Gemini does not have a separate 'JSON mode' flag like OpenAI.
+        The structured-output path *is* its JSON-enforced mechanism.
+        """
+        return False
+
     #########
     # Model #
     #########

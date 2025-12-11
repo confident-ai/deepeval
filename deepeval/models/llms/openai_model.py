@@ -151,7 +151,7 @@ class GPTModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         if schema:
-            if self.model_data.supports_structured_outputs:
+            if self.supports_structured_outputs():
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -169,7 +169,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_data.supports_json:
+            if self.supports_json_mode():
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -217,7 +217,7 @@ class GPTModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         if schema:
-            if self.model_data.supports_structured_outputs:
+            if self.supports_structured_outputs():
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -235,7 +235,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_data.supports_json:
+            if self.supports_json_mode():
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -382,20 +382,21 @@ class GPTModel(DeepEvalBaseLLM):
         return input_cost + output_cost
 
     #########################
-    # Capabilities - opt-in #
+    # Capabilities          #
     #########################
 
     def supports_structured_outputs(self) -> bool:
         """
-        OpenAI models that natively enforce typed structured outputs
+        OpenAI models that natively enforce typed structured outputs.
+         Used by generate(...) when a schema is provided.
         """
-        return self.model_name in structured_outputs_models
+        return self.model_data.supports_structured_outputs
 
     def supports_json_mode(self) -> bool:
         """
         OpenAI models that enforce JSON mode
         """
-        return self.model_name in json_mode_models
+        return self.model_data.supports_json
 
     #########
     # Model #
