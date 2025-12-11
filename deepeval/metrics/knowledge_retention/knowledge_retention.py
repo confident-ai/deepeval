@@ -198,7 +198,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             accumulated_knowledge = [
                 knowledge.data
                 for knowledge in self.knowledges[:i]
-                if knowledge is not None
+                if knowledge is not None and knowledge.data
             ]
             if len(accumulated_knowledge) == 0:
                 continue
@@ -228,7 +228,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             accumulated_knowledge = [
                 knowledge.data
                 for knowledge in self.knowledges[:i]
-                if knowledge is not None
+                if knowledge is not None and knowledge.data
             ]
             if len(accumulated_knowledge) == 0:
                 continue
