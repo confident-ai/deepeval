@@ -12,45 +12,10 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
+from deepeval.models.llms.constants import GROK_MODELS_DATA
 
 # consistent retry rules
 retry_grok = create_retry_decorator(PS.GROK)
-
-
-structured_outputs_models = [
-    "grok-4-0709",
-    "grok-3",
-    "grok-3-mini",
-    "grok-3-fast",
-    "grok-3-mini-fast",
-]
-
-model_pricing = {
-    "grok-4-0709": {
-        "input": 0.20 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "grok-3": {
-        "input": 1.00 / 1e6,
-        "output": 3.00 / 1e6,
-    },
-    "grok-3-mini": {
-        "input": 2.00 / 1e6,
-        "output": 5.00 / 1e6,
-    },
-    "grok-3-fast": {
-        "input": 0.60 / 1e6,
-        "output": 2.50 / 1e6,
-    },
-    "grok-3-mini-fast": {
-        "input": 30 / 1e6,
-        "output": 30 / 1e6,
-    },
-    "grok-2-vision-1212": {
-        "input": 1.00 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-}
 
 
 class GrokModel(DeepEvalBaseLLM):
@@ -66,10 +31,11 @@ class GrokModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         model = model or settings.GROK_MODEL_NAME
+        self.model_data = GROK_MODELS_DATA.get(model)
 
-        if model not in model_pricing:
+        if model not in GROK_MODELS_DATA.keys():
             raise ValueError(
-                f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
+                f"Invalid model. Available Grok models: {', '.join(GROK_MODELS_DATA.keys())}"
             )
         temperature_from_key = settings.TEMPERATURE
         if temperature_from_key is None:
@@ -113,7 +79,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(prompt))
 
-        if schema and self.name in structured_outputs_models:
+        if schema and self.model_data.supports_structured_outputs:
             response, structured_output = chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -152,7 +118,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(prompt))
 
-        if schema and self.name in structured_outputs_models:
+        if schema and self.model_data.supports_structured_outputs:
             response, structured_output = await chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -181,9 +147,8 @@ class GrokModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.name, model_pricing)
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     ###############################################

@@ -16,14 +16,7 @@ from deepeval.utils import (
 )
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-
-valid_multimodal_models = [
-    "gemini-2.5-pro",
-    "gemini-2.5-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash",
-    # TODO: Add more models later
-]
+from deepeval.models.llms.constants import GEMINI_MODELS_DATA
 
 if TYPE_CHECKING:
     from google.genai import Client
@@ -78,6 +71,7 @@ class GeminiModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         model = model or settings.GEMINI_MODEL_NAME or default_gemini_model
+        self.model_data = GEMINI_MODELS_DATA.get(model)
 
         # Get API key from settings if not provided
         if api_key is not None:
@@ -365,9 +359,7 @@ class GeminiModel(DeepEvalBaseLLM):
         return client
 
     def supports_multimodal(self):
-        if self.name in valid_multimodal_models:
-            return True
-        return False
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Gemini)"

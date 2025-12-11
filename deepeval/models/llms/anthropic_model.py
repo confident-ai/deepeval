@@ -16,21 +16,10 @@ from deepeval.models.utils import (
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
+from deepeval.models.llms.constants import ANTHROPIC_MODELS_DATA
 
 # consistent retry rules
 retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
-
-model_pricing = {
-    "claude-opus-4-20250514": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
-    "claude-sonnet-4-20250514": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-3-7-sonnet-latest": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-3-5-haiku-latest": {"input": 0.80 / 1e6, "output": 4.00 / 1e6},
-    "claude-3-5-sonnet-latest": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-3-opus-latest": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
-    "claude-3-sonnet-20240229": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-3-haiku-20240307": {"input": 0.25 / 1e6, "output": 1.25 / 1e6},
-    "claude-instant-1.2": {"input": 0.80 / 1e6, "output": 2.40 / 1e6},
-}
 
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
@@ -51,6 +40,8 @@ class AnthropicModel(DeepEvalBaseLLM):
             kwargs,
             _ALIAS_MAP,
         )
+
+        self.model_data = ANTHROPIC_MODELS_DATA.get(model)
 
         # re-map depricated keywords to re-named positional args
         if api_key is None and "api_key" in alias_values:
@@ -135,25 +126,28 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.name)
 
-        if pricing is None:
+        if (
+            self.model_data.input_price is None
+            or self.model_data.output_price is None
+        ):
             # Calculate average cost from all known models
             avg_input_cost = sum(
-                p["input"] for p in model_pricing.values()
-            ) / len(model_pricing)
+                model.input_price for model in ANTHROPIC_MODELS_DATA.values()
+            ) / len(ANTHROPIC_MODELS_DATA)
             avg_output_cost = sum(
-                p["output"] for p in model_pricing.values()
-            ) / len(model_pricing)
-            pricing = {"input": avg_input_cost, "output": avg_output_cost}
+                model.output_price for model in ANTHROPIC_MODELS_DATA.values()
+            ) / len(ANTHROPIC_MODELS_DATA)
+            self.model_data.input_price = avg_input_cost
+            self.model_data.output_price = avg_output_cost
 
             warnings.warn(
                 f"[Warning] Pricing not defined for model '{self.name}'. "
                 "Using average input/output token costs from existing model_pricing."
             )
 
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     ###############################################

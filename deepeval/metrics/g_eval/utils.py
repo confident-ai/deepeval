@@ -118,7 +118,9 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
         model_data = OPENAI_MODELS_DATA.get(model)
         if not model_data.supports_log_probs:
             return True
-    elif isinstance(model, GPTModel) and not model.model_data.supports_log_probs:
+    elif (
+        isinstance(model, GPTModel) and not model.model_data.supports_log_probs
+    ):
         return True
     elif (
         isinstance(model, AzureOpenAIModel)

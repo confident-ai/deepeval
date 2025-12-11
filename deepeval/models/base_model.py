@@ -1,6 +1,18 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, List
 from deepeval.models.utils import parse_model_name
+from dataclasses import dataclass
+
+
+@dataclass
+class DeepEvalModelData:
+    supports_log_probs: bool
+    supports_multimodal: bool
+    supports_structured_outputs: bool
+    supports_json: bool
+    input_price: Optional[float]
+    output_price: Optional[float]
+    supports_temperature: Optional[bool] = True
 
 
 class DeepEvalBaseModel(ABC):

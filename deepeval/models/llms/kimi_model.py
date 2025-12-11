@@ -13,64 +13,10 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
+from deepeval.models.llms.constants import KIMI_MODELS_DATA
 
 
 retry_kimi = create_retry_decorator(PS.KIMI)
-
-json_mode_models = [
-    "kimi-thinking-preview",
-    "kimi-k2-0711-preview",
-    "kimi-latest-128k",
-    "kimi-latest-32k",
-    "kimi-latest-8k",
-]
-
-model_pricing = {
-    "kimi-latest-8k": {
-        "input": 0.20 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "kimi-latest-32k": {
-        "input": 1.00 / 1e6,
-        "output": 3.00 / 1e6,
-    },
-    "kimi-latest-128k": {
-        "input": 2.00 / 1e6,
-        "output": 5.00 / 1e6,
-    },
-    "kimi-k2-0711-preview": {
-        "input": 0.60 / 1e6,
-        "output": 2.50 / 1e6,
-    },
-    "kimi-thinking-preview": {
-        "input": 30 / 1e6,
-        "output": 30 / 1e6,
-    },
-    "moonshot-v1-8k": {
-        "input": 1.00 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "moonshot-v1-32k": {
-        "input": 2.00 / 1e6,
-        "output": 3.00 / 1e6,
-    },
-    "moonshot-v1-128k": {
-        "input": 0.20 / 1e6,
-        "output": 5.00 / 1e6,
-    },
-    "moonshot-v1-8k-vision-preview": {
-        "input": 1.00 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "moonshot-v1-32k-vision-preview": {
-        "input": 2.00 / 1e6,
-        "output": 3.00 / 1e6,
-    },
-    "moonshot-v1-128k-vision-preview": {
-        "input": 0.20 / 1e6,
-        "output": 5.00 / 1e6,
-    },
-}
 
 
 class KimiModel(DeepEvalBaseLLM):
@@ -85,9 +31,10 @@ class KimiModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         model = model or settings.MOONSHOT_MODEL_NAME
-        if model not in model_pricing:
+        self.model_data = KIMI_MODELS_DATA.get(model)
+        if model not in KIMI_MODELS_DATA.keys():
             raise ValueError(
-                f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
+                f"Invalid model. Available Moonshot models: {', '.join(KIMI_MODELS_DATA.keys())}"
             )
 
         temperature_from_key = settings.TEMPERATURE
@@ -120,7 +67,7 @@ class KimiModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
 
         client = self.load_model(async_mode=False)
-        if schema and self.name in json_mode_models:
+        if schema and self.model_data.supports_json:
             completion = client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": prompt}],
@@ -159,7 +106,7 @@ class KimiModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
 
         client = self.load_model(async_mode=True)
-        if schema and self.name in json_mode_models:
+        if schema and self.model_data.supports_json:
             completion = await client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": prompt}],
@@ -201,9 +148,8 @@ class KimiModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.name, model_pricing)
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     ###############################################
