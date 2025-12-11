@@ -30,6 +30,7 @@ from deepeval.metrics.api import metric_data_manager
 
 class TurnContextualPrecisionMetric(BaseConversationalMetric):
     _required_test_case_params: List[TurnParams] = [
+        TurnParams.ROLE,
         TurnParams.CONTENT,
         TurnParams.RETRIEVAL_CONTEXT,
         TurnParams.EXPECTED_OUTCOME,
