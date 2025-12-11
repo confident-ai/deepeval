@@ -69,6 +69,7 @@ jobs:
       - name: Run tests
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
+          pip install pillow \
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
             tests/test_core/ \
             --ignore=tests/test_core/test_synthesizer/ \
@@ -89,7 +90,7 @@ jobs:
       - name: Run dev tests
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
-          pip install pillow
+          pip install pillow \
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300 \
           tests/test_core/test_synthesizer/ tests/test_core/test_datasets/ tests/test_core/test_metrics/
 
