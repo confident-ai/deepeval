@@ -65,7 +65,7 @@ jobs:
       #    Install Pillow without changing poetry.lock
       #----------------------------------------------
       - name: Install Pillow (runtime-only)
-        run: poetry run pip install Pillow
+        run: poetry run pip install Pillow mcp["cli"]
 
       #----------------------------------------------
       #              run test suite
