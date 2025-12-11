@@ -11,9 +11,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -200,7 +201,7 @@ class SummarizationMetric(BaseMetric):
 
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -236,24 +237,15 @@ class SummarizationMetric(BaseMetric):
         prompt += """JSON:
 """
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=SummarizationScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: SummarizationScoreReason = await self.model.a_generate(
-                    prompt, schema=SummarizationScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=SummarizationScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -289,22 +281,13 @@ class SummarizationMetric(BaseMetric):
         prompt += """JSON:
 """
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=SummarizationScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: SummarizationScoreReason = self.model.generate(
-                    prompt, schema=SummarizationScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=SummarizationScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _calculate_score(self, score_type: ScoreType) -> float:
         if score_type == ScoreType.ALIGNMENT:
@@ -342,69 +325,45 @@ class SummarizationMetric(BaseMetric):
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Answers)
-            self.evaluation_cost += cost
-            return res.answers
-        else:
-            try:
-                res: Answers = await self.model.a_generate(
-                    prompt, schema=Answers
-                )
-                return res.answers
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["answers"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Answers,
+            extract_schema=lambda s: s.answers,
+            extract_json=lambda data: data["answers"],
+        )
 
     def _generate_answers(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_answers(
             questions=self.assessment_questions, text=text
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Answers)
-            self.evaluation_cost += cost
-            return res.answers
-        else:
-            try:
-                res: Answers = self.model.generate(prompt, schema=Answers)
-                return res.answers
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["answers"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Answers,
+            extract_schema=lambda s: s.answers,
+            extract_json=lambda data: data["answers"],
+        )
 
-    async def _a_generate_assessment_questions(self, text: str):
+    async def _a_generate_assessment_questions(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Questions)
-            self.evaluation_cost += cost
-            return res.questions
-        else:
-            try:
-                res: Questions = await self.model.a_generate(
-                    prompt, schema=Questions
-                )
-                return res.questions
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["questions"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Questions,
+            extract_schema=lambda s: s.questions,
+            extract_json=lambda data: data["questions"],
+        )
 
-    def _generate_assessment_questions(self, text: str):
+    def _generate_assessment_questions(self, text: str) -> List[str]:
         prompt = SummarizationTemplate.generate_questions(text=text, n=self.n)
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Questions)
-            self.evaluation_cost += cost
-            return res.questions
-        else:
-            try:
-                res: Questions = self.model.generate(prompt, schema=Questions)
-                return res.questions
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["questions"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Questions,
+            extract_schema=lambda s: s.questions,
+            extract_json=lambda data: data["questions"],
+        )
 
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
@@ -468,30 +427,19 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        verdicts: List[SummarizationAlignmentVerdict] = []
         prompt = SummarizationTemplate.generate_alignment_verdicts(
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    SummarizationAlignmentVerdict(**item)
-                    for item in data["verdicts"]
-                ]
-                return verdicts
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                SummarizationAlignmentVerdict(**item)
+                for item in data["verdicts"]
+            ],
+        )
 
     def _generate_alignment_verdicts(
         self,
@@ -499,28 +447,19 @@ class SummarizationMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        verdicts: List[SummarizationAlignmentVerdict] = []
         prompt = SummarizationTemplate.generate_alignment_verdicts(
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    SummarizationAlignmentVerdict(**item)
-                    for item in data["verdicts"]
-                ]
-                return verdicts
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                SummarizationAlignmentVerdict(**item)
+                for item in data["verdicts"]
+            ],
+        )
 
     async def _a_generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
@@ -528,34 +467,24 @@ class SummarizationMetric(BaseMetric):
             retrieval_context=text,
             extraction_limit=self.truths_extraction_limit,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Truths)
-            self.evaluation_cost += cost
-            return res.truths
-        else:
-            try:
-                res: Truths = await self.model.a_generate(prompt, schema=Truths)
-                return res.truths
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["truths"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Truths,
+            extract_schema=lambda s: s.truths,
+            extract_json=lambda data: data["truths"],
+        )
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Claims)
-            self.evaluation_cost += cost
-            return res.claims
-        else:
-            try:
-                res: Claims = await self.model.a_generate(prompt, schema=Claims)
-                return res.claims
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["claims"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Claims,
+            extract_schema=lambda s: s.claims,
+            extract_json=lambda data: data["claims"],
+        )
 
     def _generate_truths(self, text: str) -> List[str]:
         # Borrow faithfulness template
@@ -563,34 +492,24 @@ class SummarizationMetric(BaseMetric):
             retrieval_context=text,
             extraction_limit=self.truths_extraction_limit,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Truths)
-            self.evaluation_cost += cost
-            return res.truths
-        else:
-            try:
-                res: Truths = self.model.generate(prompt, schema=Truths)
-                return res.truths
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["truths"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Truths,
+            extract_schema=lambda s: s.truths,
+            extract_json=lambda data: data["truths"],
+        )
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
         prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Claims)
-            self.evaluation_cost += cost
-            return res.claims
-        else:
-            try:
-                res: Claims = self.model.generate(prompt, schema=Claims)
-                return res.claims
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["claims"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Claims,
+            extract_schema=lambda s: s.claims,
+            extract_json=lambda data: data["claims"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -598,7 +517,7 @@ class SummarizationMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
