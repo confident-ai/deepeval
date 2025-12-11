@@ -22,207 +22,12 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 
 retry_openai = create_retry_decorator(PS.OPENAI)
 
-
-valid_gpt_models = [
-    "gpt-3.5-turbo",
-    "gpt-3.5-turbo-0125",
-    "gpt-3.5-turbo-1106",
-    "gpt-4-0125-preview",
-    "gpt-4-1106-preview",
-    "gpt-4-turbo",
-    "gpt-4-turbo-2024-04-09",
-    "gpt-4-turbo-preview",
-    "gpt-4o",
-    "gpt-4o-2024-05-13",
-    "gpt-4o-2024-08-06",
-    "gpt-4o-2024-11-20",
-    "gpt-4o-mini",
-    "gpt-4o-mini-2024-07-18",
-    "gpt-4-32k",
-    "gpt-4-32k-0613",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-4.1-nano",
-    "gpt-4.5-preview",
-    "o1",
-    "o1-preview",
-    "o1-2024-12-17",
-    "o1-preview-2024-09-12",
-    "o1-mini",
-    "o1-mini-2024-09-12",
-    "o3-mini",
-    "o3-mini-2025-01-31",
-    "o4-mini",
-    "o4-mini-2025-04-16",
-    "gpt-4.5-preview-2025-02-27",
-    "gpt-5",
-    "gpt-5-2025-08-07",
-    "gpt-5-mini",
-    "gpt-5-mini-2025-08-07",
-    "gpt-5-nano",
-    "gpt-5-nano-2025-08-07",
-    "gpt-5-chat-latest",
-]
-
-unsupported_log_probs_gpt_models = [
-    "o1",
-    "o1-preview",
-    "o1-2024-12-17",
-    "o1-preview-2024-09-12",
-    "o1-mini",
-    "o1-mini-2024-09-12",
-    "o3-mini",
-    "o3-mini-2025-01-31",
-    "o4-mini",
-    "o4-mini-2025-04-16",
-    "gpt-4.5-preview-2025-02-27",
-    "gpt-5",
-    "gpt-5-2025-08-07",
-    "gpt-5-mini",
-    "gpt-5-mini-2025-08-07",
-    "gpt-5-nano",
-    "gpt-5-nano-2025-08-07",
-    "gpt-5-chat-latest",
-]
-
-unsupported_log_probs_multimodal_gpt_models = [
-    "o1",
-    "o1-preview",
-    "o1-2024-12-17",
-    "o1-preview-2024-09-12",
-    "gpt-4.5-preview-2025-02-27",
-    "o4-mini",
-]
-
-structured_outputs_models = [
-    "gpt-4o",
-    "gpt-4o-2024-05-13",
-    "gpt-4o-2024-08-06",
-    "gpt-4o-2024-11-20",
-    "gpt-4o-mini",
-    "gpt-4o-mini-2024-07-18",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-4.1-nano",
-    "o1",
-    "o1-preview",
-    "o1-2024-12-17",
-    "o3-mini",
-    "o3-mini-2025-01-31",
-    "o4-mini",
-    "o4-mini-2025-04-16",
-    "gpt-4.5-preview-2025-02-27",
-    "gpt-5",
-    "gpt-5-2025-08-07",
-    "gpt-5-mini",
-    "gpt-5-mini-2025-08-07",
-    "gpt-5-nano",
-    "gpt-5-nano-2025-08-07",
-]
-
-json_mode_models = [
-    "gpt-3.5-turbo",
-    "gpt-3.5-turbo-0125",
-    "gpt-3.5-turbo-1106",
-    "gpt-4-0125-preview",
-    "gpt-4-1106-preview",
-    "gpt-4-turbo",
-    "gpt-4-turbo-2024-04-09",
-    "gpt-4-turbo-preview",
-    "gpt-4-32k",
-    "gpt-4-32k-0613",
-]
-
-model_pricing = {
-    "gpt-4o-mini": {"input": 0.150 / 1e6, "output": 0.600 / 1e6},
-    "gpt-4o": {"input": 2.50 / 1e6, "output": 10.00 / 1e6},
-    "gpt-4-turbo": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-turbo-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-0125-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-1106-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4": {"input": 30.00 / 1e6, "output": 60.00 / 1e6},
-    "gpt-4-32k": {"input": 60.00 / 1e6, "output": 120.00 / 1e6},
-    "gpt-3.5-turbo-1106": {"input": 1.00 / 1e6, "output": 2.00 / 1e6},
-    "gpt-3.5-turbo": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
-    "gpt-3.5-turbo-16k": {"input": 3.00 / 1e6, "output": 4.00 / 1e6},
-    "gpt-3.5-turbo-0125": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
-    "gpt-3.5-turbo-instruct": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
-    "o1": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o1-preview": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "o3-mini-2025-01-31": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "o4-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "o4-mini-2025-04-16": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "gpt-4.1": {
-        "input": 2.00 / 1e6,
-        "output": 8.00 / 1e6,
-    },
-    "gpt-4.1-mini": {
-        "input": 0.4 / 1e6,
-        "output": 1.60 / 1e6,
-    },
-    "gpt-4.1-nano": {
-        "input": 0.1 / 1e6,
-        "output": 0.4 / 1e6,
-    },
-    "gpt-4.5-preview": {
-        "input": 75.00 / 1e6,
-        "output": 150.00 / 1e6,
-    },
-    "gpt-5": {
-        "input": 1.25 / 1e6,
-        "output": 10.00 / 1e6,
-    },
-    "gpt-5-2025-08-07": {
-        "input": 1.25 / 1e6,
-        "output": 10.00 / 1e6,
-    },
-    "gpt-5-mini": {
-        "input": 0.25 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "gpt-5-mini-2025-08-07": {
-        "input": 0.25 / 1e6,
-        "output": 2.00 / 1e6,
-    },
-    "gpt-5-nano": {
-        "input": 0.05 / 1e6,
-        "output": 0.40 / 1e6,
-    },
-    "gpt-5-nano-2025-08-07": {
-        "input": 0.05 / 1e6,
-        "output": 0.40 / 1e6,
-    },
-    "gpt-5-chat-latest": {
-        "input": 1.25 / 1e6,
-        "output": 10.00 / 1e6,
-    },
-}
-
 default_gpt_model = "gpt-4.1"
-
-# Thinking models that require temperature=1
-models_requiring_temperature_1 = [
-    "o1",
-    "o1-2024-12-17",
-    "o1-mini",
-    "o1-mini-2024-09-12",
-    "o3-mini",
-    "o3-mini-2025-01-31",
-    "o4-mini",
-    "o4-mini-2025-04-16",
-    "gpt-5",
-    "gpt-5-2025-08-07",
-    "gpt-5-mini",
-    "gpt-5-mini-2025-08-07",
-    "gpt-5-nano",
-    "gpt-5-nano-2025-08-07",
-]
 
 
 def _request_timeout_seconds() -> float:
@@ -236,13 +41,6 @@ _ALIAS_MAP = {
 
 
 class GPTModel(DeepEvalBaseLLM):
-    valid_multimodal_models = [
-        "gpt-4o",
-        "gpt-4o-mini",
-        "gpt-4.1",
-        "gpt-4.1-mini",
-        "gpt-5",
-    ]
 
     def __init__(
         self,
@@ -267,6 +65,9 @@ class GPTModel(DeepEvalBaseLLM):
 
         settings = get_settings()
         model = model or settings.OPENAI_MODEL_NAME
+        if model is None:
+            model = default_gpt_model
+        self.model_data = OPENAI_MODELS_DATA.get(model)
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
@@ -278,17 +79,17 @@ class GPTModel(DeepEvalBaseLLM):
             else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
-        if model is None:
-            model = default_gpt_model
-
         if isinstance(model, str):
             model = parse_model_name(model)
-            if model not in valid_gpt_models:
+            if model not in OPENAI_MODELS_DATA.keys():
                 raise ValueError(
-                    f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
+                    f"Invalid model. Available GPT models: {', '.join(model for model in OPENAI_MODELS_DATA.keys())}"
                 )
 
-        if model not in model_pricing:
+        if (
+            self.model_data.input_price is None
+            or self.model_data.output_price is None
+        ):
             if cost_per_input_token is None or cost_per_output_token is None:
                 raise ValueError(
                     f"No pricing available for `{model}`. "
@@ -297,10 +98,8 @@ class GPTModel(DeepEvalBaseLLM):
                     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
                 )
             else:
-                model_pricing[model] = {
-                    "input": float(cost_per_input_token),
-                    "output": float(cost_per_output_token),
-                }
+                self.model_data.input_price = float(cost_per_input_token)
+                self.model_data.output_price = float(cost_per_output_token)
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -311,8 +110,7 @@ class GPTModel(DeepEvalBaseLLM):
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
 
-        # Auto-adjust temperature for models that require it
-        if model in models_requiring_temperature_1:
+        if not self.model_data.supports_temperature:
             temperature = 1
 
         if temperature < 0:
@@ -338,7 +136,7 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.name in structured_outputs_models:
+            if self.model_data.supports_structured_outputs:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -356,7 +154,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.name in json_mode_models:
+            if self.model_data.supports_json:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -402,7 +200,7 @@ class GPTModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.name in structured_outputs_models:
+            if self.model_data.supports_structured_outputs:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -420,7 +218,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.name in json_mode_models:
+            if self.model_data.supports_json:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -535,9 +333,8 @@ class GPTModel(DeepEvalBaseLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         # TODO: consider loggin a warning instead of defaulting to whole model pricing
-        pricing = model_pricing.get(self.name, model_pricing)
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.input_price
         return input_cost + output_cost
 
     #########
@@ -621,9 +418,7 @@ class GPTModel(DeepEvalBaseLLM):
             raise
 
     def supports_multimodal(self):
-        if self.name in GPTModel.valid_multimodal_models:
-            return True
-        return False
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name}"

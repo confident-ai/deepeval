@@ -170,7 +170,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "
                 else:
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             # Generate verdicts for each retrieval context
             verdicts = await self._a_generate_verdicts(
@@ -207,7 +208,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "
                 else:
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             # Generate verdicts for each retrieval context
             verdicts = self._generate_verdicts(

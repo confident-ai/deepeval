@@ -7,11 +7,7 @@ from io import BytesIO
 
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.llms.openai_model import (
-    structured_outputs_models,
-    json_mode_models,
-    model_pricing,
-)
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -27,14 +23,6 @@ from deepeval.models.utils import (
     normalize_kwargs_and_extract_aliases,
 )
 from deepeval.constants import ProviderSlug as PS
-
-valid_multimodal_models = [
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4.1",
-    "gpt-4.1-mini",
-    "gpt-5",
-]
 
 retry_azure = create_retry_decorator(PS.AZURE)
 
@@ -73,6 +61,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # fetch Azure deployment parameters
         model = model or settings.AZURE_MODEL_NAME
         self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
+        self.model_data = OPENAI_MODELS_DATA.get(model)
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -113,7 +102,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.name in structured_outputs_models:
+            if self.model_data.supports_structured_outputs:
                 completion = client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": prompt}],
@@ -128,7 +117,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.name in json_mode_models:
+            if self.model_data.supports_json:
                 completion = client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[
@@ -175,7 +164,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             prompt = self.generate_prompt(prompt)
 
         if schema:
-            if self.name in structured_outputs_models:
+            if self.model_data.supports_structured_outputs:
                 completion = await client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": prompt}],
@@ -190,7 +179,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.name in json_mode_models:
+            if self.model_data.supports_json:
                 completion = await client.beta.chat.completions.parse(
                     model=self.deployment_name,
                     messages=[
@@ -326,9 +315,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.name, model_pricing["gpt-4.1"])
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     ###############################################
@@ -376,9 +364,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             raise
 
     def supports_multimodal(self):
-        if self.name in valid_multimodal_models:
-            return True
-        return False
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Azure)"

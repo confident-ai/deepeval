@@ -5,7 +5,6 @@ from deepeval.metrics.api import metric_data_manager
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -505,9 +504,7 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=SummarizationAlignmentVerdict
-            )
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts

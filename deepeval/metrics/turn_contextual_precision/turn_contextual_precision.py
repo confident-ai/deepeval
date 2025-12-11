@@ -177,7 +177,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "
                 else:
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             verdicts = await self._a_generate_verdicts(
                 user_content, expected_outcome, retrieval_context, multimodal
@@ -219,7 +220,8 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 if turn.role == "user":
                     user_content += f"\n{turn.content} "
                 else:
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             verdicts = self._generate_verdicts(
                 user_content, expected_outcome, retrieval_context, multimodal

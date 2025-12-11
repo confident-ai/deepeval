@@ -85,7 +85,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model="gpt-4",
+            model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
@@ -120,7 +120,7 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Create model with explicit deployment_name
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model="gpt-4",
+            model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",
@@ -145,7 +145,7 @@ class TestAzureOpenAIModelGenerationKwargs:
 
         model = AzureOpenAIModel(
             deployment_name="test-deployment",
-            model="gpt-4",
+            model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
             openai_api_version="2024-02-15-preview",

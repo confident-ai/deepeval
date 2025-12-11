@@ -71,6 +71,8 @@ class Golden(BaseModel):
                 for context in self.context
             )
 
+        self.multimodal = auto_detect
+
         return self
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:

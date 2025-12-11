@@ -13,17 +13,7 @@ from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.test_case import MLLMImage
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-
-valid_multimodal_models = [
-    "llava:7b",
-    "llava:13b",
-    "llava:34b",
-    "llama4",
-    "gemma3",
-    "qwen3-vl",
-    "qwen2.5-vl",
-    # TODO: Add more models later on by looking at their catelogue
-]
+from deepeval.models.llms.constants import OLLAMA_MODELS_DATA
 
 if TYPE_CHECKING:
     from ollama import ChatResponse
@@ -42,6 +32,7 @@ class OllamaModel(DeepEvalBaseLLM):
     ):
         settings = get_settings()
         model = model or settings.LOCAL_MODEL_NAME
+        self.model_data = OLLAMA_MODELS_DATA.get(model)
         self.base_url = (
             base_url
             or (
@@ -73,7 +64,6 @@ class OllamaModel(DeepEvalBaseLLM):
             messages = self.generate_messages(prompt)
         else:
             messages = [{"role": "user", "content": prompt}]
-        print(messages)
 
         response: ChatResponse = chat_model.chat(
             model=self.name,
@@ -208,9 +198,7 @@ class OllamaModel(DeepEvalBaseLLM):
         return cls(**kw)
 
     def supports_multimodal(self):
-        if self.name in valid_multimodal_models:
-            return True
-        return False
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Ollama)"

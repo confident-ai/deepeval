@@ -13,21 +13,11 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.constants import ProviderSlug as PS
+from deepeval.models.llms.constants import DEEPSEEK_MODELS_DATA
 
 
 # consistent retry rules
 retry_deepseek = create_retry_decorator(PS.DEEPSEEK)
-
-model_pricing = {
-    "deepseek-chat": {
-        "input": 0.27 / 1e6,
-        "output": 1.10 / 1e6,
-    },
-    "deepseek-reasoner": {
-        "input": 0.55 / 1e6,
-        "output": 2.19 / 1e6,
-    },
-}
 
 
 class DeepSeekModel(DeepEvalBaseLLM):
@@ -42,10 +32,11 @@ class DeepSeekModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         model = model or settings.DEEPSEEK_MODEL_NAME
-        if model not in model_pricing:
+        if model not in DEEPSEEK_MODELS_DATA.keys():
             raise ValueError(
-                f"Invalid model. Available DeepSeek models: {', '.join(model_pricing.keys())}"
+                f"Invalid model. Available DeepSeek models: {', '.join(DEEPSEEK_MODELS_DATA.values())}"
             )
+        self.model_data = DEEPSEEK_MODELS_DATA.get(model)
         temperature_from_key = settings.TEMPERATURE
         if temperature_from_key is None:
             self.temperature = temperature
@@ -149,9 +140,8 @@ class DeepSeekModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(self.name, model_pricing)
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
+        input_cost = input_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     ###############################################
