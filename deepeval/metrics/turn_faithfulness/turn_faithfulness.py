@@ -182,7 +182,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     user_content += f"\n{turn.content} "
                 else:
                     assistant_content += f"\n{turn.content} "
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
             truths = await self._a_generate_truths(
                 retrieval_context, multimodal
             )
@@ -227,7 +228,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     user_content += f"\n{turn.content} "
                 else:
                     assistant_content += f"\n{turn.content} "
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
             truths = self._generate_truths(retrieval_context, multimodal)
             claims = self._generate_claims(
                 user_content, assistant_content, multimodal

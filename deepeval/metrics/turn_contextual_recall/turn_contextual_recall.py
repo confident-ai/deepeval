@@ -174,7 +174,8 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             )
             for turn in unit_interaction:
                 if turn.role == "assistant":
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             verdicts = await self._a_generate_verdicts(
                 expected_outcome, retrieval_context, multimodal
@@ -213,7 +214,8 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             )
             for turn in unit_interaction:
                 if turn.role == "assistant":
-                    retrieval_context.extend(turn.retrieval_context)
+                    if turn.retrieval_context is not None:
+                        retrieval_context.extend(turn.retrieval_context)
 
             verdicts = self._generate_verdicts(
                 expected_outcome, retrieval_context, multimodal
