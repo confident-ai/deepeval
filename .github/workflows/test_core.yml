@@ -82,14 +82,16 @@ jobs:
           --ignore=tests/test_core/test_synthesizer/                                \
           --ignore=tests/test_core/test_datasets/                                   \
           --ignore=tests/test_core/test_tracing/test_dataset_iterator.py            \
-          --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
+          --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py \
+          --ignore=tests/test_core/test_metrics/
 
       # Dev tests (with secrets)
       - name: Run dev tests
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
+          pip install pillow
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300 \
-          tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+          tests/test_core/test_synthesizer/ tests/test_core/test_datasets/ tests/test_core/test_metrics/
 
       # Dev tests (no secrets)
       - name: Run dev tests (no secrets)

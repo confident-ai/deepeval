@@ -16,7 +16,7 @@ deepeval = 'deepeval.cli.main:app'
 deepeval = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
-python = ">=3.10, <4.0"
+python = ">=3.9, <4.0"
 requests = "^2.31.0"
 tqdm = "^4.66.1"
 pytest = "*"
@@ -65,7 +65,6 @@ ruff = "^0.13.0"
 ollama = "*"
 anthropic = "*"
 google-genai = "^1.9.0"
-pillow = "*"
 
 [tool.black]
 line-length = 80
