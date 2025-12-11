@@ -1,7 +1,7 @@
 import json
 import requests
 from pydantic import BaseModel, SecretStr
-from typing import TYPE_CHECKING, Optional, Dict, List, Union
+from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
@@ -194,7 +194,9 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
 
     @retry_gemini
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+    def generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Generates text from a prompt.
 
         Args:
@@ -239,7 +241,7 @@ class GeminiModel(DeepEvalBaseLLM):
     @retry_gemini
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> str:
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Asynchronously generates text from a prompt.
 
         Args:
@@ -279,6 +281,25 @@ class GeminiModel(DeepEvalBaseLLM):
                 ),
             )
             return response.text, 0
+
+    #########################
+    # Capabilities          #
+    #########################
+
+    def supports_structured_outputs(self) -> bool:
+        """
+        Gemini via google-genai supports typed structured outputs via
+        GenerateContentConfig(response_schema=...).
+        Our generate(...) already uses this when a schema is provided.
+        """
+        return True
+
+    def supports_json_mode(self) -> bool:
+        """
+        Gemini does not have a separate 'JSON mode' flag like OpenAI.
+        The structured-output path *is* its JSON-enforced mechanism.
+        """
+        return False
 
     #########
     # Model #
