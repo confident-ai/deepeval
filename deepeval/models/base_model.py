@@ -98,7 +98,6 @@ class DeepEvalBaseLLM(ABC):
     def supports_json_mode(self) -> bool:
         return False
 
-    # Schema-safe wrappers
     def generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:
             try:
