@@ -342,3 +342,22 @@ Precedence: explicit constructor arguments (e.g., `DeepSeekModel(model=..., api_
 | `DEEPSEEK_ENDPOINT`   | string / unset | Optional. Custom endpoint URL for the DeepSeek API.                                                                      |
 
 `temperature` resolution for `DeepSeekModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+
+Here is the `Model Settings` section for the Gemini model:
+
+### Gemini Model Settings {#model-settings-gemini}
+
+These environment variables configure Gemini model usage in DeepEval.
+
+Precedence: explicit constructor arguments (e.g., `GeminiModel(model=..., api_key=...)`) override DeepEval settings or environment variables. If neither explicit arguments nor environment variables are set for the API key, DeepEval will raise an error at runtime.
+
+| Variable                     | Values               | Effect                                                                                                                |
+| ---------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `GOOGLE_API_KEY`             | string / unset       | Required at runtime unless provided as `GeminiModel(api_key=...)`. Google API key for authentication.                 |
+| `GEMINI_MODEL_NAME`          | string / unset       | Optional. Default model used when `model` is not passed to `GeminiModel(...)`. Defaults to `gemini-1.5-pro` if unset. |
+| `GOOGLE_CLOUD_PROJECT`       | string / unset       | Optional. Google Cloud project ID. Required if using Vertex AI (unless passed as `GeminiModel(project=...)`).         |
+| `GOOGLE_CLOUD_LOCATION`      | string / unset       | Optional. Google Cloud location. Required if using Vertex AI (unless passed as `GeminiModel(location=...)`).          |
+| `GOOGLE_GENAI_USE_VERTEXAI`  | `yes` / `no` / unset | Optional. When set to `yes`, Vertex AI will be used for generation. Defaults to unset (uses default service).         |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | string / unset       | Optional. Service account key in JSON format for authentication when using Vertex AI.                                 |
+
+`temperature` resolution for `GeminiModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.

@@ -44,12 +44,12 @@ model = DeepSeekModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **TWO** mandatory and **ONE** optional parameters when creating a `DeepSeekModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-deep-seek) for the DeepSeek-related environment variables::
+There are **TWO** mandatory and **ONE** optional parameters when creating a `DeepSeekModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-deep-seek) for the DeepSeek-related environment variables:
 
 - `model`: A string specifying the name of the DeepSeek model to use. Defaults to `DEEPSEEK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - `api_key`: A string specifying your DeepSeek API key for authentication. Defaults to `DEEPSEEK_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `generation_kwargs`: A dictionary of additional generation  forwarded to the Azure OpenAI `chat.completions.create(...)` call.
+- [Optional] `generation_kwargs`: A dictionary of additional generation forwarded to the OpenAI `chat.completions.create(...)` call.
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://api-docs.deepseek.com/api/create-chat-completion#request).
