@@ -1,8 +1,8 @@
 import warnings
 
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
-
+import base64
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
@@ -13,6 +13,8 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
@@ -70,6 +72,11 @@ class AnthropicModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_payload_anthropic(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         chat_model = self.load_model()
         message = chat_model.messages.create(
@@ -77,7 +84,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": content,
                 }
             ],
             model=self.name,
@@ -97,6 +104,11 @@ class AnthropicModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_payload_anthropic(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
@@ -104,7 +116,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": content,
                 }
             ],
             model=self.name,
@@ -120,6 +132,59 @@ class AnthropicModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message.content[0].text)
 
             return schema.model_validate(json_output), cost
+        
+    def generate_payload_anthropic(
+        self, multimodal_input: List[Union[str, MLLMImage]]
+    ):
+        content = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                content.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                image_format, image_raw_bytes = self._parse_image(ele)
+                content.append(
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": f"image/{image_format}",
+                            "data": base64.b64encode(image_raw_bytes).decode("utf-8"),
+                        },
+                    }
+                )
+        return content
+    
+    def _parse_image(self, image: MLLMImage):
+        if image.dataBase64:
+            fmt = (image.mimeType or "image/jpeg").split("/")[-1]
+            try:
+                raw_bytes = base64.b64decode(image.dataBase64)
+            except Exception:
+                raise ValueError("Invalid base64 in MLLMImage.dataBase64")
+            return fmt, raw_bytes
+        if image.local and image.filename:
+            import PIL.Image
+            from io import BytesIO
+            img = PIL.Image.open(image.filename)
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
+            buf = BytesIO()
+            fmt = (image.mimeType or "image/jpeg").split("/")[-1].lower()
+            fmt = "jpeg" if fmt == "jpg" else fmt
+            img.save(buf, format=fmt)
+            raw_bytes = buf.getvalue()
+            return fmt, raw_bytes
+        if image.url:
+            import requests
+            resp = requests.get(image.url)
+            resp.raise_for_status()
+            raw_bytes = resp.content
+            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            fmt = mime.split("/")[-1]
+            return fmt, raw_bytes
+        raise ValueError(
+            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
+        )
 
     ###############################################
     # Utilities
@@ -192,6 +257,9 @@ class AnthropicModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Anthropic)"
