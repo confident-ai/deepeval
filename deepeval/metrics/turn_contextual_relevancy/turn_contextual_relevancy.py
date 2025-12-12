@@ -192,7 +192,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     async def _a_get_contextual_relevancy_scores(
         self, turns_window: List[Turn], multimodal: bool
     ):
-        interaction_scores = []
+        windows_scores = []
 
         user_content = ""
         retrieval_context = []
@@ -215,14 +215,14 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             verdicts=verdicts,
         )
 
-        interaction_scores.append(interaction_score)
+        windows_scores.append(interaction_score)
 
-        return interaction_scores
+        return windows_scores
 
     def _get_contextual_relevancy_scores(
         self, turns_window: List[Turn], multimodal: bool
     ):
-        interaction_scores = []
+        windows_scores = []
 
         user_content = ""
         retrieval_context = []
@@ -244,9 +244,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             reason=reason,
             verdicts=verdicts,
         )
-        interaction_scores.append(interaction_score)
+        windows_scores.append(interaction_score)
 
-        return interaction_scores
+        return windows_scores
 
     async def _a_generate_verdicts(
         self, input: str, retrieval_context: List[str], multimodal: bool
@@ -339,7 +339,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         if len(verdicts) == 0:
             return (
                 1,
-                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+                "There were no retrieval contexts in the given turns to evaluate the contextual relevancy.",
             )
 
         score = self._calculate_interaction_score(verdicts)
@@ -361,7 +361,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         if len(verdicts) == 0:
             return (
                 1,
-                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+                "There were no retrieval contexts in the given turns to evaluate the contextual relevancy.",
             )
 
         score = self._calculate_interaction_score(verdicts)
@@ -487,10 +487,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 return data["reason"]
 
     def _get_verbose_steps(
-        self, interaction_scores: List[InteractionContextualRelevancyScore]
+        self, windows_scores: List[InteractionContextualRelevancyScore]
     ):
         steps = []
-        for index, interaction_score in enumerate(interaction_scores):
+        for index, interaction_score in enumerate(windows_scores):
             interaction_steps = [
                 f"Window {index + 1} \n",
                 f"Verdicts: {prettify_list(interaction_score.verdicts)} \n",

@@ -18,4 +18,4 @@ class ContextualPrecisionScoreReason(BaseModel):
 class InteractionContextualPrecisionScore(BaseModel):
     score: float
     reason: Optional[str]
-    verdicts: List[ContextualPrecisionVerdict]
+    verdicts: Optional[List[ContextualPrecisionVerdict]]
