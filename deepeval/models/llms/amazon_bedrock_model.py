@@ -1,11 +1,14 @@
-from typing import Optional, Tuple, Union, Dict
+import base64
+from typing import Optional, Tuple, Union, Dict,List
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
-
+from io import BytesIO
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
@@ -74,9 +77,13 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            payload = self.generate_payload(prompt)
+        else:
+            payload = self.get_converse_request_body(prompt)
 
         try:
-            payload = self.get_converse_request_body(prompt)
             client = await self._ensure_client()
             response = await client.converse(
                 modelId=self.model_id,
@@ -95,6 +102,63 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
         finally:
             await self.close()
+
+    def generate_payload(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        prompt = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({"text": ele})
+            elif isinstance(ele, MLLMImage):
+                image_format, image_raw_bytes = self._parse_image(ele)
+                visual_dict = {
+                    "image": {
+                        "format": image_format,
+                        "source": {"bytes": image_raw_bytes}
+                    }
+                }
+                prompt.append(visual_dict)
+        return {
+            "messages": [{"role": "user", "content": prompt}],
+            "inferenceConfig": {
+                **self.generation_kwargs,
+            },
+        }
+
+    def _parse_image(self, image: MLLMImage):
+        if image.dataBase64:
+            fmt = (image.mimeType or "image/jpeg").split("/")[-1]
+            try:
+                raw_bytes = base64.b64decode(image.dataBase64)
+            except Exception:
+                raise ValueError("Invalid base64 in MLLMImage.dataBase64")
+
+            return fmt, raw_bytes
+        if image.local and image.filename:
+            import PIL.Image
+            from io import BytesIO
+            img = PIL.Image.open(image.filename)
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGB")
+            buf = BytesIO()
+            fmt = (image.mimeType or "image/jpeg").split("/")[-1].upper()
+            fmt = "JPEG" if fmt == "JPG" else fmt
+            img.save(buf, format=fmt)
+            raw_bytes = buf.getvalue()
+
+            return fmt, raw_bytes
+        if image.url:
+            import requests
+            resp = requests.get(image.url)
+            resp.raise_for_status()
+            raw_bytes = resp.content
+            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            fmt = mime.split("/")[-1]
+            return fmt, raw_bytes
+        raise ValueError(
+            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
+        )
 
     ###############################################
     # Client management
@@ -155,6 +219,9 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def load_model(self):
         pass
+
+    def supports_multimodal(self):
+        return True
 
     def get_model_name(self) -> str:
         return self.model_id
