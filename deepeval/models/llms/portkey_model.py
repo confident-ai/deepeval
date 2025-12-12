@@ -96,7 +96,7 @@ class PortkeyModel(DeepEvalBaseLLM):
         if self.generation_kwargs:
             payload.update(self.generation_kwargs)
         return payload
-    
+
     def generate_payload_portkey(self, multimodal_input):
         """
         Converts multimodal input into Kimi/OpenAI-compatible messages.
@@ -108,9 +108,11 @@ class PortkeyModel(DeepEvalBaseLLM):
             elif isinstance(ele, MLLMImage):
                 mime, raw_bytes = self._parse_image(ele)
                 b64 = base64.b64encode(raw_bytes).decode("utf-8")
-                content.append({"type": "image", "image_url": f"data:{mime};base64,{b64}"})
+                content.append(
+                    {"type": "image", "image_url": f"data:{mime};base64,{b64}"}
+                )
         return content
-    
+
     def _parse_image(self, image: MLLMImage):
         if image.dataBase64:
             mime = image.mimeType or "image/jpeg"
@@ -119,6 +121,7 @@ class PortkeyModel(DeepEvalBaseLLM):
         if image.local and image.filename:
             from PIL import Image
             from io import BytesIO
+
             img = Image.open(image.filename)
             if img.mode in ("RGBA", "LA", "P"):
                 img = img.convert("RGB")
@@ -130,9 +133,12 @@ class PortkeyModel(DeepEvalBaseLLM):
 
         if image.url:
             import requests
+
             resp = requests.get(image.url)
             resp.raise_for_status()
-            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            mime = resp.headers.get(
+                "content-type", image.mimeType or "image/jpeg"
+            )
             return mime, resp.content
 
         raise ValueError(

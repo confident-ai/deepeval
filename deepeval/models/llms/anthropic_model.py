@@ -132,7 +132,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message.content[0].text)
 
             return schema.model_validate(json_output), cost
-        
+
     def generate_payload_anthropic(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ):
@@ -148,12 +148,14 @@ class AnthropicModel(DeepEvalBaseLLM):
                         "source": {
                             "type": "base64",
                             "media_type": f"image/{image_format}",
-                            "data": base64.b64encode(image_raw_bytes).decode("utf-8"),
+                            "data": base64.b64encode(image_raw_bytes).decode(
+                                "utf-8"
+                            ),
                         },
                     }
                 )
         return content
-    
+
     def _parse_image(self, image: MLLMImage):
         if image.dataBase64:
             fmt = (image.mimeType or "image/jpeg").split("/")[-1]
@@ -165,6 +167,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         if image.local and image.filename:
             import PIL.Image
             from io import BytesIO
+
             img = PIL.Image.open(image.filename)
             if img.mode in ("RGBA", "LA", "P"):
                 img = img.convert("RGB")
@@ -176,10 +179,13 @@ class AnthropicModel(DeepEvalBaseLLM):
             return fmt, raw_bytes
         if image.url:
             import requests
+
             resp = requests.get(image.url)
             resp.raise_for_status()
             raw_bytes = resp.content
-            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            mime = resp.headers.get(
+                "content-type", image.mimeType or "image/jpeg"
+            )
             fmt = mime.split("/")[-1]
             return fmt, raw_bytes
         raise ValueError(

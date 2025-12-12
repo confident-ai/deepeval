@@ -118,7 +118,7 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
-        
+
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_payload_grok(prompt)
@@ -152,7 +152,7 @@ class GrokModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
-        
+
     def generate_payload_grok(self, multimodal_input):
         """
         Converts multimodal prompt into Grok-compatible message content.
@@ -167,12 +167,11 @@ class GrokModel(DeepEvalBaseLLM):
             elif isinstance(ele, MLLMImage):
                 mime, raw_bytes = self._parse_image(ele)
                 b64 = base64.b64encode(raw_bytes).decode("utf-8")
-                content.append({
-                    "type": "image",
-                    "image_url": f"data:{mime};base64,{b64}"
-                })
+                content.append(
+                    {"type": "image", "image_url": f"data:{mime};base64,{b64}"}
+                )
         return content
-    
+
     def _parse_image(self, image: MLLMImage):
         if image.dataBase64:
             mime = image.mimeType or "image/jpeg"
@@ -182,6 +181,7 @@ class GrokModel(DeepEvalBaseLLM):
         if image.local and image.filename:
             import PIL.Image
             from io import BytesIO
+
             img = PIL.Image.open(image.filename)
             if img.mode in ("RGBA", "P", "LA"):
                 img = img.convert("RGB")
@@ -193,13 +193,17 @@ class GrokModel(DeepEvalBaseLLM):
 
         if image.url:
             import requests
+
             resp = requests.get(image.url)
             resp.raise_for_status()
-            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            mime = resp.headers.get(
+                "content-type", image.mimeType or "image/jpeg"
+            )
             return mime, resp.content
 
-        raise ValueError("MLLMImage must contain dataBase64, or (local=True + filename), or url.")
-
+        raise ValueError(
+            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
+        )
 
     ###############################################
     # Utilities

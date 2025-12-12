@@ -1,5 +1,5 @@
 import base64
-from typing import Optional, Tuple, Union, Dict,List
+from typing import Optional, Tuple, Union, Dict, List
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
 from io import BytesIO
@@ -115,7 +115,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 visual_dict = {
                     "image": {
                         "format": image_format,
-                        "source": {"bytes": image_raw_bytes}
+                        "source": {"bytes": image_raw_bytes},
                     }
                 }
                 prompt.append(visual_dict)
@@ -138,6 +138,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         if image.local and image.filename:
             import PIL.Image
             from io import BytesIO
+
             img = PIL.Image.open(image.filename)
             if img.mode in ("RGBA", "LA", "P"):
                 img = img.convert("RGB")
@@ -150,10 +151,13 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             return fmt, raw_bytes
         if image.url:
             import requests
+
             resp = requests.get(image.url)
             resp.raise_for_status()
             raw_bytes = resp.content
-            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            mime = resp.headers.get(
+                "content-type", image.mimeType or "image/jpeg"
+            )
             fmt = mime.split("/")[-1]
             return fmt, raw_bytes
         raise ValueError(
