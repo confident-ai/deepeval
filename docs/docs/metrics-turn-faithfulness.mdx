@@ -60,6 +60,7 @@ There are **NINE** optional parameters when creating a `TurnFaithfulnessMetric`:
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `truths_extraction_limit`: an optional integer to limit the number of truths extracted from retrieval context per document. Defaulted to `None`.
 - [Optional] `penalize_ambiguous_claims`: a boolean which when set to `True`, penalizes claims that cannot be verified as true or false. Defaulted to `False`.
+- [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
 
 ### As a standalone
 
@@ -80,9 +81,9 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `TurnFaithfulnessMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Turn Faithfulness} = \frac{\sum \text{Interaction Faithfulness Scores}}{\text{Number of Interactions}}" />
+<Equation formula="\text{Turn Faithfulness} = \frac{\sum \text{Turn Faithfulness Scores}}{\text{Total Number of Assistant Turns}}" />
 
-The `TurnFaithfulnessMetric` first constructs unit interactions of `user` and `assistant` exchanges from the entire conversation. For each interaction, it:
+The `TurnFaithfulnessMetric` first constructs a sliding windows of turns. For each window, it:
 
 1. **Extracts truths** from the retrieval context provided in the turns
 2. **Generates claims** from the assistant's responses in the interaction
