@@ -101,9 +101,11 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 ]
                 scores = []
                 for window in turns_windows:
-                    scores.extend(self._get_contextual_relevancy_scores(
-                        window, multimodal
-                    ))
+                    scores.extend(
+                        self._get_contextual_relevancy_scores(
+                            window, multimodal
+                        )
+                    )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(scores)
@@ -157,12 +159,14 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             ]
             scores = []
             tasks = []
+
             async def get_individual_scores(window):
                 scores.extend(
                     await self._a_get_contextual_relevancy_scores(
                         window, multimodal
                     )
                 )
+
             for window in turns_windows:
                 tasks.append(get_individual_scores(window))
             await asyncio.gather(*tasks)
@@ -210,7 +214,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             reason=reason,
             verdicts=verdicts,
         )
-        
+
         interaction_scores.append(interaction_score)
 
         return interaction_scores
@@ -333,7 +337,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return 1, "There were no retrieval contexts in the given turns to evaluate the contextual precision."
+            return (
+                1,
+                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+            )
 
         score = self._calculate_interaction_score(verdicts)
         reason = await self._a_get_interaction_reason(
@@ -352,7 +359,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return 1, "There were no retrieval contexts in the given turns to evaluate the contextual precision."
+            return (
+                1,
+                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+            )
 
         score = self._calculate_interaction_score(verdicts)
         reason = self._get_interaction_reason(
