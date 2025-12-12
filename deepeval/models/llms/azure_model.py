@@ -389,7 +389,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         kw = dict(
             api_key=api_key,
             api_version=self.openai_api_version,
-            base_url=self.base_url,
+            azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **self._client_kwargs(),
         )
