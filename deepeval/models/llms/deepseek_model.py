@@ -80,7 +80,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
     @retry_deepseek
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=False)
         if schema:
@@ -115,7 +115,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
     @retry_deepseek
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         client = self.load_model(async_mode=True)
         if schema:

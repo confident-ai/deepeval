@@ -1,7 +1,13 @@
 from typing import Optional, Tuple, Union, Dict
 from contextlib import AsyncExitStack
-from pydantic import BaseModel
 
+from pydantic import BaseModel, SecretStr
+
+from deepeval.config.settings import get_settings
+from deepeval.utils import (
+    require_dependency,
+    require_param,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -9,57 +15,122 @@ from deepeval.models.retry_policy import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
+from deepeval.models.utils import (
+    normalize_kwargs_and_extract_aliases,
+)
 
-# check aiobotocore availability
-try:
-    from aiobotocore.session import get_session
-    from botocore.config import Config
-
-    aiobotocore_available = True
-except ImportError:
-    aiobotocore_available = False
-
-# define retry policy
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
-
-def _check_aiobotocore_available():
-    if not aiobotocore_available:
-        raise ImportError(
-            "aiobotocore and botocore are required for this functionality. "
-            "Install them via your package manager (e.g. pip install aiobotocore botocore)"
-        )
+_ALIAS_MAP = {
+    "model": ["model_id"],
+    "cost_per_input_token": ["input_token_cost"],
+    "cost_per_output_token": ["output_token_cost"],
+}
 
 
 class AmazonBedrockModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_id: str,
-        region_name: str,
+        model: Optional[str] = None,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
-        input_token_cost: float = 0,
-        output_token_cost: float = 0,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
+        region_name: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        _check_aiobotocore_available()
-        super().__init__(model_id)
+        settings = get_settings()
 
-        self.model_id = model_id
-        self.region_name = region_name
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
-        self.input_token_cost = input_token_cost
-        self.output_token_cost = output_token_cost
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "AmazonBedrockModel",
+            kwargs,
+            _ALIAS_MAP,
+        )
 
-        # prepare aiobotocore session, config, and async exit stack
-        self._session = get_session()
+        # Backwards compatibility for renamed params
+        if model is None and "model" in alias_values:
+            model = alias_values["model"]
+        if (
+            cost_per_input_token is None
+            and "cost_per_input_token" in alias_values
+        ):
+            cost_per_input_token = alias_values["cost_per_input_token"]
+        if (
+            cost_per_output_token is None
+            and "cost_per_output_token" in alias_values
+        ):
+            cost_per_output_token = alias_values["cost_per_output_token"]
+
+        # Secrets: prefer explicit args -> settings -> then AWS default chain
+        if aws_access_key_id is not None:
+            self.aws_access_key_id: Optional[SecretStr] = SecretStr(
+                aws_access_key_id
+            )
+        else:
+            self.aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+
+        if aws_secret_access_key is not None:
+            self.aws_secret_access_key: Optional[SecretStr] = SecretStr(
+                aws_secret_access_key
+            )
+        else:
+            self.aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
+
+        # Dependencies: aiobotocore & botocore
+        aiobotocore_session = require_dependency(
+            "aiobotocore.session",
+            provider_label="AmazonBedrockModel",
+            install_hint="Install it with `pip install aiobotocore`.",
+        )
+        self.botocore_module = require_dependency(
+            "botocore",
+            provider_label="AmazonBedrockModel",
+            install_hint="Install it with `pip install botocore`.",
+        )
+        self._session = aiobotocore_session.get_session()
         self._exit_stack = AsyncExitStack()
-        self.kwargs = kwargs
+
+        # Defaults from settings
+        model = model or settings.AWS_BEDROCK_MODEL_NAME
+        region_name = region_name or settings.AWS_BEDROCK_REGION
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.AWS_BEDROCK_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.AWS_BEDROCK_COST_PER_OUTPUT_TOKEN
+        )
+
+        # Required params
+        model = require_param(
+            model,
+            provider_label="AmazonBedrockModel",
+            env_var_name="AWS_BEDROCK_MODEL_NAME",
+            param_hint="model",
+        )
+        region_name = require_param(
+            region_name,
+            provider_label="AmazonBedrockModel",
+            env_var_name="AWS_BEDROCK_REGION",
+            param_hint="region_name",
+        )
+
+        # Final attributes
+        self.region_name = region_name
+        self.cost_per_input_token = float(cost_per_input_token or 0.0)
+        self.cost_per_output_token = float(cost_per_output_token or 0.0)
+
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
         self._client = None
         self._sdk_retry_mode: Optional[bool] = None
+
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -67,19 +138,19 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         return safe_asyncio_run(self.a_generate(prompt, schema))
 
     @retry_bedrock
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         try:
             payload = self.get_converse_request_body(prompt)
             client = await self._ensure_client()
             response = await client.converse(
-                modelId=self.model_id,
+                modelId=self.get_model_name(),
                 messages=payload["messages"],
                 inferenceConfig=payload["inferenceConfig"],
             )
@@ -101,6 +172,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     async def _ensure_client(self):
+
         use_sdk = sdk_retries_for(PS.BEDROCK)
 
         # only rebuild if client is missing or the sdk retry mode changes
@@ -115,16 +187,26 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             if use_sdk:
                 retries_config["mode"] = "adaptive"
 
+            Config = self.botocore_module.config.Config
             config = Config(retries=retries_config)
 
-            cm = self._session.create_client(
-                "bedrock-runtime",
-                region_name=self.region_name,
-                aws_access_key_id=self.aws_access_key_id,
-                aws_secret_access_key=self.aws_secret_access_key,
-                config=config,
+            client_kwargs = {
+                "region_name": self.region_name,
+                "config": config,
                 **self.kwargs,
-            )
+            }
+
+            if self.aws_access_key_id is not None:
+                client_kwargs["aws_access_key_id"] = (
+                    self.aws_access_key_id.get_secret_value()
+                )
+            if self.aws_secret_access_key is not None:
+                client_kwargs["aws_secret_access_key"] = (
+                    self.aws_secret_access_key.get_secret_value()
+                )
+
+            cm = self._session.create_client("bedrock-runtime", **client_kwargs)
+
             self._client = await self._exit_stack.enter_async_context(cm)
             self._sdk_retry_mode = use_sdk
 
@@ -149,12 +231,12 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         return (
-            input_tokens * self.input_token_cost
-            + output_tokens * self.output_token_cost
+            input_tokens * self.cost_per_input_token
+            + output_tokens * self.cost_per_output_token
         )
 
     def load_model(self):
         pass
 
     def get_model_name(self) -> str:
-        return self.model_id
+        return self.name

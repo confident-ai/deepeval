@@ -27,6 +27,7 @@ from pydantic import (
     field_validator,
     model_validator,
     SecretStr,
+    PositiveFloat,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Any, Dict, List, Optional, NamedTuple
@@ -318,6 +319,15 @@ class Settings(BaseSettings):
     # Anthropic
     ANTHROPIC_API_KEY: Optional[SecretStr] = None
     ANTHROPIC_MODEL_NAME: Optional[str] = None
+    # AWS
+    AWS_ACCESS_KEY_ID: Optional[SecretStr] = None
+    AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = None
+    # AWS Bedrock
+    USE_AWS_BEDROCK_MODEL: Optional[bool] = None
+    AWS_BEDROCK_MODEL_NAME: Optional[str] = None
+    AWS_BEDROCK_REGION: Optional[str] = None
+    AWS_BEDROCK_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
+    AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
     # Azure Open AI
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = None
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = None
@@ -615,6 +625,7 @@ class Settings(BaseSettings):
         "SKIP_DEEPEVAL_MISSING_PARAMS",
         "TOKENIZERS_PARALLELISM",
         "TRANSFORMERS_NO_ADVISORY_WARNINGS",
+        "USE_AWS_BEDROCK_MODEL",
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
@@ -648,6 +659,8 @@ class Settings(BaseSettings):
     @field_validator(
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
+        "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
+        "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
         "CONFIDENT_TRACE_SAMPLE_RATE",
         "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
@@ -717,6 +730,16 @@ class Settings(BaseSettings):
         if not s:
             return None
         return s.upper()
+
+    @field_validator("AWS_BEDROCK_REGION", mode="before")
+    @classmethod
+    def _normalize_lower(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s:
+            return None
+        return s.lower()
 
     @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="before")
     @classmethod
