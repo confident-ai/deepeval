@@ -19,4 +19,4 @@ class ContextualRelevancyScoreReason(BaseModel):
 class InteractionContextualRelevancyScore(BaseModel):
     score: float
     reason: Optional[str]
-    verdicts: List[ContextualRelevancyVerdict]
+    verdicts: Optional[List[ContextualRelevancyVerdict]]
