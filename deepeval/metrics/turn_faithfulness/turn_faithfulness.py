@@ -1,6 +1,6 @@
 from typing import List, Optional, Union, Type, Tuple
 import asyncio
-
+import itertools
 from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
@@ -12,6 +12,7 @@ from deepeval.metrics.utils import (
     trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
+    get_turns_in_sliding_window,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -47,6 +48,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
         penalize_ambiguous_claims: bool = False,
+        window_size: int = 10,
         evaluation_template: Type[
             TurnFaithfulnessTemplate
         ] = TurnFaithfulnessTemplate,
@@ -60,6 +62,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
         self.penalize_ambiguous_claims = penalize_ambiguous_claims
+        self.window_size = window_size
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
@@ -99,9 +102,19 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
-                scores = self._get_faithfulness_scores(
-                    unit_interactions, multimodal
-                )
+                turns_windows: List[List[Turn]] = [
+                    list(itertools.chain(*window))
+                    for window in get_turns_in_sliding_window(
+                        unit_interactions, self.window_size
+                    )
+                ]
+                scores = []
+                for window in turns_windows:
+                    scores.extend(
+                        self._get_faithfulness_scores(
+                            window, multimodal
+                        )
+                    )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(scores)
@@ -147,9 +160,25 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
-            scores = await self._a_get_faithfulness_scores(
-                unit_interactions, multimodal
-            )
+            turns_windows: List[List[Turn]] = [
+                list(itertools.chain(*window))
+                for window in get_turns_in_sliding_window(
+                    unit_interactions, self.window_size
+                )
+            ]
+            scores = []
+            tasks = []
+
+            async def get_individual_scores(window):
+                scores.extend(
+                    await self._a_get_faithfulness_scores(
+                        window, multimodal
+                    )
+                )
+
+            for window in turns_windows:
+                tasks.append(get_individual_scores(window))
+            await asyncio.gather(*tasks)
             self.score = self._calculate_score(scores)
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(scores)
@@ -170,90 +199,79 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_get_faithfulness_scores(
-        self, unit_interactions: List[List[Turn]], multimodal: bool
+        self, turns_window: List[Turn], multimodal: bool
     ):
 
-        final_scores = []
+        windows_scores = []
 
-        async def get_interaction_score(unit_interaction: List[Turn]):
-            user_content = "User Message: "
-            retrieval_context = []
-            assistant_content = "Assistant Message: "
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
-                    assistant_content += f"\n{turn.content} "
-                    if turn.retrieval_context is not None:
-                        retrieval_context.extend(turn.retrieval_context)
+        user_content = ""
+        assistant_content = ""
+        retrieval_context = []
+        for turn in turns_window:
+            if turn.role == "user":
+                user_content += f"\n{turn.content} "
+            else:
+                assistant_content += f"\n{turn.content}"
+                if turn.retrieval_context is not None:
+                    retrieval_context.extend(turn.retrieval_context)
 
-            if len(retrieval_context) > 0:
-                truths = await self._a_generate_truths(
-                    retrieval_context, multimodal
-                )
-                claims = await self._a_generate_claims(
-                    user_content, assistant_content, multimodal
-                )
-                verdicts = await self._a_generate_verdicts(
-                    claims, truths, multimodal
-                )
-                score, reason = self._get_interaction_score_and_reason(
-                    verdicts, multimodal
-                )
-                interaction_score = InteractionFaithfulnessScore(
-                    score=score,
-                    reason=reason,
-                    claims=claims,
-                    truths=truths,
-                    verdicts=verdicts,
-                )
-                final_scores.append(interaction_score)
-
-        await asyncio.gather(
-            *[
-                get_interaction_score(unit_interaction)
-                for unit_interaction in unit_interactions
-            ]
+        truths = await self._a_generate_truths(
+            retrieval_context, multimodal
         )
+        claims = await self._a_generate_claims(
+            user_content, assistant_content, multimodal
+        )
+        verdicts = await self._a_generate_verdicts(
+            claims, truths, multimodal
+        )
+        score, reason = self._get_interaction_score_and_reason(
+            verdicts, multimodal
+        )
+        interaction_score = InteractionFaithfulnessScore(
+            score=score,
+            reason=reason,
+            claims=claims,
+            truths=truths,
+            verdicts=verdicts,
+        )
+        windows_scores.append(interaction_score)
 
-        return final_scores
+        return windows_scores
 
     def _get_faithfulness_scores(
-        self, unit_interactions: List[List[Turn]], multimodal: bool
+        self, turns_window: List[Turn], multimodal: bool
     ):
-        interaction_scores = []
+        windows_scores = []
 
-        for unit_interaction in unit_interactions:
-            user_content = "User Message: "
-            retrieval_context = []
-            assistant_content = "Assistant Message: "
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
-                    assistant_content += f"\n{turn.content} "
-                    if turn.retrieval_context is not None:
-                        retrieval_context.extend(turn.retrieval_context)
+        user_content = ""
+        assistant_content = ""
+        retrieval_context = []
+        for turn in turns_window:
+            if turn.role == "user":
+                user_content += f"\n{turn.content} "
+            else:
+                assistant_content += f"\n{turn.content}"
+                if turn.retrieval_context is not None:
+                    retrieval_context.extend(turn.retrieval_context)
 
-            if len(retrieval_context) > 0:
-                truths = self._generate_truths(retrieval_context, multimodal)
-                claims = self._generate_claims(
-                    user_content, assistant_content, multimodal
-                )
-                verdicts = self._generate_verdicts(claims, truths, multimodal)
-                score, reason = self._get_interaction_score_and_reason(
-                    verdicts, multimodal
-                )
-                interaction_score = InteractionFaithfulnessScore(
-                    score=score,
-                    reason=reason,
-                    claims=claims,
-                    truths=truths,
-                    verdicts=verdicts,
-                )
-                interaction_scores.append(interaction_score)
+        truths = self._generate_truths(retrieval_context, multimodal)
+        claims = self._generate_claims(
+            user_content, assistant_content, multimodal
+        )
+        verdicts = self._generate_verdicts(claims, truths, multimodal)
+        score, reason = self._get_interaction_score_and_reason(
+            verdicts, multimodal
+        )
+        interaction_score = InteractionFaithfulnessScore(
+            score=score,
+            reason=reason,
+            claims=claims,
+            truths=truths,
+            verdicts=verdicts,
+        )
+        windows_scores.append(interaction_score)
 
-        return interaction_scores
+        return windows_scores
 
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
@@ -531,7 +549,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         steps = []
         for index, interaction_score in enumerate(interaction_scores):
             interaction_steps = [
-                f"Interaction {index + 1} \n",
+                f"Window {index + 1} \n",
                 f"Truths: {prettify_list(interaction_score.truths)} \n",
                 f"Claims: {prettify_list(interaction_score.claims)} \n",
                 f"Verdicts: {prettify_list(interaction_score.verdicts)} \n",
