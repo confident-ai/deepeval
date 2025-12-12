@@ -327,3 +327,18 @@ Precedence: explicit constructor args (e.g. `AzureOpenAIModel(model=..., api_key
 | `OPENAI_API_VERSION`     | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(openai_api_version=...)`. OpenAI API version used in your deployment. |
 
 `temperature` resolution for `AzureOpenAIModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.
+
+### DeepSeek Model Settings {#model-settings-deep-seek}
+
+These environment variables configure DeepSeek model usage in DeepEval.
+
+Precedence: explicit constructor arguments (e.g., `DeepSeekModel(model=..., api_key=...)`) override DeepEval settings or environment variables. If neither explicit arguments nor environment variables are set for the API key, DeepEval will raise an error at runtime.
+
+| Variable              | Values         | Effect                                                                                                                   |
+| --------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `DEEPSEEK_API_KEY`    | string / unset | Required at runtime unless provided as `DeepSeekModel(api_key=...)`. Your DeepSeek API key.                              |
+| `DEEPSEEK_MODEL_NAME` | string / unset | Optional. Default model used when `model` is not passed to `DeepSeekModel(...)`. Defaults to `deepseek-chat` if unset.   |
+| `TEMPERATURE`         | float / unset  | Optional. Default temperature used when `temperature` is not passed to `DeepSeekModel(...)`. Defaults to `0.0` if unset. |
+| `DEEPSEEK_ENDPOINT`   | string / unset | Optional. Custom endpoint URL for the DeepSeek API.                                                                      |
+
+`temperature` resolution for `DeepSeekModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
