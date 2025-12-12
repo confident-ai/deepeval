@@ -18,4 +18,4 @@ class ContextualRecallScoreReason(BaseModel):
 class InteractionContextualRecallScore(BaseModel):
     score: float
     reason: Optional[str]
-    verdicts: List[ContextualRecallVerdict]
+    verdicts: Optional[List[ContextualRecallVerdict]]
