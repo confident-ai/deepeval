@@ -10,18 +10,75 @@ Sometimes you might want to customize the behavior of different settings for `ev
 For example, if you're using a [custom LLM judge for evaluation](/guides/guides-using-custom-llms), you may wish to `ignore_errors` to not interrupt evaluations whenever your model fails to produce a valid JSON, or avoid rate limit errors entirely by lowering the `max_concurrent` value.
 :::
 
-## Environment Flags
+## Environment Variables
 
-### General / Project Setup
+Looking for provider-specific variables (OpenAI, Bedrock, Azure, etc.)? See [Model Settings](#model-settings).
 
-| Variable                  | Values      | Effect                                  |
-| ------------------------- | ----------- | --------------------------------------- |
-| `DEEPEVAL_DISABLE_DOTENV` | `1` / unset | Disable .env autoload at import         |
-| `DEEPEVAL_GRPC_LOGGING`   | `1` / unset | Enable extra gRPC logging               |
-| `DEEPEVAL_RESULTS_FOLDER` | path        | Change local results output folder      |
-| `DEEPEVAL_FILE_SYSTEM`    | `READ_ONLY` | Restrict file writes in constrained env |
+### DeepEval Settings
 
-DeepEval autoloads `.env.local`, then `.env`, from the current working directory at import time.
+| Variable | Values | Effect |
+| --- | --- | --- |
+| `DEEPEVAL_DISABLE_DOTENV` | `1` / unset | Disable dotenv autoload at import. |
+| `ENV_DIR_PATH` | path / unset | Directory containing `.env` files (defaults to CWD when unset). |
+| `APP_ENV` | string / unset | When set, loads `.env.{APP_ENV}` between `.env` and `.env.local`. |
+| `DEEPEVAL_DISABLE_LEGACY_KEYFILE` | `1` / unset | Disable reading legacy `.deepeval/.deepeval` JSON keystore into env. |
+| `DEEPEVAL_DEFAULT_SAVE` | `dotenv[:path]` / unset | Default persistence target for `deepeval set-* --save` when `--save` is omitted. |
+| `DEEPEVAL_FILE_SYSTEM` | `READ_ONLY` / unset | Restrict file writes in constrained environments. |
+| `DEEPEVAL_RESULTS_FOLDER` | path / unset | Export a timestamped JSON of the latest test run into this directory (created if needed). |
+| `DEEPEVAL_IDENTIFIER` | string / unset | Default identifier for runs (same idea as `deepeval test run -id ...`). |
+
+DeepEval autoloads dotenv files in this order: `.env` -> `.env.{APP_ENV}` -> `.env.local` (highest precedence among dotenv files), and never overwrites existing process environment variables (process env wins).
+
+### Display / Truncation
+
+| Variable | Values | Effect |
+| --- | --- | --- |
+| `DEEPEVAL_MAXLEN_TINY` | int | Max length used for "tiny" shorteners (default: 40). |
+| `DEEPEVAL_MAXLEN_SHORT` | int | Max length used for "short" shorteners (default: 60). |
+| `DEEPEVAL_MAXLEN_MEDIUM` | int | Max length used for "medium" shorteners (default: 120). |
+| `DEEPEVAL_MAXLEN_LONG` | int | Max length used for "long" shorteners (default: 240). |
+| `DEEPEVAL_SHORTEN_DEFAULT_MAXLEN` | int / unset | Overrides the default max length used by `shorten(...)` (falls back to `DEEPEVAL_MAXLEN_LONG` when unset). |
+| `DEEPEVAL_SHORTEN_SUFFIX` | string | Suffix used by `shorten(...)` (default: `...`). |
+| `DEEPEVAL_VERBOSE_MODE` | `1` / unset | Enable verbose mode globally (where supported). |
+| `DEEPEVAL_LOG_STACK_TRACES` | `1` / unset | Log stack traces for errors (where supported). |
+
+### Retry / Backoff Tuning
+
+These flags control retry and backoff behavior for API calls.
+
+| Variable                         | Type  | Default | Notes                         |
+| -------------------------------- | ----- | ------- | ----------------------------- |
+| `DEEPEVAL_RETRY_MAX_ATTEMPTS`    | int   | `2`     | Total attempts (1 retry)      |
+| `DEEPEVAL_RETRY_INITIAL_SECONDS` | float | `1.0`   | Initial backoff               |
+| `DEEPEVAL_RETRY_EXP_BASE`        | float | `2.0`   | Exponential base (≥ 1)        |
+| `DEEPEVAL_RETRY_JITTER`          | float | `2.0`   | Random jitter added per retry |
+| `DEEPEVAL_RETRY_CAP_SECONDS`     | float | `5.0`   | Max sleep between retries     |
+| `DEEPEVAL_SDK_RETRY_PROVIDERS`   | list / unset | Provider slugs for which retries are delegated to provider SDKs (supports `["*"]`). |
+| `DEEPEVAL_RETRY_BEFORE_LOG_LEVEL` | int / unset | Log level for "before retry" logs (defaults to `LOG_LEVEL` if set, else INFO). |
+| `DEEPEVAL_RETRY_AFTER_LOG_LEVEL` | int / unset | Log level for "after retry" logs (defaults to ERROR). |
+
+### Timeouts / Concurrency
+
+| Variable | Values | Effect |
+| --- | --- | --- |
+| `DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING` | int | Max concurrent document processing tasks (default: 2). |
+| `DEEPEVAL_TIMEOUT_THREAD_LIMIT` | int | Max threads used by timeout machinery (default: 128). |
+| `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS` | float | Warn if acquiring timeout semaphore takes too long (default: 5.0). |
+| `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` | float / unset | Per-attempt timeout override for provider calls (preferred override key). |
+| `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE` | float / unset | Outer timeout budget override for a metric/test-case (preferred override key). |
+| `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE` | float / unset | Override extra buffer time added to gather/drain after tasks complete. |
+| `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS` | float (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE`. |
+| `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS` | float (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`. |
+| `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS` | float (computed) | Read-only computed value. To override, set `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`. |
+
+### Telemetry / Debug
+
+| Variable | Values | Effect |
+| --- | --- | --- |
+| `DEEPEVAL_DEBUG_ASYNC` | `1` / unset | Enable extra async debugging (where supported). |
+| `DEEPEVAL_TELEMETRY_OPT_OUT` | `1` / unset | Opt out of telemetry (unset defaults to telemetry enabled). |
+| `DEEPEVAL_UPDATE_WARNING_OPT_IN` | `1` / unset | Opt in to update warnings (where supported). |
+| `DEEPEVAL_GRPC_LOGGING` | `1` / unset | Enable extra gRPC logging. |
 
 #### Persisting CLI settings with `--save`
 
@@ -52,19 +109,6 @@ export DEEPEVAL_DEFAULT_SAVE="dotenv:.env.local"
 If `DEEPEVAL_DEFAULT_SAVE` is set, it is used whenever `--save` is omitted.
 
 > Roadmap: future versions may support secure stores, such as keyring. The `--save` flag is designed to be pluggable.
-
-### Retry / Backoff Tuning
-
-These flags control retry and backoff behavior for API calls.
-
-| Variable                         | Type  | Default | Notes                         |
-| -------------------------------- | ----- | ------- | ----------------------------- |
-| `DEEPEVAL_RETRY_MAX_ATTEMPTS`    | int   | `2`     | Total attempts (1 retry)      |
-| `DEEPEVAL_RETRY_INITIAL_SECONDS` | float | `1.0`   | Initial backoff               |
-| `DEEPEVAL_RETRY_EXP_BASE`        | float | `2.0`   | Exponential base (≥ 1)        |
-| `DEEPEVAL_RETRY_JITTER`          | float | `2.0`   | Random jitter added per retry |
-| `DEEPEVAL_RETRY_CAP_SECONDS`     | float | `5.0`   | Max sleep between retries     |
-
 
 ## Configs for `evaluate()`
 
@@ -236,3 +280,21 @@ deepeval test run test_example.py -r 2
 def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
+
+## Model Settings
+
+### AWS / Amazon Bedrock {#model-settings-aws-amazon-bedrock}
+
+These environment variables configure Amazon Bedrock usage in DeepEval.
+
+Precedence: explicit constructor args (e.g. `AmazonBedrockModel(model=..., region_name=...)`) override DeepEval settings/env vars. For credentials, if neither explicit args nor env vars are set, the AWS SDK default credentials chain is used.
+
+| Variable                           | Values           | Effect |
+| ---------------------------------- | ---------------- | ------ |
+| `AWS_ACCESS_KEY_ID`                | string / unset   | Optional. AWS Access Key ID. If unset, falls back to AWS default credentials chain. |
+| `AWS_SECRET_ACCESS_KEY`            | string / unset   | Optional. AWS Secret Access Key. If unset, falls back to AWS default credentials chain. |
+| `USE_AWS_BEDROCK_MODEL`            | `1` / unset      | Optional. When set, selects Bedrock as the default LLM provider (where applicable). |
+| `AWS_BEDROCK_MODEL_NAME`           | string / unset   | Required at runtime unless provided as `AmazonBedrockModel(model=...)`. Bedrock model id (e.g. `anthropic.claude-3-opus-20240229-v1:0`). |
+| `AWS_BEDROCK_REGION`               | string / unset   | Required at runtime unless provided as `AmazonBedrockModel(region_name=...)`. AWS region (e.g. `us-east-1`). |
+| `AWS_BEDROCK_COST_PER_INPUT_TOKEN` | float / unset    | Optional. Default input token cost used for cost calculation (defaults to `0` if unset). |
+| `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | float / unset    | Optional. Default output token cost used for cost calculation (defaults to `0` if unset). |
