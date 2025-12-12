@@ -1,6 +1,6 @@
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
-
+import base64
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -10,6 +10,8 @@ from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     require_secret_api_key,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import GROK_MODELS_DATA
@@ -71,13 +73,19 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_payload_grok(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
             model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(prompt))
+        chat.append(user(content))
 
         if schema and self.model_data.supports_structured_outputs:
             response, structured_output = chat.parse(schema)
@@ -110,13 +118,20 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
+        
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_payload_grok(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
             model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(prompt))
+        chat.append(user(content))
 
         if schema and self.model_data.supports_structured_outputs:
             response, structured_output = await chat.parse(schema)
@@ -137,6 +152,54 @@ class GrokModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
+        
+    def generate_payload_grok(self, multimodal_input):
+        """
+        Converts multimodal prompt into Grok-compatible message content.
+        Grok expects:
+        {"type": "text", "text": "..."}
+        {"type": "image", "image_url": "data:image/png;base64,..."}
+        """
+        content = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                content.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                mime, raw_bytes = self._parse_image(ele)
+                b64 = base64.b64encode(raw_bytes).decode("utf-8")
+                content.append({
+                    "type": "image",
+                    "image_url": f"data:{mime};base64,{b64}"
+                })
+        return content
+    
+    def _parse_image(self, image: MLLMImage):
+        if image.dataBase64:
+            mime = image.mimeType or "image/jpeg"
+            raw = base64.b64decode(image.dataBase64)
+            return mime, raw
+
+        if image.local and image.filename:
+            import PIL.Image
+            from io import BytesIO
+            img = PIL.Image.open(image.filename)
+            if img.mode in ("RGBA", "P", "LA"):
+                img = img.convert("RGB")
+            buf = BytesIO()
+            fmt = (image.mimeType or "image/jpeg").split("/")[-1].lower()
+            fmt = "jpeg" if fmt == "jpg" else fmt
+            img.save(buf, format=fmt.upper())
+            return f"image/{fmt}", buf.getvalue()
+
+        if image.url:
+            import requests
+            resp = requests.get(image.url)
+            resp.raise_for_status()
+            mime = resp.headers.get("content-type", image.mimeType or "image/jpeg")
+            return mime, resp.content
+
+        raise ValueError("MLLMImage must contain dataBase64, or (local=True + filename), or url.")
+
 
     ###############################################
     # Utilities
@@ -209,6 +272,9 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Grok)"
