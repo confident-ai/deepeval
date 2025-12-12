@@ -129,8 +129,9 @@ from deepeval.metrics import ArenaGEval
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
+    model="anthropic.claude-3-opus-20240229-v1:0",
+    region_name="us-east-1",
+    generation_kwargs={"temperature": 0},
 )
 task_completion_metric = ArenaGEval(model=model)
 ```
