@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -17,5 +17,5 @@ class ContextualRecallScoreReason(BaseModel):
 
 class InteractionContextualRecallScore(BaseModel):
     score: float
-    reason: str
-    verdicts: List[ContextualRecallVerdict]
+    reason: Optional[str]
+    verdicts: Optional[List[ContextualRecallVerdict]]

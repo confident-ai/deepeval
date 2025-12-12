@@ -1,6 +1,6 @@
 from typing import List, Optional, Union, Type, Tuple
 import asyncio
-
+import itertools
 from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
@@ -12,6 +12,7 @@ from deepeval.metrics.utils import (
     trimAndLoadJson,
     check_conversational_test_case_params,
     get_unit_interactions,
+    get_turns_in_sliding_window,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -44,6 +45,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        window_size: int = 10,
         evaluation_template: Type[
             TurnContextualPrecisionTemplate
         ] = TurnContextualPrecisionTemplate,
@@ -55,6 +57,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.window_size = window_size
         self.evaluation_template = evaluation_template
 
     def measure(
@@ -91,9 +94,19 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
-                scores = self._get_contextual_precision_scores(
-                    unit_interactions, test_case.expected_outcome, multimodal
-                )
+                turns_windows: List[List[Turn]] = [
+                    list(itertools.chain(*window))
+                    for window in get_turns_in_sliding_window(
+                        unit_interactions, self.window_size
+                    )
+                ]
+                scores = []
+                for window in turns_windows:
+                    scores.extend(
+                        self._get_contextual_precision_scores(
+                            window, test_case.expected_outcome, multimodal
+                        )
+                    )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(scores)
@@ -139,9 +152,25 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
-            scores = await self._a_get_contextual_precision_scores(
-                unit_interactions, test_case.expected_outcome, multimodal
-            )
+            turns_windows: List[List[Turn]] = [
+                list(itertools.chain(*window))
+                for window in get_turns_in_sliding_window(
+                    unit_interactions, self.window_size
+                )
+            ]
+            scores = []
+            tasks = []
+
+            async def get_individual_scores(window):
+                scores.extend(
+                    await self._a_get_contextual_precision_scores(
+                        window, test_case.expected_outcome, multimodal
+                    )
+                )
+
+            for window in turns_windows:
+                tasks.append(get_individual_scores(window))
+            await asyncio.gather(*tasks)
             self.score = self._calculate_score(scores)
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(scores)
@@ -163,80 +192,73 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
 
     async def _a_get_contextual_precision_scores(
         self,
-        unit_interactions: List[List[Turn]],
-        _expected_outcome: str,
+        turns_window: List[Turn],
+        expected_outcome: str,
         multimodal: bool,
     ):
-        async def get_interaction_score(unit_interaction: List[Turn]):
-            user_content = "User Message: "
-            retrieval_context = []
-            expected_outcome = (
-                f"Expected Assistant Message: \n{_expected_outcome}"
-            )
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
-                    if turn.retrieval_context is not None:
-                        retrieval_context.extend(turn.retrieval_context)
+        windows_scores = []
 
-            verdicts = await self._a_generate_verdicts(
-                user_content, expected_outcome, retrieval_context, multimodal
-            )
-            score, reason = await self._a_get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
-            )
-            interaction_score = InteractionContextualPrecisionScore(
-                score=score,
-                reason=reason,
-                verdicts=verdicts,
-            )
-            return interaction_score
+        user_content = ""
+        retrieval_context = []
+        for turn in turns_window:
+            if turn.role == "user":
+                user_content += f"\n{turn.content} "
+            else:
+                if turn.retrieval_context is not None:
+                    retrieval_context.extend(turn.retrieval_context)
 
-        final_scores = await asyncio.gather(
-            *[
-                get_interaction_score(unit_interaction)
-                for unit_interaction in unit_interactions
-            ]
+        verdicts = await self._a_generate_verdicts(
+            user_content,
+            expected_outcome,
+            retrieval_context,
+            multimodal,
         )
+        score, reason = await self._a_get_interaction_score_and_reason(
+            user_content, verdicts, multimodal
+        )
+        interaction_score = InteractionContextualPrecisionScore(
+            score=score,
+            reason=reason,
+            verdicts=verdicts,
+        )
+        windows_scores.append(interaction_score)
 
-        return final_scores
+        return windows_scores
 
     def _get_contextual_precision_scores(
         self,
-        unit_interactions: List[List[Turn]],
-        _expected_outcome: str,
+        turns_window: List[Turn],
+        expected_outcome: str,
         multimodal: bool,
     ):
-        interaction_scores = []
+        windows_scores = []
 
-        for unit_interaction in unit_interactions:
-            user_content = "User Message: "
-            retrieval_context = []
-            expected_outcome = (
-                f"Expected Assistant Message: \n{_expected_outcome}"
-            )
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_content += f"\n{turn.content} "
-                else:
-                    if turn.retrieval_context is not None:
-                        retrieval_context.extend(turn.retrieval_context)
+        user_content = ""
+        retrieval_context = []
+        for turn in turns_window:
+            if turn.role == "user":
+                user_content += f"\n{turn.content} "
+            else:
+                if turn.retrieval_context is not None:
+                    retrieval_context.extend(turn.retrieval_context)
 
-            verdicts = self._generate_verdicts(
-                user_content, expected_outcome, retrieval_context, multimodal
-            )
-            score, reason = self._get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
-            )
-            interaction_score = InteractionContextualPrecisionScore(
-                score=score,
-                reason=reason,
-                verdicts=verdicts,
-            )
-            interaction_scores.append(interaction_score)
+        verdicts = self._generate_verdicts(
+            user_content,
+            expected_outcome,
+            retrieval_context,
+            multimodal,
+        )
+        score, reason = self._get_interaction_score_and_reason(
+            user_content, verdicts, multimodal
+        )
+        interaction_score = InteractionContextualPrecisionScore(
+            score=score,
+            reason=reason,
+            verdicts=verdicts,
+        )
+        windows_scores.append(interaction_score)
 
-        return interaction_scores
+        return windows_scores
 
     async def _a_generate_verdicts(
         self,
@@ -323,7 +345,10 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return 1, None
+            return (
+                1,
+                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+            )
 
         score = self._calculate_interaction_score(verdicts)
         reason = await self._a_get_interaction_reason(
@@ -342,7 +367,10 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         multimodal: bool,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return 1, None
+            return (
+                1,
+                "There were no retrieval contexts in the given turns to evaluate the contextual precision.",
+            )
 
         score = self._calculate_interaction_score(verdicts)
         reason = self._get_interaction_reason(
@@ -379,7 +407,6 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         if relevant_nodes_count == 0:
             return 0
 
-        # Calculate Average Precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
 
@@ -481,7 +508,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         steps = []
         for index, interaction_score in enumerate(interaction_scores):
             interaction_steps = [
-                f"Interaction {index + 1} \n",
+                f"Window {index + 1} \n",
                 f"Verdicts: {prettify_list(interaction_score.verdicts)} \n",
                 f"Score: {interaction_score.score} \n",
                 f"Reason: {interaction_score.reason} \n",
@@ -492,6 +519,12 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
     def _generate_reason(
         self, scores: List[InteractionContextualPrecisionScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)
@@ -511,6 +544,12 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
     async def _a_generate_reason(
         self, scores: List[InteractionContextualPrecisionScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)
