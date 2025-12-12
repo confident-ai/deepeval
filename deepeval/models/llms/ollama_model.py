@@ -4,8 +4,9 @@ import requests
 import base64
 import io
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
-from deepeval.utils import require_dependency
+from deepeval.utils import require_dependency, require_param
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -26,7 +27,7 @@ class OllamaModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -41,8 +42,24 @@ class OllamaModel(DeepEvalBaseLLM):
             )
             or "http://localhost:11434"
         )
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="OllamaModel",
+            env_var_name="LOCAL_MODEL_NAME",
+            param_hint="model",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs

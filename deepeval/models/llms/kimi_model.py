@@ -2,6 +2,7 @@ from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -14,7 +15,7 @@ from deepeval.models.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import KIMI_MODELS_DATA
-
+from deepeval.utils import require_param
 
 retry_kimi = create_retry_decorator(PS.KIMI)
 
@@ -24,32 +25,45 @@ class KimiModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
 
         model = model or settings.MOONSHOT_MODEL_NAME
-        self.model_data = KIMI_MODELS_DATA.get(model)
-        if model not in KIMI_MODELS_DATA.keys():
-            raise ValueError(
-                f"Invalid model. Available Moonshot models: {', '.join(KIMI_MODELS_DATA.keys())}"
-            )
 
-        temperature_from_key = settings.TEMPERATURE
-        if temperature_from_key is None:
-            self.temperature = temperature
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
         else:
-            self.temperature = float(temperature_from_key)
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            temperature = 0.0
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
             self.api_key: SecretStr | None = SecretStr(api_key)
         else:
             self.api_key = settings.MOONSHOT_API_KEY
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="KimiModel",
+            env_var_name="MOONSHOT_MODEL_NAME",
+            param_hint="model",
+        )
+
+        if model not in KIMI_MODELS_DATA.keys():
+            raise DeepEvalError(
+                f"Invalid model. Available Moonshot models: {', '.join(KIMI_MODELS_DATA.keys())}"
+            )
+
+        if temperature < 0:
+            raise DeepEvalError("Temperature must be >= 0.")
+
+        self.model_data = KIMI_MODELS_DATA.get(model)
+        self.temperature = temperature
 
         self.base_url = "https://api.moonshot.cn/v1"
         # Keep sanitized kwargs for client call to strip legacy keys

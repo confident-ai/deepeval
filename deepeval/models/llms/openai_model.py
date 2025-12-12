@@ -8,6 +8,8 @@ from openai import (
     OpenAI,
     AsyncOpenAI,
 )
+
+from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
@@ -47,12 +49,14 @@ class GPTModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
+
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
             "GPTModel",
             kwargs,
@@ -63,11 +67,10 @@ class GPTModel(DeepEvalBaseLLM):
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 
-        settings = get_settings()
         model = model or settings.OPENAI_MODEL_NAME
         if model is None:
             model = default_gpt_model
-        self.model_data = OPENAI_MODELS_DATA.get(model)
+
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
@@ -79,10 +82,32 @@ class GPTModel(DeepEvalBaseLLM):
             else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.api_key: SecretStr | None = SecretStr(api_key)
+        else:
+            self.api_key = settings.OPENAI_API_KEY
+
+        self.base_url = base_url
+        # args and kwargs will be passed to the underlying model, in load_model function
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        self.model_data = OPENAI_MODELS_DATA.get(model)
+        # Auto-adjust temperature for models that require it
+        if not self.model_data.supports_temperature:
+            temperature = 1
+
+        # validation
         if isinstance(model, str):
             model = parse_model_name(model)
             if model not in OPENAI_MODELS_DATA.keys():
-                raise ValueError(
+                raise DeepEvalError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in OPENAI_MODELS_DATA.keys())}"
                 )
 
@@ -91,30 +116,20 @@ class GPTModel(DeepEvalBaseLLM):
             or self.model_data.output_price is None
         ):
             if cost_per_input_token is None or cost_per_output_token is None:
-                raise ValueError(
+
+                raise DeepEvalError(
                     f"No pricing available for `{model}`. "
                     "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
                     "or set them via the CLI:\n"
                     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
                 )
-            else:
-                self.model_data.input_price = float(cost_per_input_token)
-                self.model_data.output_price = float(cost_per_output_token)
 
-        if api_key is not None:
-            # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
-        else:
-            self.api_key = get_settings().OPENAI_API_KEY
-
-        self.base_url = base_url
-        # args and kwargs will be passed to the underlying model, in load_model function
-
-        if not self.model_data.supports_temperature:
-            temperature = 1
+            self.model_data.input_price = float(cost_per_input_token)
+            self.model_data.output_price = float(cost_per_output_token)
 
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
+
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
@@ -264,8 +279,19 @@ class GPTModel(DeepEvalBaseLLM):
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
+        model_name = self.name
+        is_multimodal = check_if_multimodal(prompt)
+
+        # validate that this model supports logprobs
+        if not self.model_data.supports_log_probs:
+            raise DeepEvalError(
+                f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
+                "Please use a different OpenAI model (for example `gpt-4.1` or `gpt-4o`) "
+                "when calling `generate_raw_response`."
+            )
+
         client = self.load_model(async_mode=False)
-        if check_if_multimodal(prompt):
+        if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = client.chat.completions.create(
@@ -290,8 +316,19 @@ class GPTModel(DeepEvalBaseLLM):
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
+        model_name = self.name
+        is_multimodal = check_if_multimodal(prompt)
+
+        # validate that this model supports logprobs
+        if not self.model_data.supports_log_probs:
+            raise DeepEvalError(
+                f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
+                "Please use a different OpenAI model (for example `gpt-4.1` or `gpt-4o`) "
+                "when calling `a_generate_raw_response`."
+            )
+
         client = self.load_model(async_mode=True)
-        if check_if_multimodal(prompt):
+        if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)
             prompt = self.generate_prompt(prompt)
         completion = await client.chat.completions.create(
@@ -312,7 +349,7 @@ class GPTModel(DeepEvalBaseLLM):
     @retry_openai
     def generate_samples(
         self, prompt: str, n: int, temperature: float
-    ) -> Tuple[list[str], float]:
+    ) -> list[str]:
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
@@ -332,7 +369,6 @@ class GPTModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        # TODO: consider loggin a warning instead of defaulting to whole model pricing
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.input_price
         return input_cost + output_cost

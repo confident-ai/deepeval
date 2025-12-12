@@ -9,6 +9,7 @@ from tenacity import (
     RetryCallState,
 )
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
@@ -16,6 +17,7 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.utils import require_param
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -47,11 +49,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-
+        settings = get_settings()
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
             "LiteLLMModel",
             kwargs,
@@ -62,13 +64,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         if base_url is None and "base_url" in alias_values:
             base_url = alias_values["base_url"]
 
-        settings = get_settings()
         # Get model name from parameter or key file
         model = model or settings.LITELLM_MODEL_NAME
-        if not model:
-            raise ValueError(
-                "Model name must be provided either through parameter or set-litellm command"
-            )
 
         # Get API key from parameter, or settings
         if api_key is not None:
@@ -98,8 +95,23 @@ class LiteLLMModel(DeepEvalBaseLLM):
             )
         )
 
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="LiteLLMModel",
+            env_var_name="LITELLM_MODEL_NAME",
+            param_hint="model",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
@@ -131,7 +143,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
             api_key = require_secret_api_key(
                 self.api_key,
                 provider_label="LiteLLM",
-                env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
+                env_var_name="LITELLM_API_KEY|LITELLM_PROXY_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
             completion_params["api_key"] = api_key

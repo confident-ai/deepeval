@@ -3,6 +3,7 @@ import warnings
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
@@ -15,7 +16,7 @@ from deepeval.models.utils import (
 )
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
-from deepeval.utils import require_dependency
+from deepeval.utils import require_dependency, require_param
 from deepeval.models.llms.constants import ANTHROPIC_MODELS_DATA
 
 # consistent retry rules
@@ -25,16 +26,19 @@ _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
 }
 
+default_model = "claude-3-7-sonnet-latest"
+
 
 class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model: str = "claude-3-7-sonnet-latest",
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
             "AnthropicModel",
             kwargs,
@@ -51,10 +55,27 @@ class AnthropicModel(DeepEvalBaseLLM):
             # keep it secret, keep it safe from serializings, logging and alike
             self.api_key: SecretStr | None = SecretStr(api_key)
         else:
-            self.api_key = get_settings().ANTHROPIC_API_KEY
+            self.api_key = settings.ANTHROPIC_API_KEY
+
+        model = model or settings.ANTHROPIC_MODEL_NAME or default_model
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # Validation
+        model = require_param(
+            model,
+            provider_label="AnthropicModel",
+            env_var_name="ANTHROPIC_MODEL_NAME",
+            param_hint="model",
+        )
 
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
         # Keep sanitized kwargs for client call to strip legacy keys

@@ -3,6 +3,7 @@ from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -14,7 +15,7 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-
+from deepeval.utils import require_param
 
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
@@ -26,7 +27,7 @@ class LocalModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         format: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -46,8 +47,24 @@ class LocalModel(DeepEvalBaseLLM):
             and str(settings.LOCAL_MODEL_BASE_URL)
         )
         self.format = format or settings.LOCAL_MODEL_FORMAT
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="LocalModel",
+            env_var_name="LOCAL_MODEL_NAME",
+            param_hint="model",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
