@@ -111,9 +111,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                 scores = []
                 for window in turns_windows:
                     scores.extend(
-                        self._get_faithfulness_scores(
-                            window, multimodal
-                        )
+                        self._get_faithfulness_scores(window, multimodal)
                     )
                 self.score = self._calculate_score(scores)
                 self.success = self.score >= self.threshold
@@ -171,9 +169,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
             async def get_individual_scores(window):
                 scores.extend(
-                    await self._a_get_faithfulness_scores(
-                        window, multimodal
-                    )
+                    await self._a_get_faithfulness_scores(window, multimodal)
                 )
 
             for window in turns_windows:
@@ -215,15 +211,11 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                 if turn.retrieval_context is not None:
                     retrieval_context.extend(turn.retrieval_context)
 
-        truths = await self._a_generate_truths(
-            retrieval_context, multimodal
-        )
+        truths = await self._a_generate_truths(retrieval_context, multimodal)
         claims = await self._a_generate_claims(
             user_content, assistant_content, multimodal
         )
-        verdicts = await self._a_generate_verdicts(
-            claims, truths, multimodal
-        )
+        verdicts = await self._a_generate_verdicts(claims, truths, multimodal)
         score, reason = self._get_interaction_score_and_reason(
             verdicts, multimodal
         )
