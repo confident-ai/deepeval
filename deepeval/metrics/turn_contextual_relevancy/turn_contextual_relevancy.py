@@ -163,6 +163,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     async def _a_get_contextual_relevancy_scores(
         self, unit_interactions: List[List[Turn]], multimodal: bool
     ):
+        final_scores = []
+
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
             retrieval_context = []
@@ -173,21 +175,22 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     if turn.retrieval_context is not None:
                         retrieval_context.extend(turn.retrieval_context)
 
-            # Generate verdicts for each retrieval context
-            verdicts = await self._a_generate_verdicts(
-                user_content, retrieval_context, multimodal
-            )
-            score, reason = await self._a_get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
-            )
-            interaction_score = InteractionContextualRelevancyScore(
-                score=score,
-                reason=reason,
-                verdicts=verdicts,
-            )
-            return interaction_score
+            if len(retrieval_context) > 0:
+                # Generate verdicts for each retrieval context
+                verdicts = await self._a_generate_verdicts(
+                    user_content, retrieval_context, multimodal
+                )
+                score, reason = await self._a_get_interaction_score_and_reason(
+                    user_content, verdicts, multimodal
+                )
+                interaction_score = InteractionContextualRelevancyScore(
+                    score=score,
+                    reason=reason,
+                    verdicts=verdicts,
+                )
+                final_scores.append(interaction_score)
 
-        final_scores = await asyncio.gather(
+        await asyncio.gather(
             *[
                 get_interaction_score(unit_interaction)
                 for unit_interaction in unit_interactions
@@ -211,19 +214,19 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     if turn.retrieval_context is not None:
                         retrieval_context.extend(turn.retrieval_context)
 
-            # Generate verdicts for each retrieval context
-            verdicts = self._generate_verdicts(
-                user_content, retrieval_context, multimodal
-            )
-            score, reason = self._get_interaction_score_and_reason(
-                user_content, verdicts, multimodal
-            )
-            interaction_score = InteractionContextualRelevancyScore(
-                score=score,
-                reason=reason,
-                verdicts=verdicts,
-            )
-            interaction_scores.append(interaction_score)
+            if len(retrieval_context) > 0:
+                verdicts = self._generate_verdicts(
+                    user_content, retrieval_context, multimodal
+                )
+                score, reason = self._get_interaction_score_and_reason(
+                    user_content, verdicts, multimodal
+                )
+                interaction_score = InteractionContextualRelevancyScore(
+                    score=score,
+                    reason=reason,
+                    verdicts=verdicts,
+                )
+                interaction_scores.append(interaction_score)
 
         return interaction_scores
 
@@ -477,6 +480,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     def _generate_reason(
         self, scores: List[InteractionContextualRelevancyScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)
@@ -496,6 +505,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     async def _a_generate_reason(
         self, scores: List[InteractionContextualRelevancyScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)

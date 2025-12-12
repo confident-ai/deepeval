@@ -173,6 +173,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         self, unit_interactions: List[List[Turn]], multimodal: bool
     ):
 
+        final_scores = []
+
         async def get_interaction_score(unit_interaction: List[Turn]):
             user_content = "User Message: "
             retrieval_context = []
@@ -184,28 +186,30 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     assistant_content += f"\n{turn.content} "
                     if turn.retrieval_context is not None:
                         retrieval_context.extend(turn.retrieval_context)
-            truths = await self._a_generate_truths(
-                retrieval_context, multimodal
-            )
-            claims = await self._a_generate_claims(
-                user_content, assistant_content, multimodal
-            )
-            verdicts = await self._a_generate_verdicts(
-                claims, truths, multimodal
-            )
-            score, reason = self._get_interaction_score_and_reason(
-                verdicts, multimodal
-            )
-            interaction_score = InteractionFaithfulnessScore(
-                score=score,
-                reason=reason,
-                claims=claims,
-                truths=truths,
-                verdicts=verdicts,
-            )
-            return interaction_score
 
-        final_scores = await asyncio.gather(
+            if len(retrieval_context) > 0:
+                truths = await self._a_generate_truths(
+                    retrieval_context, multimodal
+                )
+                claims = await self._a_generate_claims(
+                    user_content, assistant_content, multimodal
+                )
+                verdicts = await self._a_generate_verdicts(
+                    claims, truths, multimodal
+                )
+                score, reason = self._get_interaction_score_and_reason(
+                    verdicts, multimodal
+                )
+                interaction_score = InteractionFaithfulnessScore(
+                    score=score,
+                    reason=reason,
+                    claims=claims,
+                    truths=truths,
+                    verdicts=verdicts,
+                )
+                final_scores.append(interaction_score)
+
+        await asyncio.gather(
             *[
                 get_interaction_score(unit_interaction)
                 for unit_interaction in unit_interactions
@@ -230,22 +234,24 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     assistant_content += f"\n{turn.content} "
                     if turn.retrieval_context is not None:
                         retrieval_context.extend(turn.retrieval_context)
-            truths = self._generate_truths(retrieval_context, multimodal)
-            claims = self._generate_claims(
-                user_content, assistant_content, multimodal
-            )
-            verdicts = self._generate_verdicts(claims, truths, multimodal)
-            score, reason = self._get_interaction_score_and_reason(
-                verdicts, multimodal
-            )
-            interaction_score = InteractionFaithfulnessScore(
-                score=score,
-                reason=reason,
-                claims=claims,
-                truths=truths,
-                verdicts=verdicts,
-            )
-            interaction_scores.append(interaction_score)
+
+            if len(retrieval_context) > 0:
+                truths = self._generate_truths(retrieval_context, multimodal)
+                claims = self._generate_claims(
+                    user_content, assistant_content, multimodal
+                )
+                verdicts = self._generate_verdicts(claims, truths, multimodal)
+                score, reason = self._get_interaction_score_and_reason(
+                    verdicts, multimodal
+                )
+                interaction_score = InteractionFaithfulnessScore(
+                    score=score,
+                    reason=reason,
+                    claims=claims,
+                    truths=truths,
+                    verdicts=verdicts,
+                )
+                interaction_scores.append(interaction_score)
 
         return interaction_scores
 
@@ -538,6 +544,12 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     def _generate_reason(
         self, scores: List[InteractionFaithfulnessScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)
@@ -557,6 +569,12 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     async def _a_generate_reason(
         self, scores: List[InteractionFaithfulnessScore]
     ) -> str:
+        if self.include_reason is False:
+            return None
+
+        if len(scores) == 0:
+            return "There were no retrieval contexts in your turns to evaluate, hence the score is 1"
+
         reasons = []
         for score in scores:
             reasons.append(score.reason)
