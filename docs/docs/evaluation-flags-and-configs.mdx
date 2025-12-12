@@ -298,3 +298,16 @@ Precedence: explicit constructor args (e.g. `AmazonBedrockModel(model=..., regio
 | `AWS_BEDROCK_REGION`               | string / unset   | Required at runtime unless provided as `AmazonBedrockModel(region_name=...)`. AWS region (e.g. `us-east-1`). |
 | `AWS_BEDROCK_COST_PER_INPUT_TOKEN` | float / unset    | Optional. Default input token cost used for cost calculation (defaults to `0` if unset). |
 | `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | float / unset    | Optional. Default output token cost used for cost calculation (defaults to `0` if unset). |
+
+### Anthropic {#model-settings-anthropic}
+
+These environment variables configure Anthropic usage in DeepEval.
+
+Precedence: explicit constructor args (e.g. `AnthropicModel(model=..., api_key=...)`) override DeepEval settings/env vars. If neither explicit args nor env vars are set for the API key, DeepEval will raise an error at runtime.
+
+| Variable              | Values         | Effect |
+| --------------------- | -------------- | ------ |
+| `ANTHROPIC_API_KEY`   | string / unset | Required at runtime unless provided as `AnthropicModel(api_key=...)`. Anthropic API key. |
+| `ANTHROPIC_MODEL_NAME` | string / unset | Optional. Default model used when `model` is not passed to `AnthropicModel(...)` (falls back to `claude-3-7-sonnet-latest`). |
+
+`temperature` resolution for `AnthropicModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.

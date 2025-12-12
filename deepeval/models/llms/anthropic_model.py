@@ -91,10 +91,11 @@ class AnthropicModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
-
+        # Get max_tokens from kwargs, default to 1024 if not provided
+        max_tokens = self.kwargs.get("max_tokens", 1024)
         chat_model = self.load_model()
         message = chat_model.messages.create(
-            max_tokens=1024,
+            max_tokens=max_tokens,
             messages=[
                 {
                     "role": "user",
@@ -119,9 +120,11 @@ class AnthropicModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
 
+        # Get max_tokens from kwargs, default to 1024 if not provided
+        max_tokens = self.kwargs.get("max_tokens", 1024)
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
-            max_tokens=1024,
+            max_tokens=max_tokens,
             messages=[
                 {
                     "role": "user",

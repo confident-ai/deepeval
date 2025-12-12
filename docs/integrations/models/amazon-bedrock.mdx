@@ -42,7 +42,7 @@ model = AmazonBedrockModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **TWO** mandatory and **FIVE** optional parameters when creating an `AmazonBedrockModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-aws-amazon-bedrock) for the Bedrock-related environment variables.
+There are **TWO** mandatory and **FIVE** optional parameters when creating an `AmazonBedrockModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-aws-amazon-bedrock) for the Bedrock-related environment variables:
 
 - `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed.
 - `region_name`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed.

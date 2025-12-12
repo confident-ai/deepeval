@@ -1,5 +1,5 @@
 ---
-# id: anthropic
+id: anthropic
 title: Anthropic
 sidebar_label: Anthropic
 ---
@@ -34,16 +34,19 @@ model = AnthropicModel(
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+There are **TWO** mandatory and **TWO** optional parameters when creating an `AnthropicModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-anthropic) for the Anthropic-related environment variables:
 
-There are **TWO** optional parameters when creating an `AnthropicModel`:
-
-- [Optional] `model`: A string specifying which of Anthropic's Claude models to use. Defaulted to `'claude-3-7-sonnet-latest'`.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- `model`: A string specifying which Claude model to use. Defaults to `ANTHROPIC_MODEL_NAME` if not passed; falls back to `claude-3-7-sonnet-latest` if unset.
+- `api_key`: A string specifying your Anthropic API key. Defaults to `ANTHROPIC_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Anthropic `messages.create(...)` call.
 
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.anthropic.com/en/docs/about-claude/models/overview).
+Pass generation parameters, such as `max_tokens`, via `generation_kwargs` (they are forwarded to `messages.create(...)`).
+
+Extra `**kwargs` passed to `AnthropicModel(...)` are forwarded to the underlying Anthropic client and are **not** treated as generation parameters.
 :::
+
 
 ### Available Anthropic Models
 
