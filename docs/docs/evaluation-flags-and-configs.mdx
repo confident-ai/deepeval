@@ -311,3 +311,19 @@ Precedence: explicit constructor args (e.g. `AnthropicModel(model=..., api_key=.
 | `ANTHROPIC_MODEL_NAME` | string / unset | Optional. Default model used when `model` is not passed to `AnthropicModel(...)` (falls back to `claude-3-7-sonnet-latest`). |
 
 `temperature` resolution for `AnthropicModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.
+
+### Azure OpenAI {#model-settings-azure-openai}
+
+These environment variables configure Azure OpenAI usage in DeepEval.
+
+Precedence: explicit constructor args (e.g. `AzureOpenAIModel(model=..., api_key=...)`) override DeepEval settings/env vars. If neither explicit args nor env vars are set for the API key, DeepEval will raise an error at runtime.
+
+| Variable                | Values          | Effect |
+| ----------------------- | --------------- | ------ |
+| `AZURE_OPENAI_API_KEY`   | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(api_key=...)`. Azure OpenAI API key. |
+| `AZURE_MODEL_NAME`       | string / unset  | Optional. Default model used when `model` is not passed to `AzureOpenAIModel(...)` (falls back to `gpt-4.1` if unset). |
+| `AZURE_OPENAI_ENDPOINT`  | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(base_url=...)`. Azure OpenAI endpoint URL. |
+| `AZURE_DEPLOYMENT_NAME`  | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(deployment_name=...)`. Azure deployment name. |
+| `OPENAI_API_VERSION`     | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(openai_api_version=...)`. OpenAI API version used in your deployment. |
+
+`temperature` resolution for `AzureOpenAIModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.
