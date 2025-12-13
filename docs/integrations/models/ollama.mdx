@@ -4,7 +4,7 @@ title: Ollama
 sidebar_label: Ollama
 ---
 
-DeepEval allows you to use any model from Ollama to run evals, either through the CLI or directly in python.
+DeepEval allows you to use any model served by Ollama to run evals, either through the CLI or directly in Python. Some capabilities, such as multimodal support, are detected from a known-model list.
 
 :::note
 Before getting started, make sure your Ollama model is installed and running. See the full list of available models [here](https://ollama.com/search).
@@ -16,12 +16,12 @@ ollama run deepseek-r1:1.5b
 :::
 
 ### Environment Setup
-DeepEval can use a local Ollama server (default: `http://127.0.0.1:11434`).
+DeepEval can use a local Ollama server (default: `http://localhost:11434`).
 Optionally set a custom host:
 
 ```bash
 # .env.local
-OLLAMA_HOST=http://127.0.0.1:11434
+LOCAL_MODEL_BASE_URL=http://localhost:11434
 ```
 
 ### Command Line
@@ -70,12 +70,12 @@ model = OllamaModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **FIVE** mandatory and **ONE** optional parameters when creating an `AzureOpenAIModel`:
+There is **ONE** mandatory and **THREE** optional parameters when creating an `OllamaModel`:
 
-- `model`: A string specifying the name of the Ollama model to use.
-- [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaulted to `'http://localhost:11434'`.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; falls back to `http://localhost:11434` if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Ollama’s `chat(..., options={...})` call.
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).

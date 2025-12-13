@@ -30,7 +30,7 @@ class OllamaModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         settings = get_settings()
-        model = model or settings.LOCAL_MODEL_NAME
+        model = model or settings.OLLAMA_MODEL_NAME
         self.model_data = OLLAMA_MODELS_DATA.get(model)
         self.base_url = (
             base_url
@@ -211,8 +211,8 @@ class OllamaModel(DeepEvalBaseLLM):
         )
         return cls(**kw)
 
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
+    def supports_multimodal(self) -> bool:
+        return bool(self.model_data and self.model_data.supports_multimodal)
 
     def get_model_name(self):
         return f"{self.name} (Ollama)"
