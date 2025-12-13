@@ -403,7 +403,7 @@ Precedence: explicit constructor arguments (e.g., `OllamaModel(model=..., base_u
 
 | Variable               | Values         | Effect |
 | ---------------------- | -------------- | ------ |
-| `LOCAL_MODEL_NAME`     | string / unset | Required at runtime unless provided as `OllamaModel(model=...)`. Ollama model name (e.g. `deepseek-r1:1.5b`). |
+| `OLLAMA_MODEL_NAME`    | string / unset | Required at runtime unless provided as `OllamaModel(model=...)`. Ollama model name (e.g. `deepseek-r1:1.5b`). |
 | `LOCAL_MODEL_BASE_URL` | string / unset | Optional. Base URL of the Ollama server. Defaults to `http://localhost:11434` if unset. |
 
 `temperature` resolution for `OllamaModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
