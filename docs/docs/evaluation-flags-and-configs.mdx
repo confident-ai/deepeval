@@ -361,3 +361,49 @@ Precedence: explicit constructor arguments (e.g., `GeminiModel(model=..., api_ke
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | string / unset       | Optional. Service account key in JSON format for authentication when using Vertex AI.                                 |
 
 `temperature` resolution for `GeminiModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+
+### Grok Model Settings {#model-settings-grok}
+
+These environment variables configure Grok (xAI) usage in DeepEval.
+
+Precedence: explicit constructor arguments (e.g., `GrokModel(model=..., api_key=...)`) override DeepEval settings / environment variables.
+
+| Variable           | Values        | Effect |
+| ------------------ | ------------- | ------ |
+| `USE_GROK_MODEL`   | `1` / unset   | Optional. When set, selects Grok as the default LLM provider (where applicable). |
+| `GROK_API_KEY`     | string / unset| Required at runtime unless provided as `GrokModel(api_key=...)`. Grok API key for authentication. |
+| `GROK_MODEL_NAME`  | string / unset| Required at runtime unless provided as `GrokModel(model=...)`. Must be one of DeepEval’s supported Grok model names (validated at runtime). |
+
+`temperature` resolution for `GrokModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+
+### LiteLLM Model Settings {#model-settings-litellm}
+
+These environment variables configure LiteLLM usage in DeepEval.
+
+Precedence: explicit constructor arguments (e.g., `LiteLLMModel(model=..., api_key=..., base_url=...)`) override DeepEval settings / environment variables.
+
+| Variable                 | Values             | Effect |
+| ------------------------ | ------------------ | ------ |
+| `USE_LITELLM`            | `1` / unset        | Optional. When set, selects LiteLLM as the default LLM provider (where applicable). |
+| `LITELLM_MODEL_NAME`     | string / unset     | Required at runtime unless provided as `LiteLLMModel(model=...)`. Must include a provider prefix (e.g., `openai/gpt-3.5-turbo`). |
+| `LITELLM_API_KEY`        | string / unset     | Optional. Primary API key used by `LiteLLMModel` when `api_key` is not passed. |
+| `LITELLM_PROXY_API_KEY`  | string / unset     | Optional. Fallback API key used if `LITELLM_API_KEY` is unset. |
+| `LITELLM_API_BASE`       | string / unset     | Optional. Default base URL used when `base_url` is not passed (useful for custom endpoints). |
+| `LITELLM_PROXY_API_BASE` | string / unset     | Optional. Fallback base URL used if `LITELLM_API_BASE` is unset. |
+
+API key fallback behavior: if `api_key` is not passed to `LiteLLMModel(...)`, DeepEval attempts (in order) `LITELLM_API_KEY`, `LITELLM_PROXY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, then `GOOGLE_API_KEY`. If none are set, the key is left unset and the underlying LiteLLM/provider behavior applies.
+
+`temperature` resolution for `LiteLLMModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+
+### Ollama Model Settings {#model-settings-ollama}
+
+These environment variables configure Ollama (local) model usage in DeepEval.
+
+Precedence: explicit constructor arguments (e.g., `OllamaModel(model=..., base_url=...)`) override DeepEval settings / environment variables.
+
+| Variable               | Values         | Effect |
+| ---------------------- | -------------- | ------ |
+| `LOCAL_MODEL_NAME`     | string / unset | Required at runtime unless provided as `OllamaModel(model=...)`. Ollama model name (e.g. `deepseek-r1:1.5b`). |
+| `LOCAL_MODEL_BASE_URL` | string / unset | Optional. Base URL of the Ollama server. Defaults to `http://localhost:11434` if unset. |
+
+`temperature` resolution for `OllamaModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
