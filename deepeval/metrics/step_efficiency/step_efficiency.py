@@ -3,9 +3,10 @@ from typing import Optional, List, Union, Dict
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
@@ -157,83 +158,61 @@ class StepEfficiencyMetric(BaseMetric):
 
             return self.score
 
-    def _get_score(self, task: str, test_case: LLMTestCase):
+    def _get_score(
+        self, task: str, test_case: LLMTestCase
+    ) -> EfficiencyVerdict:
         if test_case._trace_dict is not None:
             prompt = StepEfficiencyTemplate.get_execution_efficiency(
                 task, test_case._trace_dict
             )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=EfficiencyVerdict)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = self.model.generate(
-                    prompt, schema=EfficiencyVerdict
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return EfficiencyVerdict(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=EfficiencyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: EfficiencyVerdict(**data),
+        )
 
-    async def _a_get_score(self, task: str, test_case: LLMTestCase):
+    async def _a_get_score(
+        self, task: str, test_case: LLMTestCase
+    ) -> EfficiencyVerdict:
         if test_case._trace_dict is not None:
             prompt = StepEfficiencyTemplate.get_execution_efficiency(
                 task, test_case._trace_dict
             )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=EfficiencyVerdict
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: Task = await self.model.a_generate(
-                    prompt, schema=EfficiencyVerdict
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return EfficiencyVerdict(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=EfficiencyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: EfficiencyVerdict(**data),
+        )
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Task)
-            self.evaluation_cost += cost
-            return res.task
-        else:
-            try:
-                res: Task = self.model.generate(prompt, schema=Task)
-                return res.task
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Task)
-            self.evaluation_cost += cost
-            return res.task
-        else:
-            try:
-                res: Task = await self.model.a_generate(prompt, schema=Task)
-                return res.task
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Task,
+            extract_schema=lambda s: s.task,
+            extract_json=lambda data: data["task"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -241,7 +220,7 @@ class StepEfficiencyMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

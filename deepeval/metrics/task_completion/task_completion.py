@@ -1,11 +1,12 @@
 from typing import Optional, List, Tuple, Union, Dict
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -15,7 +16,10 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.task_completion.schema import *
+from deepeval.metrics.task_completion.schema import (
+    TaskAndOutcome,
+    TaskCompletionVerdict,
+)
 
 
 class TaskCompletionMetric(BaseMetric):
@@ -150,44 +154,26 @@ class TaskCompletionMetric(BaseMetric):
             task=self.task,
             actual_outcome=self.outcome,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=TaskCompletionVerdict
-            )
-            self.evaluation_cost += cost
-            return res.verdict, res.reason
-        else:
-            try:
-                res: TaskCompletionVerdict = await self.model.a_generate(
-                    prompt, schema=TaskCompletionVerdict
-                )
-                return res.verdict, res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["verdict"], data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TaskCompletionVerdict,
+            extract_schema=lambda s: (s.verdict, s.reason),
+            extract_json=lambda data: (data["verdict"], data["reason"]),
+        )
 
     def _generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
             task=self.task,
             actual_outcome=self.outcome,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=TaskCompletionVerdict
-            )
-            self.evaluation_cost += cost
-            return res.verdict, res.reason
-        else:
-            try:
-                res: TaskCompletionVerdict = self.model.generate(
-                    prompt, schema=TaskCompletionVerdict
-                )
-                return res.verdict, res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["verdict"], data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TaskCompletionVerdict,
+            extract_schema=lambda s: (s.verdict, s.reason),
+            extract_json=lambda data: (data["verdict"], data["reason"]),
+        )
 
     async def _a_extract_task_and_outcome(
         self,
@@ -205,22 +191,13 @@ class TaskCompletionMetric(BaseMetric):
                 actual_output=test_case.actual_output,
                 tools_called=test_case.tools_called,
             )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=TaskAndOutcome
-            )
-            self.evaluation_cost += cost
-            return res.task, res.outcome
-        else:
-            try:
-                res: TaskAndOutcome = await self.model.a_generate(
-                    prompt, schema=TaskAndOutcome
-                )
-                return res.task, res.outcome
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"], data["outcome"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TaskAndOutcome,
+            extract_schema=lambda s: (s.task, s.outcome),
+            extract_json=lambda data: (data["task"], data["outcome"]),
+        )
 
     def _extract_task_and_outcome(
         self,
@@ -238,20 +215,13 @@ class TaskCompletionMetric(BaseMetric):
                 actual_output=test_case.actual_output,
                 tools_called=test_case.tools_called,
             )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=TaskAndOutcome)
-            self.evaluation_cost += cost
-            return res.task, res.outcome
-        else:
-            try:
-                res: TaskAndOutcome = self.model.generate(
-                    prompt, schema=TaskAndOutcome
-                )
-                return res.task, res.outcome
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["task"], data["outcome"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TaskAndOutcome,
+            extract_schema=lambda s: (s.task, s.outcome),
+            extract_json=lambda data: (data["task"], data["outcome"]),
+        )
 
     def _calculate_score(self):
         return (
@@ -266,7 +236,7 @@ class TaskCompletionMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

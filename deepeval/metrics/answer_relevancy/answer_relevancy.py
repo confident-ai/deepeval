@@ -6,16 +6,22 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    generate_with_schema_and_extract,
+    a_generate_with_schema_and_extract,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.answer_relevancy.schema import *
+from deepeval.metrics.answer_relevancy.schema import (
+    Statements,
+    AnswerRelevancyVerdict,
+    Verdicts,
+    AnswerRelevancyScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -175,22 +181,13 @@ class AnswerRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=AnswerRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: AnswerRelevancyScoreReason = await self.model.a_generate(
-                    prompt=prompt, schema=AnswerRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=AnswerRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self, input: str, multimodal: bool) -> str:
         if self.include_reason is False:
@@ -208,22 +205,13 @@ class AnswerRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=AnswerRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: AnswerRelevancyScoreReason = self.model.generate(
-                    prompt=prompt, schema=AnswerRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=AnswerRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(
         self, input: str, multimodal: bool
@@ -235,22 +223,15 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input, statements=self.statements, multimodal=multimodal
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-                ]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(
         self, input: str, multimodal: bool
@@ -262,52 +243,15 @@ class AnswerRelevancyMetric(BaseMetric):
             input=input, statements=self.statements, multimodal=multimodal
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-                ]
-
-    async def _a_generate_statements(
-        self,
-        actual_output: str,
-        multimodal: bool,
-    ) -> List[str]:
-        prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output, multimodal=multimodal
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
+            ],
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Statements)
-            self.evaluation_cost += cost
-            statements: List[str] = res.statements + [
-                ele for ele in actual_output if isinstance(ele, MLLMImage)
-            ]
-            return statements
-        else:
-            try:
-                res: Statements = await self.model.a_generate(
-                    prompt, schema=Statements
-                )
-                statements: List[str] = res.statements + [
-                    ele for ele in actual_output if isinstance(ele, MLLMImage)
-                ]
-                return statements
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                statements = data["statements"] + [
-                    ele for ele in actual_output if isinstance(ele, MLLMImage)
-                ]
-                return statements
 
     def _generate_statements(
         self,
@@ -317,27 +261,35 @@ class AnswerRelevancyMetric(BaseMetric):
         prompt = self.evaluation_template.generate_statements(
             actual_output=actual_output, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Statements)
-            self.evaluation_cost += cost
-            statements = res.statements + [
-                ele for ele in actual_output if isinstance(ele, MLLMImage)
-            ]
-            return statements
-        else:
-            try:
-                res: Statements = self.model.generate(prompt, schema=Statements)
-                statements = res.statements + [
-                    ele for ele in actual_output if isinstance(ele, MLLMImage)
-                ]
-                return statements
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                statements = data["statements"] + [
-                    ele for ele in actual_output if isinstance(ele, MLLMImage)
-                ]
-                return statements
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Statements,
+            extract_schema=lambda s: s.statements
+            + [ele for ele in actual_output if isinstance(ele, MLLMImage)],
+            extract_json=lambda d: d["statements"]
+            + [ele for ele in actual_output if isinstance(ele, MLLMImage)],
+        )
+
+    async def _a_generate_statements(
+        self,
+        actual_output: str,
+        multimodal: bool,
+    ) -> List[str]:
+        prompt = self.evaluation_template.generate_statements(
+            actual_output=actual_output, multimodal=multimodal
+        )
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Statements,
+            extract_schema=lambda s: s.statements
+            + [ele for ele in actual_output if isinstance(ele, MLLMImage)],
+            extract_json=lambda d: d["statements"]
+            + [ele for ele in actual_output if isinstance(ele, MLLMImage)],
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -358,7 +310,7 @@ class AnswerRelevancyMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

@@ -2,6 +2,7 @@ from typing import Dict, Optional, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
@@ -57,7 +58,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         model = model if model else default_openai_embedding_model
         if model not in valid_openai_embedding_models:
-            raise ValueError(
+            raise DeepEvalError(
                 f"Invalid model. Available OpenAI Embedding models: {', '.join(valid_openai_embedding_models)}"
             )
         self.kwargs = normalized_kwargs

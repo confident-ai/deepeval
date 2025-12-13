@@ -3,6 +3,7 @@ import types
 import pytest
 from pydantic import SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.models.llms.litellm_model import LiteLLMModel  # noqa: E402
 
 ############################################################################
@@ -86,13 +87,13 @@ def test_litellm_defaults_model_api_key_and_base_from_settings(settings):
 def test_litellm_raises_when_model_missing(settings):
     """
     If neither ctor `model` nor Settings.LITELLM_MODEL_NAME is set,
-    LiteLLMModel should raise a ValueError.
+    LiteLLMModel should raise a DeepEvalError.
     """
     # Clear any model name in Settings
     with settings.edit(persist=False):
         settings.LITELLM_MODEL_NAME = None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(DeepEvalError):
         LiteLLMModel()
 
 

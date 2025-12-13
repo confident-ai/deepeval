@@ -8,9 +8,10 @@ from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_helpfulness.schema import (
@@ -274,20 +275,13 @@ class ImageHelpfulnessMetric(BaseMetric):
             context_above, context_below
         )
         prompt = f"{instructions} \nImages: {image}"
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ReasonScore)
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = self.model.generate(
-                    prompt, schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     async def a_evaluate_image_helpfulness(
         self,
@@ -299,20 +293,13 @@ class ImageHelpfulnessMetric(BaseMetric):
             context_above, context_below
         )
         prompt = f"{instructions} \nImages: {image}"
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = await self.model.a_generate(
-                    prompt, schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     def get_image_context(
         self, image_index: int, actual_output: List[Union[str, MLLMImage]]
@@ -347,7 +334,7 @@ class ImageHelpfulnessMetric(BaseMetric):
             if isinstance(element, MLLMImage)
         ]
 
-    def calculate_score(self, scores: List[float]):
+    def calculate_score(self, scores: List[float]) -> float:
         return sum(scores) / len(scores)
 
     def is_successful(self) -> bool:
@@ -356,7 +343,7 @@ class ImageHelpfulnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

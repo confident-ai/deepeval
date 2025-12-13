@@ -64,7 +64,7 @@ def test_various_generation_kwargs_passed_through(gen_kwargs):
         assert inf_cfg[key] == value
 
 
-def test_get_model_name_returns_model_id():
+def test_get_model_name_returns_name():
     model = _mk_model({})
-    model.model_id = "my-model"
+    model.name = "my-model"
     assert model.get_model_name() == "my-model"

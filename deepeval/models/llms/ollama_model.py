@@ -4,8 +4,9 @@ import requests
 import base64
 import io
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
-from deepeval.utils import require_dependency
+from deepeval.utils import require_dependency, require_param
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -26,12 +27,12 @@ class OllamaModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
-        model = model or settings.LOCAL_MODEL_NAME
+        model = model or settings.OLLAMA_MODEL_NAME
         self.model_data = OLLAMA_MODELS_DATA.get(model)
         self.base_url = (
             base_url
@@ -41,8 +42,24 @@ class OllamaModel(DeepEvalBaseLLM):
             )
             or "http://localhost:11434"
         )
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="OllamaModel",
+            env_var_name="LOCAL_MODEL_NAME",
+            param_hint="model",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
@@ -56,7 +73,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model()
 
         if check_if_multimodal(prompt):
@@ -86,7 +103,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):
@@ -197,8 +214,8 @@ class OllamaModel(DeepEvalBaseLLM):
         )
         return cls(**kw)
 
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
+    def supports_multimodal(self) -> bool:
+        return bool(self.model_data and self.model_data.supports_multimodal)
 
     def get_model_name(self):
         return f"{self.name} (Ollama)"

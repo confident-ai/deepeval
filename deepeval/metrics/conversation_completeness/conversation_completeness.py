@@ -8,9 +8,10 @@ from deepeval.metrics.conversation_completeness.template import (
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -18,7 +19,11 @@ from deepeval.test_case import ConversationalTestCase
 from deepeval.test_case import TurnParams
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_completeness.schema import *
+from deepeval.metrics.conversation_completeness.schema import (
+    UserIntentions,
+    ConversationCompletenessVerdict,
+    ConversationCompletenessScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -176,24 +181,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ConversationCompletenessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ConversationCompletenessScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ConversationCompletenessScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ConversationCompletenessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
@@ -210,22 +204,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ConversationCompletenessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ConversationCompletenessScoreReason = self.model.generate(
-                    prompt, schema=ConversationCompletenessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ConversationCompletenessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
@@ -235,24 +220,14 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intention=intention,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ConversationCompletenessVerdict
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ConversationCompletenessVerdict = (
-                    await self.model.a_generate(
-                        prompt, schema=ConversationCompletenessVerdict
-                    )
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ConversationCompletenessVerdict(**data)
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ConversationCompletenessVerdict,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+        )
 
     def _generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
@@ -262,22 +237,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intention=intention,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ConversationCompletenessVerdict
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: ConversationCompletenessVerdict = self.model.generate(
-                    prompt, schema=ConversationCompletenessVerdict
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ConversationCompletenessVerdict(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ConversationCompletenessVerdict,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+        )
 
     async def _a_extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
@@ -286,22 +252,14 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             turns=[convert_turn_to_dict(turn) for turn in turns],
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=UserIntentions
-            )
-            self.evaluation_cost += cost
-            return res.intentions
-        else:
-            try:
-                res: UserIntentions = await self.model.a_generate(
-                    prompt, schema=UserIntentions
-                )
-                return res.intentions
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return UserIntentions(**data).intentions
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=UserIntentions,
+            extract_schema=lambda r: r.intentions,
+            extract_json=lambda data: UserIntentions(**data).intentions,
+        )
 
     def _extract_user_intentions(
         self, turns: List[Turn], multimodal: bool
@@ -310,20 +268,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             turns=[convert_turn_to_dict(turn) for turn in turns],
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=UserIntentions)
-            self.evaluation_cost += cost
-            return res.intentions
-        else:
-            try:
-                res: UserIntentions = self.model.generate(
-                    prompt, schema=UserIntentions
-                )
-                return res.intentions
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return UserIntentions(**data).intentions
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=UserIntentions,
+            extract_schema=lambda r: r.intentions,
+            extract_json=lambda data: UserIntentions(**data).intentions,
+        )
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -343,8 +294,8 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
-            except:
+                self.success = self.score >= self.threshold
+            except TypeError:
                 self.success = False
         return self.success
 
