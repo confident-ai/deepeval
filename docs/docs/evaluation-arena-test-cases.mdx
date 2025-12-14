@@ -109,6 +109,104 @@ contestant_1 = Contestant(
 )
 ```
 
+
+## Including Images
+
+By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
+
+```python
+from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ArenaTestCase(contestants=[
+    Contestant(
+        name="GPT-4",
+        hyperparameters={"model": "gpt-4"},
+        test_case=LLMTestCase(
+            input=f"What's in this image? {shoes}",
+            actual_output="That's a red shoe",
+        ),
+    ),
+    Contestant(
+        name="Claude-4",
+        hyperparameters={"model": "claude-4"},
+        test_case=LLMTestCase(
+            input=f"What's in this image? {shoes}",
+            actual_output="The image shows a pair of red shoes",
+        ),
+    )
+])
+```
+
+:::info
+Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs of your `LLMTestCase`s. You can use the [`ArenaGEval`](/docs/metrics-arena-g-eval) metric to run evaluations for your multimodal test cases as usual.
+:::
+
+### `MLLMImage` Data Model
+
+Here's the data model of the `MLLMImage` in `deepeval`:
+
+```python
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+```
+
+You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when initializing an `MLLMImage`. The `local` attribute should be set to `True` for locally stored images and `False` for images hosted online (default is `False`).
+
+:::note
+
+All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = LLMTestCase(
+    input=f"Change the color of these shoes to blue: {shoes}",
+    expected_output=f"..."
+)
+
+print(test_case.input)
+```
+
+This outputs the following:
+
+```
+Change the color of these shoes to blue: [DEEPEVAL:IMAGE:awefv234fvbnhg456]
+```
+
+Users who'd like to access their images themselves for any ETL can use the `convert_to_multi_modal_array` method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval.utils import convert_to_multi_modal_array
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = LLMTestCase(
+    input=f"Change the color of these shoes to blue: {shoes}",
+    expected_output=f"..."
+)
+
+print(convert_to_multi_modal_array(test_case.input))
+```
+
+This will output the following:
+
+```
+["Change the color of these shoes to blue:",  [DEEPEVAL:IMAGE:awefv234fvbnhg456]]
+```
+
+The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMImage` you passed inside your test case.
+
+:::
+
 ## Using Test Cases For Evals
 
 The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which picks a "winner" out of the list of contestants:
