@@ -3,10 +3,20 @@ import textwrap
 
 
 class ArenaGEvalTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
-    def generate_evaluation_steps(parameters: str, criteria: str):
+    def generate_evaluation_steps(parameters: str, criteria: str, multimodal: Optional[bool]):
         return textwrap.dedent(
             f"""Given an evaluation criteria which outlines how you should choose the winner out of all contestants based on the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
+
+            {ArenaGEvalTemplate.multimodal_rules if multimodal else ""}
 
             Evaluation Criteria:
             {criteria}
@@ -28,6 +38,7 @@ class ArenaGEvalTemplate:
         evaluation_steps: str,
         test_case_contents: List[str],
         parameters: str,
+        multimodal: Optional[bool]
     ):
         reasoning_expectation = (
             "Be specific and grounded in the evaluation steps."
@@ -36,6 +47,9 @@ class ArenaGEvalTemplate:
         return textwrap.dedent(
             f"""
             You are a judge. Given the following evaluation steps, select the single contestant that best aligns with the evaluation steps.
+
+            {ArenaGEvalTemplate.multimodal_rules if multimodal else ""}
+
             Return a JSON object with three fields:
 
             - `"winner"`: the contestant that is best aligned with the evaluation steps.
