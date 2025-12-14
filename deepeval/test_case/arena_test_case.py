@@ -43,5 +43,6 @@ class ArenaTestCase:
             if contestant.test_case.multimodal:
                 self.multimodal = True
 
+
 class Arena:
     test_cases: List[ArenaTestCase]

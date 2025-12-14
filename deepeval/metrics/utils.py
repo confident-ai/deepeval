@@ -32,7 +32,7 @@ from deepeval.models.llms.constants import (
     OLLAMA_MODELS_DATA,
     ANTHROPIC_MODELS_DATA,
     GROK_MODELS_DATA,
-    KIMI_MODELS_DATA
+    KIMI_MODELS_DATA,
 )
 from deepeval.key_handler import (
     ModelKeyValues,
@@ -63,7 +63,7 @@ MULTIMODAL_SUPPORTED_MODELS = {
     AzureOpenAIModel: OPENAI_MODELS_DATA,
     KimiModel: KIMI_MODELS_DATA,
     AnthropicModel: ANTHROPIC_MODELS_DATA,
-    GrokModel: GROK_MODELS_DATA
+    GrokModel: GROK_MODELS_DATA,
 }
 
 
@@ -330,7 +330,7 @@ def check_arena_test_case_params(
     test_case_params: List[LLMTestCaseParams],
     metric: BaseArenaMetric,
     model: Optional[DeepEvalBaseLLM] = None,
-    multimodal: Optional[bool] = False
+    multimodal: Optional[bool] = False,
 ):
     if not isinstance(arena_test_case, ArenaTestCase):
         raise ValueError(

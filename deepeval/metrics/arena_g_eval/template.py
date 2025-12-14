@@ -12,7 +12,9 @@ class ArenaGEvalTemplate:
     """
 
     @staticmethod
-    def generate_evaluation_steps(parameters: str, criteria: str, multimodal: Optional[bool]):
+    def generate_evaluation_steps(
+        parameters: str, criteria: str, multimodal: Optional[bool]
+    ):
         return textwrap.dedent(
             f"""Given an evaluation criteria which outlines how you should choose the winner out of all contestants based on the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
 
@@ -38,7 +40,7 @@ class ArenaGEvalTemplate:
         evaluation_steps: str,
         test_case_contents: List[str],
         parameters: str,
-        multimodal: Optional[bool]
+        multimodal: Optional[bool],
     ):
         reasoning_expectation = (
             "Be specific and grounded in the evaluation steps."
