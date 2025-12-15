@@ -16,11 +16,13 @@ from deepeval.models.retry_policy import (
 from deepeval.test_case import MLLMImage
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
     normalize_kwargs_and_extract_aliases,
 )
+
 
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
@@ -124,6 +126,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         )
 
         # Final attributes
+        self.model_data = BEDROCK_MODELS_DATA.get(model)
         self.region_name = region_name
         self.cost_per_input_token = float(cost_per_input_token or 0.0)
         self.cost_per_output_token = float(cost_per_output_token or 0.0)
@@ -212,6 +215,25 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             },
         }
 
+    #########################
+    # Capabilities          #
+    #########################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
+
     ###############################################
     # Client management
     ###############################################
@@ -278,9 +300,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def load_model(self):
         pass
-
-    def supports_multimodal(self):
-        return True
 
     def get_model_name(self) -> str:
         return self.name

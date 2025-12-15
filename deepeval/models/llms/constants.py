@@ -1806,3 +1806,227 @@ OLLAMA_MODELS_DATA = ModelDataRegistry(
         ),
     }
 )
+
+
+BEDROCK_MODELS_DATA = ModelDataRegistry(
+    {
+        ########################
+        # anthropic (claude 3) #
+        ########################
+        "anthropic.claude-3-opus-20240229-v1:0": make_model_data(
+            supports_log_probs=False,  # Converse responses don't include logprobs.
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # We support `schema` by parsing JSON from text (not toolConfig).
+            supports_json=False,  # No cross-model JSON-mode supported by AmazonBedrockModel yet
+            input_price=None,
+            output_price=None,
+        ),
+        "anthropic.claude-3-sonnet-20240229-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ################################
+        # anthropic (claude 4 / 4.5)   #
+        ################################
+        "anthropic.claude-opus-4-20250514-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "anthropic.claude-opus-4-1-20250805-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "anthropic.claude-sonnet-4-20250514-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ################
+        # amazon titan #
+        ################
+        # NOTE: AWS examples for Titan Text are shown via InvokeModel (provider-specific),
+        # not Converse, so these may not work with AmazonBedrockModel, which is converse only.
+        "amazon.titan-text-express-v1": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "amazon.titan-text-premier-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ###############
+        # amazon nova #
+        ###############
+        "amazon.nova-micro-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "amazon.nova-lite-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "amazon.nova-pro-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "amazon.nova-premier-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ##################
+        # meta (llama 4) #
+        ##################
+        "meta.llama4-maverick-17b-instruct-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,  # SDK tool use varies by model.  # noqa: E501
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "meta.llama4-maverick-17b-instruct-128k-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "meta.llama4-scout-17b-instruct-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "meta.llama4-scout-17b-instruct-128k-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ##################
+        # mistral (text) #
+        ##################
+        "mistral.mistral-large-2407-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "mistral.mistral-large-2411-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ############################
+        # mistral (pixtral/vision) #
+        ############################
+        "mistral.pixtral-large-2411-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "mistral.pixtral-large-2502-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "mistral.pixtral-large-2511-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        ####################
+        # openai (gpt-oss) #
+        ####################
+        "openai.gpt-oss-20b-1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+        "openai.gpt-oss-120b-1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=False,
+            input_price=None,
+            output_price=None,
+        ),
+    }
+)
