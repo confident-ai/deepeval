@@ -173,8 +173,9 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
     def generate_payload(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
     ):
+        multimodal_input = [] if multimodal_input is None else multimodal_input
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
