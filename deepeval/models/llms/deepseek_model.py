@@ -28,6 +28,8 @@ class DeepSeekModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -41,6 +43,17 @@ class DeepSeekModel(DeepEvalBaseLLM):
             temperature = settings.TEMPERATURE
         else:
             temperature = 0.0
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.DEEPSEEK_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.DEEPSEEK_COST_PER_OUTPUT_TOKEN
+        )
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -58,19 +71,42 @@ class DeepSeekModel(DeepEvalBaseLLM):
             param_hint="model",
         )
 
-        if model not in DEEPSEEK_MODELS_DATA.keys():
-            raise DeepEvalError(
-                f"Invalid model. Available DeepSeek models: {', '.join(DEEPSEEK_MODELS_DATA.values())}"
-            )
-
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.model_data = DEEPSEEK_MODELS_DATA.get(model)
         self.temperature = temperature
+
+        if cost_per_input_token is not None and float(cost_per_input_token) < 0:
+            raise DeepEvalError("cost_per_input_token must be >= 0.")
+        if (
+            cost_per_output_token is not None
+            and float(cost_per_output_token) < 0
+        ):
+            raise DeepEvalError("cost_per_output_token must be >= 0.")
+
+        if (
+            self.model_data.input_price is None
+            or self.model_data.output_price is None
+        ):
+            if cost_per_input_token is None or cost_per_output_token is None:
+
+                raise DeepEvalError(
+                    f"No pricing available for `{model}`. "
+                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `DeepSeekModel`, "
+                    "or set `DEEPSEEK_COST_PER_INPUT_TOKEN` and `DEEPSEEK_COST_PER_OUTPUT_TOKEN` environment variables."
+                )
+
+            self.model_data.input_price = float(cost_per_input_token)
+            self.model_data.output_price = float(cost_per_output_token)
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -159,6 +195,25 @@ class DeepSeekModel(DeepEvalBaseLLM):
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
+
+    ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
 
     ###############################################
     # Model

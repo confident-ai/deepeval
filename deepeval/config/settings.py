@@ -340,6 +340,8 @@ class Settings(BaseSettings):
     USE_DEEPSEEK_MODEL: Optional[bool] = None
     DEEPSEEK_API_KEY: Optional[SecretStr] = None
     DEEPSEEK_MODEL_NAME: Optional[str] = None
+    DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = None
+    DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # Gemini
     USE_GEMINI_MODEL: Optional[bool] = None
     GOOGLE_API_KEY: Optional[SecretStr] = None

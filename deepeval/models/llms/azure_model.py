@@ -401,9 +401,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
-    #########################
-    # Capabilities          #
-    #########################
+    ###############################################
+    # Capabilities
+    ###############################################
 
     def supports_log_probs(self) -> Union[bool, None]:
         return self.model_data.supports_log_probs
