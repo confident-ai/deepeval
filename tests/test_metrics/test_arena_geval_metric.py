@@ -1,7 +1,13 @@
 import os
 import pytest
 from deepeval.metrics import ArenaGEval
-from deepeval.test_case import LLMTestCase, MLLMImage, ArenaTestCase, LLMTestCaseParams, Contestant
+from deepeval.test_case import (
+    LLMTestCase,
+    MLLMImage,
+    ArenaTestCase,
+    LLMTestCaseParams,
+    Contestant,
+)
 from deepeval import compare
 
 pytestmark = pytest.mark.skipif(
@@ -44,7 +50,9 @@ class TestArenaGEval:
                 actual_output="Hello!!",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -52,7 +60,7 @@ class TestArenaGEval:
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(test_case)
 
@@ -87,7 +95,9 @@ class TestArenaGEval:
                 actual_output="Hello!!",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -130,7 +140,9 @@ class TestArenaGEval:
                 actual_output="A nice car",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -173,7 +185,9 @@ class TestArenaGEval:
                 actual_output="A nice car",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -181,7 +195,7 @@ class TestArenaGEval:
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            async_mode=False
+            async_mode=False,
         )
         metric.measure(test_case)
 
@@ -217,7 +231,9 @@ class TestArenaGEval:
                 actual_output="A nice car",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         with pytest.raises(ValueError):
             metric = ArenaGEval(
                 name="Friendly",
@@ -226,7 +242,7 @@ class TestArenaGEval:
                     LLMTestCaseParams.INPUT,
                     LLMTestCaseParams.ACTUAL_OUTPUT,
                 ],
-                model="gpt-3.5-turbo"
+                model="gpt-3.5-turbo",
             )
             metric.measure(test_case)
 
@@ -257,7 +273,9 @@ class TestArenaGEval:
                 actual_output="Hello!!",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -265,7 +283,7 @@ class TestArenaGEval:
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            async_mode=False
+            async_mode=False,
         )
 
         results = compare(test_cases=[test_case], metric=metric)
@@ -300,7 +318,9 @@ class TestArenaGEval:
                 actual_output="A nice car",
             ),
         )
-        test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
+        test_case = ArenaTestCase(
+            contestants=[contestant_1, contestant_2, contestant_3]
+        )
         metric = ArenaGEval(
             name="Friendly",
             criteria="Choose the winner of the more accurate contestant based on the input and actual output",
@@ -308,10 +328,9 @@ class TestArenaGEval:
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            async_mode=False
+            async_mode=False,
         )
 
         results = compare(test_cases=[test_case], metric=metric)
 
         assert results is not None
-
