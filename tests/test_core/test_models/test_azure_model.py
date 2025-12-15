@@ -98,12 +98,12 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-deployment",
-            messages=[{
-                "role": "user", 
-                "content": [
-                    {"type": "text", "text": "test prompt"}
-                ]
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
             max_tokens=1000,
             top_p=0.9,
@@ -137,12 +137,12 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Verify the completion was called without extra kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-deployment",
-            messages=[{
-                "role": "user", 
-                "content": [
-                    {"type": "text", "text": "test prompt"}
-                ]
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
         )
         assert output == "test response"
