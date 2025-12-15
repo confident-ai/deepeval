@@ -59,7 +59,7 @@ class GrokModel(DeepEvalBaseLLM):
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.GROK_API_KEY
 
@@ -310,9 +310,6 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Grok)"

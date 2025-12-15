@@ -72,7 +72,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         # Get API key from parameter, or settings
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and aolike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = (
                 settings.LITELLM_API_KEY

@@ -53,7 +53,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 

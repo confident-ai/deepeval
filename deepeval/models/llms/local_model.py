@@ -42,7 +42,7 @@ class LocalModel(DeepEvalBaseLLM):
 
         model = model or settings.LOCAL_MODEL_NAME
         if api_key is not None:
-            self.local_model_api_key: SecretStr | None = SecretStr(api_key)
+            self.local_model_api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
 
