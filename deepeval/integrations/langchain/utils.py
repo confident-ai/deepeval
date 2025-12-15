@@ -1,5 +1,6 @@
 from typing import Any, List, Dict, Optional
 from langchain_core.outputs import ChatGeneration
+from langchain_core.messages import BaseMessage
 
 
 def parse_prompts_to_messages(
@@ -62,6 +63,36 @@ def parse_prompts_to_messages(
             messages.append({"role": "Tool Input", "content": str(tool)})
 
     return messages
+
+
+def parse_langchain_messages(messages: list) -> List[Dict[str, Any]]:
+    parsed_messages = []
+
+    for message_list in messages:
+        if not isinstance(message_list, list):
+            continue
+        for message in message_list:
+            if isinstance(message, dict):
+                parsed_messages.append(message)
+            elif isinstance(message, BaseMessage):
+                role = message.type
+                content = message.content
+
+                if isinstance(content, str):
+                    parsed_messages.append({"role": role, "content": content})
+                elif isinstance(content, list):
+                    content_blocks = []
+                    for part in content:
+                        if isinstance(part, dict):
+                            content_blocks.append(part)
+                        elif isinstance(part, str):
+                            content_blocks.append(
+                                {"type": "text", "text": part}
+                            )
+                    parsed_messages.append(
+                        {"role": role, "content": content_blocks}
+                    )
+    return parsed_messages
 
 
 def convert_chat_generation_to_string(gen: ChatGeneration) -> str:

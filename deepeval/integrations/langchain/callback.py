@@ -15,11 +15,12 @@ try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
-    from langchain_core.messages import AIMessage
+    from langchain_core.messages import AIMessage, BaseMessage
 
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
         parse_prompts_to_messages,
+        parse_langchain_messages,
         extract_name,
         safe_extract_model_name,
         safe_extract_token_usage,
@@ -115,6 +116,37 @@ class CallbackHandler(BaseCallbackHandler):
             base_span.output = output
             current_trace_context.get().output = output
             exit_current_context(uuid_str=uuid_str)
+
+    def on_chat_model_start(
+        self,
+        serialized: dict[str, Any],
+        messages: list[list[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        uuid_str = str(run_id)
+        input_messages = parse_langchain_messages(messages)
+        model = safe_extract_model_name(metadata, **kwargs)
+
+        llm_span: LlmSpan = enter_current_context(
+            uuid_str=uuid_str,
+            span_type="llm",
+            func_name=extract_name(serialized, **kwargs),
+        )
+
+        llm_span.input = input_messages
+        llm_span.model = model
+        if metadata:
+            metrics = metadata.pop("metrics", None)
+            metric_collection = metadata.pop("metric_collection", None)
+            prompt = metadata.pop("prompt", None)
+            llm_span.metrics = metrics
+            llm_span.metric_collection = metric_collection
+            llm_span.prompt = prompt
 
     def on_llm_start(
         self,
