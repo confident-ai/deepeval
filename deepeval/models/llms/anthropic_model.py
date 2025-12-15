@@ -47,8 +47,6 @@ class AnthropicModel(DeepEvalBaseLLM):
             _ALIAS_MAP,
         )
 
-        self.model_data = ANTHROPIC_MODELS_DATA.get(model)
-
         # re-map depricated keywords to re-named positional args
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
@@ -80,9 +78,24 @@ class AnthropicModel(DeepEvalBaseLLM):
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
+        self.model_data = ANTHROPIC_MODELS_DATA.get(model)
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+        max_tokens = self.kwargs.pop("max_tokens", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+        default_max_tokens = 1024 if max_tokens is None else max_tokens
+        self._max_tokens = int(
+            self.generation_kwargs.pop("max_tokens", default_max_tokens)
+        )
+
         super().__init__(model)
 
     ###############################################
@@ -100,7 +113,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         # Get max_tokens from kwargs, default to 1024 if not provided
-        max_tokens = self.kwargs.get("max_tokens", 1024)
+        max_tokens = self._max_tokens
         chat_model = self.load_model()
         message = chat_model.messages.create(
             max_tokens=max_tokens,
@@ -134,7 +147,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         # Get max_tokens from kwargs, default to 1024 if not provided
-        max_tokens = self.kwargs.get("max_tokens", 1024)
+        max_tokens = self._max_tokens
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
             max_tokens=max_tokens,
@@ -196,13 +209,17 @@ class AnthropicModel(DeepEvalBaseLLM):
             self.model_data.input_price is None
             or self.model_data.output_price is None
         ):
+            models_data_values = [
+                ANTHROPIC_MODELS_DATA[k] for k in ANTHROPIC_MODELS_DATA.keys()
+            ]
+
             # Calculate average cost from all known models
             avg_input_cost = sum(
-                model.input_price for model in ANTHROPIC_MODELS_DATA.values()
-            ) / len(ANTHROPIC_MODELS_DATA)
+                model.input_price for model in models_data_values
+            ) / len(models_data_values)
             avg_output_cost = sum(
-                model.output_price for model in ANTHROPIC_MODELS_DATA.values()
-            ) / len(ANTHROPIC_MODELS_DATA)
+                model.output_price for model in models_data_values
+            ) / len(models_data_values)
             self.model_data.input_price = avg_input_cost
             self.model_data.output_price = avg_output_cost
 
