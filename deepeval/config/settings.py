@@ -377,6 +377,8 @@ class Settings(BaseSettings):
     USE_MOONSHOT_MODEL: Optional[bool] = None
     MOONSHOT_API_KEY: Optional[SecretStr] = None
     MOONSHOT_MODEL_NAME: Optional[str] = None
+    MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = None
+    MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # Ollama
     OLLAMA_MODEL_NAME: Optional[str] = None
     # OpenAI

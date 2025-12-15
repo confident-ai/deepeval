@@ -17,7 +17,7 @@ from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import KIMI_MODELS_DATA
-from deepeval.utils import require_param
+from deepeval.utils import require_param, require_costs
 
 retry_kimi = create_retry_decorator(PS.KIMI)
 
@@ -28,6 +28,8 @@ class KimiModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -41,6 +43,17 @@ class KimiModel(DeepEvalBaseLLM):
             temperature = settings.TEMPERATURE
         else:
             temperature = 0.0
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.MOONSHOT_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.MOONSHOT_COST_PER_OUTPUT_TOKEN
+        )
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -56,21 +69,31 @@ class KimiModel(DeepEvalBaseLLM):
             param_hint="model",
         )
 
-        if model not in KIMI_MODELS_DATA.keys():
-            raise DeepEvalError(
-                f"Invalid model. Available Moonshot models: {', '.join(KIMI_MODELS_DATA.keys())}"
-            )
-
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.model_data = KIMI_MODELS_DATA.get(model)
         self.temperature = temperature
 
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "MOONSHOT_COST_PER_INPUT_TOKEN",
+            "MOONSHOT_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+        self.model_data.input_price = float(cost_per_input_token)
+        self.model_data.output_price = float(cost_per_output_token)
+
         self.base_url = "https://api.moonshot.cn/v1"
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -89,7 +112,7 @@ class KimiModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         client = self.load_model(async_mode=False)
-        if schema and self.model_data.supports_json:
+        if schema and self.supports_json_mode() is True:
             completion = client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": content}],
@@ -134,7 +157,7 @@ class KimiModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         client = self.load_model(async_mode=True)
-        if schema and self.model_data.supports_json:
+        if schema and self.supports_json_mode() is True:
             completion = await client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": content}],
@@ -207,6 +230,25 @@ class KimiModel(DeepEvalBaseLLM):
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
+
+    ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
 
     ###############################################
     # Model
