@@ -281,129 +281,172 @@ def function_to_be_called_after_test_run():
     print("Test finished!")
 ```
 
-## Model Settings
+## Model Settings 
+
+Most model integrations in DeepEval can be configured either by:
+
+- Passing explicit arguments to the model constructor (e.g. `OpenAIModel(api_key=...)`), or
+- Setting environment variables (loaded through `Settings` / `.env`).
+
+**Precedence:** explicit constructor arguments always win over environment variables.
+
+### Common model configuration {#model-settings-common}
+
+| Variable      | Values         | Effect |
+| ------------- | -------------- | ------ |
+| `TEMPERATURE` | float / unset  | Optional default temperature used when a model instance is created without an explicit `temperature=...` argument. |
+
+### Provider selection flags {#model-settings-provider-selection}
+
+Some parts of DeepEval can select a "default" LLM provider based on these flags:
+
+| Variable                    | Values      | Effect |
+| --------------------------- | ----------- | ------ |
+| `USE_OPENAI_MODEL`          | `1` / unset | Prefer OpenAI as the default LLM provider (where applicable). |
+| `USE_AZURE_OPENAI`          | `1` / unset | Prefer Azure OpenAI as the default LLM provider (where applicable). |
+| `USE_AWS_BEDROCK_MODEL`     | `1` / unset | Prefer Amazon Bedrock as the default LLM provider (where applicable). |
+| `USE_DEEPSEEK_MODEL`        | `1` / unset | Prefer DeepSeek as the default LLM provider (where applicable). |
+| `USE_GEMINI_MODEL`          | `1` / unset | Prefer Gemini as the default LLM provider (where applicable). |
+| `USE_GROK_MODEL`            | `1` / unset | Prefer Grok as the default LLM provider (where applicable). |
+| `USE_LITELLM`               | `1` / unset | Prefer LiteLLM as the default LLM provider (where applicable). |
+| `USE_LOCAL_MODEL`           | `1` / unset | Prefer the local model adapter as the default LLM provider (where applicable). |
+| `USE_MOONSHOT_MODEL`        | `1` / unset | Prefer Moonshot as the default LLM provider (where applicable). |
+| `USE_PORTKEY_MODEL`         | `1` / unset | Prefer Portkey as the default LLM provider (where applicable). |
+| `USE_AZURE_OPENAI_EMBEDDING` | `1` / unset | Prefer Azure OpenAI embeddings as the default embeddings provider (where applicable). |
+| `USE_LOCAL_EMBEDDINGS`      | `1` / unset | Prefer local embeddings as the default embeddings provider (where applicable). |
 
 ### AWS / Amazon Bedrock {#model-settings-aws-amazon-bedrock}
 
-These environment variables configure Amazon Bedrock usage in DeepEval.
+If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK default credentials chain is used.
 
-Precedence: explicit constructor args (e.g. `AmazonBedrockModel(model=..., region_name=...)`) override DeepEval settings/env vars. For credentials, if neither explicit args nor env vars are set, the AWS SDK default credentials chain is used.
-
-| Variable                           | Values           | Effect |
-| ---------------------------------- | ---------------- | ------ |
-| `AWS_ACCESS_KEY_ID`                | string / unset   | Optional. AWS Access Key ID. If unset, falls back to AWS default credentials chain. |
-| `AWS_SECRET_ACCESS_KEY`            | string / unset   | Optional. AWS Secret Access Key. If unset, falls back to AWS default credentials chain. |
-| `USE_AWS_BEDROCK_MODEL`            | `1` / unset      | Optional. When set, selects Bedrock as the default LLM provider (where applicable). |
-| `AWS_BEDROCK_MODEL_NAME`           | string / unset   | Required at runtime unless provided as `AmazonBedrockModel(model=...)`. Bedrock model id (e.g. `anthropic.claude-3-opus-20240229-v1:0`). |
-| `AWS_BEDROCK_REGION`               | string / unset   | Required at runtime unless provided as `AmazonBedrockModel(region_name=...)`. AWS region (e.g. `us-east-1`). |
-| `AWS_BEDROCK_COST_PER_INPUT_TOKEN` | float / unset    | Optional. Default input token cost used for cost calculation (defaults to `0` if unset). |
-| `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | float / unset    | Optional. Default output token cost used for cost calculation (defaults to `0` if unset). |
+| Variable                            | Values         | Effect |
+| ----------------------------------- | -------------- | ------ |
+| `AWS_ACCESS_KEY_ID`                 | string / unset | Optional AWS access key ID for authentication. |
+| `AWS_SECRET_ACCESS_KEY`             | string / unset | Optional AWS secret access key for authentication. |
+| `USE_AWS_BEDROCK_MODEL`             | `1` / unset    | Prefer Bedrock as the default LLM provider (where applicable). |
+| `AWS_BEDROCK_MODEL_NAME`            | string / unset | Bedrock model ID (e.g. `anthropic.claude-3-opus-20240229-v1:0`). |
+| `AWS_BEDROCK_REGION`                | string / unset | AWS region (e.g. `us-east-1`). |
+| `AWS_BEDROCK_COST_PER_INPUT_TOKEN`  | float / unset  | Optional input-token cost used for cost reporting. |
+| `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | float / unset  | Optional output-token cost used for cost reporting. |
 
 ### Anthropic {#model-settings-anthropic}
 
-These environment variables configure Anthropic usage in DeepEval.
-
-Precedence: explicit constructor args (e.g. `AnthropicModel(model=..., api_key=...)`) override DeepEval settings/env vars. If neither explicit args nor env vars are set for the API key, DeepEval will raise an error at runtime.
-
-| Variable              | Values         | Effect |
-| --------------------- | -------------- | ------ |
-| `ANTHROPIC_API_KEY`   | string / unset | Required at runtime unless provided as `AnthropicModel(api_key=...)`. Anthropic API key. |
-| `ANTHROPIC_MODEL_NAME` | string / unset | Optional. Default model used when `model` is not passed to `AnthropicModel(...)` (falls back to `claude-3-7-sonnet-latest`). |
-
-`temperature` resolution for `AnthropicModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.
+| Variable                          | Values         | Effect |
+| --------------------------------- | -------------- | ------ |
+| `ANTHROPIC_API_KEY`               | string / unset | Anthropic API key. |
+| `ANTHROPIC_MODEL_NAME`            | string / unset | Optional default Anthropic model name. |
+| `ANTHROPIC_COST_PER_INPUT_TOKEN`  | float / unset  | Optional input-token cost used for cost reporting. |
+| `ANTHROPIC_COST_PER_OUTPUT_TOKEN` | float / unset  | Optional output-token cost used for cost reporting. |
 
 ### Azure OpenAI {#model-settings-azure-openai}
 
-These environment variables configure Azure OpenAI usage in DeepEval.
+| Variable                | Values         | Effect |
+| ----------------------- | -------------- | ------ |
+| `USE_AZURE_OPENAI`      | `1` / unset    | Prefer Azure OpenAI as the default LLM provider (where applicable). |
+| `AZURE_OPENAI_API_KEY`  | string / unset | Azure OpenAI API key. |
+| `AZURE_OPENAI_ENDPOINT` | string / unset | Azure OpenAI endpoint URL. |
+| `OPENAI_API_VERSION`    | string / unset | Azure OpenAI API version. |
+| `AZURE_DEPLOYMENT_NAME` | string / unset | Azure deployment name. |
+| `AZURE_MODEL_NAME`      | string / unset | Optional Azure model name (for metadata / reporting). |
+| `AZURE_MODEL_VERSION`   | string / unset | Optional Azure model version (for metadata / reporting). |
 
-Precedence: explicit constructor args (e.g. `AzureOpenAIModel(model=..., api_key=...)`) override DeepEval settings/env vars. If neither explicit args nor env vars are set for the API key, DeepEval will raise an error at runtime.
+### OpenAI {#model-settings-openai}
 
-| Variable                | Values          | Effect |
-| ----------------------- | --------------- | ------ |
-| `AZURE_OPENAI_API_KEY`   | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(api_key=...)`. Azure OpenAI API key. |
-| `AZURE_MODEL_NAME`       | string / unset  | Optional. Default model used when `model` is not passed to `AzureOpenAIModel(...)` (falls back to `gpt-4.1` if unset). |
-| `AZURE_OPENAI_ENDPOINT`  | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(base_url=...)`. Azure OpenAI endpoint URL. |
-| `AZURE_DEPLOYMENT_NAME`  | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(deployment_name=...)`. Azure deployment name. |
-| `OPENAI_API_VERSION`     | string / unset  | Required at runtime unless provided as `AzureOpenAIModel(openai_api_version=...)`. OpenAI API version used in your deployment. |
+| Variable                       | Values         | Effect |
+| ------------------------------ | -------------- | ------ |
+| `USE_OPENAI_MODEL`             | `1` / unset    | Prefer OpenAI as the default LLM provider (where applicable). |
+| `OPENAI_API_KEY`               | string / unset | OpenAI API key. |
+| `OPENAI_MODEL_NAME`            | string / unset | Optional default OpenAI model name. |
+| `OPENAI_COST_PER_INPUT_TOKEN`  | float / unset  | Optional input-token cost used for cost reporting. |
+| `OPENAI_COST_PER_OUTPUT_TOKEN` | float / unset  | Optional output-token cost used for cost reporting. |
 
-`temperature` resolution for `AzureOpenAIModel(...)`: explicit `temperature` arg -> global `TEMPERATURE` setting -> `0.0` default.
+### DeepSeek {#model-settings-deepseek}
 
-### DeepSeek Model Settings {#model-settings-deep-seek}
+| Variable                        | Values         | Effect |
+| ------------------------------- | -------------- | ------ |
+| `USE_DEEPSEEK_MODEL`            | `1` / unset    | Prefer DeepSeek as the default LLM provider (where applicable). |
+| `DEEPSEEK_API_KEY`              | string / unset | DeepSeek API key. |
+| `DEEPSEEK_MODEL_NAME`           | string / unset | Optional default DeepSeek model name. |
+| `DEEPSEEK_COST_PER_INPUT_TOKEN` | float / unset  | Optional input-token cost used for cost reporting. |
+| `DEEPSEEK_COST_PER_OUTPUT_TOKEN`| float / unset  | Optional output-token cost used for cost reporting. |
 
-These environment variables configure DeepSeek model usage in DeepEval.
+### Gemini {#model-settings-gemini}
 
-Precedence: explicit constructor arguments (e.g., `DeepSeekModel(model=..., api_key=...)`) override DeepEval settings or environment variables. If neither explicit arguments nor environment variables are set for the API key, DeepEval will raise an error at runtime.
+| Variable                     | Values            | Effect |
+| ---------------------------- | ----------------- | ------ |
+| `USE_GEMINI_MODEL`           | `1` / unset       | Prefer Gemini as the default LLM provider (where applicable). |
+| `GOOGLE_API_KEY`             | string / unset    | Google API key. |
+| `GEMINI_MODEL_NAME`          | string / unset    | Optional default Gemini model name. |
+| `GOOGLE_GENAI_USE_VERTEXAI`  | `1` / `0` / unset | If set, use Vertex AI via google-genai (where supported). |
+| `GOOGLE_CLOUD_PROJECT`       | string / unset    | Optional GCP project (Vertex AI). |
+| `GOOGLE_CLOUD_LOCATION`      | string / unset    | Optional GCP location/region (Vertex AI). |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | string / unset    | Optional service account key (Vertex AI). |
+| `VERTEX_AI_MODEL_NAME`       | string / unset    | Optional Vertex AI model name. |
 
-| Variable              | Values         | Effect                                                                                                                   |
-| --------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `DEEPSEEK_API_KEY`    | string / unset | Required at runtime unless provided as `DeepSeekModel(api_key=...)`. Your DeepSeek API key.                              |
-| `DEEPSEEK_MODEL_NAME` | string / unset | Optional. Default model used when `model` is not passed to `DeepSeekModel(...)`. Defaults to `deepseek-chat` if unset.   |
-| `TEMPERATURE`         | float / unset  | Optional. Default temperature used when `temperature` is not passed to `DeepSeekModel(...)`. Defaults to `0.0` if unset. |
-| `DEEPSEEK_ENDPOINT`   | string / unset | Optional. Custom endpoint URL for the DeepSeek API.                                                                      |
+### Grok {#model-settings-grok}
 
-`temperature` resolution for `DeepSeekModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+| Variable                    | Values         | Effect |
+| --------------------------- | -------------- | ------ |
+| `USE_GROK_MODEL`            | `1` / unset    | Prefer Grok as the default LLM provider (where applicable). |
+| `GROK_API_KEY`              | string / unset | Grok API key. |
+| `GROK_MODEL_NAME`           | string / unset | Optional default Grok model name. |
+| `GROK_COST_PER_INPUT_TOKEN` | float / unset  | Optional input-token cost used for cost reporting. |
+| `GROK_COST_PER_OUTPUT_TOKEN`| float / unset  | Optional output-token cost used for cost reporting. |
 
-Here is the `Model Settings` section for the Gemini model:
+### LiteLLM {#model-settings-litellm}
 
-### Gemini Model Settings {#model-settings-gemini}
+| Variable                 | Values         | Effect |
+| ------------------------ | -------------- | ------ |
+| `USE_LITELLM`            | `1` / unset    | Prefer LiteLLM as the default LLM provider (where applicable). |
+| `LITELLM_API_KEY`        | string / unset | Optional API key passed to LiteLLM. |
+| `LITELLM_MODEL_NAME`     | string / unset | Default LiteLLM model name. |
+| `LITELLM_API_BASE`       | string / unset | Optional base URL for the LiteLLM endpoint. |
+| `LITELLM_PROXY_API_BASE` | string / unset | Optional proxy base URL (if using a proxy). |
+| `LITELLM_PROXY_API_KEY`  | string / unset | Optional proxy API key (if using a proxy). |
 
-These environment variables configure Gemini model usage in DeepEval.
-
-Precedence: explicit constructor arguments (e.g., `GeminiModel(model=..., api_key=...)`) override DeepEval settings or environment variables. If neither explicit arguments nor environment variables are set for the API key, DeepEval will raise an error at runtime.
-
-| Variable                     | Values               | Effect                                                                                                                |
-| ---------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `GOOGLE_API_KEY`             | string / unset       | Required at runtime unless provided as `GeminiModel(api_key=...)`. Google API key for authentication.                 |
-| `GEMINI_MODEL_NAME`          | string / unset       | Optional. Default model used when `model` is not passed to `GeminiModel(...)`. Defaults to `gemini-1.5-pro` if unset. |
-| `GOOGLE_CLOUD_PROJECT`       | string / unset       | Optional. Google Cloud project ID. Required if using Vertex AI (unless passed as `GeminiModel(project=...)`).         |
-| `GOOGLE_CLOUD_LOCATION`      | string / unset       | Optional. Google Cloud location. Required if using Vertex AI (unless passed as `GeminiModel(location=...)`).          |
-| `GOOGLE_GENAI_USE_VERTEXAI`  | `yes` / `no` / unset | Optional. When set to `yes`, Vertex AI will be used for generation. Defaults to unset (uses default service).         |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | string / unset       | Optional. Service account key in JSON format for authentication when using Vertex AI.                                 |
-
-`temperature` resolution for `GeminiModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
-
-### Grok Model Settings {#model-settings-grok}
-
-These environment variables configure Grok (xAI) usage in DeepEval.
-
-Precedence: explicit constructor arguments (e.g., `GrokModel(model=..., api_key=...)`) override DeepEval settings / environment variables.
-
-| Variable           | Values        | Effect |
-| ------------------ | ------------- | ------ |
-| `USE_GROK_MODEL`   | `1` / unset   | Optional. When set, selects Grok as the default LLM provider (where applicable). |
-| `GROK_API_KEY`     | string / unset| Required at runtime unless provided as `GrokModel(api_key=...)`. Grok API key for authentication. |
-| `GROK_MODEL_NAME`  | string / unset| Required at runtime unless provided as `GrokModel(model=...)`. Must be one of DeepEval’s supported Grok model names (validated at runtime). |
-
-`temperature` resolution for `GrokModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
-
-### LiteLLM Model Settings {#model-settings-litellm}
-
-These environment variables configure LiteLLM usage in DeepEval.
-
-Precedence: explicit constructor arguments (e.g., `LiteLLMModel(model=..., api_key=..., base_url=...)`) override DeepEval settings / environment variables.
-
-| Variable                 | Values             | Effect |
-| ------------------------ | ------------------ | ------ |
-| `USE_LITELLM`            | `1` / unset        | Optional. When set, selects LiteLLM as the default LLM provider (where applicable). |
-| `LITELLM_MODEL_NAME`     | string / unset     | Required at runtime unless provided as `LiteLLMModel(model=...)`. Must include a provider prefix (e.g., `openai/gpt-3.5-turbo`). |
-| `LITELLM_API_KEY`        | string / unset     | Optional. Primary API key used by `LiteLLMModel` when `api_key` is not passed. |
-| `LITELLM_PROXY_API_KEY`  | string / unset     | Optional. Fallback API key used if `LITELLM_API_KEY` is unset. |
-| `LITELLM_API_BASE`       | string / unset     | Optional. Default base URL used when `base_url` is not passed (useful for custom endpoints). |
-| `LITELLM_PROXY_API_BASE` | string / unset     | Optional. Fallback base URL used if `LITELLM_API_BASE` is unset. |
-
-API key fallback behavior: if `api_key` is not passed to `LiteLLMModel(...)`, DeepEval attempts (in order) `LITELLM_API_KEY`, `LITELLM_PROXY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, then `GOOGLE_API_KEY`. If none are set, the key is left unset and the underlying LiteLLM/provider behavior applies.
-
-`temperature` resolution for `LiteLLMModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
-
-### Ollama Model Settings {#model-settings-ollama}
-
-These environment variables configure Ollama (local) model usage in DeepEval.
-
-Precedence: explicit constructor arguments (e.g., `OllamaModel(model=..., base_url=...)`) override DeepEval settings / environment variables.
+### Local Model {#model-settings-local-model}
 
 | Variable               | Values         | Effect |
 | ---------------------- | -------------- | ------ |
-| `OLLAMA_MODEL_NAME`    | string / unset | Required at runtime unless provided as `OllamaModel(model=...)`. Ollama model name (e.g. `deepseek-r1:1.5b`). |
-| `LOCAL_MODEL_BASE_URL` | string / unset | Optional. Base URL of the Ollama server. Defaults to `http://localhost:11434` if unset. |
+| `USE_LOCAL_MODEL`      | `1` / unset    | Prefer the local model adapter as the default LLM provider (where applicable). |
+| `LOCAL_MODEL_API_KEY`  | string / unset | Optional API key for the local model endpoint (if required). |
+| `LOCAL_MODEL_NAME`     | string / unset | Optional default local model name. |
+| `LOCAL_MODEL_BASE_URL` | string / unset | Base URL for the local model endpoint. |
+| `LOCAL_MODEL_FORMAT`   | string / unset | Optional format hint for the local model integration. |
 
-`temperature` resolution for `OllamaModel(...)`: explicit `temperature` argument -> global `TEMPERATURE` setting -> `0.0` default.
+### Kimi (Moonshot) {#model-settings-kimi}
+
+| Variable                        | Values         | Effect |
+| ------------------------------- | -------------- | ------ |
+| `USE_MOONSHOT_MODEL`            | `1` / unset    | Prefer Moonshot as the default LLM provider (where applicable). |
+| `MOONSHOT_API_KEY`              | string / unset | Moonshot API key. |
+| `MOONSHOT_MODEL_NAME`           | string / unset | Optional default Moonshot model name. |
+| `MOONSHOT_COST_PER_INPUT_TOKEN` | float / unset  | Optional input-token cost used for cost reporting. |
+| `MOONSHOT_COST_PER_OUTPUT_TOKEN`| float / unset  | Optional output-token cost used for cost reporting. |
+
+### Ollama {#model-settings-ollama}
+
+| Variable            | Values         | Effect |
+| ------------------- | -------------- | ------ |
+| `OLLAMA_MODEL_NAME` | string / unset | Optional default Ollama model name. |
+
+### Portkey {#model-settings-portkey}
+
+| Variable               | Values         | Effect |
+| ---------------------- | -------------- | ------ |
+| `USE_PORTKEY_MODEL`    | `1` / unset    | Prefer Portkey as the default LLM provider (where applicable). |
+| `PORTKEY_API_KEY`      | string / unset | Portkey API key. |
+| `PORTKEY_MODEL_NAME`   | string / unset | Optional default model name passed to Portkey. |
+| `PORTKEY_BASE_URL`     | string / unset | Optional Portkey base URL. |
+| `PORTKEY_PROVIDER_NAME`| string / unset | Optional provider name (Portkey routing). |
+
+### Embeddings {#model-settings-embeddings}
+
+| Variable                         | Values         | Effect |
+| -------------------------------- | -------------- | ------ |
+| `USE_AZURE_OPENAI_EMBEDDING`     | `1` / unset    | Prefer Azure OpenAI embeddings as the default embeddings provider (where applicable). |
+| `AZURE_EMBEDDING_DEPLOYMENT_NAME`| string / unset | Azure embedding deployment name. |
+| `USE_LOCAL_EMBEDDINGS`           | `1` / unset    | Prefer local embeddings as the default embeddings provider (where applicable). |
+| `LOCAL_EMBEDDING_API_KEY`        | string / unset | Optional API key for the local embeddings endpoint (if required). |
+| `LOCAL_EMBEDDING_MODEL_NAME`     | string / unset | Optional default local embedding model name. |
+| `LOCAL_EMBEDDING_BASE_URL`       | string / unset | Base URL for the local embeddings endpoint. |
