@@ -28,6 +28,8 @@ class GrokModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -43,6 +45,17 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             temperature = 0.0
 
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.GROK_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.GROK_COST_PER_OUTPUT_TOKEN
+        )
+
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
             self.api_key: SecretStr | None = SecretStr(api_key)
@@ -57,20 +70,42 @@ class GrokModel(DeepEvalBaseLLM):
         )
 
         # validation
-        if model not in GROK_MODELS_DATA.keys():
-            raise DeepEvalError(
-                f"Invalid model. Available Grok models: {', '.join(GROK_MODELS_DATA.keys())}"
-            )
-
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.model_data = GROK_MODELS_DATA.get(model)
         self.temperature = temperature
 
+        if cost_per_input_token is not None and float(cost_per_input_token) < 0:
+            raise DeepEvalError("cost_per_input_token must be >= 0.")
+        if (
+            cost_per_output_token is not None
+            and float(cost_per_output_token) < 0
+        ):
+            raise DeepEvalError("cost_per_output_token must be >= 0.")
+
+        if (
+            self.model_data.input_price is None
+            or self.model_data.output_price is None
+        ):
+            if cost_per_input_token is None or cost_per_output_token is None:
+
+                raise DeepEvalError(
+                    f"No pricing available for `{model}`. "
+                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GrokModel`, "
+                    "or set `GROK_COST_PER_INPUT_TOKEN` and `GROK_COST_PER_OUTPUT_TOKEN` environment variables."
+                )
+
+            self.model_data.input_price = float(cost_per_input_token)
+            self.model_data.output_price = float(cost_per_output_token)
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -102,7 +137,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(content))
 
-        if schema and self.model_data.supports_structured_outputs:
+        if schema and self.supports_structured_outputs() is True:
             response, structured_output = chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -148,7 +183,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(content))
 
-        if schema and self.model_data.supports_structured_outputs:
+        if schema and self.supports_structured_outputs() is True:
             response, structured_output = await chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -208,6 +243,25 @@ class GrokModel(DeepEvalBaseLLM):
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
+
+    ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
 
     ###############################################
     # Model

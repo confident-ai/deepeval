@@ -354,6 +354,8 @@ class Settings(BaseSettings):
     USE_GROK_MODEL: Optional[bool] = None
     GROK_API_KEY: Optional[SecretStr] = None
     GROK_MODEL_NAME: Optional[str] = None
+    GROK_COST_PER_INPUT_TOKEN: Optional[float] = None
+    GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # LiteLLM
     USE_LITELLM: Optional[bool] = None
     LITELLM_API_KEY: Optional[SecretStr] = None
