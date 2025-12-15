@@ -61,9 +61,7 @@ class MLLMImage:
             if self.local:
                 path = self.process_url(self.url)
                 self.filename = os.path.basename(path)
-                self.mimeType = (
-                    mimetypes.guess_type(path)[0] or "image/jpeg"
-                )
+                self.mimeType = mimetypes.guess_type(path)[0] or "image/jpeg"
 
                 if not os.path.exists(path):
                     raise FileNotFoundError(f"Image file not found: {path}")
