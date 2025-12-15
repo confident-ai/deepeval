@@ -138,7 +138,21 @@ def convert_keys_to_snake_case(data: Any) -> Any:
         return data
 
 
-def prettify_list(lst: List[Any]):
+def prettify_list(lst: List[Any], truncate_to: Optional[int] = None):
+    """Creates a human-readable, formatted string representation of a list.
+
+    Strings are wrapped in double quotes, Pydantic BaseModel instances are
+    serialized as pretty-printed JSON, and all other items fall back to repr().
+
+    Args:
+        lst: A list of arbitrary objects to format.
+        truncate_to: If provided and > 0, truncates each formatted element
+            to this many characters and appends '...'.
+
+    Returns:
+        A formatted, multi-line string representation of the list.
+    """
+
     if len(lst) == 0:
         return "[]"
 
@@ -161,6 +175,13 @@ def prettify_list(lst: List[Any]):
         else:
             formatted_elements.append(repr(item))  # Fallback for other types
 
+    if truncate_to is not None and truncate_to > 0:
+        # Truncation for some displays / debugging
+        formatted_elements = [
+            element if len(element) <= truncate_to
+            else f"{element[:truncate_to]}...[truncated]"
+            for element in formatted_elements
+        ]
     formatted_list = ",\n    ".join(formatted_elements)
     return f"[\n    {formatted_list}\n]"
 
