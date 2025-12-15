@@ -142,44 +142,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             },
         }
 
-    def _parse_image(self, image: MLLMImage):
-        if image.dataBase64:
-            fmt = (image.mimeType or "image/jpeg").split("/")[-1]
-            try:
-                raw_bytes = base64.b64decode(image.dataBase64)
-            except Exception:
-                raise ValueError("Invalid base64 in MLLMImage.dataBase64")
-
-            return fmt, raw_bytes
-        if image.local and image.filename:
-            import PIL.Image
-            from io import BytesIO
-
-            img = PIL.Image.open(image.filename)
-            if img.mode in ("RGBA", "LA", "P"):
-                img = img.convert("RGB")
-            buf = BytesIO()
-            fmt = (image.mimeType or "image/jpeg").split("/")[-1].upper()
-            fmt = "JPEG" if fmt == "JPG" else fmt
-            img.save(buf, format=fmt)
-            raw_bytes = buf.getvalue()
-
-            return fmt, raw_bytes
-        if image.url:
-            import requests
-
-            resp = requests.get(image.url)
-            resp.raise_for_status()
-            raw_bytes = resp.content
-            mime = resp.headers.get(
-                "content-type", image.mimeType or "image/jpeg"
-            )
-            fmt = mime.split("/")[-1]
-            return fmt, raw_bytes
-        raise ValueError(
-            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
-        )
-
     ###############################################
     # Client management
     ###############################################
