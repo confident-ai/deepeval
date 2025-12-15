@@ -86,7 +86,7 @@ class PortkeyModel(DeepEvalBaseLLM):
     def _payload(self, prompt: str) -> Dict[str, Any]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_payload_kimi(prompt)
+            content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
         payload = {
@@ -97,32 +97,25 @@ class PortkeyModel(DeepEvalBaseLLM):
             payload.update(self.generation_kwargs)
         return payload
 
-    def generate_payload_portkey(self, multimodal_input):
-        """
-        Converts multimodal input into Kimi/OpenAI-compatible messages.
-        """
+    def generate_content(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
         content = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                content.append({"type": "text", "text": ele})
-            elif isinstance(ele, MLLMImage):
-                if ele.url and not ele.local:
-                    if not ele.url.startswith(('http://', 'https://')):
-                        raise ValueError(
-                            f"Invalid remote URL format: {ele.url}. "
-                            "URL must start with http:// or https://"
-                        )
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
                     content.append({
-                        "type": "image",
-                        "image_url": ele.url,
+                        "type": "image_url",
+                        "image_url": {"url": element.url},
                     })
                 else:
-                    ele.ensure_loaded()
-                    mime_type = ele.mimeType or "image/jpeg"
-                    data_uri = f"data:{mime_type};base64,{ele.dataBase64}"
+                    element.ensure_images_loaded()
+                    data_uri = f"data:{element.mimeType};base64,{element.dataBase64}"
                     content.append({
-                        "type": "image",
-                        "image_url": data_uri,
+                        "type": "image_url",
+                        "image_url": {"url": data_uri},
                     })
         return content
 

@@ -106,26 +106,23 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     def generate_payload(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
-        prompt = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append({"text": ele})
-            elif isinstance(ele, MLLMImage):
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"text": element})
+            elif isinstance(element, MLLMImage):
                 # Bedrock doesn't support external URLs - must convert everything to bytes
-                # Ensure base64 is loaded (handles lazy loading)
-                ele.ensure_loaded()
+                element.ensure_images_loaded()
                 
-                # Get format from mimeType
-                image_format = (ele.mimeType or "image/jpeg").split("/")[-1].upper()
+                image_format = (element.mimeType or "image/jpeg").split("/")[-1].upper()
                 image_format = "JPEG" if image_format == "JPG" else image_format
                 
-                # Decode base64 to raw bytes
                 try:
-                    image_raw_bytes = base64.b64decode(ele.dataBase64)
+                    image_raw_bytes = base64.b64decode(element.dataBase64)
                 except Exception:
-                    raise ValueError(f"Invalid base64 data in MLLMImage: {ele._id}")
+                    raise ValueError(f"Invalid base64 data in MLLMImage: {element._id}")
                 
-                prompt.append({
+                content.append({
                     "image": {
                         "format": image_format,
                         "source": {"bytes": image_raw_bytes},
@@ -133,7 +130,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 })
         
         return {
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
             "inferenceConfig": {
                 **self.generation_kwargs,
             },

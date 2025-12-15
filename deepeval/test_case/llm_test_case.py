@@ -71,6 +71,11 @@ class MLLMImage:
                 if not self._lazy_load:
                     self._load_base64(path)
             else:
+                if not self.url.startswith(('http://', 'https://')):
+                    raise ValueError(
+                        f"Invalid remote URL format: {self.url}. "
+                        "URL must start with http:// or https://"
+                    )
                 self.filename = None
                 self.mimeType = None
                 self.dataBase64 = None
@@ -78,13 +83,11 @@ class MLLMImage:
         _MLLM_IMAGE_REGISTRY[self._id] = self
 
     def _load_base64(self, path: str):
-        """Load and encode - called lazily or eagerly."""
         with open(path, "rb") as f:
             raw = f.read()
         self.dataBase64 = base64.b64encode(raw).decode("ascii")
     
-    def ensure_loaded(self):
-        """Ensure base64 is loaded before use."""
+    def ensure_images_loaded(self):
         if self.local and self.dataBase64 is None:
             path = self.process_url(self.url)
             self._load_base64(path)

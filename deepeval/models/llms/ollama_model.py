@@ -116,22 +116,16 @@ class OllamaModel(DeepEvalBaseLLM):
     def generate_messages(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
-        """
-        Converts multimodal input into Ollama-compatible messages.
-        Ollama expects base64 strings (without data URI prefix) in the 'images' array.
-        """
         messages = []
         
-        for ele in multimodal_input:
-            if isinstance(ele, str):
+        for element in multimodal_input:
+            if isinstance(element, str):
                 messages.append({
                     "role": "user",
-                    "content": ele,
+                    "content": element,
                 })
-            elif isinstance(ele, MLLMImage):
-                # For remote URLs, we still need to download
-                # Ollama SDK accepts URLs but converts them internally anyway
-                if ele.url and not ele.local:
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
                     import requests
                     from PIL import Image
                     import io
@@ -139,7 +133,7 @@ class OllamaModel(DeepEvalBaseLLM):
                     settings = get_settings()
                     try:
                         response = requests.get(
-                            ele.url,
+                            element.url,
                             stream=True,
                             timeout=(
                                 settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
@@ -163,8 +157,8 @@ class OllamaModel(DeepEvalBaseLLM):
                         print(f"Image fetch/encode failed: {e}")
                         raise
                 else:
-                    ele.ensure_loaded()
-                    img_b64 = ele.dataBase64
+                    element.ensure_images_loaded()
+                    img_b64 = element.dataBase64
                 
                 messages.append({
                     "role": "user",

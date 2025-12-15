@@ -133,14 +133,14 @@ class GPTModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            prompt = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
 
         if schema:
             if self.model_data.supports_structured_outputs:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
-                        {"role": "user", "content": prompt},
+                        {"role": "user", "content": content},
                     ],
                     response_format=schema,
                     temperature=self.temperature,
@@ -158,7 +158,7 @@ class GPTModel(DeepEvalBaseLLM):
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
-                        {"role": "user", "content": prompt},
+                        {"role": "user", "content": content},
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
@@ -175,7 +175,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         completion = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -197,14 +197,14 @@ class GPTModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            prompt = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
 
         if schema:
             if self.model_data.supports_structured_outputs:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
-                        {"role": "user", "content": prompt},
+                        {"role": "user", "content": content},
                     ],
                     response_format=schema,
                     temperature=self.temperature,
@@ -222,7 +222,7 @@ class GPTModel(DeepEvalBaseLLM):
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
-                        {"role": "user", "content": prompt},
+                        {"role": "user", "content": content},
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
@@ -239,7 +239,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         completion = await client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -267,10 +267,10 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            prompt = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
         completion = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
@@ -293,10 +293,10 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            prompt = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
         completion = await client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
@@ -316,10 +316,10 @@ class GPTModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            prompt = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
         response = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             n=n,
             temperature=temperature,
             **self.generation_kwargs,
@@ -341,29 +341,27 @@ class GPTModel(DeepEvalBaseLLM):
     # Model #
     #########
 
-    def generate_prompt(
+    def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
-        prompt = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append({"type": "text", "text": ele})
-            elif isinstance(ele, MLLMImage):
-
-                if ele.url and not ele.local:
-                    prompt.append({
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append({
                         "type": "image_url",
-                        "image_url": {"url": ele.url},
+                        "image_url": {"url": element.url},
                     })
-
                 else:
-                    ele.ensure_loaded()
-                    data_uri = f"data:{ele.mimeType};base64,{ele.dataBase64}"
-                    prompt.append({
+                    element.ensure_images_loaded()
+                    data_uri = f"data:{element.mimeType};base64,{element.dataBase64}"
+                    content.append({
                         "type": "image_url",
                         "image_url": {"url": data_uri},
                     })
-        return prompt
+        return content
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

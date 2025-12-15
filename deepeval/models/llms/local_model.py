@@ -66,7 +66,7 @@ class LocalModel(DeepEvalBaseLLM):
         
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
         else:
             content = prompt
 
@@ -92,7 +92,7 @@ class LocalModel(DeepEvalBaseLLM):
         
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_prompt(prompt)
+            content = self.generate_content(prompt)
         else:
             content = prompt
 
@@ -111,7 +111,7 @@ class LocalModel(DeepEvalBaseLLM):
         else:
             return res_content, 0.0
 
-    def generate_prompt(
+    def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
         """
@@ -119,20 +119,20 @@ class LocalModel(DeepEvalBaseLLM):
         Uses data URIs for all images since we can't guarantee local servers support URL fetching.
         """
         prompt = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append({"type": "text", "text": ele})
-            elif isinstance(ele, MLLMImage):
+        for element in multimodal_input:
+            if isinstance(element, str):
+                prompt.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
                 # For local servers, use data URIs for both remote and local images
                 # Most local servers don't support fetching external URLs
-                if ele.url and not ele.local:
+                if element.url and not element.local:
                     import requests
                     import base64
                     
                     settings = get_settings()
                     try:
                         response = requests.get(
-                            ele.url,
+                            element.url,
                             timeout=(
                                 settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
                                 settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
@@ -143,7 +143,7 @@ class LocalModel(DeepEvalBaseLLM):
                         # Get mime type from response
                         mime_type = response.headers.get(
                             "content-type", 
-                            ele.mimeType or "image/jpeg"
+                            element.mimeType or "image/jpeg"
                         )
                         
                         # Encode to base64
@@ -151,11 +151,11 @@ class LocalModel(DeepEvalBaseLLM):
                         data_uri = f"data:{mime_type};base64,{b64_data}"
                         
                     except Exception as e:
-                        raise ValueError(f"Failed to fetch remote image {ele.url}: {e}")
+                        raise ValueError(f"Failed to fetch remote image {element.url}: {e}")
                 else:
-                    ele.ensure_loaded()
-                    mime_type = ele.mimeType or "image/jpeg"
-                    data_uri = f"data:{mime_type};base64,{ele.dataBase64}"
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
+                    data_uri = f"data:{mime_type};base64,{element.dataBase64}"
                 
                 prompt.append({
                     "type": "image_url",

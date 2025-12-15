@@ -74,7 +74,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_payload_anthropic(prompt)
+            content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
 
@@ -106,7 +106,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ) -> Tuple[str, float]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_payload_anthropic(prompt)
+            content = self.generate_content(prompt)
         else:
             content = [{"type": "text", "text": prompt}]
 
@@ -133,30 +133,28 @@ class AnthropicModel(DeepEvalBaseLLM):
 
             return schema.model_validate(json_output), cost
 
-    def generate_payload_anthropic(
+    def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]]
     ):
         content = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                content.append({"type": "text", "text": ele})
-            elif isinstance(ele, MLLMImage):
-
-                if ele.url and not ele.local:
-                    if not ele.url.startswith(('http://', 'https://')):
-                        raise ValueError(f"Invalid URL: {ele.url}")
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
                     content.append({
                         "type": "image",
-                        "source": {"type": "url", "url": ele.url},
+                        "source": {"type": "url", "url": element.url},
                     })
                 else:
-                    ele.ensure_loaded()
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
                     content.append({
                         "type": "image",
                         "source": {
                             "type": "base64",
-                            "media_type": ele.mimeType,
-                            "data": ele.dataBase64,
+                            "media_type": mime_type,
+                            "data": element.dataBase64,
                         },
                     })
         return content

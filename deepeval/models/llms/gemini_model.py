@@ -146,25 +146,23 @@ class GeminiModel(DeepEvalBaseLLM):
             return False
 
     @retry_gemini
-    def generate_prompt(
+    def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
-        prompt = []
+        content = []
 
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append(ele)
-            elif isinstance(ele, MLLMImage):
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append(element)
+            elif isinstance(element, MLLMImage):
                 # Gemini doesn't support direct external URLs
                 # Must convert all images to bytes
-                
-                # For remote URLs, we need to download
-                if ele.url and not ele.local:
+                if element.url and not element.local:
                     import requests
                     settings = get_settings()
                     
                     response = requests.get(
-                        ele.url,
+                        element.url,
                         timeout=(
                             settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
                             settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
@@ -172,32 +170,29 @@ class GeminiModel(DeepEvalBaseLLM):
                     )
                     response.raise_for_status()
                     image_data = response.content
-                    
-                    # Get mime type from response or MLLMImage
                     mime_type = response.headers.get(
                         "content-type", 
-                        ele.mimeType or "image/jpeg"
+                        element.mimeType or "image/jpeg"
                     )
                 else:
-                    ele.ensure_loaded()
-                    
+                    element.ensure_images_loaded()
                     try:
-                        image_data = base64.b64decode(ele.dataBase64)
+                        image_data = base64.b64decode(element.dataBase64)
                     except Exception:
-                        raise ValueError(f"Invalid base64 data in MLLMImage: {ele._id}")
+                        raise ValueError(f"Invalid base64 data in MLLMImage: {element._id}")
                     
-                    mime_type = ele.mimeType or "image/jpeg"
+                    mime_type = element.mimeType or "image/jpeg"
                 
                 # Create Part from bytes
                 image_part = self._module.types.Part.from_bytes(
                     data=image_data, 
                     mime_type=mime_type
                 )
-                prompt.append(image_part)
+                content.append(image_part)
             else:
-                raise ValueError(f"Invalid input type: {type(ele)}")
+                raise ValueError(f"Invalid input type: {type(element)}")
         
-        return prompt
+        return content
 
     ###############################################
     # Generate functions
