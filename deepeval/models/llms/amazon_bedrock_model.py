@@ -154,25 +154,23 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         else:
             payload = self.get_converse_request_body(prompt)
 
-        try:
-            client = await self._ensure_client()
-            response = await client.converse(
-                modelId=self.get_model_name(),
-                messages=payload["messages"],
-                inferenceConfig=payload["inferenceConfig"],
-            )
-            message = response["output"]["message"]["content"][0]["text"]
-            cost = self.calculate_cost(
-                response["usage"]["inputTokens"],
-                response["usage"]["outputTokens"],
-            )
-            if schema is None:
-                return message, cost
-            else:
-                json_output = trim_and_load_json(message)
-                return schema.model_validate(json_output), cost
-        finally:
-            await self.close()
+        payload = self.get_converse_request_body(prompt)
+        client = await self._ensure_client()
+        response = await client.converse(
+            modelId=self.get_model_name(),
+            messages=payload["messages"],
+            inferenceConfig=payload["inferenceConfig"],
+        )
+        message = response["output"]["message"]["content"][0]["text"]
+        cost = self.calculate_cost(
+            response["usage"]["inputTokens"],
+            response["usage"]["outputTokens"],
+        )
+        if schema is None:
+            return message, cost
+        else:
+            json_output = trim_and_load_json(message)
+            return schema.model_validate(json_output), cost
 
     def generate_payload(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
@@ -223,10 +221,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
         # only rebuild if client is missing or the sdk retry mode changes
         if self._client is None or self._sdk_retry_mode != use_sdk:
-            # Close any previous
-            if self._client is not None:
-                await self._exit_stack.aclose()
-                self._client = None
 
             # create retry config for botocore
             retries_config = {"max_attempts": (5 if use_sdk else 1)}
