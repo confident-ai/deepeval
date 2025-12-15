@@ -81,7 +81,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-5",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=1,  # GPT-5 auto-sets to 1
             reasoning_effort="high",
             seed=123,
@@ -112,7 +117,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called without extra kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
         )
         assert output == "test response"
@@ -149,7 +159,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the parse method was called with generation_kwargs
         mock_beta.chat.completions.parse.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             response_format=SampleSchema,
             temperature=0,
             reasoning_effort="low",
@@ -200,7 +215,10 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with the correct parameters
         assert call_args["model"] == "gpt-5-nano"
         assert call_args["messages"] == [
-            {"role": "user", "content": "async test prompt"}
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "async test prompt"}],
+            }
         ]
         assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
         assert call_args["reasoning_effort"] == "medium"
@@ -249,7 +267,10 @@ class TestGPTModelCompletionKwargs:
         # Verify the parse method was called with correct parameters
         assert call_args["model"] == "gpt-4o"
         assert call_args["messages"] == [
-            {"role": "user", "content": "async test prompt"}
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "async test prompt"}],
+            }
         ]
         assert call_args["response_format"] == SampleSchema
         assert call_args["temperature"] == 0
@@ -288,7 +309,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with both method params and generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
             logprobs=True,
             top_logprobs=3,
@@ -323,7 +349,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             n=2,
             temperature=0.7,
             reasoning_effort="low",

@@ -272,6 +272,8 @@ class GPTModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         completion = client.chat.completions.create(
             model=self.name,
             messages=[{"role": "user", "content": content}],
@@ -298,6 +300,8 @@ class GPTModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         completion = await client.chat.completions.create(
             model=self.name,
             messages=[{"role": "user", "content": content}],
@@ -321,6 +325,8 @@ class GPTModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         response = client.chat.completions.create(
             model=self.name,
             messages=[{"role": "user", "content": content}],
