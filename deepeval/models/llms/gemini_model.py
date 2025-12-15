@@ -112,7 +112,10 @@ class GeminiModel(DeepEvalBaseLLM):
 
         # Raw kwargs destined for the underlying Client
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
 
         self._module = self._require_module()
         # Configure default model generation settings
@@ -303,20 +306,27 @@ class GeminiModel(DeepEvalBaseLLM):
     # Capabilities          #
     #########################
 
-    def supports_structured_outputs(self) -> bool:
-        """
-        Gemini via google-genai supports typed structured outputs via
-        GenerateContentConfig(response_schema=...).
-        Our generate(...) already uses this when a schema is provided.
-        """
-        return True
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
 
-    def supports_json_mode(self) -> bool:
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
         """
-        Gemini does not have a separate 'JSON mode' flag like OpenAI.
-        The structured-output path *is* its JSON-enforced mechanism.
+        OpenAI models that natively enforce typed structured outputs.
+         Used by generate(...) when a schema is provided.
         """
-        return False
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        """
+        OpenAI models that enforce JSON mode
+        """
+        return self.model_data.supports_json
 
     #########
     # Model #
@@ -395,9 +405,6 @@ class GeminiModel(DeepEvalBaseLLM):
             client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Gemini)"
