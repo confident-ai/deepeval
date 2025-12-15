@@ -141,56 +141,25 @@ class AnthropicModel(DeepEvalBaseLLM):
             if isinstance(ele, str):
                 content.append({"type": "text", "text": ele})
             elif isinstance(ele, MLLMImage):
-                image_format, image_raw_bytes = self._parse_image(ele)
-                content.append(
-                    {
+
+                if ele.url and not ele.local:
+                    if not ele.url.startswith(('http://', 'https://')):
+                        raise ValueError(f"Invalid URL: {ele.url}")
+                    content.append({
+                        "type": "image",
+                        "source": {"type": "url", "url": ele.url},
+                    })
+                else:
+                    ele.ensure_loaded()
+                    content.append({
                         "type": "image",
                         "source": {
                             "type": "base64",
-                            "media_type": f"image/{image_format}",
-                            "data": base64.b64encode(image_raw_bytes).decode(
-                                "utf-8"
-                            ),
+                            "media_type": ele.mimeType,
+                            "data": ele.dataBase64,
                         },
-                    }
-                )
+                    })
         return content
-
-    def _parse_image(self, image: MLLMImage):
-        if image.dataBase64:
-            fmt = (image.mimeType or "image/jpeg").split("/")[-1]
-            try:
-                raw_bytes = base64.b64decode(image.dataBase64)
-            except Exception:
-                raise ValueError("Invalid base64 in MLLMImage.dataBase64")
-            return fmt, raw_bytes
-        if image.local and image.filename:
-            import PIL.Image
-            from io import BytesIO
-
-            img = PIL.Image.open(image.filename)
-            if img.mode in ("RGBA", "LA", "P"):
-                img = img.convert("RGB")
-            buf = BytesIO()
-            fmt = (image.mimeType or "image/jpeg").split("/")[-1].lower()
-            fmt = "jpeg" if fmt == "jpg" else fmt
-            img.save(buf, format=fmt)
-            raw_bytes = buf.getvalue()
-            return fmt, raw_bytes
-        if image.url:
-            import requests
-
-            resp = requests.get(image.url)
-            resp.raise_for_status()
-            raw_bytes = resp.content
-            mime = resp.headers.get(
-                "content-type", image.mimeType or "image/jpeg"
-            )
-            fmt = mime.split("/")[-1]
-            return fmt, raw_bytes
-        raise ValueError(
-            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
-        )
 
     ###############################################
     # Utilities

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
@@ -14,6 +14,8 @@ from deepeval.models.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 
 
 # consistent retry rules
@@ -35,7 +37,6 @@ class LocalModel(DeepEvalBaseLLM):
 
         model = model or settings.LOCAL_MODEL_NAME
         if api_key is not None:
-            # keep it secret, keep it safe from serializings, logging and alike
             self.local_model_api_key: SecretStr | None = SecretStr(api_key)
         else:
             self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
@@ -49,24 +50,30 @@ class LocalModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        # Keep sanitized kwargs for client call to strip legacy keys
+
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model)
 
     ###############################################
-    # Other generate functions
+    # Generate functions
     ###############################################
 
     @retry_local
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_prompt(prompt)
+        else:
+            content = prompt
 
         client = self.load_model(async_mode=False)
         response: ChatCompletion = client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -82,11 +89,17 @@ class LocalModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_prompt(prompt)
+        else:
+            content = prompt
 
         client = self.load_model(async_mode=True)
         response: ChatCompletion = await client.chat.completions.create(
             model=self.name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": content}],
             temperature=self.temperature,
             **self.generation_kwargs,
         )
@@ -98,12 +111,67 @@ class LocalModel(DeepEvalBaseLLM):
         else:
             return res_content, 0.0
 
+    def generate_prompt(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        """
+        Converts multimodal input into OpenAI-compatible format.
+        Uses data URIs for all images since we can't guarantee local servers support URL fetching.
+        """
+        prompt = []
+        for ele in multimodal_input:
+            if isinstance(ele, str):
+                prompt.append({"type": "text", "text": ele})
+            elif isinstance(ele, MLLMImage):
+                # For local servers, use data URIs for both remote and local images
+                # Most local servers don't support fetching external URLs
+                if ele.url and not ele.local:
+                    import requests
+                    import base64
+                    
+                    settings = get_settings()
+                    try:
+                        response = requests.get(
+                            ele.url,
+                            timeout=(
+                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                            ),
+                        )
+                        response.raise_for_status()
+                        
+                        # Get mime type from response
+                        mime_type = response.headers.get(
+                            "content-type", 
+                            ele.mimeType or "image/jpeg"
+                        )
+                        
+                        # Encode to base64
+                        b64_data = base64.b64encode(response.content).decode("utf-8")
+                        data_uri = f"data:{mime_type};base64,{b64_data}"
+                        
+                    except Exception as e:
+                        raise ValueError(f"Failed to fetch remote image {ele.url}: {e}")
+                else:
+                    ele.ensure_loaded()
+                    mime_type = ele.mimeType or "image/jpeg"
+                    data_uri = f"data:{mime_type};base64,{ele.dataBase64}"
+                
+                prompt.append({
+                    "type": "image_url",
+                    "image_url": {"url": data_uri},
+                })
+        return prompt
+
     ###############################################
     # Model
     ###############################################
 
     def get_model_name(self):
         return f"{self.name} (Local Model)"
+
+    def supports_multimodal(self):
+        return True
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

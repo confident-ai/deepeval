@@ -349,32 +349,21 @@ class GPTModel(DeepEvalBaseLLM):
             if isinstance(ele, str):
                 prompt.append({"type": "text", "text": ele})
             elif isinstance(ele, MLLMImage):
-                if ele.local:
-                    import PIL.Image
 
-                    image = PIL.Image.open(ele.url)
-                    visual_dict = {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{self.encode_pil_image(image)}"
-                        },
-                    }
-                else:
-                    visual_dict = {
+                if ele.url and not ele.local:
+                    prompt.append({
                         "type": "image_url",
                         "image_url": {"url": ele.url},
-                    }
-                prompt.append(visual_dict)
-        return prompt
+                    })
 
-    def encode_pil_image(self, pil_image):
-        image_buffer = BytesIO()
-        if pil_image.mode in ("RGBA", "LA", "P"):
-            pil_image = pil_image.convert("RGB")
-        pil_image.save(image_buffer, format="JPEG")
-        image_bytes = image_buffer.getvalue()
-        base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
-        return base64_encoded_image
+                else:
+                    ele.ensure_loaded()
+                    data_uri = f"data:{ele.mimeType};base64,{ele.dataBase64}"
+                    prompt.append({
+                        "type": "image_url",
+                        "image_url": {"url": data_uri},
+                    })
+        return prompt
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

@@ -1,5 +1,5 @@
 import json
-import requests
+import base64
 from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union
 
@@ -148,29 +148,21 @@ class GeminiModel(DeepEvalBaseLLM):
     @retry_gemini
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ) -> List[Union[str, MLLMImage]]:
-        """Converts DeepEval multimodal input into GenAI SDK compatible format.
-
-        Args:
-            multimodal_input: List of strings and MLLMImage objects
-
-        Returns:
-            List of strings and PIL Image objects ready for model input
-
-        Raises:
-            ValueError: If an invalid input type is provided
-        """
+    ):
         prompt = []
-        settings = get_settings()
 
         for ele in multimodal_input:
             if isinstance(ele, str):
                 prompt.append(ele)
             elif isinstance(ele, MLLMImage):
-                if ele.local:
-                    with open(ele.url, "rb") as f:
-                        image_data = f.read()
-                else:
+                # Gemini doesn't support direct external URLs
+                # Must convert all images to bytes
+                
+                # For remote URLs, we need to download
+                if ele.url and not ele.local:
+                    import requests
+                    settings = get_settings()
+                    
                     response = requests.get(
                         ele.url,
                         timeout=(
@@ -180,13 +172,31 @@ class GeminiModel(DeepEvalBaseLLM):
                     )
                     response.raise_for_status()
                     image_data = response.content
-
+                    
+                    # Get mime type from response or MLLMImage
+                    mime_type = response.headers.get(
+                        "content-type", 
+                        ele.mimeType or "image/jpeg"
+                    )
+                else:
+                    ele.ensure_loaded()
+                    
+                    try:
+                        image_data = base64.b64decode(ele.dataBase64)
+                    except Exception:
+                        raise ValueError(f"Invalid base64 data in MLLMImage: {ele._id}")
+                    
+                    mime_type = ele.mimeType or "image/jpeg"
+                
+                # Create Part from bytes
                 image_part = self._module.types.Part.from_bytes(
-                    data=image_data, mime_type="image/jpeg"
+                    data=image_data, 
+                    mime_type=mime_type
                 )
                 prompt.append(image_part)
             else:
                 raise ValueError(f"Invalid input type: {type(ele)}")
+        
         return prompt
 
     ###############################################

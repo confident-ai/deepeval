@@ -106,44 +106,25 @@ class PortkeyModel(DeepEvalBaseLLM):
             if isinstance(ele, str):
                 content.append({"type": "text", "text": ele})
             elif isinstance(ele, MLLMImage):
-                mime, raw_bytes = self._parse_image(ele)
-                b64 = base64.b64encode(raw_bytes).decode("utf-8")
-                content.append(
-                    {"type": "image", "image_url": f"data:{mime};base64,{b64}"}
-                )
+                if ele.url and not ele.local:
+                    if not ele.url.startswith(('http://', 'https://')):
+                        raise ValueError(
+                            f"Invalid remote URL format: {ele.url}. "
+                            "URL must start with http:// or https://"
+                        )
+                    content.append({
+                        "type": "image",
+                        "image_url": ele.url,
+                    })
+                else:
+                    ele.ensure_loaded()
+                    mime_type = ele.mimeType or "image/jpeg"
+                    data_uri = f"data:{mime_type};base64,{ele.dataBase64}"
+                    content.append({
+                        "type": "image",
+                        "image_url": data_uri,
+                    })
         return content
-
-    def _parse_image(self, image: MLLMImage):
-        if image.dataBase64:
-            mime = image.mimeType or "image/jpeg"
-            return mime, base64.b64decode(image.dataBase64)
-
-        if image.local and image.filename:
-            from PIL import Image
-            from io import BytesIO
-
-            img = Image.open(image.filename)
-            if img.mode in ("RGBA", "LA", "P"):
-                img = img.convert("RGB")
-            buf = BytesIO()
-            fmt = (image.mimeType or "image/jpeg").split("/")[-1].lower()
-            fmt = "jpeg" if fmt == "jpg" else fmt
-            img.save(buf, format=fmt.upper())
-            return f"image/{fmt}", buf.getvalue()
-
-        if image.url:
-            import requests
-
-            resp = requests.get(image.url)
-            resp.raise_for_status()
-            mime = resp.headers.get(
-                "content-type", image.mimeType or "image/jpeg"
-            )
-            return mime, resp.content
-
-        raise ValueError(
-            "MLLMImage must contain dataBase64, or (local=True + filename), or url."
-        )
 
     def _extract_content(self, data: Dict[str, Any]) -> str:
         choices: Union[List[Dict[str, Any]], None] = data.get("choices")
