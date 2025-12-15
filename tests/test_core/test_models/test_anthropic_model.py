@@ -30,6 +30,8 @@ def test_anthropic_model_accepts_legacy_anthropic_api_key_keyword_and_uses_it(
     # Put ANTHROPIC_API_KEY into the process env so Settings sees it
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "env-secret-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
 
     # rebuild the Settings singleton from the current env
     reset_settings(reload_dotenv=False)
@@ -77,6 +79,8 @@ def test_anthropic_model_uses_explicit_key_over_settings_and_strips_secret(
     # Put ANTHROPIC_API_KEY into the process env so Settings sees it
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "env-secret-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
 
     # rebuild the Settings singleton from the current env
     reset_settings(reload_dotenv=False)
@@ -117,6 +121,8 @@ def test_anthropic_model_uses_settings_key_when_no_explicit_key(
     # Ensure env has a key
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "env-only-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
 
     reset_settings(reload_dotenv=False)
 
@@ -144,6 +150,9 @@ def test_anthropic_model_uses_explicit_key_when_settings_missing(
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     reset_settings(reload_dotenv=False)
     settings = get_settings()
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
     assert settings.ANTHROPIC_API_KEY is None
 
     fake_anthropic_module = SimpleNamespace(
@@ -167,6 +176,11 @@ def test_anthropic_model_raises_when_no_key_configured(
 ):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     reset_settings(reload_dotenv=False)
+    settings = get_settings()
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
     assert get_settings().ANTHROPIC_API_KEY is None
 
     fake_anthropic_module = SimpleNamespace(
@@ -189,6 +203,11 @@ def test_anthropic_model_raises_when_explicit_key_empty(
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     reset_settings(reload_dotenv=False)
 
+    settings = get_settings()
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
     fake_anthropic_module = SimpleNamespace(
         Anthropic=_RecordingClient,
         AsyncAnthropic=_RecordingClient,
@@ -209,6 +228,8 @@ def test_anthropic_model_raises_when_settings_key_empty(
 ):
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = ""
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
     reset_settings(reload_dotenv=False)
     # pydantic will treat this as SecretStr(""), which is what we want to test
     assert isinstance(settings.ANTHROPIC_API_KEY, SecretStr)

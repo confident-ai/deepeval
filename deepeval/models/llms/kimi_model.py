@@ -10,6 +10,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
+    require_costs,
     require_secret_api_key,
 )
 from deepeval.test_case import MLLMImage
@@ -17,7 +18,7 @@ from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import KIMI_MODELS_DATA
-from deepeval.utils import require_param, require_costs
+from deepeval.utils import require_param
 
 retry_kimi = create_retry_decorator(PS.KIMI)
 
