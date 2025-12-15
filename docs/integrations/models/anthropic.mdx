@@ -34,11 +34,13 @@ model = AnthropicModel(
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
-There are **ZERO** mandatory and **FOUR** optional parameters when creating an `AnthropicModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-anthropic) for the Anthropic-related environment variables:
+There are **ZERO** mandatory and **SIX** optional parameters when creating an `AnthropicModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-anthropic) for the Anthropic-related environment variables:
 
 - [Optional] `model`: A string specifying which Claude model to use. Defaults to `ANTHROPIC_MODEL_NAME` if not passed; falls back to `claude-3-7-sonnet-latest` if unset.
 - [Optional] `api_key`: A string specifying your Anthropic API key. Defaults to `ANTHROPIC_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset and raises if < 0.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `ANTHROPIC_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `ANTHROPIC_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Anthropic `messages.create(...)` call.
 
 :::tip

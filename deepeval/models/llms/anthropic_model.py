@@ -1,5 +1,3 @@
-import warnings
-
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 
@@ -11,6 +9,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.utils import (
+    require_costs,
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
@@ -37,6 +36,8 @@ class AnthropicModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -66,6 +67,17 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             temperature = 0.0
 
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.ANTHROPIC_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN
+        )
+
         # Validation
         model = require_param(
             model,
@@ -79,6 +91,17 @@ class AnthropicModel(DeepEvalBaseLLM):
         self.temperature = temperature
 
         self.model_data = ANTHROPIC_MODELS_DATA.get(model)
+
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "ANTHROPIC_COST_PER_INPUT_TOKEN",
+            "ANTHROPIC_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
 
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
@@ -204,30 +227,6 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-
-        if (
-            self.model_data.input_price is None
-            or self.model_data.output_price is None
-        ):
-            models_data_values = [
-                ANTHROPIC_MODELS_DATA[k] for k in ANTHROPIC_MODELS_DATA.keys()
-            ]
-
-            # Calculate average cost from all known models
-            avg_input_cost = sum(
-                model.input_price for model in models_data_values
-            ) / len(models_data_values)
-            avg_output_cost = sum(
-                model.output_price for model in models_data_values
-            ) / len(models_data_values)
-            self.model_data.input_price = avg_input_cost
-            self.model_data.output_price = avg_output_cost
-
-            warnings.warn(
-                f"[Warning] Pricing not defined for model '{self.name}'. "
-                "Using average input/output token costs from existing model_pricing."
-            )
-
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost

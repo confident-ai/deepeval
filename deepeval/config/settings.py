@@ -319,6 +319,9 @@ class Settings(BaseSettings):
     # Anthropic
     ANTHROPIC_API_KEY: Optional[SecretStr] = None
     ANTHROPIC_MODEL_NAME: Optional[str] = None
+    ANTHROPIC_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
+    ANTHROPIC_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
+
     # AWS
     AWS_ACCESS_KEY_ID: Optional[SecretStr] = None
     AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = None
