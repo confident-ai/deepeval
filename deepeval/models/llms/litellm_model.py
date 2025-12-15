@@ -117,7 +117,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
         super().__init__(model)
 
