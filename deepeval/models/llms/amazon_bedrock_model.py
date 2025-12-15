@@ -20,6 +20,7 @@ from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
+    require_costs,
     normalize_kwargs_and_extract_aliases,
 )
 
@@ -125,8 +126,17 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             param_hint="region_name",
         )
 
-        # Final attributes
         self.model_data = BEDROCK_MODELS_DATA.get(model)
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
+            "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+
+        # Final attributes
         self.region_name = region_name
         self.cost_per_input_token = float(cost_per_input_token or 0.0)
         self.cost_per_output_token = float(cost_per_output_token or 0.0)

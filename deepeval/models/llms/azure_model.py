@@ -23,6 +23,7 @@ from deepeval.models.llms.utils import (
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
+    require_costs,
     normalize_kwargs_and_extract_aliases,
 )
 from deepeval.constants import ProviderSlug as PS
@@ -126,28 +127,17 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             param_hint="openai_api_version",
         )
 
-        if cost_per_input_token is not None and float(cost_per_input_token) < 0:
-            raise DeepEvalError("cost_per_input_token must be >= 0.")
-        if (
-            cost_per_output_token is not None
-            and float(cost_per_output_token) < 0
-        ):
-            raise DeepEvalError("cost_per_output_token must be >= 0.")
-
         self.model_data = OPENAI_MODELS_DATA.get(model)
-        if (
-            self.model_data.input_price is None
-            or self.model_data.output_price is None
-        ):
-            if cost_per_input_token is None or cost_per_output_token is None:
-                raise DeepEvalError(
-                    f"No pricing available for `{model}`. "
-                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `AzureOpenAIModel`, "
-                    "or set `OPENAI_COST_PER_INPUT_TOKEN` and `OPENAI_COST_PER_OUTPUT_TOKEN` environment variables."
-                )
-
-            self.model_data.input_price = float(cost_per_input_token)
-            self.model_data.output_price = float(cost_per_output_token)
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "OPENAI_COST_PER_INPUT_TOKEN",
+            "OPENAI_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
 
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
