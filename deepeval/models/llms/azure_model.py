@@ -42,6 +42,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         deployment_name: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
@@ -54,7 +56,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             _ALIAS_MAP,
         )
 
-        # re-map depricated keywords to re-named positional args
+        # re-map deprecated keywords to re-named positional args
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
         if base_url is None and "base_url" in alias_values:
@@ -83,6 +85,17 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature = settings.TEMPERATURE
         else:
             temperature = 0.0
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.OPENAI_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.OPENAI_COST_PER_OUTPUT_TOKEN
+        )
 
         # validation
         model = require_param(
@@ -113,15 +126,44 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             param_hint="openai_api_version",
         )
 
+        if cost_per_input_token is not None and float(cost_per_input_token) < 0:
+            raise DeepEvalError("cost_per_input_token must be >= 0.")
+        if (
+            cost_per_output_token is not None
+            and float(cost_per_output_token) < 0
+        ):
+            raise DeepEvalError("cost_per_output_token must be >= 0.")
+
+        self.model_data = OPENAI_MODELS_DATA.get(model)
+        if (
+            self.model_data.input_price is None
+            or self.model_data.output_price is None
+        ):
+            if cost_per_input_token is None or cost_per_output_token is None:
+                raise DeepEvalError(
+                    f"No pricing available for `{model}`. "
+                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `AzureOpenAIModel`, "
+                    "or set `OPENAI_COST_PER_INPUT_TOKEN` and `OPENAI_COST_PER_OUTPUT_TOKEN` environment variables."
+                )
+
+            self.model_data.input_price = float(cost_per_input_token)
+            self.model_data.output_price = float(cost_per_output_token)
+
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
-        self.model_data = OPENAI_MODELS_DATA.get(model)
-
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+
         super().__init__(parse_model_name(model))
 
     ###############################################
@@ -147,6 +189,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -164,6 +207,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -211,6 +255,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -319,8 +364,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return completion, cost
 
     def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
     ):
+        multimodal_input = [] if multimodal_input is None else multimodal_input
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
@@ -354,6 +400,25 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         input_cost = input_tokens * self.model_data.input_price
         output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
+
+    #########################
+    # Capabilities          #
+    #########################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
 
     ###############################################
     # Model
@@ -398,9 +463,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Azure)"
