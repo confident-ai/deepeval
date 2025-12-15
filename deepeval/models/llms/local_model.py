@@ -46,10 +46,11 @@ class LocalModel(DeepEvalBaseLLM):
         else:
             self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
 
+        base_url = (
+            base_url if base_url is not None else settings.LOCAL_MODEL_BASE_URL
+        )
         self.base_url = (
-            base_url
-            or settings.LOCAL_MODEL_BASE_URL
-            and str(settings.LOCAL_MODEL_BASE_URL)
+            str(base_url).rstrip("/") if base_url is not None else None
         )
         self.format = format or settings.LOCAL_MODEL_FORMAT
 

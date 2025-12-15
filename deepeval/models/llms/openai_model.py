@@ -89,7 +89,9 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.OPENAI_API_KEY
 
-        self.base_url = base_url
+        self.base_url = (
+            str(base_url).rstrip("/") if base_url is not None else None
+        )
         # args and kwargs will be passed to the underlying model, in load_model function
 
         if temperature is not None:

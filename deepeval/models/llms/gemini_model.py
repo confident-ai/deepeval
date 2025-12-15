@@ -64,7 +64,7 @@ class GeminiModel(DeepEvalBaseLLM):
         temperature: Optional[float] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        service_account_key: Optional[Dict[str, str]] = None,
+        service_account_key: Optional[Union[str, Dict[str, str]]] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -89,21 +89,24 @@ class GeminiModel(DeepEvalBaseLLM):
             temperature = 0.0
 
         self.project = project or settings.GOOGLE_CLOUD_PROJECT
-        self.location = (
-            location
-            or settings.GOOGLE_CLOUD_LOCATION is not None
-            and str(settings.GOOGLE_CLOUD_LOCATION)
+        location = (
+            location if location is not None else settings.GOOGLE_CLOUD_LOCATION
         )
+        self.location = str(location).strip() if location is not None else None
         self.use_vertexai = settings.GOOGLE_GENAI_USE_VERTEXAI
 
-        if service_account_key:
-            self.service_account_key = service_account_key
+        self.service_account_key: Optional[SecretStr] = None
+        if service_account_key is None:
+            self.service_account_key = settings.GOOGLE_SERVICE_ACCOUNT_KEY
+        elif isinstance(service_account_key, dict):
+            self.service_account_key = SecretStr(
+                json.dumps(service_account_key)
+            )
         else:
-            service_account_key_data = settings.GOOGLE_SERVICE_ACCOUNT_KEY
-            if service_account_key_data is None:
-                self.service_account_key = None
-            elif isinstance(service_account_key_data, str):
-                self.service_account_key = json.loads(service_account_key_data)
+            str_value = str(service_account_key).strip()
+            self.service_account_key = (
+                SecretStr(str_value) if str_value else None
+            )
 
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
@@ -151,7 +154,7 @@ class GeminiModel(DeepEvalBaseLLM):
             True if the model should use Vertex AI, False otherwise
         """
         if self.use_vertexai is not None:
-            return self.use_vertexai.lower() == "yes"
+            return self.use_vertexai
         if self.project and self.location:
             return True
         else:
@@ -159,7 +162,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = None
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
     ):
         multimodal_input = (
             multimodal_input if multimodal_input is not None else []
@@ -368,6 +371,25 @@ class GeminiModel(DeepEvalBaseLLM):
         client_kwargs = self._client_kwargs(**self.kwargs)
 
         if self.should_use_vertexai():
+            service_account_key_json = require_secret_api_key(
+                self.service_account_key,
+                provider_label="Google Gemini",
+                env_var_name="GOOGLE_SERVICE_ACCOUNT_KEY",
+                param_hint="`service_account_key` to GeminiModel(...)",
+            )
+
+            try:
+                service_account_key = json.loads(service_account_key_json)
+            except Exception as e:
+                raise DeepEvalError(
+                    "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
+                ) from e
+
+            if not isinstance(service_account_key, dict):
+                raise DeepEvalError(
+                    "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
+                )
+
             if not self.project or not self.location:
                 raise DeepEvalError(
                     "When using Vertex AI API, both project and location are required. "
@@ -378,12 +400,12 @@ class GeminiModel(DeepEvalBaseLLM):
             oauth2 = self._require_oauth2()
             credentials = (
                 oauth2.service_account.Credentials.from_service_account_info(
-                    self.service_account_key,
+                    service_account_key,
                     scopes=[
                         "https://www.googleapis.com/auth/cloud-platform",
                     ],
                 )
-                if self.service_account_key
+                if service_account_key
                 else None
             )
 

@@ -74,11 +74,10 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
         openai_api_version = openai_api_version or settings.OPENAI_API_VERSION
-        base_url = (
-            base_url
-            or settings.AZURE_OPENAI_ENDPOINT
-            and str(settings.AZURE_OPENAI_ENDPOINT)
-        )
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.AZURE_OPENAI_ENDPOINT is not None:
+            base_url = str(settings.AZURE_OPENAI_ENDPOINT).rstrip("/")
 
         if temperature is not None:
             temperature = float(temperature)

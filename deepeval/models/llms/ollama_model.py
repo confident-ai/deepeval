@@ -32,14 +32,13 @@ class OllamaModel(DeepEvalBaseLLM):
         settings = get_settings()
         model = model or settings.OLLAMA_MODEL_NAME
         self.model_data = OLLAMA_MODELS_DATA.get(model)
-        self.base_url = (
-            base_url
-            or (
-                settings.LOCAL_MODEL_BASE_URL
-                and str(settings.LOCAL_MODEL_BASE_URL)
-            )
-            or "http://localhost:11434"
-        )
+
+        if base_url is not None:
+            self.base_url = str(base_url).rstrip("/")
+        elif settings.LOCAL_MODEL_BASE_URL is not None:
+            self.base_url = str(settings.LOCAL_MODEL_BASE_URL).rstrip("/")
+        else:
+            self.base_url = "http://localhost:11434"
 
         if temperature is not None:
             temperature = float(temperature)

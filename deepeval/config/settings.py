@@ -352,7 +352,7 @@ class Settings(BaseSettings):
     GOOGLE_GENAI_USE_VERTEXAI: Optional[bool] = None
     GOOGLE_CLOUD_PROJECT: Optional[str] = None
     GOOGLE_CLOUD_LOCATION: Optional[str] = None
-    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[str] = None
+    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[SecretStr] = None
     # Grok
     USE_GROK_MODEL: Optional[bool] = None
     GROK_API_KEY: Optional[SecretStr] = None

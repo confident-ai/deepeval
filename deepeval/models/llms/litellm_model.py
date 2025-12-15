@@ -83,7 +83,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
             )
 
         # Get API base from parameter, key file, or environment variable
-        self.base_url = (
+        base_url = (
             base_url
             or (
                 str(settings.LITELLM_API_BASE)
@@ -95,6 +95,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 if settings.LITELLM_PROXY_API_BASE is not None
                 else None
             )
+        )
+        self.base_url = (
+            str(base_url).rstrip("/") if base_url is not None else None
         )
 
         if temperature is not None:
