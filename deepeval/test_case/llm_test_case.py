@@ -62,7 +62,7 @@ class MLLMImage:
                 path = self.process_url(self.url)
                 self.filename = os.path.basename(path)
                 self.mimeType = (
-                    mimetypes.guess_type(path)[0] or "application/octet-stream"
+                    mimetypes.guess_type(path)[0] or "image/jpeg"
                 )
 
                 if not os.path.exists(path):
@@ -73,8 +73,7 @@ class MLLMImage:
             else:
                 if not self.url.startswith(("http://", "https://")):
                     raise ValueError(
-                        f"Invalid remote URL format: {self.url}. "
-                        "URL must start with http:// or https://"
+                        f"Invalid remote URL format: {self.url}. URL must start with http:// or https://"
                     )
                 self.filename = None
                 self.mimeType = None

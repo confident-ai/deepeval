@@ -134,6 +134,8 @@ class GPTModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -198,6 +200,8 @@ class GPTModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         if schema:
             if self.model_data.supports_structured_outputs:

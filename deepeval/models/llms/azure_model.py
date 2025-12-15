@@ -98,8 +98,10 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=False)
 
         if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
+            prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -160,8 +162,10 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         client = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
+            prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -232,6 +236,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -258,6 +264,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],

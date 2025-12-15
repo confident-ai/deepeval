@@ -213,9 +213,8 @@ class GeminiModel(DeepEvalBaseLLM):
         client = self.load_model()
 
         if check_if_multimodal(prompt):
-
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = client.models.generate_content(
@@ -259,7 +258,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = await client.aio.models.generate_content(
