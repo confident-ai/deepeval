@@ -108,6 +108,14 @@ class GPTModel(DeepEvalBaseLLM):
             temperature = 1
 
         # validation
+        if cost_per_input_token is not None and float(cost_per_input_token) < 0:
+            raise DeepEvalError("cost_per_input_token must be >= 0.")
+        if (
+            cost_per_output_token is not None
+            and float(cost_per_output_token) < 0
+        ):
+            raise DeepEvalError("cost_per_output_token must be >= 0.")
+
         if (
             self.model_data.input_price is None
             or self.model_data.output_price is None
@@ -117,8 +125,7 @@ class GPTModel(DeepEvalBaseLLM):
                 raise DeepEvalError(
                     f"No pricing available for `{model}`. "
                     "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
-                    "or set them via the CLI:\n"
-                    "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
+                    "or set `OPENAI_COST_PER_INPUT_TOKEN` and `OPENAI_COST_PER_OUTPUT_TOKEN` environment variables."
                 )
 
             self.model_data.input_price = float(cost_per_input_token)
@@ -130,7 +137,7 @@ class GPTModel(DeepEvalBaseLLM):
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.generation_kwargs = dict(generation_kwargs or {})
         super().__init__(model)
 
     ######################
@@ -411,8 +418,9 @@ class GPTModel(DeepEvalBaseLLM):
     #########
 
     def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
     ):
+        multimodal_input = [] if multimodal_input is None else multimodal_input
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
