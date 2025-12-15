@@ -1,9 +1,7 @@
-import base64
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, Tuple, Union, Dict, List
 from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
-from io import BytesIO
 from openai import (
     OpenAI,
     AsyncOpenAI,

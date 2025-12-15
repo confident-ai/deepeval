@@ -1,9 +1,7 @@
-import base64
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
-from io import BytesIO
 
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM

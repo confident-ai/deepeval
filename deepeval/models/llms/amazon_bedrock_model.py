@@ -2,7 +2,6 @@ import base64
 from typing import Optional, Tuple, Union, Dict, List
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
-from io import BytesIO
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,

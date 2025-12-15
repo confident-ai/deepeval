@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
-import requests
 import base64
-import io
 
 from deepeval.config.settings import get_settings
 from deepeval.utils import require_dependency

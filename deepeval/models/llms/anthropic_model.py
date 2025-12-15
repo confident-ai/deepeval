@@ -2,7 +2,6 @@ import warnings
 
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
-import base64
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (

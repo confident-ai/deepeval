@@ -2,7 +2,6 @@ import aiohttp
 import requests
 from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyUrl, SecretStr
-import base64
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,

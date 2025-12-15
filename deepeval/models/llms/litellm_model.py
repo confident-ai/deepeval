@@ -8,7 +8,6 @@ from tenacity import (
     wait_exponential_jitter,
     RetryCallState,
 )
-import base64
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
