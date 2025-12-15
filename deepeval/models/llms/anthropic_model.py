@@ -92,7 +92,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     @retry_anthropic
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
@@ -124,7 +124,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     @retry_anthropic
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)

@@ -83,7 +83,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
@@ -109,7 +109,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
