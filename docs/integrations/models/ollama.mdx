@@ -72,7 +72,7 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 
 There is **ONE** mandatory parameter and **THREE** optional parameters when creating an `OllamaModel`:
 
-- `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; falls back to `http://localhost:11434` if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Ollama’s `chat(..., options={...})` call.
