@@ -113,22 +113,28 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             elif isinstance(element, MLLMImage):
                 # Bedrock doesn't support external URLs - must convert everything to bytes
                 element.ensure_images_loaded()
-                
-                image_format = (element.mimeType or "image/jpeg").split("/")[-1].upper()
+
+                image_format = (
+                    (element.mimeType or "image/jpeg").split("/")[-1].upper()
+                )
                 image_format = "JPEG" if image_format == "JPG" else image_format
-                
+
                 try:
                     image_raw_bytes = base64.b64decode(element.dataBase64)
                 except Exception:
-                    raise ValueError(f"Invalid base64 data in MLLMImage: {element._id}")
-                
-                content.append({
-                    "image": {
-                        "format": image_format,
-                        "source": {"bytes": image_raw_bytes},
+                    raise ValueError(
+                        f"Invalid base64 data in MLLMImage: {element._id}"
+                    )
+
+                content.append(
+                    {
+                        "image": {
+                            "format": image_format,
+                            "source": {"bytes": image_raw_bytes},
+                        }
                     }
-                })
-        
+                )
+
         return {
             "messages": [{"role": "user", "content": content}],
             "inferenceConfig": {

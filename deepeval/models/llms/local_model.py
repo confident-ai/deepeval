@@ -63,7 +63,7 @@ class LocalModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        
+
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
@@ -89,7 +89,7 @@ class LocalModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        
+
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
@@ -128,7 +128,7 @@ class LocalModel(DeepEvalBaseLLM):
                 if element.url and not element.local:
                     import requests
                     import base64
-                    
+
                     settings = get_settings()
                     try:
                         response = requests.get(
@@ -139,28 +139,33 @@ class LocalModel(DeepEvalBaseLLM):
                             ),
                         )
                         response.raise_for_status()
-                        
+
                         # Get mime type from response
                         mime_type = response.headers.get(
-                            "content-type", 
-                            element.mimeType or "image/jpeg"
+                            "content-type", element.mimeType or "image/jpeg"
                         )
-                        
+
                         # Encode to base64
-                        b64_data = base64.b64encode(response.content).decode("utf-8")
+                        b64_data = base64.b64encode(response.content).decode(
+                            "utf-8"
+                        )
                         data_uri = f"data:{mime_type};base64,{b64_data}"
-                        
+
                     except Exception as e:
-                        raise ValueError(f"Failed to fetch remote image {element.url}: {e}")
+                        raise ValueError(
+                            f"Failed to fetch remote image {element.url}: {e}"
+                        )
                 else:
                     element.ensure_images_loaded()
                     mime_type = element.mimeType or "image/jpeg"
                     data_uri = f"data:{mime_type};base64,{element.dataBase64}"
-                
-                prompt.append({
-                    "type": "image_url",
-                    "image_url": {"url": data_uri},
-                })
+
+                prompt.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": data_uri},
+                    }
+                )
         return prompt
 
     ###############################################

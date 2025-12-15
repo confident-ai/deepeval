@@ -117,19 +117,21 @@ class OllamaModel(DeepEvalBaseLLM):
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
         messages = []
-        
+
         for element in multimodal_input:
             if isinstance(element, str):
-                messages.append({
-                    "role": "user",
-                    "content": element,
-                })
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": element,
+                    }
+                )
             elif isinstance(element, MLLMImage):
                 if element.url and not element.local:
                     import requests
                     from PIL import Image
                     import io
-                    
+
                     settings = get_settings()
                     try:
                         response = requests.get(
@@ -141,30 +143,32 @@ class OllamaModel(DeepEvalBaseLLM):
                             ),
                         )
                         response.raise_for_status()
-                        
+
                         # Convert to JPEG and encode
                         image = Image.open(io.BytesIO(response.content))
                         buffered = io.BytesIO()
-                        
+
                         # Convert RGBA/LA/P to RGB for JPEG
                         if image.mode in ("RGBA", "LA", "P"):
                             image = image.convert("RGB")
-                        
+
                         image.save(buffered, format="JPEG")
                         img_b64 = base64.b64encode(buffered.getvalue()).decode()
-                        
+
                     except (requests.exceptions.RequestException, OSError) as e:
                         print(f"Image fetch/encode failed: {e}")
                         raise
                 else:
                     element.ensure_images_loaded()
                     img_b64 = element.dataBase64
-                
-                messages.append({
-                    "role": "user",
-                    "images": [img_b64],
-                })
-        
+
+                messages.append(
+                    {
+                        "role": "user",
+                        "images": [img_b64],
+                    }
+                )
+
         return messages
 
     ###############################################

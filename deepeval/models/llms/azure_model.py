@@ -282,17 +282,23 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 content.append({"type": "text", "text": element})
             elif isinstance(element, MLLMImage):
                 if element.url and not element.local:
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {"url": element.url},
-                    })
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": element.url},
+                        }
+                    )
                 else:
                     element.ensure_images_loaded()
-                    data_uri = f"data:{element.mimeType};base64,{element.dataBase64}"
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {"url": data_uri},
-                    })
+                    data_uri = (
+                        f"data:{element.mimeType};base64,{element.dataBase64}"
+                    )
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_uri},
+                        }
+                    )
         return content
 
     ###############################################

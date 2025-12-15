@@ -159,8 +159,9 @@ class GeminiModel(DeepEvalBaseLLM):
                 # Must convert all images to bytes
                 if element.url and not element.local:
                     import requests
+
                     settings = get_settings()
-                    
+
                     response = requests.get(
                         element.url,
                         timeout=(
@@ -171,27 +172,27 @@ class GeminiModel(DeepEvalBaseLLM):
                     response.raise_for_status()
                     image_data = response.content
                     mime_type = response.headers.get(
-                        "content-type", 
-                        element.mimeType or "image/jpeg"
+                        "content-type", element.mimeType or "image/jpeg"
                     )
                 else:
                     element.ensure_images_loaded()
                     try:
                         image_data = base64.b64decode(element.dataBase64)
                     except Exception:
-                        raise ValueError(f"Invalid base64 data in MLLMImage: {element._id}")
-                    
+                        raise ValueError(
+                            f"Invalid base64 data in MLLMImage: {element._id}"
+                        )
+
                     mime_type = element.mimeType or "image/jpeg"
-                
+
                 # Create Part from bytes
                 image_part = self._module.types.Part.from_bytes(
-                    data=image_data, 
-                    mime_type=mime_type
+                    data=image_data, mime_type=mime_type
                 )
                 content.append(image_part)
             else:
                 raise ValueError(f"Invalid input type: {type(element)}")
-        
+
         return content
 
     ###############################################

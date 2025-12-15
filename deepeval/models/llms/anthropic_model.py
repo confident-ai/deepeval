@@ -133,30 +133,32 @@ class AnthropicModel(DeepEvalBaseLLM):
 
             return schema.model_validate(json_output), cost
 
-    def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]]
-    ):
+    def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
                 content.append({"type": "text", "text": element})
             elif isinstance(element, MLLMImage):
                 if element.url and not element.local:
-                    content.append({
-                        "type": "image",
-                        "source": {"type": "url", "url": element.url},
-                    })
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": element.url},
+                        }
+                    )
                 else:
                     element.ensure_images_loaded()
                     mime_type = element.mimeType or "image/jpeg"
-                    content.append({
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": mime_type,
-                            "data": element.dataBase64,
-                        },
-                    })
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": element.dataBase64,
+                            },
+                        }
+                    )
         return content
 
     ###############################################
