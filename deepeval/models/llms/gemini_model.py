@@ -1,5 +1,5 @@
 import json
-import requests
+import base64
 from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union
 
@@ -146,33 +146,24 @@ class GeminiModel(DeepEvalBaseLLM):
             return False
 
     @retry_gemini
-    def generate_prompt(
+    def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ) -> List[Union[str, MLLMImage]]:
-        """Converts DeepEval multimodal input into GenAI SDK compatible format.
+    ):
+        content = []
 
-        Args:
-            multimodal_input: List of strings and MLLMImage objects
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append(element)
+            elif isinstance(element, MLLMImage):
+                # Gemini doesn't support direct external URLs
+                # Must convert all images to bytes
+                if element.url and not element.local:
+                    import requests
 
-        Returns:
-            List of strings and PIL Image objects ready for model input
+                    settings = get_settings()
 
-        Raises:
-            ValueError: If an invalid input type is provided
-        """
-        prompt = []
-        settings = get_settings()
-
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append(ele)
-            elif isinstance(ele, MLLMImage):
-                if ele.local:
-                    with open(ele.url, "rb") as f:
-                        image_data = f.read()
-                else:
                     response = requests.get(
-                        ele.url,
+                        element.url,
                         timeout=(
                             settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
                             settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
@@ -180,14 +171,29 @@ class GeminiModel(DeepEvalBaseLLM):
                     )
                     response.raise_for_status()
                     image_data = response.content
+                    mime_type = response.headers.get(
+                        "content-type", element.mimeType or "image/jpeg"
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    try:
+                        image_data = base64.b64decode(element.dataBase64)
+                    except Exception:
+                        raise ValueError(
+                            f"Invalid base64 data in MLLMImage: {element._id}"
+                        )
 
+                    mime_type = element.mimeType or "image/jpeg"
+
+                # Create Part from bytes
                 image_part = self._module.types.Part.from_bytes(
-                    data=image_data, mime_type="image/jpeg"
+                    data=image_data, mime_type=mime_type
                 )
-                prompt.append(image_part)
+                content.append(image_part)
             else:
-                raise ValueError(f"Invalid input type: {type(ele)}")
-        return prompt
+                raise ValueError(f"Invalid input type: {type(element)}")
+
+        return content
 
     ###############################################
     # Generate functions
@@ -207,9 +213,8 @@ class GeminiModel(DeepEvalBaseLLM):
         client = self.load_model()
 
         if check_if_multimodal(prompt):
-
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = client.models.generate_content(
@@ -253,7 +258,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = await client.aio.models.generate_content(

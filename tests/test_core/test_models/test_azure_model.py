@@ -26,7 +26,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         model = AzureOpenAIModel()
@@ -39,7 +39,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         generation_kwargs = {
@@ -58,7 +58,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         generation_kwargs = {"max_tokens": 500}
@@ -98,7 +98,12 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-deployment",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
             max_tokens=1000,
             top_p=0.9,
@@ -132,7 +137,12 @@ class TestAzureOpenAIModelGenerationKwargs:
         # Verify the completion was called without extra kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="test-deployment",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
         )
         assert output == "test response"
@@ -171,7 +181,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         # This should work exactly as before
@@ -186,7 +196,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         model = AzureOpenAIModel(generation_kwargs={})
@@ -198,7 +208,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_OPENAI_API_KEY = "test-key"
             settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
-            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
         model = AzureOpenAIModel(generation_kwargs=None)

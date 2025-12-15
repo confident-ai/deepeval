@@ -252,6 +252,17 @@ compare(test_cases=[test_case], metric=arena_geval)
 
 <Tabs>
 
+<TabItem value="confident-ai" label="Confident AI">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import Prompt
+
+prompt = Prompt(alias="First Prompt")
+prompt.pull(version="00.00.01")
+```
+
+</TabItem>
+
 <TabItem value="from-json" label="From JSON">
 
 When loading prompts from `.json` files, the file name is automatically taken as the alias, if unspecified.
@@ -300,17 +311,6 @@ You are a helpful assistant.
 ```
 
 </details>
-
-</TabItem>
-
-<TabItem value="confident-ai" label="Confident AI">
-
-```python title="main.py" showLineNumbers={true}
-from deepeval.prompt import Prompt
-
-prompt = Prompt(alias="First Prompt")
-prompt.pull(version="00.00.01")
-```
 
 </TabItem>
 

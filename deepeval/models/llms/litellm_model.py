@@ -8,12 +8,13 @@ from tenacity import (
     wait_exponential_jitter,
     RetryCallState,
 )
-
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 
@@ -121,9 +122,15 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         from litellm import completion
 
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         completion_params = {
             "model": self.name,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
             "temperature": self.temperature,
         }
 
@@ -177,9 +184,15 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         from litellm import acompletion
 
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         completion_params = {
             "model": self.name,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
             "temperature": self.temperature,
         }
 
@@ -241,9 +254,14 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
+            if check_if_multimodal(prompt):
+                prompt = convert_to_multi_modal_array(input=prompt)
+                content = self.generate_content(prompt)
+            else:
+                content = [{"type": "text", "text": prompt}]
             completion_params = {
                 "model": self.name,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": [{"role": "user", "content": content}],
                 "temperature": self.temperature,
                 "api_key": api_key,
                 "api_base": self.base_url,
@@ -282,9 +300,14 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 env_var_name="LITELLM_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|GOOGLE_API_KEY",
                 param_hint="`api_key` to LiteLLMModel(...)",
             )
+            if check_if_multimodal(prompt):
+                prompt = convert_to_multi_modal_array(input=prompt)
+                content = self.generate_content(prompt)
+            else:
+                content = [{"type": "text", "text": prompt}]
             completion_params = {
                 "model": self.name,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": [{"role": "user", "content": content}],
                 "temperature": self.temperature,
                 "api_key": api_key,
                 "api_base": self.base_url,
@@ -340,6 +363,34 @@ class LiteLLMModel(DeepEvalBaseLLM):
             logging.error(f"Error in LiteLLM generate_samples: {e}")
             raise
 
+    def generate_content(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    data_uri = (
+                        f"data:{element.mimeType};base64,{element.dataBase64}"
+                    )
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_uri},
+                        }
+                    )
+        return content
+
     def calculate_cost(self, response: Any) -> float:
         """Calculate the cost of the response based on token usage."""
         try:
@@ -389,3 +440,6 @@ class LiteLLMModel(DeepEvalBaseLLM):
             None as LiteLLM handles client creation internally
         """
         return None
+
+    def supports_multimodal(self):
+        return True

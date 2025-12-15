@@ -62,7 +62,13 @@ class ArenaGEval(BaseArenaMetric):
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
     ) -> str:
-        check_arena_test_case_params(test_case, self.evaluation_params, self)
+        check_arena_test_case_params(
+            test_case,
+            self.evaluation_params,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -76,12 +82,12 @@ class ArenaGEval(BaseArenaMetric):
                 )
             else:
                 self.evaluation_steps: List[str] = (
-                    self._generate_evaluation_steps()
+                    self._generate_evaluation_steps(test_case.multimodal)
                 )
                 if _progress:
                     update_pbar(_progress, _pbar_id)
                 masked_winner, masked_reason, dummy_to_real_names = (
-                    self._compare(test_case)
+                    self._compare(test_case, test_case.multimodal)
                 )
                 if _progress:
                     update_pbar(_progress, _pbar_id)
@@ -111,7 +117,13 @@ class ArenaGEval(BaseArenaMetric):
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
     ) -> str:
-        check_arena_test_case_params(test_case, self.evaluation_params, self)
+        check_arena_test_case_params(
+            test_case,
+            self.evaluation_params,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
@@ -120,12 +132,12 @@ class ArenaGEval(BaseArenaMetric):
             _show_indicator=_show_indicator,
         ):
             self.evaluation_steps: List[str] = (
-                await self._a_generate_evaluation_steps()
+                await self._a_generate_evaluation_steps(test_case.multimodal)
             )
             if _progress:
                 update_pbar(_progress, _pbar_id)
             masked_winner, masked_reason, dummy_to_real_names = (
-                await self._a_compare(test_case)
+                await self._a_compare(test_case, test_case.multimodal)
             )
             if _progress:
                 update_pbar(_progress, _pbar_id)
@@ -147,7 +159,7 @@ class ArenaGEval(BaseArenaMetric):
             )
             return self.winner
 
-    async def _a_generate_evaluation_steps(self) -> List[str]:
+    async def _a_generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
             return self.evaluation_steps
 
@@ -155,7 +167,9 @@ class ArenaGEval(BaseArenaMetric):
             self.evaluation_params
         )
         prompt = ArenaGEvalTemplate.generate_evaluation_steps(
-            criteria=self.criteria, parameters=g_eval_params_str
+            criteria=self.criteria,
+            parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
@@ -171,7 +185,7 @@ class ArenaGEval(BaseArenaMetric):
                 data = trimAndLoadJson(res, self)
                 return data["steps"]
 
-    def _generate_evaluation_steps(self) -> List[str]:
+    def _generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
             return self.evaluation_steps
 
@@ -179,7 +193,9 @@ class ArenaGEval(BaseArenaMetric):
             self.evaluation_params
         )
         prompt = ArenaGEvalTemplate.generate_evaluation_steps(
-            criteria=self.criteria, parameters=g_eval_params_str
+            criteria=self.criteria,
+            parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
@@ -196,8 +212,7 @@ class ArenaGEval(BaseArenaMetric):
                 return data["steps"]
 
     async def _a_compare(
-        self,
-        test_case: ArenaTestCase,
+        self, test_case: ArenaTestCase, multimodal: bool
     ) -> Tuple[str, str, Dict[str, str]]:
         formatted_test_case, dummy_to_real_names = format_arena_test_case(
             self.evaluation_params, test_case
@@ -209,6 +224,7 @@ class ArenaGEval(BaseArenaMetric):
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
             test_case_contents=formatted_test_case,
             parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Winner)
@@ -224,8 +240,7 @@ class ArenaGEval(BaseArenaMetric):
                 return data["winner"], data["reason"], dummy_to_real_names
 
     def _compare(
-        self,
-        test_case: ArenaTestCase,
+        self, test_case: ArenaTestCase, multimodal: bool
     ) -> Tuple[str, str, Dict[str, str]]:
         formatted_test_case, dummy_to_real_names = format_arena_test_case(
             self.evaluation_params, test_case
@@ -237,6 +252,7 @@ class ArenaGEval(BaseArenaMetric):
             evaluation_steps=number_evaluation_steps(self.evaluation_steps),
             test_case_contents=formatted_test_case,
             parameters=g_eval_params_str,
+            multimodal=multimodal,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Winner)

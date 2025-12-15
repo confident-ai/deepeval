@@ -73,7 +73,7 @@ class TurnContextualPrecisionTemplate:
             Assistant Output:
             {expected_outcome}
 
-            Retrieval Context{document_count_str}:
+            Retrieval Context {document_count_str}:
             {context_to_display}
 
             JSON:

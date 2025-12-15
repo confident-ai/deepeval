@@ -1,6 +1,5 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
-
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -10,6 +9,8 @@ from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     require_secret_api_key,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import GROK_MODELS_DATA
@@ -71,13 +72,19 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
             model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(prompt))
+        chat.append(user(content))
 
         if schema and self.model_data.supports_structured_outputs:
             response, structured_output = chat.parse(schema)
@@ -110,13 +117,20 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
+
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
+
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
             model=self.name,
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(prompt))
+        chat.append(user(content))
 
         if schema and self.model_data.supports_structured_outputs:
             response, structured_output = await chat.parse(schema)
@@ -137,6 +151,34 @@ class GrokModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
+
+    def generate_content(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    data_uri = (
+                        f"data:{element.mimeType};base64,{element.dataBase64}"
+                    )
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_uri},
+                        }
+                    )
+        return content
 
     ###############################################
     # Utilities
@@ -209,6 +251,9 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Grok)"

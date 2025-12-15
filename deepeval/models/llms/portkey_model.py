@@ -2,11 +2,12 @@ import aiohttp
 import requests
 from typing import Any, Dict, List, Optional, Union
 from pydantic import AnyUrl, SecretStr
-
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import require_param
 
@@ -82,13 +83,46 @@ class PortkeyModel(DeepEvalBaseLLM):
         return headers
 
     def _payload(self, prompt: str) -> Dict[str, Any]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
         payload = {
             "model": self.name,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
         }
         if self.generation_kwargs:
             payload.update(self.generation_kwargs)
         return payload
+
+    def generate_content(
+        self, multimodal_input: List[Union[str, MLLMImage]] = []
+    ):
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    data_uri = (
+                        f"data:{element.mimeType};base64,{element.dataBase64}"
+                    )
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_uri},
+                        }
+                    )
+        return content
 
     def _extract_content(self, data: Dict[str, Any]) -> str:
         choices: Union[List[Dict[str, Any]], None] = data.get("choices")
@@ -147,3 +181,6 @@ class PortkeyModel(DeepEvalBaseLLM):
 
     def get_model_name(self):
         return f"{self.name} (Portkey)"
+
+    def supports_multimodal(self):
+        return True

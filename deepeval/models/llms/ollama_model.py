@@ -1,8 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
-import requests
 import base64
-import io
 
 from deepeval.config.settings import get_settings
 from deepeval.utils import require_dependency
@@ -117,60 +115,59 @@ class OllamaModel(DeepEvalBaseLLM):
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
         messages = []
-        for ele in multimodal_input:
-            if isinstance(ele, str):
+
+        for element in multimodal_input:
+            if isinstance(element, str):
                 messages.append(
                     {
                         "role": "user",
-                        "content": ele,
+                        "content": element,
                     }
                 )
-            elif isinstance(ele, MLLMImage):
-                img_b64 = self.convert_to_base64(ele.url, ele.local)
-                if img_b64 is not None:
-                    messages.append(
-                        {
-                            "role": "user",
-                            "images": [img_b64],
-                        }
-                    )
-        return messages
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    import requests
+                    from PIL import Image
+                    import io
 
-    ###############################################
-    # Utilities
-    ###############################################
+                    settings = get_settings()
+                    try:
+                        response = requests.get(
+                            element.url,
+                            stream=True,
+                            timeout=(
+                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                            ),
+                        )
+                        response.raise_for_status()
 
-    def convert_to_base64(self, image_source: str, is_local: bool) -> str:
-        from PIL import Image
+                        # Convert to JPEG and encode
+                        image = Image.open(io.BytesIO(response.content))
+                        buffered = io.BytesIO()
 
-        settings = get_settings()
-        try:
-            if not is_local:
-                response = requests.get(
-                    image_source,
-                    stream=True,
-                    timeout=(
-                        settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                        settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                    ),
+                        # Convert RGBA/LA/P to RGB for JPEG
+                        if image.mode in ("RGBA", "LA", "P"):
+                            image = image.convert("RGB")
+
+                        image.save(buffered, format="JPEG")
+                        img_b64 = base64.b64encode(buffered.getvalue()).decode()
+
+                    except (requests.exceptions.RequestException, OSError) as e:
+                        print(f"Image fetch/encode failed: {e}")
+                        raise
+                else:
+                    element.ensure_images_loaded()
+                    img_b64 = element.dataBase64
+
+                messages.append(
+                    {
+                        "role": "user",
+                        "images": [img_b64],
+                    }
                 )
-                response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-                image = Image.open(io.BytesIO(response.content))
-            else:
-                image = Image.open(image_source)
 
-            buffered = io.BytesIO()
-            image.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-            return img_str
-
-        except (requests.exceptions.RequestException, OSError) as e:
-            # Log, then rethrow so @retry_ollama can retry generate_messages() on network failures
-            print(f"Image fetch/encode failed: {e}")
-            raise
-        except Exception as e:
-            print(f"Error converting image to base64: {e}")
-            return None
+        return messages
 
     ###############################################
     # Model

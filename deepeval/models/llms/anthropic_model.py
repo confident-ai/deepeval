@@ -1,8 +1,7 @@
 import warnings
 
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
-
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
@@ -13,6 +12,8 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency
@@ -70,6 +71,11 @@ class AnthropicModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         chat_model = self.load_model()
         message = chat_model.messages.create(
@@ -77,7 +83,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": content,
                 }
             ],
             model=self.name,
@@ -97,6 +103,11 @@ class AnthropicModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
+        if check_if_multimodal(prompt):
+            prompt = convert_to_multi_modal_array(input=prompt)
+            content = self.generate_content(prompt)
+        else:
+            content = [{"type": "text", "text": prompt}]
 
         chat_model = self.load_model(async_mode=True)
         message = await chat_model.messages.create(
@@ -104,7 +115,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": content,
                 }
             ],
             model=self.name,
@@ -120,6 +131,34 @@ class AnthropicModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message.content[0].text)
 
             return schema.model_validate(json_output), cost
+
+    def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
+        content = []
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": element.dataBase64,
+                            },
+                        }
+                    )
+        return content
 
     ###############################################
     # Utilities
@@ -192,6 +231,9 @@ class AnthropicModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
+
+    def supports_multimodal(self):
+        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Anthropic)"

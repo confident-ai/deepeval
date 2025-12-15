@@ -25,7 +25,7 @@ class FaithfulnessScoreReason(BaseModel):
 
 class InteractionFaithfulnessScore(BaseModel):
     score: float
-    reason: str
+    reason: Optional[str]
     claims: List[str]
     truths: List[str]
     verdicts: List[FaithfulnessVerdict]
