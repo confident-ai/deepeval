@@ -2,6 +2,7 @@ from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
@@ -14,6 +15,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import DEEPSEEK_MODELS_DATA
+from deepeval.utils import require_param
 
 
 # consistent retry rules
@@ -25,25 +27,20 @@ class DeepSeekModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
 
         model = model or settings.DEEPSEEK_MODEL_NAME
-        if model not in DEEPSEEK_MODELS_DATA.keys():
-            raise ValueError(
-                f"Invalid model. Available DeepSeek models: {', '.join(DEEPSEEK_MODELS_DATA.values())}"
-            )
-        self.model_data = DEEPSEEK_MODELS_DATA.get(model)
-        temperature_from_key = settings.TEMPERATURE
-        if temperature_from_key is None:
-            self.temperature = temperature
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
         else:
-            self.temperature = float(temperature_from_key)
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            temperature = 0.0
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -52,6 +49,25 @@ class DeepSeekModel(DeepEvalBaseLLM):
             self.api_key = settings.DEEPSEEK_API_KEY
 
         self.base_url = "https://api.deepseek.com"
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="DeepSeekModel",
+            env_var_name="DEEPSEEK_MODEL_NAME",
+            param_hint="model",
+        )
+
+        if model not in DEEPSEEK_MODELS_DATA.keys():
+            raise DeepEvalError(
+                f"Invalid model. Available DeepSeek models: {', '.join(DEEPSEEK_MODELS_DATA.values())}"
+            )
+
+        if temperature < 0:
+            raise DeepEvalError("Temperature must be >= 0.")
+
+        self.model_data = DEEPSEEK_MODELS_DATA.get(model)
+        self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}

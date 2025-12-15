@@ -3,6 +3,7 @@ from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import OPENAI_MODELS_DATA
@@ -11,7 +12,11 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.test_case import MLLMImage
-from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
+from deepeval.utils import (
+    convert_to_multi_modal_array,
+    check_if_multimodal,
+    require_param,
+)
 from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
@@ -36,12 +41,13 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         deployment_name: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
             "AzureOpenAIModel",
             kwargs,
@@ -54,12 +60,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if base_url is None and "base_url" in alias_values:
             base_url = alias_values["base_url"]
 
-        settings = get_settings()
-
         # fetch Azure deployment parameters
         model = model or settings.AZURE_MODEL_NAME
-        self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
-        self.model_data = OPENAI_MODELS_DATA.get(model)
+        deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -67,18 +70,54 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        self.openai_api_version = (
-            openai_api_version or settings.OPENAI_API_VERSION
-        )
-        self.base_url = (
+        openai_api_version = openai_api_version or settings.OPENAI_API_VERSION
+        base_url = (
             base_url
             or settings.AZURE_OPENAI_ENDPOINT
             and str(settings.AZURE_OPENAI_ENDPOINT)
         )
 
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_MODEL_NAME",
+            param_hint="model",
+        )
+
+        self.deployment_name = require_param(
+            deployment_name,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_DEPLOYMENT_NAME",
+            param_hint="deployment_name",
+        )
+
+        self.base_url = require_param(
+            base_url,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_OPENAI_ENDPOINT",
+            param_hint="base_url",
+        )
+
+        self.openai_api_version = require_param(
+            openai_api_version,
+            provider_label="AzureOpenAIModel",
+            env_var_name="OPENAI_API_VERSION",
+            param_hint="openai_api_version",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
+
+        self.model_data = OPENAI_MODELS_DATA.get(model)
 
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs

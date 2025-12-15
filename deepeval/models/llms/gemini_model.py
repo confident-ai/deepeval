@@ -3,6 +3,7 @@ import base64
 from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union
 
+from deepeval.errors import DeepEvalError
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import require_secret_api_key
@@ -60,7 +61,7 @@ class GeminiModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
         service_account_key: Optional[Dict[str, str]] = None,
@@ -80,6 +81,13 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.GOOGLE_API_KEY
 
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
         self.project = project or settings.GOOGLE_CLOUD_PROJECT
         self.location = (
             location
@@ -98,7 +106,8 @@ class GeminiModel(DeepEvalBaseLLM):
                 self.service_account_key = json.loads(service_account_key_data)
 
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
+
         self.temperature = temperature
 
         # Raw kwargs destined for the underlying Client
@@ -147,8 +156,11 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
+        self, multimodal_input: List[Union[str, MLLMImage]] = None
     ):
+        multimodal_input = (
+            multimodal_input if multimodal_input is not None else []
+        )
         content = []
 
         for element in multimodal_input:
@@ -191,7 +203,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 )
                 content.append(image_part)
             else:
-                raise ValueError(f"Invalid input type: {type(element)}")
+                raise DeepEvalError(f"Invalid input type: {type(element)}")
 
         return content
 
@@ -326,7 +338,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if self.should_use_vertexai():
             if not self.project or not self.location:
-                raise ValueError(
+                raise DeepEvalError(
                     "When using Vertex AI API, both project and location are required. "
                     "Either provide them as arguments or set GOOGLE_CLOUD_PROJECT and "
                     "GOOGLE_CLOUD_LOCATION in your DeepEval configuration."

@@ -317,6 +317,7 @@ class Settings(BaseSettings):
 
     # Anthropic
     ANTHROPIC_API_KEY: Optional[SecretStr] = None
+    ANTHROPIC_MODEL_NAME: Optional[str] = None
     # Azure Open AI
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = None
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = None
