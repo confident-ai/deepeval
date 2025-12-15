@@ -1,17 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Union
 from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
 
 
 @dataclass
 class DeepEvalModelData:
-    supports_log_probs: bool
-    supports_multimodal: bool
-    supports_structured_outputs: bool
-    supports_json: bool
-    input_price: Optional[float]
-    output_price: Optional[float]
+    supports_log_probs: Optional[bool] = None
+    supports_multimodal: Optional[bool] = None
+    supports_structured_outputs: Optional[bool] = None
+    supports_json: Optional[bool] = None
+    input_price: Optional[float] = None
+    output_price: Optional[float] = None
     supports_temperature: Optional[bool] = True
 
 
@@ -78,9 +78,6 @@ class DeepEvalBaseLLM(ABC):
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name
 
-    def supports_multimodal(self) -> bool:
-        return False
-
     def batch_generate(self, *args, **kwargs) -> List[str]:
         """Runs the model to output LLM responses.
 
@@ -92,11 +89,20 @@ class DeepEvalBaseLLM(ABC):
         )
 
     # Capabilities
-    def supports_structured_outputs(self) -> bool:
-        return False
+    def supports_log_probs(self) -> Union[bool, None]:
+        return None
 
-    def supports_json_mode(self) -> bool:
-        return False
+    def supports_temperature(self) -> Union[bool, None]:
+        return None
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return None
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return None
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return None
 
     def generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:

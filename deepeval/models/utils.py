@@ -8,7 +8,7 @@ from deepeval.errors import DeepEvalError
 logger = logging.getLogger(__name__)
 
 
-def parse_model_name(model_name: Optional[str] = None) -> str:
+def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:
     """Extract base model name from provider-prefixed format.
 
     This function is useful for extracting the actual model name from a

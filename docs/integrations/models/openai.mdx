@@ -35,8 +35,8 @@ Run the following command in your CLI to specify an OpenAI model to power all me
 
 ```bash
 deepeval set-openai \
-    --model=gpt-4.1
-    --cost_per_input_token=0.000002
+    --model=gpt-4.1 \
+    --cost_per_input_token=0.000002 \
     --cost_per_output_token=0.000008
 ```
 
@@ -75,16 +75,18 @@ model = GPTModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **ONE** mandatory and **ONE** optional parameters when creating a `GPTModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GPTModel`:
 
-- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4o`.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to `gpt-4.1`.
+- [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying your OpenAI URL.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
 
 :::info
-You can use custom providers by setting `_openai_api_key` and `base_url` with your custom provider's details.
+You can use custom providers by setting `api_key` and `base_url` with your custom provider's details.
 :::
 
 :::tip

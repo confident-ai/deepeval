@@ -22,7 +22,9 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.models.llms.constants import OPENAI_MODELS_DATA
+from deepeval.models.llms.constants import (
+    OPENAI_MODELS_DATA,
+)
 
 
 retry_openai = create_retry_decorator(PS.OPENAI)
@@ -96,19 +98,16 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             temperature = 0.0
 
+        if isinstance(model, str):
+            model = parse_model_name(model)
+
         self.model_data = OPENAI_MODELS_DATA.get(model)
-        # Auto-adjust temperature for models that require it
-        if not self.model_data.supports_temperature:
+
+        # Auto-adjust temperature for known models that require it
+        if self.model_data.supports_temperature is False:
             temperature = 1
 
         # validation
-        if isinstance(model, str):
-            model = parse_model_name(model)
-            if model not in OPENAI_MODELS_DATA.keys():
-                raise DeepEvalError(
-                    f"Invalid model. Available GPT models: {', '.join(model for model in OPENAI_MODELS_DATA.keys())}"
-                )
-
         if (
             self.model_data.input_price is None
             or self.model_data.output_price is None
@@ -151,7 +150,7 @@ class GPTModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         if schema:
-            if self.supports_structured_outputs():
+            if self.supports_structured_outputs() is True:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -169,7 +168,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.supports_json_mode():
+            if self.supports_json_mode() is True:
                 completion = client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -217,7 +216,7 @@ class GPTModel(DeepEvalBaseLLM):
             content = [{"type": "text", "text": prompt}]
 
         if schema:
-            if self.supports_structured_outputs():
+            if self.supports_structured_outputs() is True:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -235,7 +234,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.supports_json_mode():
+            if self.supports_json_mode() is True:
                 completion = await client.beta.chat.completions.parse(
                     model=self.name,
                     messages=[
@@ -285,7 +284,7 @@ class GPTModel(DeepEvalBaseLLM):
         is_multimodal = check_if_multimodal(prompt)
 
         # validate that this model supports logprobs
-        if not self.model_data.supports_log_probs:
+        if self.supports_log_probs() is False:
             raise DeepEvalError(
                 f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
                 "Please use a different OpenAI model (for example `gpt-4.1` or `gpt-4o`) "
@@ -324,7 +323,7 @@ class GPTModel(DeepEvalBaseLLM):
         is_multimodal = check_if_multimodal(prompt)
 
         # validate that this model supports logprobs
-        if not self.model_data.supports_log_probs:
+        if self.supports_log_probs() is False:
             raise DeepEvalError(
                 f"Model `{model_name}` does not support `logprobs` / `top_logprobs`. "
                 "Please use a different OpenAI model (for example `gpt-4.1` or `gpt-4o`) "
@@ -378,21 +377,30 @@ class GPTModel(DeepEvalBaseLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         input_cost = input_tokens * self.model_data.input_price
-        output_cost = output_tokens * self.model_data.input_price
+        output_cost = output_tokens * self.model_data.output_price
         return input_cost + output_cost
 
     #########################
     # Capabilities          #
     #########################
 
-    def supports_structured_outputs(self) -> bool:
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
         """
         OpenAI models that natively enforce typed structured outputs.
          Used by generate(...) when a schema is provided.
         """
         return self.model_data.supports_structured_outputs
 
-    def supports_json_mode(self) -> bool:
+    def supports_json_mode(self) -> Union[bool, None]:
         """
         OpenAI models that enforce JSON mode
         """
@@ -470,9 +478,6 @@ class GPTModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name}"
