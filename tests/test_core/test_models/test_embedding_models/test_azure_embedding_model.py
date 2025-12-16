@@ -40,7 +40,7 @@ def test_azure_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     # Explicit ctor args should override everything from Settings
     model = AzureOpenAIEmbeddingModel(
         api_key="ctor-secret-key",
-        openai_api_version="2099-01-01-preview",
+        api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
         deployment_name="ctor-deployment",
         model="ctor-model",

@@ -90,7 +90,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
             generation_kwargs={"max_tokens": 1000, "top_p": 0.9},
         )
 
@@ -130,7 +130,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
         )
 
         # Call generate without generation_kwargs
@@ -160,7 +160,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
             timeout=30,
             max_retries=5,  # user-provided, but we should override it to 0
         )
@@ -326,7 +326,7 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch, settings):
         deployment_name="ctor-deployment",
         model="ctor-model",
         api_key="ctor-secret-key",
-        openai_api_version="2099-01-01-preview",
+        api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
     )
 

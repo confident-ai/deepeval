@@ -46,7 +46,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         deployment_name: Optional[str] = None,
-        openai_api_version: Optional[str] = None,
+        api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -73,7 +73,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        openai_api_version = openai_api_version or settings.OPENAI_API_VERSION
+        api_version = api_version or settings.OPENAI_API_VERSION
         if base_url is not None:
             base_url = str(base_url).rstrip("/")
         elif settings.AZURE_OPENAI_ENDPOINT is not None:
@@ -119,11 +119,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             param_hint="base_url",
         )
 
-        self.openai_api_version = require_param(
-            openai_api_version,
+        self.api_version = require_param(
+            api_version,
             provider_label="AzureOpenAIModel",
             env_var_name="OPENAI_API_VERSION",
-            param_hint="openai_api_version",
+            param_hint="api_version",
         )
 
         self.model_data = OPENAI_MODELS_DATA.get(model)
@@ -439,7 +439,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         kw = dict(
             api_key=api_key,
-            api_version=self.openai_api_version,
+            api_version=self.api_version,
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **self._client_kwargs(),

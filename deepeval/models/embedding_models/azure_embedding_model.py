@@ -31,7 +31,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         deployment_name: Optional[str] = None,
-        openai_api_version: Optional[str] = None,
+        api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -57,9 +57,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        self.openai_api_version = (
-            openai_api_version or settings.OPENAI_API_VERSION
-        )
+        self.api_version = api_version or settings.OPENAI_API_VERSION
         self.base_url = (
             base_url
             or settings.AZURE_OPENAI_ENDPOINT
@@ -126,7 +124,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         client_init_kwargs = dict(
             api_key=api_key,
-            api_version=self.openai_api_version,
+            api_version=self.api_version,
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **client_kwargs,
