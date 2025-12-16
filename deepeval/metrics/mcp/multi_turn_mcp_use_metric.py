@@ -366,7 +366,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         else:
             res = self.model.generate(prompt)
             return res
-        
+
     async def _a_generate_reason(
         self,
         tool_accuracy_score: List[ToolScore],

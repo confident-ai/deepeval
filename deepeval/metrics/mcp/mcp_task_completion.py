@@ -80,9 +80,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
 
                 unit_interactions = get_unit_interactions(test_case.turns)
                 tasks = self._get_tasks(unit_interactions)
-                task_scores = [
-                    self._get_task_score(task) for task in tasks
-                ]
+                task_scores = [self._get_task_score(task) for task in tasks]
                 self.score = self._calculate_score(task_scores)
                 self.reason = self._generate_reason(task_scores)
                 scores_reasons_list = [
@@ -158,11 +156,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 )
 
         return self.score
-    
-    def _generate_reason(
-        self,
-        task_scores: List[TaskScore]
-    ) -> str:
+
+    def _generate_reason(self, task_scores: List[TaskScore]) -> str:
         if self.include_reason is False:
             return None
 
@@ -181,11 +176,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         else:
             res = self.model.generate(prompt)
             return res
-        
-    async def _a_generate_reason(
-        self,
-        task_scores: List[TaskScore]
-    ) -> str:
+
+    async def _a_generate_reason(self, task_scores: List[TaskScore]) -> str:
         if self.include_reason is False:
             return None
 
