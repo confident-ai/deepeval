@@ -30,7 +30,16 @@ from pydantic import (
     PositiveFloat,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any, Dict, List, Optional, NamedTuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Union,
+    NamedTuple,
+    get_args,
+    get_origin,
+)
 
 from deepeval.config.utils import (
     parse_bool,
@@ -91,6 +100,19 @@ def _is_secret_key(settings: "Settings", env_key: str) -> bool:
     return False
 
 
+def _is_secret_env_key(env_key: str) -> bool:
+    field = Settings.model_fields.get(env_key)
+    if not field:
+        return False
+    if field.annotation is SecretStr:
+        return True
+
+    origin = get_origin(field.annotation)
+    if origin is Union:
+        return any(arg is SecretStr for arg in get_args(field.annotation))
+    return False
+
+
 def _merge_legacy_keyfile_into_env() -> None:
     """
     Backwards compatibility: merge values from the legacy .deepeval/.deepeval
@@ -111,7 +133,6 @@ def _merge_legacy_keyfile_into_env() -> None:
         KeyValues,
         ModelKeyValues,
         EmbeddingKeyValues,
-        SECRET_KEYS,
     )
 
     key_path = Path(HIDDEN_DIR) / KEY_FILE
@@ -148,21 +169,20 @@ def _merge_legacy_keyfile_into_env() -> None:
             continue
 
         # Mirror the legacy warning semantics for secrets, but only once per key
-        if (
-            json_key in SECRET_KEYS
-            and json_key not in _LEGACY_KEYFILE_SECRET_WARNED
+        if env_key not in _LEGACY_KEYFILE_SECRET_WARNED and _is_secret_env_key(
+            env_key
         ):
             logger.warning(
-                "Reading secret '%s' from legacy %s/%s. "
+                "Reading secret '%s' (legacy key '%s') from legacy %s/%s. "
                 "Persisting API keys in plaintext is deprecated. "
                 "Move this to your environment (.env / .env.local). "
                 "This fallback will be removed in a future release.",
+                env_key,
                 json_key,
                 HIDDEN_DIR,
                 KEY_FILE,
             )
-            _LEGACY_KEYFILE_SECRET_WARNED.add(json_key)
-
+            _LEGACY_KEYFILE_SECRET_WARNED.add(env_key)
         # Let Settings validators coerce types; we just inject the raw string
         os.environ[env_key] = str(raw)
 
@@ -971,6 +991,7 @@ class Settings(BaseSettings):
             from deepeval.config.settings_manager import (
                 update_settings_and_persist,
                 _normalize_for_env,
+                _resolve_save_path,
             )
 
             # lazy import legacy JSON store deps
@@ -993,7 +1014,13 @@ class Settings(BaseSettings):
             changed_keys -= self.COMPUTED_FIELDS
 
             if not changed_keys:
-                self.result = PersistResult(False, None, {})
+                if self._persist is False:
+                    # we report handled so that the cli does not mistakenly report invalid save option
+                    self.result = PersistResult(True, None, {})
+                    return False
+
+                ok, resolved_path = _resolve_save_path(self._save)
+                self.result = PersistResult(ok, resolved_path, {})
                 return False
 
             updates = {k: after[k] for k in changed_keys}
@@ -1123,7 +1150,7 @@ class Settings(BaseSettings):
 
 
 _settings_singleton: Optional[Settings] = None
-_settings_env_fingerprint: "str | None" = None
+_settings_env_fingerprint: Optional[str] = None
 _settings_lock = threading.RLock()
 
 

@@ -5,14 +5,13 @@ import webbrowser
 import pyfiglet
 
 from enum import Enum
-from pathlib import Path
 from rich import print
-from typing import Optional, Dict, Iterable, List, Tuple, Union
+from typing import Optional, Dict, Iterable, Tuple, Union
 from opentelemetry.trace import Span
 
+from deepeval.config.settings import Settings
 from deepeval.key_handler import (
     KEY_FILE_HANDLER,
-    KeyValues,
     ModelKeyValues,
     EmbeddingKeyValues,
 )
@@ -26,24 +25,21 @@ from deepeval.cli.dotenv_handler import DotenvHandler
 StrOrEnum = Union[str, "Enum"]
 PROD = "https://app.confident-ai.com"
 # List all mutually exclusive USE_* keys
-USE_MODEL_KEYS: List[ModelKeyValues | EmbeddingKeyValues] = [
-    ModelKeyValues.USE_OPENAI_MODEL,
-    ModelKeyValues.USE_AZURE_OPENAI,
-    ModelKeyValues.USE_LOCAL_MODEL,
-    ModelKeyValues.USE_GROK_MODEL,
-    ModelKeyValues.USE_MOONSHOT_MODEL,
-    ModelKeyValues.USE_DEEPSEEK_MODEL,
-    ModelKeyValues.USE_GEMINI_MODEL,
-    ModelKeyValues.USE_LITELLM,
-    EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING,
-    EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS,
-    # MAINTENANCE: add more if new USE_* keys appear
+USE_LLM_KEYS = [
+    key
+    for key in Settings.model_fields
+    if key.startswith("USE_") and key in ModelKeyValues.__members__
+]
+USE_EMBED_KEYS = [
+    key
+    for key in Settings.model_fields
+    if key.startswith("USE_") and key in EmbeddingKeyValues.__members__
 ]
 
 
 def render_login_message():
     print(
-        f"🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
+        "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
     )
     print("")
     print(pyfiglet.Figlet(font="big_money-ne").renderText("DeepEval Cloud"))
@@ -72,7 +68,7 @@ def upload_and_open_link(_span: Span):
                 else:
                     print("❌ API Key cannot be empty. Please try again.\n")
 
-        print(f"📤 Uploading test run to Confident AI...")
+        print("📤 Uploading test run to Confident AI...")
         global_test_run_manager.post_test_run(last_test_run_data)
     else:
         print(
@@ -91,7 +87,7 @@ def clear_embedding_model_keys():
 
 
 def _to_str_key(k: StrOrEnum) -> str:
-    return k.value if hasattr(k, "value") else str(k)
+    return k.name if hasattr(k, "name") else str(k)
 
 
 def _normalize_kv(updates: Dict[StrOrEnum, str]) -> Dict[str, str]:
@@ -103,8 +99,8 @@ def _normalize_keys(keys: Iterable[StrOrEnum]) -> list[str]:
 
 
 def _parse_save_option(
-    save_opt: str | None, default_path: str = ".env.local"
-) -> Tuple[bool, str | None]:
+    save_opt: Optional[str] = None, default_path: str = ".env.local"
+) -> Tuple[bool, Optional[str]]:
     if not save_opt:
         return False, None
     kind, *rest = save_opt.split(":", 1)
@@ -133,8 +129,8 @@ def resolve_save_target(save_opt: Optional[str]) -> Optional[str]:
 
 
 def save_environ_to_store(
-    save_opt: str | None, updates: Dict[StrOrEnum, str]
-) -> Tuple[bool, str | None]:
+    updates: Dict[StrOrEnum, str], save_opt: Optional[str] = None
+) -> Tuple[bool, Optional[str]]:
     """
     Save 'updates' into the selected store (currently only dotenv). Idempotent upsert.
     Returns (handled, path).
@@ -148,8 +144,8 @@ def save_environ_to_store(
 
 
 def unset_environ_in_store(
-    save_opt: str | None, keys: Iterable[StrOrEnum]
-) -> Tuple[bool, str | None]:
+    keys: Iterable[StrOrEnum], save_opt: Optional[str] = None
+) -> Tuple[bool, Optional[str]]:
     """
     Remove keys from the selected store (currently only dotenv).
     Returns (handled, path).
@@ -163,19 +159,46 @@ def unset_environ_in_store(
     return True, path
 
 
-def switch_model_provider(target: ModelKeyValues, save: str = None) -> None:
+def _as_legacy_use_key(
+    k: str,
+) -> Union[ModelKeyValues, EmbeddingKeyValues, None]:
+    if k in ModelKeyValues.__members__:
+        return ModelKeyValues[k]
+    if k in EmbeddingKeyValues.__members__:
+        return EmbeddingKeyValues[k]
+    return None
+
+
+def switch_model_provider(
+    target: Union[ModelKeyValues, EmbeddingKeyValues],
+    save: Optional[str] = None,
+) -> Tuple[bool, Optional[str]]:
     """
-    Ensure exactly one USE_* model flag is set to "YES" and the rest to "NO",
-    both in the .deepeval json store and in a dotenv file (if save is provided).
+    Ensure exactly one USE_* flag is enabled.
+    We *unset* all other USE_* keys (instead of writing explicit "NO") to:
+      - keep dotenv clean
+      - preserve Optional[bool] semantics (unset vs explicit false)
     """
-    if target not in USE_MODEL_KEYS:
+    keys_to_clear = (
+        USE_LLM_KEYS if isinstance(target, ModelKeyValues) else USE_EMBED_KEYS
+    )
+    target_key = target.name  # or _to_str_key(target)
+
+    if target_key not in keys_to_clear:
         raise ValueError(f"{target} is not a recognized USE_* model key")
 
-    for key in USE_MODEL_KEYS:
-        value = "YES" if key == target else "NO"
-        KEY_FILE_HANDLER.write_key(key, value)
+    # Clear legacy JSON store entries
+    for k in keys_to_clear:
+        legacy = _as_legacy_use_key(k)
+        if legacy is not None:
+            KEY_FILE_HANDLER.remove_key(legacy)
 
-        if save:
-            handled, path = save_environ_to_store(save, {key: value})
-            if not handled:
-                print("Unsupported --save option. Use --save=dotenv[:path].")
+    KEY_FILE_HANDLER.write_key(target, "YES")
+
+    if not save:
+        return True, None
+
+    handled, path = unset_environ_in_store(keys_to_clear, save)
+    if not handled:
+        return False, None
+    return save_environ_to_store({target: "true"}, save)

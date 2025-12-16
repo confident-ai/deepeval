@@ -514,28 +514,51 @@ def unset_debug(
 
 @app.command(name="set-openai")
 def set_openai_env(
-    model: str = typer.Option(..., "--model", help="OpenAI model name"),
+    model: str = typer.Option(
+        ...,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider (e.g., `gpt-4.1`).",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for OPENAI_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
     cost_per_input_token: Optional[float] = typer.Option(
         None,
-        "--cost_per_input_token",
+        "-i",
+        "--cost-per-input-token",
         help=(
-            "USD per input token. Optional for known OpenAI models (pricing is preconfigured); "
-            "REQUIRED if you use a custom/unsupported model."
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
         ),
     ),
     cost_per_output_token: Optional[float] = typer.Option(
         None,
-        "--cost_per_output_token",
+        "-o",
+        "--cost-per-output-token",
         help=(
-            "USD per output token. Optional for known OpenAI models (pricing is preconfigured); "
-            "REQUIRED if you use a custom/unsupported model."
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
         ),
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """
@@ -549,47 +572,63 @@ def set_openai_env(
     Pricing rules:
     - If `model` is a known OpenAI model, you may omit costs (built‑in pricing is used).
     - If `model` is custom/unsupported, you must provide both
-      `--cost_per_input_token` and `--cost_per_output_token`.
+      `--cost-per-input-token` and `--cost-per-output-token`.
 
     Secrets & saving:
-    - Set your `OPENAI_API_KEY` via environment or a dotenv file.
-    - Pass `--save=dotenv[:path]` to write configuration to a dotenv file
-      (default: `.env.local`). This command does not set or persist OPENAI_API_KEY. Set it
-      via your environment or a dotenv file (e.g., add OPENAI_API_KEY=... to .env.local)
-      before running this command, or manage it with whatever command you use for secrets.
+
+    - If you run with --prompt-api-key, DeepEval will set OPENAI_API_KEY for this session.
+    - If --save=dotenv[:path] is used (or DEEPEVAL_DEFAULT_SAVE is set), the key will be written to that dotenv file (plaintext).
+
+    Secrets are never written to .deepeval/.deepeval (legacy JSON store).
 
     Args:
-        model: OpenAI model name, such as `gpt-4o-mini`.
-        cost_per_input_token: USD per input token (optional for known models).
-        cost_per_output_token: USD per output token (optional for known models).
-        save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
+        --model: OpenAI model name, such as `gpt-4o-mini`.
+        --prompt-api-key: Prompt interactively for OPENAI_API_KEY (input hidden). Avoids putting secrets on the command line (shell history/process args). Not suitable for CI.
+        --cost-per-input-token: USD per input token (optional for known models).
+        --cost-per-output-token: USD per output token (optional for known models).
+        --save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
+        --quiet: Suppress printing to the terminal.
 
     Example:
         deepeval set-openai \\
           --model gpt-4o-mini \\
-          --cost_per_input_token 0.0005 \\
-          --cost_per_output_token 0.0015 \\
+          --cost-per-input-token 0.0005 \\
+          --cost-per-output-token 0.0015 \\
           --save dotenv:.env.local
     """
+    api_key = None
+    if prompt_api_key:
+        api_key = typer.prompt("OpenAI API key", hide_input=True)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_OPENAI_MODEL)
         settings.OPENAI_MODEL_NAME = model
+        if api_key is not None:
+            settings.OPENAI_API_KEY = api_key
         if cost_per_input_token is not None:
             settings.OPENAI_COST_PER_INPUT_TOKEN = cost_per_input_token
         if cost_per_output_token is not None:
             settings.OPENAI_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
     if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
+        raise typer.BadParameter(
+            "Unsupported --save option. Use --save=dotenv[:path].",
+            param_hint="--save",
+        )
+
+    if quiet:
+        return
+
+    if path and updates:
         # persisted to a file
         print(
             f"Saved environment variables to {path} (ensure it's git-ignored)."
         )
+    elif path:
+        print(f"No changes to save in {path}.")
     else:
         # updated in-memory & process env only
         print(
@@ -606,9 +645,21 @@ def set_openai_env(
 def unset_openai_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the OpenAI related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "--clear-secrets",
+        help="Also remove OPENAI_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """
@@ -622,6 +673,8 @@ def unset_openai_env(
 
     Args:
         --save: Remove OpenAI keys from the given dotenv file as well.
+        --clear-secrets: Removes OPENAI_API_KEY from the dotenv store
+        --quiet: Suppress printing to the terminal
 
     Example:
         deepeval unset-openai --save dotenv:.env.local
@@ -633,13 +686,21 @@ def unset_openai_env(
         settings.OPENAI_COST_PER_INPUT_TOKEN = None
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = None
         settings.USE_OPENAI_MODEL = None
+        if clear_secrets:
+            settings.OPENAI_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
     if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
+        raise typer.BadParameter(
+            "Unsupported --save option. Use --save=dotenv[:path].",
+            param_hint="--save",
+        )
+
+    if quiet:
+        return
+
+    if path and updates:
         # persisted to a file
         print(f"Removed OpenAI environment variables from {path}.")
 
