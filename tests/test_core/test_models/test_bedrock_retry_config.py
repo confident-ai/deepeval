@@ -114,7 +114,7 @@ def test_bedrock_sdk_toggle(mock_require_dep, settings):
         settings.AWS_BEDROCK_COST_PER_INPUT_TOKEN = 1e-6
         settings.AWS_BEDROCK_COST_PER_OUTPUT_TOKEN = 1e-6
 
-    m = mod.AmazonBedrockModel(model="id", region_name="us-east-1")
+    m = mod.AmazonBedrockModel(model="id", region="us-east-1")
     # triggers client build
     m.generate("ping")
     assert m._sdk_retry_mode is True

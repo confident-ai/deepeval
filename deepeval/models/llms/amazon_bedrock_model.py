@@ -42,7 +42,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         aws_secret_access_key: Optional[str] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
-        region_name: Optional[str] = None,
+        region: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -99,7 +99,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
         # Defaults from settings
         model = model or settings.AWS_BEDROCK_MODEL_NAME
-        region_name = region_name or settings.AWS_BEDROCK_REGION
+        region = region or settings.AWS_BEDROCK_REGION
 
         cost_per_input_token = (
             cost_per_input_token
@@ -119,11 +119,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             env_var_name="AWS_BEDROCK_MODEL_NAME",
             param_hint="model",
         )
-        region_name = require_param(
-            region_name,
+        region = require_param(
+            region,
             provider_label="AmazonBedrockModel",
             env_var_name="AWS_BEDROCK_REGION",
-            param_hint="region_name",
+            param_hint="region",
         )
 
         self.model_data = BEDROCK_MODELS_DATA.get(model)
@@ -137,7 +137,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         )
 
         # Final attributes
-        self.region_name = region_name
+        self.region = region
         self.cost_per_input_token = float(cost_per_input_token or 0.0)
         self.cost_per_output_token = float(cost_per_output_token or 0.0)
 
@@ -264,7 +264,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             config = Config(retries=retries_config)
 
             client_kwargs = {
-                "region_name": self.region_name,
+                "region_name": self.region,
                 "config": config,
                 **self.kwargs,
             }

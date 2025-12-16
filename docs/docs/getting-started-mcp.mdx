@@ -143,7 +143,7 @@ from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
     model="anthropic.claude-3-opus-20240229-v1:0",
-    region_name="us-east-1",
+    region="us-east-1",
     generation_kwargs={"temperature": 0},
 )
 task_completion_metric = MCPUseMetric(model=model)
