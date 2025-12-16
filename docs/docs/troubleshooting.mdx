@@ -10,7 +10,7 @@ sidebar_label: Troubleshooting
 
 This page covers a few common failure modes and how to debug them quickly.
 
-## TLS errors
+## TLS Errors
 
 If DeepEval fails to upload results to Confident AI with an error like:
 
@@ -48,7 +48,7 @@ If this fails with a certificate error, copy the full output.
 
 If the Python snippet succeeds, re-run your DeepEval evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full traceback and the output of the two checks above when reporting the issue.
 
-## More logs
+## Configure Logging
 
 DeepEval uses the standard Python `logging` module. To see logs, your application (or test runner) needs to configure logging output.
 
@@ -68,7 +68,7 @@ DeepEval also exposes a few environment flags that can make debugging easier:
 
 Note that retry logging levels are read at call-time.
 
-## Timeout tuning
+## Timeout Tuning
 
 If evaluations frequently time out (or appear to hang), the quickest fix is usually to increase the overall per-task time budget and reduce the number of retries.
 
@@ -102,11 +102,9 @@ If the per-attempt timeout is unset or resolves to `0`, DeepEval skips the inner
 For sync timeouts, DeepEval uses a bounded semaphore. See `DEEPEVAL_TIMEOUT_THREAD_LIMIT` and `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS`.
 :::
 
-## Dotenv loading
+## Dotenv Loading
 
-DeepEval loads dotenv files at import time (`import deepeval`). In `pytest`, this can pull in a project `.env` you didn’t intend to load.
-
-Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
+DeepEval loads dotenv files at import time (`import deepeval`). In `pytest`, this can pull in a project `.env` you didn’t intend to load. Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
 
 Controls: `DEEPEVAL_DISABLE_DOTENV=1` (skip) and `ENV_DIR_PATH` (dotenv directory, default: current working directory).
 
@@ -120,7 +118,7 @@ ENV_DIR_PATH=/path/to/project pytest -q
 APP_ENV=production pytest -q
 ```
 
-## Save config
+## Save Config
 
 DeepEval settings are cached. If you change environment variables at runtime and don’t see the change, restart the process or call:
 
