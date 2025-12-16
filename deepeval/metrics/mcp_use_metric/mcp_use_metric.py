@@ -299,6 +299,8 @@ class MCPUseMetric(BaseMetric):
         primitives_used_score: MCPPrimitivesScore,
         argument_correctness_score: MCPArgsScore,
     ) -> str:
+        if self.include_reason is False:
+            return None
         return (
             f"[\n"
             f"\t{primitives_used_score.reason}\n"

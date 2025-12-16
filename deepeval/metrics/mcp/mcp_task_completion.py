@@ -78,23 +78,23 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
 
-                self.unit_interactions = get_unit_interactions(test_case.turns)
-                self.tasks = self._get_tasks(self.unit_interactions)
-                self.task_scores = [
-                    self._get_task_score(task) for task in self.tasks
+                unit_interactions = get_unit_interactions(test_case.turns)
+                tasks = self._get_tasks(unit_interactions)
+                task_scores = [
+                    self._get_task_score(task) for task in tasks
                 ]
-                self.score = self._calculate_score(self.task_scores)
-                self.reason = self._generate_reason(self.task_scores)
-                self.scores_reasons_list = [
+                self.score = self._calculate_score(task_scores)
+                self.reason = self._generate_reason(task_scores)
+                scores_reasons_list = [
                     (task_score.score, task_score.reason)
-                    for task_score in self.task_scores
+                    for task_score in task_scores
                 ]
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Tasks:\n{prettify_list(self.tasks)}",
-                        f"Individual Scores & Reasons:\n{self.scores_reasons_list}",
+                        f"Tasks:\n{prettify_list(tasks)}",
+                        f"Individual Scores & Reasons:\n{scores_reasons_list}",
                         f"Score: {self.score}",
                     ],
                 )
@@ -132,23 +132,23 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
 
-            self.unit_interactions = get_unit_interactions(test_case.turns)
-            self.tasks = self._get_tasks(self.unit_interactions)
-            self.task_scores = await asyncio.gather(
-                *[self._a_get_task_score(task) for task in self.tasks]
+            unit_interactions = get_unit_interactions(test_case.turns)
+            tasks = self._get_tasks(unit_interactions)
+            task_scores = await asyncio.gather(
+                *[self._a_get_task_score(task) for task in tasks]
             )
-            self.scores_reasons_list = [
+            scores_reasons_list = [
                 (task_score.score, task_score.reason)
-                for task_score in self.task_scores
+                for task_score in task_scores
             ]
-            self.score = self._calculate_score(self.task_scores)
-            self.reason = self._generate_reason(self.task_scores)
+            self.score = self._calculate_score(task_scores)
+            self.reason = await self._a_generate_reason(task_scores)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Tasks:\n{prettify_list(self.tasks)}",
-                    f"Individual Scores & Reasons:\n{prettify_list(self.scores_reasons_list)}",
+                    f"Tasks:\n{prettify_list(tasks)}",
+                    f"Individual Scores & Reasons:\n{prettify_list(scores_reasons_list)}",
                     f"Score: {self.score}",
                 ],
             )
@@ -158,17 +158,52 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 )
 
         return self.score
+    
+    def _generate_reason(
+        self,
+        task_scores: List[TaskScore]
+    ) -> str:
+        if self.include_reason is False:
+            return None
 
-    def _generate_reason(self, task_scores: List[TaskScore]) -> str:
-        reason = "["
+        reasons = []
         for task_score in task_scores:
-            if task_score.score < self.threshold:
-                reason += (
-                    f"\nScore: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        reason += "]"
-        return reason
+            reasons.append(task_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = self.model.generate(prompt)
+            return res
+        
+    async def _a_generate_reason(
+        self,
+        task_scores: List[TaskScore]
+    ) -> str:
+        if self.include_reason is False:
+            return None
+
+        reasons = []
+        for task_score in task_scores:
+            reasons.append(task_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = await self.model.a_generate(prompt)
+            return res
 
     def _get_task_score(self, task: Task) -> TaskScore:
         prompt = MCPTaskCompletionTemplate.get_task_completion_score(task)

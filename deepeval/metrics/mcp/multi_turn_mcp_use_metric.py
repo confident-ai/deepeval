@@ -92,11 +92,11 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 self.reason = self._generate_reason(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
-                self.tools_scores_reasons_list = [
+                primitives_scores_reasons_list = [
                     (tool_score.score, tool_score.reason)
                     for tool_score in primitives_accuracy_scores
                 ]
-                self.args_scores_reasons_list = [
+                args_scores_reasons_list = [
                     (args_score.score, args_score.reason)
                     for args_score in args_accuracy_scores
                 ]
@@ -105,8 +105,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     self,
                     steps=[
                         f"Tasks:\n{prettify_list(self.tasks)}",
-                        f"Individual Scores & Reasons for Primitives:\n{prettify_list(self.tools_scores_reasons_list)}",
-                        f"Individual Scores & Reasons for Arguments:\n{prettify_list(self.args_scores_reasons_list)}",
+                        f"Individual Scores & Reasons for Primitives:\n{prettify_list(primitives_scores_reasons_list)}",
+                        f"Individual Scores & Reasons for Arguments:\n{prettify_list(args_scores_reasons_list)}",
                         f"Score: {self.score}",
                     ],
                 )
@@ -165,11 +165,11 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.reason = self._generate_reason(
                 primitives_accuracy_scores, args_accuracy_scores
             )
-            self.tools_scores_reasons_list = [
+            primitives_scores_reasons_list = [
                 (tool_score.score, tool_score.reason)
                 for tool_score in primitives_accuracy_scores
             ]
-            self.args_scores_reasons_list = [
+            args_scores_reasons_list = [
                 (args_score.score, args_score.reason)
                 for args_score in args_accuracy_scores
             ]
@@ -178,8 +178,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 self,
                 steps=[
                     f"Tasks:\n{prettify_list(self.tasks)}",
-                    f"Individual Scores & Reasons for Primitives:\n{prettify_list(self.tools_scores_reasons_list)}",
-                    f"Individual Scores & Reasons for Arguments:\n{prettify_list(self.args_scores_reasons_list)}",
+                    f"Individual Scores & Reasons for Primitives:\n{prettify_list(primitives_scores_reasons_list)}",
+                    f"Individual Scores & Reasons for Arguments:\n{prettify_list(args_scores_reasons_list)}",
                     f"Score: {self.score}",
                 ],
             )
@@ -345,23 +345,54 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
     ) -> str:
-        reason = "["
+        if self.include_reason is False:
+            return None
+
+        reasons = []
         for task_score in tool_accuracy_score:
-            if task_score.score < self.threshold:
-                reason += "\nPrimitives Used\n"
-                reason += (
-                    f"Score: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        for task_score in args_accuracy_score:
-            if task_score.score < self.threshold:
-                reason += "\nArguments Generated\n"
-                reason += (
-                    f"Score: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        reason += "]"
-        return reason
+            reasons.append(task_score.reason)
+
+        for arg_score in args_accuracy_score:
+            reasons.append(arg_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = self.model.generate(prompt)
+            return res
+        
+    async def _a_generate_reason(
+        self,
+        tool_accuracy_score: List[ToolScore],
+        args_accuracy_score: List[ArgsScore],
+    ) -> str:
+        if self.include_reason is False:
+            return None
+
+        reasons = []
+        for task_score in tool_accuracy_score:
+            reasons.append(task_score.reason)
+
+        for arg_score in args_accuracy_score:
+            reasons.append(arg_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = await self.model.a_generate(prompt)
+            return res
 
     def is_successful(self) -> bool:
         if self.error is not None:
