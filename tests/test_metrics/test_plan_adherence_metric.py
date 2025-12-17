@@ -1,7 +1,7 @@
 import os
 import pytest
-from deepeval.test_case import MLLMImage, ToolCall
-from deepeval.tracing import observe, update_current_trace
+from deepeval.test_case import MLLMImage
+from deepeval.tracing import observe
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.metrics import PlanAdherenceMetric
 
@@ -26,7 +26,6 @@ class TestPlanAdherenceMetric:
 
             @observe()
             def restaurant_finder(city):
-
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -58,7 +57,6 @@ class TestPlanAdherenceMetric:
 
             @observe()
             def restaurant_finder(city):
-
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -92,7 +90,6 @@ class TestPlanAdherenceMetric:
 
             @observe()
             def restaurant_finder(city):
-
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -128,7 +125,6 @@ class TestPlanAdherenceMetric:
 
             @observe()
             def restaurant_finder(city):
-
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -164,7 +160,6 @@ class TestPlanAdherenceMetric:
 
             @observe()
             def restaurant_finder(city):
-
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
