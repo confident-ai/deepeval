@@ -408,6 +408,7 @@ class Settings(BaseSettings):
 
     # Azure OpenAI
     USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = None
+    AZURE_EMBEDDING_MODEL_NAME: Optional[str] = None
     AZURE_EMBEDDING_DEPLOYMENT_NAME: Optional[str] = None
     # Local
     USE_LOCAL_EMBEDDINGS: Optional[bool] = None

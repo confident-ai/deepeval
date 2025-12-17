@@ -465,8 +465,8 @@ def should_use_local_model():
 
 
 def should_use_ollama_model():
-    base_url = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
-    return base_url == "ollama"
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
+    return value == "ollama"
 
 
 def should_use_gemini_model():

@@ -13,6 +13,7 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
+from deepeval.utils import require_param
 
 
 retry_azure = create_retry_decorator(PS.AZURE)
@@ -57,19 +58,42 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        self.api_version = api_version or settings.OPENAI_API_VERSION
-        self.base_url = (
-            base_url
-            or settings.AZURE_OPENAI_ENDPOINT
-            and str(settings.AZURE_OPENAI_ENDPOINT)
-        )
+        api_version = api_version or settings.OPENAI_API_VERSION
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.AZURE_OPENAI_ENDPOINT is not None:
+            base_url = str(settings.AZURE_OPENAI_ENDPOINT).rstrip("/")
 
-        self.deployment_name = (
+        deployment_name = (
             deployment_name or settings.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
+
+        model = model or settings.AZURE_EMBEDDING_MODEL_NAME or deployment_name
+
+        # validation
+        self.deployment_name = require_param(
+            deployment_name,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="AZURE_EMBEDDING_DEPLOYMENT_NAME",
+            param_hint="deployment_name",
+        )
+
+        self.base_url = require_param(
+            base_url,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="AZURE_OPENAI_ENDPOINT",
+            param_hint="base_url",
+        )
+
+        self.api_version = require_param(
+            api_version,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="OPENAI_API_VERSION",
+            param_hint="api_version",
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        model = model or self.deployment_name
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model)
 
