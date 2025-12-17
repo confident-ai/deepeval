@@ -1,10 +1,12 @@
 from __future__ import annotations
-
+import json
 import os
-import webbrowser
 import pyfiglet
+import typer
+import webbrowser
 
 from enum import Enum
+from pathlib import Path
 from rich import print
 from typing import Optional, Dict, Iterable, Tuple, Union
 from opentelemetry.trace import Span
@@ -202,3 +204,38 @@ def switch_model_provider(
     if not handled:
         return False, None
     return save_environ_to_store({target: "true"}, save)
+
+
+def coerce_blank_to_none(value: Optional[str]) -> Optional[str]:
+    """Return None if value is None/blank/whitespace; otherwise return stripped string."""
+    if value is None:
+        return None
+    value = value.strip()
+    return value or None
+
+
+def load_service_account_key_file(path: Path) -> str:
+    try:
+        raw = path.read_text(encoding="utf-8").strip()
+    except OSError as e:
+        raise typer.BadParameter(
+            f"Could not read service account file: {path}",
+            param_hint="--service-account-file",
+        ) from e
+
+    if not raw:
+        raise typer.BadParameter(
+            f"Service account file is empty: {path}",
+            param_hint="--service-account-file",
+        )
+
+    # Validate it's JSON and normalize to a single-line string for dotenv.
+    try:
+        obj = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise typer.BadParameter(
+            f"Service account file does not contain valid JSON: {path}",
+            param_hint="--service-account-file",
+        ) from e
+
+    return json.dumps(obj, separators=(",", ":"))

@@ -52,7 +52,7 @@ class LocalModel(DeepEvalBaseLLM):
         self.base_url = (
             str(base_url).rstrip("/") if base_url is not None else None
         )
-        self.format = format or settings.LOCAL_MODEL_FORMAT
+        self.format = format or settings.LOCAL_MODEL_FORMAT or "json"
 
         if temperature is not None:
             temperature = float(temperature)
