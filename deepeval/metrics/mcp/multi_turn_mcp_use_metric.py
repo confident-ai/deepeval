@@ -344,8 +344,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self,
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
-    ) -> str:
-        if self.include_reason is False:
+    ) -> Optional[str]:
+        if not self.include_reason:
             return None
 
         reasons = []
@@ -371,8 +371,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self,
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
-    ) -> str:
-        if self.include_reason is False:
+    ) -> Optional[str]:
+        if not self.include_reason:
             return None
 
         reasons = []

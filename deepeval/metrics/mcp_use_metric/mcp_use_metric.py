@@ -298,8 +298,8 @@ class MCPUseMetric(BaseMetric):
         self,
         primitives_used_score: MCPPrimitivesScore,
         argument_correctness_score: MCPArgsScore,
-    ) -> str:
-        if self.include_reason is False:
+    ) -> Optional[str]:
+        if not self.include_reason:
             return None
         return (
             f"[\n"
