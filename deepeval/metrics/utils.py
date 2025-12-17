@@ -227,6 +227,8 @@ def check_conversational_test_case_params(
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
                     type(model)
                 ).items():
+                    if callable(model_data):
+                        model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
                 raise ValueError(
@@ -282,6 +284,8 @@ def check_llm_test_case_params(
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
                     type(model)
                 ).items():
+                    if callable(model_data):
+                        model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
                 raise ValueError(

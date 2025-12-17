@@ -205,7 +205,7 @@ class ImageEditingMetric(BaseMetric):
         ]
         return await a_generate_with_schema_and_extract(
             metric=self,
-            prompt=prompt + images,
+            prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
             extract_schema=lambda s: (s.score, s.reasoning),
             extract_json=lambda data: (data["score"], data["reasoning"]),
@@ -226,7 +226,7 @@ class ImageEditingMetric(BaseMetric):
         ]
         return generate_with_schema_and_extract(
             metric=self,
-            prompt=prompt + images,
+            prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
             extract_schema=lambda s: (s.score, s.reasoning),
             extract_json=lambda data: (data["score"], data["reasoning"]),
@@ -241,7 +241,7 @@ class ImageEditingMetric(BaseMetric):
         ]
         return await a_generate_with_schema_and_extract(
             metric=self,
-            prompt=prompt + images,
+            prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
             extract_schema=lambda s: (s.score, s.reasoning),
             extract_json=lambda data: (data["score"], data["reasoning"]),
@@ -256,7 +256,7 @@ class ImageEditingMetric(BaseMetric):
         ]
         return generate_with_schema_and_extract(
             metric=self,
-            prompt=prompt + images,
+            prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
             extract_schema=lambda s: (s.score, s.reasoning),
             extract_json=lambda data: (data["score"], data["reasoning"]),

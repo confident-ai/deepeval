@@ -3,7 +3,6 @@ import pytest
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
-from deepeval.errors import DeepEvalError
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -70,8 +69,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -91,8 +90,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -112,8 +111,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -122,8 +121,10 @@ class TestAnswerRelevancyMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        with pytest.raises(DeepEvalError):
-            metric = AnswerRelevancyMetric(async_mode=False, model="gpt-3.5-turbo")
+        with pytest.raises(ValueError):
+            metric = AnswerRelevancyMetric(
+                async_mode=False, model="gpt-3.5-turbo"
+            )
             metric.measure(test_case)
 
     def test_normal_evaluate_method(self):
@@ -154,8 +155,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
