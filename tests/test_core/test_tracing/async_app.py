@@ -5,7 +5,6 @@ from deepeval.tracing import (
     update_retriever_span,
     observe,
 )
-from deepeval.test_case import ToolCall
 import asyncio
 
 
@@ -100,6 +99,5 @@ async def meta_agent(input: str):
     update_current_span(
         input=input,
         output=final_response,
-        tools_called=[ToolCall(name="FindRestaurant")],
     )
     return final_response
