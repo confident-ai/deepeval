@@ -5,7 +5,9 @@ from pydantic import (
     PrivateAttr,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal, Union
+from pathlib import Path
+import requests
 from enum import Enum
 import json
 import uuid
@@ -163,6 +165,103 @@ class MLLMImage:
         return f"data:{self.mimeType};base64,{self.dataBase64}"
 
 
+@dataclass
+class Context:
+    source_type: Literal["file", "url"]
+    source: str
+    chunk_size: int = 2048
+    chunk_overlap: int = 0
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    _content: Optional[str] = None
+
+    def __post_init__(self):
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap must be smaller than chunk_size")
+
+        if self.source_type == "file":
+            path = Path(self.source)
+            if not path.exists():
+                raise ValueError(f"Context file does not exist: {self.source}")
+
+        if self.source_type == "url":
+            if not self.source.startswith(("http://", "https://")):
+                raise ValueError(f"Invalid URL context source: {self.source}")
+
+    def resolve(self) -> Union[str, List[str]]:
+        if self._content is None:
+            if self.source_type == "file":
+                self._content = self._load_file(self.source)
+            elif self.source_type == "url":
+                self._content = self._fetch_url(self.source)
+
+        if len(self._content) <= self.chunk_size:
+            return self._content
+
+        return self._chunk_text(self._content)
+
+    def to_string(self) -> Union[str, List[str]]:
+        return self.resolve()
+
+    def _load_file(self, path: str) -> str:
+        from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
+
+        chunker = DocumentChunker(embedder=None)
+        chunker.load_doc(path, encoding="utf-8")
+
+        if not chunker.sections:
+            return ""
+
+        return " ".join(section.page_content for section in chunker.sections)
+
+    def _fetch_url(self, url: str) -> str:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        text = resp.text
+
+        self.metadata.update(
+            {
+                "source_type": "url",
+                "url": url,
+                "status_code": resp.status_code,
+            }
+        )
+
+        return self.html_to_text(text)
+
+    def html_to_text(self, html: str) -> str:
+        try:
+            from bs4 import BeautifulSoup
+        except Exception as e:
+            raise Exception(
+                f"BeautifulSoup (bs4) is required for URL contexts."
+                f"Install with `pip install beautifulsoup4`. Root cause: {e}"
+            )
+
+        soup = BeautifulSoup(html, "html.parser")
+
+        for tag in soup(["script", "style", "noscript"]):
+            tag.decompose()
+
+        return soup.get_text(separator=" ", strip=True)
+
+    def _chunk_text(self, text: str) -> List[str]:
+        chunks = []
+        start = 0
+        text_length = len(text)
+
+        while start < text_length:
+            end = start + self.chunk_size
+            chunk = text[start:end]
+            chunks.append(chunk)
+            start = end - self.chunk_overlap
+
+        self.metadata["num_chunks"] = len(chunks)
+        self.metadata["chunk_size"] = self.chunk_size
+        self.metadata["chunk_overlap"] = self.chunk_overlap
+
+        return chunks
+
+
 class LLMTestCaseParams(Enum):
     INPUT = "input"
     ACTUAL_OUTPUT = "actual_output"
@@ -312,7 +411,7 @@ class LLMTestCase(BaseModel):
         serialization_alias="expectedOutput",
         validation_alias=AliasChoices("expectedOutput", "expected_output"),
     )
-    context: Optional[List[str]] = Field(
+    context: Optional[List[Union[str, Context]]] = Field(
         default=None, serialization_alias="context"
     )
     retrieval_context: Optional[List[str]] = Field(
@@ -371,10 +470,41 @@ class LLMTestCase(BaseModel):
     _identifier: Optional[str] = PrivateAttr(
         default_factory=lambda: str(uuid.uuid4())
     )
+    _context_items: Optional[List[Union[str, Context]]] = PrivateAttr(
+        default=None
+    )
 
     @model_validator(mode="after")
-    def set_is_multimodal(self):
-        import re
+    def post_init(self):
+
+        self._handle_context_data()
+        self._set_is_multimodal()
+
+        return self
+
+    def _handle_context_data(self):
+        if self.context is None:
+            return
+
+        self._context_items = self.context[:]
+
+        resolved_context = []
+
+        for item in self.context:
+            if isinstance(item, Context):
+                resolved = item.resolve()
+                if isinstance(resolved, list):
+                    resolved_context.extend(resolved)
+                else:
+                    resolved_context.append(resolved)
+            else:
+                resolved_context.append(item)
+
+        self.context = resolved_context
+
+        return self
+
+    def _set_is_multimodal(self):
 
         if self.multimodal is True:
             return self
@@ -429,9 +559,12 @@ class LLMTestCase(BaseModel):
         # Ensure `context` is None or a list of strings
         if context is not None:
             if not isinstance(context, list) or not all(
-                isinstance(item, str) for item in context
+                (isinstance(item, str) or isinstance(item, Context))
+                for item in context
             ):
-                raise TypeError("'context' must be None or a list of strings")
+                raise TypeError(
+                    "'context' must be None or a list of strings or 'Context'"
+                )
 
         # Ensure `retrieval_context` is None or a list of strings
         if retrieval_context is not None:
