@@ -278,11 +278,22 @@ test_case = LLMTestCase(
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
 
-Unlike other parameters, a context accepts a list of strings.
+Unlike other parameters, `context` accepts a list containing:
+
+- plain strings,
+- `MLLMImage` objects, and
+- `Context` objects, which allow you to reference files or website URLs that `deepeval` will automatically fetch and process.
 
 ```python
 # A hypothetical LLM application example
+from deepeval.test_case import Context
 import chatbot
+
+website_context =  Context(
+    source_type="url",
+    source="https://www.trydeepteam.com/docs/getting-started",
+)
+file_context = Context(source_type="file", source="/path/to/your/file")
 
 input = "Why did the chicken cross the road?"
 
@@ -290,9 +301,32 @@ test_case = LLMTestCase(
     input=input,
     actual_output=chatbot.run(input),
     expected_output="To get to the other side!",
-    context=["The chicken wanted to cross the road."]
+    context=[
+        "The chicken wanted to cross the road.",
+        website_context,
+        file_context,
+    ]
 )
 ```
+
+Sometimes, the context can live in large documents or on the internet. To make this seamless, `deepeval` allows you to pass file paths or URLs via the `Context` object. The data model for `Context` is shown below:
+
+```python
+class Context:
+    source_type: Literal["file", "url"]
+    source: str
+    chunk_size: int = 2048
+    chunk_overlap: int = 128
+```
+
+The `Context` object accepts 2 mandatory and 2 optional parameters:
+
+- `source_type`: A string value of either `"file"` or `"url"`, which determines how deepeval resolves the context data.
+- `source`: A string representing either the file path or the website URL from which the context should be fetched.
+- [Optional] `chunk_size`: The maximum size (in characters) of each context chunk. Defaults to `2048`.
+- [Optional] `chunk_overlap`: The number of overlapping characters between consecutive chunks. Defaults to `128`.
+
+The `Context` object currently supports the following file formats: `pdf`, `txt`, `docx`, `md`, `markdown`, and `mdx`.
 
 :::note
 Often times people confuse `expected_output` with `context` since due to their similar level of factual accuracy. However, while both are (or should be) factually correct, `expected_output` also takes aspects like tone and linguistic patterns into account, whereas context is strictly factual.
