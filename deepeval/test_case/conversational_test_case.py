@@ -196,7 +196,7 @@ class ConversationalTestCase(BaseModel):
         self.context = resolved_context
 
         return self
-    
+
     def _set_is_multimodal(self):
         import re
 
