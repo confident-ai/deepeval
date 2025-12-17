@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Type
 import asyncio
 
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -9,9 +9,10 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
@@ -187,22 +188,13 @@ class FaithfulnessMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=FaithfulnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: FaithfulnessScoreReason = await self.model.a_generate(
-                    prompt, schema=FaithfulnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=FaithfulnessScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self, multimodal: bool) -> str:
         if self.include_reason is False:
@@ -219,22 +211,13 @@ class FaithfulnessMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=FaithfulnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: FaithfulnessScoreReason = self.model.generate(
-                    prompt, schema=FaithfulnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=FaithfulnessScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(
         self, multimodal: bool
@@ -242,63 +225,41 @@ class FaithfulnessMetric(BaseMetric):
         if len(self.claims) == 0:
             return []
 
-        verdicts: List[FaithfulnessVerdict] = []
-
         prompt = self.evaluation_template.generate_verdicts(
             claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    FaithfulnessVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                FaithfulnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
         if len(self.claims) == 0:
             return []
 
-        verdicts: List[FaithfulnessVerdict] = []
-
         prompt = self.evaluation_template.generate_verdicts(
             claims=self.claims,
             retrieval_context="\n\n".join(self.truths),
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    FaithfulnessVerdict(**item) for item in data["verdicts"]
-                ]
-                return verdicts
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                FaithfulnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     async def _a_generate_truths(
         self, retrieval_context: str, multimodal: bool
@@ -308,18 +269,13 @@ class FaithfulnessMetric(BaseMetric):
             extraction_limit=self.truths_extraction_limit,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Truths)
-            self.evaluation_cost += cost
-            return res.truths
-        else:
-            try:
-                res: Truths = await self.model.a_generate(prompt, schema=Truths)
-                return res.truths
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["truths"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Truths,
+            extract_schema=lambda s: s.truths,
+            extract_json=lambda data: data["truths"],
+        )
 
     def _generate_truths(
         self, retrieval_context: str, multimodal: bool
@@ -329,18 +285,13 @@ class FaithfulnessMetric(BaseMetric):
             extraction_limit=self.truths_extraction_limit,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Truths)
-            self.evaluation_cost += cost
-            return res.truths
-        else:
-            try:
-                res: Truths = self.model.generate(prompt, schema=Truths)
-                return res.truths
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["truths"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Truths,
+            extract_schema=lambda s: s.truths,
+            extract_json=lambda data: data["truths"],
+        )
 
     async def _a_generate_claims(
         self, actual_output: str, multimodal: bool
@@ -348,18 +299,13 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_claims(
             actual_output=actual_output, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Claims)
-            self.evaluation_cost += cost
-            return res.claims
-        else:
-            try:
-                res: Claims = await self.model.a_generate(prompt, schema=Claims)
-                return res.claims
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["claims"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Claims,
+            extract_schema=lambda s: s.claims,
+            extract_json=lambda data: data["claims"],
+        )
 
     def _generate_claims(
         self, actual_output: str, multimodal: bool
@@ -367,18 +313,13 @@ class FaithfulnessMetric(BaseMetric):
         prompt = self.evaluation_template.generate_claims(
             actual_output=actual_output, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Claims)
-            self.evaluation_cost += cost
-            return res.claims
-        else:
-            try:
-                res: Claims = self.model.generate(prompt, schema=Claims)
-                return res.claims
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["claims"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Claims,
+            extract_schema=lambda s: s.claims,
+            extract_json=lambda data: data["claims"],
+        )
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -405,7 +346,7 @@ class FaithfulnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

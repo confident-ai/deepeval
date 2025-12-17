@@ -7915,7 +7915,7 @@ deepeval set-azure-openai \
     --openai-api-key=<api_key> \
     --openai-model-name=<model_name> \ # e.g. gpt-4o
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
 
 ```
 
@@ -7944,7 +7944,7 @@ model = AzureOpenAIModel(
     model="gpt-4o",
     deployment_name="Test Deployment",
     api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
+    api_version="2025-01-01-preview",
     base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
@@ -7958,7 +7958,7 @@ There are **FIVE** mandatory and **ONE** optional parameters when creating an `A
 - `model_name`: A string specifying the name of the Azure OpenAI model to use.
 - `deployment_name`: A string specifying the name of your Azure OpenAI deployment.
 - `azure_openai_api_key`: A string specifying your Azure OpenAI API key.
-- `openai_api_version`: A string specifying the OpenAI API version used in your deployment.
+- `api_version`: A string specifying the OpenAI API version used in your deployment.
 - `azure_endpoint`: A string specifying your Azure OpenAI endpoint URL.
 - \[Optional\] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
@@ -14104,7 +14104,7 @@ deepeval set-azure-openai \
     --openai-api-key=<api_key> \
     --openai-model-name=<model_name> \ # e.g. gpt-4o
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 
 ```
@@ -14209,7 +14209,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,
@@ -19162,7 +19162,7 @@ Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if 
 deepeval set-azure-openai --openai-endpoint=<endpoint> \
     --openai-api-key=<api_key> \
     --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
+    --openai-api-version=<api_version> \
     --model-version=<model_version>
 
 ```
@@ -19277,7 +19277,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,

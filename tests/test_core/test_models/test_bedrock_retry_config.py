@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+from unittest.mock import patch
+
 import deepeval.models.llms.amazon_bedrock_model as mod
 
 
@@ -46,51 +49,72 @@ def test_bedrock_retry_predicate_present():
         make_is_transient,
     )
 
+    # If botocore isn't installed, the Bedrock policy is None and we skip.
     if BEDROCK_ERROR_POLICY is None:
-        return  # botocore not installed in this env, then skip
+        return
+
+    # Only import botocore when we know it's available.
+    from botocore.exceptions import ClientError
+
     pred = make_is_transient(BEDROCK_ERROR_POLICY)
 
-    # throttling by message: should retry
-    class ClientError(Exception): ...
-
-    assert (
-        pred(
-            ClientError(
-                "An error occurred (ThrottlingException) when calling Converse: Rate exceeded"
-            )
-        )
-        is True
+    # ThrottlingException should be treated as retriable.
+    throttling_exc = ClientError(
+        error_response={
+            "Error": {
+                "Code": "ThrottlingException",
+                "Message": "Rate exceeded",
+            }
+        },
+        operation_name="Converse",
     )
-    # accessDenied: should NOT retry
-    assert (
-        pred(
-            ClientError(
-                "An error occurred (AccessDeniedException) when calling Converse: Access denied"
-            )
-        )
-        is False
+    assert pred(throttling_exc) is True
+
+    # AccessDeniedException: should not be retried.
+    access_denied_exc = ClientError(
+        error_response={
+            "Error": {
+                "Code": "AccessDeniedException",
+                "Message": "Access denied",
+            }
+        },
+        operation_name="Converse",
     )
+    assert pred(access_denied_exc) is False
 
 
-def test_bedrock_sdk_toggle(monkeypatch):
-    from deepeval.config.settings import get_settings
+@patch("deepeval.models.llms.amazon_bedrock_model.require_dependency")
+def test_bedrock_sdk_toggle(mock_require_dep, settings):
 
     # fake session instance so we can inspect its state
     sess = DummySession()
 
-    # fake aiobotocore availability and configure module to use our fakes
-    monkeypatch.setattr(mod, "aiobotocore_available", True)
-    monkeypatch.setattr(mod, "get_session", lambda: sess, raising=False)
-    monkeypatch.setattr(mod, "Config", DummyConfig, raising=False)
+    # Fake modules returned by require_dependency inside AmazonBedrockModel
+    fake_aiobotocore_session_module = SimpleNamespace(
+        get_session=lambda: sess,
+    )
 
-    # use settings.edit() so the runtime toggle takes effect
-    s = get_settings()
+    class DummyBotocoreModule:
+        class config:
+            Config = DummyConfig
+
+    def fake_require_dependency(name, provider_label=None, install_hint=None):
+        if name == "aiobotocore.session":
+            return fake_aiobotocore_session_module
+        if name == "botocore":
+            return DummyBotocoreModule
+        raise AssertionError(f"Unexpected dependency requested: {name}")
+
+    # Patch the require_dependency used by amazon_bedrock_model
+    mock_require_dep.side_effect = fake_require_dependency
 
     # SDK control ON means adaptive mode, max_attempts=5
-    with s.edit(persist=False):
-        s.DEEPEVAL_SDK_RETRY_PROVIDERS = ["bedrock"]
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = ["bedrock"]
+        settings.AWS_BEDROCK_COST_PER_INPUT_TOKEN = 1e-6
+        settings.AWS_BEDROCK_COST_PER_OUTPUT_TOKEN = 1e-6
 
-    m = mod.AmazonBedrockModel(model_id="id", region_name="us-east-1")
+    m = mod.AmazonBedrockModel(model="id", region="us-east-1")
     # triggers client build
     m.generate("ping")
     assert m._sdk_retry_mode is True
@@ -99,8 +123,8 @@ def test_bedrock_sdk_toggle(monkeypatch):
     assert sess.last_config.retries.get("mode") == "adaptive"
 
     # flip to Tenacity control, expect max_attempts=1
-    with s.edit(persist=False):
-        s.DEEPEVAL_SDK_RETRY_PROVIDERS = []
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = []
 
     # Next call should rebuild the client with new retry config
     m.generate("ping2")

@@ -5,7 +5,7 @@ import deepeval.models.llms.azure_model as azure_mod
 from unittest.mock import Mock, patch
 from pydantic import BaseModel, SecretStr
 import pytest
-from deepeval.config.settings import get_settings, reset_settings
+from deepeval.config.settings import reset_settings
 from deepeval.models.llms.azure_model import AzureOpenAIModel
 from tests.test_core.stubs import _RecordingClient
 
@@ -28,6 +28,8 @@ class TestAzureOpenAIModelGenerationKwargs:
             settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
             settings.AZURE_MODEL_NAME = "gpt-4.1"
             settings.OPENAI_API_VERSION = "2024-02-15-preview"
+            settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+            settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
 
         model = AzureOpenAIModel()
         assert model.generation_kwargs == {}
@@ -88,7 +90,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
             generation_kwargs={"max_tokens": 1000, "top_p": 0.9},
         )
 
@@ -128,7 +130,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
         )
 
         # Call generate without generation_kwargs
@@ -158,7 +160,7 @@ class TestAzureOpenAIModelGenerationKwargs:
             model="gpt-4.1",
             api_key="test-key",
             base_url="test-endpoint",
-            openai_api_version="2024-02-15-preview",
+            api_version="2024-02-15-preview",
             timeout=30,
             max_retries=5,  # user-provided, but we should override it to 0
         )
@@ -221,14 +223,16 @@ class TestAzureOpenAIModelGenerationKwargs:
 
 
 def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
-    monkeypatch,
+    monkeypatch, settings
 ):
-    # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
-
-    # rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    # Put Azure config into the process env so Settings sees it
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
+        settings.OPENAI_API_VERSION = "2024-02-01"
 
     # Sanity check: Settings should expose this as a SecretStr
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
@@ -255,17 +259,16 @@ def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
     assert api_key == "constructor-key"
 
 
-def test_azure_openai_model_defaults_from_settings(monkeypatch):
+def test_azure_openai_model_defaults_from_settings(monkeypatch, settings):
     # Seed env so Settings picks up all Azure-related values
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://azure.example.com")
-    monkeypatch.setenv("AZURE_DEPLOYMENT_NAME", "settings-deployment")
-    monkeypatch.setenv("AZURE_MODEL_NAME", "settings-model")
-    monkeypatch.setenv("OPENAI_API_VERSION", "2024-02-15-preview")
-
-    # Rebuild settings from env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "settings-model"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
 
     # Sanity: API key should be a SecretStr on the settings object
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
@@ -287,7 +290,7 @@ def test_azure_openai_model_defaults_from_settings(monkeypatch):
 
     # Client kwargs pulled from Settings
     assert kw.get("api_key") == "env-secret-key"
-    endpoint = kw.get("base_url")
+    endpoint = kw.get("azure_endpoint")
     assert endpoint is not None
     assert endpoint.rstrip("/") == "https://azure.example.com"
     assert kw.get("azure_deployment") == "settings-deployment"
@@ -297,13 +300,16 @@ def test_azure_openai_model_defaults_from_settings(monkeypatch):
     assert model.name == "settings-model"
 
 
-def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
+def test_azure_openai_model_ctor_args_override_settings(monkeypatch, settings):
     # Baseline Settings values
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "settings-secret-key")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://settings-endpoint")
-    monkeypatch.setenv("AZURE_DEPLOYMENT_NAME", "settings-deployment")
-    monkeypatch.setenv("AZURE_MODEL_NAME", "settings-model")
-    monkeypatch.setenv("OPENAI_API_VERSION", "2024-02-15-preview")
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "settings-model"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
 
     reset_settings(reload_dotenv=False)
 
@@ -320,7 +326,7 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
         deployment_name="ctor-deployment",
         model="ctor-model",
         api_key="ctor-secret-key",
-        openai_api_version="2099-01-01-preview",
+        api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
     )
 
@@ -330,7 +336,7 @@ def test_azure_openai_model_ctor_args_override_settings(monkeypatch):
     # API key should come from ctor, not Settings
     assert kw.get("api_key") == "ctor-secret-key"
     # Endpoint & deployment from ctor
-    assert kw.get("base_url") == "https://ctor-endpoint"
+    assert kw.get("azure_endpoint") == "https://ctor-endpoint"
     assert kw.get("azure_deployment") == "ctor-deployment"
     # API version from ctor
     assert kw.get("api_version") == "2099-01-01-preview"
@@ -353,7 +359,12 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
     - It should not be forwarded through `model.kwargs`
     """
     with settings.edit(persist=False):
-        settings.AZURE_OPENAI_API_KEY = "test-key"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
         settings.OPENAI_API_VERSION = "4.1"
 
     model = AzureOpenAIModel(base_url="https://example.com")
@@ -366,7 +377,7 @@ def test_azure_openai_model_accepts_legacy_azure_endpoint_keyword_and_maps_to_ba
 
 
 def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
-    monkeypatch,
+    monkeypatch, settings
 ):
     """
     Using the legacy `azure_openai_api_key` keyword should:
@@ -375,11 +386,17 @@ def test_azure_openai_model_accepts_legacy_api_key_keyword_and_uses_it(
     - Not forward `azure_openai_api_key` in model.kwargs
     """
     # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+    with settings.edit(persist=False):
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.AZURE_DEPLOYMENT_NAME = "dummy-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = (
+            "https://example-resource.openai.azure.com"
+        )
+        settings.OPENAI_API_VERSION = "4.1"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
 
-    # rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
 
     # Stub the Azure SDK clients so we don't make any real calls

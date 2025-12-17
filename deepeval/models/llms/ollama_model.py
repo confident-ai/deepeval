@@ -2,8 +2,9 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
 import base64
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
-from deepeval.utils import require_dependency
+from deepeval.utils import require_dependency, require_param
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -24,27 +25,46 @@ class OllamaModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         settings = get_settings()
-        model = model or settings.LOCAL_MODEL_NAME
+        model = model or settings.OLLAMA_MODEL_NAME
         self.model_data = OLLAMA_MODELS_DATA.get(model)
-        self.base_url = (
-            base_url
-            or (
-                settings.LOCAL_MODEL_BASE_URL
-                and str(settings.LOCAL_MODEL_BASE_URL)
-            )
-            or "http://localhost:11434"
+
+        if base_url is not None:
+            self.base_url = str(base_url).rstrip("/")
+        elif settings.LOCAL_MODEL_BASE_URL is not None:
+            self.base_url = str(settings.LOCAL_MODEL_BASE_URL).rstrip("/")
+        else:
+            self.base_url = "http://localhost:11434"
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="OllamaModel",
+            env_var_name="LOCAL_MODEL_NAME",
+            param_hint="model",
         )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -54,7 +74,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model()
 
         if check_if_multimodal(prompt):
@@ -84,7 +104,7 @@ class OllamaModel(DeepEvalBaseLLM):
     @retry_ollama
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model(async_mode=True)
 
         if check_if_multimodal(prompt):
@@ -170,6 +190,25 @@ class OllamaModel(DeepEvalBaseLLM):
         return messages
 
     ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
+
+    ###############################################
     # Model
     ###############################################
 
@@ -193,9 +232,6 @@ class OllamaModel(DeepEvalBaseLLM):
             **self._client_kwargs(),
         )
         return cls(**kw)
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Ollama)"

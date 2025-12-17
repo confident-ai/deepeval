@@ -11,15 +11,19 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     get_turns_in_sliding_window,
     get_unit_interactions,
-    trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.turn_relevancy.schema import *
+from deepeval.metrics.turn_relevancy.schema import (
+    TurnRelevancyVerdict,
+    TurnRelevancyScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -158,7 +162,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -172,24 +176,19 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         prompt = TurnRelevancyTemplate.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=TurnRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: TurnRelevancyScoreReason = await self.model.a_generate(
-                    prompt, schema=TurnRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
 
-    def _generate_reason(self) -> str:
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TurnRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
+
+    def _generate_reason(self) -> Optional[str]:
+        if self.include_reason is False:
+            return None
+
         irrelevancies: List[Dict[str, str]] = []
         for index, verdict in enumerate(self.verdicts):
             if verdict.verdict.strip().lower() == "no":
@@ -200,22 +199,14 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         prompt = TurnRelevancyTemplate.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=TurnRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: TurnRelevancyScoreReason = self.model.generate(
-                    prompt, schema=TurnRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TurnRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdict(
         self, turns_sliding_window: List[Turn]
@@ -225,22 +216,14 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=TurnRelevancyVerdict
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: TurnRelevancyVerdict = await self.model.a_generate(
-                    prompt, schema=TurnRelevancyVerdict
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return TurnRelevancyVerdict(**data)
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TurnRelevancyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: TurnRelevancyVerdict(**data),
+        )
 
     def _generate_verdict(
         self, turns_sliding_window: List[Turn]
@@ -250,20 +233,14 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=TurnRelevancyVerdict)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: TurnRelevancyVerdict = self.model.generate(
-                    prompt, schema=TurnRelevancyVerdict
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return TurnRelevancyVerdict(**data)
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TurnRelevancyVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: TurnRelevancyVerdict(**data),
+        )
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -284,7 +261,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         else:
             try:
                 self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

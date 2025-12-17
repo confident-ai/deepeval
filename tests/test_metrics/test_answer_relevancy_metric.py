@@ -123,7 +123,7 @@ class TestAnswerRelevancyMetric:
         )
         with pytest.raises(ValueError):
             metric = AnswerRelevancyMetric(
-                async_mode=False, model="gpt-3.5-turbo"
+                async_mode=False, model="gpt-4.1"
             )
             metric.measure(test_case)
 

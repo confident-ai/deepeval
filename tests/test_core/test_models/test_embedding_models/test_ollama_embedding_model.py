@@ -114,7 +114,9 @@ def test_ollama_embedding_model_accepts_legacy_host_keyword_and_maps_to_base_url
     - It should populate `model`
     - It should not be forwarded through `model.kwargs`
     """
-    model = OllamaEmbeddingModel(base_url="ctor-host")
+    model = OllamaEmbeddingModel(
+        model="settings-embedding-model", base_url="ctor-host"
+    )
 
     # legacy keyword mapped to canonical parameter
     assert model.base_url == "ctor-host"

@@ -40,7 +40,7 @@ def test_azure_embedding_model_uses_explicit_params_over_settings_and_strips_sec
     # Explicit ctor args should override everything from Settings
     model = AzureOpenAIEmbeddingModel(
         api_key="ctor-secret-key",
-        openai_api_version="2099-01-01-preview",
+        api_version="2099-01-01-preview",
         base_url="https://ctor-endpoint",
         deployment_name="ctor-deployment",
         model="ctor-model",
@@ -126,7 +126,7 @@ def test_azure_embedding_model_accepts_legacy_azure_endpoint_keyword_and_maps_to
     with settings.edit(persist=False):
         settings.AZURE_OPENAI_API_KEY = "test-key"
         settings.OPENAI_API_VERSION = "4.1"
-
+        settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = "settings-embed-deployment"
     model = AzureOpenAIEmbeddingModel(base_url="https://example.com")
 
     # legacy keyword mapped to canonical parameter
@@ -137,7 +137,7 @@ def test_azure_embedding_model_accepts_legacy_azure_endpoint_keyword_and_maps_to
 
 
 def test_azure_embedding_model_accepts_legacy_api_key_keyword_and_uses_it(
-    monkeypatch,
+    monkeypatch, settings
 ):
     """
     Using the legacy `azure_openai_api_key` keyword should:
@@ -146,11 +146,13 @@ def test_azure_embedding_model_accepts_legacy_api_key_keyword_and_uses_it(
     - Not forward `azure_openai_api_key` in model.kwargs
     """
     # Put AZURE_OPENAI_API_KEY into the process env so Settings sees it
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "env-secret-key")
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = "env-secret-key"
+        settings.OPENAI_API_VERSION = "4.1"
+        settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = "settings-embed-deployment"
+        settings.AZURE_OPENAI_ENDPOINT = "https://example.com"
 
     # rebuild the Settings singleton from the current env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
     assert isinstance(settings.AZURE_OPENAI_API_KEY, SecretStr)
 
     # Stub the Azure SDK clients so we don't make any real calls

@@ -3,6 +3,7 @@ from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -15,7 +16,11 @@ from deepeval.models.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+from deepeval.utils import (
+    check_if_multimodal,
+    convert_to_multi_modal_array,
+    require_param,
+)
 
 
 # consistent retry rules
@@ -28,7 +33,7 @@ class LocalModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         format: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
@@ -37,22 +42,43 @@ class LocalModel(DeepEvalBaseLLM):
 
         model = model or settings.LOCAL_MODEL_NAME
         if api_key is not None:
-            self.local_model_api_key: SecretStr | None = SecretStr(api_key)
+            self.local_model_api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.local_model_api_key = settings.LOCAL_MODEL_API_KEY
 
+        base_url = (
+            base_url if base_url is not None else settings.LOCAL_MODEL_BASE_URL
+        )
         self.base_url = (
-            base_url
-            or settings.LOCAL_MODEL_BASE_URL
-            and str(settings.LOCAL_MODEL_BASE_URL)
+            str(base_url).rstrip("/") if base_url is not None else None
         )
         self.format = format or settings.LOCAL_MODEL_FORMAT
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="LocalModel",
+            env_var_name="LOCAL_MODEL_NAME",
+            param_hint="model",
+        )
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -62,7 +88,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
@@ -88,7 +114,7 @@ class LocalModel(DeepEvalBaseLLM):
     @retry_local
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)

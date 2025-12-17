@@ -11,7 +11,8 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
-    trimAndLoadJson,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -46,6 +47,7 @@ class JsonCorrectnessMetric(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.expected_schema = expected_schema
+        self.evaluation_model = self.model.get_model_name()
 
     def measure(
         self,
@@ -86,7 +88,7 @@ class JsonCorrectnessMetric(BaseMetric):
                     self.expected_schema.model_validate_json(
                         test_case.actual_output
                     )
-                except ValidationError as e:
+                except ValidationError:
                     valid_json = False
 
                 self.score = 1 if valid_json else 0
@@ -138,7 +140,7 @@ class JsonCorrectnessMetric(BaseMetric):
                 self.expected_schema.model_validate_json(
                     test_case.actual_output
                 )
-            except ValidationError as e:
+            except ValidationError:
                 valid_json = False
 
             self.score = 1 if valid_json else 0
@@ -174,22 +176,13 @@ class JsonCorrectnessMetric(BaseMetric):
             is_valid_json=is_valid_json,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=JsonCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: JsonCorrectnessScoreReason = await self.model.a_generate(
-                    prompt, schema=JsonCorrectnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=JsonCorrectnessScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def generate_reason(self, actual_output: str) -> str:
         if self.include_reason is False:
@@ -207,22 +200,13 @@ class JsonCorrectnessMetric(BaseMetric):
             is_valid_json=is_valid_json,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=JsonCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: JsonCorrectnessScoreReason = self.model.generate(
-                    prompt, schema=JsonCorrectnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=JsonCorrectnessScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -230,7 +214,7 @@ class JsonCorrectnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

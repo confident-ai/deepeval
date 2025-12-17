@@ -246,7 +246,7 @@ task_completion_metric = TaskCompletionMetric(model=model)
 from deepeval.metrics import TaskCompletionMetric
 from deepeval.models import GrokModel
 
-model = GrokModel("grok-4-0709")
+model = GrokModel("grok-4.1")
 task_completion_metric = TaskCompletionMetric(model=model)
 ```
 
@@ -262,7 +262,7 @@ model = AzureOpenAIModel(
     model="gpt-4.1",
     deployment_name="Test Deployment",
     api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
+    api_version="2025-01-01-preview",
     base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
@@ -278,8 +278,9 @@ from deepeval.metrics import TaskCompletionMetric
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
+    model="anthropic.claude-3-opus-20240229-v1:0",
+    region="us-east-1",
+    generation_kwargs={"temperature": 0},
 )
 task_completion_metric = TaskCompletionMetric(model=model)
 ```

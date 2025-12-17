@@ -1,5 +1,7 @@
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
+
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -7,6 +9,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
+    require_costs,
     require_secret_api_key,
 )
 from deepeval.test_case import MLLMImage
@@ -14,6 +17,7 @@ from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import GROK_MODELS_DATA
+from deepeval.utils import require_param
 
 # consistent retry rules
 retry_grok = create_retry_decorator(PS.GROK)
@@ -24,7 +28,9 @@ class GrokModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -32,29 +38,63 @@ class GrokModel(DeepEvalBaseLLM):
         settings = get_settings()
 
         model = model or settings.GROK_MODEL_NAME
-        self.model_data = GROK_MODELS_DATA.get(model)
 
-        if model not in GROK_MODELS_DATA.keys():
-            raise ValueError(
-                f"Invalid model. Available Grok models: {', '.join(GROK_MODELS_DATA.keys())}"
-            )
-        temperature_from_key = settings.TEMPERATURE
-        if temperature_from_key is None:
-            self.temperature = temperature
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
         else:
-            self.temperature = float(temperature_from_key)
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            temperature = 0.0
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.GROK_COST_PER_INPUT_TOKEN
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.GROK_COST_PER_OUTPUT_TOKEN
+        )
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.GROK_API_KEY
 
+        model = require_param(
+            model,
+            provider_label="GrokModel",
+            env_var_name="GROK_MODEL_NAME",
+            param_hint="model",
+        )
+
+        # validation
+        if temperature < 0:
+            raise DeepEvalError("Temperature must be >= 0.")
+
+        self.model_data = GROK_MODELS_DATA.get(model)
+        self.temperature = temperature
+
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "GROK_COST_PER_INPUT_TOKEN",
+            "GROK_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
         super().__init__(model)
 
     ###############################################
@@ -64,7 +104,7 @@ class GrokModel(DeepEvalBaseLLM):
     @retry_grok
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         try:
             from xai_sdk.chat import user
@@ -86,7 +126,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(content))
 
-        if schema and self.model_data.supports_structured_outputs:
+        if schema and self.supports_structured_outputs() is True:
             response, structured_output = chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -109,7 +149,7 @@ class GrokModel(DeepEvalBaseLLM):
     @retry_grok
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
 
         try:
             from xai_sdk.chat import user
@@ -132,7 +172,7 @@ class GrokModel(DeepEvalBaseLLM):
         )
         chat.append(user(content))
 
-        if schema and self.model_data.supports_structured_outputs:
+        if schema and self.supports_structured_outputs() is True:
             response, structured_output = await chat.parse(schema)
             cost = self.calculate_cost(
                 response.usage.prompt_tokens,
@@ -194,6 +234,25 @@ class GrokModel(DeepEvalBaseLLM):
         return input_cost + output_cost
 
     ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
+
+    ###############################################
     # Model
     ###############################################
 
@@ -251,9 +310,6 @@ class GrokModel(DeepEvalBaseLLM):
                 kw.pop("channel_options", None)
                 return cls(**kw)
             raise
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Grok)"
