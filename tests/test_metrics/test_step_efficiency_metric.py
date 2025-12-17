@@ -26,6 +26,9 @@ class TestStepEfficiencyMetric:
 
             @observe()
             def restaurant_finder(city):
+                update_current_trace(
+                    tools_called=[ToolCall(name="FindRestaurant")]
+                )
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -57,6 +60,9 @@ class TestStepEfficiencyMetric:
 
             @observe()
             def restaurant_finder(city):
+                update_current_trace(
+                    tools_called=[ToolCall(name="FindRestaurant")]
+                )
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -90,6 +96,9 @@ class TestStepEfficiencyMetric:
 
             @observe()
             def restaurant_finder(city):
+                update_current_trace(
+                    tools_called=[ToolCall(name="FindRestaurant")]
+                )
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
@@ -125,6 +134,9 @@ class TestStepEfficiencyMetric:
 
             @observe()
             def restaurant_finder(city):
+                update_current_trace(
+                    tools_called=[ToolCall(name="FindRestaurant")]
+                )
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
