@@ -3,9 +3,10 @@ from typing import Optional, List, Union
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -143,7 +144,10 @@ class MCPUseMetric(BaseMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, _show_indicator=_show_indicator, _in_component=_in_component
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
         ):
             available_primitives, primitives_used = (
                 self._get_mcp_interaction_text(
@@ -195,20 +199,13 @@ class MCPUseMetric(BaseMetric):
         prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=MCPPrimitivesScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: MCPPrimitivesScore = self.model.generate(
-                    prompt, schema=MCPPrimitivesScore
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return MCPPrimitivesScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MCPPrimitivesScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: MCPPrimitivesScore(**data),
+        )
 
     async def _a_get_primitives_used_score(
         self,
@@ -219,22 +216,13 @@ class MCPUseMetric(BaseMetric):
         prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=MCPPrimitivesScore
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: MCPPrimitivesScore = await self.model.a_generate(
-                    prompt, schema=MCPPrimitivesScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return MCPPrimitivesScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MCPPrimitivesScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: MCPPrimitivesScore(**data),
+        )
 
     def _get_argument_correctness_score(
         self,
@@ -245,20 +233,13 @@ class MCPUseMetric(BaseMetric):
         prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=MCPArgsScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: MCPArgsScore = self.model.generate(
-                    prompt, schema=MCPArgsScore
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return MCPArgsScore(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MCPArgsScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: MCPArgsScore(**data),
+        )
 
     async def _a_get_argument_correctness_score(
         self,
@@ -269,20 +250,13 @@ class MCPUseMetric(BaseMetric):
         prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=MCPArgsScore)
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res: MCPArgsScore = await self.model.a_generate(
-                    prompt, schema=MCPArgsScore
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return MCPArgsScore(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MCPArgsScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: MCPArgsScore(**data),
+        )
 
     def _calculate_score(
         self,
@@ -410,7 +384,7 @@ class MCPUseMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 
