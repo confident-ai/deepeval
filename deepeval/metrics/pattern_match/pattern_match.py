@@ -60,9 +60,9 @@ class PatternMatchMetric(BaseMetric):
 
             self.score = 1.0 if full_match else 0.0
             self.reason = (
-                f"The actual output fully matches the pattern."
+                "The actual output fully matches the pattern."
                 if full_match
-                else f"The actual output does not match the pattern."
+                else "The actual output does not match the pattern."
             )
             self.success = self.score >= self.threshold
 
@@ -102,7 +102,7 @@ class PatternMatchMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

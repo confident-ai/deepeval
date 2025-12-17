@@ -8,7 +8,7 @@ from deepeval.errors import DeepEvalError
 logger = logging.getLogger(__name__)
 
 
-def parse_model_name(model_name: Optional[str] = None) -> str:
+def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:
     """Extract base model name from provider-prefixed format.
 
     This function is useful for extracting the actual model name from a
@@ -78,6 +78,62 @@ def require_secret_api_key(
         )
 
     return api_key
+
+
+def require_costs(
+    model_data,
+    model_name: str,
+    input_token_envvar: str,
+    output_token_envvar: str,
+    cost_per_input_token: Optional[float] = None,
+    cost_per_output_token: Optional[float] = None,
+) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Validates and returns the cost parameters (input and output tokens) for a model.
+
+    Arguments:
+    - model_data: The model's data object, which should contain `input_price` and `output_price`.
+    - model_name: The model name used for error messaging.
+    - cost_per_input_token: The input token cost provided during model initialization (optional).
+    - cost_per_output_token: The output token cost provided during model initialization (optional).
+    - input_token_envvar: The environment variable name for input cost.
+    - output_token_envvar: The environment variable name for output cost.
+
+    Returns:
+    - A tuple of validated values (input_cost, output_cost). If the values are provided, they are returned.
+      If not provided, they are fetched from settings or environment variables.
+    """
+
+    def validate_cost(
+        value: Optional[float], envvar_name: str
+    ) -> Optional[float]:
+        """Helper function to validate the cost values."""
+        if value is not None and value < 0:
+            raise DeepEvalError(f"{envvar_name} must be >= 0.")
+        return value
+
+    # Validate provided token costs
+    cost_per_input_token = validate_cost(
+        cost_per_input_token, input_token_envvar
+    )
+    cost_per_output_token = validate_cost(
+        cost_per_output_token, output_token_envvar
+    )
+
+    # If model data doesn't have pricing, use provided values or environment variables
+    if model_data.input_price is None or model_data.output_price is None:
+        if cost_per_input_token is None or cost_per_output_token is None:
+            raise DeepEvalError(
+                f"No pricing available for `{model_name}`. "
+                f"Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `{model_name}`, "
+                f"or set {input_token_envvar} and {output_token_envvar} environment variables."
+            )
+
+        # Return the validated cost values as a tuple
+        return cost_per_input_token, cost_per_output_token
+
+    # If no custom cost values are provided, return model's default cost values
+    return model_data.input_price, model_data.output_price
 
 
 def normalize_kwargs_and_extract_aliases(

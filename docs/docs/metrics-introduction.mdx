@@ -422,7 +422,7 @@ deepeval set-azure-openai \
     --openai-api-key=<api_key> \
     --openai-model-name=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 ```
 
@@ -527,7 +527,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,

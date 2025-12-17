@@ -13,6 +13,7 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
 )
+from deepeval.utils import require_param
 
 
 retry_azure = create_retry_decorator(PS.AZURE)
@@ -31,7 +32,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         deployment_name: Optional[str] = None,
-        openai_api_version: Optional[str] = None,
+        api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -53,25 +54,46 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        self.openai_api_version = (
-            openai_api_version or settings.OPENAI_API_VERSION
-        )
-        self.base_url = (
-            base_url
-            or settings.AZURE_OPENAI_ENDPOINT
-            and str(settings.AZURE_OPENAI_ENDPOINT)
-        )
+        api_version = api_version or settings.OPENAI_API_VERSION
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.AZURE_OPENAI_ENDPOINT is not None:
+            base_url = str(settings.AZURE_OPENAI_ENDPOINT).rstrip("/")
 
-        self.deployment_name = (
+        deployment_name = (
             deployment_name or settings.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
+
+        model = model or settings.AZURE_EMBEDDING_MODEL_NAME or deployment_name
+
+        # validation
+        self.deployment_name = require_param(
+            deployment_name,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="AZURE_EMBEDDING_DEPLOYMENT_NAME",
+            param_hint="deployment_name",
+        )
+
+        self.base_url = require_param(
+            base_url,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="AZURE_OPENAI_ENDPOINT",
+            param_hint="base_url",
+        )
+
+        self.api_version = require_param(
+            api_version,
+            provider_label="AzureOpenAIEmbeddingModel",
+            env_var_name="OPENAI_API_VERSION",
+            param_hint="api_version",
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        model = model or self.deployment_name
         self.generation_kwargs = generation_kwargs or {}
         super().__init__(model)
 
@@ -126,7 +148,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         client_init_kwargs = dict(
             api_key=api_key,
-            api_version=self.openai_api_version,
+            api_version=self.api_version,
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **client_kwargs,

@@ -531,8 +531,6 @@ def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
 def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     settings,
 ):
-    from deepeval.models.llms.constants import OPENAI_MODELS_DATA
-
     """
     When a model is missing from `model_pricing`, GPTModel should populate
     pricing from Settings.OPENAI_COST_PER_INPUT_TOKEN and
@@ -540,16 +538,11 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     """
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
-        settings.OPENAI_MODEL_NAME = "gpt-5-chat-latest"
+        settings.OPENAI_MODEL_NAME = "model-not-yet-in-our-registry"  # <- A model not in our registry will not have pricing
         settings.OPENAI_COST_PER_INPUT_TOKEN = 0.123
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.456
 
-    # Ensure this model has no pricing so GPTModel must use Settings-based costs
-    model_data = OPENAI_MODELS_DATA.get("gpt-5-chat-latest", None)
-    model_data.input_price = None
-    model_data.output_price = None
-
     model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
-    assert model.name == "gpt-5-chat-latest"
+    assert model.name == "model-not-yet-in-our-registry"
     assert model.model_data.input_price == 0.123
     assert model.model_data.output_price == 0.456

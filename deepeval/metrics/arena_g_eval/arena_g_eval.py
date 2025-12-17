@@ -14,12 +14,17 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     check_arena_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.arena_g_eval.schema import *
+from deepeval.metrics.arena_g_eval.schema import (
+    RewrittenReason,
+    Winner,
+    Steps,
+)
 from deepeval.metrics.g_eval.utils import (
     construct_g_eval_params_string,
     validate_criteria_and_evaluation_steps,
@@ -171,19 +176,14 @@ class ArenaGEval(BaseArenaMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
-        else:
-            try:
-                res: Steps = await self.model.a_generate(prompt, schema=Steps)
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+
+        return await a_generate_with_schema_and_extract(
+            self,
+            prompt,
+            Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda data: data["steps"],
+        )
 
     def _generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
@@ -197,19 +197,13 @@ class ArenaGEval(BaseArenaMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
-        else:
-            try:
-                res: Steps = self.model.generate(prompt, schema=Steps)
-                return res.steps
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+        return generate_with_schema_and_extract(
+            self,
+            prompt,
+            Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda data: data["steps"],
+        )
 
     async def _a_compare(
         self, test_case: ArenaTestCase, multimodal: bool
@@ -226,18 +220,22 @@ class ArenaGEval(BaseArenaMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Winner)
-            self.evaluation_cost += cost
-            return res.winner, res.reason, dummy_to_real_names
-        else:
-            try:
-                res: Winner = await self.model.a_generate(prompt, schema=Winner)
-                return res.winner, res.reason, dummy_to_real_names
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["winner"], data["reason"], dummy_to_real_names
+
+        return await a_generate_with_schema_and_extract(
+            self,
+            prompt,
+            Winner,
+            extract_schema=lambda s: (
+                s.winner,
+                s.reason,
+                dummy_to_real_names,
+            ),
+            extract_json=lambda data: (
+                data["winner"],
+                data["reason"],
+                dummy_to_real_names,
+            ),
+        )
 
     def _compare(
         self, test_case: ArenaTestCase, multimodal: bool
@@ -254,18 +252,21 @@ class ArenaGEval(BaseArenaMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Winner)
-            self.evaluation_cost += cost
-            return res.winner, res.reason, dummy_to_real_names
-        else:
-            try:
-                res: Winner = self.model.generate(prompt, schema=Winner)
-                return res.winner, res.reason, dummy_to_real_names
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["winner"], data["reason"], dummy_to_real_names
+        return generate_with_schema_and_extract(
+            self,
+            prompt,
+            Winner,
+            extract_schema=lambda s: (
+                s.winner,
+                s.reason,
+                dummy_to_real_names,
+            ),
+            extract_json=lambda data: (
+                data["winner"],
+                data["reason"],
+                dummy_to_real_names,
+            ),
+        )
 
     async def _a_generate_rewritten_reason(
         self,
@@ -276,22 +277,14 @@ class ArenaGEval(BaseArenaMetric):
             reason=reason,
             dummy_to_real_names=dummy_to_real_names,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=RewrittenReason
-            )
-            self.evaluation_cost += cost
-            return res.rewritten_reason
-        else:
-            try:
-                res: RewrittenReason = await self.model.a_generate(
-                    prompt, schema=RewrittenReason
-                )
-                return res.rewritten_reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["rewritten_reason"]
+
+        return await a_generate_with_schema_and_extract(
+            self,
+            prompt,
+            RewrittenReason,
+            extract_schema=lambda s: s.rewritten_reason,
+            extract_json=lambda data: data["rewritten_reason"],
+        )
 
     def _generate_rewritten_reason(
         self,
@@ -302,20 +295,13 @@ class ArenaGEval(BaseArenaMetric):
             reason=reason,
             dummy_to_real_names=dummy_to_real_names,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=RewrittenReason)
-            self.evaluation_cost += cost
-            return res.rewritten_reason
-        else:
-            try:
-                res: RewrittenReason = self.model.generate(
-                    prompt, schema=RewrittenReason
-                )
-                return res.rewritten_reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["rewritten_reason"]
+        return generate_with_schema_and_extract(
+            self,
+            prompt,
+            RewrittenReason,
+            extract_schema=lambda s: s.rewritten_reason,
+            extract_json=lambda data: data["rewritten_reason"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:

@@ -3,6 +3,7 @@ from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import OPENAI_MODELS_DATA
@@ -11,13 +12,18 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.test_case import MLLMImage
-from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
+from deepeval.utils import (
+    convert_to_multi_modal_array,
+    check_if_multimodal,
+    require_param,
+)
 from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
+    require_costs,
     normalize_kwargs_and_extract_aliases,
 )
 from deepeval.constants import ProviderSlug as PS
@@ -36,53 +42,117 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         deployment_name: Optional[str] = None,
-        openai_api_version: Optional[str] = None,
+        api_version: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        settings = get_settings()
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
             "AzureOpenAIModel",
             kwargs,
             _ALIAS_MAP,
         )
 
-        # re-map depricated keywords to re-named positional args
+        # re-map deprecated keywords to re-named positional args
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
         if base_url is None and "base_url" in alias_values:
             base_url = alias_values["base_url"]
 
-        settings = get_settings()
-
         # fetch Azure deployment parameters
         model = model or settings.AZURE_MODEL_NAME
-        self.deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
-        self.model_data = OPENAI_MODELS_DATA.get(model)
+        deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
 
-        self.openai_api_version = (
-            openai_api_version or settings.OPENAI_API_VERSION
+        api_version = api_version or settings.OPENAI_API_VERSION
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.AZURE_OPENAI_ENDPOINT is not None:
+            base_url = str(settings.AZURE_OPENAI_ENDPOINT).rstrip("/")
+
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else settings.OPENAI_COST_PER_INPUT_TOKEN
         )
-        self.base_url = (
-            base_url
-            or settings.AZURE_OPENAI_ENDPOINT
-            and str(settings.AZURE_OPENAI_ENDPOINT)
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else settings.OPENAI_COST_PER_OUTPUT_TOKEN
         )
 
+        # validation
+        model = require_param(
+            model,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_MODEL_NAME",
+            param_hint="model",
+        )
+
+        self.deployment_name = require_param(
+            deployment_name,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_DEPLOYMENT_NAME",
+            param_hint="deployment_name",
+        )
+
+        self.base_url = require_param(
+            base_url,
+            provider_label="AzureOpenAIModel",
+            env_var_name="AZURE_OPENAI_ENDPOINT",
+            param_hint="base_url",
+        )
+
+        self.api_version = require_param(
+            api_version,
+            provider_label="AzureOpenAIModel",
+            env_var_name="OPENAI_API_VERSION",
+            param_hint="api_version",
+        )
+
+        self.model_data = OPENAI_MODELS_DATA.get(model)
+        cost_per_input_token, cost_per_output_token = require_costs(
+            self.model_data,
+            model,
+            "OPENAI_COST_PER_INPUT_TOKEN",
+            "OPENAI_COST_PER_OUTPUT_TOKEN",
+            cost_per_input_token,
+            cost_per_output_token,
+        )
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
+
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop(
+            "temperature", None
+        )  # to avoid duplicate with self.temperature
+
         super().__init__(parse_model_name(model))
 
     ###############################################
@@ -92,7 +162,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     @retry_azure
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:
+    ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
         if check_if_multimodal(prompt):
@@ -108,6 +178,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -125,6 +196,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -172,6 +244,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -280,8 +353,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return completion, cost
 
     def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
     ):
+        multimodal_input = [] if multimodal_input is None else multimodal_input
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
@@ -317,6 +391,25 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return input_cost + output_cost
 
     ###############################################
+    # Capabilities
+    ###############################################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        return self.model_data.supports_json
+
+    ###############################################
     # Model
     ###############################################
 
@@ -346,8 +439,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         kw = dict(
             api_key=api_key,
-            api_version=self.openai_api_version,
-            base_url=self.base_url,
+            api_version=self.api_version,
+            azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             **self._client_kwargs(),
         )
@@ -359,9 +452,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 kw.pop("max_retries", None)
                 return cls(**kw)
             raise
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Azure)"

@@ -15,6 +15,8 @@ from deepeval.metrics.utils import (
     trimAndLoadJson,
     initialize_model,
     check_llm_test_case_params,
+    generate_with_schema_and_extract,
+    a_generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -221,21 +223,13 @@ class GEval(BaseMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
-        else:
-            try:
-                res: gschema.Steps = await self.model.a_generate(
-                    prompt, schema=gschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=gschema.Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda d: d["steps"],
+        )
 
     def _generate_evaluation_steps(self, multimodal: bool) -> List[str]:
         if self.evaluation_steps:
@@ -249,21 +243,13 @@ class GEval(BaseMetric):
             parameters=g_eval_params_str,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
-        else:
-            try:
-                res: gschema.Steps = self.model.generate(
-                    prompt, schema=gschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=gschema.Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda d: d["steps"],
+        )
 
     async def _a_evaluate(
         self,
@@ -311,8 +297,7 @@ class GEval(BaseMetric):
                 prompt, top_logprobs=self.top_logprobs
             )
 
-            if self.evaluation_cost is not None:
-                self.evaluation_cost += cost
+            self._accrue_cost(cost)
 
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
@@ -328,24 +313,15 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
-        except (
-            AttributeError
-        ):  # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
-            else:
-                try:
-                    res: gschema.ReasonScore = await self.model.a_generate(
-                        prompt, schema=gschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+        except AttributeError:
+            # This catches the case where a_generate_raw_response doesn't exist.
+            return await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=gschema.ReasonScore,
+                extract_schema=lambda s: (s.score, s.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
+            )
 
     def _evaluate(
         self,
@@ -392,7 +368,7 @@ class GEval(BaseMetric):
             res, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
-            self.evaluation_cost += cost
+            self._accrue_cost(cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
@@ -409,21 +385,13 @@ class GEval(BaseMetric):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
-            else:
-                try:
-                    res: gschema.ReasonScore = self.model.generate(
-                        prompt, schema=gschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+            return generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=gschema.ReasonScore,
+                extract_schema=lambda s: (s.score, s.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
+            )
 
     def is_successful(self) -> bool:
         if self.error is not None:

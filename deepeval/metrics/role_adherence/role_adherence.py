@@ -4,20 +4,21 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.api import metric_data_manager
 from deepeval.metrics.role_adherence.schema import (
     OutOfCharacterResponseVerdicts,
+    RoleAdherenceScoreReason,
 )
 from deepeval.metrics.role_adherence.template import RoleAdherenceTemplate
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     convert_turn_to_dict,
-    trimAndLoadJson,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import Turn, ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.role_adherence.schema import *
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
@@ -142,7 +143,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, role: str) -> str:
+    async def _a_generate_reason(self, role: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -154,24 +155,17 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 for verdict in self.out_of_character_verdicts.verdicts
             ],
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=RoleAdherenceScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: RoleAdherenceScoreReason = await self.model.a_generate(
-                    prompt, schema=RoleAdherenceScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=RoleAdherenceScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
-    def _generate_reason(self, role: str) -> str:
+    def _generate_reason(self, role: str) -> Optional[str]:
+        if self.include_reason is False:
+            return None
         prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
             role=role,
@@ -180,22 +174,13 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 for verdict in self.out_of_character_verdicts.verdicts
             ],
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=RoleAdherenceScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: RoleAdherenceScoreReason = self.model.generate(
-                    prompt, schema=RoleAdherenceScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=RoleAdherenceScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_extract_out_of_character_verdicts(
         self, turns: List[Turn], role: str
@@ -206,28 +191,23 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 role=role,
             )
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=OutOfCharacterResponseVerdicts
+        res: OutOfCharacterResponseVerdicts = (
+            await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=OutOfCharacterResponseVerdicts,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: OutOfCharacterResponseVerdicts(
+                    **data
+                ),
             )
-            self.evaluation_cost += cost
-        else:
-            try:
-                res: OutOfCharacterResponseVerdicts = (
-                    await self.model.a_generate(
-                        prompt, schema=OutOfCharacterResponseVerdicts
-                    )
-                )
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                res = OutOfCharacterResponseVerdicts(**data)
+        )
 
         for verdict in res.verdicts:
             try:
                 index = verdict.index
                 verdict.ai_message = f"{turns[index].content} (turn #{index+1})"
-            except:
+            except Exception:
                 pass
         return res
 
@@ -240,26 +220,19 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 role=role,
             )
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=OutOfCharacterResponseVerdicts
-            )
-            self.evaluation_cost += cost
-        else:
-            try:
-                res: OutOfCharacterResponseVerdicts = self.model.generate(
-                    prompt, schema=OutOfCharacterResponseVerdicts
-                )
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                res = OutOfCharacterResponseVerdicts(**data)
+        res: OutOfCharacterResponseVerdicts = generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=OutOfCharacterResponseVerdicts,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: OutOfCharacterResponseVerdicts(**data),
+        )
 
         for verdict in res.verdicts:
             try:
                 index = verdict.index
                 verdict.ai_message = f"{turns[index].content} (turn #{index+1})"
-            except:
+            except Exception:
                 pass
         return res
 
@@ -282,8 +255,8 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
-            except:
+                self.success = self.score >= self.threshold
+            except TypeError:
                 self.success = False
         return self.success
 

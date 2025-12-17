@@ -36,7 +36,7 @@ def test_azure_sdk_retries_disabled(monkeypatch):
         deployment_name="dummy",
         model="gpt-4o-mini",
         api_key="x",
-        openai_api_version="2024-02-01",
+        api_version="2024-02-01",
         base_url="https://example",
         max_retries=5,
     )
@@ -90,7 +90,7 @@ def test_azure_sdk_retries_opt_in_respects_user_max_retries(settings):
         deployment_name="dummy",
         model="gpt-4o-mini",
         api_key="x",
-        openai_api_version="2024-02-01",
+        api_version="2024-02-01",
         base_url="https://example",
         max_retries=5,  # should be honored when SDK retries are enabled
     )

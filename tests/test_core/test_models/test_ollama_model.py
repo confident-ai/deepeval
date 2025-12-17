@@ -19,7 +19,7 @@ def test_ollama_model_uses_explicit_model_and_base_url_over_settings(
 
     # Seed Settings with default values that *should not* be used
     with settings.edit(persist=False):
-        settings.LOCAL_MODEL_NAME = "settings-model"
+        settings.OLLAMA_MODEL_NAME = "settings-model"
         settings.LOCAL_MODEL_BASE_URL = "http://settings-host:11434"
 
     # Set up fake ollama module returned by require_dependency
@@ -48,7 +48,7 @@ def test_ollama_model_defaults_model_and_base_url_from_settings(
     """
     When no ctor `model` or `base_url` is provided, OllamaModel should
     resolve both values from the Pydantic Settings object
-    (LOCAL_MODEL_NAME, LOCAL_MODEL_BASE_URL), and construct the Client
+    (OLLAMA_MODEL_NAME, LOCAL_MODEL_BASE_URL), and construct the Client
     with that host.
     """
     # Fresh Settings instance
@@ -56,7 +56,7 @@ def test_ollama_model_defaults_model_and_base_url_from_settings(
 
     # Seed Settings with the values that should be used by default
     with settings.edit(persist=False):
-        settings.LOCAL_MODEL_NAME = "settings-model"
+        settings.OLLAMA_MODEL_NAME = "settings-model"
         settings.LOCAL_MODEL_BASE_URL = "http://settings-host:11434"
 
     # Set up fake ollama module returned by require_dependency
