@@ -100,6 +100,6 @@ async def meta_agent(input: str):
     update_current_span(
         input=input,
         output=final_response,
-        tools_called=[ToolCall(name="FindRestaurant")]
+        tools_called=[ToolCall(name="FindRestaurant")],
     )
     return final_response
