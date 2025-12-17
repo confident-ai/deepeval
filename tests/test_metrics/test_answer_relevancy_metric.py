@@ -3,6 +3,7 @@ import pytest
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
+from deepeval.errors import DeepEvalError
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -121,10 +122,8 @@ class TestAnswerRelevancyMetric:
             ],
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
-        with pytest.raises(ValueError):
-            metric = AnswerRelevancyMetric(
-                async_mode=False, model="gpt-4.1"
-            )
+        with pytest.raises(DeepEvalError):
+            metric = AnswerRelevancyMetric(async_mode=False, model="gpt-4.1")
             metric.measure(test_case)
 
     def test_normal_evaluate_method(self):
