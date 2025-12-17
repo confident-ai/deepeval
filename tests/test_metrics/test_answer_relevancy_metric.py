@@ -123,7 +123,7 @@ class TestAnswerRelevancyMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(DeepEvalError):
-            metric = AnswerRelevancyMetric(async_mode=False, model="gpt-4.1")
+            metric = AnswerRelevancyMetric(async_mode=False, model="gpt-3.5-turbo")
             metric.measure(test_case)
 
     def test_normal_evaluate_method(self):
