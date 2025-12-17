@@ -1,4 +1,4 @@
-import os
+pimport os
 import pytest
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
@@ -122,9 +122,7 @@ class TestAnswerRelevancyMetric:
             expected_tools=[ToolCall(name="ImageAnalysis")],
         )
         with pytest.raises(ValueError):
-            metric = AnswerRelevancyMetric(
-                async_mode=False, model="gpt-4.1"
-            )
+            metric = AnswerRelevancyMetric(async_mode=False, model="gpt-4.1")
             metric.measure(test_case)
 
     def test_normal_evaluate_method(self):
