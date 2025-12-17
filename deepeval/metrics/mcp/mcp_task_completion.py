@@ -177,7 +177,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             res = self.model.generate(prompt)
             return res
 
-    async def _a_generate_reason(self, task_scores: List[TaskScore]) -> Optional[str]:
+    async def _a_generate_reason(
+        self, task_scores: List[TaskScore]
+    ) -> Optional[str]:
         if not self.include_reason:
             return None
 
