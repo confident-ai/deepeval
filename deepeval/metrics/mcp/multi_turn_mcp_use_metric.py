@@ -324,23 +324,52 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     ) -> Optional[str]:
         if not self.include_reason:
             return None
-        reason = "["
+
+        reasons = []
         for task_score in tool_accuracy_score:
-            if task_score.score < self.threshold:
-                reason += "\nPrimitives Used\n"
-                reason += (
-                    f"Score: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        for task_score in args_accuracy_score:
-            if task_score.score < self.threshold:
-                reason += "\nArguments Generated\n"
-                reason += (
-                    f"Score: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        reason += "]"
-        return reason
+            reasons.append(task_score.reason)
+
+        for arg_score in args_accuracy_score:
+            reasons.append(arg_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = self.model.generate(prompt)
+            return res
+
+    async def _a_generate_reason(
+        self,
+        tool_accuracy_score: List[ToolScore],
+        args_accuracy_score: List[ArgsScore],
+    ) -> Optional[str]:
+        if not self.include_reason:
+            return None
+
+        reasons = []
+        for task_score in tool_accuracy_score:
+            reasons.append(task_score.reason)
+
+        for arg_score in args_accuracy_score:
+            reasons.append(arg_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = await self.model.a_generate(prompt)
+            return res
 
     def is_successful(self) -> bool:
         if self.error is not None:

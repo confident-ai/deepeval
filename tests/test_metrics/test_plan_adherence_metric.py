@@ -177,7 +177,7 @@ class TestPlanAdherenceMetric:
         dataset = EvaluationDataset(goldens=[golden])
 
         with pytest.raises(ValueError):
-            metric = PlanAdherenceMetric(model="gpt-3.5-turboclear")
+            metric = PlanAdherenceMetric(model="gpt-3.5-turbo")
 
             for golden in dataset.evals_iterator(metrics=[metric]):
                 trip_planner_agent(golden.input)

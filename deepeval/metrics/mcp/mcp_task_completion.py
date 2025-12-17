@@ -163,15 +163,44 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     def _generate_reason(self, task_scores: List[TaskScore]) -> Optional[str]:
         if not self.include_reason:
             return None
-        reason = "["
+
+        reasons = []
         for task_score in task_scores:
-            if task_score.score < self.threshold:
-                reason += (
-                    f"\nScore: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        reason += "]"
-        return reason
+            reasons.append(task_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = self.model.generate(prompt)
+            return res
+
+    async def _a_generate_reason(
+        self, task_scores: List[TaskScore]
+    ) -> Optional[str]:
+        if not self.include_reason:
+            return None
+
+        reasons = []
+        for task_score in task_scores:
+            reasons.append(task_score.reason)
+
+        prompt = MCPTaskCompletionTemplate.generate_final_reason(
+            self.score, self.success, reasons
+        )
+
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt)
+            self.evaluation_cost += cost
+            return res
+        else:
+            res = await self.model.a_generate(prompt)
+            return res
 
     def _get_task_score(self, task: Task) -> TaskScore:
         prompt = MCPTaskCompletionTemplate.get_task_completion_score(task)

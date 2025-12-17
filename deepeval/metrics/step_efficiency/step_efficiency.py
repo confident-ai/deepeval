@@ -24,7 +24,6 @@ class StepEfficiencyMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.TOOLS_CALLED,
     ]
 
     def __init__(
@@ -52,17 +51,15 @@ class StepEfficiencyMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ):
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
-        if not has_trace:
-            check_llm_test_case_params(
-                test_case,
-                self._required_params,
-                None,
-                None,
-                self,
-                self.model,
-                test_case.multimodal,
-            )
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -112,17 +109,15 @@ class StepEfficiencyMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ):
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
-        if not has_trace:
-            check_llm_test_case_params(
-                test_case,
-                self._required_params,
-                None,
-                None,
-                self,
-                self.model,
-                test_case.multimodal,
-            )
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
 
