@@ -15,17 +15,6 @@ from deepeval.test_case import (
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
-def _prepare_images_mapping_for_api(images_mapping):
-    if not images_mapping:
-        return None
-
-    for img in images_mapping.values():
-        if img is not None:
-            img.ensure_images_loaded()  # populates dataBase64 for local images
-
-    return images_mapping
-
-
 def create_api_turn(turn: Turn, index: int) -> TurnApi:
     return TurnApi(
         role=turn.role,
@@ -70,9 +59,7 @@ def create_api_test_case(
             context=test_case.context,
             tags=test_case.tags,
             comments=test_case.comments,
-            imagesMapping=_prepare_images_mapping_for_api(
-                test_case._get_images_mapping()
-            ),
+            imagesMapping=test_case._get_images_mapping(),
             additionalMetadata=test_case.additional_metadata,
         )
 
@@ -106,9 +93,7 @@ def create_api_test_case(
             expectedOutput=test_case.expected_output,
             retrievalContext=test_case.retrieval_context,
             context=test_case.context,
-            imagesMapping=_prepare_images_mapping_for_api(
-                test_case._get_images_mapping()
-            ),
+            imagesMapping=test_case._get_images_mapping(),
             toolsCalled=test_case.tools_called,
             expectedTools=test_case.expected_tools,
             tokenCost=test_case.token_cost,
