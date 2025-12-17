@@ -2,14 +2,14 @@ import pytest
 import uuid
 from unittest.mock import patch
 from pydantic import ValidationError
-
+import tempfile
 from deepeval.test_case import (
     LLMTestCase,
     ToolCall,
     LLMTestCaseParams,
     ToolCallParams,
 )
-from deepeval.test_case.mcp import MCPServer
+from deepeval.test_case import Context
 
 
 class TestLLMTestCaseInitialization:
@@ -40,6 +40,7 @@ class TestLLMTestCaseInitialization:
         assert test_case._dataset_rank is None
         assert test_case._dataset_alias is None
         assert test_case._dataset_id is None
+        assert test_case._context_items is None
         assert isinstance(test_case._identifier, str)
 
     def test_full_initialization(self):
@@ -50,13 +51,17 @@ class TestLLMTestCaseInitialization:
             output={"results": ["result1", "result2"]},
             input_parameters={"query": "test query"},
         )
+        context = Context(
+            source_type="url",
+            source="https://www.trydeepteam.com/docs/getting-started",
+        )
 
         test_case = LLMTestCase(
             input="What is machine learning?",
             actual_output="Machine learning is a subset of AI...",
             expected_output="Machine learning is a method of data analysis...",
-            context=["ML is important", "AI revolution"],
-            retrieval_context=["Retrieved context 1", "Retrieved context 2"],
+            context=["ML is important", "AI revolution", context],
+            retrieval_context=["Retrieved context 1","Retrieved context 2"],
             additional_metadata={"source": "test", "version": 1.0},
             tools_called=[tool_call],
             comments="This is a test case",
@@ -75,7 +80,8 @@ class TestLLMTestCaseInitialization:
             test_case.expected_output
             == "Machine learning is a method of data analysis..."
         )
-        assert test_case.context == ["ML is important", "AI revolution"]
+        assert len(test_case.context) > 3
+        assert test_case._context_items == ["ML is important", "AI revolution", context]
         assert test_case.retrieval_context == [
             "Retrieved context 1",
             "Retrieved context 2",
@@ -774,3 +780,170 @@ class TestIntegrationScenarios:
         assert test_case.tools_called[0].name == "web_search"
         assert test_case.tools_called[1].name == "calculator"
         assert len(test_case.expected_tools) == 1
+
+
+class TestContextInitialization:
+    def test_minimal_file_context(self):
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"hello world")
+            path = f.name
+
+        context = Context(source_type="file", source=path)
+        assert context.source_type == "file"
+        assert context.source == path
+        assert context.chunk_size == 2048
+        assert context.chunk_overlap == 128
+        assert context._content is None
+
+    def test_minimal_url_context(self):
+        context = Context(
+            source_type="url",
+            source="https://example.com",
+        )
+        assert context.source_type == "url"
+        assert context.source.startswith("https://")
+
+    def test_invalid_file_path(self):
+        with pytest.raises(ValueError):
+            Context(source_type="file", source="/non/existent/file.txt")
+
+    def test_invalid_url(self):
+        with pytest.raises(ValueError):
+            Context(source_type="url", source="ftp://example.com")
+
+    def test_invalid_chunk_overlap(self):
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"text")
+            path = f.name
+
+        with pytest.raises(ValueError):
+            Context(
+                source_type="file",
+                source=path,
+                chunk_size=100,
+                chunk_overlap=100,
+            )
+
+
+class TestContextFileLoading:
+    def test_txt_file_loading(self):
+        content = "This is a simple text file."
+
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", mode="w", delete=False
+        ) as f:
+            f.write(content)
+            path = f.name
+
+        context = Context(source_type="file", source=path)
+        resolved = context.resolve_contexts()
+
+        assert isinstance(resolved, str)
+        assert content in resolved
+
+    def test_file_chunking(self):
+        content = "A" * 5000
+
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", mode="w", delete=False
+        ) as f:
+            f.write(content)
+            path = f.name
+
+        context = Context(
+            source_type="file",
+            source=path,
+            chunk_size=1000,
+            chunk_overlap=100,
+        )
+
+        chunks = context.resolve_contexts()
+        assert isinstance(chunks, list)
+        assert len(chunks) > 1
+
+
+class TestContextURLLoading:
+    def test_html_stripping(self, monkeypatch):
+        html = """
+        <html>
+            <head><title>Test</title></head>
+            <body>
+                <h1>Hello</h1>
+                <script>alert("bad")</script>
+                <p>World</p>
+            </body>
+        </html>
+        """
+
+        class MockResponse:
+            status_code = 200
+            text = html
+
+            def raise_for_status(self):
+                pass
+
+        monkeypatch.setattr(
+            "requests.get", lambda *args, **kwargs: MockResponse()
+        )
+
+        context = Context(
+            source_type="url",
+            source="https://example.com",
+        )
+
+        resolved = context.resolve_contexts()
+        assert "Hello" in resolved
+        assert "World" in resolved
+        assert "alert" not in resolved
+
+    def test_url_chunking(self, monkeypatch):
+        html = "<p>" + ("text " * 2000) + "</p>"
+
+        class MockResponse:
+            status_code = 200
+            text = html
+
+            def raise_for_status(self):
+                pass
+
+        monkeypatch.setattr(
+            "requests.get", lambda *args, **kwargs: MockResponse()
+        )
+
+        context = Context(
+            source_type="url",
+            source="https://example.com",
+            chunk_size=500,
+            chunk_overlap=50,
+        )
+
+        chunks = context.resolve_contexts()
+        assert isinstance(chunks, list)
+        assert len(chunks) > 1
+
+
+class TestContextResolutionBehavior:
+    def test_resolve_idempotent(self, monkeypatch):
+        html = "<p>Hello World</p>"
+
+        class MockResponse:
+            status_code = 200
+            text = html
+
+            def raise_for_status(self):
+                pass
+
+        monkeypatch.setattr(
+            "requests.get", lambda *args, **kwargs: MockResponse()
+        )
+
+        context = Context(
+            source_type="url",
+            source="https://example.com",
+        )
+
+        first = context.resolve_contexts()
+        second = context.resolve_contexts()
+
+        assert first == second
+        assert context._content is not None

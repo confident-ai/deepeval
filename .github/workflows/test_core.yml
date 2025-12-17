@@ -59,7 +59,10 @@ jobs:
       #    install dev dependencies (including chromadb and model deps)
       #----------------------------------------------
       - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
+        run: poetry install --no-interaction --with 
+        
+      - name: Install other dependencies
+        run: poetry run pip install beautifulsoup4
         
       #----------------------------------------------
       #              run test suite

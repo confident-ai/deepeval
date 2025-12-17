@@ -4,6 +4,7 @@ from .llm_test_case import (
     ToolCall,
     ToolCallParams,
     MLLMImage,
+    Context,
 )
 from .conversational_test_case import (
     ConversationalTestCase,
@@ -24,6 +25,7 @@ __all__ = [
     "LLMTestCaseParams",
     "ToolCall",
     "ToolCallParams",
+    "Context",
     "ConversationalTestCase",
     "Turn",
     "TurnParams",
