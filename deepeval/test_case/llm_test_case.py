@@ -170,8 +170,7 @@ class Context:
     source_type: Literal["file", "url"]
     source: str
     chunk_size: int = 2048
-    chunk_overlap: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    chunk_overlap: int = 128
     _content: Optional[str] = None
 
     def __post_init__(self):
@@ -187,7 +186,7 @@ class Context:
             if not self.source.startswith(("http://", "https://")):
                 raise ValueError(f"Invalid URL context source: {self.source}")
 
-    def resolve(self) -> Union[str, List[str]]:
+    def resolve_contexts(self) -> Union[str, List[str]]:
         if self._content is None:
             if self.source_type == "file":
                 self._content = self._load_file(self.source)
@@ -198,9 +197,6 @@ class Context:
             return self._content
 
         return self._chunk_text(self._content)
-
-    def to_string(self) -> Union[str, List[str]]:
-        return self.resolve()
 
     def _load_file(self, path: str) -> str:
         from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
@@ -217,14 +213,6 @@ class Context:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         text = resp.text
-
-        self.metadata.update(
-            {
-                "source_type": "url",
-                "url": url,
-                "status_code": resp.status_code,
-            }
-        )
 
         return self.html_to_text(text)
 
@@ -254,10 +242,6 @@ class Context:
             chunk = text[start:end]
             chunks.append(chunk)
             start = end - self.chunk_overlap
-
-        self.metadata["num_chunks"] = len(chunks)
-        self.metadata["chunk_size"] = self.chunk_size
-        self.metadata["chunk_overlap"] = self.chunk_overlap
 
         return chunks
 
@@ -492,7 +476,7 @@ class LLMTestCase(BaseModel):
 
         for item in self.context:
             if isinstance(item, Context):
-                resolved = item.resolve()
+                resolved = item.resolve_contexts()
                 if isinstance(resolved, list):
                     resolved_context.extend(resolved)
                 else:
@@ -501,8 +485,6 @@ class LLMTestCase(BaseModel):
                 resolved_context.append(item)
 
         self.context = resolved_context
-
-        return self
 
     def _set_is_multimodal(self):
 
@@ -533,7 +515,6 @@ class LLMTestCase(BaseModel):
             )
 
         self.multimodal = auto_detect
-        return self
 
     @model_validator(mode="before")
     def validate_input(cls, data):

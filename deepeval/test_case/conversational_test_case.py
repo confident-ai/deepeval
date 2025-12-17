@@ -6,7 +6,7 @@ from pydantic import (
     model_validator,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Literal
+from typing import List, Optional, Dict, Literal, Union
 from copy import deepcopy
 from enum import Enum
 
@@ -18,7 +18,7 @@ from deepeval.test_case.mcp import (
     MCPToolCall,
     validate_mcp_servers,
 )
-from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY, Context
 
 
 class TurnParams(Enum):
@@ -131,7 +131,7 @@ class Turn(BaseModel):
 class ConversationalTestCase(BaseModel):
     turns: List[Turn]
     scenario: Optional[str] = Field(default=None)
-    context: Optional[List[str]] = Field(default=None)
+    context: Optional[List[Union[str, Context]]] = Field(default=None)
     name: Optional[str] = Field(default=None)
     user_description: Optional[str] = Field(
         default=None,
@@ -163,9 +163,41 @@ class ConversationalTestCase(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _context_items: Optional[List[Union[str, Context]]] = PrivateAttr(
+        default=None
+    )
 
     @model_validator(mode="after")
-    def set_is_multimodal(self):
+    def post_init(self):
+
+        self._handle_context_data()
+        self._set_is_multimodal()
+
+        return self
+
+    def _handle_context_data(self):
+        if self.context is None:
+            return
+
+        self._context_items = self.context[:]
+
+        resolved_context = []
+
+        for item in self.context:
+            if isinstance(item, Context):
+                resolved = item.resolve_contexts()
+                if isinstance(resolved, list):
+                    resolved_context.extend(resolved)
+                else:
+                    resolved_context.append(resolved)
+            else:
+                resolved_context.append(item)
+
+        self.context = resolved_context
+
+        return self
+    
+    def _set_is_multimodal(self):
         import re
 
         if self.multimodal is True:
@@ -194,8 +226,6 @@ class ConversationalTestCase(BaseModel):
                         re.search(pattern, context) is not None
                         for context in turn.retrieval_context
                     )
-
-        return self
 
     @model_validator(mode="before")
     def validate_input(cls, data):
