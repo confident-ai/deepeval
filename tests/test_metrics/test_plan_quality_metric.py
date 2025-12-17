@@ -1,7 +1,7 @@
 import os
 import pytest
-from deepeval.test_case import MLLMImage
-from deepeval.tracing import observe
+from deepeval.test_case import MLLMImage, ToolCall
+from deepeval.tracing import observe, update_current_trace
 from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.metrics import PlanQualityMetric
 
@@ -160,6 +160,7 @@ class TestPlanQualityMetric:
 
             @observe()
             def restaurant_finder(city):
+                update_current_trace(tools_called=[ToolCall(name="FindRestaurant")])
                 return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
             @observe()
