@@ -36,7 +36,6 @@ class MLLMImage:
     local: Optional[bool] = None
     filename: Optional[str] = None
     _id: str = field(default_factory=lambda: uuid.uuid4().hex)
-    _lazy_load: bool = True
 
     def __post_init__(self):
 
@@ -66,8 +65,7 @@ class MLLMImage:
                 if not os.path.exists(path):
                     raise FileNotFoundError(f"Image file not found: {path}")
 
-                if not self._lazy_load:
-                    self._load_base64(path)
+                self._load_base64(path)
             else:
                 if not self.url.startswith(("http://", "https://")):
                     raise ValueError(
