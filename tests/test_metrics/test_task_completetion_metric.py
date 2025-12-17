@@ -177,7 +177,7 @@ class TestTaskCompletionMetric:
         dataset = EvaluationDataset(goldens=[golden])
 
         with pytest.raises(ValueError):
-            metric = TaskCompletionMetric(model="gpt-3.5-turboclear")
+            metric = TaskCompletionMetric(model="gpt-3.5-turbo")
 
             for golden in dataset.evals_iterator(metrics=[metric]):
                 trip_planner_agent(golden.input)
