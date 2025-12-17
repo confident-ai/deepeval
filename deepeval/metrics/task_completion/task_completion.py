@@ -20,6 +20,7 @@ from deepeval.metrics.task_completion.schema import (
     TaskAndOutcome,
     TaskCompletionVerdict,
 )
+from deepeval.metrics.api import metric_data_manager
 
 
 class TaskCompletionMetric(BaseMetric):
@@ -62,17 +63,15 @@ class TaskCompletionMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
-        if not has_trace:
-            check_llm_test_case_params(
-                test_case,
-                self._required_params,
-                None,
-                None,
-                self,
-                self.model,
-                test_case.multimodal,
-            )
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -103,6 +102,12 @@ class TaskCompletionMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
+
             return self.score
 
     async def a_measure(
@@ -112,17 +117,15 @@ class TaskCompletionMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
-        if not has_trace:
-            check_llm_test_case_params(
-                test_case,
-                self._required_params,
-                None,
-                None,
-                self,
-                self.model,
-                test_case.multimodal,
-            )
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -147,6 +150,12 @@ class TaskCompletionMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
+
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
+
             return self.score
 
     async def _a_generate_verdicts(self) -> Tuple:
