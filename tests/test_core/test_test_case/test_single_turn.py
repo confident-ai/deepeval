@@ -61,7 +61,7 @@ class TestLLMTestCaseInitialization:
             actual_output="Machine learning is a subset of AI...",
             expected_output="Machine learning is a method of data analysis...",
             context=["ML is important", "AI revolution", context],
-            retrieval_context=["Retrieved context 1","Retrieved context 2"],
+            retrieval_context=["Retrieved context 1", "Retrieved context 2"],
             additional_metadata={"source": "test", "version": 1.0},
             tools_called=[tool_call],
             comments="This is a test case",
@@ -81,7 +81,11 @@ class TestLLMTestCaseInitialization:
             == "Machine learning is a method of data analysis..."
         )
         assert len(test_case.context) > 3
-        assert test_case._context_items == ["ML is important", "AI revolution", context]
+        assert test_case._context_items == [
+            "ML is important",
+            "AI revolution",
+            context,
+        ]
         assert test_case.retrieval_context == [
             "Retrieved context 1",
             "Retrieved context 2",

@@ -239,10 +239,12 @@ class ConversationalTestCase(BaseModel):
         # Ensure `context` is None or a list of strings
         if context is not None:
             if not isinstance(context, list) or not all(
-                (isinstance(item, str) or isinstance(item, Context)) 
+                (isinstance(item, str) or isinstance(item, Context))
                 for item in context
             ):
-                raise TypeError("'context' must be None or a list of  or 'Context'")
+                raise TypeError(
+                    "'context' must be None or a list of  or 'Context'"
+                )
 
         if mcp_servers is not None:
             validate_mcp_servers(mcp_servers)
