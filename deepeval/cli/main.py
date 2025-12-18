@@ -139,6 +139,12 @@ def set_confident_region_command(
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     """Set the Confident AI data region."""
     # Add flag emojis based on region
@@ -148,40 +154,29 @@ def set_confident_region_command(
     with settings.edit(save=save) as edit_ctx:
         settings.CONFIDENT_REGION = region.value
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
+        ),
     )
 
 
-@app.command()
+@app.command(
+    help=(
+        "Login will prompt you for your Confident AI API key (input hidden). "
+        "Get it from https://app.confident-ai.com. "
+        "Required to log events to the server. "
+        "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
+    )
+)
 def login(
-    api_key: str = typer.Option(
-        "",
-        help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server.",
-    ),
-    confident_api_key: Optional[str] = typer.Option(
-        None,
-        "--confident-api-key",
-        "-c",
-        help="Confident API key (non-interactive). If omitted, you'll be prompted to enter one. In all cases the key is saved to a dotenv file (default: .env.local) unless overridden with --save.",
-    ),
     save: Optional[str] = typer.Option(
         None,
         "-s",
@@ -189,12 +184,16 @@ def login(
         help="Where to persist settings. Format: dotenv[:path]. Defaults to .env.local. If omitted, login still writes to .env.local.",
     ),
 ):
+    api_key = coerce_blank_to_none(
+        typer.prompt("🔐 Enter your API Key", hide_input=True)
+    )
+
     with capture_login_event() as span:
         completed = False
         try:
             # Resolve the key from CLI flag or interactive flow
-            if confident_api_key:
-                key = confident_api_key.strip()
+            if api_key is not None:
+                key = api_key
             else:
                 render_login_message()
 
@@ -216,16 +215,15 @@ def login(
                 )
 
                 # Manual fallback if still empty
-                if api_key == "":
-                    while True:
-                        api_key = input("🔐 Enter your API Key: ").strip()
-                        if api_key:
-                            break
-                        else:
-                            print(
-                                "❌ API Key cannot be empty. Please try again.\n"
-                            )
-                key = api_key.strip()
+                while True:
+                    api_key = coerce_blank_to_none(
+                        typer.prompt("🔐 Enter your API Key", hide_input=True)
+                    )
+                    if api_key:
+                        break
+                    else:
+                        print("❌ API Key cannot be empty. Please try again.\n")
+                key = api_key
 
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
@@ -272,7 +270,13 @@ def logout(
         "-s",
         "--save",
         help="Where to remove the saved key from. Use format dotenv[:path]. If omitted, uses DEEPEVAL_DEFAULT_SAVE or .env.local. The JSON keystore is always cleared.",
-    )
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     """
     Log out of Confident AI.
@@ -290,17 +294,18 @@ def logout(
 
     handled, path, updated = edit_ctx.result
 
-    if updated:
-        if not handled and save is not None:
-            # invalid --save format (unsupported)
-            print("Unsupported --save option. Use --save=dotenv[:path].")
-        elif path:
-            # persisted to a file
-            print(f"Removed Confident AI key(s) from {path}.")
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updated,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Confident AI key(s) from {path}.",
+        tip_msg=None,
+    ):
+        print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
     delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
-
-    print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
 
 @app.command()
@@ -2118,7 +2123,9 @@ def set_local_embeddings_env(
 ):
     api_key = None
     if prompt_api_key:
-        api_key = typer.prompt("Local Embedding Model API key", hide_input=True)
+        api_key = coerce_blank_to_none(
+            typer.prompt("Local Embedding Model API key", hide_input=True)
+        )
 
     model = coerce_blank_to_none(model)
     base_url = coerce_blank_to_none(base_url)
