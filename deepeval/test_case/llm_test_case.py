@@ -167,7 +167,7 @@ class MLLMImage:
 
 @dataclass
 class Context:
-    source_type: Literal["file", "url"]
+    type: Literal["file", "url"]
     source: str
     chunk_size: int = 2048
     chunk_overlap: int = 128
@@ -177,20 +177,20 @@ class Context:
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap must be smaller than chunk_size")
 
-        if self.source_type == "file":
+        if self.type == "file":
             path = Path(self.source)
             if not path.exists():
                 raise ValueError(f"Context file does not exist: {self.source}")
 
-        if self.source_type == "url":
+        if self.type == "url":
             if not self.source.startswith(("http://", "https://")):
                 raise ValueError(f"Invalid URL context source: {self.source}")
 
     def resolve_contexts(self) -> Union[str, List[str]]:
         if self._content is None:
-            if self.source_type == "file":
+            if self.type == "file":
                 self._content = self._load_file(self.source)
-            elif self.source_type == "url":
+            elif self.type == "url":
                 self._content = self._fetch_url(self.source)
 
         if len(self._content) <= self.chunk_size:
