@@ -538,6 +538,173 @@ You may wish to wish any JSON confinement libraries out there, and we're just su
 
 In the final section, we'll show several popular end-to-end examples of custom LLMs using either `lm-format-enforcer` or `instructor` for JSON confinement.
 
+## Multimodal Support For Images
+
+`deepeval` natively supports passing images in your test cases using the `MLLMImage` object, these objects are converted to `deepeval` special slug strings, and are parsed at the model level in the `generate` functions. This section will show you how to update your `generate` functions to support multimodal evaluations with your custom LLM.
+
+### Detecting Multimodal Inputs
+
+In `deepeval`, passing `MLLMImage`s in your test cases converts them to special slugs like `[DEEPEVAL:IMAGE:<uuid>]`. An example is shown below:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+test_case = LLMTestCase(
+    input=f"What's in this image: {MLLMImage(url="./my_image.jpeg")}"
+    actual_output=f"The image contains a red car drifting in the rain."
+)
+```
+
+From the above code the `input` of `LLMTestCase` will be shown as following:
+
+```
+What's in this image: [DEEPEVAL:IMAGE:<uuid>]
+```
+
+The evaluation models are passed the same strings with the slug shown above, `deepeval` provides a method called `check_if_multimodal` that can be used to check if a string has multimodal images.
+
+```python
+from deepeval.utils import check_if_multimodal
+
+print(check_if_multimodal(test_case.input)) # True
+print(check_if_multimodal(test_case.actual_output)) # False
+```
+
+### Parsing Multimodal Strings
+
+`deepeval` provides a helper method called `convert_to_multi_modal_array`, which can be used to convert a string with the `deepeval` image slug into a list of strings and `MLLMImage` objects, you can use this list to do ETL and provide images separately to your custom LLM application in its native format. Here's an example:
+
+```python
+from deepeval.utils import convert_to_multi_modal_array
+
+print(convert_to_multi_modal_array(test_case.input))
+```
+
+This returns an ordered list containing plain strings and `MLLMImage` objects:
+
+```
+[
+    "What's in this image: ",
+    MLLMImage(...)
+]
+```
+
+The placeholder slug is replaced with the original `MLLMImage` instance you passed into the test case. From here, you can do simple ETL and map text and images into your LLM provider’s native multimodal format.
+
+### Reimplementing `generate` and `a_generate` to Support Multimodal Inputs
+
+Different providers accept multimodal inputs differently. As a concrete example, OpenAI expects images to be passed as part of a structured `content` array:
+
+```python
+from openai import OpenAI
+client = OpenAI()
+
+response = client.chat.completions.create(
+    model="gpt-4.1",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What is in this image?"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+                    },
+                },
+            ],
+        }
+    ],
+    max_tokens=300,
+)
+```
+
+Below is an example showing how to construct an OpenAI-compatible multimodal payload inside a custom DeepEval evaluation model.
+
+```python
+from typing import Union
+from pydantic import BaseModel
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import MLLMImage
+from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+
+class CustomMultimodalModel(DeepEvalBaseLLM):
+    def __init__(self, client):
+        self.client = client
+
+    def load_model(self):
+        return self.client
+
+    def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        if check_if_multimodal(prompt):
+            multimodal_elements = convert_to_multi_modal_array(prompt)
+            content = []
+
+            for element in multimodal_elements:
+                if isinstance(element, str):
+                    content.append({"type": "text", "text": element})
+
+                elif isinstance(element, MLLMImage):
+                    # External images can be passed by URL
+                    if element.url and not element.local:
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {"url": element.url},
+                        })
+                    else:
+                        # Local images must be converted to base64 data URIs
+                        element.ensure_images_loaded()
+                        data_uri = (
+                            f"data:{element.mimeType};base64,{element.dataBase64}"
+                        )
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {"url": data_uri},
+                        })
+        else:
+            content = [{"type": "text", "text": prompt}]
+
+        response = self.client.chat.completions.create(
+            model="gpt-4.1",
+            messages=[
+                {
+                    "role": "user",
+                    "content": content,
+                }
+            ],
+        )
+
+        # Parse and return the structured output according to the provided schema
+        return schema.model_validate_json(response.choices[0].message.content)
+
+    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        return self.generate(prompt, schema)
+```
+
+Here's what we've done in the above code:
+
+- We first checked if the prompt provided to the model is multimodal using the `check_if_multimodal` method.
+- If the prompt is multimodal, we converted it into the list of strings and `MLLMImage` instances using the `convert_to_multi_modal_array` method.
+- If the image in the `MLLMImage` instance is an external image, we simply passed the external url since OpenAI API supports it
+- If the image is local, we converted it to `base64` uri as OpenAI API requires `base64` uri data for local images.
+- The `ensure_images_loaded` method for `MLLMImage` instances, makes sure that all local images are fetched and parsed to populate the `dataBase64` and `mimeType` attributes.
+
+This is how you can use the `deepeval`'s internal methods to allow your custom models to support multimodal inputs.
+
+:::note
+If your custom model supports multimodal images, please override the `supports_multimodal` method to return `True` as that would allow `deepeval` to know that the evaluation model can handle multimodal data. Here's how to do it:
+
+```python
+from pydantic import BaseModel
+
+class CustomMultimodalModel(DeepEvalBaseLLM):
+    ...
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return True
+```
+:::
+
 ## More Examples
 
 ### `Mistral-7B-Instruct-v0.3` through `transformers`
