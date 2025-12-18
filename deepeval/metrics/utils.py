@@ -32,6 +32,7 @@ from deepeval.models import (
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    PortkeyModel,
     KimiModel,
     GrokModel,
     DeepSeekModel,
@@ -493,6 +494,11 @@ def should_use_litellm():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_portkey():
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_PORTKEY_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_deepseek_model():
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
@@ -531,6 +537,8 @@ def initialize_model(
         return GeminiModel(), True
     if should_use_litellm():
         return LiteLLMModel(), True
+    if should_use_portkey():
+        return PortkeyModel(), True
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
@@ -540,11 +548,11 @@ def initialize_model(
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(model=model), True
+        return GrokModel(), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
-        return AnthropicModel(model=model), True
+        return AnthropicModel(), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
