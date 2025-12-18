@@ -135,19 +135,19 @@ The `context` is an **optional** parameter that represents additional data recei
 
 A context accepts a list of:
 
-- f-strings with `MLLMImage` objects, and
+- strings and f-strings with `MLLMImage` objects, and
 - `Context` objects, which allow you to reference files or website URLs that `deepeval` will automatically fetch and process.
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase, Context
 
 website_context = Context(
-    source_type="url",
+    type="url",
     source="https://www.trydeepteam.com/docs/getting-started",
 )
 
 file_context = Context(
-    source_type="file",
+    type="file",
     source="/path/to/your/file.pdf",
 )
 
@@ -167,7 +167,7 @@ The `Context` object allows you to pass large or external sources of truth (such
 
 ```python
 class Context:
-    source_type: Literal["file", "url"]
+    type: Literal["file", "url"]
     source: str
     chunk_size: int = 2048
     chunk_overlap: int = 128
