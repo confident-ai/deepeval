@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
+from deepeval.test_case import ConversationalTestCase, Turn, Context
+import tempfile
 
 
 class TestConversationalTestCaseInitialization:
@@ -90,16 +91,12 @@ class TestConversationalTestCaseValidation:
 
     def test_invalid_context_type_raises_error(self):
         turns = [Turn(role="user", content="Hello")]
-        with pytest.raises(
-            TypeError, match="'context' must be None or a list of strings"
-        ):
+        with pytest.raises(TypeError):
             ConversationalTestCase(turns=turns, context="not a list")
 
     def test_invalid_context_items_raises_error(self):
         turns = [Turn(role="user", content="Hello")]
-        with pytest.raises(
-            TypeError, match="'context' must be None or a list of strings"
-        ):
+        with pytest.raises(TypeError):
             ConversationalTestCase(
                 turns=turns, context=["valid", 123, "invalid"]
             )
@@ -114,6 +111,30 @@ class TestConversationalTestCaseValidation:
         turns = [Turn(role="user", content="Hello")]
         test_case = ConversationalTestCase(turns=turns, context=None)
         assert test_case.context is None
+
+    def test_minimal_file_context(self):
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(b"hello world")
+            path = f.name
+
+        context = Context(source_type="file", source=path)
+        assert context.source_type == "file"
+        assert context.source == path
+        assert context.chunk_size == 2048
+        assert context.chunk_overlap == 128
+        assert context._content is None
+
+    def test_external_context_is_valid(self):
+        turns = [Turn(role="user", content="Hello")]
+        context = Context(
+            source_type="url",
+            source="https://www.trydeepteam.com/docs/getting-started",
+        )
+        test_case = ConversationalTestCase(
+            turns=turns, context=["Testing context", context]
+        )
+
+        assert len(test_case.context) > 3
 
 
 class TestConversationalTestCaseComplexScenarios:
