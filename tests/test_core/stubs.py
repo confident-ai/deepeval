@@ -1,6 +1,7 @@
 import io
 import time
 import asyncio
+from contextlib import contextmanager
 from unittest.mock import MagicMock
 from types import SimpleNamespace
 from typing import Callable, List, Optional, Protocol, runtime_checkable
@@ -82,7 +83,8 @@ class StubPrompt:
 
 
 class DummyModel:
-    pass
+    def get_model_name(self):
+        return "dummy"
 
 
 class AlwaysJsonModel:
@@ -389,6 +391,45 @@ class _FakeTrace:
         self.uuid = "trace-uuid"
 
 
+######################
+# Progress Indicator #
+######################
+
+
+class DummyProgress:
+    """
+    Tiny stub for rich.progress.Progress used to test _on_status.
+    Records update / advance calls.
+    """
+
+    def __init__(self):
+        self.records = []
+
+    def update(self, task_id, **kwargs):
+        self.records.append(("update", task_id, kwargs))
+
+    def advance(self, task_id, amount):
+        self.records.append(("advance", task_id, {"amount": amount}))
+
+
+###############
+# Synthesizer #
+###############
+
+
+class DummyEvolutionConfig:
+    num_evolutions = 0
+    evolutions = {}
+
+
+@contextmanager
+def stub_synthesizer_progress_context(**kwargs):
+    # behave like synthesizer_progress_context: yield (progress, pbar_id)
+    progress = kwargs.get("progress") or DummyProgress()
+    pbar_id = kwargs.get("pbar_id")
+    yield (progress, pbar_id)
+
+
 ################
 # Optimization #
 ################
@@ -561,22 +602,6 @@ class AsyncDummyRunner:
             "pareto_scores": {"root": [1.0]},
             "parents": {"root": None},
         }
-
-
-class DummyProgress:
-    """
-    Tiny stub for rich.progress.Progress used to test _on_status.
-    Records update / advance calls.
-    """
-
-    def __init__(self):
-        self.records = []
-
-    def update(self, task_id, **kwargs):
-        self.records.append(("update", task_id, kwargs))
-
-    def advance(self, task_id, amount):
-        self.records.append(("advance", task_id, {"amount": amount}))
 
 
 class StubScoringAdapter:

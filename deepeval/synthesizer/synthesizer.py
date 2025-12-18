@@ -25,7 +25,7 @@ from deepeval.metrics.utils import (
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.synthesizer.types import *
+from deepeval.synthesizer.types import Evolution, PromptEvolution
 from deepeval.synthesizer.templates import (
     EvolutionTemplate,
     SynthesizerTemplate,
@@ -246,7 +246,7 @@ class Synthesizer:
                 )
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
-                if _send_data == True:
+                if _send_data:
                     pass
                 remove_pbars(
                     progress,
@@ -546,7 +546,7 @@ class Synthesizer:
                 # Remove pbar if not from docs
                 remove_pbars(progress, [pbar_id]) if _progress is None else None
 
-        if _send_data == True:
+        if _send_data:
             pass
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -567,7 +567,8 @@ class Synthesizer:
         if _reset_cost:
             self.synthetic_goldens = []
             self.synthesis_cost = 0 if self.using_native_model else None
-        semaphore = asyncio.Semaphore(self.max_concurrent)
+        context_semaphore = asyncio.Semaphore(self.max_concurrent)
+        worker_semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
 
         with synthesizer_progress_context(
@@ -586,9 +587,9 @@ class Synthesizer:
         ):
             tasks = [
                 self.task_wrapper(
-                    semaphore,
+                    context_semaphore,
                     self._a_generate_from_context,
-                    semaphore=semaphore,
+                    semaphore=worker_semaphore,
                     context=context,
                     goldens=goldens,
                     include_expected_output=include_expected_output,
@@ -965,7 +966,7 @@ class Synthesizer:
 
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
-        if _send_data == True:
+        if _send_data:
             pass
         return goldens
 
@@ -1023,7 +1024,7 @@ class Synthesizer:
                 source_files.append(golden.source_file)
 
             # Extract styles from goldens if not already set
-            if self.set_styling_config == False:
+            if not self.set_styling_config:
                 example_inputs = random.sample(
                     [golden.input for golden in goldens], min(len(goldens), 10)
                 )
@@ -1069,7 +1070,7 @@ class Synthesizer:
             source_files.append(golden.source_file)
 
         # Extract styles from goldens if not already set
-        if self.set_styling_config == False:
+        if not self.set_styling_config:
             example_inputs = random.sample(
                 [golden.input for golden in goldens], min(len(goldens), 10)
             )
@@ -1637,7 +1638,7 @@ class Synthesizer:
                 )
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
-                if _send_data == True:
+                if _send_data:
                     pass
                 remove_pbars(
                     progress,
@@ -1949,7 +1950,7 @@ class Synthesizer:
                 # Remove pbar if not from docs
                 remove_pbars(progress, [pbar_id]) if _progress is None else None
 
-        if _send_data == True:
+        if _send_data:
             pass
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -1970,7 +1971,8 @@ class Synthesizer:
         if _reset_cost:
             self.synthetic_conversational_goldens = []
             self.synthesis_cost = 0 if self.using_native_model else None
-        semaphore = asyncio.Semaphore(self.max_concurrent)
+        context_semaphore = asyncio.Semaphore(self.max_concurrent)
+        worker_semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[ConversationalGolden] = []
 
         with synthesizer_progress_context(
@@ -1989,9 +1991,9 @@ class Synthesizer:
         ):
             tasks = [
                 self.task_wrapper(
-                    semaphore,
+                    context_semaphore,
                     self._a_generate_conversational_from_context,
-                    semaphore=semaphore,
+                    semaphore=worker_semaphore,
                     context=context,
                     goldens=goldens,
                     include_expected_outcome=include_expected_outcome,
@@ -2335,7 +2337,7 @@ class Synthesizer:
 
         # Wrap up Synthesis
         self.synthetic_conversational_goldens.extend(goldens)
-        if _send_data == True:
+        if _send_data:
             pass
         return goldens
 
@@ -2567,7 +2569,7 @@ class Synthesizer:
                 contexts.append(golden.context)
 
             # Extract styles from conversational goldens if not already set
-            if self.set_conversational_styling_config == False:
+            if not self.set_conversational_styling_config:
                 example_scenarios = random.sample(
                     [golden.scenario for golden in goldens],
                     min(len(goldens), 10),
@@ -2612,7 +2614,7 @@ class Synthesizer:
             contexts.append(golden.context)
 
         # Extract styles from conversational goldens if not already set
-        if self.set_conversational_styling_config == False:
+        if not self.set_conversational_styling_config:
             example_scenarios = random.sample(
                 [golden.scenario for golden in goldens], min(len(goldens), 10)
             )
