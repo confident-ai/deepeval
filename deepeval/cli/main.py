@@ -324,7 +324,14 @@ def view():
             upload_and_open_link(_span=span)
 
 
-@app.command(name="set-debug")
+@app.command(
+    name="set-debug",
+    help=(
+        "Configure verbosity flags (global LOG_LEVEL, verbose mode), retry logger levels, "
+        "gRPC logging, and Confident trace toggles. Use the --save option to persist settings "
+        "to a dotenv file (default: .env.local)."
+    ),
+)
 def set_debug(
     # Core verbosity
     log_level: Optional[str] = typer.Option(
@@ -423,17 +430,19 @@ def set_debug(
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     """
-    Configure verbose debug behavior for DeepEval.
+    Configure debug and logging behaviors for DeepEval.
 
-    This command lets you mix-and-match verbosity flags (global LOG_LEVEL, verbose mode),
-    retry logger levels, gRPC wire logging, and Confident trace toggles. Values apply
-    immediately to the current process and can be persisted to a dotenv file with --save.
-
-    Examples:
-        deepeval set-debug --log-level DEBUG --verbose --grpc --retry-before-level DEBUG --retry-after-level INFO
-        deepeval set-debug --trace-verbose --trace-env staging --save dotenv:.env.local
+    Use verbosity flags to set the global log level, retry logging behavior, gRPC logging,
+    Confident AI tracing, and more. This command applies changes immediately but can also
+    persist settings to a dotenv file with --save.
     """
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
@@ -487,23 +496,14 @@ def set_debug(
 
     handled, path, updated = edit_ctx.result
 
-    if not updated:
-        # no changes were made, so there is nothing to do.
-        return
-
-    if not handled and save is not None:
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(":loud_sound: Debug options updated.")
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updated,
+        save=save,
+        quiet=quiet,
+        success_msg=(":loud_sound: Debug options updated."),
+    )
 
 
 @app.command(name="unset-debug")
@@ -514,6 +514,12 @@ def unset_debug(
         "--save",
         help="Remove only the debug-related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """
@@ -548,16 +554,17 @@ def unset_debug(
         settings.ERROR_REPORTING = None
         settings.IGNORE_DEEPEVAL_ERRORS = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updated = edit_ctx.result
 
-    if not handled and save is not None:
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        print(f"Removed debug-related environment variables from {path}.")
-    else:
-        print("Debug settings reverted to defaults for this session.")
-
-    print(":mute: Debug options unset.")
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updated,
+        save=save,
+        quiet=quiet,
+        updated_msg=":mute: Debug options unset.",
+        tip_msg=None,
+    )
 
 
 #############################################
