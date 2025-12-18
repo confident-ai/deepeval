@@ -458,6 +458,11 @@ async def a_generate_with_schema_and_extract(
 ###############################################
 
 
+def should_use_anthropic_model():
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ANTHROPIC_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_azure_openai():
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
     return value.lower() == "yes" if value is not None else False
@@ -538,6 +543,8 @@ def initialize_model(
         return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
+    elif should_use_anthropic_model():
+        return AnthropicModel(model=model), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 

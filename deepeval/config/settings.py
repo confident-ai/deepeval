@@ -337,6 +337,7 @@ class Settings(BaseSettings):
     TEMPERATURE: Optional[confloat(ge=0, le=2)] = None
 
     # Anthropic
+    USE_ANTHROPIC_MODEL: Optional[bool] = None
     ANTHROPIC_API_KEY: Optional[SecretStr] = None
     ANTHROPIC_MODEL_NAME: Optional[str] = None
     ANTHROPIC_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
