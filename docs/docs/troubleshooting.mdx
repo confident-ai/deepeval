@@ -4,23 +4,19 @@ title: Troubleshooting
 sidebar_label: Troubleshooting
 ---
 
-<head>
-  <link rel="canonical" href="https://deepeval.com/docs/troubleshooting" />
-</head>
-
-This page covers a few common failure modes and how to debug them quickly.
+This page covers the most common failure modes and how to debug them quickly.
 
 ## TLS Errors
 
-If DeepEval fails to upload results to Confident AI with an error like:
+If `deepeval` fails to upload results to Confident AI with an error like:
 
 ```text
 SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate
 ```
 
-it usually means certificate verification is failing in the local environment (not inside DeepEval).
+it usually means certificate verification is failing in the local environment (not inside `deepeval`).
 
-Run these checks from the same machine and Python environment where you run DeepEval.
+Run these checks from the same machine and Python environment where you run `deepeval`.
 
 1. Check with `curl`
 
@@ -44,13 +40,13 @@ PY
 
 If this fails with a certificate error, copy the full output.
 
-3. Re-run DeepEval
+3. Re-run `deepeval`
 
-If the Python snippet succeeds, re-run your DeepEval evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full traceback and the output of the two checks above when reporting the issue.
+If the Python snippet succeeds, re-run your `deepeval` evaluation from the same terminal session and see whether the upload still fails. If you still get the TLS error, please include the full traceback and the output of the two checks above when reporting the issue.
 
 ## Configure Logging
 
-DeepEval uses the standard Python `logging` module. To see logs, your application (or test runner) needs to configure logging output.
+`deepeval` uses the standard Python `logging` module. To see logs, your application (or test runner) needs to configure logging output.
 
 ```python
 import logging
@@ -58,9 +54,9 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
 
-DeepEval also exposes a few environment flags that can make debugging easier:
+`deepeval` also exposes a few environment flags that can make debugging easier:
 
-- `LOG_LEVEL`: sets the global log level used by DeepEval (accepts standard names like `DEBUG`, `INFO`, etc.).
+- `LOG_LEVEL`: sets the global log level used by `deepeval` (accepts standard names like `DEBUG`, `INFO`, etc.).
 - `DEEPEVAL_VERBOSE_MODE`: enables additional warnings and diagnostics.
 - `DEEPEVAL_LOG_STACK_TRACES`: includes stack traces in retry logs.
 - `DEEPEVAL_RETRY_BEFORE_LOG_LEVEL`: log level for retry "before sleep" messages.
@@ -72,7 +68,7 @@ Note that retry logging levels are read at call-time.
 
 If evaluations frequently time out (or appear to hang), the quickest fix is usually to increase the overall per-task time budget and reduce the number of retries.
 
-DeepEval uses an outer time budget per task (metric / test case). It can also apply a per-attempt timeout to individual provider calls. If you don’t set a per-attempt override, DeepEval may derive one from the outer budget and the retry settings.
+`deepeval` uses an outer time budget per task (metric / test case). It can also apply a per-attempt timeout to individual provider calls. If you don’t set a per-attempt override, DeepEval may derive one from the outer budget and the retry settings.
 
 Key settings:
 
@@ -97,19 +93,19 @@ On a high-latency or heavily rate-limited network, increasing the outer budget (
 :::
 
 :::note
-If you only set `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`, DeepEval may derive a per-attempt timeout from the total budget and retry settings.
-If the per-attempt timeout is unset or resolves to `0`, DeepEval skips the inner `asyncio.wait_for` and relies on the outer per-task budget.
-For sync timeouts, DeepEval uses a bounded semaphore. See `DEEPEVAL_TIMEOUT_THREAD_LIMIT` and `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS`.
+If you only set `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`, `deepeval` may derive a per-attempt timeout from the total budget and retry settings.
+If the per-attempt timeout is unset or resolves to `0`, `deepeval` skips the inner `asyncio.wait_for` and relies on the outer per-task budget.
+For sync timeouts, `deepeval` uses a bounded semaphore. See `DEEPEVAL_TIMEOUT_THREAD_LIMIT` and `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS`.
 :::
 
 ## Dotenv Loading
 
-DeepEval loads dotenv files at import time (`import deepeval`). In `pytest`, this can pull in a project `.env` you didn’t intend to load. Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
+`deepeval` loads dotenv files at import time (`import deepeval`). In `pytest`, this can pull in a project `.env` you didn’t intend to load. Dotenv never overrides existing process env vars. Lowest to highest: `.env`, `.env.{APP_ENV}`, `.env.local`.
 
 Controls: `DEEPEVAL_DISABLE_DOTENV=1` (skip) and `ENV_DIR_PATH` (dotenv directory, default: current working directory).
 
 :::tip
-Set `DEEPEVAL_DISABLE_DOTENV=1` **before** anything imports DeepEval.
+Set `DEEPEVAL_DISABLE_DOTENV=1` **before** anything imports `deepeval`.
 :::
 
 ```bash
@@ -120,7 +116,7 @@ APP_ENV=production pytest -q
 
 ## Save Config
 
-DeepEval settings are cached. If you change environment variables at runtime and don’t see the change, restart the process or call:
+`deepeval` settings are cached. If you change environment variables at runtime and don’t see the change, restart the process or call:
 
 ```python
 from deepeval.config.settings import reset_settings
@@ -144,7 +140,7 @@ Computed fields (like the derived timeout settings) are not persisted.
 
 If you open a GitHub issue, please include:
 
-- DeepEval version
+- `deepeval` version
 - OS + Python version
 - A minimal repro script
 - Full traceback
