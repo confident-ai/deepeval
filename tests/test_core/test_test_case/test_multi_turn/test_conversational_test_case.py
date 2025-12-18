@@ -117,8 +117,8 @@ class TestConversationalTestCaseValidation:
             f.write(b"hello world")
             path = f.name
 
-        context = Context(source_type="file", source=path)
-        assert context.source_type == "file"
+        context = Context(type="file", source=path)
+        assert context.type == "file"
         assert context.source == path
         assert context.chunk_size == 2048
         assert context.chunk_overlap == 128
@@ -127,7 +127,7 @@ class TestConversationalTestCaseValidation:
     def test_external_context_is_valid(self):
         turns = [Turn(role="user", content="Hello")]
         context = Context(
-            source_type="url",
+            type="url",
             source="https://www.trydeepteam.com/docs/getting-started",
         )
         test_case = ConversationalTestCase(

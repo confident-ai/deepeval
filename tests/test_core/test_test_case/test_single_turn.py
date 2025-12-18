@@ -52,7 +52,7 @@ class TestLLMTestCaseInitialization:
             input_parameters={"query": "test query"},
         )
         context = Context(
-            source_type="url",
+            type="url",
             source="https://www.trydeepteam.com/docs/getting-started",
         )
 
@@ -792,8 +792,8 @@ class TestContextInitialization:
             f.write(b"hello world")
             path = f.name
 
-        context = Context(source_type="file", source=path)
-        assert context.source_type == "file"
+        context = Context(type="file", source=path)
+        assert context.type == "file"
         assert context.source == path
         assert context.chunk_size == 2048
         assert context.chunk_overlap == 128
@@ -801,19 +801,19 @@ class TestContextInitialization:
 
     def test_minimal_url_context(self):
         context = Context(
-            source_type="url",
+            type="url",
             source="https://example.com",
         )
-        assert context.source_type == "url"
+        assert context.type == "url"
         assert context.source.startswith("https://")
 
     def test_invalid_file_path(self):
         with pytest.raises(ValueError):
-            Context(source_type="file", source="/non/existent/file.txt")
+            Context(type="file", source="/non/existent/file.txt")
 
     def test_invalid_url(self):
         with pytest.raises(ValueError):
-            Context(source_type="url", source="ftp://example.com")
+            Context(type="url", source="ftp://example.com")
 
     def test_invalid_chunk_overlap(self):
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -822,7 +822,7 @@ class TestContextInitialization:
 
         with pytest.raises(ValueError):
             Context(
-                source_type="file",
+                type="file",
                 source=path,
                 chunk_size=100,
                 chunk_overlap=100,
@@ -839,7 +839,7 @@ class TestContextFileLoading:
             f.write(content)
             path = f.name
 
-        context = Context(source_type="file", source=path)
+        context = Context(type="file", source=path)
         resolved = context.resolve_contexts()
 
         assert isinstance(resolved, str)
@@ -855,7 +855,7 @@ class TestContextFileLoading:
             path = f.name
 
         context = Context(
-            source_type="file",
+            type="file",
             source=path,
             chunk_size=1000,
             chunk_overlap=100,
@@ -891,7 +891,7 @@ class TestContextURLLoading:
         )
 
         context = Context(
-            source_type="url",
+            type="url",
             source="https://example.com",
         )
 
@@ -915,7 +915,7 @@ class TestContextURLLoading:
         )
 
         context = Context(
-            source_type="url",
+            type="url",
             source="https://example.com",
             chunk_size=500,
             chunk_overlap=50,
@@ -942,7 +942,7 @@ class TestContextResolutionBehavior:
         )
 
         context = Context(
-            source_type="url",
+            type="url",
             source="https://example.com",
         )
 
