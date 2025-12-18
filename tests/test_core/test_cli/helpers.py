@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from pathlib import Path
+from enum import Enum, Pattern
 from typing import (
     Dict,
     Iterable,
@@ -20,7 +21,7 @@ from deepeval.key_handler import (
     ModelKeyValues,
     EmbeddingKeyValues,
 )
-from deepeval.cli.utils import USE_MODEL_KEYS
+from deepeval.cli.utils import USE_LLM_KEYS, USE_EMBED_KEYS
 
 ###########
 # .env IO #
@@ -206,7 +207,7 @@ def assert_deepeval_json_lacks(
     for k in keys:
         actual = KEY_FILE_HANDLER.fetch_data(k)
         assert (
-            actual == None
+            actual is None
         ), f"Expected no key {k} in .deepeval JSON store, got {actual!r}"
 
 
@@ -215,22 +216,33 @@ def assert_env_model_switched_to(
 ):
     env = read_dotenv_as_dict(path)
     want_on, want_off = "1", "0"
-    for k in USE_MODEL_KEYS:
-        got = env.get(k.value)
-        if k == selected_model:
-            assert (
-                got == want_on
-            ), f"Expected {k}={want_on} in {path}, got {got!r}"
-        else:
-            assert (
-                got == want_off
-            ), f"Expected {k}={want_off} in {path}, got {got!r}"
+
+    if isinstance(selected_model, ModelKeyValues):
+        keys = USE_LLM_KEYS
+    elif isinstance(selected_model, EmbeddingKeyValues):
+        keys = USE_EMBED_KEYS
+    else:
+        raise TypeError(f"Unexpected selected type: {type(selected_model)!r}")
+
+    for key in keys:
+        got = env.get(key.value)
+        expected = want_on if key == selected_model else want_off
+        assert (
+            got == expected
+        ), f"Expected {key}={expected} in {path}, got {got!r}"
 
 
 def assert_deepeval_json_model_switched_to(
     selected_model: ModelKeyValues | EmbeddingKeyValues,
 ):
-    for k in USE_MODEL_KEYS:
+    if isinstance(selected_model, ModelKeyValues):
+        keys = USE_LLM_KEYS
+    elif isinstance(selected_model, EmbeddingKeyValues):
+        keys = USE_EMBED_KEYS
+    else:
+        raise TypeError(f"Unexpected selected type: {type(selected_model)!r}")
+
+    for k in keys:
         actual = KEY_FILE_HANDLER.fetch_data(k)
         if k == selected_model:
             assert (

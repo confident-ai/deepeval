@@ -15,6 +15,7 @@ from deepeval.models.llms import (
     KimiModel,
     GrokModel,
     DeepSeekModel,
+    PortkeyModel,
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
@@ -42,4 +43,5 @@ __all__ = [
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",
     "OllamaEmbeddingModel",
+    "PortkeyModel",
 ]

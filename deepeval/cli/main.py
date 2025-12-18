@@ -26,7 +26,7 @@ from typing import Optional
 from rich import print
 from rich.markup import escape
 from enum import Enum
-from path import Path
+from pathlib import Path
 from pydantic import SecretStr
 from deepeval.key_handler import (
     EmbeddingKeyValues,
