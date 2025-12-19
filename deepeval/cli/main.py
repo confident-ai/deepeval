@@ -36,14 +36,14 @@ from deepeval.key_handler import (
     ModelKeyValues,
 )
 from deepeval.telemetry import capture_login_event, capture_view_event
-from deepeval.cli.test import app as test_app
-from deepeval.cli.server import start_server
 from deepeval.config.settings import get_settings
 from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
+from deepeval.cli.test import app as test_app
+from deepeval.cli.server import start_server
 from deepeval.cli.utils import (
     coerce_blank_to_none,
     is_optional,
