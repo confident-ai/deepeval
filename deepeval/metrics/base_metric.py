@@ -48,6 +48,10 @@ class BaseMetric:
     def __name__(self):
         return "Base Metric"
 
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost
+
 
 class BaseConversationalMetric:
     threshold: float
@@ -64,6 +68,8 @@ class BaseConversationalMetric:
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
 
     @abstractmethod
     def measure(
@@ -86,6 +92,10 @@ class BaseConversationalMetric:
     @property
     def __name__(self):
         return "Base Conversational Metric"
+
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost
 
 
 class BaseArenaMetric:
@@ -117,3 +127,7 @@ class BaseArenaMetric:
     @property
     def __name__(self):
         return "Base Arena Metric"
+
+    def _accrue_cost(self, cost: float) -> None:
+        if self.evaluation_cost is not None:
+            self.evaluation_cost += cost

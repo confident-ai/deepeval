@@ -69,8 +69,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -90,8 +90,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -111,8 +111,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[
@@ -155,8 +155,8 @@ class TestAnswerRelevancyMetric:
         image = MLLMImage(url=CAR)
         test_case = LLMTestCase(
             input=f"What's shown in this image? {image}'",
-            expected_output=f"That's an image of a car",
-            actual_output=f"That is a car.",
+            expected_output="That's an image of a car",
+            actual_output="That is a car.",
             retrieval_context=[f"Cars are great to look at {image}"],
             context=[f"Cars are great to look at {image}"],
             tools_called=[

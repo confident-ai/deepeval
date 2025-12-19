@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pydantic import BaseModel
-
+import re
 from deepeval.test_case import (
     LLMTestCase,
 )
@@ -19,6 +19,7 @@ class Contestant(BaseModel):
 @dataclass
 class ArenaTestCase:
     contestants: List[Contestant]
+    multimodal: bool = field(default=False)
 
     def __post_init__(self):
         contestant_names = [contestant.name for contestant in self.contestants]
@@ -37,6 +38,10 @@ class ArenaTestCase:
                 raise ValueError(
                     "All contestants must have the same 'expected_output'."
                 )
+
+        for contestant in self.contestants:
+            if contestant.test_case.multimodal:
+                self.multimodal = True
 
 
 class Arena:

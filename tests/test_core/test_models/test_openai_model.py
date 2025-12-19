@@ -81,7 +81,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-5",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=1,  # GPT-5 auto-sets to 1
             reasoning_effort="high",
             seed=123,
@@ -112,7 +117,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called without extra kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
         )
         assert output == "test response"
@@ -149,7 +159,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the parse method was called with generation_kwargs
         mock_beta.chat.completions.parse.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             response_format=SampleSchema,
             temperature=0,
             reasoning_effort="low",
@@ -200,7 +215,10 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with the correct parameters
         assert call_args["model"] == "gpt-5-nano"
         assert call_args["messages"] == [
-            {"role": "user", "content": "async test prompt"}
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "async test prompt"}],
+            }
         ]
         assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
         assert call_args["reasoning_effort"] == "medium"
@@ -249,7 +267,10 @@ class TestGPTModelCompletionKwargs:
         # Verify the parse method was called with correct parameters
         assert call_args["model"] == "gpt-4o"
         assert call_args["messages"] == [
-            {"role": "user", "content": "async test prompt"}
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": "async test prompt"}],
+            }
         ]
         assert call_args["response_format"] == SampleSchema
         assert call_args["temperature"] == 0
@@ -288,7 +309,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with both method params and generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             temperature=0,
             logprobs=True,
             top_logprobs=3,
@@ -323,7 +349,12 @@ class TestGPTModelCompletionKwargs:
         # Verify the completion was called with generation_kwargs
         mock_client.chat.completions.create.assert_called_once_with(
             model="gpt-4o",
-            messages=[{"role": "user", "content": "test prompt"}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "test prompt"}],
+                }
+            ],
             n=2,
             temperature=0.7,
             reasoning_effort="low",
@@ -500,8 +531,6 @@ def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
 def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     settings,
 ):
-    from deepeval.models.llms.constants import OPENAI_MODELS_DATA
-
     """
     When a model is missing from `model_pricing`, GPTModel should populate
     pricing from Settings.OPENAI_COST_PER_INPUT_TOKEN and
@@ -509,16 +538,11 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     """
     with settings.edit(persist=False):
         settings.OPENAI_API_KEY = "test-key"
-        settings.OPENAI_MODEL_NAME = "gpt-5-chat-latest"
+        settings.OPENAI_MODEL_NAME = "model-not-yet-in-our-registry"  # <- A model not in our registry will not have pricing
         settings.OPENAI_COST_PER_INPUT_TOKEN = 0.123
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.456
 
-    # Ensure this model has no pricing so GPTModel must use Settings-based costs
-    model_data = OPENAI_MODELS_DATA.get("gpt-5-chat-latest", None)
-    model_data.input_price = None
-    model_data.output_price = None
-
     model = GPTModel()  # Uses Settings.OPENAI_MODEL_NAME + Settings pricing
-    assert model.name == "gpt-5-chat-latest"
+    assert model.name == "model-not-yet-in-our-registry"
     assert model.model_data.input_price == 0.123
     assert model.model_data.output_price == 0.456

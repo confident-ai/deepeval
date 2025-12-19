@@ -27,6 +27,7 @@ from pydantic import (
     field_validator,
     model_validator,
     SecretStr,
+    PositiveFloat,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Any, Dict, List, Optional, NamedTuple
@@ -317,6 +318,19 @@ class Settings(BaseSettings):
 
     # Anthropic
     ANTHROPIC_API_KEY: Optional[SecretStr] = None
+    ANTHROPIC_MODEL_NAME: Optional[str] = None
+    ANTHROPIC_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
+    ANTHROPIC_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
+
+    # AWS
+    AWS_ACCESS_KEY_ID: Optional[SecretStr] = None
+    AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = None
+    # AWS Bedrock
+    USE_AWS_BEDROCK_MODEL: Optional[bool] = None
+    AWS_BEDROCK_MODEL_NAME: Optional[str] = None
+    AWS_BEDROCK_REGION: Optional[str] = None
+    AWS_BEDROCK_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
+    AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
     # Azure Open AI
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = None
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = None
@@ -329,6 +343,8 @@ class Settings(BaseSettings):
     USE_DEEPSEEK_MODEL: Optional[bool] = None
     DEEPSEEK_API_KEY: Optional[SecretStr] = None
     DEEPSEEK_MODEL_NAME: Optional[str] = None
+    DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = None
+    DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # Gemini
     USE_GEMINI_MODEL: Optional[bool] = None
     GOOGLE_API_KEY: Optional[SecretStr] = None
@@ -336,11 +352,13 @@ class Settings(BaseSettings):
     GOOGLE_GENAI_USE_VERTEXAI: Optional[bool] = None
     GOOGLE_CLOUD_PROJECT: Optional[str] = None
     GOOGLE_CLOUD_LOCATION: Optional[str] = None
-    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[str] = None
+    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[SecretStr] = None
     # Grok
     USE_GROK_MODEL: Optional[bool] = None
     GROK_API_KEY: Optional[SecretStr] = None
     GROK_MODEL_NAME: Optional[str] = None
+    GROK_COST_PER_INPUT_TOKEN: Optional[float] = None
+    GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # LiteLLM
     USE_LITELLM: Optional[bool] = None
     LITELLM_API_KEY: Optional[SecretStr] = None
@@ -362,6 +380,8 @@ class Settings(BaseSettings):
     USE_MOONSHOT_MODEL: Optional[bool] = None
     MOONSHOT_API_KEY: Optional[SecretStr] = None
     MOONSHOT_MODEL_NAME: Optional[str] = None
+    MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = None
+    MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = None
     # Ollama
     OLLAMA_MODEL_NAME: Optional[str] = None
     # OpenAI
@@ -388,6 +408,7 @@ class Settings(BaseSettings):
 
     # Azure OpenAI
     USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = None
+    AZURE_EMBEDDING_MODEL_NAME: Optional[str] = None
     AZURE_EMBEDDING_DEPLOYMENT_NAME: Optional[str] = None
     # Local
     USE_LOCAL_EMBEDDINGS: Optional[bool] = None
@@ -614,6 +635,7 @@ class Settings(BaseSettings):
         "SKIP_DEEPEVAL_MISSING_PARAMS",
         "TOKENIZERS_PARALLELISM",
         "TRANSFORMERS_NO_ADVISORY_WARNINGS",
+        "USE_AWS_BEDROCK_MODEL",
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
@@ -647,6 +669,8 @@ class Settings(BaseSettings):
     @field_validator(
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
+        "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
+        "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
         "CONFIDENT_TRACE_SAMPLE_RATE",
         "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
@@ -716,6 +740,16 @@ class Settings(BaseSettings):
         if not s:
             return None
         return s.upper()
+
+    @field_validator("AWS_BEDROCK_REGION", mode="before")
+    @classmethod
+    def _normalize_lower(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s:
+            return None
+        return s.lower()
 
     @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="before")
     @classmethod

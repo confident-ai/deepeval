@@ -60,18 +60,33 @@ class MLLMImage:
             if self.local:
                 path = self.process_url(self.url)
                 self.filename = os.path.basename(path)
-                self.mimeType = (
-                    mimetypes.guess_type(path)[0] or "application/octet-stream"
-                )
-                with open(path, "rb") as f:
-                    raw = f.read()
-                self.dataBase64 = base64.b64encode(raw).decode("ascii")
+                self.mimeType = mimetypes.guess_type(path)[0] or "image/jpeg"
+
+                if not os.path.exists(path):
+                    raise FileNotFoundError(f"Image file not found: {path}")
+
+                self._load_base64(path)
             else:
+                if not self.url.startswith(("http://", "https://")):
+                    raise ValueError(
+                        f"Invalid remote URL format: {self.url}. URL must start with http:// or https://"
+                    )
                 self.filename = None
                 self.mimeType = None
                 self.dataBase64 = None
 
         _MLLM_IMAGE_REGISTRY[self._id] = self
+
+    def _load_base64(self, path: str):
+        with open(path, "rb") as f:
+            raw = f.read()
+        self.dataBase64 = base64.b64encode(raw).decode("ascii")
+
+    def ensure_images_loaded(self):
+        if self.local and self.dataBase64 is None:
+            path = self.process_url(self.url)
+            self._load_base64(path)
+        return self
 
     def _placeholder(self) -> str:
         return f"[DEEPEVAL:IMAGE:{self._id}]"

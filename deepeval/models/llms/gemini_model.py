@@ -1,8 +1,9 @@
 import json
-import requests
+import base64
 from pydantic import BaseModel, SecretStr
-from typing import TYPE_CHECKING, Optional, Dict, List, Union
+from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
+from deepeval.errors import DeepEvalError
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import require_secret_api_key
@@ -60,10 +61,10 @@ class GeminiModel(DeepEvalBaseLLM):
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        temperature: float = 0,
+        temperature: Optional[float] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
-        service_account_key: Optional[Dict[str, str]] = None,
+        service_account_key: Optional[Union[str, Dict[str, str]]] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -76,34 +77,48 @@ class GeminiModel(DeepEvalBaseLLM):
         # Get API key from settings if not provided
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and aolike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.GOOGLE_API_KEY
 
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
+
         self.project = project or settings.GOOGLE_CLOUD_PROJECT
-        self.location = (
-            location
-            or settings.GOOGLE_CLOUD_LOCATION is not None
-            and str(settings.GOOGLE_CLOUD_LOCATION)
+        location = (
+            location if location is not None else settings.GOOGLE_CLOUD_LOCATION
         )
+        self.location = str(location).strip() if location is not None else None
         self.use_vertexai = settings.GOOGLE_GENAI_USE_VERTEXAI
 
-        if service_account_key:
-            self.service_account_key = service_account_key
+        self.service_account_key: Optional[SecretStr] = None
+        if service_account_key is None:
+            self.service_account_key = settings.GOOGLE_SERVICE_ACCOUNT_KEY
+        elif isinstance(service_account_key, dict):
+            self.service_account_key = SecretStr(
+                json.dumps(service_account_key)
+            )
         else:
-            service_account_key_data = settings.GOOGLE_SERVICE_ACCOUNT_KEY
-            if service_account_key_data is None:
-                self.service_account_key = None
-            elif isinstance(service_account_key_data, str):
-                self.service_account_key = json.loads(service_account_key_data)
+            str_value = str(service_account_key).strip()
+            self.service_account_key = (
+                SecretStr(str_value) if str_value else None
+            )
 
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
+
         self.temperature = temperature
 
         # Raw kwargs destined for the underlying Client
         self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
 
         self._module = self._require_module()
         # Configure default model generation settings
@@ -139,40 +154,34 @@ class GeminiModel(DeepEvalBaseLLM):
             True if the model should use Vertex AI, False otherwise
         """
         if self.use_vertexai is not None:
-            return self.use_vertexai.lower() == "yes"
+            return self.use_vertexai
         if self.project and self.location:
             return True
         else:
             return False
 
     @retry_gemini
-    def generate_prompt(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ) -> List[Union[str, MLLMImage]]:
-        """Converts DeepEval multimodal input into GenAI SDK compatible format.
+    def generate_content(
+        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
+    ):
+        multimodal_input = (
+            multimodal_input if multimodal_input is not None else []
+        )
+        content = []
 
-        Args:
-            multimodal_input: List of strings and MLLMImage objects
+        for element in multimodal_input:
+            if isinstance(element, str):
+                content.append(element)
+            elif isinstance(element, MLLMImage):
+                # Gemini doesn't support direct external URLs
+                # Must convert all images to bytes
+                if element.url and not element.local:
+                    import requests
 
-        Returns:
-            List of strings and PIL Image objects ready for model input
+                    settings = get_settings()
 
-        Raises:
-            ValueError: If an invalid input type is provided
-        """
-        prompt = []
-        settings = get_settings()
-
-        for ele in multimodal_input:
-            if isinstance(ele, str):
-                prompt.append(ele)
-            elif isinstance(ele, MLLMImage):
-                if ele.local:
-                    with open(ele.url, "rb") as f:
-                        image_data = f.read()
-                else:
                     response = requests.get(
-                        ele.url,
+                        element.url,
                         timeout=(
                             settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
                             settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
@@ -180,21 +189,38 @@ class GeminiModel(DeepEvalBaseLLM):
                     )
                     response.raise_for_status()
                     image_data = response.content
+                    mime_type = response.headers.get(
+                        "content-type", element.mimeType or "image/jpeg"
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    try:
+                        image_data = base64.b64decode(element.dataBase64)
+                    except Exception:
+                        raise ValueError(
+                            f"Invalid base64 data in MLLMImage: {element._id}"
+                        )
 
+                    mime_type = element.mimeType or "image/jpeg"
+
+                # Create Part from bytes
                 image_part = self._module.types.Part.from_bytes(
-                    data=image_data, mime_type="image/jpeg"
+                    data=image_data, mime_type=mime_type
                 )
-                prompt.append(image_part)
+                content.append(image_part)
             else:
-                raise ValueError(f"Invalid input type: {type(ele)}")
-        return prompt
+                raise DeepEvalError(f"Invalid input type: {type(element)}")
+
+        return content
 
     ###############################################
     # Generate functions
     ###############################################
 
     @retry_gemini
-    def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
+    def generate(
+        self, prompt: str, schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Generates text from a prompt.
 
         Args:
@@ -207,9 +233,8 @@ class GeminiModel(DeepEvalBaseLLM):
         client = self.load_model()
 
         if check_if_multimodal(prompt):
-
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = client.models.generate_content(
@@ -239,7 +264,7 @@ class GeminiModel(DeepEvalBaseLLM):
     @retry_gemini
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> str:
+    ) -> Tuple[Union[str, BaseModel], float]:
         """Asynchronously generates text from a prompt.
 
         Args:
@@ -253,7 +278,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_prompt(prompt)
+            prompt = self.generate_content(prompt)
 
         if schema is not None:
             response = await client.aio.models.generate_content(
@@ -279,6 +304,32 @@ class GeminiModel(DeepEvalBaseLLM):
                 ),
             )
             return response.text, 0
+
+    #########################
+    # Capabilities          #
+    #########################
+
+    def supports_log_probs(self) -> Union[bool, None]:
+        return self.model_data.supports_log_probs
+
+    def supports_temperature(self) -> Union[bool, None]:
+        return self.model_data.supports_temperature
+
+    def supports_multimodal(self) -> Union[bool, None]:
+        return self.model_data.supports_multimodal
+
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        """
+        OpenAI models that natively enforce typed structured outputs.
+         Used by generate(...) when a schema is provided.
+        """
+        return self.model_data.supports_structured_outputs
+
+    def supports_json_mode(self) -> Union[bool, None]:
+        """
+        OpenAI models that enforce JSON mode
+        """
+        return self.model_data.supports_json
 
     #########
     # Model #
@@ -320,8 +371,27 @@ class GeminiModel(DeepEvalBaseLLM):
         client_kwargs = self._client_kwargs(**self.kwargs)
 
         if self.should_use_vertexai():
+            service_account_key_json = require_secret_api_key(
+                self.service_account_key,
+                provider_label="Google Gemini",
+                env_var_name="GOOGLE_SERVICE_ACCOUNT_KEY",
+                param_hint="`service_account_key` to GeminiModel(...)",
+            )
+
+            try:
+                service_account_key = json.loads(service_account_key_json)
+            except Exception as e:
+                raise DeepEvalError(
+                    "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
+                ) from e
+
+            if not isinstance(service_account_key, dict):
+                raise DeepEvalError(
+                    "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
+                )
+
             if not self.project or not self.location:
-                raise ValueError(
+                raise DeepEvalError(
                     "When using Vertex AI API, both project and location are required. "
                     "Either provide them as arguments or set GOOGLE_CLOUD_PROJECT and "
                     "GOOGLE_CLOUD_LOCATION in your DeepEval configuration."
@@ -330,12 +400,12 @@ class GeminiModel(DeepEvalBaseLLM):
             oauth2 = self._require_oauth2()
             credentials = (
                 oauth2.service_account.Credentials.from_service_account_info(
-                    self.service_account_key,
+                    service_account_key,
                     scopes=[
                         "https://www.googleapis.com/auth/cloud-platform",
                     ],
                 )
-                if self.service_account_key
+                if service_account_key
                 else None
             )
 
@@ -357,9 +427,6 @@ class GeminiModel(DeepEvalBaseLLM):
             client = self._module.Client(api_key=api_key, **client_kwargs)
 
         return client
-
-    def supports_multimodal(self):
-        return self.model_data.supports_multimodal
 
     def get_model_name(self):
         return f"{self.name} (Gemini)"

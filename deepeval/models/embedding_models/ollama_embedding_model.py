@@ -10,7 +10,7 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
 from deepeval.constants import ProviderSlug as PS
-
+from deepeval.utils import require_param
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
 
@@ -37,12 +37,23 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         settings = get_settings()
 
-        self.base_url = (
-            base_url
-            or settings.LOCAL_EMBEDDING_BASE_URL
-            and str(settings.LOCAL_EMBEDDING_BASE_URL)
-        )
+        if base_url is not None:
+            self.base_url = str(base_url).rstrip("/")
+        elif settings.LOCAL_EMBEDDING_BASE_URL is not None:
+            self.base_url = str(settings.LOCAL_EMBEDDING_BASE_URL).rstrip("/")
+        else:
+            self.base_url = "http://localhost:11434"
+
         model = model or settings.LOCAL_EMBEDDING_MODEL_NAME
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="OllamaEmbeddingModel",
+            env_var_name="LOCAL_EMBEDDING_MODEL_NAME",
+            param_hint="model",
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}

@@ -4,7 +4,6 @@ import deepeval.models.llms.grok_model as grok_mod
 
 from pydantic import SecretStr
 
-from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.llms.grok_model import GrokModel
 from tests.test_core.stubs import _RecordingClient
 
@@ -29,19 +28,18 @@ def _stub_load_model(monkeypatch):
 
 
 def test_grok_model_uses_explicit_key_over_settings_and_strips_secret(
-    monkeypatch,
+    monkeypatch, settings
 ):
     """
     Explicit ctor api_key must override Settings.GROK_API_KEY, and the client
     should see a plain string, even if Settings stores a SecretStr.
     """
     # Seed env so Settings sees a GROK_API_KEY
-    monkeypatch.setenv("GROK_API_KEY", "env-secret-key")
-    monkeypatch.setenv("GROK_MODEL_NAME", "grok-3")
-
-    # Rebuild Settings from env
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "env-secret-key"
+        settings.GROK_MODEL_NAME = "grok-3"
+        settings.GROK_COST_PER_INPUT_TOKEN = 1e-6
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 1e-6
 
     # Sanity: Settings should expose this as SecretStr
     assert isinstance(settings.GROK_API_KEY, SecretStr)
@@ -63,16 +61,16 @@ def test_grok_model_uses_explicit_key_over_settings_and_strips_secret(
     assert api_key == "ctor-secret-key"
 
 
-def test_grok_model_defaults_from_settings(monkeypatch):
+def test_grok_model_defaults_from_settings(monkeypatch, settings):
     """
     When no ctor args are provided, GrokModel should pull model/api_key from
     Settings, which are backed by env vars.
     """
-    monkeypatch.setenv("GROK_API_KEY", "env-secret-key")
-    monkeypatch.setenv("GROK_MODEL_NAME", "grok-3")
-
-    reset_settings(reload_dotenv=False)
-    settings = get_settings()
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "env-secret-key"
+        settings.GROK_MODEL_NAME = "grok-3"
+        settings.GROK_COST_PER_INPUT_TOKEN = 1e-6
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 1e-6
 
     assert isinstance(settings.GROK_API_KEY, SecretStr)
 

@@ -138,3 +138,40 @@ Example Output:
 
 JSON:
 """
+
+    @staticmethod
+    def generate_final_reason(
+        final_score: float, success: bool, reasons: List[str]
+    ):
+        return f"""You are an AI evaluator producing a single final explanation for the an MCP application's evaluation results using the provided reasons.
+
+        Context:
+        The reasons are from metrics that were used to evaluate an MCP application by determining whether the model accurately completed a task or called toos and resources with the right arguments.
+
+        Inputs:
+        - final_score: the averaged score across all interactions.
+        - success: whether the metric passed or failed
+        - reasons: a list of textual reasons generated from individual interactions.
+
+        Instructions:
+        1. Read all reasons and synthesize them into one unified explanation.
+        2. Do not repeat every reason; merge them into a concise, coherent narrative.
+        4. If the metric failed, state the dominant failure reasons. If it passed, state why the application has passed.
+        5. Output a single paragraph with no lists, no bullets, no markup.
+
+        Output:
+        A single paragraph explaining the final outcome.
+
+        Here's the inputs:
+
+        Final Score: {final_score}
+        
+        Reasons: 
+        {reasons}
+
+        Success: {success}
+
+        Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
+
+        The final reason:
+        """

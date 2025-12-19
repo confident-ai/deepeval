@@ -2,6 +2,7 @@ from typing import Dict, Optional, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import (
     require_secret_api_key,
@@ -51,13 +52,13 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = get_settings().OPENAI_API_KEY
 
         model = model if model else default_openai_embedding_model
         if model not in valid_openai_embedding_models:
-            raise ValueError(
+            raise DeepEvalError(
                 f"Invalid model. Available OpenAI Embedding models: {', '.join(valid_openai_embedding_models)}"
             )
         self.kwargs = normalized_kwargs

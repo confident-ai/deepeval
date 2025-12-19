@@ -7,9 +7,10 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -21,7 +22,10 @@ from deepeval.metrics.contextual_relevancy.template import (
     ContextualRelevancyTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_relevancy.schema import *
+from deepeval.metrics.contextual_relevancy.schema import (
+    ContextualRelevancyVerdicts,
+    ContextualRelevancyScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -187,24 +191,13 @@ class ContextualRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ContextualRelevancyScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self, input: str, multimodal: bool):
         if self.include_reason is False:
@@ -227,22 +220,13 @@ class ContextualRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = self.model.generate(
-                    prompt, schema=ContextualRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _calculate_score(self):
         total_verdicts = 0
@@ -266,22 +250,13 @@ class ContextualRelevancyMetric(BaseMetric):
             input=input, context=context, multimodal=multimodal
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyVerdicts
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = await self.model.a_generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdicts(**data)
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyVerdicts,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        )
 
     def _generate_verdicts(
         self, input: str, context: str, multimodal: bool
@@ -290,22 +265,13 @@ class ContextualRelevancyMetric(BaseMetric):
             input=input, context=context, multimodal=multimodal
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyVerdicts
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = self.model.generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdicts(**data)
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyVerdicts,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -313,7 +279,7 @@ class ContextualRelevancyMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

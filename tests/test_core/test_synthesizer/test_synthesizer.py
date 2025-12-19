@@ -1,6 +1,8 @@
-from typing import List
+import asyncio
 import pytest
 import os
+
+from typing import List
 
 from deepeval.synthesizer.synthesizer import Synthesizer
 from deepeval.synthesizer.config import (
@@ -10,7 +12,14 @@ from deepeval.synthesizer.config import (
     ContextConstructionConfig,
     Evolution,
 )
+import deepeval.synthesizer.synthesizer as synth_mod
 from deepeval.dataset import Golden, ConversationalGolden
+from tests.test_core.stubs import (
+    DummyModel,
+    DummyProgress,
+    stub_synthesizer_progress_context,
+    DummyEvolutionConfig,
+)
 
 
 TABLES = {
@@ -357,3 +366,97 @@ async def test_async_generate_conversational_goldens_from_scratch(
     assert len(goldens) > 0
     assert len(goldens) >= 1
     assert all(isinstance(g, ConversationalGolden) for g in goldens)
+
+
+@pytest.mark.asyncio
+async def test_a_generate_goldens_from_contexts_no_deadlock_when_max_concurrent_lt_contexts(
+    monkeypatch,
+):
+    # Build an instance without running __init__ so we won't depend on API keys configs.
+    s = Synthesizer.__new__(Synthesizer)
+    s.max_concurrent = 1
+    s.model = DummyModel()
+    s.evolution_config = DummyEvolutionConfig()
+    s.synthetic_goldens = []
+    s.synthesis_cost = 0
+    s.cost_tracking = False
+    s.using_native_model = False
+
+    # Avoid Rich Progress setup in the test
+    monkeypatch.setattr(
+        synth_mod,
+        "synthesizer_progress_context",
+        stub_synthesizer_progress_context,
+    )
+
+    async def fake_generate_from_context(*, semaphore, **kwargs):
+        async def inner(i):
+            await asyncio.sleep(0.01)
+            return i
+
+        # This is the “inner gather” pattern that deadlocks if the same semaphore
+        # is also held by the outer per-context task.
+        tasks = [s.task_wrapper(semaphore, inner, i) for i in range(2)]
+        await asyncio.gather(*tasks)
+
+    # Patch the context worker to the minimal nested-semaphore behavior
+    monkeypatch.setattr(
+        s, "_a_generate_from_context", fake_generate_from_context
+    )
+
+    contexts = [["ctx1"], ["ctx2"]]  # len(contexts)=2 > max_concurrent=1
+
+    # Pre-fix: this times out (deadlock). Post-fix: completes quickly.
+    await asyncio.wait_for(
+        s.a_generate_goldens_from_contexts(
+            contexts=contexts,
+            _progress=DummyProgress(),  # ensures the method doesn't treat `progress` as a CM
+            _reset_cost=False,
+        ),
+        timeout=0.5,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_generate_conversational_goldens_from_contexts_no_deadlock_when_max_concurrent_lt_contexts(
+    monkeypatch,
+):
+    s = Synthesizer.__new__(Synthesizer)
+    s.max_concurrent = 1
+    s.model = DummyModel()
+    s.evolution_config = DummyEvolutionConfig()
+    s.synthetic_conversational_goldens = []
+    s.synthesis_cost = 0
+    s.cost_tracking = False
+    s.using_native_model = False
+
+    monkeypatch.setattr(
+        synth_mod,
+        "synthesizer_progress_context",
+        stub_synthesizer_progress_context,
+    )
+
+    async def fake_generate_conversational_from_context(*, semaphore, **kwargs):
+        async def inner(i):
+            await asyncio.sleep(0.01)
+            return i
+
+        tasks = [s.task_wrapper(semaphore, inner, i) for i in range(2)]
+        await asyncio.gather(*tasks)
+
+    monkeypatch.setattr(
+        s,
+        "_a_generate_conversational_from_context",
+        fake_generate_conversational_from_context,
+    )
+
+    contexts = [["ctx1"], ["ctx2"]]
+
+    await asyncio.wait_for(
+        s.a_generate_conversational_goldens_from_contexts(
+            contexts=contexts,
+            _progress=DummyProgress(),
+            _reset_cost=False,
+        ),
+        timeout=0.5,
+    )

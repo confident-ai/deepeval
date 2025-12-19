@@ -120,6 +120,9 @@ def _env_sandbox(_session_env_baseline, request, monkeypatch):
     for k, v in preserved.items():
         monkeypatch.setenv(k, v)
 
+    # Never open the Confident AI browser UI during tests
+    monkeypatch.setenv("CONFIDENT_OPEN_BROWSER", "0")
+
     # Disable dotenv by default unless the test opts in via @pytest.mark.enable_dotenv
     if not request.node.get_closest_marker("enable_dotenv"):
         monkeypatch.setenv("DEEPEVAL_DISABLE_DOTENV", "1")
@@ -137,7 +140,9 @@ def _env_sandbox(_session_env_baseline, request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _core_mode_no_confident(monkeypatch, request: "FixtureRequest"):
+def _core_mode_no_confident(
+    _env_sandbox, monkeypatch, request: "FixtureRequest"
+):
 
     # Ensure no Confident keys come from the process env in this test
     for key in ("CONFIDENT_API_KEY", "CONFIDENTAI_API_KEY"):

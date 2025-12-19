@@ -12,7 +12,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.constants import ProviderSlug as PS
-
+from deepeval.utils import require_param
 
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
@@ -31,16 +31,31 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
         settings = get_settings()
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
-            self.api_key: SecretStr | None = SecretStr(api_key)
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = get_settings().LOCAL_EMBEDDING_API_KEY
 
-        self.base_url = (
-            base_url
-            or settings.LOCAL_EMBEDDING_BASE_URL
-            and str(settings.LOCAL_EMBEDDING_BASE_URL)
-        )
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.LOCAL_EMBEDDING_BASE_URL is not None:
+            base_url = str(settings.LOCAL_EMBEDDING_BASE_URL).rstrip("/")
+
         model = model or settings.LOCAL_EMBEDDING_MODEL_NAME
+        # validation
+        model = require_param(
+            model,
+            provider_label="LocalEmbeddingModel",
+            env_var_name="LOCAL_EMBEDDING_MODEL_NAME",
+            param_hint="model",
+        )
+
+        self.base_url = require_param(
+            base_url,
+            provider_label="LocalEmbeddingModel",
+            env_var_name="LOCAL_EMBEDDING_BASE_URL",
+            param_hint="base_url",
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}

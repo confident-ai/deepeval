@@ -2,7 +2,17 @@ import inspect
 import json
 import re
 import sys
-from typing import Any, Dict, Optional, List, Union, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
@@ -30,6 +40,9 @@ from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
     GEMINI_MODELS_DATA,
     OLLAMA_MODELS_DATA,
+    ANTHROPIC_MODELS_DATA,
+    GROK_MODELS_DATA,
+    KIMI_MODELS_DATA,
 )
 from deepeval.key_handler import (
     ModelKeyValues,
@@ -58,6 +71,9 @@ MULTIMODAL_SUPPORTED_MODELS = {
     GeminiModel: GEMINI_MODELS_DATA,
     OllamaModel: OLLAMA_MODELS_DATA,
     AzureOpenAIModel: OPENAI_MODELS_DATA,
+    KimiModel: KIMI_MODELS_DATA,
+    AnthropicModel: ANTHROPIC_MODELS_DATA,
+    GrokModel: GROK_MODELS_DATA,
 }
 
 
@@ -211,6 +227,8 @@ def check_conversational_test_case_params(
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
                     type(model)
                 ).items():
+                    if callable(model_data):
+                        model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
                 raise ValueError(
@@ -266,6 +284,8 @@ def check_llm_test_case_params(
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
                     type(model)
                 ).items():
+                    if callable(model_data):
+                        model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
                 raise ValueError(
@@ -323,6 +343,8 @@ def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
     test_case_params: List[LLMTestCaseParams],
     metric: BaseArenaMetric,
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
     if not isinstance(arena_test_case, ArenaTestCase):
         raise ValueError(
@@ -344,7 +366,7 @@ def check_arena_test_case_params(
 
     for test_case in cases:
         check_llm_test_case_params(
-            test_case, test_case_params, None, None, metric, metric.model, False
+            test_case, test_case_params, None, None, metric, model, multimodal
         )
 
 
@@ -374,6 +396,63 @@ def trimAndLoadJson(
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
+SchemaType = TypeVar("SchemaType")
+ReturnType = TypeVar("ReturnType")
+
+
+def generate_with_schema_and_extract(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Synchronous wrapper:
+    - calls model.generate_with_schema(...)
+    - accrues cost if applicable
+    - if schema instance -> extract_schema
+      else parse JSON -> extract_json
+    """
+    if metric.using_native_model:
+        result, cost = metric.model.generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = metric.model.generate_with_schema(prompt, schema=schema_cls)
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
+
+
+async def a_generate_with_schema_and_extract(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    if metric.using_native_model:
+        result, cost = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
+
+
 ###############################################
 # Default Model Providers
 ###############################################
@@ -390,8 +469,8 @@ def should_use_local_model():
 
 
 def should_use_ollama_model():
-    base_url = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
-    return base_url == "ollama"
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
+    return value == "ollama"
 
 
 def should_use_gemini_model():

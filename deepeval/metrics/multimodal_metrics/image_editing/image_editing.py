@@ -14,9 +14,10 @@ from deepeval.utils import (
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
@@ -109,7 +110,7 @@ class ImageEditingMetric(BaseMetric):
                     steps=[
                         f"Semantic Consistency Scores:\n{self.SC_scores}",
                         f"Semantic Consistency Reasoning:\n{self.SC_reasoning}",
-                        f"Perceptual Quality Scores:\n{self.SC_scores}",
+                        f"Perceptual Quality Scores:\n{self.PQ_scores}",
                         f"Perceptual Quality Reasoning:\n{self.PQ_reasoning}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -170,7 +171,7 @@ class ImageEditingMetric(BaseMetric):
                 steps=[
                     f"Semantic Consistency Scores:\n{self.SC_scores}",
                     f"Semantic Consistency Reasoning:\n{self.SC_reasoning}",
-                    f"Perceptual Quality Scores:\n{self.SC_scores}",
+                    f"Perceptual Quality Scores:\n{self.PQ_scores}",
                     f"Perceptual Quality Reasoning:\n{self.PQ_reasoning}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -197,27 +198,18 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
-        prompt = ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-            text_prompt=text_prompt
-        )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                f"{prompt} {images}", schema=ReasonScore
+        prompt = [
+            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+                text_prompt=text_prompt
             )
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = await self.model.a_generate(
-                    f"{prompt} {images}", schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = await self.model.a_generate(
-                    f"{prompt} {images}", input_text=prompt
-                )
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        ]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=f"{prompt} {images}",
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     def _evaluate_semantic_consistency(
         self,
@@ -227,25 +219,18 @@ class ImageEditingMetric(BaseMetric):
     ) -> Tuple[List[int], str]:
         images: List[MLLMImage] = []
         images.extend([image_input, actual_image_output])
-        prompt = ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
-            text_prompt=text_prompt
-        )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                f"{prompt} {images}", schema=ReasonScore
+        prompt = [
+            ImageEditingTemplate.generate_semantic_consistency_evaluation_results(
+                text_prompt=text_prompt
             )
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = self.model.generate(
-                    f"{prompt} {images}", schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = self.model.generate(f"{prompt} {images}")
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        ]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=f"{prompt} {images}",
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     async def _a_evaluate_perceptual_quality(
         self, actual_image_output: MLLMImage
@@ -254,22 +239,13 @@ class ImageEditingMetric(BaseMetric):
         prompt = [
             ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                f"{prompt} {images}", schema=ReasonScore
-            )
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = await self.model.a_generate(
-                    f"{prompt} {images}", schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = await self.model.a_generate(f"{prompt} {images}")
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=f"{prompt} {images}",
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     def _evaluate_perceptual_quality(
         self, actual_image_output: MLLMImage
@@ -278,24 +254,15 @@ class ImageEditingMetric(BaseMetric):
         prompt = [
             ImageEditingTemplate.generate_perceptual_quality_evaluation_results()
         ]
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                f"{prompt} {images}", schema=ReasonScore
-            )
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = self.model.generate(
-                    f"{prompt} {images}", schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = self.model.generate(f"{prompt} {images}")
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=f"{prompt} {images}",
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
-    def _calculate_score(self) -> List[str]:
+    def _calculate_score(self) -> float:
         min_SC_score = min(self.SC_scores)
         min_PQ_score = min(self.PQ_scores)
         return math.sqrt(min_SC_score * min_PQ_score) / 10
@@ -305,14 +272,14 @@ class ImageEditingMetric(BaseMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
-            except:
+                self.success = self.score >= self.threshold
+            except TypeError:
                 self.success = False
         return self.success
 
     def _generate_reason(
         self,
-    ) -> Tuple[List[float], str]:
+    ) -> str:
         return textwrap.dedent(
             f"""
             The overall score is {self.score:.2f} because the lowest score from semantic consistency was {min(self.SC_scores)} 
