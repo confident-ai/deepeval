@@ -1,7 +1,8 @@
 import json
 import os
 import re
-
+from dotenv import dotenv_values
+from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
 
@@ -142,3 +143,10 @@ def dedupe_preserve_order(items: Iterable[str]) -> List[str]:
 def constrain_between(value: float, lo: float, hi: float) -> float:
     """Return value constrained to the inclusive range [lo, hi]."""
     return min(max(value, lo), hi)
+
+
+def read_dotenv_file(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    values = dotenv_values(path)
+    return {key: value for key, value in values.items() if value is not None}

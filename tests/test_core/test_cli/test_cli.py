@@ -756,3 +756,37 @@ def test_set_gemini_service_account_file_validation_errors(
     )
     assert r.exit_code != 0
     assert "does not contain valid JSON" in _normalize_cli_output(r.output)
+
+
+def test_settings_set_writes_to_dotenv_even_if_value_already_in_json_store(
+    runner: CliRunner,
+    env_path: Path,
+    hidden_store_dir: Path,
+) -> None:
+    # Seed the legacy JSON store with a setting not written to dotenv
+    store_path = hidden_store_dir / ".deepeval"
+    store_path.write_text(json.dumps({"TEMPERATURE": "0.5"}), encoding="utf-8")
+
+    # Settings is a singleton and is already created by autouse fixtures,
+    # so we need to rebuild it to pick up the JSON store value we just wrote.
+    settings = reset_settings(reload_dotenv=False)
+    assert settings.TEMPERATURE == pytest.approx(0.5)
+
+    # Sanity: dotenv is still empty
+    assert _read_dotenv(env_path).get("TEMPERATURE") is None
+
+    # Use the CLI to "set" the same setting, but request persistence to dotenv
+    _invoke_ok(
+        runner,
+        [
+            "settings",
+            "-u",
+            "temperature=0.5",
+            "--save",
+            f"dotenv:{env_path}",
+        ],
+    )
+
+    # Assert the setting was persisted to dotenv
+    env = _read_dotenv(env_path)
+    assert env.get("TEMPERATURE") == "0.5"

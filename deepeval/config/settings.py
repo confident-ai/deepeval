@@ -17,7 +17,7 @@ import os
 import re
 import threading
 
-from dotenv import dotenv_values
+from contextvars import ContextVar
 from pathlib import Path
 from pydantic import (
     AnyUrl,
@@ -43,16 +43,21 @@ from typing import (
 )
 
 from deepeval.config.utils import (
-    parse_bool,
     coerce_to_list,
     constrain_between,
     dedupe_preserve_order,
+    parse_bool,
+    read_dotenv_file,
 )
 from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
 
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
+
+_ACTIVE_SETTINGS_EDIT_CTX: ContextVar[Optional["Settings._SettingsEditCtx"]] = (
+    ContextVar("_ACTIVE_SETTINGS_EDIT_CTX", default=None)
+)
 
 # settings that were converted to computed fields with override counterparts
 _DEPRECATED_TO_OVERRIDE = {
@@ -86,22 +91,7 @@ def _find_legacy_enum(env_key: str):
     return None
 
 
-def _is_secret_key(settings: "Settings", env_key: str) -> bool:
-    field = type(settings).model_fields.get(env_key)
-    if not field:
-        return False
-    if field.annotation is SecretStr:
-        return True
-    # Optional[SecretStr] etc.
-    from typing import get_origin, get_args, Union
-
-    origin = get_origin(field.annotation)
-    if origin is Union:
-        return any(arg is SecretStr for arg in get_args(field.annotation))
-    return False
-
-
-def _is_secret_env_key(env_key: str) -> bool:
+def _is_secret_key(env_key: str) -> bool:
     field = Settings.model_fields.get(env_key)
     if not field:
         return False
@@ -170,7 +160,7 @@ def _merge_legacy_keyfile_into_env() -> None:
             continue
 
         # Mirror the legacy warning semantics for secrets, but only once per key
-        if env_key not in _LEGACY_KEYFILE_SECRET_WARNED and _is_secret_env_key(
+        if env_key not in _LEGACY_KEYFILE_SECRET_WARNED and _is_secret_key(
             env_key
         ):
             logger.warning(
@@ -188,22 +178,10 @@ def _merge_legacy_keyfile_into_env() -> None:
         os.environ[env_key] = str(raw)
 
 
-def _read_env_file(path: Path) -> Dict[str, str]:
-    if not path.exists():
-        return {}
-    try:
-        # filter out None to avoid writing "None" later
-        return {
-            k: v for k, v in dotenv_values(str(path)).items() if v is not None
-        }
-    except Exception:
-        return {}
-
-
 def _discover_app_env_from_files(env_dir: Path) -> Optional[str]:
     # prefer base .env.local, then .env for APP_ENV discovery
     for name in (".env.local", ".env"):
-        v = _read_env_file(env_dir / name).get("APP_ENV")
+        v = read_dotenv_file(env_dir / name).get("APP_ENV")
         if v:
             v = str(v).strip()
             if v:
@@ -232,8 +210,8 @@ def autoload_dotenv() -> None:
         env_dir = Path(os.getcwd())
 
     # merge files in precedence order
-    base = _read_env_file(env_dir / ".env")
-    local = _read_env_file(env_dir / ".env.local")
+    base = read_dotenv_file(env_dir / ".env")
+    local = read_dotenv_file(env_dir / ".env.local")
 
     # Pick APP_ENV (process -> .env.local -> .env -> default)
     app_env = (
@@ -244,7 +222,7 @@ def autoload_dotenv() -> None:
     if app_env is not None:
         app_env = app_env.strip()
         if app_env:
-            env_specific = _read_env_file(env_dir / f".env.{app_env}")
+            env_specific = read_dotenv_file(env_dir / f".env.{app_env}")
             merged.setdefault("APP_ENV", app_env)
 
     merged.update(base)
@@ -264,6 +242,14 @@ class PersistResult(NamedTuple):
 
 
 class Settings(BaseSettings):
+    # def __init__(self):
+    #     super().__init__()
+    def __setattr__(self, name: str, value):
+        ctx = _ACTIVE_SETTINGS_EDIT_CTX.get()
+        if ctx is not None and name in type(self).model_fields:
+            ctx._touched.add(name)
+        return super().__setattr__(name, value)
+
     model_config = SettingsConfigDict(
         extra="ignore",
         case_sensitive=True,
@@ -1304,6 +1290,7 @@ class Settings(BaseSettings):
             self._save = save
             self._persist = persist
             self._before: Dict[str, Any] = {}
+            self._touched: set[str] = set()
             self.result: Optional[PersistResult] = None
 
         @property
@@ -1312,100 +1299,136 @@ class Settings(BaseSettings):
 
         def __enter__(self) -> "Settings._SettingsEditCtx":
             # snapshot current state
+            self._token = _ACTIVE_SETTINGS_EDIT_CTX.set(self)
             self._before = {
                 k: getattr(self._s, k) for k in type(self._s).model_fields
             }
             return self
 
         def __exit__(self, exc_type, exc, tb):
-            if exc_type is not None:
-                return False  # don’t persist on error
+            try:
+                if exc_type is not None:
+                    return False  # don’t persist on error
 
-            from deepeval.config.settings_manager import (
-                update_settings_and_persist,
-                _normalize_for_env,
-                _resolve_save_path,
-            )
-
-            # lazy import legacy JSON store deps
-            from deepeval.key_handler import KEY_FILE_HANDLER
-
-            model_fields = type(self._s).model_fields
-            # Exclude computed fields from persistence
-
-            # compute diff of changed fields
-            after = {k: getattr(self._s, k) for k in model_fields}
-
-            before_norm = {
-                k: _normalize_for_env(v) for k, v in self._before.items()
-            }
-            after_norm = {k: _normalize_for_env(v) for k, v in after.items()}
-
-            changed_keys = {
-                k for k in after_norm if after_norm[k] != before_norm.get(k)
-            }
-            changed_keys -= self.COMPUTED_FIELDS
-
-            if not changed_keys:
-                if self._persist is False:
-                    # we report handled so that the cli does not mistakenly report invalid save option
-                    self.result = PersistResult(True, None, {})
-                    return False
-
-                ok, resolved_path = _resolve_save_path(self._save)
-                self.result = PersistResult(ok, resolved_path, {})
-                return False
-
-            updates = {k: after[k] for k in changed_keys}
-
-            if "LOG_LEVEL" in updates:
-                from deepeval.config.logging import (
-                    apply_deepeval_log_level,
+                from deepeval.config.settings_manager import (
+                    update_settings_and_persist,
+                    _normalize_for_env,
+                    _resolve_save_path,
                 )
 
-                apply_deepeval_log_level()
+                # lazy import legacy JSON store deps
+                from deepeval.key_handler import KEY_FILE_HANDLER
 
-            #
-            # .deepeval JSON support
-            #
+                model_fields = type(self._s).model_fields
+                # Exclude computed fields from persistence
 
-            if self._persist is not False:
-                for k in changed_keys:
-                    legacy_member = _find_legacy_enum(k)
-                    if legacy_member is None:
-                        continue  # skip if not a defined as legacy field
+                # compute diff of changed fields
+                after = {k: getattr(self._s, k) for k in model_fields}
 
-                    val = updates[k]
-                    # Remove from JSON if unset
-                    if val is None:
-                        KEY_FILE_HANDLER.remove_key(legacy_member)
-                        continue
+                before_norm = {
+                    k: _normalize_for_env(v) for k, v in self._before.items()
+                }
+                after_norm = {
+                    k: _normalize_for_env(v) for k, v in after.items()
+                }
 
-                    # Never store secrets in the JSON keystore
-                    if _is_secret_key(self._s, k):
-                        continue
+                changed_keys = {
+                    k for k in after_norm if after_norm[k] != before_norm.get(k)
+                }
+                changed_keys -= self.COMPUTED_FIELDS
+                touched_keys = set(self._touched) - self.COMPUTED_FIELDS
 
-                    # For booleans, the legacy store expects "YES"/"NO"
-                    if isinstance(val, bool):
-                        KEY_FILE_HANDLER.write_key(
-                            legacy_member, "YES" if val else "NO"
-                        )
+                # dotenv should persist union(changed, touched)
+                persist_dotenv = self._persist is not False
+                ok, resolved_path = _resolve_save_path(self._save)
+
+                existing_dotenv = {}
+                if persist_dotenv and ok and resolved_path is not None:
+                    existing_dotenv = read_dotenv_file(resolved_path)
+
+                candidate_keys_for_dotenv = (
+                    changed_keys | touched_keys
+                ) - self.COMPUTED_FIELDS
+
+                keys_for_dotenv: set[str] = set()
+                for key in candidate_keys_for_dotenv:
+                    desired = after_norm.get(key)  # normalized string or None
+                    if desired is None:
+                        # only need to unset if it's actually present in dotenv
+                        # if key in existing_dotenv:
+                        #     keys_for_dotenv.add(key)
+                        keys_for_dotenv.add(key)
                     else:
-                        # store as string
-                        KEY_FILE_HANDLER.write_key(legacy_member, str(val))
+                        if existing_dotenv.get(key) != desired:
+                            keys_for_dotenv.add(key)
 
-            #
-            # dotenv store
-            #
+                updates_for_dotenv = {
+                    key: after[key] for key in keys_for_dotenv
+                }
 
-            # defer import to avoid cyclics
-            handled, path = update_settings_and_persist(
-                updates,
-                save=self._save,
-                persist_dotenv=(False if self._persist is False else True),
-            )
-            self.result = PersistResult(handled, path, updates)
-            return False
+                if not changed_keys and not updates_for_dotenv:
+                    if self._persist is False:
+                        # we report handled so that the cli does not mistakenly report invalid save option
+                        self.result = PersistResult(True, None, {})
+                        return False
+
+                    ok, resolved_path = _resolve_save_path(self._save)
+                    self.result = PersistResult(ok, resolved_path, {})
+                    return False
+
+                updates = {k: after[k] for k in changed_keys}
+
+                if "LOG_LEVEL" in updates:
+                    from deepeval.config.logging import (
+                        apply_deepeval_log_level,
+                    )
+
+                    apply_deepeval_log_level()
+
+                #
+                # .deepeval JSON support
+                #
+
+                if self._persist is not False:
+                    for k in changed_keys:
+                        legacy_member = _find_legacy_enum(k)
+                        if legacy_member is None:
+                            continue  # skip if not a defined as legacy field
+
+                        val = updates[k]
+                        # Remove from JSON if unset
+                        if val is None:
+                            KEY_FILE_HANDLER.remove_key(legacy_member)
+                            continue
+
+                        # Never store secrets in the JSON keystore
+                        if _is_secret_key(k):
+                            continue
+
+                        # For booleans, the legacy store expects "YES"/"NO"
+                        if isinstance(val, bool):
+                            KEY_FILE_HANDLER.write_key(
+                                legacy_member, "YES" if val else "NO"
+                            )
+                        else:
+                            # store as string
+                            KEY_FILE_HANDLER.write_key(legacy_member, str(val))
+
+                #
+                # dotenv store
+                #
+
+                # defer import to avoid cyclics
+                handled, path = update_settings_and_persist(
+                    updates_for_dotenv,
+                    save=self._save,
+                    persist_dotenv=persist_dotenv,
+                )
+                self.result = PersistResult(handled, path, updates_for_dotenv)
+                return False
+            finally:
+                if self._token is not None:
+                    _ACTIVE_SETTINGS_EDIT_CTX.reset(self._token)
 
         def switch_model_provider(self, target) -> None:
             """
