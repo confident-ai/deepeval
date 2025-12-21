@@ -88,6 +88,28 @@ class AnswerRelevancyMetric(BaseMetric):
                 input = test_case.input
                 actual_output = test_case.actual_output
 
+                self.statements: List[str] = []
+                self.verdicts: List[AnswerRelevancyVerdict] = []
+                self.score = 0
+                self.success = False
+                if self._is_empty_actual_output(
+                    actual_output, test_case.multimodal
+                ):
+                    self.reason = (
+                        "The score is 0.00 because the actual output is empty and does not address the input."
+                        if self.include_reason
+                        else None
+                    )
+                    self.verbose_logs = construct_verbose_logs(
+                        self,
+                        steps=[
+                            "Statements:\n[]",
+                            "Verdicts:\n[]",
+                            f"Score: {self.score}\nReason: {self.reason}",
+                        ],
+                    )
+                    return self.score
+
                 self.statements: List[str] = self._generate_statements(
                     actual_output, test_case.multimodal
                 )
@@ -139,12 +161,33 @@ class AnswerRelevancyMetric(BaseMetric):
         ):
             input = test_case.input
             actual_output = test_case.actual_output
+            self.statements: List[str] = []
+            self.verdicts: List[AnswerRelevancyVerdict] = []
+            self.score = 0
+            self.success = False
+            if self._is_empty_actual_output(
+                actual_output, test_case.multimodal
+            ):
+                self.reason = (
+                    "The score is 0.00 because the actual output is empty and does not address the input."
+                    if self.include_reason
+                    else None
+                )
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        "Statements:\n[]",
+                        "Verdicts:\n[]",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
+                return self.score
 
-            self.statements: List[str] = await self._a_generate_statements(
+            self.statements = await self._a_generate_statements(
                 actual_output, test_case.multimodal
             )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(input, test_case.multimodal)
+            self.verdicts = await self._a_generate_verdicts(
+                input, test_case.multimodal
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(
@@ -294,7 +337,7 @@ class AnswerRelevancyMetric(BaseMetric):
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 1
+            return 0
 
         relevant_count = 0
         for verdict in self.verdicts:
@@ -303,6 +346,28 @@ class AnswerRelevancyMetric(BaseMetric):
 
         score = relevant_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
+
+    def _is_empty_actual_output(self, actual_output, multimodal: bool) -> bool:
+        if actual_output is None:
+            return True
+
+        if multimodal:
+            # typical shape: List[Union[str, MLLMImage]]
+            try:
+                for item in actual_output:
+                    if isinstance(item, MLLMImage):
+                        return False
+                    if isinstance(item, str) and item.strip():
+                        return False
+                return True
+            except TypeError:
+                # not iterable
+                return str(actual_output).strip() == ""
+
+        if isinstance(actual_output, str):
+            return actual_output.strip() == ""
+
+        return str(actual_output).strip() == ""
 
     def is_successful(self) -> bool:
         if self.error is not None:
