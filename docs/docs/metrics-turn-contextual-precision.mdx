@@ -4,17 +4,15 @@ title: Turn Contextual Precision
 sidebar_label: Turn Contextual Precision
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/metrics-turn-contextual-precision"
-  />
-</head>
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
-
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceFree={false} />
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  referenceFree={false}
+  rag={true}
+/>
 
 The turn contextual precision metric is a conversational metric that evaluates whether relevant nodes in your retrieval context are ranked higher than irrelevant nodes **throughout a conversation**.
 

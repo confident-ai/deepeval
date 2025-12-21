@@ -28,6 +28,10 @@
       font-size: 1.8rem;
     }
 
+    h3 {
+      font-size: 1.4rem;
+    }
+
     p,
     ul,
     ol {
@@ -364,88 +368,78 @@ video {
 
 // MENU STYLING
 
-/* Remove all the sidebar item ::before content */
-.sidebar-item-getting-started > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-llm-eval > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-metrics > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-prompt-optimization
-  > .menu__list-item-collapsible
-  > a::before,
-.sidebar-item-icon-synthetic-data > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-red-teaming > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-benchmarks > .menu__list-item-collapsible > a::before,
-.sidebar-item-icon-others > .menu__list-item-collapsible > a::before {
-  content: none;
-}
-
-.sidebar-item-getting-started ul:not(:first-child),
-.sidebar-item-icon-llm-eval ul:not(:first-child),
-.sidebar-item-icon-prompt-optimization ul:not(:first-child),
-.sidebar-item-icon-synthetic-data ul:not(:first-child),
-.sidebar-item-icon-metrics ul:not(:first-child),
-.sidebar-item-icon-red-teaming ul:not(:first-child),
-.sidebar-item-icon-benchmarks ul:not(:first-child),
-.sidebar-item-icon-others ul:not(:first-child) {
+/* Sidebar nested ul styling */
+[class*='sidebar-item-'] ul:not(:first-child) {
   margin-left: 18px !important;
   border-left: 1px solid #e0e0e0;
 }
 
-html[data-theme='dark'] .sidebar-item-getting-started ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-llm-eval ul:not(:first-child),
-html[data-theme='dark']
-  .sidebar-item-icon-prompt-optimization
-  ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-synthetic-data ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-metrics ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-red-teaming ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-benchmarks ul:not(:first-child),
-html[data-theme='dark'] .sidebar-item-icon-others ul:not(:first-child) {
+html[data-theme='dark'] [class*='sidebar-item-'] ul:not(:first-child) {
   border-left-color: #374151;
 }
 
-/* Styling for Lucide icons in sidebar */
-.sidebar-icon {
-  margin-right: 0.4rem;
+/* Base styles for sidebar icons via CSS ::before */
+@mixin sidebar-icon-base {
+  content: '';
+  display: inline-block;
   width: 1em;
   height: 1em;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  margin-right: 0.4rem;
   vertical-align: middle;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
-/* Color adjustments for light/dark mode */
-html[data-theme='light'] .sidebar-icon {
-  color: black;
-  font-weight: 500;
+/* Icon definitions - Lucide icons as SVG data URIs */
+$sidebar-icons: (
+  'getting-started':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z'/%3E%3Cpath d='m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z'/%3E%3Cpath d='M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0'/%3E%3Cpath d='M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'/%3E%3C/svg%3E",
+  'icon-llm-eval':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2'/%3E%3Cpath d='M8.5 2h7'/%3E%3Cpath d='M7 16h10'/%3E%3C/svg%3E",
+  'icon-metrics':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' x2='18' y1='20' y2='10'/%3E%3Cline x1='12' x2='12' y1='20' y2='4'/%3E%3Cline x1='6' x2='6' y1='20' y2='14'/%3E%3C/svg%3E",
+  'icon-prompt-optimization':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E",
+  'icon-synthetic-data':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5' rx='9' ry='3'/%3E%3Cpath d='M3 5V19A9 3 0 0 0 21 19V5'/%3E%3Cpath d='M3 12A9 3 0 0 0 21 12'/%3E%3C/svg%3E",
+  'icon-red-teaming':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/%3E%3Cpath d='M12 8v4'/%3E%3Cpath d='M12 16h.01'/%3E%3C/svg%3E",
+  'icon-benchmarks':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' x2='18' y1='20' y2='10'/%3E%3Cline x1='12' x2='12' y1='20' y2='4'/%3E%3Cline x1='6' x2='6' y1='20' y2='14'/%3E%3C/svg%3E",
+  'icon-agent':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8V4H8'/%3E%3Crect width='16' height='12' x='4' y='8' rx='2'/%3E%3Cpath d='M2 14h2'/%3E%3Cpath d='M20 14h2'/%3E%3Cpath d='M15 13v2'/%3E%3Cpath d='M9 13v2'/%3E%3C/svg%3E",
+  'icon-chatbot':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6V2H8'/%3E%3Cpath d='m8 18-4 4V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z'/%3E%3Cpath d='M2 12h2'/%3E%3Cpath d='M9 11v2'/%3E%3Cpath d='M15 11v2'/%3E%3Cpath d='M20 12h2'/%3E%3C/svg%3E",
+  'icon-rag':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='17' cy='17' r='3'/%3E%3Cpath d='M10.7 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5.7'/%3E%3Cpath d='M21 21 19 19'/%3E%3Cpath d='M6 8h.01M6 12h.01M6 16h.01'/%3E%3C/svg%3E",
+  'icon-customizations':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E",
+  'icon-others':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E",
+  'icon-frameworks':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='7' height='7' x='14' y='3' rx='1'/%3E%3Cpath d='M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3'/%3E%3C/svg%3E",
+  'icon-eval-model':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z'/%3E%3Cpath d='M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z'/%3E%3Cpath d='M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4'/%3E%3Cpath d='M17.599 6.5a3 3 0 0 0 .399-1.375'/%3E%3Cpath d='M6.003 5.125A3 3 0 0 0 6.401 6.5'/%3E%3Cpath d='M3.477 10.896a4 4 0 0 1 .585-.396'/%3E%3Cpath d='M19.938 10.5a4 4 0 0 1 .585.396'/%3E%3Cpath d='M6 18a4 4 0 0 1-1.967-.516'/%3E%3Cpath d='M19.967 17.484A4 4 0 0 1 18 18'/%3E%3C/svg%3E",
+  'icon-vector-db':
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='8' x='2' y='2' rx='2' ry='2'/%3E%3Crect width='20' height='8' x='2' y='14' rx='2' ry='2'/%3E%3Cline x1='6' x2='6.01' y1='6' y2='6'/%3E%3Cline x1='6' x2='6.01' y1='18' y2='18'/%3E%3C/svg%3E",
+);
+
+/* Generate icon styles for each sidebar item */
+@each $name, $icon in $sidebar-icons {
+  .sidebar-item-#{$name} > .menu__list-item-collapsible > a::before {
+    @include sidebar-icon-base;
+    background-image: url($icon);
+  }
 }
 
-html[data-theme='dark'] .sidebar-icon {
-  color: white;
-  font-weight: 500;
-}
-
-/* Adjust color for light/dark modes */
-html[data-theme='light'] .sidebar-item-getting-started > a::before,
-html[data-theme='light'] .sidebar-item-icon-llm-eval > a::before,
-html[data-theme='light'] .sidebar-item-icon-prompt-optimization > a::before,
-html[data-theme='light'] .sidebar-item-icon-synthetic-data > a::before,
-html[data-theme='light'] .sidebar-item-icon-red-teaming > a::before,
-html[data-theme='light'] .sidebar-item-icon-benchmarks > a::before,
-html[data-theme='light'] .sidebar-item-icon-others > a::before {
-  filter: invert(35%) sepia(90%) saturate(1000%) hue-rotate(240deg)
-    brightness(90%) contrast(95%);
-}
-
-html[data-theme='dark'] .sidebar-item-getting-started > a::before,
-html[data-theme='dark'] .sidebar-item-icon-llm-eval > a::before,
-html[data-theme='dark'] .sidebar-item-icon-prompt-optimization > a::before,
-html[data-theme='dark'] .sidebar-item-icon-synthetic-data > a::before,
-html[data-theme='dark'] .sidebar-item-icon-red-teaming > a::before,
-html[data-theme='dark'] .sidebar-item-icon-benchmarks > a::before,
-html[data-theme='dark'] .sidebar-item-icon-others > a::before {
-  filter: invert(60%) sepia(75%) saturate(1000%) hue-rotate(240deg)
-    brightness(95%) contrast(95%);
+/* Dark mode: invert icons to white */
+html[data-theme='dark'] {
+  @each $name, $icon in $sidebar-icons {
+    .sidebar-item-#{$name} > .menu__list-item-collapsible > a::before {
+      filter: invert(100%);
+    }
+  }
 }
 
 .theme-code-block-highlighted-line {
@@ -558,4 +552,16 @@ html[data-theme='dark'] .prism-code {
   margin-bottom: 20px;
   position: relative;
   z-index: 10;
+}
+
+// SEARCH BAR STYLING
+
+.DocSearch-Button {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Hide search bar in navbar (since it's in the sidebar)
+[class^='navbarSearchContainer'] {
+  display: none !important;
 }

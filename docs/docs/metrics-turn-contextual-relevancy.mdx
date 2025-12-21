@@ -4,17 +4,15 @@ title: Turn Contextual Relevancy
 sidebar_label: Turn Contextual Relevancy
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/metrics-turn-contextual-relevancy"
-  />
-</head>
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
-
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceFree={false} />
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  referenceFree={false}
+  rag={true}
+/>
 
 The turn contextual relevancy metric is a conversational metric that evaluates whether the retrieval context contains relevant information to address the user's input **throughout a conversation**.
 

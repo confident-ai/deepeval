@@ -22,8 +22,9 @@
   flex-shrink: 0;
   margin-top: 1.5rem;
   padding: 1rem;
-  border: 1px solid black;
-  background-color: rgba(153, 0, 255, 0.038);
+  border-radius: 4px;
+  border: 1px solid #00000028;
+  background-color: rgba(132, 0, 255, 0.07);
 
   .logo {
     width: 32px;
