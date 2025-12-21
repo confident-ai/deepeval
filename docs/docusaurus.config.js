@@ -42,6 +42,19 @@ module.exports = {
         showLastUpdateTime: true,
       },
     ],
+    // [
+    //   '@docusaurus/plugin-content-blog',
+    //   {
+    //     id: 'changelog',
+    //     path: 'changelog',
+    //     routeBasePath: 'changelog',
+    //     blogTitle: 'Changelog',
+    //     blogDescription: 'Release notes and updates',
+    //     blogSidebarTitle: 'Releases',
+    //     blogSidebarCount: 'ALL',
+    //     showReadingTime: false,
+    //   },
+    // ],
   ],
 
   title: 'DeepEval - The Open-Source LLM Evaluation Framework',
@@ -152,6 +165,7 @@ module.exports = {
             activeBasePath: 'integrations',
           },
           { to: 'blog', label: 'Blog', position: 'left' },
+          // { to: 'changelog', label: 'Changelog', position: 'left' },
           {
             href: 'https://www.confident-ai.com/docs',
             position: 'left',
