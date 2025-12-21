@@ -1,8 +1,11 @@
 import os
 import pytest
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.test_case import LLMTestCase, MLLMImage, ToolCall
 from deepeval import evaluate
+from tests.test_core.stubs import make_metric
+
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -171,3 +174,35 @@ class TestAnswerRelevancyMetric:
         results = evaluate([test_case], [metric])
 
         assert results is not None
+
+
+def test_answer_relevancy_empty_actual_output_scores_zero():
+    metric = make_metric(
+        AnswerRelevancyMetric,
+        metric_template=AnswerRelevancyTemplate,
+        async_mode=False,
+    )
+    tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="")
+    score = metric.measure(
+        tc, _show_indicator=False, _log_metric_to_confident=False
+    )
+    assert score == 0
+    assert "empty" in (metric.reason or "").lower()
+
+
+@pytest.mark.asyncio
+async def test_answer_relevancy_empty_actual_output_scores_zero_async():
+    metric = make_metric(
+        AnswerRelevancyMetric,
+        metric_template=AnswerRelevancyTemplate,
+        async_mode=False,
+    )
+
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?", actual_output="   "
+    )
+    score = await metric.a_measure(
+        tc, _show_indicator=False, _log_metric_to_confident=False
+    )
+    assert score == 0
+    assert "empty" in (metric.reason or "").lower()
