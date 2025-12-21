@@ -22,6 +22,7 @@ import random
 import string
 import socket
 import typer
+import importlib.metadata
 from typing import List, Optional
 from rich import print
 from rich.markup import escape
@@ -58,13 +59,24 @@ from deepeval.confident.api import (
     is_confident,
 )
 
-app = typer.Typer(name="deepeval")
+app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
 
 
 class Regions(Enum):
     US = "US"
     EU = "EU"
+
+
+def version_callback(value: Optional[bool] = None) -> None:
+    if not value:
+        return
+    try:
+        version = importlib.metadata.version("deepeval")
+    except importlib.metadata.PackageNotFoundError:
+        from deepeval import __version__ as version  # type: ignore
+    typer.echo(version)  # or: typer.echo(f"deepeval {v}")
+    raise typer.Exit()
 
 
 def generate_pairing_code():
@@ -131,6 +143,20 @@ def _handle_save_result(
         print(success_msg)
 
     return True
+
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Show the DeepEval version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    pass
 
 
 @app.command(name="set-confident-region")
