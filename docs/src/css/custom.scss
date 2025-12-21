@@ -76,7 +76,7 @@ html[data-theme="dark"] {
   --ifm-color-primary-light: #8e55ef;
   --ifm-color-primary-lighter: #9763f1;
   --ifm-color-primary-lightest: #b28bf4;
-  --ifm-background-color: #13171e;
+  --ifm-background-color: #0d1015;
   --ifm-background-surface-color: #13171e;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 
@@ -184,8 +184,9 @@ li.tabs__item--active {
 
 // TOP NAV STYLING
 
-.navbar {
-  background-color: #1d232e;
+html[data-theme="dark"] .navbar {
+  background-color: #0d1015;
+  border-bottom: 1px solid #374151;
 }
 
 .avatar__name > a {
@@ -443,15 +444,15 @@ video {
   border-left: 1px solid #e0e0e0;
 }
 
-html[data-theme="dark"] .sidebar-item-getting-started > ul,
-html[data-theme="dark"] .sidebar-item-icon-llm-eval > ul,
-html[data-theme="dark"] .sidebar-item-icon-prompt-optimization > ul,
-html[data-theme="dark"] .sidebar-item-icon-synthetic-data > ul,
-html[data-theme="dark"] .sidebar-item-icon-metrics > ul,
-html[data-theme="dark"] .sidebar-item-icon-red-teaming > ul,
-html[data-theme="dark"] .sidebar-item-icon-benchmarks > ul,
-html[data-theme="dark"] .sidebar-item-icon-others > ul {
-  border-left-color: #383f4b;
+html[data-theme="dark"] .sidebar-item-getting-started ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-llm-eval ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-prompt-optimization ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-synthetic-data ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-metrics ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-red-teaming ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-benchmarks ul:not(:first-child),
+html[data-theme="dark"] .sidebar-item-icon-others ul:not(:first-child) {
+  border-left-color: #374151;
 }
 
 /* Styling for Lucide icons in sidebar */
