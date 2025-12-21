@@ -1,0 +1,56 @@
+.tableOfContents {
+  max-height: calc(100vh - (var(--ifm-navbar-height) + 2rem));
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 1rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.tocItemsContainer {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0; /* Allows flex item to shrink below content size */
+}
+
+@media (max-width: 996px) {
+  .tableOfContents {
+    display: none;
+  }
+}
+
+.promoCard {
+  flex-shrink: 0;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid black;
+  background-color: rgba(153, 0, 255, 0.038);
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .heading {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .description {
+    font-size: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .button {
+    display: inline-block;
+    background-color: #000;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 12px;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}
