@@ -5,13 +5,24 @@ import pyfiglet
 import typer
 import webbrowser
 
+from pydantic import ValidationError
+from pydantic.fields import FieldInfo
 from enum import Enum
 from pathlib import Path
 from rich import print
-from typing import Optional, Dict, Iterable, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Tuple,
+    Optional,
+    get_args,
+    get_origin,
+    Union,
+)
 from opentelemetry.trace import Span
 
-from deepeval.config.settings import Settings
+from deepeval.config.settings import Settings, get_settings
 from deepeval.key_handler import (
     KEY_FILE_HANDLER,
     ModelKeyValues,
@@ -98,6 +109,11 @@ def _normalize_kv(updates: Dict[StrOrEnum, str]) -> Dict[str, str]:
 
 def _normalize_keys(keys: Iterable[StrOrEnum]) -> list[str]:
     return [_to_str_key(k) for k in keys]
+
+
+def _normalize_setting_key(raw_key: str) -> str:
+    """Normalize CLI keys like 'log-level' / 'LOG_LEVEL' to model field names."""
+    return raw_key.strip().lower().replace("-", "_")
 
 
 def _parse_save_option(
@@ -239,3 +255,99 @@ def load_service_account_key_file(path: Path) -> str:
         ) from e
 
     return json.dumps(obj, separators=(",", ":"))
+
+
+def unwrap_optional(annotation: Any) -> Any:
+    """
+    If `annotation` is Optional[T] (i.e. Union[T, None]), return T.
+    Otherwise return `annotation` unchanged.
+
+    Note: If it's a Union with multiple non-None members, we leave it unchanged.
+    """
+    origin = get_origin(annotation)
+    if origin is Union:
+        non_none = [a for a in get_args(annotation) if a is not type(None)]
+        if len(non_none) == 1:
+            return non_none[0]
+    return annotation
+
+
+def looks_like_json_container_literal(raw_value: str) -> bool:
+    setting = raw_value.strip()
+    return (setting.startswith("{") and setting.endswith("}")) or (
+        setting.startswith("[") and setting.endswith("]")
+    )
+
+
+def should_parse_json_for_field(field_info: FieldInfo) -> bool:
+    annotation = unwrap_optional(field_info.annotation)
+    origin = get_origin(annotation) or annotation
+    return origin in (list, dict, tuple, set)
+
+
+def maybe_parse_json_literal(raw_value: str, field_info) -> object:
+    if not isinstance(raw_value, str):
+        return raw_value
+    if not looks_like_json_container_literal(raw_value):
+        return raw_value
+    if not should_parse_json_for_field(field_info):
+        return raw_value
+    try:
+        return json.loads(raw_value)
+    except Exception as e:
+        raise typer.BadParameter(f"Invalid JSON for {field_info}: {e}") from e
+
+
+def resolve_field_names(settings, query: str) -> list[str]:
+    """Return matching Settings fields for a case-insensitive partial query."""
+    fields = type(settings).model_fields
+    query = _normalize_setting_key(query)
+
+    # exact match (case-insensitive) first
+    exact = [
+        name for name in fields.keys() if _normalize_setting_key(name) == query
+    ]
+    if exact:
+        return exact
+
+    # substring matches
+    return [
+        name for name in fields.keys() if query in _normalize_setting_key(name)
+    ]
+
+
+def is_optional(annotation) -> bool:
+    origin = get_origin(annotation)
+    if origin is Union:
+        return type(None) in get_args(annotation)
+    return False
+
+
+def parse_and_validate(field_name: str, field_info, raw: str):
+    """
+    Validate and coerce a CLI value by delegating to the Settings model.
+
+    Field validators like LOG_LEVEL coercion (e.g. 'error' -> numeric log level)
+    are applied.
+    """
+    settings = get_settings()
+    value: object = maybe_parse_json_literal(raw, field_info)
+    payload = settings.model_dump(mode="python")
+    payload[field_name] = value
+
+    try:
+        validated = type(settings).model_validate(payload)
+    except ValidationError as e:
+        # Surface field-specific error(s) if possible
+        field_errors: list[str] = []
+        for err in e.errors():
+            loc = err.get("loc") or ()
+            if loc and loc[0] == field_name:
+                field_errors.append(err.get("msg") or str(err))
+
+        detail = "; ".join(field_errors) if field_errors else str(e)
+        raise typer.BadParameter(
+            f"Invalid value for {field_name}: {raw!r}. {detail}"
+        ) from e
+
+    return getattr(validated, field_name)

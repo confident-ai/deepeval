@@ -22,12 +22,15 @@ import random
 import string
 import socket
 import typer
-from typing import Optional
+from typing import List, Optional
 from rich import print
 from rich.markup import escape
+from rich.console import Console
+from rich.table import Table
 from enum import Enum
 from pathlib import Path
 from pydantic import SecretStr
+from pydantic_core import PydanticUndefined
 from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
@@ -43,8 +46,11 @@ from deepeval.test_run.test_run import (
 )
 from deepeval.cli.utils import (
     coerce_blank_to_none,
+    is_optional,
     load_service_account_key_file,
+    parse_and_validate,
     render_login_message,
+    resolve_field_names,
     upload_and_open_link,
     PROD,
 )
@@ -325,6 +331,175 @@ def view():
 
 
 @app.command(
+    name="settings",
+    help=(
+        "Power-user command to set/unset any DeepEval Settings field. "
+        "Uses Pydantic type validation. Supports partial, case-insensitive matching for --unset and --list."
+    ),
+)
+def update_settings(
+    set_: Optional[List[str]] = typer.Option(
+        None,
+        "-u",
+        "--set",
+        help="Set a setting (repeatable). Format: KEY=VALUE",
+    ),
+    unset: Optional[List[str]] = typer.Option(
+        None,
+        "-U",
+        "--unset",
+        help=(
+            "Unset setting(s) by name or partial match (repeatable, case-insensitive). "
+            "If a filter matches multiple keys, all are unset."
+        ),
+    ),
+    list_: bool = typer.Option(
+        False,
+        "-l",
+        "--list",
+        help="List available settings. You can optionally pass a FILTER argument, such as `-l verbose`.",
+    ),
+    filters: Optional[List[str]] = typer.Argument(
+        None,
+        help="Optional filter(s) for --list (case-insensitive substring match). You can pass multiple terms.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist settings to dotenv. Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    def _format_setting_value(val: object) -> str:
+        if isinstance(val, SecretStr):
+            secret = val.get_secret_value()
+            return "********" if secret and secret.strip() else ""
+        if val is None:
+            return ""
+        s = str(val)
+        return s if len(s) <= 120 else (s[:117] + "…")
+
+    def _print_settings_list(filter_terms: Optional[List[str]]) -> None:
+        needles = []
+        for term in filter_terms or []:
+            t = term.strip().lower().replace("-", "_")
+            if t:
+                needles.append(t)
+
+        table = Table(title="DeepEval Settings")
+        table.add_column("Name", style="bold")
+        table.add_column("Value", overflow="fold")
+        table.add_column("Description", overflow="fold")
+
+        shown = 0
+        for name in sorted(fields.keys()):
+            hay = name.lower().replace("-", "_")
+            if needles and not any(n in hay for n in needles):
+                continue
+
+            field_info = fields[name]
+            desc = field_info.description or ""
+            current_val = getattr(settings, name, None)
+            table.add_row(name, _format_setting_value(current_val), desc)
+            shown += 1
+
+        if shown == 0:
+            raise typer.BadParameter(f"No settings matched: {filter_terms!r}")
+
+        Console().print(table)
+
+    settings = get_settings()
+    fields = type(settings).model_fields
+
+    if filters is not None and not list_:
+        raise typer.BadParameter("FILTER can only be used with --list / -l.")
+
+    if list_:
+        if set_ or unset:
+            raise typer.BadParameter(
+                "--list cannot be combined with --set/--unset."
+            )
+        _print_settings_list(filters)
+        return
+
+    # Build an assignment plan: name -> value (None means "unset")
+    plan: dict[str, object] = {}
+
+    # --unset (filters)
+    if unset:
+        matched_any = False
+        for f in unset:
+            matches = resolve_field_names(settings, f)
+            if not matches:
+                continue
+            matched_any = True
+            for name in matches:
+                field_info = fields[name]
+                ann = field_info.annotation
+
+                # "unset" semantics:
+                # - Optional -> None
+                # - else -> reset to default if it exists
+                if is_optional(ann):
+                    plan[name] = None
+                elif field_info.default is not PydanticUndefined:
+                    plan[name] = field_info.default
+                else:
+                    raise typer.BadParameter(
+                        f"Cannot unset required setting {name} (no default, not Optional)."
+                    )
+
+        if unset and not matched_any:
+            raise typer.BadParameter(f"No settings matched: {unset!r}")
+
+    # --set KEY=VALUE
+    if set_:
+        for item in set_:
+            key, sep, raw = item.partition("=")
+            if not sep:
+                raise typer.BadParameter(
+                    f"--set must be KEY=VALUE (got {item!r})"
+                )
+
+            matches = resolve_field_names(settings, key)
+            if not matches:
+                raise typer.BadParameter(f"Unknown setting: {key!r}")
+            if len(matches) > 1:
+                raise typer.BadParameter(
+                    f"Ambiguous setting {key!r}; matches: {', '.join(matches)}"
+                )
+
+            name = matches[0]
+            field_info = fields[name]
+            plan[name] = parse_and_validate(name, field_info, raw)
+
+    if not plan:
+        # nothing requested
+        return
+
+    with settings.edit(save=save) as edit_ctx:
+        for name, val in plan.items():
+            setattr(settings, name, val)
+
+    handled, path, updates = edit_ctx.result
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=":wrench: Settings updated." if updates else None,
+    )
+
+
+@app.command(
     name="set-debug",
     help=(
         "Configure verbosity flags (global LOG_LEVEL, verbose mode), retry logger levels, "
@@ -341,6 +516,16 @@ def set_debug(
     ),
     verbose: Optional[bool] = typer.Option(
         None, "--verbose/--no-verbose", help="Toggle DEEPEVAL_VERBOSE_MODE."
+    ),
+    debug_async: Optional[bool] = typer.Option(
+        None,
+        "--debug-async/--no-debug-async",
+        help="Toggle DEEPEVAL_DEBUG_ASYNC.",
+    ),
+    log_stack_traces: Optional[bool] = typer.Option(
+        None,
+        "--log-stack-traces/--no-log-stack-traces",
+        help="Toggle DEEPEVAL_LOG_STACK_TRACES.",
     ),
     # Retry logging dials
     retry_before_level: Optional[str] = typer.Option(
@@ -411,17 +596,6 @@ def set_debug(
         "--metric-logging-enabled/--no-metric-logging-enabled",
         help="Enable / disable CONFIDENT_METRIC_LOGGING_ENABLED.",
     ),
-    # Advanced / potentially surprising
-    error_reporting: Optional[bool] = typer.Option(
-        None,
-        "--error-reporting/--no-error-reporting",
-        help="Enable / disable ERROR_REPORTING.",
-    ),
-    ignore_errors: Optional[bool] = typer.Option(
-        None,
-        "--ignore-errors/--no-ignore-errors",
-        help="Enable / disable IGNORE_DEEPEVAL_ERRORS (not recommended in normal debugging).",
-    ),
     # Persistence
     save: Optional[str] = typer.Option(
         None,
@@ -451,6 +625,10 @@ def set_debug(
             settings.LOG_LEVEL = log_level
         if verbose is not None:
             settings.DEEPEVAL_VERBOSE_MODE = verbose
+        if debug_async is not None:
+            settings.DEEPEVAL_DEBUG_ASYNC = debug_async
+        if log_stack_traces is not None:
+            settings.DEEPEVAL_LOG_STACK_TRACES = log_stack_traces
 
         # Retry logging
         if retry_before_level is not None:
@@ -488,25 +666,25 @@ def set_debug(
         if metric_logging_enabled is not None:
             settings.CONFIDENT_METRIC_LOGGING_ENABLED = metric_logging_enabled
 
-        # Advanced
-        if error_reporting is not None:
-            settings.ERROR_REPORTING = error_reporting
-        if ignore_errors is not None:
-            settings.IGNORE_DEEPEVAL_ERRORS = ignore_errors
-
-    handled, path, updated = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
     _handle_save_result(
         handled=handled,
         path=path,
-        updates=updated,
+        updates=updates,
         save=save,
         quiet=quiet,
-        success_msg=(":loud_sound: Debug options updated."),
+        success_msg=":loud_sound: Debug options updated." if updates else None,
     )
 
 
-@app.command(name="unset-debug")
+@app.command(
+    name="unset-debug",
+    help=(
+        "Restore default behavior by removing debug-related overrides. "
+        "Use --save to also remove these keys from a dotenv file (default: .env.local)."
+    ),
+)
 def unset_debug(
     save: Optional[str] = typer.Option(
         None,
@@ -522,47 +700,44 @@ def unset_debug(
         help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
-    """
-    Restore default behavior by unsetting debug related variables.
-
-    Behavior:
-    - Resets LOG_LEVEL back to 'info'.
-    - Unsets DEEPEVAL_VERBOSE_MODE, retry log-level overrides, gRPC and Confident trace flags.
-    - If --save is provided (or DEEPEVAL_DEFAULT_SAVE is set), removes these keys from the target dotenv file.
-    """
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        # Back to normal global level
-        settings.LOG_LEVEL = "info"
-        settings.CONFIDENT_TRACE_ENVIRONMENT = "development"
-        settings.CONFIDENT_TRACE_VERBOSE = True
-        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = True
-        settings.CONFIDENT_METRIC_LOGGING_ENABLED = True
-
-        # Clear optional toggles/overrides
+        # Core verbosity
+        settings.LOG_LEVEL = None
         settings.DEEPEVAL_VERBOSE_MODE = None
+        settings.DEEPEVAL_DEBUG_ASYNC = None
+        settings.DEEPEVAL_LOG_STACK_TRACES = None
+
+        # Retry logging dials
         settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = None
         settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = None
 
+        # gRPC visibility
         settings.DEEPEVAL_GRPC_LOGGING = None
         settings.GRPC_VERBOSITY = None
         settings.GRPC_TRACE = None
 
+        # Confident tracing
+        settings.CONFIDENT_TRACE_VERBOSE = None
+        settings.CONFIDENT_TRACE_ENVIRONMENT = None
         settings.CONFIDENT_TRACE_FLUSH = None
+        settings.CONFIDENT_TRACE_SAMPLE_RATE = None
+
+        # Confident metrics
+        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = None
         settings.CONFIDENT_METRIC_LOGGING_FLUSH = None
+        settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = None
+        settings.CONFIDENT_METRIC_LOGGING_ENABLED = None
 
-        settings.ERROR_REPORTING = None
-        settings.IGNORE_DEEPEVAL_ERRORS = None
-
-    handled, path, updated = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
     _handle_save_result(
         handled=handled,
         path=path,
-        updates=updated,
+        updates=updates,
         save=save,
         quiet=quiet,
-        updated_msg=":mute: Debug options unset.",
+        success_msg=":mute: Debug options unset." if updates else None,
         tip_msg=None,
     )
 

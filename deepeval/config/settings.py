@@ -24,6 +24,7 @@ from pydantic import (
     computed_field,
     confloat,
     conint,
+    Field,
     field_validator,
     model_validator,
     SecretStr,
@@ -273,23 +274,50 @@ class Settings(BaseSettings):
     # General
     #
 
-    APP_ENV: str = "dev"
-    LOG_LEVEL: Optional[int] = None
-    PYTHONPATH: str = "."
-    CONFIDENT_REGION: Optional[str] = None
-    CONFIDENT_OPEN_BROWSER: Optional[bool] = True
+    APP_ENV: str = Field(
+        "dev",
+        description="Application environment name used for dotenv selection (loads .env.<APP_ENV> if present).",
+    )
+    LOG_LEVEL: Optional[int] = Field(
+        None,
+        description="Global logging level (e.g. DEBUG/INFO/WARNING/ERROR/CRITICAL or numeric).",
+    )
+    PYTHONPATH: str = Field(
+        ".",
+        description="Extra PYTHONPATH used by the CLI runner (default: current project '.').",
+    )
+    CONFIDENT_REGION: Optional[str] = Field(
+        None,
+        description="Optional Confident AI region hint (uppercased).",
+    )
+    CONFIDENT_OPEN_BROWSER: Optional[bool] = Field(
+        True,
+        description="Open a browser automatically for Confident AI links/flows when available.",
+    )
 
     #
     # CLI
     #
-
-    DEEPEVAL_DEFAULT_SAVE: Optional[str] = None
-    DEEPEVAL_DISABLE_DOTENV: Optional[bool] = None
-    ENV_DIR_PATH: Optional[Path] = (
-        None  # where .env files live (CWD if not set)
+    DEEPEVAL_DEFAULT_SAVE: Optional[str] = Field(
+        None,
+        description="Default persistence target for settings changes (e.g. 'dotenv' or 'dotenv:/path/to/.env.local').",
     )
-    DEEPEVAL_FILE_SYSTEM: Optional[str] = None
-    DEEPEVAL_IDENTIFIER: Optional[str] = None
+    DEEPEVAL_DISABLE_DOTENV: Optional[bool] = Field(
+        None,
+        description="Disable dotenv autoloading (.env → .env.<APP_ENV> → .env.local). Tip: set to 1 in pytest/CI to prevent loading env files on import.",
+    )
+    ENV_DIR_PATH: Optional[Path] = Field(
+        None,
+        description="Directory containing .env files (default: current working directory).",
+    )
+    DEEPEVAL_FILE_SYSTEM: Optional[str] = Field(
+        None,
+        description="Filesystem mode for runtime/CLI (currently supports READ_ONLY).",
+    )
+    DEEPEVAL_IDENTIFIER: Optional[str] = Field(
+        None,
+        description="Identifier/tag to help identify your test run on Confident AI.",
+    )
 
     #
     # Storage & Output
@@ -297,144 +325,360 @@ class Settings(BaseSettings):
 
     # When set, DeepEval will export a timestamped JSON of the latest test run
     # into this directory. The directory will be created on demand.
-    DEEPEVAL_RESULTS_FOLDER: Optional[Path] = None
+    DEEPEVAL_RESULTS_FOLDER: Optional[Path] = Field(
+        None,
+        description="If set, export a timestamped JSON of the latest test run into this folder (created if missing).",
+    )
 
     # Display / Truncation
-    DEEPEVAL_MAXLEN_TINY: Optional[int] = 40
-    DEEPEVAL_MAXLEN_SHORT: Optional[int] = 60
-    DEEPEVAL_MAXLEN_MEDIUM: Optional[int] = 120
-    DEEPEVAL_MAXLEN_LONG: Optional[int] = 240
+    DEEPEVAL_MAXLEN_TINY: Optional[int] = Field(
+        40,
+        description="Default truncation length for 'tiny' displays in logs/UI.",
+    )
+    DEEPEVAL_MAXLEN_SHORT: Optional[int] = Field(
+        60,
+        description="Default truncation length for 'short' displays in logs/UI.",
+    )
+    DEEPEVAL_MAXLEN_MEDIUM: Optional[int] = Field(
+        120,
+        description="Default truncation length for 'medium' displays in logs/UI.",
+    )
+    DEEPEVAL_MAXLEN_LONG: Optional[int] = Field(
+        240,
+        description="Default truncation length for 'long' displays in logs/UI.",
+    )
 
     # If set, this overrides the default max_len used by deepeval/utils shorten
     # falls back to DEEPEVAL_MAXLEN_LONG when None.
-    DEEPEVAL_SHORTEN_DEFAULT_MAXLEN: Optional[int] = None
+    DEEPEVAL_SHORTEN_DEFAULT_MAXLEN: Optional[int] = Field(
+        None,
+        description="Override default max_len for deepeval.utils.shorten (falls back to DEEPEVAL_MAXLEN_LONG when unset).",
+    )
 
     # Optional global suffix (keeps your "..." default).
-    DEEPEVAL_SHORTEN_SUFFIX: Optional[str] = "..."
+    DEEPEVAL_SHORTEN_SUFFIX: Optional[str] = Field(
+        "...",
+        description="Suffix appended by deepeval.utils.shorten when truncating (default: '...').",
+    )
 
     #
     # GPU and perf toggles
     #
 
-    CUDA_LAUNCH_BLOCKING: Optional[bool] = None
-    CUDA_VISIBLE_DEVICES: Optional[str] = None
-    TOKENIZERS_PARALLELISM: Optional[bool] = None
-    TRANSFORMERS_NO_ADVISORY_WARNINGS: Optional[bool] = None
+    CUDA_LAUNCH_BLOCKING: Optional[bool] = Field(
+        None,
+        description="CUDA debug toggle (forces synchronous CUDA ops). Useful for debugging GPU errors.",
+    )
+    CUDA_VISIBLE_DEVICES: Optional[str] = Field(
+        None,
+        description="CUDA device visibility mask (e.g. '0' or '0,1').",
+    )
+    TOKENIZERS_PARALLELISM: Optional[bool] = Field(
+        None,
+        description="HuggingFace tokenizers parallelism toggle (set to false to reduce warnings/noise).",
+    )
+    TRANSFORMERS_NO_ADVISORY_WARNINGS: Optional[bool] = Field(
+        None,
+        description="Disable advisory warnings from transformers (reduces console noise).",
+    )
 
     #
     # Model Keys
     #
 
-    API_KEY: Optional[SecretStr] = None
-    CONFIDENT_API_KEY: Optional[SecretStr] = None
+    API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Alias for CONFIDENT_API_KEY (Confident AI API key).",
+    )
+    CONFIDENT_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Confident AI API key (used for uploading results/telemetry to Confident).",
+    )
 
     # ======
     # Base URL for Confident AI API server
     # ======
-    CONFIDENT_BASE_URL: Optional[str] = None
+    CONFIDENT_BASE_URL: Optional[str] = Field(
+        None,
+        description="Base URL for Confident AI API server (set only if using a custom/hosted endpoint).",
+    )
 
     # General
-    TEMPERATURE: Optional[confloat(ge=0, le=2)] = None
+    TEMPERATURE: Optional[confloat(ge=0, le=2)] = Field(
+        None,
+        description="Global default model temperature (0–2). Model-specific constructors may override.",
+    )
 
     # Anthropic
-    USE_ANTHROPIC_MODEL: Optional[bool] = None
-    ANTHROPIC_API_KEY: Optional[SecretStr] = None
-    ANTHROPIC_MODEL_NAME: Optional[str] = None
-    ANTHROPIC_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
-    ANTHROPIC_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
+    USE_ANTHROPIC_MODEL: Optional[bool] = Field(
+        None,
+        description="Select Anthropic as the active LLM provider (USE_* flags are mutually exclusive in CLI helpers).",
+    )
+    ANTHROPIC_API_KEY: Optional[SecretStr] = Field(
+        None, description="Anthropic API key."
+    )
+    ANTHROPIC_MODEL_NAME: Optional[str] = Field(
+        None, description="Anthropic model name (e.g. 'claude-3-...')."
+    )
+    ANTHROPIC_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="Anthropic input token cost (used for cost reporting).",
+    )
+    ANTHROPIC_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="Anthropic output token cost (used for cost reporting).",
+    )
 
     # AWS
-    AWS_ACCESS_KEY_ID: Optional[SecretStr] = None
-    AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = None
+    AWS_ACCESS_KEY_ID: Optional[SecretStr] = Field(
+        None,
+        description="AWS access key ID (for Bedrock or other AWS-backed integrations).",
+    )
+    AWS_SECRET_ACCESS_KEY: Optional[SecretStr] = Field(
+        None,
+        description="AWS secret access key (for Bedrock or other AWS-backed integrations).",
+    )
     # AWS Bedrock
-    USE_AWS_BEDROCK_MODEL: Optional[bool] = None
-    AWS_BEDROCK_MODEL_NAME: Optional[str] = None
-    AWS_BEDROCK_REGION: Optional[str] = None
-    AWS_BEDROCK_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = None
-    AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = None
+    USE_AWS_BEDROCK_MODEL: Optional[bool] = Field(
+        None, description="Select AWS Bedrock as the active LLM provider."
+    )
+    AWS_BEDROCK_MODEL_NAME: Optional[str] = Field(
+        None, description="AWS Bedrock model identifier."
+    )
+    AWS_BEDROCK_REGION: Optional[str] = Field(
+        None, description="AWS region for Bedrock (normalized to lowercase)."
+    )
+    AWS_BEDROCK_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None, description="Bedrock input token cost (used for cost reporting)."
+    )
+    AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None, description="Bedrock output token cost (used for cost reporting)."
+    )
     # Azure Open AI
-    AZURE_OPENAI_API_KEY: Optional[SecretStr] = None
-    AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = None
-    OPENAI_API_VERSION: Optional[str] = None
-    AZURE_DEPLOYMENT_NAME: Optional[str] = None
-    AZURE_MODEL_NAME: Optional[str] = None
-    AZURE_MODEL_VERSION: Optional[str] = None
-    USE_AZURE_OPENAI: Optional[bool] = None
+    USE_AZURE_OPENAI: Optional[bool] = Field(
+        None, description="Select Azure OpenAI as the active LLM provider."
+    )
+    AZURE_OPENAI_API_KEY: Optional[SecretStr] = Field(
+        None, description="Azure OpenAI API key."
+    )
+    AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = Field(
+        None, description="Azure OpenAI endpoint URL."
+    )
+    OPENAI_API_VERSION: Optional[str] = Field(
+        None,
+        description="Azure OpenAI API version (if required by your deployment).",
+    )
+    AZURE_DEPLOYMENT_NAME: Optional[str] = Field(
+        None,
+        description="Azure OpenAI deployment name (required for most Azure configs).",
+    )
+    AZURE_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Azure model name label (informational; may be used in reporting).",
+    )
+    AZURE_MODEL_VERSION: Optional[str] = Field(
+        None,
+        description="Azure model version label (informational; may be used in reporting).",
+    )
     # DeepSeek
-    USE_DEEPSEEK_MODEL: Optional[bool] = None
-    DEEPSEEK_API_KEY: Optional[SecretStr] = None
-    DEEPSEEK_MODEL_NAME: Optional[str] = None
-    DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = None
-    DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    USE_DEEPSEEK_MODEL: Optional[bool] = Field(
+        None, description="Select DeepSeek as the active LLM provider."
+    )
+    DEEPSEEK_API_KEY: Optional[SecretStr] = Field(
+        None, description="DeepSeek API key."
+    )
+    DEEPSEEK_MODEL_NAME: Optional[str] = Field(
+        None, description="DeepSeek model name."
+    )
+    DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="DeepSeek input token cost (used for cost reporting)."
+    )
+    DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="DeepSeek output token cost (used for cost reporting).",
+    )
     # Gemini
-    USE_GEMINI_MODEL: Optional[bool] = None
-    GOOGLE_API_KEY: Optional[SecretStr] = None
-    GEMINI_MODEL_NAME: Optional[str] = None
-    GOOGLE_GENAI_USE_VERTEXAI: Optional[bool] = None
-    GOOGLE_CLOUD_PROJECT: Optional[str] = None
-    GOOGLE_CLOUD_LOCATION: Optional[str] = None
-    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[SecretStr] = None
+    USE_GEMINI_MODEL: Optional[bool] = Field(
+        None, description="Select Google Gemini as the active LLM provider."
+    )
+    GOOGLE_API_KEY: Optional[SecretStr] = Field(
+        None, description="Google API key for Gemini (non-Vertex usage)."
+    )
+    GEMINI_MODEL_NAME: Optional[str] = Field(
+        None, description="Gemini model name (e.g. 'gemini-...')."
+    )
+    GOOGLE_GENAI_USE_VERTEXAI: Optional[bool] = Field(
+        None,
+        description="Use Vertex AI for Gemini requests instead of direct API key mode.",
+    )
+    GOOGLE_CLOUD_PROJECT: Optional[str] = Field(
+        None,
+        description="GCP project ID for Vertex AI (required if GOOGLE_GENAI_USE_VERTEXAI=true).",
+    )
+    GOOGLE_CLOUD_LOCATION: Optional[str] = Field(
+        None,
+        description="GCP region/location for Vertex AI (e.g. 'us-central1').",
+    )
+    GOOGLE_SERVICE_ACCOUNT_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Service account JSON key for Vertex AI auth (if not using ADC).",
+    )
     # Grok
-    USE_GROK_MODEL: Optional[bool] = None
-    GROK_API_KEY: Optional[SecretStr] = None
-    GROK_MODEL_NAME: Optional[str] = None
-    GROK_COST_PER_INPUT_TOKEN: Optional[float] = None
-    GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    USE_GROK_MODEL: Optional[bool] = Field(
+        None, description="Select Grok as the active LLM provider."
+    )
+    GROK_API_KEY: Optional[SecretStr] = Field(None, description="Grok API key.")
+    GROK_MODEL_NAME: Optional[str] = Field(None, description="Grok model name.")
+    GROK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="Grok input token cost (used for cost reporting)."
+    )
+    GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None, description="Grok output token cost (used for cost reporting)."
+    )
     # LiteLLM
-    USE_LITELLM: Optional[bool] = None
-    LITELLM_API_KEY: Optional[SecretStr] = None
-    LITELLM_MODEL_NAME: Optional[str] = None
-    LITELLM_API_BASE: Optional[AnyUrl] = None
-    LITELLM_PROXY_API_BASE: Optional[AnyUrl] = None
-    LITELLM_PROXY_API_KEY: Optional[SecretStr] = None
+    USE_LITELLM: Optional[bool] = Field(
+        None, description="Select LiteLLM as the active LLM provider."
+    )
+    LITELLM_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="LiteLLM API key (if required by your LiteLLM deployment).",
+    )
+    LITELLM_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="LiteLLM model name (as exposed by your LiteLLM endpoint).",
+    )
+    LITELLM_API_BASE: Optional[AnyUrl] = Field(
+        None, description="LiteLLM API base URL (direct)."
+    )
+    LITELLM_PROXY_API_BASE: Optional[AnyUrl] = Field(
+        None, description="LiteLLM proxy base URL (if using proxy mode)."
+    )
+    LITELLM_PROXY_API_KEY: Optional[SecretStr] = Field(
+        None, description="LiteLLM proxy API key (if required)."
+    )
     # LM Studio
-    LM_STUDIO_API_KEY: Optional[SecretStr] = None
-    LM_STUDIO_MODEL_NAME: Optional[str] = None
+    LM_STUDIO_API_KEY: Optional[SecretStr] = Field(
+        None, description="LM Studio API key (if configured)."
+    )
+    LM_STUDIO_MODEL_NAME: Optional[str] = Field(
+        None, description="LM Studio model name."
+    )
     # Local Model
-    USE_LOCAL_MODEL: Optional[bool] = None
-    LOCAL_MODEL_API_KEY: Optional[SecretStr] = None
-    LOCAL_EMBEDDING_API_KEY: Optional[SecretStr] = None
-    LOCAL_MODEL_NAME: Optional[str] = None
-    LOCAL_MODEL_BASE_URL: Optional[AnyUrl] = None
-    LOCAL_MODEL_FORMAT: Optional[str] = None
+    USE_LOCAL_MODEL: Optional[bool] = Field(
+        None,
+        description="Select a local/self-hosted model as the active LLM provider.",
+    )
+    LOCAL_MODEL_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="API key for a local/self-hosted LLM endpoint (if required).",
+    )
+    LOCAL_EMBEDDING_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="API key for a local/self-hosted embedding endpoint (if required).",
+    )
+    LOCAL_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Local/self-hosted model name (informational / routing).",
+    )
+    LOCAL_MODEL_BASE_URL: Optional[AnyUrl] = Field(
+        None, description="Base URL for a local/self-hosted LLM endpoint."
+    )
+    LOCAL_MODEL_FORMAT: Optional[str] = Field(
+        None,
+        description="Local model API format identifier (implementation-specific).",
+    )
     # Moonshot
-    USE_MOONSHOT_MODEL: Optional[bool] = None
-    MOONSHOT_API_KEY: Optional[SecretStr] = None
-    MOONSHOT_MODEL_NAME: Optional[str] = None
-    MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = None
-    MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    USE_MOONSHOT_MODEL: Optional[bool] = Field(
+        None, description="Select Moonshot as the active LLM provider."
+    )
+    MOONSHOT_API_KEY: Optional[SecretStr] = Field(
+        None, description="Moonshot API key."
+    )
+    MOONSHOT_MODEL_NAME: Optional[str] = Field(
+        None, description="Moonshot model name."
+    )
+    MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="Moonshot input token cost (used for cost reporting)."
+    )
+    MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="Moonshot output token cost (used for cost reporting).",
+    )
     # Ollama
-    OLLAMA_MODEL_NAME: Optional[str] = None
+    OLLAMA_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Ollama model name (used when running via Ollama integration).",
+    )
     # OpenAI
-    USE_OPENAI_MODEL: Optional[bool] = None
-    OPENAI_API_KEY: Optional[SecretStr] = None
-    OPENAI_MODEL_NAME: Optional[str] = None
-    OPENAI_COST_PER_INPUT_TOKEN: Optional[float] = None
-    OPENAI_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    USE_OPENAI_MODEL: Optional[bool] = Field(
+        None, description="Select OpenAI as the active LLM provider."
+    )
+    OPENAI_API_KEY: Optional[SecretStr] = Field(
+        None, description="OpenAI API key."
+    )
+    OPENAI_MODEL_NAME: Optional[str] = Field(
+        None, description="OpenAI model name (e.g. 'gpt-4.1')."
+    )
+    OPENAI_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="OpenAI input token cost (used for cost reporting)."
+    )
+    OPENAI_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None, description="OpenAI output token cost (used for cost reporting)."
+    )
     # PortKey
-    USE_PORTKEY_MODEL: Optional[bool] = None
-    PORTKEY_API_KEY: Optional[SecretStr] = None
-    PORTKEY_MODEL_NAME: Optional[str] = None
-    PORTKEY_BASE_URL: Optional[AnyUrl] = None
-    PORTKEY_PROVIDER_NAME: Optional[str] = None
+    USE_PORTKEY_MODEL: Optional[bool] = Field(
+        None, description="Select Portkey as the active LLM provider."
+    )
+    PORTKEY_API_KEY: Optional[SecretStr] = Field(
+        None, description="Portkey API key."
+    )
+    PORTKEY_MODEL_NAME: Optional[str] = Field(
+        None, description="Portkey model name (as configured in Portkey)."
+    )
+    PORTKEY_BASE_URL: Optional[AnyUrl] = Field(
+        None, description="Portkey base URL (if using a custom endpoint)."
+    )
+    PORTKEY_PROVIDER_NAME: Optional[str] = Field(
+        None, description="Provider name/routing hint for Portkey."
+    )
     # Vertex AI
-    VERTEX_AI_MODEL_NAME: Optional[str] = None
+    VERTEX_AI_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Vertex AI model name (used by some Google integrations).",
+    )
     # VLLM
-    VLLM_API_KEY: Optional[SecretStr] = None
-    VLLM_MODEL_NAME: Optional[str] = None
+    VLLM_API_KEY: Optional[SecretStr] = Field(
+        None, description="vLLM API key (if required by your vLLM gateway)."
+    )
+    VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
 
     #
     # Embedding Keys
     #
 
     # Azure OpenAI
-    USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = None
-    AZURE_EMBEDDING_MODEL_NAME: Optional[str] = None
-    AZURE_EMBEDDING_DEPLOYMENT_NAME: Optional[str] = None
+    USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = Field(
+        None, description="Use Azure OpenAI for embeddings."
+    )
+    AZURE_EMBEDDING_MODEL_NAME: Optional[str] = Field(
+        None, description="Azure embedding model name label."
+    )
+    AZURE_EMBEDDING_DEPLOYMENT_NAME: Optional[str] = Field(
+        None, description="Azure embedding deployment name."
+    )
+
     # Local
-    USE_LOCAL_EMBEDDINGS: Optional[bool] = None
-    LOCAL_EMBEDDING_MODEL_NAME: Optional[str] = None
-    LOCAL_EMBEDDING_BASE_URL: Optional[AnyUrl] = None
+    USE_LOCAL_EMBEDDINGS: Optional[bool] = Field(
+        None, description="Use a local/self-hosted embeddings endpoint."
+    )
+    LOCAL_EMBEDDING_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Local embedding model name (informational / routing).",
+    )
+    LOCAL_EMBEDDING_BASE_URL: Optional[AnyUrl] = Field(
+        None,
+        description="Base URL for a local/self-hosted embeddings endpoint.",
+    )
 
     #
     # Retry Policy
@@ -446,60 +690,129 @@ class Settings(BaseSettings):
     #   contribution is ~ JITTER/2 per sleep.
     # - logging levels are looked up dynamically each attempt, so if you change LOG_LEVEL at runtime,
     #   the retry loggers will honor it without restart.
-    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = (
-        None  # ["*"] to delegate all retries to SDKs
+    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = Field(
+        None,
+        description="Providers for which retries should be delegated to the provider SDK (use ['*'] for all).",
     )
-    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = (
-        None  # default is LOG_LEVEL if set, else INFO
+    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = Field(
+        None,
+        description="Log level for 'before retry' logs (defaults to LOG_LEVEL if set, else INFO).",
     )
-    DEEPEVAL_RETRY_AFTER_LOG_LEVEL: Optional[int] = None  # default -> ERROR
-    DEEPEVAL_RETRY_MAX_ATTEMPTS: conint(ge=1) = (
-        2  # attempts = first try + retries
+    DEEPEVAL_RETRY_AFTER_LOG_LEVEL: Optional[int] = Field(
+        None,
+        description="Log level for 'after retry' logs (defaults to ERROR).",
     )
-    DEEPEVAL_RETRY_INITIAL_SECONDS: confloat(ge=0) = (
-        1.0  # first sleep before retry, if any
+    DEEPEVAL_RETRY_MAX_ATTEMPTS: conint(ge=1) = Field(
+        2,
+        description="Max attempts per provider call (includes the first call; 1 = no retries).",
     )
-    DEEPEVAL_RETRY_EXP_BASE: confloat(ge=1) = (
-        2.0  # exponential growth factor for sleeps
+    DEEPEVAL_RETRY_INITIAL_SECONDS: confloat(ge=0) = Field(
+        1.0,
+        description="Initial backoff sleep (seconds) before the first retry.",
     )
-    DEEPEVAL_RETRY_JITTER: confloat(ge=0) = 2.0  # uniform jitter
-    DEEPEVAL_RETRY_CAP_SECONDS: confloat(ge=0) = (
-        5.0  # cap for each backoff sleep
+    DEEPEVAL_RETRY_EXP_BASE: confloat(ge=1) = Field(
+        2.0, description="Exponential backoff growth factor."
+    )
+    DEEPEVAL_RETRY_JITTER: confloat(ge=0) = Field(
+        2.0, description="Uniform jitter added to each retry sleep (seconds)."
+    )
+    DEEPEVAL_RETRY_CAP_SECONDS: confloat(ge=0) = Field(
+        5.0, description="Maximum backoff sleep per retry (seconds)."
     )
 
     #
     # Telemetry and Debug
     #
-    DEEPEVAL_DEBUG_ASYNC: Optional[bool] = None
-    DEEPEVAL_TELEMETRY_OPT_OUT: Optional[bool] = None
-    DEEPEVAL_UPDATE_WARNING_OPT_IN: Optional[bool] = None
-    DEEPEVAL_GRPC_LOGGING: Optional[bool] = None
-    GRPC_VERBOSITY: Optional[str] = None
-    GRPC_TRACE: Optional[str] = None
-    ERROR_REPORTING: Optional[bool] = None
-    IGNORE_DEEPEVAL_ERRORS: Optional[bool] = None
-    SKIP_DEEPEVAL_MISSING_PARAMS: Optional[bool] = None
-    DEEPEVAL_VERBOSE_MODE: Optional[bool] = None
-    DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = None
-    ENABLE_DEEPEVAL_CACHE: Optional[bool] = None
+    DEEPEVAL_DEBUG_ASYNC: Optional[bool] = Field(
+        None, description="Enable extra async debugging logs/behavior."
+    )
+    DEEPEVAL_TELEMETRY_OPT_OUT: Optional[bool] = Field(
+        None,
+        description="Opt out of DeepEval telemetry (OFF wins if conflicting legacy flags are set).",
+    )
+    DEEPEVAL_UPDATE_WARNING_OPT_IN: Optional[bool] = Field(
+        None,
+        description="Opt in to update warnings in the CLI/runtime when new versions are available.",
+    )
+    DEEPEVAL_GRPC_LOGGING: Optional[bool] = Field(
+        None,
+        description="Enable extra gRPC logging for Confident transport/debugging.",
+    )
+    GRPC_VERBOSITY: Optional[str] = Field(
+        None, description="gRPC verbosity (grpc env var passthrough)."
+    )
+    GRPC_TRACE: Optional[str] = Field(
+        None, description="gRPC trace categories (grpc env var passthrough)."
+    )
+    ERROR_REPORTING: Optional[bool] = Field(
+        None,
+        description="Enable/disable error reporting (implementation/integration dependent).",
+    )
+    IGNORE_DEEPEVAL_ERRORS: Optional[bool] = Field(
+        None,
+        description="Continue execution when DeepEval encounters certain recoverable errors.",
+    )
+    SKIP_DEEPEVAL_MISSING_PARAMS: Optional[bool] = Field(
+        None,
+        description="Skip metrics/test cases with missing required params instead of raising.",
+    )
+    DEEPEVAL_VERBOSE_MODE: Optional[bool] = Field(
+        None, description="Enable verbose logging and additional warnings."
+    )
+    DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = Field(
+        None, description="Include stack traces in certain DeepEval error logs."
+    )
+    ENABLE_DEEPEVAL_CACHE: Optional[bool] = Field(
+        None,
+        description="Enable DeepEval caching where supported (may improve performance).",
+    )
 
-    CONFIDENT_TRACE_FLUSH: Optional[bool] = None
-    CONFIDENT_TRACE_ENVIRONMENT: Optional[str] = "development"
-    CONFIDENT_TRACE_VERBOSE: Optional[bool] = True
-    CONFIDENT_TRACE_SAMPLE_RATE: Optional[float] = 1.0
+    CONFIDENT_TRACE_FLUSH: Optional[bool] = Field(
+        None,
+        description="Flush traces eagerly (useful for debugging; may add overhead).",
+    )
+    CONFIDENT_TRACE_ENVIRONMENT: Optional[str] = Field(
+        "development",
+        description="Trace environment label (e.g. development/staging/production).",
+    )
+    CONFIDENT_TRACE_VERBOSE: Optional[bool] = Field(
+        True, description="Enable verbose trace logging for Confident tracing."
+    )
+    CONFIDENT_TRACE_SAMPLE_RATE: Optional[float] = Field(
+        1.0, description="Trace sampling rate (0–1). Lower to reduce overhead."
+    )
 
-    CONFIDENT_METRIC_LOGGING_FLUSH: Optional[bool] = None
-    CONFIDENT_METRIC_LOGGING_VERBOSE: Optional[bool] = True
-    CONFIDENT_METRIC_LOGGING_SAMPLE_RATE: Optional[float] = 1.0
-    CONFIDENT_METRIC_LOGGING_ENABLED: Optional[bool] = True
+    CONFIDENT_METRIC_LOGGING_FLUSH: Optional[bool] = Field(
+        None,
+        description="Flush metric logs eagerly (useful for debugging; may add overhead).",
+    )
+    CONFIDENT_METRIC_LOGGING_VERBOSE: Optional[bool] = Field(
+        True, description="Enable verbose metric logging."
+    )
+    CONFIDENT_METRIC_LOGGING_SAMPLE_RATE: Optional[float] = Field(
+        1.0,
+        description="Metric logging sampling rate (0–1). Lower to reduce overhead.",
+    )
+    CONFIDENT_METRIC_LOGGING_ENABLED: Optional[bool] = Field(
+        True, description="Enable metric logging to Confident where supported."
+    )
 
-    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
+    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = Field(
+        None,
+        description="OpenTelemetry OTLP exporter endpoint (if using OTEL export).",
+    )
 
     #
     # Network
     #
-    MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
-    MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
+    MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = Field(
+        3.05,
+        description="Connect timeout (seconds) when fetching remote images for multimodal inputs.",
+    )
+    MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = Field(
+        10.0,
+        description="Read timeout (seconds) when fetching remote images for multimodal inputs.",
+    )
     # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE
     # Per-attempt timeout (seconds) for provider calls used by the retry policy.
     # This is an OVERRIDE setting. The effective value you should rely on at runtime is
@@ -512,20 +825,31 @@ class Settings(BaseSettings):
     #
     # Tip: Set this OR the outer override, but generally not both
     DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(gt=0)] = (
-        None
+        Field(
+            None,
+            description="Override per-attempt provider call timeout (seconds). Leave unset to derive from task timeout.",
+        )
     )
 
     #
     # Async Document Pipelines
     #
 
-    DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING: conint(ge=1) = 2
+    DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING: conint(ge=1) = Field(
+        2, description="Max concurrent async document processing tasks."
+    )
 
     #
     # Async Task Configuration
     #
-    DEEPEVAL_TIMEOUT_THREAD_LIMIT: conint(ge=1) = 128
-    DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS: confloat(ge=0) = 5.0
+    DEEPEVAL_TIMEOUT_THREAD_LIMIT: conint(ge=1) = Field(
+        128,
+        description="Max worker threads used for timeout enforcement in async execution.",
+    )
+    DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS: confloat(ge=0) = Field(
+        5.0,
+        description="Warn if waiting on the timeout semaphore longer than this many seconds.",
+    )
     # DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
     # Outer time budget (seconds) for a single metric/test-case, including retries and backoff.
     # This is an OVERRIDE setting. If None or 0 the DEEPEVAL_PER_TASK_TIMEOUT_SECONDS field is computed:
@@ -538,7 +862,12 @@ class Settings(BaseSettings):
     # usage:
     #   - set DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE along with DEEPEVAL_RETRY_MAX_ATTEMPTS, or
     #   - set DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE alone.
-    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = None
+    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = (
+        Field(
+            None,
+            description="Override outer per-test-case timeout budget (seconds), including retries/backoff. Leave unset to auto-derive.",
+        )
+    )
 
     # Buffer time for gathering results from all tasks, added to the longest task duration
     # Increase if many tasks are running concurrently
@@ -546,7 +875,10 @@ class Settings(BaseSettings):
     #     30  # 15s seemed like not enough. we may make this computed later.
     # )
     DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = (
-        None
+        Field(
+            None,
+            description="Override buffer added to the longest task duration when gathering async results (seconds).",
+        )
     )
 
     ###################
