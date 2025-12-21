@@ -1,7 +1,6 @@
-// const remarkMath = require('remark-math');
-// const rehypeKatex = require('rehype-katex');
-const remarkMathModule = import("remark-math");
-const rehypeKatexModule = import("rehype-katex");
+const remarkMath = require("remark-math").default;
+const rehypeKatex = require("rehype-katex").default;
+const { themes: prismThemes } = require("prism-react-renderer");
 /** @type {import('@docusaurus/types').Config} */
 
 module.exports = {
@@ -81,8 +80,8 @@ module.exports = {
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
           sidebarPath: require.resolve("./sidebars.js"),
-          remarkPlugins: [remarkMathModule],
-          rehypePlugins: [rehypeKatexModule],
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
         },
         theme: {
           customCss: require.resolve("./src/css/custom.scss"),
@@ -273,7 +272,7 @@ module.exports = {
         copyright: `Copyright © ${new Date().getFullYear()} Confident AI Inc. Built with ❤️ and confidence.`,
       },
       prism: {
-        theme: require("prism-react-renderer/themes/nightOwl"),
+        theme: prismThemes.nightOwl,
         // theme: require("prism-react-renderer/themes/palenight"),
         additionalLanguages: ["python"],
         magicComments: [

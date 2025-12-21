@@ -221,12 +221,29 @@ html[data-theme="light"] .navbar__logo {
   filter: invert(100%);
 }
 
-div[class^="announcementBar_"] {
+// Announcement bar
+div[role="banner"][class*="announcementBar"] {
   font-weight: 600;
+  background-color: #710bee !important;
+  color: white !important;
 }
 
-html[data-theme="light"] div[class^="announcementBar_"] {
+html[data-theme="light"] div[role="banner"][class*="announcementBar"] {
   background-color: #710bee !important;
+  color: white !important;
+}
+
+// Also style the content and close button
+div[class*="announcementBarContent"] {
+  color: white !important;
+}
+
+div[class*="announcementBar"] a {
+  color: white !important;
+  text-decoration: underline;
+}
+
+div[class*="announcementBar"] button {
   color: white !important;
 }
 
