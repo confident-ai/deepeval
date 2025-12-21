@@ -11,8 +11,8 @@ sidebar_label: Introduction
   />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 `deepeval`'s `Synthesizer` offers a fast and easy way to generate high-quality **single and multi-turn goldens** for your evaluation datasets in just a few lines of code. This is especially helpful if:
 
@@ -186,11 +186,11 @@ print(dataframe)
 
 Here's an example of what the resulting DataFrame might look like for a single-turn generation:
 
-| <div style={{width: "200px"}}>input</div>      | actual_output | expected_output | <div style={{width: "280px"}}>input</div>                             | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
-| ---------------------------------------------- | ------------- | --------------- | --------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
-| Who wrote the novel "1984"?                    | None          | George Orwell   | ["1984 is a dystopian novel published in 1949 by George Orwell."]     | None              | 1                    | 60             | 0.5             | 0.6                     | None       | file1.txt   |
-| What is the boiling point of water in Celsius? | None          | 100°C           | ["Water boils at 100°C (212°F) under standard atmospheric pressure."] | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
-| ...                                            | ...           | ...             | ...                                                                   | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
+| <div style={{width: "200px"}}>input</div>      | actual_output | expected_output | <div style={{width: "280px"}}>context</div>                             | retrieval_context | n_chunks_per_context | context_length | context_quality | synthetic_input_quality | evolutions | source_file |
+| ---------------------------------------------- | ------------- | --------------- | ----------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------------- | ----------------------- | ---------- | ----------- |
+| Who wrote the novel "1984"?                    | None          | George Orwell   | `["1984 is a dystopian novel published in 1949 by George Orwell."]`     | None              | 1                    | 60             | 0.5             | 0.6                     | None       | file1.txt   |
+| What is the boiling point of water in Celsius? | None          | 100°C           | `["Water boils at 100°C (212°F) under standard atmospheric pressure."]` | None              | 1                    | 55             | 0.4             | 0.9                     | None       | file2.txt   |
+| ...                                            | ...           | ...             | ...                                                                     | ...               | ...                  | ...            | ...             | ...                     | ...        | ...         |
 
 And that's it! You now have access to a list of synthetic goldens generated using information from your knowledge base.
 
@@ -409,17 +409,17 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
 
 <div
   style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }}
 >
   <img
     src="https://deepeval-docs.s3.amazonaws.com/generation-filtration.svg"
     style={{
-      marginBottom: "10px",
-      height: "auto",
-      maxHeight: "800px",
+      marginBottom: '10px',
+      height: 'auto',
+      maxHeight: '800px',
     }}
   />
 </div>
