@@ -15,14 +15,23 @@
   --ifm-color-primary-light: #7c3edd;
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
-  --ifm-code-font-size: 90%;
+  --ifm-code-font-size: 85%;
   --ifm-menu-color: #747680 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
+  
+
   .theme-doc-markdown {
-    p, ul {
-      font-size: 1rem;
-      line-height: 1.75;
+    h1 {
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+    }
+
+    p, ul, ol {
+      font-size: 0.9rem;
     }
   }
 
@@ -138,7 +147,7 @@ details [class*="collapsibleContent"] {
   border-top: 1px solid #e2e8f0 !important;
 
   p, ul {
-    font-size: 14px !important;
+    font-size: 13px !important;
     line-height: 1.75;
   }
 }
@@ -165,6 +174,7 @@ ul.tabs {
 li.tabs__item {
   padding: 0.5rem !important;
   font-weight: 500 !important;
+  font-size: 14px !important;
   border-bottom: 1px solid transparent !important;
 }
 
@@ -184,7 +194,7 @@ li.tabs__item--active {
 
 .navbar__link {
   font-weight: 400 !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   border-bottom: 2px solid transparent !important;
 }
 
@@ -195,7 +205,7 @@ li.tabs__item--active {
 
 @media (max-width: 1330px) {
   .navbar__link {
-    font-size: 14px !important;
+    font-size: 13px !important;
   }
 }
 
@@ -285,7 +295,7 @@ html[data-theme="dark"] .header-confident-link {
   align-items: center;
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
   column-gap: 0.1rem;
   border: 1px solid black;
   box-shadow: -4px 4px 0 black;
@@ -484,16 +494,16 @@ html[data-theme="dark"] .sidebar-item-icon-others > a::before {
 
 .menu {
   font-weight: 400;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.121) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 25px 25px;
 }
 
 html[data-theme="dark"] .menu {
   background-image: radial-gradient(
-    rgba(30, 29, 32, 0.131) 1px,
+    rgba(30, 29, 32, 0.14) 1px,
     transparent 1px
   );
-  background-size: 20px 20px;
+  background-size: 25px 25px;
 }
 
 .menu_list {
@@ -501,13 +511,13 @@ html[data-theme="dark"] .menu {
 }
 
 .menu__link {
-  font-size: 15px;
-  padding-top: 0.4rem !important;
-  padding-bottom: 0.4rem !important;
+  font-size: 14px;
+  padding-top: 0.2rem !important;
+  padding-bottom: 0.2rem !important;
 }
 
 .menu__link--active {
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   background-color: rgba(115, 0, 255, 0.083) !important;
 }
 
@@ -521,18 +531,18 @@ html[data-theme="dark"] .menu {
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible > .menu__link:first-of-type {
   color: black; // Example: orange text
   font-weight: 600 !important;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 /* Dark mode */
 [data-theme='dark'] .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible > .menu__link:first-of-type {
   color: white; // or any high-contrast color
   font-weight: 600 !important;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .theme-doc-sidebar-item-category-level-1 {
-  margin-bottom: 2rem!important;
+  margin-bottom: 1.5rem!important;
 }
 
 .menu__list .menu__list {
@@ -568,7 +578,7 @@ html[data-theme="dark"] .menu {
 /* Add border to code blocks */
 .prism-code {
   border-radius: 6px;
-  font-size: 14px !important;
+  font-size: 12px !important;
 }
 
 html[data-theme="dark"] .prism-code {

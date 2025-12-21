@@ -164,7 +164,7 @@ module.exports = {
           {
             href: "https://www.confident-ai.com/docs",
             position: "left",
-            label: "Confident AI Docs",
+            label: "Confident Docs",
           },
           {
             href: "https://confident-ai.com",

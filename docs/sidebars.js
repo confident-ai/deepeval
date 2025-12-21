@@ -6,11 +6,18 @@ module.exports = {
       className: "sidebar-item-getting-started",
       items: [
         "getting-started",
-        "getting-started-agents",
-        "getting-started-chatbots",
-        "getting-started-rag",
-        "getting-started-mcp",
-        "getting-started-llm-arena",
+        {
+          type: "category",
+          label: "Use Cases",
+          items: [
+            "getting-started-agents",
+            "getting-started-chatbots",
+            "getting-started-rag",
+            "getting-started-mcp",
+            "getting-started-llm-arena",
+          ],
+          collapsed: false,
+        },
       ],
       collapsed: false,
     },
