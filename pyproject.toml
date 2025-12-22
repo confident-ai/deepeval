@@ -101,10 +101,10 @@ langchain = "^0.3.27"
 
 [tool.towncrier]
 directory = "changelog.d"
-filename = "CHANGELOG.md"
-start_string = "<!-- towncrier release notes start -->\n"
+filename = "docs/docs/changelog/2025.mdx"
+start_string = "<!-- DeepEval release notes start -->\n"
 underlines = ["", "", ""]
-title_format = "## [{version}](https://github.com/confident-ai/deepeval/tree/{version}) - {project_date}"
+title_format = "## [{version}](https://github.com/confident-ai/deepeval/tree/v{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/confident-ai/deepeval/issues/{issue})"
 
 [[tool.towncrier.type]]

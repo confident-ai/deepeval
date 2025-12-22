@@ -274,6 +274,15 @@ module.exports = {
     },
     {
       type: "category",
+      label: "Changelog",
+      className: "sidebar-item-icon-changelog",
+      link: { type: "doc", id: "changelog" },
+      items: ["changelog-2025"],
+      collapsed: false,
+    },
+
+    {
+      type: "category",
       label: "Others",
       className: "sidebar-item-icon-others",
       items: ["command-line-interface", "environment-variables", "troubleshooting", "data-privacy", "miscellaneous"],
