@@ -418,7 +418,7 @@ def update_settings(
             if t:
                 needles.append(t)
 
-        table = Table(title="DeepEval Settings")
+        table = Table(title="Settings")
         table.add_column("Name", style="bold")
         table.add_column("Value", overflow="fold")
         table.add_column("Description", overflow="fold")

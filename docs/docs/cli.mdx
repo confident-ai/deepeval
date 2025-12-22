@@ -12,7 +12,7 @@ sidebar_label: CLI Settings
 - Enabling/disabling debug
 - Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
-- Listing and updating any DeepEval setting (`deepeval settings -l`, `deepeval settings --set KEY=VALUE`)
+- Listing and updating any deepeval setting (`deepeval settings -l`, `deepeval settings --set KEY=VALUE`)
 - Saving settings and secrets persistently to `.env` files
 
 :::tip
@@ -33,9 +33,9 @@ deepeval --help
 
 ## Read & Write Settings
 
-DeepEval reads settings from dotenv files in the current working directory (or `ENV_DIR_PATH=/path/to/project`), without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.<APP_ENV>` → `.env.local`.
+deepeval reads settings from dotenv files in the current working directory (or `ENV_DIR_PATH=/path/to/project`), without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.<APP_ENV>` → `.env.local`.
 
-DeepEval also uses a legacy JSON keystore at `.deepeval/.deepeval` for **non-secret** keys. This keystore is treated as a fallback (dotenv/process env take precedence). Secrets are never written to the JSON keystore.
+deepeval also uses a legacy JSON keystore at `.deepeval/.deepeval` for **non-secret** keys. This keystore is treated as a fallback (dotenv/process env take precedence). Secrets are never written to the JSON keystore.
 
 :::tip
 To disable dotenv autoloading (useful in pytest/CI to avoid loading local `.env*` files on import), set `DEEPEVAL_DISABLE_DOTENV=1`.
@@ -61,7 +61,7 @@ All `set-*` / `unset-*` commands follow the same rules:
 - Non-secrets (model name, endpoint, deployment, etc.) may be mirrored into `.deepeval/.deepeval`.
 - Secrets (API keys) are never written to `.deepeval/.deepeval`.
 - Pass `--save=dotenv[:path]` to write settings (including secrets) to a dotenv file (default: `.env.local`).
-- If `--save` is omitted, DeepEval will use `DEEPEVAL_DEFAULT_SAVE` if set; otherwise it won’t write a dotenv file (some commands like `login` still default to `.env.local`).
+- If `--save` is omitted, deepeval will use `DEEPEVAL_DEFAULT_SAVE` if set; otherwise it won’t write a dotenv file (some commands like `login` still default to `.env.local`).
 - Unsetting one provider only removes that provider’s keys. If other provider credentials remain (e.g. `OPENAI_API_KEY`), they may still be selected by default.
 
 :::tip
@@ -83,7 +83,7 @@ Saved environment variables to .env.local (ensure it's git-ignored).
 To view your settings for Anthropic you would run:
 ```bash
 deepeval settings -l anthropic
-                                                                        DeepEval Settings                                                                        
+                                                                                Settings                                                                        
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name                            ┃ Value                    ┃ Description                                                                                      ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -142,7 +142,7 @@ To see all available debug flags, run `deepeval set-debug --help`.
 To filter (substring match) settings by name displaying each setting's current value and description run:
 ```bash
 deepeval settings -l log-level
-                                                    DeepEval Settings                                                     
+                                                            Settings                                                     
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name                            ┃ Value ┃ Description                                                                  ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -213,6 +213,6 @@ For provider-specific flags, run `deepeval set-<provider> --help`.
 
 - **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean exit with no output often means you are passing the `--quiet` / `-q` flag.
 - **Provider still active after unsetting?** Unsetting turns off target provider `USE_*` flags; if a provider remains enabled and properly configured it will become the active provider. If no provider is enabled, but OpenAI credentials are present, OpenAI may be used as a fallback. To force a provider, run the corresponding `set-<provider>` command.
-- **Dotenv edits not picked up?** DeepEval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
+- **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
 
 If you’re still stuck, the dedicated [Troubleshooting](/docs/troubleshooting) page covers deeper debugging (TLS errors, logging, timeouts, dotenv loading, and config caching).
