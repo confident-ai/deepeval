@@ -385,7 +385,7 @@ description = "Backport of CPython tarfile module"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
-markers = "python_version < \"3.12\""
+markers = "python_version <= \"3.11\""
 files = [
     {file = "backports.tarfile-1.2.0-py3-none-any.whl", hash = "sha256:77e284d754527b01fb1e6fa8a1afe577858ebe4e9dad8919e34c862cb399bc34"},
     {file = "backports_tarfile-1.2.0.tar.gz", hash = "sha256:d75e02c268746e1b8144c278978b6e98e85de6ad16f8e4b0844a154557eca991"},
@@ -778,7 +778,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\"", integrations = "python_version >= \"3.10\" and platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -988,7 +988,7 @@ description = "Chroma."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\" or python_version >= \"3.11\""
 files = [
     {file = "chromadb-1.3.5-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d4e5b3bd1bf879a4fffa5644ccb175b98ee18799d8447140f3f893d350068d1b"},
     {file = "chromadb-1.3.5-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:59d35ea15a5765da751e2bc0804054b7ade81f564119c88a1b3310c18c696d92"},
@@ -1290,7 +1290,7 @@ files = [
     {file = "cryptography-46.0.3-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:6b5063083824e5509fdba180721d55909ffacccc8adbec85268b48439423d78c"},
     {file = "cryptography-46.0.3.tar.gz", hash = "sha256:a8b17438104fed022ce745b362294d9ce35b4c2e45c1d958ad4a4b019285f4a1"},
 ]
-markers = {dev = "sys_platform == \"linux\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
+markers = {dev = "python_version >= \"3.10\" and sys_platform == \"linux\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "python_full_version >= \"3.9.0\" and platform_python_implementation != \"PyPy\""}
@@ -2128,7 +2128,7 @@ version = "3.2.4"
 description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["integrations"]
 markers = "python_version == \"3.9\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.2.4-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:8c68325b0d0acf8d91dde4e6f930967dd52a5302cd4062932a6b2e7c2969f47c"},
@@ -2198,7 +2198,7 @@ description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "(platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.3.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:6f8496d434d5cb2dce025773ba5597f71f5410ae499d5dd9533e0653258cdb3d"},
     {file = "greenlet-3.3.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b96dc7eef78fd404e022e165ec55327f935b9b52ff355b067eb4a0267fc1cffb"},
@@ -2434,7 +2434,7 @@ files = [
     {file = "hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69"},
     {file = "hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f"},
 ]
-markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version == \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
+markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or python_version >= \"3.11\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version == \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
 
 [package.extras]
 tests = ["pytest"]
@@ -2564,7 +2564,7 @@ files = [
     {file = "httpx_sse-0.4.3-py3-none-any.whl", hash = "sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"},
     {file = "httpx_sse-0.4.3.tar.gz", hash = "sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d"},
 ]
-markers = {dev = "python_version >= \"3.11\" or python_version == \"3.9\"", integrations = "python_version >= \"3.11\""}
+markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [[package]]
 name = "huggingface-hub"
@@ -2614,7 +2614,7 @@ description = "Client library to download and publish models, datasets and other
 optional = false
 python-versions = ">=3.9.0"
 groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\" or python_version >= \"3.11\""
 files = [
     {file = "huggingface_hub-1.1.7-py3-none-any.whl", hash = "sha256:f3efa4779f4890e44c957bbbb0f197e6028887ad09f0cf95a21659fa7753605d"},
     {file = "huggingface_hub-1.1.7.tar.gz", hash = "sha256:3c84b6283caca928595f08fd42e9a572f17ec3501dec508c3f2939d94bfbd9d2"},
@@ -3064,7 +3064,7 @@ version = "3.1.6"
 description = "A very fast and expressive template engine."
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"},
     {file = "jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d"},
@@ -3171,7 +3171,7 @@ description = "Fast iterable JSON parser."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev", "integrations"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\" or python_version >= \"3.11\""
 files = [
     {file = "jiter-0.12.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:e7acbaba9703d5de82a2c98ae6a0f59ab9770ab5af5fa35e43a303aee962cf65"},
     {file = "jiter-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:364f1a7294c91281260364222f535bc427f56d4de1d8ffd718162d21fbbd602e"},
@@ -4157,7 +4157,7 @@ version = "3.0.3"
 description = "Safely add untrusted strings to HTML/XML markup."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "markupsafe-3.0.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2f981d352f04553a7171b8e44369f2af4055f888dfb147d55e42d29e29e74559"},
     {file = "markupsafe-3.0.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e1c1493fb6e50ab01d20a22826e57520f1284df32f2d8601fdd90b6304601419"},
@@ -6290,7 +6290,7 @@ description = "Wraps the portalocker recipe for easy usage"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\" or python_version >= \"3.11\""
 files = [
     {file = "portalocker-3.2.0-py3-none-any.whl", hash = "sha256:3cdc5f565312224bc570c49337bd21428bba0ef363bbcf58b9ef4a9f11779968"},
     {file = "portalocker-3.2.0.tar.gz", hash = "sha256:1f3002956a54a8c3730586c5c77bf18fae4149e07eaf1c29fc3faf4d5a3f89ac"},
@@ -6880,7 +6880,7 @@ files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", integrations = "python_version >= \"3.10\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -7381,7 +7381,7 @@ files = [
     {file = "pyreadline3-3.5.4-py3-none-any.whl", hash = "sha256:eaf8e6cc3c49bcccf145fc6067ba8643d1df34d604a1ec0eccbf7a18e6d3fae6"},
     {file = "pyreadline3-3.5.4.tar.gz", hash = "sha256:8d57d53039a1c75adba8e50dd3d992b28143480816187ea5efbd5c78e6c885b7"},
 ]
-markers = {dev = "sys_platform == \"win32\"", integrations = "python_version == \"3.10\" and sys_platform == \"win32\""}
+markers = {dev = "sys_platform == \"win32\"", integrations = "sys_platform == \"win32\" and python_version == \"3.10\""}
 
 [package.extras]
 dev = ["build", "flake8", "mypy", "pytest", "twine"]
@@ -8437,7 +8437,7 @@ description = "Python bindings to FreeDesktop.org Secret Service API"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
-markers = "sys_platform == \"linux\" and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and sys_platform == \"linux\""
 files = [
     {file = "secretstorage-3.5.0-py3-none-any.whl", hash = "sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137"},
     {file = "secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be"},
@@ -9016,6 +9016,28 @@ files = [
 ]
 
 [[package]]
+name = "towncrier"
+version = "25.8.0"
+description = "Building newsfiles for your project."
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "towncrier-25.8.0-py3-none-any.whl", hash = "sha256:b953d133d98f9aeae9084b56a3563fd2519dfc6ec33f61c9cd2c61ff243fb513"},
+    {file = "towncrier-25.8.0.tar.gz", hash = "sha256:eef16d29f831ad57abb3ae32a0565739866219f1ebfbdd297d32894eb9940eb1"},
+]
+
+[package.dependencies]
+click = "*"
+importlib-metadata = {version = ">=4.6", markers = "python_version < \"3.10\""}
+importlib-resources = {version = ">=5", markers = "python_version < \"3.10\""}
+jinja2 = "*"
+tomli = {version = "*", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["furo (>=2024.05.06)", "nox", "packaging", "sphinx (>=5)", "twisted"]
+
+[[package]]
 name = "tqdm"
 version = "4.67.1"
 description = "Fast, Extensible Progress Meter"
@@ -9102,7 +9124,7 @@ description = "Typer, build great CLIs. Easy to code. Based on Python type hints
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\" or python_version >= \"3.11\""
 files = [
     {file = "typer_slim-0.20.0-py3-none-any.whl", hash = "sha256:f42a9b7571a12b97dddf364745d29f12221865acef7a2680065f9bb29c7dc89d"},
     {file = "typer_slim-0.20.0.tar.gz", hash = "sha256:9fc6607b3c6c20f5c33ea9590cbeb17848667c51feee27d9e314a579ab07d1a3"},
@@ -9290,7 +9312,7 @@ files = [
     {file = "uvicorn-0.38.0-py3-none-any.whl", hash = "sha256:48c0afd214ceb59340075b4a052ea1ee91c16fbc2a9b1469cca0e54566977b02"},
     {file = "uvicorn-0.38.0.tar.gz", hash = "sha256:fd97093bdd120a2609fc0d3afe931d4d4ad688b6e75f0f929fde1bc36fe0e91d"},
 ]
-markers = {integrations = "sys_platform != \"emscripten\" and python_version >= \"3.10\" or python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and sys_platform != \"emscripten\" or python_version == \"3.10\""}
 
 [package.dependencies]
 click = ">=7.0"
@@ -9365,7 +9387,7 @@ files = [
     {file = "uvloop-0.22.1-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:286322a90bea1f9422a470d5d2ad82d38080be0a29c4dd9b3e6384320a4d11e7"},
     {file = "uvloop-0.22.1.tar.gz", hash = "sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f"},
 ]
-markers = {dev = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", integrations = "python_version == \"3.10\" and sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""}
+markers = {dev = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", integrations = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\" and python_version == \"3.10\""}
 
 [package.extras]
 dev = ["Cython (>=3.0,<4.0)", "setuptools (>=60)"]
@@ -10166,4 +10188,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "c9613bfda630eb6fbfc0313068c164e79a15f123e356de90ca87ef4d8411f63b"
+content-hash = "ca9a70cd12a4333bb714c62f89f6551a0e0c7f7f0cc28492dab5f4ceae03f2a3"

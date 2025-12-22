@@ -65,6 +65,7 @@ ruff = "^0.13.0"
 ollama = "*"
 anthropic = "*"
 google-genai = "^1.9.0"
+towncrier = "^25.8.0"
 
 [tool.black]
 line-length = 80
@@ -85,6 +86,7 @@ markers = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+
 [tool.poetry.group.integrations]
 optional = true
 
@@ -96,3 +98,32 @@ llama-index = "^0.14.4"
 langchain_openai = "^0.3.35"
 openai-agents = "^0.3.3"
 langchain = "^0.3.27"
+
+[tool.towncrier]
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+title_format = "## [{version}](https://github.com/confident-ai/deepeval/tree/{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/confident-ai/deepeval/issues/{issue})"
+
+[[tool.towncrier.type]]
+name = "Breaking"
+
+[[tool.towncrier.type]]
+name = "Security"
+
+[[tool.towncrier.type]]
+name = "Removed"
+
+[[tool.towncrier.type]]
+name = "Deprecated"
+
+[[tool.towncrier.type]]
+name = "Added"
+
+[[tool.towncrier.type]]
+name = "Changed"
+
+[[tool.towncrier.type]]
+name = "Fixed"
