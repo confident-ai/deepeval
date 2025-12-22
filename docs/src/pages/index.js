@@ -340,8 +340,8 @@ class Index extends React.Component {
         <div className={styles.section}>
           <div className={styles.container}>
             <div className={styles.title}>
-              <strong>Built for Production-Grade Standards</strong> Integrates
-              with your AI stack seamlessly.
+              <strong>Built for Production-Grade Standards</strong> Fits right
+              in your existing AI stack.
             </div>
             <div className={styles.integrationGrid}>
               <Corners />
