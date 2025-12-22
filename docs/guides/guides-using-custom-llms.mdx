@@ -621,7 +621,7 @@ response = client.chat.completions.create(
 
 Below is an example showing how to construct an OpenAI-compatible multimodal payload inside a custom DeepEval evaluation model.
 
-```python
+```python {15,16,28}
 from typing import Union
 from pydantic import BaseModel
 from deepeval.models import DeepEvalBaseLLM
@@ -639,20 +639,16 @@ class CustomMultimodalModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             multimodal_elements = convert_to_multi_modal_array(prompt)
             content = []
-
             for element in multimodal_elements:
                 if isinstance(element, str):
                     content.append({"type": "text", "text": element})
-
                 elif isinstance(element, MLLMImage):
-                    # External images can be passed by URL
                     if element.url and not element.local:
                         content.append({
                             "type": "image_url",
                             "image_url": {"url": element.url},
                         })
                     else:
-                        # Local images must be converted to base64 data URIs
                         element.ensure_images_loaded()
                         data_uri = (
                             f"data:{element.mimeType};base64,{element.dataBase64}"
@@ -673,8 +669,6 @@ class CustomMultimodalModel(DeepEvalBaseLLM):
                 }
             ],
         )
-
-        # Parse and return the structured output according to the provided schema
         return schema.model_validate_json(response.choices[0].message.content)
 
     async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
@@ -756,6 +750,7 @@ class CustomMistral7B(DeepEvalBaseLLM):
         return self.model
 
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        # Convert your multimodal inputs here
         model = self.load_model()
         pipeline = pipeline(
             "text-generation",
@@ -826,6 +821,7 @@ class CustomGeminiFlash(DeepEvalBaseLLM):
         return self.model
 
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        # Convert your multimodal inputs here
         client = self.load_model()
         instructor_client = instructor.from_gemini(
             client=client,
@@ -876,6 +872,7 @@ class CustomClaudeOpus(DeepEvalBaseLLM):
         return self.model
 
     def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        # Convert your multimodal inputs here
         client = self.load_model()
         instructor_client = instructor.from_anthropic(client)
         resp = instructor_client.messages.create(
