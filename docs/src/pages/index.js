@@ -232,7 +232,7 @@ class Index extends React.Component {
               <span className={styles.dollarSign}>$</span> used by some of the
               world's leading AI companies, DeepEval enables you to build{' '}
               <strong>reliable evaluation pipelines</strong> to test any AI
-              application
+              system
               <span className={styles.cursor}>_</span>
             </p>
             <div className={styles.ctaContainer}>
