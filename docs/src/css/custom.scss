@@ -79,7 +79,7 @@ html[data-theme='dark'] {
   --ifm-color-primary-light: #8e55ef;
   --ifm-color-primary-lighter: #9763f1;
   --ifm-color-primary-lightest: #b28bf4;
-  --ifm-background-color: #0d1015;
+  --ifm-background-color: #090b0e;
   --ifm-background-surface-color: #13171e;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 
@@ -188,8 +188,8 @@ li.tabs__item--active {
 // TOP NAV STYLING
 
 html[data-theme='dark'] .navbar {
-  background-color: #0d1015;
-  border-bottom: 1px solid #374151;
+  background-color: var(--ifm-background-color);
+  border-bottom: 1px solid #171e28;
 }
 
 .avatar__name > a {
@@ -218,7 +218,7 @@ html[data-theme='light'] .navbar {
 }
 
 .navbar__logo {
-  height: 2.2rem;
+  height: 1.8rem;
 }
 
 html[data-theme='light'] .navbar__logo {
@@ -285,8 +285,9 @@ html[data-theme='dark'] .header-github-link:before {
 html[data-theme='dark'] .header-twitter-link:before {
   filter: invert(100%);
 }
+
 .footer {
-  background: #20232a;
+  background: #0e1015;
 }
 
 .footer__copyright {
