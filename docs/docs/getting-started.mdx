@@ -18,9 +18,9 @@ import NavigationCards from "@site/src/components/NavigationCards";
 and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
-- Plug-and-use 30+ LLM-evaluated metrics, most with research backing.
-- Supports both end-to-end and component level evaluation.
+- Plug-and-use 50+ LLM-evaluated metrics, most with research backing, and all are multi-modal.
 - Evaluation for RAG, agents, chatbots, and virtually any use case.
+- Supports both end-to-end and component level evaluation.
 - Synthetic dataset generation with state-of-the-art evolution techniques.
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
@@ -186,7 +186,7 @@ Most likely your evaluation LLM is failing and this might be due to rate limits 
   (for OpenAI, `insufficient_quota` is treated as non-retryable).
 - **Backoff:** exponential with jitter (initial **1s**, base **2**, jitter **2s**, cap **5s**).
 
-You can tune these via environment flags (no code changes). See [Environment Flags](./evaluation-flags-and-configs#environment-flags) for details.
+You can tune these via environment flags (no code changes). See [environment variables](/docs/environment-variables) for details.
 
 </details>
 

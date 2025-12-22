@@ -1,0 +1,29 @@
+.sidebarContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100vh;
+
+  // Make the DocSidebarDesktop take remaining space and scroll
+  > aside,
+  > div:last-child {
+    flex: 1;
+    min-height: 0; // Critical for flex children to allow shrinking below content size
+    overflow-y: auto;
+  }
+}
+
+.searchBarContainer {
+  flex-shrink: 0;
+  padding: 1rem;
+  padding-top: calc(var(--ifm-navbar-height) + 1rem);
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+
+  & > div {
+    width: 100%;
+  }
+
+  & + div {
+    padding-top: 0 !important;
+  }
+}

@@ -29,7 +29,8 @@ A hallucination doesn’t start in generation — it starts in retrieval. If you
 
 Let’s say you’re using a standard `FAISS` \+ `OpenAIEmbeddings` retriever.
 
-<details> <summary>Click here to see the implementation of a simple retriever</summary>
+<details>
+<summary>Click here to see the implementation of a simple retriever</summary>
 
 ```python
 from langchain.vectorstores import Chroma, FAISS
@@ -250,7 +251,8 @@ Why? Because **the generator is the system’s voice**. It’s what users read, 
 
 In most setups, you’re building a prompt using retrieval context and user query, below is an example of how generators are usually made:
 
-<details> <summary>Click here to see the implementation of a simple generator</summary>
+<details>
+<summary>Click here to see the implementation of a simple generator</summary>
 
 ```python
 from langchain.llms import OpenAI

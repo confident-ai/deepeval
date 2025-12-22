@@ -4,17 +4,15 @@ title: Turn Contextual Recall
 sidebar_label: Turn Contextual Recall
 ---
 
-<head>
-  <link
-    rel="canonical"
-    href="https://deepeval.com/docs/metrics-turn-contextual-recall"
-  />
-</head>
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
-
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceFree={false} />
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  referenceFree={false}
+  rag={true}
+/>
 
 The turn contextual recall metric is a conversational metric that evaluates whether the retrieval context contains sufficient information to support the expected outcome **throughout a conversation**.
 

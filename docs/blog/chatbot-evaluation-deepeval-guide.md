@@ -55,7 +55,8 @@ Our chatbot will follow three key principles:
 
 We’ll begin with a minimal version to demonstrate core functionality. While it isn’t production-ready, it provides a solid foundation we can iterate on and evaluate using DeepEval.
 
-<details><summary><strong>Click to see the implementation of a simple multi-turn chatbot</strong></summary>
+<details>
+<summary><strong>Click to see the implementation of a simple multi-turn chatbot</strong></summary>
 
 ```python
 from openai import OpenAI
@@ -254,7 +255,8 @@ For multi-turn chatbots, these are the parameters that typically have the bigges
 2. Prompt design
 3. Chat history management
 
-<details><summary><strong>Click here to see the changes that were made to SimpleChatbot class to support hyperparameters.</strong></summary>
+<details>
+<summary><strong>Click here to see the changes that were made to SimpleChatbot class to support hyperparameters.</strong></summary>
 
 ```python
 from openai import OpenAI
