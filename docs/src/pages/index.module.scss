@@ -921,6 +921,18 @@ $dollar-sign-color: rgb(119, 0, 255);
 }
 
 @media (max-width: 500px) {
+  .heroContainer {
+    margin-top: -2rem;
+
+    .description {
+      font-size: 14px !important;
+    }
+  }
+
+  .heading {
+    font-size: 32px !important;
+  }
+
   .featureCard .title {
     font-size: 12px !important;
   }
