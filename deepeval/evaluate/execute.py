@@ -218,14 +218,23 @@ async def _snapshot_tasks():
 
 
 def _per_task_timeout() -> float:
-    return get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+    s = get_settings()
+    return (
+        None
+        if s.DEEPEVAL_DISABLE_TIMEOUTS
+        else s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+    )
 
 
 def _gather_timeout() -> float:
     s = get_settings()
     return (
-        s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+        None
+        if s.DEEPEVAL_DISABLE_TIMEOUTS
+        else (
+            s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+            + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+        )
     )
 
 
