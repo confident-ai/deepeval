@@ -289,6 +289,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "top_logprobs": top_logprobs,
             }
             completion_params.update(self.kwargs)
+            completion_params.update(self.generation_kwargs)
 
             response = completion(**completion_params)
             cost = self.calculate_cost(response)
@@ -335,6 +336,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "top_logprobs": top_logprobs,
             }
             completion_params.update(self.kwargs)
+            completion_params.update(self.generation_kwargs)
 
             response = await acompletion(**completion_params)
             cost = self.calculate_cost(response)
