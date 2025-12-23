@@ -1432,32 +1432,35 @@ class Settings(BaseSettings):
 
         def switch_model_provider(self, target) -> None:
             """
-            Flip all USE_* toggles so that the one matching the target is True and the rest are False.
-            Also,  mirror this change into the legacy JSON keystore as "YES"/"NO".
-
-            `target` may be an Enum with `.value`, such as ModelKeyValues.USE_OPENAI_MODEL
-            or a plain string like "USE_OPENAI_MODEL".
+            Flip USE_* settings within the target's provider family (LLM vs embeddings).
             """
             from deepeval.key_handler import KEY_FILE_HANDLER
 
-            # Target key is the env style string, such as "USE_OPENAI_MODEL"
             target_key = getattr(target, "value", str(target))
 
+            def _is_embedding_flag(k: str) -> bool:
+                return "EMBEDDING" in k
+
+            target_is_embedding = _is_embedding_flag(target_key)
+
             use_fields = [
-                k for k in type(self._s).model_fields if k.startswith("USE_")
+                field
+                for field in type(self._s).model_fields
+                if field.startswith("USE_")
+                and _is_embedding_flag(field) == target_is_embedding
             ]
+
             if target_key not in use_fields:
                 raise ValueError(
                     f"{target_key} is not a recognized USE_* field"
                 )
 
-            for k in use_fields:
-                on = k == target_key
-                # dotenv persistence will serialize to "1"/"0"
-                setattr(self._s, k, on)
+            for field in use_fields:
+                on = field == target_key
+                setattr(self._s, field, on)
+
                 if self._persist is not False:
-                    # legacy json persistence will serialize to "YES"/"NO"
-                    legacy_member = _find_legacy_enum(k)
+                    legacy_member = _find_legacy_enum(field)
                     if legacy_member is not None:
                         KEY_FILE_HANDLER.write_key(
                             legacy_member, "YES" if on else "NO"
