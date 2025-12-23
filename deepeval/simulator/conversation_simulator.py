@@ -514,7 +514,9 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [t.model_dump() for t in turns], indent=4
+                [t.model_dump() for t in turns],
+                indent=4,
+                ensure_ascii=False,
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome
@@ -559,7 +561,9 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [t.model_dump() for t in turns], indent=4
+                [t.model_dump() for t in turns],
+                indent=4,
+                ensure_ascii=False,
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome

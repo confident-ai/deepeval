@@ -57,7 +57,9 @@ class ConversationSimulatorTemplate:
         language: str,
     ) -> str:
         previous_conversation = json.dumps(
-            [t.model_dump() for t in turns], indent=4
+            [t.model_dump() for t in turns],
+            indent=4,
+            ensure_ascii=False,
         )
         prompt = textwrap.dedent(
             f"""
