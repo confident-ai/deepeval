@@ -1,0 +1,985 @@
+$slate-50: #f8fafc;
+$slate-100: #f1f5f9;
+$slate-200: #e2e8f0;
+$slate-300: #cbd5e1;
+$slate-400: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-700: #334155;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
+$slate-950: #020617;
+
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+$gray-950: #030712;
+
+$neutral-50: #fafafa;
+$neutral-100: #f5f5f5;
+$neutral-200: #e5e5e5;
+$neutral-300: #d4d4d4;
+$neutral-400: #a3a3a3;
+$neutral-500: #737373;
+$neutral-600: #525252;
+$neutral-700: #404040;
+$neutral-800: #262626;
+$neutral-900: #171717;
+$neutral-950: #0a0a0a;
+
+$zinc-50: #fafafa;
+$zinc-100: #f4f4f5;
+$zinc-200: #e4e4e7;
+$zinc-300: #d4d4d8;
+$zinc-400: #a1a1aa;
+$zinc-500: #71717a;
+$zinc-600: #52525b;
+$zinc-700: #3f3f46;
+$zinc-800: #27272a;
+$zinc-900: #18181b;
+$zinc-950: #09090b;
+
+$blue-50: #eff6ff;
+$blue-100: #dbeafe;
+$blue-200: #bfdbfe;
+$blue-300: #93c5fd;
+$blue-400: #60a5fa;
+$blue-500: #3b82f6;
+$blue-600: #2563eb;
+$blue-700: #1d4ed8;
+$blue-800: #1e40af;
+$blue-900: #1e3a8a;
+$blue-950: #172554;
+$blue-999: #040f22;
+
+$violet-50: #f5f3ff;
+$violet-100: #ede9fe;
+$violet-200: #ddd6fe;
+$violet-300: #c4b5fd;
+$violet-400: #a78bfa;
+$violet-500: #8b5cf6;
+$violet-600: #7c3aed;
+$violet-700: #6d28d9;
+$violet-800: #5b21b6;
+$violet-900: #4c1d95;
+$violet-950: #2e1065;
+$violet-999: #110428;
+
+$emerald-50: #ecfdf5;
+$emerald-100: #d1fae5;
+$emerald-200: #a7f3d0;
+$emerald-300: #6ee7b7;
+$emerald-400: #34d399;
+$emerald-500: #10b981;
+$emerald-600: #059669;
+$emerald-700: #047857;
+$emerald-800: #065f46;
+$emerald-900: #064e3b;
+$emerald-950: #022c22;
+$emerald-999: #021514;
+
+$teal-50: #f0fdfa;
+$teal-100: #cbfbf1;
+$teal-200: #96f7e4;
+$teal-300: #46ecd5;
+$teal-400: #00d5be;
+$teal-500: #00bba7;
+$teal-600: #009689;
+$teal-700: #007467;
+$teal-800: #005245;
+$teal-900: #003428;
+$teal-950: #022f2e;
+$teal-999: #021514;
+
+$rose-50: #fff1f2;
+$rose-100: #ffe4e6;
+$rose-200: #fecdd3;
+$rose-300: #fda4af;
+$rose-400: #fb7185;
+$rose-500: #f43f5e;
+$rose-600: #e11d48;
+$rose-700: #be123c;
+$rose-800: #9f1239;
+$rose-900: #881337;
+$rose-950: #4c0519;
+
+$amber-50: #fffbeb;
+$amber-100: #fef3c7;
+$amber-200: #fde68a;
+$amber-300: #fcd34d;
+$amber-400: #fbbf24;
+$amber-500: #f59e0b;
+$amber-600: #d97706;
+$amber-700: #b45309;
+$amber-800: #92400e;
+$amber-900: #78350f;
+$amber-950: #451a03;
+$amber-999: #250e02;
+$amber-1000: #1a0a00;
+
+$yellow-50: #fefce8;
+$yellow-100: #fef9c3;
+$yellow-200: #fef08a;
+$yellow-300: #fde047;
+$yellow-400: #facc15;
+$yellow-500: #eab308;
+$yellow-600: #ca8a04;
+$yellow-700: #a16207;
+$yellow-800: #854d0e;
+$yellow-900: #713f12;
+$yellow-950: #392903;
+$yellow-999: #2a1504;
+
+$pink-50: #fdf2f8;
+$pink-100: #fce7f3;
+$pink-200: #fbcfe8;
+$pink-300: #f9a8d4;
+$pink-400: #f472b6;
+$pink-500: #ec4899;
+$pink-600: #db2777;
+$pink-700: #be185d;
+$pink-800: #9d174d;
+$pink-900: #831843;
+$pink-950: #500724;
+$pink-999: #2f0415;
+$pink-1000: #18000c;
+
+$orange-50: #fff7ed;
+$orange-100: #ffedd5;
+$orange-200: #fed7aa;
+$orange-300: #fdba74;
+$orange-400: #fb923c;
+$orange-500: #f97316;
+$orange-600: #ea580c;
+$orange-700: #c2410c;
+$orange-800: #9a3412;
+$orange-900: #7c2d12;
+$orange-950: #431407;
+$orange-999: #250e02;
+$orange-1000: #1a0a00;
+
+$cyan-50: #ecfeff;
+$cyan-100: #cffafe;
+$cyan-200: #a5f3fc;
+$cyan-300: #67e8f9;
+$cyan-400: #22d3ee;
+$cyan-500: #06b6d4;
+$cyan-600: #0891b2;
+$cyan-700: #0e7490;
+$cyan-800: #155e75;
+$cyan-900: #164e63;
+$cyan-950: #083344;
+
+$sky-50: #f0f9ff;
+$sky-100: #e0f2fe;
+$sky-200: #bae6fd;
+$sky-300: #7dd3fc;
+$sky-400: #38bdf8;
+$sky-500: #0ea5e9;
+$sky-600: #0284c7;
+$sky-700: #0369a1;
+$sky-800: #075985;
+$sky-900: #0c4a6e;
+$sky-950: #082f49;
+$sky-999: #041826;
+$sky-1000: #020e1a;
+
+$border-dotted-color: $gray-500;
+$dollar-sign-color: rgb(119, 0, 255);
+
+.mainRapper {
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  ::selection {
+    background: white;
+    color: black;
+  }
+}
+
+.section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rem 2rem;
+
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    row-gap: 1rem;
+  }
+
+  .title {
+    color: $zinc-400;
+    font-size: 16px;
+    font-family:
+      'Geist',
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+
+    strong {
+      color: white;
+      font-size: 28px;
+      margin-right: 4px;
+    }
+  }
+
+  .heading {
+    text-align: center;
+    color: white;
+    font-size: 42px !important;
+    font-family:
+      'Geist',
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      'Cantarell',
+      'Fira Sans',
+      'Droid Sans',
+      'Helvetica Neue',
+      sans-serif;
+    padding: 12px 24px;
+  }
+}
+
+.heroContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  .mainTitle {
+    margin-bottom: 2rem;
+    text-align: center;
+    color: white;
+    font-size: max(44px, min(5vw, 68px)) !important;
+    font-family:
+      'Geist',
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Roboto',
+      'Oxygen',
+      'Ubuntu',
+      'Cantarell',
+      'Fira Sans',
+      'Droid Sans',
+      'Helvetica Neue',
+      sans-serif;
+    padding: 12px 24px;
+    border: 1px dashed $border-dotted-color;
+    position: relative;
+  }
+
+  .description {
+    .dollarSign {
+      color: $dollar-sign-color;
+    }
+
+    font-size: 16px;
+    color: $gray-400;
+    text-align: center;
+    max-width: 650px;
+    margin-bottom: 2rem;
+    font-family:
+      'Geist',
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
+
+    strong {
+      color: white;
+    }
+  }
+
+  .cursor {
+    animation: blink 1.5s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  .envelopeWrapper {
+    transform: scale(0.9);
+    transform-origin: center top;
+  }
+
+  .ctaContainer {
+    display: flex;
+    align-items: center;
+    column-gap: 1rem;
+  }
+}
+
+.corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: white;
+  border-style: solid;
+  pointer-events: none;
+
+  &:nth-child(1) {
+    top: -11px;
+    left: -11px;
+    border-width: 0 1px 1px 0;
+  }
+
+  &:nth-child(2) {
+    top: -11px;
+    right: -11px;
+    border-width: 0 0 1px 1px;
+  }
+
+  &:nth-child(3) {
+    bottom: -11px;
+    left: -11px;
+    border-width: 1px 1px 0 0;
+  }
+
+  &:nth-child(4) {
+    bottom: -11px;
+    right: -11px;
+    border-width: 1px 0 0 1px;
+  }
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  padding: 10px 80px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none !important;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 1;
+  font-family: inherit;
+  background-color: white;
+  border: 1px solid white;
+  color: black !important;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.codeBox {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 24px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px dashed $border-dotted-color;
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.02em;
+  position: relative;
+
+  .dollarSign {
+    color: $dollar-sign-color;
+    margin-right: 8px;
+  }
+}
+
+.ctaContainer {
+  display: flex;
+  align-items: center;
+  column-gap: 1rem;
+}
+
+.logoCloud {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  margin: 0 auto;
+  border-top: 1px dashed $border-dotted-color;
+  border-left: 1px dashed $border-dotted-color;
+
+  .logoItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    border-right: 1px dashed $border-dotted-color;
+    border-bottom: 1px dashed $border-dotted-color;
+
+    img {
+      max-width: 80px;
+      max-height: 28px;
+      filter: grayscale(100%) brightness(2);
+      transition: opacity 0.2s ease;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .logoPlaceholder {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+@media (max-width: 768px) {
+  .logoCloud {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 300px;
+  }
+}
+
+.featuresContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  max-width: 900px;
+  border: 1px dashed $border-dotted-color;
+  position: relative;
+}
+
+// SOTA container - 3 items, either 3 columns or 1, never 2
+.sotaFeaturesContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  max-width: 900px;
+  border: 1px dashed $border-dotted-color;
+  position: relative;
+}
+
+.featureCardContainer {
+  display: flex;
+  align-items: center;
+}
+
+.featureCard:nth-of-type(1):hover .iconWrapper {
+  color: $teal-400;
+}
+.featureCard:nth-of-type(2):hover .iconWrapper {
+  color: $violet-500;
+}
+.featureCard:nth-of-type(3):hover .iconWrapper {
+  color: $yellow-500;
+}
+.featureCard:nth-of-type(4):hover .iconWrapper {
+  color: $pink-500;
+}
+.featureCard:nth-of-type(5):hover .iconWrapper {
+  color: $sky-500;
+}
+.featureCard:nth-of-type(6):hover .iconWrapper {
+  color: $orange-500;
+}
+
+.featureCardContainer img {
+  width: 14px;
+  margin-left: 6px;
+  margin-bottom: -2px;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.featureCard {
+  padding: 1.25rem 1.5rem;
+  border-right: 1px dashed $border-dotted-color;
+  border-bottom: 1px dashed $border-dotted-color;
+  transition: background-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+
+  .iconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.5);
+    transition: color 0.15s ease;
+    margin-bottom: 1rem;
+  }
+
+  &:nth-of-type(3n) {
+    border-right: none;
+  }
+
+  &:nth-last-of-type(-n + 3) {
+    border-bottom: none;
+  }
+
+  &:hover {
+    text-decoration: none;
+
+    .featureCardContainer img {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+
+    .title {
+      color: white;
+    }
+  }
+
+  &:nth-of-type(1):hover {
+    background-color: rgba($teal-500, 0.08);
+  }
+  &:nth-of-type(2):hover {
+    background-color: rgba($violet-500, 0.08);
+  }
+  &:nth-of-type(3):hover {
+    background-color: rgba($amber-500, 0.08);
+  }
+  &:nth-of-type(4):hover {
+    background-color: rgba($pink-500, 0.08);
+  }
+  &:nth-of-type(5):hover {
+    background-color: rgba($sky-500, 0.08);
+  }
+  &:nth-of-type(6):hover {
+    background-color: rgba($orange-500, 0.08);
+  }
+}
+
+.featureCard .title {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  font-family:
+    'Geist',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.featureCard .description {
+  font-size: 12px;
+  color: $zinc-400;
+  margin-top: 6px;
+  margin-bottom: 0 !important;
+  line-height: 1.5;
+  font-family:
+    'Geist',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+.dashboardStack {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  // Dynamic height based on stack count: base height + offset per additional image
+  height: calc(350px + (var(--stack-count, 3) - 1) * 40px);
+}
+
+.dashboardImage {
+  position: absolute;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 4px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  // Dynamic positioning: each image shifts down and left based on its index
+  // Last image (highest index) appears on top and most offset
+  top: calc(var(--i, 0) * 40px);
+  left: calc(var(--i, 0) * -45px);
+  // Subtle scale for depth effect - front images slightly larger
+  transform: scale(calc(1 + var(--i, 0) * 0.015));
+  transform-origin: top left;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+
+  &:hover {
+    transform: scale(calc(1 + var(--i, 0) * 0.015 + 0.02)) translateY(-5px);
+    box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.productionizeContent {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 4rem;
+  margin-top: 2rem;
+
+  .description {
+    color: $zinc-400;
+  }
+}
+
+.pillsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+
+  &:nth-child(1) {
+    background-color: $teal-999;
+    color: $teal-400;
+  }
+
+  &:nth-child(2) {
+    background-color: $violet-999;
+    color: $violet-400;
+  }
+
+  &:nth-child(3) {
+    background-color: $sky-999;
+    color: $sky-400;
+  }
+
+  &:nth-child(4) {
+    background-color: $amber-999;
+    color: $amber-400;
+  }
+
+  &:nth-child(5) {
+    background-color: $pink-1000;
+    color: $pink-400;
+  }
+
+  &:nth-child(6) {
+    background-color: $orange-999;
+    color: $orange-400;
+  }
+}
+
+// 3x3 Integration Grid
+.integrationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  max-width: 900px;
+  border: 1px dashed $border-dotted-color;
+  position: relative;
+}
+
+.integrationCell {
+  padding: 1.25rem 1.5rem;
+  min-height: 160px;
+  border-right: 1px dashed $border-dotted-color;
+  border-bottom: 1px dashed $border-dotted-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(.centerCell) {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.centerCell {
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.logoCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.deepevalLogo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+
+.integrationCard {
+  padding: 1.25rem 1.5rem;
+  min-height: 160px;
+  border-right: 1px dashed $border-dotted-color;
+  border-bottom: 1px dashed $border-dotted-color;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    text-decoration: none;
+
+    .integrationName {
+      color: white;
+    }
+  }
+}
+
+.noRightBorder {
+  border-right: none;
+}
+
+.noBottomBorder {
+  border-bottom: none;
+}
+
+.integrationIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+
+  img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.4;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+}
+
+.integrationCard:hover .integrationIconWrapper img {
+  opacity: 0.9;
+  transform: translateY(-4px);
+}
+
+.integrationName {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease;
+  font-family:
+    'Geist',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+@media (max-width: 1018px) {
+  .featuresContainer {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    border: 1px dashed $border-dotted-color;
+
+    .featureCard {
+      border-right: none !important;
+      border-bottom: 1px dashed $border-dotted-color !important;
+
+      &:last-child {
+        border-bottom: none !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .productionizeContent {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+
+  // Stack images vertically, front image at top (reversed order)
+  .dashboardStack {
+    max-width: 100%;
+    height: calc(280px + (var(--stack-count, 3) - 1) * 30px);
+  }
+
+  .dashboardImage {
+    max-width: 100%;
+    left: 0 !important;
+    // Reverse: front image (highest index) at top, back images below
+    top: calc((var(--stack-count, 3) - 1 - var(--i, 0)) * 30px) !important;
+    transform: scale(1) !important;
+  }
+
+  .featuresContainer {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 600px;
+    border: 1px dashed $border-dotted-color;
+
+    .featureCard {
+      border-right: 1px dashed $border-dotted-color !important;
+      border-bottom: 1px dashed $border-dotted-color !important;
+
+      // Every 2nd column - no right border
+      &:nth-child(2n) {
+        border-right: none !important;
+      }
+
+      // Last row - no bottom border
+      &:nth-last-child(-n + 2) {
+        border-bottom: none !important;
+      }
+    }
+  }
+
+  // Keep SOTA at 1 column - don't change to 2 columns
+  .sotaFeaturesContainer {
+    grid-template-columns: 1fr !important;
+
+    .featureCard {
+      border-right: none !important;
+      border-bottom: 1px dashed $border-dotted-color !important;
+
+      &:last-child {
+        border-bottom: none !important;
+      }
+    }
+  }
+
+  .integrationGrid {
+    grid-template-columns: 1fr;
+    border: 1px dashed $border-dotted-color;
+  }
+
+  .integrationCell,
+  .integrationCard {
+    border-right: none !important;
+    border-bottom: 1px dashed $border-dotted-color !important;
+    padding: 0.75rem 1rem;
+    min-height: 100px;
+  }
+
+  .integrationGrid > *:last-child {
+    border-bottom: none !important;
+  }
+
+  .deepevalLogo {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+  }
+
+  .integrationIconWrapper img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .integrationName {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+  .heroContainer {
+    margin-top: -2rem;
+
+    .description {
+      font-size: 14px !important;
+    }
+  }
+
+  .section .heading {
+    font-size: 36px !important;
+  }
+
+  .featureCard .title {
+    font-size: 12px !important;
+  }
+
+  .featureCard .description {
+    font-size: 11px !important;
+  }
+
+  .integrationIconWrapper img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .integrationName {
+    font-size: 11px;
+  }
+
+  .deepevalLogo {
+    width: 40px;
+    height: 40px;
+  }
+
+  // Even tighter stack spacing on mobile (still reversed order)
+  .dashboardStack {
+    height: calc(220px + (var(--stack-count, 3) - 1) * 20px);
+  }
+
+  .dashboardImage {
+    top: calc((var(--stack-count, 3) - 1 - var(--i, 0)) * 20px) !important;
+  }
+
+  .featuresContainer {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+
+    .featureCard {
+      border-right: none !important;
+      border-bottom: 1px dashed $border-dotted-color !important;
+
+      // Override the 768px nth-last-child(-n + 2) rule
+      &:nth-last-child(-n + 2) {
+        border-bottom: 1px dashed $border-dotted-color !important;
+      }
+
+      &:last-child {
+        border-bottom: none !important;
+      }
+    }
+  }
+}
