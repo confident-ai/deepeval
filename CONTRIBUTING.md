@@ -23,12 +23,44 @@ poetry install
 
 ## Our expectations (not a lot :)
 
-To contribute, all we ask for is to follow existing patterns within the codebase. For example, if you're looking to add a new benchmark, look at how the different modules in the existing benchmarks are structured and implemented, and we encourage you to reuse helper functions and methods shared by similar modules.
+To contribute, we mostly just ask that you follow existing patterns within the codebase. For example, if you're looking to add a new benchmark, look at how the different modules in the existing benchmarks are structured and implemented, and we encourage you to reuse helper functions and methods shared by similar modules.
 
-Other than that, there are no strict rules to follow, except for optionally running `black` to ensure good formatting. Also, there's no need to worry about failing test cases in GitHub Actions, as these are mostly for internal use and will only pass if triggered by a user with the correct permissions within Confident AI.
+Other than that, there are just a couple lightweight requirements:
+
+- For most user-facing changes, please add a Towncrier changelog fragment (see below).
+- Optionally run `black` to ensure good formatting.
+
+Also, there's no need to worry about failing test cases in GitHub Actions, as these are mostly for internal use and will only pass if triggered by a user with the correct permissions within Confident AI.
 
 Thank you and come ask any questions or discuss any new PRs you have in mind on our [Discord](https://discord.com/invite/a3K9c8GRGt)!
 
+### Changelog entries (Towncrier)
+
+DeepEval uses **Towncrier** to build release notes from small changelog fragment files.  
+Most user facing PRs should include **one** fragment in `changelog.d/`.
+
+**When you should add a fragment**
+- Bug fixes, behavior changes, new features, deprecations, removals, or anything users would notice.
+
+**When you can skip a fragment**
+- Pure refactors with no user impact, internal CI changes, or trivial docs/typos (maintainers may apply the `skip-changelog` label).
+
+**How to add a fragment**
+Open your PR first so you have a PR number, then create a new file under `changelog.d/` named:
+
+`<PR_NUMBER>.<type>.md`
+
+Types:
+- `breaking`, `security`, `removed`, `deprecated`, `added`, `changed`, `fixed`
+
+Example:
+- `1234.fixed.md`
+
+You can create the fragment file manually, or if you have Towncrier installed, generate it with the CLI. If you’re using Poetry, run it via `poetry run`:
+
+```bash
+poetry run towncrier create 1234.fixed.md
+```
 
 ## Issue lifecycle & staleness policy
 

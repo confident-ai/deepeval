@@ -19,6 +19,7 @@
 <h4 align="center">
     <p>
         <a href="https://deepeval.com/docs/getting-started?utm_source=GitHub">Documentation</a> |
+        <a href="https://deepeval.com/docs/changelog?utm_source=GitHub">Changelog</a> |
         <a href="#-metrics-and-features">Metrics and Features</a> |
         <a href="#-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
