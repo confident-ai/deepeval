@@ -1,0 +1,63 @@
+---
+# id: portkey
+title: Portkey
+sidebar_label: Portkey
+---
+
+DeepEval's integration with Portkey AI allows you to use the portkey gateway to connect to any model to power all of DeepEval's metrics.
+
+### Command Line
+
+To configure your Portkey model through the CLI, run the following command:
+
+```bash
+deepeval set-portkey \
+    --model "your-model" \ # Ex: gpt-4.1
+    --provider "your-provider" \ # Ex: openai
+    --base-url "your-base-url" \
+    --temperature=0
+```
+
+:::info
+The CLI command above sets Portkey as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Moonshot:
+
+```bash
+deepeval unset-portkey
+```
+
+:::
+
+:::tip Persisting settings
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, you can define `PortkeyModel` directly in python code:
+
+```python
+from deepeval.models import PortkeyModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = PortkeyModel(
+    model="gpt-4.1",
+    provider="openai",
+    api_key="your-api-key",
+    base_url="your-base-url"
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **ZERO** mandatory and **FIVE** optional parameters when creating a `PortkeyModel`:
+
+- [Optional] `model`: A string specifying the name of the Portkey model to use. Defaults to `PORTKEY_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Portkey API key for authentication. Defaults to `PORTKEY_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `provider`: A string specifying the Portkey provider of your model. Defaults to `PORTKEY_PROVIDER_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying the base URL for the model API. Defaults to `PORTKEY_BASE_URL` if not passed; raises an error at runtime if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Portkey's `completion(...)` / `acompletion(...)` call
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://portkey.ai/docs/product/ai-gateway/universal-api#python).
+:::
