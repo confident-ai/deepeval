@@ -105,12 +105,6 @@ def is_openai_configured() -> bool:
     return bool(env and env.strip())
 
 
-TIP_MSG = (
-    "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
-    "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-)
-
-
 def _handle_save_result(
     *,
     handled: bool,
@@ -121,7 +115,7 @@ def _handle_save_result(
     success_msg: Optional[str] = None,
     updated_msg: str = "Saved environment variables to {path} (ensure it's git-ignored).",
     no_changes_msg: str = "No changes to save in {path}.",
-    tip_msg: Optional[str] = TIP_MSG,
+    tip_msg: Optional[str] = None,
 ) -> bool:
     if not handled and save is not None:
         raise typer.BadParameter(
