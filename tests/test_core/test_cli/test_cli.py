@@ -707,6 +707,7 @@ def test_set_gemini_prompt_api_key_persists_to_dotenv_not_json(
     hidden_store_dir,
     env_path,
 ) -> None:
+
     runner = CliRunner()
     save = f"dotenv:{env_path}"
 
@@ -716,7 +717,14 @@ def test_set_gemini_prompt_api_key_persists_to_dotenv_not_json(
     # Typer prompt can be satisfied via CliRunner input
     result = runner.invoke(
         cli_app,
-        ["set-gemini", "--prompt-api-key", "--save", save],
+        [
+            "set-gemini",
+            "--model",
+            "test-model",
+            "--prompt-api-key",
+            "--save",
+            save,
+        ],
         input="test-google-api-key\n",
     )
     assert result.exit_code == 0, result.output

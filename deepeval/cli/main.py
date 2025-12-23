@@ -873,7 +873,12 @@ def set_openai_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.OPENAI_MODEL_NAME or "<unset>"
+    effective_model = settings.OPENAI_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "OpenAI model name is not set. Pass --model (or set OPENAI_MODEL_NAME).",
+            param_hint="--model",
+        )
 
     _handle_save_result(
         handled=handled,
@@ -1043,7 +1048,12 @@ def set_azure_openai_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.AZURE_MODEL_NAME or "<unset>"
+    effective_model = settings.AZURE_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Azure OpenAI model name is not set. Pass --model (or set AZURE_MODEL_NAME).",
+            param_hint="--model",
+        )
 
     _handle_save_result(
         handled=handled,
@@ -1153,7 +1163,14 @@ def set_azure_openai_embedding_env(
             settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = deployment_name
 
     handled, path, updates = edit_ctx.result
-    effective_model = settings.AZURE_EMBEDDING_MODEL_NAME or "<unset>"
+
+    effective_model = settings.AZURE_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Azure OpenAI embedding model name is not set. Pass --model (or set AZURE_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
+        )
+
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1161,7 +1178,7 @@ def set_azure_openai_embedding_env(
         save=save,
         quiet=quiet,
         success_msg=(
-            f":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings  model `{escape(effective_model)}` for all evals that require text embeddings."
+            f":raising_hands: Congratulations! You're now using Azure OpenAI embedding model `{escape(effective_model)}` for all evals that require text embeddings."
         ),
     )
 
@@ -1285,7 +1302,13 @@ def set_anthropic_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.ANTHROPIC_MODEL_NAME or "<unset>"
+    effective_model = settings.ANTHROPIC_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Anthropic model name is not set. Pass --model (or set ANTHROPIC_MODEL_NAME).",
+            param_hint="--model",
+        )
+
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1439,7 +1462,13 @@ def set_bedrock_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.AWS_BEDROCK_MODEL_NAME or "<unset>"
+    effective_model = settings.AWS_BEDROCK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "AWS Bedrock model name is not set. Pass --model (or set AWS_BEDROCK_MODEL_NAME).",
+            param_hint="--model",
+        )
+
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1552,7 +1581,13 @@ def set_ollama_model_env(
             settings.LOCAL_MODEL_BASE_URL = base_url
 
     handled, path, updates = edit_ctx.result
-    effective_model = settings.OLLAMA_MODEL_NAME or "<unset>"
+
+    effective_model = settings.OLLAMA_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Ollama model name is not set. Pass --model (or set OLLAMA_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1657,7 +1692,13 @@ def set_ollama_embeddings_env(
             settings.LOCAL_EMBEDDING_BASE_URL = base_url
 
     handled, path, updates = edit_ctx.result
-    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME or "<unset>"
+
+    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Ollama embedding model name is not set. Pass --model (or set LOCAL_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1793,7 +1834,12 @@ def set_local_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.LOCAL_MODEL_NAME or "<unset>"
+    effective_model = settings.LOCAL_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Local model name is not set. Pass --model (or set LOCAL_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -1934,7 +1980,12 @@ def set_grok_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.GROK_MODEL_NAME or "<unset>"
+    effective_model = settings.GROK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Grok model name is not set. Pass --model (or set GROK_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2075,7 +2126,12 @@ def set_moonshot_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.MOONSHOT_MODEL_NAME or "<unset>"
+    effective_model = settings.MOONSHOT_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Moonshot model name is not set. Pass --model (or set MOONSHOT_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2216,7 +2272,13 @@ def set_deepseek_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.DEEPSEEK_MODEL_NAME or "<unset>"
+    effective_model = settings.DEEPSEEK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "DeepSeek model name is not set. Pass --model (or set DEEPSEEK_MODEL_NAME).",
+            param_hint="--model",
+        )
+
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2344,7 +2406,12 @@ def set_local_embeddings_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME or "<unset>"
+    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Local embedding model name is not set. Pass --model (or set LOCAL_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2501,7 +2568,12 @@ def set_gemini_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.GEMINI_MODEL_NAME or "<unset>"
+    effective_model = settings.GEMINI_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Gemini model name is not set. Pass --model (or set GEMINI_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2652,7 +2724,12 @@ def set_litellm_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.LITELLM_MODEL_NAME or "<unset>"
+    effective_model = settings.LITELLM_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "LiteLLM model name is not set. Pass --model (or set LITELLM_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
@@ -2790,7 +2867,12 @@ def set_portkey_model_env(
 
     handled, path, updates = edit_ctx.result
 
-    effective_model = settings.PORTKEY_MODEL_NAME or "<unset>"
+    effective_model = settings.PORTKEY_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Portkey model name is not set. Pass --model (or set PORTKEY_MODEL_NAME).",
+            param_hint="--model",
+        )
     _handle_save_result(
         handled=handled,
         path=path,
