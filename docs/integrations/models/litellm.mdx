@@ -21,28 +21,28 @@ To configure your LiteLLM model through the CLI, run the following command. You 
 
 ```bash
 # OpenAI
-deepeval set-litellm openai/gpt-3.5-turbo
+deepeval set-litellm --model=openai/gpt-3.5-turbo
 
 # Anthropic
-deepeval set-litellm anthropic/claude-3-opus
+deepeval set-litellm --model=anthropic/claude-3-opus
 
 # Google
-deepeval set-litellm google/gemini-pro
+deepeval set-litellm --model=google/gemini-pro
 ```
 
 You can also specify additional parameters:
 
 ```bash
 # With API key
-deepeval set-litellm openai/gpt-3.5-turbo --api-key="your-api-key"
+deepeval set-litellm --prompt-api-key --model=openai/gpt-3.5-turbo
 
 # With custom API base
-deepeval set-litellm openai/gpt-3.5-turbo --api-base="https://your-custom-endpoint.com"
+deepeval set-litellm --model=openai/gpt-3.5-turbo --base-url="https://your-custom-endpoint.com"
 
 # With both API key and custom base
-deepeval set-litellm openai/gpt-3.5-turbo \
-    --api-key="your-api-key" \
-    --api-base="https://your-custom-endpoint.com"
+deepeval set-litellm --prompt-api-key \
+    --model=openai/gpt-3.5-turbo \
+    --base-url="https://your-custom-endpoint.com"
 ```
 
 :::info

@@ -29,13 +29,13 @@ LOCAL_MODEL_BASE_URL=http://localhost:11434
 To configure your Ollama model through the CLI, run the following command. Replace `deepseek-r1:1.5b` with any Ollama-supported model of your choice.
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b
+deepeval set-ollama --model=deepseek-r1:1.5b
 ```
 
 You may also specify the **base URL** of your local Ollama model instance if you've defined a custom port. By default, the base URL is set to `http://localhost:11434`.
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b \
+deepeval set-ollama --model=deepseek-r1:1.5b \
     --base-url="http://localhost:11434"
 ```
 

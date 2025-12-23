@@ -14,13 +14,13 @@ To start using LM Studio with `deepeval`, follow these steps:
 2. Run the following command in your terminal to connect `deepeval` to LM Studio:
 
 ```bash
-deepeval set-local-model --model-name=<model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --api-key=<api-key>
+deepeval set-local-model --prompt-api-key \
+    --model=<model_name> \
+    --base-url="http://localhost:1234/v1/"
 ```
 
 :::tip
-Use any placeholder string for `--api-key` if your local endpoint doesn't require authentication.
+If your local endpoint doesn't require authentication enter any placeholder string when prompted to enter an api key.
 :::
 
 :::tip Persisting settings
