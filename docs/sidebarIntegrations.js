@@ -31,6 +31,7 @@ module.exports = {
         'models/vertex-ai',
         'models/grok',
         'models/moonshot',
+        'models/portkey',
         'models/vllm',
         'models/lmstudio',
         'models/litellm',
