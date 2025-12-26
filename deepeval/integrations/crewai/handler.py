@@ -12,6 +12,9 @@ from deepeval.config.settings import get_settings
 logger = logging.getLogger(__name__)
 
 
+class BaseEventListener(object):
+    pass
+
 try:
     from crewai.events import BaseEventListener
     from crewai.events import (
