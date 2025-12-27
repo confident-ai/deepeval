@@ -26,7 +26,6 @@ You can use Azure's OpenAI embedding models by running the following commands in
 
 ```bash
 deepeval set-azure-openai \
-    --prompt-api-key \
     # e.g. https://example-resource.azure.openai.com/
     --base-url=<endpoint> \
     # e.g. gpt-4.1
@@ -85,16 +84,14 @@ For example to use a local model from LM Studio, use the following command:
 
 ```bash
 deepeval set-local-model --model=<model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --prompt-api-key
+    --base-url="http://localhost:1234/v1/"
 ```
 
 Then, run this to set the local Embeddings model:
 
 ```bash
 deepeval set-local-embeddings --model=<embedding_model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --prompt-api-key
+    --base-url="http://localhost:1234/v1/"
 ```
 
 To revert back to the default OpenAI embeddings run:
@@ -167,7 +164,7 @@ class CustomEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
 :::
 
-Lastly, provide the custom embedding model through the `embedder` parameter  in the [`ContextConstructionConfig`](/docs/synthesizer-generate-from-docs#customize-context-construction) when calling any of the synthesis function:
+Lastly, provide the custom embedding model through the `embedder` parameter in the [`ContextConstructionConfig`](/docs/synthesizer-generate-from-docs#customize-context-construction) when calling any of the synthesis function:
 
 ```python
 from deepeval.synthesizer import Synthesizer

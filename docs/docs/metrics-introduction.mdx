@@ -8,9 +8,9 @@ sidebar_label: Introduction
   <link rel="canonical" href="https://deepeval.com/docs/metrics-introduction" />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 `deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
 
@@ -418,7 +418,6 @@ Please **do not include** quotation marks when setting your `API_KEYS` as enviro
 
 ```bash
 deepeval set-azure-openai \
-    --prompt-api-key \
     --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --model=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
@@ -480,7 +479,6 @@ To use Gemini models with `deepeval`, run the following command in your CLI.
 
 ```bash
 deepeval set-gemini \
-    --prompt-api-key \
     --model=<model_name> # e.g. "gemini-2.0-flash-001"
 ```
 
