@@ -326,21 +326,49 @@ def test_sample_rate_invalid_raises(monkeypatch, val):
         get_settings()
 
 
-def test_switch_model_provider_flips_all_use_flags(monkeypatch):
-    s = get_settings()
-    with s.edit(persist=False) as ctx:
-        # Seed a mix of USE_* flags across models/embeddings
-        for field in type(s).model_fields:
-            if field.startswith("USE_"):
-                setattr(s, field, True)
-        ctx.switch_model_provider("USE_GEMINI_MODEL")
+def test_switch_model_provider_flips_use_flags_within_family_only(settings):
+    # Split USE_* flags into "llm family" vs "embedding family"
+    all_use = [
+        field
+        for field in type(settings).model_fields
+        if field.startswith("USE_")
+    ]
+    llm_flags = [field for field in all_use if "EMBEDDING" not in field]
+    emb_flags = [field for field in all_use if "EMBEDDING" in field]
 
-    for field in type(s).model_fields:
-        if field.startswith("USE_"):
-            if field == "USE_GEMINI_MODEL":
-                assert getattr(s, field) is True
-            else:
-                assert getattr(s, field) is False
+    # Assert both families exist
+    assert llm_flags, "No LLM USE_* flags found on Settings"
+    assert emb_flags, "No embedding USE_* flags found on Settings"
+
+    target_llm = llm_flags[0]
+    target_emb = emb_flags[0]
+
+    with settings.edit(persist=False) as ctx:
+        # Seed all flags to True so we can observe which ones get flipped
+        for field in all_use:
+            setattr(settings, field, True)
+
+        # Flip LLM family only
+        ctx.switch_model_provider(target_llm)
+
+        for field in llm_flags:
+            assert getattr(settings, field) is (field == target_llm)
+        for field in emb_flags:
+            # Embeddings should be untouched by LLM switch (remain True)
+            assert getattr(settings, field) is True
+
+        # Reset everything to True again
+        for field in all_use:
+            setattr(settings, field, True)
+
+        # Flip embedding family only
+        ctx.switch_model_provider(target_emb)
+
+        for field in emb_flags:
+            assert getattr(settings, field) is (field == target_emb)
+        for field in llm_flags:
+            # LLMs should be untouched by embedding switch (remain True)
+            assert getattr(settings, field) is True
 
 
 ############################################################

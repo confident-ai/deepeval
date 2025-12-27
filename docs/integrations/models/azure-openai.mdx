@@ -12,11 +12,11 @@ Run the following command in your terminal to configure your deepeval environmen
 
 ```bash
 deepeval set-azure-openai \
-    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
-    --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4.1
+    --prompt-api-key \
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model-name=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
 ```
 
 :::info

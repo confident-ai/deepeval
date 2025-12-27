@@ -418,11 +418,11 @@ Please **do not include** quotation marks when setting your `API_KEYS` as enviro
 
 ```bash
 deepeval set-azure-openai \
-    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
-    --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4.1
+    --prompt-api-key \
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 ```
 
@@ -449,16 +449,16 @@ ollama run deepseek-r1:1.5b
 
 :::
 
-To use **Ollama** models for your metrics, run `deepeval set-ollama <model>` in your CLI. For example:
+To use **Ollama** models for your metrics, run `deepeval set-ollama --model=<model>` in your CLI. For example:
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b
+deepeval set-ollama --model=deepseek-r1:1.5b
 ```
 
 Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434`.
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b \
+deepeval set-ollama --model=deepseek-r1:1.5b \
     --base-url="http://localhost:11434"
 ```
 
@@ -480,8 +480,8 @@ To use Gemini models with `deepeval`, run the following command in your CLI.
 
 ```bash
 deepeval set-gemini \
-    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
-    --google-api-key=<api_key>
+    --prompt-api-key \
+    --model=<model_name> # e.g. "gemini-2.0-flash-001"
 ```
 
 </TabItem>

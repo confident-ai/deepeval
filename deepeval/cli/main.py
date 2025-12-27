@@ -16,32 +16,42 @@ General behavior for all `set-*` / `unset-*` commands:
 """
 
 import os
-from typing import Optional
-from rich import print
-from rich.markup import escape
 import webbrowser
 import threading
 import random
 import string
 import socket
 import typer
+import importlib.metadata
+from typing import List, Optional
+from rich import print
+from rich.markup import escape
+from rich.console import Console
+from rich.table import Table
 from enum import Enum
+from pathlib import Path
 from pydantic import SecretStr
+from pydantic_core import PydanticUndefined
 from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
 )
 from deepeval.telemetry import capture_login_event, capture_view_event
-from deepeval.cli.test import app as test_app
-from deepeval.cli.server import start_server
 from deepeval.config.settings import get_settings
 from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
+from deepeval.cli.test import app as test_app
+from deepeval.cli.server import start_server
 from deepeval.cli.utils import (
+    coerce_blank_to_none,
+    is_optional,
+    load_service_account_key_file,
+    parse_and_validate,
     render_login_message,
+    resolve_field_names,
     upload_and_open_link,
     PROD,
 )
@@ -49,13 +59,24 @@ from deepeval.confident.api import (
     is_confident,
 )
 
-app = typer.Typer(name="deepeval")
+app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
 
 
 class Regions(Enum):
     US = "US"
     EU = "EU"
+
+
+def version_callback(value: Optional[bool] = None) -> None:
+    if not value:
+        return
+    try:
+        version = importlib.metadata.version("deepeval")
+    except importlib.metadata.PackageNotFoundError:
+        from deepeval import __version__ as version  # type: ignore
+    typer.echo(version)  # or: typer.echo(f"deepeval {v}")
+    raise typer.Exit()
 
 
 def generate_pairing_code():
@@ -84,6 +105,54 @@ def is_openai_configured() -> bool:
     return bool(env and env.strip())
 
 
+def _handle_save_result(
+    *,
+    handled: bool,
+    path: Optional[str],
+    updates: dict,
+    save: Optional[str],
+    quiet: bool,
+    success_msg: Optional[str] = None,
+    updated_msg: str = "Saved environment variables to {path} (ensure it's git-ignored).",
+    no_changes_msg: str = "No changes to save in {path}.",
+    tip_msg: Optional[str] = None,
+) -> bool:
+    if not handled and save is not None:
+        raise typer.BadParameter(
+            "Unsupported --save option. Use --save=dotenv[:path].",
+            param_hint="--save",
+        )
+
+    if quiet:
+        return False
+
+    if path and updates:
+        print(updated_msg.format(path=path))
+    elif path:
+        print(no_changes_msg.format(path=path))
+    elif tip_msg:
+        print(tip_msg)
+
+    if success_msg:
+        print(success_msg)
+
+    return True
+
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Show the DeepEval version and exit.",
+        callback=version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    pass
+
+
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
@@ -91,9 +160,16 @@ def set_confident_region_command(
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """Set the Confident AI data region."""
@@ -104,52 +180,46 @@ def set_confident_region_command(
     with settings.edit(save=save) as edit_ctx:
         settings.CONFIDENT_REGION = region.value
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
+        ),
     )
 
 
-@app.command()
+@app.command(
+    help=(
+        "Login will prompt you for your Confident AI API key (input hidden). "
+        "Get it from https://app.confident-ai.com. "
+        "Required to log events to the server. "
+        "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
+    )
+)
 def login(
-    api_key: str = typer.Option(
-        "",
-        help="API key to get from https://app.confident-ai.com. Required if you want to log events to the server.",
-    ),
-    confident_api_key: Optional[str] = typer.Option(
-        None,
-        "--confident-api-key",
-        "-c",
-        help="Confident API key (non-interactive). If omitted, you'll be prompted to enter one. In all cases the key is saved to a dotenv file (default: .env.local) unless overridden with --save.",
-    ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Where to persist settings. Format: dotenv[:path]. Defaults to .env.local. If omitted, login still writes to .env.local.",
     ),
 ):
+    api_key = coerce_blank_to_none(
+        typer.prompt("🔐 Enter your API Key", hide_input=True)
+    )
+
     with capture_login_event() as span:
         completed = False
         try:
             # Resolve the key from CLI flag or interactive flow
-            if confident_api_key:
-                key = confident_api_key.strip()
+            if api_key is not None:
+                key = api_key
             else:
                 render_login_message()
 
@@ -171,16 +241,15 @@ def login(
                 )
 
                 # Manual fallback if still empty
-                if api_key == "":
-                    while True:
-                        api_key = input("🔐 Enter your API Key: ").strip()
-                        if api_key:
-                            break
-                        else:
-                            print(
-                                "❌ API Key cannot be empty. Please try again.\n"
-                            )
-                key = api_key.strip()
+                while True:
+                    api_key = coerce_blank_to_none(
+                        typer.prompt("🔐 Enter your API Key", hide_input=True)
+                    )
+                    if api_key:
+                        break
+                    else:
+                        print("❌ API Key cannot be empty. Please try again.\n")
+                key = api_key
 
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
@@ -224,9 +293,16 @@ def login(
 def logout(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Where to remove the saved key from. Use format dotenv[:path]. If omitted, uses DEEPEVAL_DEFAULT_SAVE or .env.local. The JSON keystore is always cleared.",
-    )
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     """
     Log out of Confident AI.
@@ -244,17 +320,18 @@ def logout(
 
     handled, path, updated = edit_ctx.result
 
-    if updated:
-        if not handled and save is not None:
-            # invalid --save format (unsupported)
-            print("Unsupported --save option. Use --save=dotenv[:path].")
-        elif path:
-            # persisted to a file
-            print(f"Removed Confident AI key(s) from {path}.")
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updated,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Confident AI key(s) from {path}.",
+        tip_msg=None,
+    ):
+        print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
     delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
-
-    print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
 
 @app.command()
@@ -273,7 +350,183 @@ def view():
             upload_and_open_link(_span=span)
 
 
-@app.command(name="set-debug")
+@app.command(
+    name="settings",
+    help=(
+        "Power-user command to set/unset any DeepEval Settings field. "
+        "Uses Pydantic type validation. Supports partial, case-insensitive matching for --unset and --list."
+    ),
+)
+def update_settings(
+    set_: Optional[List[str]] = typer.Option(
+        None,
+        "-u",
+        "--set",
+        help="Set a setting (repeatable). Format: KEY=VALUE",
+    ),
+    unset: Optional[List[str]] = typer.Option(
+        None,
+        "-U",
+        "--unset",
+        help=(
+            "Unset setting(s) by name or partial match (repeatable, case-insensitive). "
+            "If a filter matches multiple keys, all are unset."
+        ),
+    ),
+    list_: bool = typer.Option(
+        False,
+        "-l",
+        "--list",
+        help="List available settings. You can optionally pass a FILTER argument, such as `-l verbose`.",
+    ),
+    filters: Optional[List[str]] = typer.Argument(
+        None,
+        help="Optional filter(s) for --list (case-insensitive substring match). You can pass multiple terms.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist settings to dotenv. Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    def _format_setting_value(val: object) -> str:
+        if isinstance(val, SecretStr):
+            secret = val.get_secret_value()
+            return "********" if secret and secret.strip() else ""
+        if val is None:
+            return ""
+        s = str(val)
+        return s if len(s) <= 120 else (s[:117] + "…")
+
+    def _print_settings_list(filter_terms: Optional[List[str]]) -> None:
+        needles = []
+        for term in filter_terms or []:
+            t = term.strip().lower().replace("-", "_")
+            if t:
+                needles.append(t)
+
+        table = Table(title="Settings")
+        table.add_column("Name", style="bold")
+        table.add_column("Value", overflow="fold")
+        table.add_column("Description", overflow="fold")
+
+        shown = 0
+        for name in sorted(fields.keys()):
+            hay = name.lower().replace("-", "_")
+            if needles and not any(n in hay for n in needles):
+                continue
+
+            field_info = fields[name]
+            desc = field_info.description or ""
+            current_val = getattr(settings, name, None)
+            table.add_row(name, _format_setting_value(current_val), desc)
+            shown += 1
+
+        if shown == 0:
+            raise typer.BadParameter(f"No settings matched: {filter_terms!r}")
+
+        Console().print(table)
+
+    settings = get_settings()
+    fields = type(settings).model_fields
+
+    if filters is not None and not list_:
+        raise typer.BadParameter("FILTER can only be used with --list / -l.")
+
+    if list_:
+        if set_ or unset:
+            raise typer.BadParameter(
+                "--list cannot be combined with --set/--unset."
+            )
+        _print_settings_list(filters)
+        return
+
+    # Build an assignment plan: name -> value (None means "unset")
+    plan: dict[str, object] = {}
+
+    # --unset (filters)
+    if unset:
+        matched_any = False
+        for f in unset:
+            matches = resolve_field_names(settings, f)
+            if not matches:
+                continue
+            matched_any = True
+            for name in matches:
+                field_info = fields[name]
+                ann = field_info.annotation
+
+                # "unset" semantics:
+                # - Optional -> None
+                # - else -> reset to default if it exists
+                if is_optional(ann):
+                    plan[name] = None
+                elif field_info.default is not PydanticUndefined:
+                    plan[name] = field_info.default
+                else:
+                    raise typer.BadParameter(
+                        f"Cannot unset required setting {name} (no default, not Optional)."
+                    )
+
+        if unset and not matched_any:
+            raise typer.BadParameter(f"No settings matched: {unset!r}")
+
+    # --set KEY=VALUE
+    if set_:
+        for item in set_:
+            key, sep, raw = item.partition("=")
+            if not sep:
+                raise typer.BadParameter(
+                    f"--set must be KEY=VALUE (got {item!r})"
+                )
+
+            matches = resolve_field_names(settings, key)
+            if not matches:
+                raise typer.BadParameter(f"Unknown setting: {key!r}")
+            if len(matches) > 1:
+                raise typer.BadParameter(
+                    f"Ambiguous setting {key!r}; matches: {', '.join(matches)}"
+                )
+
+            name = matches[0]
+            field_info = fields[name]
+            plan[name] = parse_and_validate(name, field_info, raw)
+
+    if not plan:
+        # nothing requested
+        return
+
+    with settings.edit(save=save) as edit_ctx:
+        for name, val in plan.items():
+            setattr(settings, name, val)
+
+    handled, path, updates = edit_ctx.result
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=":wrench: Settings updated." if updates else None,
+    )
+
+
+@app.command(
+    name="set-debug",
+    help=(
+        "Configure verbosity flags (global LOG_LEVEL, verbose mode), retry logger levels, "
+        "gRPC logging, and Confident trace toggles. Use the --save option to persist settings "
+        "to a dotenv file (default: .env.local)."
+    ),
+)
 def set_debug(
     # Core verbosity
     log_level: Optional[str] = typer.Option(
@@ -283,6 +536,16 @@ def set_debug(
     ),
     verbose: Optional[bool] = typer.Option(
         None, "--verbose/--no-verbose", help="Toggle DEEPEVAL_VERBOSE_MODE."
+    ),
+    debug_async: Optional[bool] = typer.Option(
+        None,
+        "--debug-async/--no-debug-async",
+        help="Toggle DEEPEVAL_DEBUG_ASYNC.",
+    ),
+    log_stack_traces: Optional[bool] = typer.Option(
+        None,
+        "--log-stack-traces/--no-log-stack-traces",
+        help="Toggle DEEPEVAL_LOG_STACK_TRACES.",
     ),
     # Retry logging dials
     retry_before_level: Optional[str] = typer.Option(
@@ -353,35 +616,27 @@ def set_debug(
         "--metric-logging-enabled/--no-metric-logging-enabled",
         help="Enable / disable CONFIDENT_METRIC_LOGGING_ENABLED.",
     ),
-    # Advanced / potentially surprising
-    error_reporting: Optional[bool] = typer.Option(
-        None,
-        "--error-reporting/--no-error-reporting",
-        help="Enable / disable ERROR_REPORTING.",
-    ),
-    ignore_errors: Optional[bool] = typer.Option(
-        None,
-        "--ignore-errors/--no-ignore-errors",
-        help="Enable / disable IGNORE_DEEPEVAL_ERRORS (not recommended in normal debugging).",
-    ),
     # Persistence
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     """
-    Configure verbose debug behavior for DeepEval.
+    Configure debug and logging behaviors for DeepEval.
 
-    This command lets you mix-and-match verbosity flags (global LOG_LEVEL, verbose mode),
-    retry logger levels, gRPC wire logging, and Confident trace toggles. Values apply
-    immediately to the current process and can be persisted to a dotenv file with --save.
-
-    Examples:
-        deepeval set-debug --log-level DEBUG --verbose --grpc --retry-before-level DEBUG --retry-after-level INFO
-        deepeval set-debug --trace-verbose --trace-env staging --save dotenv:.env.local
+    Use verbosity flags to set the global log level, retry logging behavior, gRPC logging,
+    Confident AI tracing, and more. This command applies changes immediately but can also
+    persist settings to a dotenv file with --save.
     """
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
@@ -390,6 +645,10 @@ def set_debug(
             settings.LOG_LEVEL = log_level
         if verbose is not None:
             settings.DEEPEVAL_VERBOSE_MODE = verbose
+        if debug_async is not None:
+            settings.DEEPEVAL_DEBUG_ASYNC = debug_async
+        if log_stack_traces is not None:
+            settings.DEEPEVAL_LOG_STACK_TRACES = log_stack_traces
 
         # Retry logging
         if retry_before_level is not None:
@@ -427,84 +686,80 @@ def set_debug(
         if metric_logging_enabled is not None:
             settings.CONFIDENT_METRIC_LOGGING_ENABLED = metric_logging_enabled
 
-        # Advanced
-        if error_reporting is not None:
-            settings.ERROR_REPORTING = error_reporting
-        if ignore_errors is not None:
-            settings.IGNORE_DEEPEVAL_ERRORS = ignore_errors
+    handled, path, updates = edit_ctx.result
 
-    handled, path, updated = edit_ctx.result
-
-    if not updated:
-        # no changes were made, so there is nothing to do.
-        return
-
-    if not handled and save is not None:
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(":loud_sound: Debug options updated.")
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=":loud_sound: Debug options updated." if updates else None,
+    )
 
 
-@app.command(name="unset-debug")
+@app.command(
+    name="unset-debug",
+    help=(
+        "Restore default behavior by removing debug-related overrides. "
+        "Use --save to also remove these keys from a dotenv file (default: .env.local)."
+    ),
+)
 def unset_debug(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the debug-related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
-    """
-    Restore default behavior by unsetting debug related variables.
-
-    Behavior:
-    - Resets LOG_LEVEL back to 'info'.
-    - Unsets DEEPEVAL_VERBOSE_MODE, retry log-level overrides, gRPC and Confident trace flags.
-    - If --save is provided (or DEEPEVAL_DEFAULT_SAVE is set), removes these keys from the target dotenv file.
-    """
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        # Back to normal global level
-        settings.LOG_LEVEL = "info"
-        settings.CONFIDENT_TRACE_ENVIRONMENT = "development"
-        settings.CONFIDENT_TRACE_VERBOSE = True
-        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = True
-        settings.CONFIDENT_METRIC_LOGGING_ENABLED = True
-
-        # Clear optional toggles/overrides
+        # Core verbosity
+        settings.LOG_LEVEL = None
         settings.DEEPEVAL_VERBOSE_MODE = None
+        settings.DEEPEVAL_DEBUG_ASYNC = None
+        settings.DEEPEVAL_LOG_STACK_TRACES = None
+
+        # Retry logging dials
         settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = None
         settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = None
 
+        # gRPC visibility
         settings.DEEPEVAL_GRPC_LOGGING = None
         settings.GRPC_VERBOSITY = None
         settings.GRPC_TRACE = None
 
+        # Confident tracing
+        settings.CONFIDENT_TRACE_VERBOSE = None
+        settings.CONFIDENT_TRACE_ENVIRONMENT = None
         settings.CONFIDENT_TRACE_FLUSH = None
+        settings.CONFIDENT_TRACE_SAMPLE_RATE = None
+
+        # Confident metrics
+        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = None
         settings.CONFIDENT_METRIC_LOGGING_FLUSH = None
+        settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = None
+        settings.CONFIDENT_METRIC_LOGGING_ENABLED = None
 
-        settings.ERROR_REPORTING = None
-        settings.IGNORE_DEEPEVAL_ERRORS = None
+    handled, path, updates = edit_ctx.result
 
-    handled, path, _ = edit_ctx.result
-
-    if not handled and save is not None:
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        print(f"Removed debug-related environment variables from {path}.")
-    else:
-        print("Debug settings reverted to defaults for this session.")
-
-    print(":mute: Debug options unset.")
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=":mute: Debug options unset." if updates else None,
+        tip_msg=None,
+    )
 
 
 #############################################
@@ -514,28 +769,51 @@ def unset_debug(
 
 @app.command(name="set-openai")
 def set_openai_env(
-    model: str = typer.Option(..., "--model", help="OpenAI model name"),
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider (e.g., `gpt-4.1`).",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for OPENAI_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
     cost_per_input_token: Optional[float] = typer.Option(
         None,
-        "--cost_per_input_token",
+        "-i",
+        "--cost-per-input-token",
         help=(
-            "USD per input token. Optional for known OpenAI models (pricing is preconfigured); "
-            "REQUIRED if you use a custom/unsupported model."
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
         ),
     ),
     cost_per_output_token: Optional[float] = typer.Option(
         None,
-        "--cost_per_output_token",
+        "-o",
+        "--cost-per-output-token",
         help=(
-            "USD per output token. Optional for known OpenAI models (pricing is preconfigured); "
-            "REQUIRED if you use a custom/unsupported model."
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
         ),
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """
@@ -549,56 +827,69 @@ def set_openai_env(
     Pricing rules:
     - If `model` is a known OpenAI model, you may omit costs (built‑in pricing is used).
     - If `model` is custom/unsupported, you must provide both
-      `--cost_per_input_token` and `--cost_per_output_token`.
+      `--cost-per-input-token` and `--cost-per-output-token`.
 
     Secrets & saving:
-    - Set your `OPENAI_API_KEY` via environment or a dotenv file.
-    - Pass `--save=dotenv[:path]` to write configuration to a dotenv file
-      (default: `.env.local`). This command does not set or persist OPENAI_API_KEY. Set it
-      via your environment or a dotenv file (e.g., add OPENAI_API_KEY=... to .env.local)
-      before running this command, or manage it with whatever command you use for secrets.
+
+    - If you run with --prompt-api-key, DeepEval will set OPENAI_API_KEY for this session.
+    - If --save=dotenv[:path] is used (or DEEPEVAL_DEFAULT_SAVE is set), the key will be written to that dotenv file (plaintext).
+
+    Secrets are never written to .deepeval/.deepeval (legacy JSON store).
 
     Args:
-        model: OpenAI model name, such as `gpt-4o-mini`.
-        cost_per_input_token: USD per input token (optional for known models).
-        cost_per_output_token: USD per output token (optional for known models).
-        save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
+        --model: OpenAI model name, such as `gpt-4o-mini`.
+        --prompt-api-key: Prompt interactively for OPENAI_API_KEY (input hidden). Avoids putting secrets on the command line (shell history/process args). Not suitable for CI.
+        --cost-per-input-token: USD per input token (optional for known models).
+        --cost-per-output-token: USD per output token (optional for known models).
+        --save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
+        --quiet: Suppress printing to the terminal.
 
     Example:
         deepeval set-openai \\
           --model gpt-4o-mini \\
-          --cost_per_input_token 0.0005 \\
-          --cost_per_output_token 0.0015 \\
+          --cost-per-input-token 0.0005 \\
+          --cost-per-output-token 0.0015 \\
           --save dotenv:.env.local
     """
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("OpenAI API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_OPENAI_MODEL)
-        settings.OPENAI_MODEL_NAME = model
+        if model is not None:
+            settings.OPENAI_MODEL_NAME = model
+        if api_key is not None:
+            settings.OPENAI_API_KEY = api_key
         if cost_per_input_token is not None:
             settings.OPENAI_COST_PER_INPUT_TOKEN = cost_per_input_token
         if cost_per_output_token is not None:
             settings.OPENAI_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
-            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+    effective_model = settings.OPENAI_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "OpenAI model name is not set. Pass --model (or set OPENAI_MODEL_NAME).",
+            param_hint="--model",
         )
 
-    print(
-        f":raising_hands: Congratulations! You're now using OpenAI's `{escape(model)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using OpenAI's `{escape(effective_model)}` "
+            "for all evals that require an LLM."
+        ),
     )
 
 
@@ -606,9 +897,22 @@ def set_openai_env(
 def unset_openai_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the OpenAI related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove OPENAI_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
     """
@@ -622,6 +926,8 @@ def unset_openai_env(
 
     Args:
         --save: Remove OpenAI keys from the given dotenv file as well.
+        --clear-secrets: Removes OPENAI_API_KEY from the dotenv store
+        --quiet: Suppress printing to the terminal
 
     Example:
         deepeval unset-openai --save dotenv:.env.local
@@ -633,24 +939,29 @@ def unset_openai_env(
         settings.OPENAI_COST_PER_INPUT_TOKEN = None
         settings.OPENAI_COST_PER_OUTPUT_TOKEN = None
         settings.USE_OPENAI_MODEL = None
+        if clear_secrets:
+            settings.OPENAI_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed OpenAI environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "OpenAI has been unset. No active provider is configured. Set one with the CLI, or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed OpenAI environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "OpenAI has been unset. No active provider is configured. "
+                "Set one with the CLI, or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -660,108 +971,99 @@ def unset_openai_env(
 
 @app.command(name="set-azure-openai")
 def set_azure_openai_env(
-    azure_openai_api_key: str = typer.Option(
-        ...,
-        "--openai-api-key",
-        help="Azure OpenAI API key",
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider (e.g., `gpt-4.1`).",
     ),
-    azure_openai_endpoint: str = typer.Option(
-        ..., "--openai-endpoint", help="Azure OpenAI endpoint"
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for AZURE_OPENAI_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
     ),
-    openai_api_version: str = typer.Option(
-        ..., "--openai-api-version", help="OpenAI API version"
+    base_url: Optional[str] = typer.Option(
+        None,
+        "-u",
+        "--base-url",
+        help="Override the API endpoint/base URL used by this provider.",
     ),
-    openai_model_name: str = typer.Option(
-        ..., "--openai-model-name", help="OpenAI model name"
+    api_version: Optional[str] = typer.Option(
+        None,
+        "-v",
+        "--api-version",
+        help="Azure OpenAI API version (passed to the Azure OpenAI client).",
     ),
-    azure_deployment_name: str = typer.Option(
-        ..., "--deployment-name", help="Azure deployment name"
+    model_version: Optional[str] = typer.Option(
+        None, "-V", "--model-version", help="Azure model version"
     ),
-    azure_model_version: Optional[str] = typer.Option(
-        None, "--model-version", help="Azure model version (optional)"
+    deployment_name: Optional[str] = typer.Option(
+        None, "-d", "--deployment-name", help="Azure OpenAI deployment name"
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Azure OpenAI API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+    api_version = coerce_blank_to_none(api_version)
+    deployment_name = coerce_blank_to_none(deployment_name)
+    model_version = coerce_blank_to_none(model_version)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_AZURE_OPENAI)
-        settings.AZURE_OPENAI_API_KEY = azure_openai_api_key
-        settings.AZURE_OPENAI_ENDPOINT = azure_openai_endpoint
-        settings.OPENAI_API_VERSION = openai_api_version
-        settings.AZURE_DEPLOYMENT_NAME = azure_deployment_name
-        settings.AZURE_MODEL_NAME = openai_model_name
-        if azure_model_version is not None:
-            settings.AZURE_MODEL_VERSION = azure_model_version
+        if model is not None:
+            settings.AZURE_MODEL_NAME = model
+        if api_key is not None:
+            settings.AZURE_OPENAI_API_KEY = api_key
+        if base_url is not None:
+            settings.AZURE_OPENAI_ENDPOINT = base_url
+        if api_version is not None:
+            settings.OPENAI_API_VERSION = api_version
+        if deployment_name is not None:
+            settings.AZURE_DEPLOYMENT_NAME = deployment_name
+        if model_version is not None:
+            settings.AZURE_MODEL_VERSION = model_version
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+    effective_model = settings.AZURE_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Azure OpenAI model name is not set. Pass --model (or set AZURE_MODEL_NAME).",
+            param_hint="--model",
         )
 
-    print(
-        f":raising_hands: Congratulations! You're now using Azure OpenAI's `{escape(openai_model_name)}` for all evals that require an LLM."
-    )
-
-
-@app.command(name="set-azure-openai-embedding")
-def set_azure_openai_embedding_env(
-    azure_embedding_deployment_name: str = typer.Option(
-        ...,
-        "--embedding-deployment-name",
-        help="Azure embedding deployment name",
-    ),
-    save: Optional[str] = typer.Option(
-        None,
-        "--save",
-        help="Persist CLI parameters as environment variables in a dotenv file. "
-        "Usage: --save=dotenv[:path] (default: .env.local)",
-    ),
-):
-    settings = get_settings()
-    with settings.edit(save=save) as edit_ctx:
-        edit_ctx.switch_model_provider(
-            EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING
-        )
-        settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = (
-            azure_embedding_deployment_name
-        )
-
-    handled, path, _ = edit_ctx.result
-
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Azure OpenAI's `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -769,73 +1071,468 @@ def set_azure_openai_embedding_env(
 def unset_azure_openai_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Azure OpenAI–related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
-    )
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove AZURE_OPENAI_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.AZURE_OPENAI_API_KEY = None
         settings.AZURE_OPENAI_ENDPOINT = None
         settings.OPENAI_API_VERSION = None
         settings.AZURE_DEPLOYMENT_NAME = None
         settings.AZURE_MODEL_NAME = None
         settings.AZURE_MODEL_VERSION = None
         settings.USE_AZURE_OPENAI = None
+        if clear_secrets:
+            settings.AZURE_OPENAI_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed Azure OpenAI environment variables from {path}.")
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Azure OpenAI environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "Azure OpenAI has been unset. No active provider is configured. Set one with the CLI, or add credentials to .env[.local]."
+            )
 
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+
+@app.command(name="set-azure-openai-embedding")
+def set_azure_openai_embedding_env(
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider (e.g., `gpt-4.1`).",
+    ),
+    deployment_name: Optional[str] = typer.Option(
+        None,
+        "-d",
+        "--deployment-name",
+        help="Azure embedding deployment name",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    model = coerce_blank_to_none(model)
+    deployment_name = coerce_blank_to_none(deployment_name)
+
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(
+            EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING
         )
-    else:
-        print(
-            "Azure OpenAI has been unset. No active provider is configured. Set one with the CLI, or add credentials to .env[.local]."
+        if model is not None:
+            settings.AZURE_EMBEDDING_MODEL_NAME = model
+        if deployment_name is not None:
+            settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = deployment_name
+
+    handled, path, updates = edit_ctx.result
+
+    effective_model = settings.AZURE_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Azure OpenAI embedding model name is not set. Pass --model (or set AZURE_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
         )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Azure OpenAI embedding model `{escape(effective_model)}` for all evals that require text embeddings."
+        ),
+    )
 
 
 @app.command(name="unset-azure-openai-embedding")
 def unset_azure_openai_embedding_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Azure OpenAI embedding related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
+        settings.AZURE_EMBEDDING_MODEL_NAME = None
         settings.AZURE_EMBEDDING_DEPLOYMENT_NAME = None
         settings.USE_AZURE_OPENAI_EMBEDDING = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Removed Azure OpenAI embedding environment variables from {path}."
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Azure OpenAI embedding environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "Azure OpenAI embedding has been unset. No active provider is configured. Set one with the CLI, or add credentials to .env[.local]."
+            )
+
+
+#############################################
+# Anthropic Model Integration ###############
+#############################################
+
+
+@app.command(name="set-anthropic")
+def set_anthropic_model_env(
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for ANTHROPIC_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    cost_per_input_token: Optional[float] = typer.Option(
+        None,
+        "-i",
+        "--cost-per-input-token",
+        help=(
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        None,
+        "-o",
+        "--cost-per-output-token",
+        help=(
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Anthropic API key", hide_input=True)
         )
 
-    if is_openai_configured():
-        print(
-            ":raised_hands: Regular OpenAI embeddings will still be used by default because OPENAI_API_KEY is set."
+    model = coerce_blank_to_none(model)
+
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(ModelKeyValues.USE_ANTHROPIC_MODEL)
+        if api_key is not None:
+            settings.ANTHROPIC_API_KEY = api_key
+        if model is not None:
+            settings.ANTHROPIC_MODEL_NAME = model
+        if cost_per_input_token is not None:
+            settings.ANTHROPIC_COST_PER_INPUT_TOKEN = cost_per_input_token
+        if cost_per_output_token is not None:
+            settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = cost_per_output_token
+
+    handled, path, updates = edit_ctx.result
+
+    effective_model = settings.ANTHROPIC_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Anthropic model name is not set. Pass --model (or set ANTHROPIC_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        print(
-            "The Azure OpenAI embedding model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Anthropic `{escape(effective_model)}` for all evals that require an LLM."
+        ),
+    )
+
+
+@app.command(name="unset-anthropic")
+def unset_anthropic_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Remove only the Anthropic model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove ANTHROPIC_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.USE_ANTHROPIC_MODEL = None
+        settings.ANTHROPIC_MODEL_NAME = None
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = None
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = None
+        if clear_secrets:
+            settings.ANTHROPIC_API_KEY = None
+
+    handled, path, updates = edit_ctx.result
+
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Anthropic model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The Anthropic model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
+
+
+#############################################
+# AWS Bedrock Model Integration #############
+#############################################
+
+
+@app.command(name="set-bedrock")
+def set_bedrock_model_env(
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
+    prompt_credentials: bool = typer.Option(
+        False,
+        "-a",
+        "--prompt-credentials",
+        help=(
+            "Prompt for AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY (secret access key input is hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, credentials are written to dotenv in plaintext."
+        ),
+    ),
+    region: Optional[str] = typer.Option(
+        None,
+        "-r",
+        "--region",
+        help="AWS region for bedrock (e.g., `us-east-1`).",
+    ),
+    cost_per_input_token: Optional[float] = typer.Option(
+        None,
+        "-i",
+        "--cost-per-input-token",
+        help=(
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        None,
+        "-o",
+        "--cost-per-output-token",
+        help=(
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    access_key_id = None
+    secret_access_key = None
+    if prompt_credentials:
+        access_key_id = coerce_blank_to_none(typer.prompt("AWS Access key Id"))
+        secret_access_key = coerce_blank_to_none(
+            typer.prompt("AWS Secret Access key", hide_input=True)
         )
+
+    model = coerce_blank_to_none(model)
+    region = coerce_blank_to_none(region)
+
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(ModelKeyValues.USE_AWS_BEDROCK_MODEL)
+        if access_key_id is not None:
+            settings.AWS_ACCESS_KEY_ID = access_key_id
+        if secret_access_key is not None:
+            settings.AWS_SECRET_ACCESS_KEY = secret_access_key
+        if model is not None:
+            settings.AWS_BEDROCK_MODEL_NAME = model
+        if region is not None:
+            settings.AWS_BEDROCK_REGION = region
+        if cost_per_input_token is not None:
+            settings.AWS_BEDROCK_COST_PER_INPUT_TOKEN = cost_per_input_token
+        if cost_per_output_token is not None:
+            settings.AWS_BEDROCK_COST_PER_OUTPUT_TOKEN = cost_per_output_token
+
+    handled, path, updates = edit_ctx.result
+
+    effective_model = settings.AWS_BEDROCK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "AWS Bedrock model name is not set. Pass --model (or set AWS_BEDROCK_MODEL_NAME).",
+            param_hint="--model",
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using AWS Bedrock `{escape(effective_model)}` for all evals that require an LLM."
+        ),
+    )
+
+
+@app.command(name="unset-bedrock")
+def unset_bedrock_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Remove only the AWS Bedrock model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY  from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.USE_AWS_BEDROCK_MODEL = None
+        settings.AWS_BEDROCK_MODEL_NAME = None
+        settings.AWS_BEDROCK_REGION = None
+        settings.AWS_BEDROCK_COST_PER_INPUT_TOKEN = None
+        settings.AWS_BEDROCK_COST_PER_OUTPUT_TOKEN = None
+        if clear_secrets:
+            settings.AWS_ACCESS_KEY_ID = None
+            settings.AWS_SECRET_ACCESS_KEY = None
+
+    handled, path, updates = edit_ctx.result
+
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed AWS Bedrock model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The AWS Bedrock model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -845,46 +1542,61 @@ def unset_azure_openai_embedding_env(
 
 @app.command(name="set-ollama")
 def set_ollama_model_env(
-    model_name: str = typer.Argument(..., help="Name of the Ollama model"),
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
     base_url: str = typer.Option(
         "http://localhost:11434",
-        "-b",
+        "-u",
         "--base-url",
-        help="Base URL for the local model API",
+        help="Override the API endpoint/base URL used by this provider.",
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL)
         settings.LOCAL_MODEL_API_KEY = "ollama"
-        settings.LOCAL_MODEL_NAME = model_name
-        settings.LOCAL_MODEL_BASE_URL = base_url
+        if model is not None:
+            settings.OLLAMA_MODEL_NAME = model
+        if base_url is not None:
+            settings.LOCAL_MODEL_BASE_URL = base_url
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.OLLAMA_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Ollama model name is not set. Pass --model (or set OLLAMA_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using a local Ollama model `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using a local Ollama model `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -892,81 +1604,110 @@ def set_ollama_model_env(
 def unset_ollama_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Ollama related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove LOCAL_MODEL_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.LOCAL_MODEL_API_KEY = None
-        settings.LOCAL_MODEL_NAME = None
+        if clear_secrets:
+            settings.LOCAL_MODEL_API_KEY = None
+        settings.OLLAMA_MODEL_NAME = None
         settings.LOCAL_MODEL_BASE_URL = None
         settings.USE_LOCAL_MODEL = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed local Ollama environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The local Ollama model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed local Ollama environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The local Ollama model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 @app.command(name="set-ollama-embeddings")
 def set_ollama_embeddings_env(
-    model_name: str = typer.Argument(
-        ..., help="Name of the Ollama embedding model"
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider.",
     ),
     base_url: str = typer.Option(
         "http://localhost:11434",
-        "-b",
+        "-u",
         "--base-url",
-        help="Base URL for the Ollama embedding model API",
+        help="Override the API endpoint/base URL used by this provider.",
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
         settings.LOCAL_EMBEDDING_API_KEY = "ollama"
-        settings.LOCAL_EMBEDDING_MODEL_NAME = model_name
-        settings.LOCAL_EMBEDDING_BASE_URL = base_url
+        if model is not None:
+            settings.LOCAL_EMBEDDING_MODEL_NAME = model
+        if base_url is not None:
+            settings.LOCAL_EMBEDDING_BASE_URL = base_url
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Ollama embedding model name is not set. Pass --model (or set LOCAL_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using the Ollama embedding model `{escape(model_name)}` for all evals that require text embeddings."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using the Ollama embedding model `{escape(effective_model)}` for all evals that require text embeddings."
+        ),
     )
 
 
@@ -974,38 +1715,51 @@ def set_ollama_embeddings_env(
 def unset_ollama_embeddings_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Ollama embedding related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove LOCAL_EMBEDDING_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
-
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.LOCAL_EMBEDDING_API_KEY = None
+        if clear_secrets:
+            settings.LOCAL_EMBEDDING_API_KEY = None
         settings.LOCAL_EMBEDDING_MODEL_NAME = None
         settings.LOCAL_EMBEDDING_BASE_URL = None
         settings.USE_LOCAL_EMBEDDINGS = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Removed local Ollama embedding environment variables from {path}."
-        )
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: Regular OpenAI embeddings will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The local Ollama embedding model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed local Ollama embedding environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: Regular OpenAI embeddings will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The local Ollama embedding model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1015,58 +1769,86 @@ def unset_ollama_embeddings_env(
 
 @app.command(name="set-local-model")
 def set_local_model_env(
-    model_name: str = typer.Option(
-        ..., "--model-name", help="Name of the local model"
-    ),
-    base_url: str = typer.Option(
-        ..., "--base-url", help="Base URL for the local model API"
-    ),
-    api_key: Optional[str] = typer.Option(
+    model: Optional[str] = typer.Option(
         None,
-        "--api-key",
-        help="API key for the local model. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for LOCAL_MODEL_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    base_url: Optional[str] = typer.Option(
+        None,
+        "-u",
+        "--base-url",
+        help="Override the API endpoint/base URL used by this provider.",
     ),
     model_format: Optional[str] = typer.Option(
-        "json",
+        None,
+        "-f",
         "--format",
         help="Format of the response from the local model (default: json)",
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Local Model API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+    model_format = coerce_blank_to_none(model_format)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL)
-        settings.LOCAL_MODEL_NAME = model_name
-        settings.LOCAL_MODEL_BASE_URL = base_url
-        if model_format:
-            settings.LOCAL_MODEL_FORMAT = model_format
-        if api_key:
+        if model is not None:
+            settings.LOCAL_MODEL_NAME = model
+        if base_url is not None:
+            settings.LOCAL_MODEL_BASE_URL = base_url
+        if api_key is not None:
             settings.LOCAL_MODEL_API_KEY = api_key
+        if model_format is not None:
+            settings.LOCAL_MODEL_FORMAT = model_format
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.LOCAL_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Local model name is not set. Pass --model (or set LOCAL_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using a local model `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using a local model `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -1074,36 +1856,52 @@ def set_local_model_env(
 def unset_local_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the local model related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove LOCAL_MODEL_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.LOCAL_MODEL_API_KEY = None
+        if clear_secrets:
+            settings.LOCAL_MODEL_API_KEY = None
         settings.LOCAL_MODEL_NAME = None
         settings.LOCAL_MODEL_BASE_URL = None
         settings.LOCAL_MODEL_FORMAT = None
         settings.USE_LOCAL_MODEL = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed local model environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The local model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed local model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The local model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1113,50 +1911,90 @@ def unset_local_model_env(
 
 @app.command(name="set-grok")
 def set_grok_model_env(
-    model_name: str = typer.Option(
-        ..., "--model-name", help="Name of the Grok model"
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
     ),
-    api_key: str = typer.Option(
-        ...,
-        "--api-key",
-        help="API key for the Grok model. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for GROK_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
     ),
-    temperature: float = typer.Option(
-        0, "--temperature", help="Temperature for the Grok model"
+    cost_per_input_token: Optional[float] = typer.Option(
+        None,
+        "-i",
+        "--cost-per-input-token",
+        help=(
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        None,
+        "-o",
+        "--cost-per-output-token",
+        help=(
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Grok API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_GROK_MODEL)
-        settings.GROK_API_KEY = api_key
-        settings.GROK_MODEL_NAME = model_name
-        settings.TEMPERATURE = temperature
+        if api_key is not None:
+            settings.GROK_API_KEY = api_key
+        if model is not None:
+            settings.GROK_MODEL_NAME = model
+        if cost_per_input_token is not None:
+            settings.GROK_COST_PER_INPUT_TOKEN = cost_per_input_token
+        if cost_per_output_token is not None:
+            settings.GROK_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.GROK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Grok model name is not set. Pass --model (or set GROK_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using a Grok's `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Grok `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -1164,35 +2002,52 @@ def set_grok_model_env(
 def unset_grok_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Grok model related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove GROK_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.GROK_API_KEY = None
-        settings.GROK_MODEL_NAME = None
-        settings.TEMPERATURE = None
         settings.USE_GROK_MODEL = None
+        settings.GROK_MODEL_NAME = None
+        settings.GROK_COST_PER_INPUT_TOKEN = None
+        settings.GROK_COST_PER_OUTPUT_TOKEN = None
+        if clear_secrets:
+            settings.GROK_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed Grok model environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The Grok model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Grok model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The Grok model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1202,50 +2057,90 @@ def unset_grok_model_env(
 
 @app.command(name="set-moonshot")
 def set_moonshot_model_env(
-    model_name: str = typer.Option(
-        ..., "--model-name", help="Name of the Moonshot model"
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
     ),
-    api_key: str = typer.Option(
-        ...,
-        "--api-key",
-        help="API key for the Moonshot model. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for MOONSHOT_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
     ),
-    temperature: float = typer.Option(
-        0, "--temperature", help="Temperature for the Moonshot model"
+    cost_per_input_token: Optional[float] = typer.Option(
+        None,
+        "-i",
+        "--cost-per-input-token",
+        help=(
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        None,
+        "-o",
+        "--cost-per-output-token",
+        help=(
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Moonshot API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_MOONSHOT_MODEL)
-        settings.MOONSHOT_API_KEY = api_key
-        settings.MOONSHOT_MODEL_NAME = model_name
-        settings.TEMPERATURE = temperature
+        if model is not None:
+            settings.MOONSHOT_MODEL_NAME = model
+        if api_key is not None:
+            settings.MOONSHOT_API_KEY = api_key
+        if cost_per_input_token is not None:
+            settings.MOONSHOT_COST_PER_INPUT_TOKEN = cost_per_input_token
+        if cost_per_output_token is not None:
+            settings.MOONSHOT_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.MOONSHOT_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Moonshot model name is not set. Pass --model (or set MOONSHOT_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using Moonshot's `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Moonshot `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -1253,35 +2148,52 @@ def set_moonshot_model_env(
 def unset_moonshot_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Moonshot model related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove MOONSHOT_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.MOONSHOT_API_KEY = None
-        settings.MOONSHOT_MODEL_NAME = None
-        settings.TEMPERATURE = None
         settings.USE_MOONSHOT_MODEL = None
+        settings.MOONSHOT_MODEL_NAME = None
+        settings.MOONSHOT_COST_PER_INPUT_TOKEN = None
+        settings.MOONSHOT_COST_PER_OUTPUT_TOKEN = None
+        if clear_secrets:
+            settings.MOONSHOT_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed Moonshot model environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The Moonshot model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Moonshot model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The Moonshot model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1291,50 +2203,91 @@ def unset_moonshot_model_env(
 
 @app.command(name="set-deepseek")
 def set_deepseek_model_env(
-    model_name: str = typer.Option(
-        ..., "--model-name", help="Name of the DeepSeek model"
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
     ),
-    api_key: str = typer.Option(
-        ...,
-        "--api-key",
-        help="API key for the DeepSeek model. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for DEEPSEEK_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
     ),
-    temperature: float = typer.Option(
-        0, "--temperature", help="Temperature for the DeepSeek model"
+    cost_per_input_token: Optional[float] = typer.Option(
+        None,
+        "-i",
+        "--cost-per-input-token",
+        help=(
+            "USD per input token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        None,
+        "-o",
+        "--cost-per-output-token",
+        help=(
+            "USD per output token override used for cost tracking. Preconfigured for known models; "
+            "REQUIRED if you use a custom/unknown model."
+        ),
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("DeepSeek API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_DEEPSEEK_MODEL)
-        settings.DEEPSEEK_API_KEY = api_key
-        settings.DEEPSEEK_MODEL_NAME = model_name
-        settings.TEMPERATURE = temperature
+        if model is not None:
+            settings.DEEPSEEK_MODEL_NAME = model
+        if api_key is not None:
+            settings.DEEPSEEK_API_KEY = api_key
+        if cost_per_input_token is not None:
+            settings.DEEPSEEK_COST_PER_INPUT_TOKEN = cost_per_input_token
+        if cost_per_output_token is not None:
+            settings.DEEPSEEK_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
-        )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+    effective_model = settings.DEEPSEEK_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "DeepSeek model name is not set. Pass --model (or set DEEPSEEK_MODEL_NAME).",
+            param_hint="--model",
         )
 
-    print(
-        f":raising_hands: Congratulations! You're now using DeepSeek's `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using DeepSeek `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -1342,35 +2295,52 @@ def set_deepseek_model_env(
 def unset_deepseek_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the DeepSeek model related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove DEEPSEEK_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.DEEPSEEK_API_KEY = None
-        settings.DEEPSEEK_MODEL_NAME = None
-        settings.TEMPERATURE = None
         settings.USE_DEEPSEEK_MODEL = None
+        settings.DEEPSEEK_MODEL_NAME = None
+        settings.DEEPSEEK_COST_PER_INPUT_TOKEN = None
+        settings.DEEPSEEK_COST_PER_OUTPUT_TOKEN = None
+        if clear_secrets:
+            settings.DEEPSEEK_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed DeepSeek model environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The DeepSeek model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed DeepSeek model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The DeepSeek model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1380,51 +2350,77 @@ def unset_deepseek_model_env(
 
 @app.command(name="set-local-embeddings")
 def set_local_embeddings_env(
-    model_name: str = typer.Option(
-        ..., "--model-name", help="Name of the local embeddings model"
-    ),
-    base_url: str = typer.Option(
-        ..., "--base-url", help="Base URL for the local embeddings API"
-    ),
-    api_key: Optional[str] = typer.Option(
+    model: Optional[str] = typer.Option(
         None,
-        "--api-key",
-        help="API key for the local embeddings. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for LOCAL_EMBEDDING_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    base_url: Optional[str] = typer.Option(
+        None,
+        "-u",
+        "--base-url",
+        help="Override the API endpoint/base URL used by this provider.",
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Local Embedding Model API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
-        settings.LOCAL_EMBEDDING_MODEL_NAME = model_name
-        settings.LOCAL_EMBEDDING_BASE_URL = base_url
-        if api_key:
+        if model is not None:
+            settings.LOCAL_EMBEDDING_MODEL_NAME = model
+        if base_url is not None:
+            settings.LOCAL_EMBEDDING_BASE_URL = base_url
+        if api_key is not None:
             settings.LOCAL_EMBEDDING_API_KEY = api_key
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.LOCAL_EMBEDDING_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Local embedding model name is not set. Pass --model (or set LOCAL_EMBEDDING_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using the local embedding model `{escape(model_name)}` for all evals that require text embeddings."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using the local embedding model `{escape(effective_model)}` for all evals that require text embeddings."
+        ),
     )
 
 
@@ -1432,35 +2428,51 @@ def set_local_embeddings_env(
 def unset_local_embeddings_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the local embedding related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove LOCAL_MODEL_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.LOCAL_EMBEDDING_API_KEY = None
         settings.LOCAL_EMBEDDING_MODEL_NAME = None
         settings.LOCAL_EMBEDDING_BASE_URL = None
         settings.USE_LOCAL_EMBEDDINGS = None
+        if clear_secrets:
+            settings.LOCAL_EMBEDDING_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed local embedding environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The local embeddings model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed local embedding environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The local embeddings model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 #############################################
@@ -1470,172 +2482,263 @@ def unset_local_embeddings_env(
 
 @app.command(name="set-gemini")
 def set_gemini_model_env(
-    model_name: Optional[str] = typer.Option(
-        None, "--model-name", help="Gemini Model name"
-    ),
-    google_api_key: Optional[str] = typer.Option(
+    model: Optional[str] = typer.Option(
         None,
-        "--google-api-key",
-        help="Google API Key for Gemini",
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
     ),
-    google_cloud_project: Optional[str] = typer.Option(
-        None, "--project-id", help="Google Cloud project ID"
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for GOOGLE_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
     ),
-    google_cloud_location: Optional[str] = typer.Option(
-        None, "--location", help="Google Cloud location"
-    ),
-    google_service_account_key: Optional[str] = typer.Option(
+    project: Optional[str] = typer.Option(
         None,
-        "--service-account-key",
-        help="Google Service Account Key for Gemini",
+        "-p",
+        "--project",
+        help="GCP project ID (used by Vertex AI / Gemini when applicable).",
+    ),
+    location: Optional[str] = typer.Option(
+        None,
+        "-l",
+        "--location",
+        help="GCP location/region for Vertex AI (e.g., `us-central1`).",
+    ),
+    service_account_file: Optional[Path] = typer.Option(
+        None,
+        "-S",
+        "--service-account-file",
+        help=("Path to a Google service account JSON key file."),
+        exists=True,
+        dir_okay=False,
+        readable=True,
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
-    if not google_api_key and not (
-        google_cloud_project and google_cloud_location
-    ):
-        typer.echo(
-            "You must provide either --google-api-key or both --project-id and --location.",
-            err=True,
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Google API key", hide_input=True)
         )
-        raise typer.Exit(code=1)
+
+    model = coerce_blank_to_none(model)
+    project = coerce_blank_to_none(project)
+    location = coerce_blank_to_none(location)
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_GEMINI_MODEL)
 
-        if google_api_key is not None:
-            settings.GOOGLE_API_KEY = google_api_key
+        if model is not None:
+            settings.GEMINI_MODEL_NAME = model
+        if project is not None:
+            settings.GOOGLE_CLOUD_PROJECT = project
+        if location is not None:
+            settings.GOOGLE_CLOUD_LOCATION = location
+        if service_account_file is not None:
+            settings.GOOGLE_SERVICE_ACCOUNT_KEY = load_service_account_key_file(
+                service_account_file
+            )
+        if api_key is not None:
+            settings.GOOGLE_API_KEY = api_key
             settings.GOOGLE_GENAI_USE_VERTEXAI = False
-        else:
+        elif (
+            project is not None
+            or location is not None
+            or service_account_file is not None
+        ):
             settings.GOOGLE_GENAI_USE_VERTEXAI = True
-        if google_cloud_project:
-            settings.GOOGLE_CLOUD_PROJECT = google_cloud_project
-        if google_cloud_location:
-            settings.GOOGLE_CLOUD_LOCATION = google_cloud_location
-        if google_service_account_key:
-            settings.GOOGLE_SERVICE_ACCOUNT_KEY = google_service_account_key
-        if model_name:
-            settings.GEMINI_MODEL_NAME = model_name
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.GEMINI_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Gemini model name is not set. Pass --model (or set GEMINI_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    _model_name = (
-        model_name if model_name is not None else settings.GEMINI_MODEL_NAME
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Gemini `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
-    if _model_name is not None:
-        print(
-            f":raising_hands: Congratulations! You're now using Gemini's `{escape(_model_name)}` for all evals that require an LLM."
-        )
-    else:
-        print(
-            ":raising_hands: Congratulations! You're now using Gemini's model for all evals that require an LLM."
-        )
 
 
 @app.command(name="unset-gemini")
 def unset_gemini_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the Gemini related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove GOOGLE_API_KEY and GOOGLE_SERVICE_ACCOUNT_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.GOOGLE_API_KEY = None
+        settings.USE_GEMINI_MODEL = None
         settings.GOOGLE_GENAI_USE_VERTEXAI = None
         settings.GOOGLE_CLOUD_PROJECT = None
         settings.GOOGLE_CLOUD_LOCATION = None
         settings.GEMINI_MODEL_NAME = None
-        settings.USE_GEMINI_MODEL = None
+        if clear_secrets:
+            settings.GOOGLE_API_KEY = None
+            settings.GOOGLE_SERVICE_ACCOUNT_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed Gemini model environment variables from {path}.")
-
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
-        )
-    else:
-        print(
-            "The Gemini model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
-        )
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Gemini model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The Gemini model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 @app.command(name="set-litellm")
 def set_litellm_model_env(
-    model_name: str = typer.Argument(..., help="Name of the LiteLLM model"),
-    api_key: Optional[str] = typer.Option(
+    model: Optional[str] = typer.Option(
         None,
-        "--api-key",
-        help="API key for the model. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
     ),
-    api_base: Optional[str] = typer.Option(
-        None, "--api-base", help="Base URL for the model API (if required)"
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for LITELLM_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    base_url: Optional[str] = typer.Option(
+        None,
+        "-u",
+        "--base-url",
+        help="Override the API endpoint/base URL used by this provider.",
+    ),
+    proxy_prompt_api_key: bool = typer.Option(
+        False,
+        "-K",
+        "--proxy-prompt-api-key",
+        help=(
+            "Prompt for LITELLM_PROXY_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    proxy_base_url: Optional[str] = typer.Option(
+        None,
+        "-U",
+        "--proxy-base-url",
+        help="Override the LITELLM_PROXY_API_BASE URL (useful for proxies, gateways, or self-hosted endpoints).",
     ),
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Persist CLI parameters as environment variables in a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("LiteLLM API key", hide_input=True)
+        )
+
+    proxy_api_key = None
+    if proxy_prompt_api_key:
+        proxy_api_key = coerce_blank_to_none(
+            typer.prompt("LiteLLM Proxy API key", hide_input=True)
+        )
+
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+    proxy_base_url = coerce_blank_to_none(proxy_base_url)
+
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_LITELLM)
-        settings.LITELLM_MODEL_NAME = model_name
+        if model is not None:
+            settings.LITELLM_MODEL_NAME = model
         if api_key is not None:
             settings.LITELLM_API_KEY = api_key
-        if api_base is not None:
-            settings.LITELLM_API_BASE = api_base
+        if base_url is not None:
+            settings.LITELLM_API_BASE = base_url
+        if proxy_api_key is not None:
+            settings.LITELLM_PROXY_API_KEY = proxy_api_key
+        if proxy_base_url is not None:
+            settings.LITELLM_PROXY_API_BASE = proxy_base_url
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(
-            f"Saved environment variables to {path} (ensure it's git-ignored)."
+    effective_model = settings.LITELLM_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "LiteLLM model name is not set. Pass --model (or set LITELLM_MODEL_NAME).",
+            param_hint="--model",
         )
-    else:
-        # updated in-memory & process env only
-        print(
-            "Settings updated for this session. To persist, use --save=dotenv[:path] "
-            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
-        )
-
-    print(
-        f":raising_hands: Congratulations! You're now using LiteLLM's `{escape(model_name)}` for all evals that require an LLM."
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using LiteLLM `{escape(effective_model)}` for all evals that require an LLM."
+        ),
     )
 
 
@@ -1643,35 +2746,195 @@ def set_litellm_model_env(
 def unset_litellm_model_env(
     save: Optional[str] = typer.Option(
         None,
+        "-s",
         "--save",
         help="Remove only the LiteLLM related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove LITELLM_API_KEY and LITELLM_PROXY_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.LITELLM_API_KEY = None
+        settings.USE_LITELLM = None
         settings.LITELLM_MODEL_NAME = None
         settings.LITELLM_API_BASE = None
-        settings.USE_LITELLM = None
+        settings.LITELLM_PROXY_API_BASE = None
+        if clear_secrets:
+            settings.LITELLM_API_KEY = None
+            settings.LITELLM_PROXY_API_KEY = None
 
-    handled, path, _ = edit_ctx.result
+    handled, path, updates = edit_ctx.result
 
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    elif path:
-        # persisted to a file
-        print(f"Removed LiteLLM model environment variables from {path}.")
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed LiteLLM model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The LiteLLM model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
-    if is_openai_configured():
-        print(
-            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+
+#############################################
+# Portkey                       #############
+#############################################
+
+
+@app.command(name="set-portkey")
+def set_portkey_model_env(
+    model: Optional[str] = typer.Option(
+        None,
+        "-m",
+        "--model",
+        help="Model identifier to use for this provider",
+    ),
+    prompt_api_key: bool = typer.Option(
+        False,
+        "-k",
+        "--prompt-api-key",
+        help=(
+            "Prompt for PORTKEY_API_KEY (input hidden). Not suitable for CI. "
+            "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
+        ),
+    ),
+    base_url: Optional[str] = typer.Option(
+        None,
+        "-u",
+        "--base-url",
+        help="Override the API endpoint/base URL used by this provider.",
+    ),
+    provider: Optional[str] = typer.Option(
+        None,
+        "-P",
+        "--provider",
+        help="Override the PORTKEY_PROVIDER_NAME.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt("Portkey API key", hide_input=True)
         )
-    else:
-        print(
-            "The LiteLLM model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+
+    model = coerce_blank_to_none(model)
+    base_url = coerce_blank_to_none(base_url)
+    provider = coerce_blank_to_none(provider)
+
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(ModelKeyValues.USE_PORTKEY_MODEL)
+        if model is not None:
+            settings.PORTKEY_MODEL_NAME = model
+        if api_key is not None:
+            settings.PORTKEY_API_KEY = api_key
+        if base_url is not None:
+            settings.PORTKEY_BASE_URL = base_url
+        if provider is not None:
+            settings.PORTKEY_PROVIDER_NAME = provider
+
+    handled, path, updates = edit_ctx.result
+
+    effective_model = settings.PORTKEY_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "Portkey model name is not set. Pass --model (or set PORTKEY_MODEL_NAME).",
+            param_hint="--model",
         )
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=(
+            f":raising_hands: Congratulations! You're now using Portkey `{escape(effective_model)}` for all evals that require an LLM."
+        ),
+    )
+
+
+@app.command(name="unset-portkey")
+def unset_portkey_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Remove only the Portkey related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    clear_secrets: bool = typer.Option(
+        False,
+        "-x",
+        "--clear-secrets",
+        help="Also remove PORTKEY_API_KEY from the dotenv store.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.USE_PORTKEY_MODEL = None
+        settings.PORTKEY_MODEL_NAME = None
+        settings.PORTKEY_BASE_URL = None
+        settings.PORTKEY_PROVIDER_NAME = None
+        if clear_secrets:
+            settings.PORTKEY_API_KEY = None
+
+    handled, path, updates = edit_ctx.result
+
+    if _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        updated_msg="Removed Portkey model environment variables from {path}.",
+        tip_msg=None,
+    ):
+        if is_openai_configured():
+            print(
+                ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+            )
+        else:
+            print(
+                "The Portkey model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+            )
 
 
 if __name__ == "__main__":

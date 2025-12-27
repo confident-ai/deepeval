@@ -9,6 +9,7 @@ from .litellm_model import LiteLLMModel
 from .kimi_model import KimiModel
 from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
+from .portkey_model import PortkeyModel
 
 __all__ = [
     "AzureOpenAIModel",
@@ -22,4 +23,5 @@ __all__ = [
     "KimiModel",
     "GrokModel",
     "DeepSeekModel",
+    "PortkeyModel",
 ]
