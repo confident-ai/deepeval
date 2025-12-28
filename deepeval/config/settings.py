@@ -799,6 +799,10 @@ class Settings(BaseSettings):
         10.0,
         description="Read timeout (seconds) when fetching remote images for multimodal inputs.",
     )
+    DEEPEVAL_DISABLE_TIMEOUTS: Optional[bool] = Field(
+        None,
+        description="Disable DeepEval-enforced timeouts (per-attempt, per-task, gather). Provider SDK timeouts may still apply.",
+    )
     # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE
     # Per-attempt timeout (seconds) for provider calls used by the retry policy.
     # This is an OVERRIDE setting. The effective value you should rely on at runtime is
@@ -958,10 +962,16 @@ class Settings(BaseSettings):
     ##############
 
     @field_validator(
+        "CONFIDENT_METRIC_LOGGING_ENABLED",
+        "CONFIDENT_METRIC_LOGGING_VERBOSE",
+        "CONFIDENT_METRIC_LOGGING_FLUSH",
         "CONFIDENT_OPEN_BROWSER",
         "CONFIDENT_TRACE_FLUSH",
         "CONFIDENT_TRACE_VERBOSE",
         "CUDA_LAUNCH_BLOCKING",
+        "DEEPEVAL_DEBUG_ASYNC",
+        "DEEPEVAL_LOG_STACK_TRACES",
+        "DEEPEVAL_DISABLE_TIMEOUTS",
         "DEEPEVAL_VERBOSE_MODE",
         "DEEPEVAL_GRPC_LOGGING",
         "DEEPEVAL_DISABLE_DOTENV",

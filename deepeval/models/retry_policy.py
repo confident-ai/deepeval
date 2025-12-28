@@ -87,6 +87,8 @@ def set_outer_deadline(seconds: float | None):
         call, which must be passed to `reset_outer_deadline` to restore the
         previous value.
     """
+    if get_settings().DEEPEVAL_DISABLE_TIMEOUTS:
+        return _OUTER_DEADLINE.set(None)
     if seconds and seconds > 0:
         return _OUTER_DEADLINE.set(time.monotonic() + seconds)
     return _OUTER_DEADLINE.set(None)
@@ -131,11 +133,10 @@ def resolve_effective_attempt_timeout():
         float: Seconds to use for the inner per-attempt timeout. `0` means
         disable inner timeout and rely on the outer budget instead.
     """
-    per_attempt = float(
-        get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
-    )
+    settings = get_settings()
+    per_attempt = float(settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
     # 0 or None disable inner wait_for. That means rely on outer task cap for timeouts instead.
-    if per_attempt <= 0:
+    if settings.DEEPEVAL_DISABLE_TIMEOUTS or per_attempt <= 0:
         return 0
     # If we do have a positive per-attempt, use up to remaining outer budget.
     rem = _remaining_budget()
@@ -557,7 +558,11 @@ def run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
         BaseException: If `func` raises, the same exception is re-raised with its
                        original traceback.
     """
-    if not timeout_seconds or timeout_seconds <= 0:
+    if (
+        get_settings().DEEPEVAL_DISABLE_TIMEOUTS
+        or not timeout_seconds
+        or timeout_seconds <= 0
+    ):
         return func(*args, **kwargs)
 
     # try to respect the global cap on concurrent timeout workers
