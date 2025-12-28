@@ -83,10 +83,15 @@ class PromptAlignmentMetric(BaseMetric):
                     _in_component=_in_component,
                     _log_metric_to_confident=_log_metric_to_confident,
                 )
+                settings = get_settings()
                 loop.run_until_complete(
                     asyncio.wait_for(
                         coro,
-                        timeout=get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                        timeout=(
+                            None
+                            if settings.DEEPEVAL_DISABLE_TIMEOUTS
+                            else settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+                        ),
                     )
                 )
             else:
