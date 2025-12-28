@@ -65,12 +65,12 @@ def test_env_mutation_after_init_triggers_auto_refresh(monkeypatch):
     from deepeval.config.settings import get_settings
 
     s1 = get_settings()
-    assert s1.USE_OPENAI_MODEL in (None, False, True)
+    old = s1.USE_OPENAI_MODEL
 
-    monkeypatch.setenv("USE_OPENAI_MODEL", "YES")
+    monkeypatch.setenv("USE_OPENAI_MODEL", "NO" if old is True else "YES")
     s2 = get_settings()
     assert s2 is not s1  # should auto refresh when env updates
-    assert s2.USE_OPENAI_MODEL is True
+    assert s2.USE_OPENAI_MODEL is (old is not True)
 
 
 def test_invalid_trace_sample_rate_raises(monkeypatch):
