@@ -64,6 +64,7 @@ These options let you tune timeout limits and concurrency for parallel execution
 | `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` | `float` / unset    | Per-attempt timeout override for provider calls (preferred override key).                   |
 | `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`    | `float` / unset    | Outer timeout budget override for a metric/test-case (preferred override key).              |
 | `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`  | `float` / unset    | Override extra buffer time added to gather/drain after tasks complete.                      |
+| `DEEPEVAL_DISABLE_TIMEOUTS`                     | `bool`  / unset    | Disable DeepEval enforced timeouts (per-attempt, per-task, gather).                         |
 | `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS`          | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE`. |
 | `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS`             | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`.    |
 | `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS`           | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`.  |
