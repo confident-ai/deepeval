@@ -44,10 +44,8 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_multimodal=False,
             supports_structured_outputs=False,
             supports_json=True,
-            # input_price=0.50 / 1e6,
-            # output_price=1.50 / 1e6,
-            input_price=None,
-            output_price=None,
+            input_price=0.50 / 1e6,
+            output_price=1.50 / 1e6,
         ),
         "gpt-3.5-turbo-0125": make_model_data(
             supports_log_probs=True,
