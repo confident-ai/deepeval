@@ -125,6 +125,13 @@ class TurnContextualRecallTemplate:
             Context:
             This metric evaluates conversational contextual recall by determining whether sentences in the assistant output can be attributed to the retrieval context for each interaction. Each interaction yields a reason indicating which sentences were supported or unsupported. You are given all those reasons.
 
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+            Example JSON:
+            {{
+                "reason": "The score is <contextual_recall_score> because <your_reason>."
+            }}
+
             Inputs:
             - final_score: the averaged score across all interactions.
             - success: whether the metric passed or failed
@@ -151,7 +158,7 @@ class TurnContextualRecallTemplate:
 
             Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
 
-            The final reason:
+            JSON:
             """
         )
 

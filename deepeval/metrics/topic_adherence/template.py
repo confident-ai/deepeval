@@ -149,6 +149,13 @@ class TopicAdherenceTemplate:
                 
                 Your task is to go through these reasons and give a single final explaination that clearly explains why this metric has failed or passed.
 
+                **
+                IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+                Example JSON:
+                {{
+                    "reason": "The score is <score> because <your_reason>."
+                }}
+
                 {TopicAdherenceTemplate.multimodal_rules}
 
                 Pass: {success}
@@ -170,6 +177,6 @@ class TopicAdherenceTemplate:
 
                 Output ONLY the reason, DON"T output anything else.
 
-                Reason:
+                JSON:
             """
         )

@@ -130,6 +130,13 @@ class TurnContextualRelevancyTemplate:
             Context:
             This metric evaluates conversational contextual relevancy by determining whether statements in the retrieval context are relevant to the user message for each interaction. Each interaction yields a reason indicating which statements were relevant or irrelevant. You are given all those reasons.
 
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+            Example JSON:
+            {{
+                "reason": "The score is <contextual_relevancy_score> because <your_reason>."
+            }}
+
             Inputs:
             - final_score: the averaged score across all interactions.
             - success: whether the metric passed or failed
@@ -156,6 +163,6 @@ class TurnContextualRelevancyTemplate:
 
             Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
 
-            The final reason:
+            JSON:
             """
         )
