@@ -4,9 +4,6 @@ title: CLI Settings
 sidebar_label: CLI Settings
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-
 ## Quick Summary
 
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
@@ -15,9 +12,12 @@ import TabItem from "@theme/TabItem";
 - Enabling/disabling debug
 - Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
-- Save settings and secrets persistently to `.env` files
+- Listing and updating any deepeval setting (`deepeval settings -l`, `deepeval settings --set KEY=VALUE`)
+- Saving settings and secrets persistently to `.env` files
 
-The CLI supports easy configuration of providers, model selections, and debug settings for seamless integration with your projects.
+:::tip
+For the full and most up-to-date list of flags for any command, run `deepeval <command> --help`.
+:::
 
 ## Install & Update
 
@@ -33,10 +33,13 @@ deepeval --help
 
 ## Read & Write Settings
 
-- **Dotenv**: deepeval loads `.env` / `.env.local` from the current working directory.
-  You can point dotenv loading to another folder via `ENV_DIR_PATH=/path/to/project`.
-- **Hidden keystore**: Non-secret settings are stored in `.deepeval/.deepeval` under the current working directory (no override env var yet).
-  A future UX pass will make these locations configurable and consistent.
+deepeval reads settings from dotenv files in the current working directory (or `ENV_DIR_PATH=/path/to/project`), without overriding existing process environment variables. Dotenv precedence (lowest → highest) is: `.env` → `.env.<APP_ENV>` → `.env.local`.
+
+deepeval also uses a legacy JSON keystore at `.deepeval/.deepeval` for **non-secret** keys. This keystore is treated as a fallback (dotenv/process env take precedence). Secrets are never written to the JSON keystore.
+
+:::tip
+To disable dotenv autoloading (useful in pytest/CI to avoid loading local `.env*` files on import), set `DEEPEVAL_DISABLE_DOTENV=1`.
+:::
 
 ## Confident AI Commands
 
@@ -55,158 +58,61 @@ Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) 
 
 All `set-*` / `unset-*` commands follow the same rules:
 
-- **Non-secrets**, such as model name, endpoint, deployment, etc., are written to a hidden JSON keystore at `.deepeval/.deepeval`.
-- **Secrets** (API keys) are **never** written to that JSON keystore.
-- Pass `--save=dotenv[:path]` to also write settings, including secrets, to a dotenv file with a default path of: `.env.local`.
-  Make sure your dotenv files are git-ignored in your project.
-- If `--save` is omitted, only the in-process environment and JSON store are updated.
-- Unsetting one provider only removes that provider’s keys. If another provider’s credentials remain, such as `OPENAI_API_KEY`, it may still be selected by default.
+- Non-secrets (model name, endpoint, deployment, etc.) may be mirrored into `.deepeval/.deepeval`.
+- Secrets (API keys) are never written to `.deepeval/.deepeval`.
+- Pass `--save=dotenv[:path]` to write settings (including secrets) to a dotenv file (default: `.env.local`).
+- If `--save` is omitted, deepeval will use `DEEPEVAL_DEFAULT_SAVE` if set; otherwise it won’t write a dotenv file (some commands like `login` still default to `.env.local`).
+- Unsetting one provider only removes that provider’s keys. If other provider credentials remain (e.g. `OPENAI_API_KEY`), they may still be selected by default.
 
 :::tip
 You can set a default save target via `DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local` so you don’t have to pass `--save` each time.
 :::
 
-## Model Provider Configs
-
-All provider commands come in pairs:
-
-- `deepeval set-<provider> [provider-specific flags] [--save=dotenv[:path]]`
-- `deepeval unset-<provider> [--save=dotenv[:path]]`
-
-This switches the active provider:
-
-- It sets `USE_<PROVIDER>_MODEL = True` for the chosen provider, and
-- Turns all other `USE_*` flags off so that only one provider is enabled at a time.
-
-When you **set** a provider, the CLI enables that provider’s `USE_<PROVIDER>_MODEL` flag and disables all other `USE_*` flags. When you **unset** a provider, it disables only that provider’s `USE_*` flag and leaves all others as is.
-
-:::caution
-Because of how `deepeval` manages your model related environment variables, **using the CLI is 100% the recommended way to configure evaluation models in `deepeval`.** It handles all the necessary environment variables for you, ensuring consistent and correct setup across different providers.
-
-If you want to see what environment variables `deepeval` manages under the hood, refer to the [Model Settings](/docs/environment-variables#model-settings) documentation.
+:::info
+Token costs are expressed in **USD per token**. If you're using published pricing in **$/MTok** (million tokens), divide by **1,000,000**.
+For example, **&#36;3 / MTok = 0.000003**.
 :::
 
-### Full model list
-
-| Provider (LLM)   | Set command        | Unset command        | Typical flags you’ll see                                                                                                        |
-| ---------------- | ------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| OpenAI           | `set-openai`       | `unset-openai`       | `--model`, optional cost overrides if using custom models                                                                       |
-| Azure OpenAI     | `set-azure-openai` | `unset-azure-openai` | `--openai-api-key`, `--openai-endpoint`, `--openai-api-version`, `--openai-model-name`, `--deployment-name`, `--model-version?` |
-| Gemini           | `set-gemini`       | `unset-gemini`       | Either `--google-api-key` **or** (`--project-id` + `--location`), optional `--model-name`                                       |
-| Grok             | `set-grok`         | `unset-grok`         | `--model-name`, `--api-key`, optional `--temperature`                                                                           |
-| DeepSeek         | `set-deepseek`     | `unset-deepseek`     | `--model-name`, `--api-key`, optional `--temperature`                                                                           |
-| LiteLLM router   | `set-litellm`      | `unset-litellm`      | `model_name` (arg), optional `--api-key`, `--api-base`                                                                          |
-| Local HTTP model | `set-local-model`  | `unset-local-model`  | `--model-name`, `--base-url`, optional `--api-key`, `--format`                                                                  |
-| Ollama (local)   | `set-ollama`       | `unset-ollama`       | `model_name` (arg), optional `--base-url`                                                                                       |
-
-**Embeddings:**
-
-| Provider (Embeddings) | Set command                  | Unset command                  | Typical flags                                      |
-| --------------------- | ---------------------------- | ------------------------------ | -------------------------------------------------- |
-| Azure OpenAI          | `set-azure-openai-embedding` | `unset-azure-openai-embedding` | `--embedding-deployment-name`                      |
-| Local (HTTP)          | `set-local-embeddings`       | `unset-local-embeddings`       | `--model-name`, `--base-url`, optional `--api-key` |
-| Ollama                | `set-ollama-embeddings`      | `unset-ollama-embeddings`      | `model_name` (arg), optional `--base-url`          |
-
-:::note
-Flags vary a bit today (some use positional args vs. options). We will converge them in a future release. To avoid churn, this page documents the pattern and points to `--help` for exact flags.
-:::
-
-### Common examples
-
-<Tabs>
-<TabItem value="openai" label="OpenAI">
-
+To set the model and token cost for Anthropic you would run:
 ```bash
-# Use a known OpenAI model
-deepeval set-openai --model gpt-4o-mini --save=dotenv
-
-# Remove OpenAI config
-deepeval unset-openai --save=dotenv
+deepeval set-anthropic -m claude-3-7-sonnet-latest -i 0.000003 -o 0.000015 --save=dotenv
+Saved environment variables to .env.local (ensure it's git-ignored).
+🙌 Congratulations! You're now using Anthropic `claude-3-7-sonnet-latest` for all evals that require an LLM.
 ```
 
-</TabItem>
-<TabItem value="azure" label="Azure OpenAI">
-
+To view your settings for Anthropic you would run:
 ```bash
-deepeval set-azure-openai \
-  --openai-api-key $AZURE_OPENAI_KEY \
-  --openai-endpoint https://my-endpoint.openai.azure.com \
-  --openai-api-version 2024-06-01 \
-  --openai-model-name gpt-4o-mini \
-  --deployment-name my-gpt4o-mini \
-  --save=dotenv
-
-deepeval set-azure-openai-embedding \
-  --embedding-deployment-name text-embedding-3-large \
-  --save=dotenv
-
-deepeval unset-azure-openai --save=dotenv
-deepeval unset-azure-openai-embedding --save=dotenv
+deepeval settings -l anthropic
+                                                                                Settings                                                                        
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name                            ┃ Value                    ┃ Description                                                                                      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ ANTHROPIC_API_KEY               │ ********                 │ Anthropic API key.                                                                               │
+│ ANTHROPIC_COST_PER_INPUT_TOKEN  │ 3e-06                    │ Anthropic input token cost (used for cost reporting).                                            │
+│ ANTHROPIC_COST_PER_OUTPUT_TOKEN │ 1.5e-05                  │ Anthropic output token cost (used for cost reporting).                                           │
+│ ANTHROPIC_MODEL_NAME            │ claude-3-7-sonnet-latest │ Anthropic model name (e.g. 'claude-3-...').                                                      │
+│ USE_ANTHROPIC_MODEL             │ True                     │ Select Anthropic as the active LLM provider (USE_* flags are mutually exclusive in CLI helpers). │
+└─────────────────────────────────┴──────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-</TabItem>
-<TabItem value="ollama" label="Ollama (local)">
+## Core Commands
+
+### `login` & `logout`
+
+- `deepeval login [--save=dotenv[:path]]` (interactive prompt)
+- `deepeval logout [--save=dotenv[:path]]`: Clears keys from the JSON keystore and removes them from the chosen dotenv file.
+
+### `view`
+
+- `deepeval view`: Opens the latest test run in your browser. If needed, uploads artifacts first.
+
+### `test`
+
+The CLI includes a test sub-app for running E2E examples and fixtures. Usage varies, so consult the built-in help:
 
 ```bash
-deepeval set-ollama mistral --base-url http://localhost:11434 --save=dotenv
-deepeval set-ollama-embeddings nomic-embed-text --save=dotenv
-
-deepeval unset-ollama --save=dotenv
-deepeval unset-ollama-embeddings --save=dotenv
-```
-
-</TabItem>
-</Tabs>
-
-> **Secrets**: Set API keys via CLI flags when supported, or by editing your dotenv file directly. Secrets are never written to the JSON keystore.
-
-### Persist CLI settings
-
-The `deepeval set-*` commands support a `--save` flag to persist settings to a dotenv file:
-
-```bash
-deepeval set-openai --model gpt-4o-mini --save=dotenv:.env.local
-```
-
-| Flag                   | Where settings are stored                                           |
-| ---------------------- | ------------------------------------------------------------------- |
-| Without `--save`       | `.deepeval/.deepeval` (JSON) — secrets are never written here       |
-| `--save=dotenv[:path]` | Specified dotenv file (defaults to `.env.local`) — includes secrets |
-
-:::tip
-Set `DEEPEVAL_DEFAULT_SAVE="dotenv:.env.local"` to skip passing `--save` every time.
-:::
-
-## Retry Policy
-
-The CLI "debug" options include **retry log levels**:
-
-- `--retry-before-level` (default **INFO**)
-- `--retry-after-level` (default **ERROR**)
-
-deepeval’s retry behavior is controlled by environment settings which you can place in `.env.local`:
-
-```bash
-# Providers whose own SDK should handle retries. Retries for these providers will not be managed by deepeval
-# Default: empty list (deepeval manages retries where supported)
-DEEPEVAL_SDK_RETRY_PROVIDERS="['azure']"   # or "['*']"
-
-# Log levels (validator accepts names or numeric)
-DEEPEVAL_RETRY_BEFORE_LOG_LEVEL=INFO
-DEEPEVAL_RETRY_AFTER_LOG_LEVEL=ERROR
-
-# Backoff settings
-DEEPEVAL_RETRY_MAX_ATTEMPTS=2
-DEEPEVAL_RETRY_INITIAL_SECONDS=1.0
-DEEPEVAL_RETRY_EXP_BASE=2.0
-DEEPEVAL_RETRY_JITTER=2.0
-DEEPEVAL_RETRY_CAP_SECONDS=5.0
-```
-
-You can also set the two retry log-level values via:
-
-```bash
-deepeval set-debug --retry-before-level INFO --retry-after-level ERROR --save=dotenv
+deepeval test --help
+deepeval test <command> --help
 ```
 
 ## Debug Controls
@@ -216,18 +122,36 @@ Use these to turn on structured logs, gRPC wire tracing, and Confident tracing (
 ```bash
 deepeval set-debug \
   --log-level DEBUG \
-  --verbose \
+  --debug-async \
   --retry-before-level INFO \
   --retry-after-level ERROR \
   --grpc --grpc-verbosity DEBUG --grpc-trace list_tracers \
   --trace-verbose --trace-env staging --trace-flush \
-  --error-reporting --ignore-errors \
   --save=dotenv
 ```
 
 - **Immediate effect** in the current process
 - **Optional persistence** via `--save=dotenv[:path]`
-- **No-op guard**: if nothing would change, the command exits quietly
+- **No-op guard**: If nothing would change, you’ll see **No changes to save …** (and nothing is written).
+
+:::info
+To see all available debug flags, run `deepeval set-debug --help`.
+:::
+
+:::tip
+To filter (substring match) settings by name displaying each setting's current value and description run:
+```bash
+deepeval settings -l log-level
+                                                            Settings                                                     
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Name                            ┃ Value ┃ Description                                                                  ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ DEEPEVAL_RETRY_AFTER_LOG_LEVEL  │ 20    │ Log level for 'after retry' logs (defaults to ERROR).                        │
+│ DEEPEVAL_RETRY_BEFORE_LOG_LEVEL │ 20    │ Log level for 'before retry' logs (defaults to LOG_LEVEL if set, else INFO). │
+│ LOG_LEVEL                       │ 40    │ Global logging level (e.g. DEBUG/INFO/WARNING/ERROR/CRITICAL or numeric).    │
+└─────────────────────────────────┴───────┴──────────────────────────────────────────────────────────────────────────────┘
+```
+:::
 
 To restore defaults and clean persisted values:
 
@@ -235,30 +159,60 @@ To restore defaults and clean persisted values:
 deepeval unset-debug --save=dotenv
 ```
 
-**Optional Flags**
+## Model Provider Configs
 
-- Logs: `--log-level`, `--verbose/--no-verbose`
-- Retry log levels: `--retry-before-level`, `--retry-after-level` (accepts names `DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET` or numbers)
-- gRPC: `--grpc/--no-grpc`, `--grpc-verbosity`, `--grpc-trace`
-- Tracing: `--trace-verbose/--no-trace-verbose`, `--trace-env`, `--trace-flush`
-- Other: `--error-reporting/--no-error-reporting`, `--ignore-errors/--no-ignore-errors`
-- Persistence: `--save=dotenv[:path]`
+All provider commands come in pairs:
 
-## Namespacing `deepeval test`
+- `deepeval set-<provider> [provider-specific flags] [--save=dotenv[:path]] [--quiet]`
+- `deepeval unset-<provider> [--save=dotenv[:path]] [--quiet]`
 
-The CLI includes a `test` sub-app for running E2E examples and fixtures. Usage varies, please consult the built-in help for details:
+This switches the active provider:
 
-```bash
-deepeval test --help
-deepeval test <command> --help
-```
+- It sets `USE_<PROVIDER>_MODEL = True` for the chosen provider, and
+- Turns all other `USE_*` flags off so that only one provider is enabled at a time.
+
+When you **set** a provider, the CLI enables that provider’s `USE_<PROVIDER>_MODEL` flag and disables all other `USE_*` flags. When you **unset** a provider, it disables only that provider’s `USE_*` flag and leaves all others untouched. If you manually set env vars (or edit dotenv files) it’s possible to end up with multiple `USE_*` flags enabled.
+
+:::caution
+Because of how `deepeval` manages your model related environment variables, **using the CLI is 100% the recommended way to configure evaluation models in `deepeval`.** It handles all the necessary environment variables for you, ensuring consistent and correct setup across different providers.
+
+If you want to see what environment variables `deepeval` manages under the hood, refer to the [Model Settings](/docs/environment-variables#model-settings) documentation.
+:::
+
+### Full model list
+
+| Provider (LLM)   | Set                | Unset                |
+| ---------------- | ------------------ | -------------------- |
+| OpenAI           | `set-openai`       | `unset-openai`       |
+| Azure OpenAI     | `set-azure-openai` | `unset-azure-openai` |
+| Anthropic        | `set-anthropic`    | `unset-anthropic`    |
+| AWS Bedrock      | `set-bedrock`      | `unset-bedrock`      |
+| Ollama (local)   | `set-ollama`       | `unset-ollama`       |
+| Local HTTP model | `set-local-model`  | `unset-local-model`  |
+| Grok             | `set-grok`         | `unset-grok`         |
+| Moonshot (Kimi)  | `set-moonshot`     | `unset-moonshot`     |
+| DeepSeek         | `set-deepseek`     | `unset-deepseek`     |
+| Gemini           | `set-gemini`       | `unset-gemini`       |
+| LiteLLM          | `set-litellm`      | `unset-litellm`      |
+| Portkey          | `set-portkey`      | `unset-portkey`      |
+
+**Embeddings:**
+
+| Provider (Embeddings) | Set                          | Unset                          |
+| --------------------- | ---------------------------- | ------------------------------ |
+| Azure OpenAI          | `set-azure-openai-embedding` | `unset-azure-openai-embedding` |
+| Local (HTTP)          | `set-local-embeddings`       | `unset-local-embeddings`       |
+| Ollama                | `set-ollama-embeddings`      | `unset-ollama-embeddings`      |
+
+
+:::tip
+For provider-specific flags, run `deepeval set-<provider> --help`.
+:::
 
 ## Common Issues
 
-If something doesn’t look right after running `set-*` / `unset-*` commands, these quick checks usually catch it:
-
-- **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean no-output exit usually means **no changes** were detected.
-- **Provider still active after unsetting?** `unset-<provider>` only disables that provider’s `USE_*` flag. If another provider is still enabled and configured, `deepeval` will pick it up. If no provider is enabled but OpenAI credentials are present, OpenAI may be used as a fallback. To explicitly switch providers, run the corresponding `set-<provider>` command.
-- **Dotenv edits not picked up?** `deepeval` loads dotenv files from the current working directory by default (or from `ENV_DIR_PATH` if set). Make sure your Python process is running in that same context, and restart long-running processes after changing env vars.
+- **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean exit with no output often means you are passing the `--quiet` / `-q` flag.
+- **Provider still active after unsetting?** Unsetting turns off target provider `USE_*` flags; if a provider remains enabled and properly configured it will become the active provider. If no provider is enabled, but OpenAI credentials are present, OpenAI may be used as a fallback. To force a provider, run the corresponding `set-<provider>` command.
+- **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
 
 If you’re still stuck, the dedicated [Troubleshooting](/docs/troubleshooting) page covers deeper debugging (TLS errors, logging, timeouts, dotenv loading, and config caching).

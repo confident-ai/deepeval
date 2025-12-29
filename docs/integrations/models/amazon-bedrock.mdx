@@ -4,10 +4,10 @@ title: Amazon Bedrock
 sidebar_label: Amazon Bedrock
 ---
 
-DeepEval supports Amazon Bedrock models that are available through the Bedrock Runtime Converse API for all evaluation metrics. To get started, you'll need to set up your AWS credentials.
+`deepeval` supports Amazon Bedrock models that are available through the Bedrock Runtime Converse API for all evaluation metrics. To get started, you'll need to set up your AWS credentials.
 
 :::note
-`AmazonBedrockModel` requires `aiobotocore` and `botocore`. DeepEval will prompt you to install them if they are missing.
+`AmazonBedrockModel` requires `aiobotocore` and `botocore`. `deepeval` will prompt you to install them if they are missing.
 :::
 
 ### Setting Up Your API Key
@@ -28,7 +28,7 @@ Alternatively, if you're working in a notebook environment (e.g., Jupyter or Col
 
 ### Python
 
-To use Amazon bedrock models for DeepEval metrics, define an `AmazonBedrockModel` and specify the model you want to use.
+To use Amazon bedrock models for `deepeval` metrics, define an `AmazonBedrockModel` and specify the model you want to use.
 
 ```python
 from deepeval.models import AmazonBedrockModel
@@ -42,7 +42,7 @@ model = AmazonBedrockModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-aws-amazon-bedrock) for the Bedrock-related environment variables:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`:
 
 - [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed; raises an error at runtime if unset.
@@ -51,6 +51,8 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating an 
 - [Optional] `cost_per_input_token`: A float specifying the per-input-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_INPUT_TOKEN` (else `0`).
 - [Optional] `cost_per_output_token`: A float specifying the per-output-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` (else `0`).
 - [Optional] `generation_kwargs`: A dictionary of generation parameters that will be sent to Bedrock as `inferenceConfig`. Available keys may vary by the Bedrock model you choose. See the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-aws-amazon-bedrock) for the Bedrock-related environment variables.
 
 :::tip
 Pass generation parameters like `temperature`, `topP`, or `maxTokens` via `generation_kwargs` (they are sent as `inferenceConfig`).

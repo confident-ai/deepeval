@@ -4,7 +4,7 @@ title: Azure OpenAI
 sidebar_label: Azure OpenAI
 ---
 
-DeepEval allows you to directly integrate Azure OpenAI models into all available LLM-based metrics. You can easily configure the model through the command line or directly within your python code.
+`deepeval` allows you to directly integrate Azure OpenAI models into all available LLM-based metrics. You can easily configure the model through the command line or directly within your python code.
 
 ### Command Line
 
@@ -12,11 +12,10 @@ Run the following command in your terminal to configure your deepeval environmen
 
 ```bash
 deepeval set-azure-openai \
-    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
-    --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4.1
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model-name=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
 ```
 
 :::info
@@ -35,7 +34,7 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 ### Python
 
-Alternatively, you can specify your model directly in code using `AzureOpenAIModel` from DeepEval's model collection.
+Alternatively, you can specify your model directly in code using `AzureOpenAIModel` from `deepeval`'s model collection.
 
 :::tip
 This approach is ideal when you need to use separate models for specific metrics.
@@ -57,17 +56,19 @@ model = AzureOpenAIModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-azure-openai) for the Azure OpenAI-related environment variables:
+There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the Azure OpenAI model to use. Defaults to `AZURE_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
 - [Optional] `deployment_name`: A string specifying the name of your Azure OpenAI deployment. Defaults to `AZURE_DEPLOYMENT_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_version`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed; raises an error at runtime if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-azure-openai) for the Azure OpenAI-related environment variables.
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we recommend that you double check the params supported by the model and your model provider in their [official docs](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference#request-body).

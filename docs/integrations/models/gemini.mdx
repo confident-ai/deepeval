@@ -4,7 +4,7 @@ title: Gemini
 sidebar_label: Gemini
 ---
 
-DeepEval allows you to directly integrate Gemini models into all available LLM-based metrics, either through the command line or directly within your python code.
+`deepeval` allows you to directly integrate Gemini models into all available LLM-based metrics, either through the command line or directly within your python code.
 
 ### Command Line
 
@@ -12,8 +12,7 @@ Run the following command in your terminal to configure your deepeval environmen
 
 ```bash
 deepeval set-gemini \
-    --model-name=<model> \ # e.g. "gemini-2.0-flash-001"
-    --google-api-key=<api_key>
+    --model=<model> # e.g. "gemini-2.0-flash-001"
 ```
 
 :::info
@@ -32,7 +31,7 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 ### Python
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from DeepEval's model collection. By default, `model` is set to `gemini-1.5-pro`.
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-1.5-pro`.
 
 ```python
 from deepeval.models import GeminiModel
@@ -47,19 +46,17 @@ model = GeminiModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **ZERO** mandatory and **FOUR** optional parameters when creating an `GeminiModel`. Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via DeepEval settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-gemini) for the Gemini-related environment variables:
+There are **ZERO** mandatory and **FOUR** optional parameters when creating an `GeminiModel`:
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_key`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Gemini API `generate_content(...)` call.
 
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-gemini) for the Gemini-related environment variables.
+
 :::note
 At runtime, you must provide an API key (via `api_key` or `GOOGLE_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
-:::
-
-:::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ai.google.dev/api/generate-content#generationconfig).
 :::
 
 ### Available Gemini Models
