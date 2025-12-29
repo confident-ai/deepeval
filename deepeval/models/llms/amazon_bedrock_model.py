@@ -29,6 +29,7 @@ retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
 _ALIAS_MAP = {
     "model": ["model_id"],
+    "region": ["region_name"],
     "cost_per_input_token": ["input_token_cost"],
     "cost_per_output_token": ["output_token_cost"],
 }
