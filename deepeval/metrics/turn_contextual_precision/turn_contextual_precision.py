@@ -14,6 +14,8 @@ from deepeval.metrics.utils import (
     get_unit_interactions,
     get_turns_in_sliding_window,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.turn_contextual_precision.template import (
@@ -279,26 +281,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    ContextualPrecisionVerdict(**item)
-                    for item in data["verdicts"]
-                ]
-                return verdicts
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: s.verdicts,
+            extract_json=lambda data: data["verdicts"],
+        )
 
     def _generate_verdicts(
         self,
@@ -319,24 +308,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [
-                    ContextualPrecisionVerdict(**item)
-                    for item in data["verdicts"]
-                ]
-                return verdicts
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: s.verdicts,
+            extract_json=lambda data: data["verdicts"],
+        )
 
     async def _a_get_interaction_score_and_reason(
         self,
@@ -438,24 +416,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualPrecisionScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualPrecisionScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ContextualPrecisionScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualPrecisionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _get_interaction_reason(
         self,
@@ -485,22 +452,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualPrecisionScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualPrecisionScoreReason = self.model.generate(
-                    prompt, schema=ContextualPrecisionScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualPrecisionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _get_verbose_steps(
         self, interaction_scores: List[InteractionContextualPrecisionScore]
@@ -533,13 +491,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = self.model.generate(prompt)
-            return res
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualPrecisionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_reason(
         self, scores: List[InteractionContextualPrecisionScore]
@@ -558,13 +516,13 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = await self.model.a_generate(prompt)
-            return res
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualPrecisionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _calculate_score(
         self, scores: List[InteractionContextualPrecisionScore]

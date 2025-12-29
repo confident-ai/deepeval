@@ -187,6 +187,13 @@ class TurnFaithfulnessTemplate:
                 Context:
                 This metric evaluates conversational faithfulness by extracting truths from retrieval context, extracting claims from the assistant's output, and generating verdicts that compare each claim against the truths. Each interaction yields a reason indicating why a verdict failed or succeeded. You are given all those reasons.
 
+                **
+                IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+                Example JSON:
+                {{
+                    "reason": "The score is <turn_faithfulness_score> because <your_reason>."
+                }}
+
                 Inputs:
                 - final_score: the averaged score across all interactions.
                 - success: whether the metric passed or failed
@@ -213,6 +220,6 @@ class TurnFaithfulnessTemplate:
 
                 Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
 
-                The final reason:
+                JSON:
             """
         )
