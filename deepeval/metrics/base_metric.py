@@ -49,8 +49,10 @@ class BaseMetric:
         return "Base Metric"
 
     def _accrue_cost(self, cost: float) -> None:
-        if self.evaluation_cost is not None:
+        if self.evaluation_cost is not None and cost is not None:
             self.evaluation_cost += cost
+        else:
+            self.evaluation_cost = None
 
 
 class BaseConversationalMetric:
