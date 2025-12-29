@@ -48,8 +48,8 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating a `De
 - [Optional] `model`: A string specifying the name of the DeepSeek model to use. Defaults to `DEEPSEEK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_key`: A string specifying your DeepSeek API key for authentication. Defaults to `DEEPSEEK_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `DEEPSEEK_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `DEEPSEEK_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `DEEPSEEK_COST_PER_INPUT_TOKEN` (else `0`).
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `DEEPSEEK_COST_PER_OUTPUT_TOKEN` (else `0`).
 - [Optional] `generation_kwargs`: A dictionary of additional generation forwarded to the OpenAI `chat.completions.create(...)` call.
 
 Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-deep-seek) for the DeepSeek-related environment variables.

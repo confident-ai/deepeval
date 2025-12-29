@@ -123,11 +123,8 @@ def require_costs(
     # If model data doesn't have pricing, use provided values or environment variables
     if model_data.input_price is None or model_data.output_price is None:
         if cost_per_input_token is None or cost_per_output_token is None:
-            raise DeepEvalError(
-                f"No pricing available for `{model_name}`. "
-                f"Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `{model_name}`, "
-                f"or set {input_token_envvar} and {output_token_envvar} environment variables."
-            )
+            # No costs provided, default all costs to zero instead of throwing an error
+            return 0, 0
 
         # Return the validated cost values as a tuple
         return cost_per_input_token, cost_per_output_token
