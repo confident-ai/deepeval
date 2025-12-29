@@ -357,7 +357,7 @@ class ToolUseMetric(BaseConversationalMetric):
         prompt = ToolUseTemplate.get_tool_selection_final_reason(
             scores_and_reasons, self.score, self.threshold
         )
-        
+
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
