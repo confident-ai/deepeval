@@ -1028,7 +1028,11 @@ class TestRunManager:
                 LATEST_TEST_RUN_FILE_PATH,
                 save_under_key=LATEST_TEST_RUN_DATA_KEY,
             )
-            token_cost = f"{test_run.evaluation_cost} USD" if test_run.evaluation_cost else "None"
+            token_cost = (
+                f"{test_run.evaluation_cost} USD"
+                if test_run.evaluation_cost
+                else "None"
+            )
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",

@@ -302,7 +302,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 **self.generation_kwargs,
             },
         }
-    
+
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price

@@ -292,7 +292,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             extraction_limit=self.truths_extraction_limit,
             multimodal=multimodal,
         )
-        
+
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -326,7 +326,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             assistant_output=assistant_content,
             multimodal=multimodal,
         )
-        
+
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,

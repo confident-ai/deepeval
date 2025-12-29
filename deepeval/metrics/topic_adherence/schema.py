@@ -15,5 +15,6 @@ class RelevancyVerdict(BaseModel):
     verdict: Literal["TP", "TN", "FP", "FN"]
     reason: str
 
+
 class TopicAdherenceReason(BaseModel):
     reason: str
