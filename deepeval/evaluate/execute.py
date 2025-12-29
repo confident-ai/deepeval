@@ -484,21 +484,18 @@ def execute_test_cases(
             except (asyncio.TimeoutError, TimeoutError):
 
                 msg = _timeout_msg("evaluating metric", deadline_timeout)
-
-                for i, m in enumerate(metrics_for_case):
-                    if getattr(m, "skipped", False):
+                for i, metric in enumerate(metrics_for_case):
+                    if metric.skipped:
                         continue
                     # already finished or errored? leave it
-                    if getattr(m, "success", None) is not None or getattr(
-                        m, "error", None
-                    ):
+                    if metric.success is not None or metric.error is not None:
                         continue
                     if i == current_index:
-                        m.success = False
-                        m.error = msg
+                        metric.success = False
+                        metric.error = msg
                     elif i > current_index:
-                        m.success = False
-                        m.error = "Skipped due to case timeout."
+                        metric.success = False
+                        metric.error = "Skipped due to case timeout."
 
                 if not error_config.ignore_errors:
                     raise
@@ -523,12 +520,12 @@ def execute_test_cases(
                         )
 
                     # Attach MetricData for *all* metrics (finished or synthesized)
-                    for i, m in enumerate(metrics_for_case):
-                        if getattr(m, "skipped", False):
+                    for i, metric in enumerate(metrics_for_case):
+                        if metric.skipped:
                             continue
                         if not emitted[i]:
                             api_test_case.update_metric_data(
-                                create_metric_data(m)
+                                create_metric_data(metric)
                             )
 
                     elapsed = time.perf_counter() - start_time
@@ -581,9 +578,8 @@ async def a_execute_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
-                func, *args, timeout=timeout, **kwargs
+                func, *args, timeout=get_per_task_timeout_seconds(), **kwargs
             )
 
     global_test_run_cache_manager.disable_write_cache = (
@@ -1571,9 +1567,8 @@ async def a_execute_agentic_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
-                func, *args, timeout=timeout, **kwargs
+                func, *args, timeout=get_per_task_timeout_seconds(), **kwargs
             )
 
     test_run_manager = global_test_run_manager
@@ -2525,8 +2520,9 @@ def a_execute_agentic_test_cases_from_loop(
 
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
-            timeout = get_per_task_timeout_seconds()
-            return await _await_with_outer_deadline(coroutine, timeout=timeout)
+            return await _await_with_outer_deadline(
+                coroutine, timeout=get_per_task_timeout_seconds()
+            )
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
@@ -2969,9 +2965,8 @@ async def _a_evaluate_traces(
 
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
-                func, *args, timeout=timeout, **kwargs
+                func, *args, timeout=get_per_task_timeout_seconds(), **kwargs
             )
 
     eval_tasks = []
@@ -3049,9 +3044,8 @@ async def _evaluate_test_case_pairs(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
-                func, *args, timeout=timeout, **kwargs
+                func, *args, timeout=get_per_task_timeout_seconds(), **kwargs
             )
 
     tasks = []

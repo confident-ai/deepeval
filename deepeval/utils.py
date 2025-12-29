@@ -275,16 +275,12 @@ def are_timeouts_disabled() -> bool:
     return bool(get_settings().DEEPEVAL_DISABLE_TIMEOUTS)
 
 
-def maybe_timeout(seconds: float) -> Optional[float]:
-    return None if are_timeouts_disabled() else seconds
-
-
 def get_per_task_timeout_seconds() -> float:
     return get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
 
 
 def get_per_task_timeout() -> Optional[float]:
-    return maybe_timeout(get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS)
+    return None if are_timeouts_disabled() else get_per_task_timeout_seconds()
 
 
 def get_gather_timeout_seconds() -> float:
@@ -295,7 +291,7 @@ def get_gather_timeout_seconds() -> float:
 
 
 def get_gather_timeout() -> Optional[float]:
-    return maybe_timeout(get_gather_timeout_seconds())
+    return None if are_timeouts_disabled() else get_gather_timeout_seconds()
 
 
 def login(api_key: str):
