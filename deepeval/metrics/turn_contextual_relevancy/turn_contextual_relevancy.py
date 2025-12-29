@@ -14,6 +14,8 @@ from deepeval.metrics.utils import (
     get_unit_interactions,
     get_turns_in_sliding_window,
     initialize_model,
+    generate_with_schema_and_extract,
+    a_generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.turn_contextual_relevancy.template import (
@@ -264,29 +266,15 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 multimodal=multimodal,
             )
 
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                self.evaluation_cost += cost
-                verdicts.extend([item for item in res.verdicts])
-            else:
-                try:
-                    res: ContextualRelevancyVerdicts = (
-                        await self.model.a_generate(
-                            prompt, schema=ContextualRelevancyVerdicts
-                        )
-                    )
-                    verdicts.extend([item for item in res.verdicts])
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    verdicts.extend(
-                        [
-                            ContextualRelevancyVerdict(**item)
-                            for item in data["verdicts"]
-                        ]
-                    )
+            result = await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=ContextualRelevancyVerdicts,
+                extract_schema=lambda s: s.verdicts,
+                extract_json=lambda data: data["verdicts"],
+            )
+
+            verdicts.extend(result)
 
         return verdicts
 
@@ -306,27 +294,15 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 multimodal=multimodal,
             )
 
-            if self.using_native_model:
-                res, cost = self.model.generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                self.evaluation_cost += cost
-                verdicts.extend([item for item in res.verdicts])
-            else:
-                try:
-                    res: ContextualRelevancyVerdicts = self.model.generate(
-                        prompt, schema=ContextualRelevancyVerdicts
-                    )
-                    verdicts.extend([item for item in res.verdicts])
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    verdicts.extend(
-                        [
-                            ContextualRelevancyVerdict(**item)
-                            for item in data["verdicts"]
-                        ]
-                    )
+            result = generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=ContextualRelevancyVerdicts,
+                extract_schema=lambda s: s.verdicts,
+                extract_json=lambda data: data["verdicts"],
+            )
+
+            verdicts.extend(result)
 
         return verdicts
 
@@ -419,24 +395,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ContextualRelevancyScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _get_interaction_reason(
         self,
@@ -469,22 +434,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = self.model.generate(
-                    prompt, schema=ContextualRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _get_verbose_steps(
         self, windows_scores: List[InteractionContextualRelevancyScore]
@@ -517,13 +473,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = self.model.generate(prompt)
-            return res
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_reason(
         self, scores: List[InteractionContextualRelevancyScore]
@@ -542,13 +498,13 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = await self.model.a_generate(prompt)
-            return res
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _calculate_score(
         self, scores: List[InteractionContextualRelevancyScore]

@@ -29,6 +29,7 @@ retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
 _ALIAS_MAP = {
     "model": ["model_id"],
+    "region": ["region_name"],
     "cost_per_input_token": ["input_token_cost"],
     "cost_per_output_token": ["output_token_cost"],
 }
@@ -303,10 +304,10 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         }
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        return (
-            input_tokens * self.cost_per_input_token
-            + output_tokens * self.cost_per_output_token
-        )
+        if self.model_data.input_price and self.model_data.output_price:
+            input_cost = input_tokens * self.model_data.input_price
+            output_cost = output_tokens * self.model_data.output_price
+            return input_cost + output_cost
 
     def load_model(self):
         pass

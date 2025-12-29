@@ -18,6 +18,7 @@ from deepeval.metrics.topic_adherence.schema import (
     RelevancyVerdict,
     QAPairs,
     QAPair,
+    TopicAdherenceReason,
 )
 from deepeval.metrics.api import metric_data_manager
 
@@ -227,25 +228,25 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         prompt = TopicAdherenceTemplate.generate_reason(
             self.success, self.score, self.threshold, TP, TN, FP, FN
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = self.model.generate(prompt)
-            return res
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TopicAdherenceReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_reason(self, TP, TN, FP, FN):
         prompt = TopicAdherenceTemplate.generate_reason(
             self.success, self.score, self.threshold, TP, TN, FP, FN
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = await self.model.a_generate(prompt)
-            return res
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=TopicAdherenceReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _get_score(self, TP, TN, FP, FN) -> float:
         true_values = TP[0] + TN[0]

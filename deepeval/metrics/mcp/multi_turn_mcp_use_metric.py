@@ -14,7 +14,7 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore
+from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore, Reason
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.api import metric_data_manager
@@ -336,13 +336,13 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = self.model.generate(prompt)
-            return res
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Reason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_reason(
         self,
@@ -363,13 +363,13 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.score, self.success, reasons
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            return res
-        else:
-            res = await self.model.a_generate(prompt)
-            return res
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Reason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
