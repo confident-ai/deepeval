@@ -20,3 +20,6 @@ class ToolScore(BaseModel):
 class ArgsScore(BaseModel):
     score: float
     reason: str
+
+class Reason(BaseModel):
+    reason: str
