@@ -2,7 +2,11 @@ import asyncio
 
 from typing import Optional, List, Union
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    get_per_task_timeout,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -19,7 +23,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.prompt_alignment.template import PromptAlignmentTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
-from deepeval.config.settings import get_settings
 
 from deepeval.metrics.api import metric_data_manager
 
@@ -83,15 +86,10 @@ class PromptAlignmentMetric(BaseMetric):
                     _in_component=_in_component,
                     _log_metric_to_confident=_log_metric_to_confident,
                 )
-                settings = get_settings()
                 loop.run_until_complete(
                     asyncio.wait_for(
                         coro,
-                        timeout=(
-                            None
-                            if settings.DEEPEVAL_DISABLE_TIMEOUTS
-                            else settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                        ),
+                        timeout=get_per_task_timeout(),
                     )
                 )
             else:

@@ -51,6 +51,10 @@ from deepeval.utils import (
     shorten,
     len_medium,
     format_error_text,
+    are_timeouts_disabled,
+    get_per_task_timeout_seconds,
+    get_gather_timeout_seconds,
+    get_gather_timeout,
 )
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
@@ -107,6 +111,57 @@ from deepeval.test_run.hyperparameters import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _timeout_msg(action: str, seconds: float) -> str:
+    if are_timeouts_disabled():
+        return (
+            f"Timeout occurred while {action} "
+            "(DeepEval timeouts are disabled; this likely came from the model/provider SDK or network layer). "
+            "Set DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
+        )
+    return (
+        f"Timed out after {seconds:.2f}s while {action}. "
+        "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
+        "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
+    )
+
+
+def _log_gather_timeout(
+    logger,
+    *,
+    exc: Optional[BaseException] = None,
+    pending: Optional[int] = None,
+) -> None:
+    settings = get_settings()
+    if are_timeouts_disabled():
+        logger.warning(
+            "A task raised %s while waiting for gathered results; DeepEval gather/per-task timeouts are disabled%s. "
+            "This likely came from the model/provider SDK or network layer.",
+            type(exc).__name__ if exc else "TimeoutError",
+            f" (pending={pending})" if pending is not None else "",
+            exc_info=settings.DEEPEVAL_LOG_STACK_TRACES,
+        )
+    else:
+        if pending is not None:
+            logger.warning(
+                "Gather TIMEOUT after %.1fs; pending=%d tasks. "
+                "Some metrics may be marked as timed out. "
+                "To give tasks more time, consider increasing "
+                "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or "
+                "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE.",
+                get_gather_timeout_seconds(),
+                pending,
+            )
+
+        else:
+            logger.warning(
+                "gather TIMEOUT after %.1fs. Some metrics may be marked as timed out. "
+                "To give tasks more time, consider increasing "
+                "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or "
+                "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE.",
+                get_gather_timeout_seconds(),
+            )
 
 
 def _skip_metrics_for_error(
@@ -215,23 +270,6 @@ async def _snapshot_tasks():
     cur = asyncio.current_task()
     # `all_tasks` returns tasks for the current running loop only
     return {t for t in asyncio.all_tasks() if t is not cur}
-
-
-def _per_task_timeout() -> float:
-    s = get_settings()
-    return s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-
-
-def _gather_timeout() -> float:
-    s = get_settings()
-    return (
-        s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
-
-
-def _maybe_timeout(seconds: float) -> Optional[float]:
-    return None if get_settings().DEEPEVAL_DISABLE_TIMEOUTS else seconds
 
 
 def filter_duplicate_results(
@@ -359,7 +397,7 @@ def execute_test_cases(
             index_of = {id(m): i for i, m in enumerate(metrics_for_case)}
             current_index = -1
             start_time = time.perf_counter()
-            deadline_timeout = _per_task_timeout()
+            deadline_timeout = get_per_task_timeout_seconds()
             deadline_token = set_outer_deadline(deadline_timeout)
             new_cached_test_case: CachedTestCase = None
             try:
@@ -445,18 +483,8 @@ def execute_test_cases(
                 run_sync_with_timeout(_run_case, deadline_timeout)
             except (asyncio.TimeoutError, TimeoutError):
 
-                if get_settings().DEEPEVAL_DISABLE_TIMEOUTS:
-                    msg = (
-                        "Timeout occurred while executing test case "
-                        "(DeepEval timeouts are disabled; this likely came from the model/provider SDK or network layer). "
-                        "Set DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
-                    )
-                else:
-                    msg = (
-                        f"Timed out after {deadline_timeout:.2f}s while evaluating metric. "
-                        "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
-                        "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
-                    )
+                msg = _timeout_msg("evaluating metric", deadline_timeout)
+
                 for i, m in enumerate(metrics_for_case):
                     if getattr(m, "skipped", False):
                         continue
@@ -553,7 +581,7 @@ async def a_execute_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = _per_task_timeout()
+            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
                 func, *args, timeout=timeout, **kwargs
             )
@@ -653,7 +681,7 @@ async def a_execute_test_cases(
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*tasks),
-                    timeout=_maybe_timeout(_gather_timeout()),
+                    timeout=get_gather_timeout(),
                 )
             except (asyncio.TimeoutError, TimeoutError) as e:
                 for t in tasks:
@@ -661,19 +689,8 @@ async def a_execute_test_cases(
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
 
-                settings = get_settings()
-                if settings.DEEPEVAL_DISABLE_TIMEOUTS:
-                    logging.getLogger("deepeval").error(
-                        "A task raised %s while waiting for gathered results; DeepEval gather timeouts are disabled. "
-                        "Some tasks may be cancelled as part of error handling.",
-                        type(e).__name__,
-                        exc_info=settings.DEEPEVAL_LOG_STACK_TRACES,
-                    )
-                else:
-                    logging.getLogger("deepeval").error(
-                        "Gather timed out after %.1fs. Some metrics may be marked as timed out.",
-                        _gather_timeout(),
-                    )
+                _log_gather_timeout(logger, exc=e)
+
                 if not error_config.ignore_errors:
                     raise
 
@@ -733,7 +750,7 @@ async def a_execute_test_cases(
         try:
             await asyncio.wait_for(
                 asyncio.gather(*tasks),
-                timeout=_maybe_timeout(_gather_timeout()),
+                timeout=get_gather_timeout(),
             )
         except (asyncio.TimeoutError, TimeoutError):
             # Cancel any still-pending tasks and drain them
@@ -1040,7 +1057,7 @@ def execute_agentic_test_cases(
                             loop.run_until_complete(
                                 _await_with_outer_deadline(
                                     coro,
-                                    timeout=_per_task_timeout(),
+                                    timeout=get_per_task_timeout_seconds(),
                                 )
                             )
                         else:
@@ -1367,24 +1384,13 @@ def execute_agentic_test_cases(
 
             # run the golden with a timeout
             start_time = time.perf_counter()
-            deadline = _per_task_timeout()
+            deadline = get_per_task_timeout_seconds()
 
             try:
                 run_sync_with_timeout(_run_golden, deadline)
             except (asyncio.TimeoutError, TimeoutError):
                 # mark any not yet finished trace level and span level metrics as timed out.
-                if get_settings().DEEPEVAL_DISABLE_TIMEOUTS:
-                    msg = (
-                        "Timeout occurred while executing agentic test case "
-                        "(DeepEval timeouts are disabled; this likely came from the model/provider SDK or network layer). "
-                        "Set DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
-                    )
-                else:
-                    msg = (
-                        f"Timed out after {deadline:.2f}s while executing agentic test case. "
-                        "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
-                        "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
-                    )
+                msg = _timeout_msg("executing agentic test case", deadline)
 
                 if current_trace is not None:
                     # Trace-level metrics
@@ -1565,7 +1571,7 @@ async def a_execute_agentic_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = _per_task_timeout()
+            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
                 func, *args, timeout=timeout, **kwargs
             )
@@ -1618,7 +1624,7 @@ async def a_execute_agentic_test_cases(
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*tasks),
-                    timeout=_maybe_timeout(_gather_timeout()),
+                    timeout=get_gather_timeout(),
                 )
             except (asyncio.TimeoutError, TimeoutError):
                 # Cancel any still-pending tasks and drain them
@@ -1699,7 +1705,7 @@ async def _a_execute_agentic_test_case(
                     await _await_with_outer_deadline(
                         observed_callback,
                         golden.input,
-                        timeout=_per_task_timeout(),
+                        timeout=get_per_task_timeout_seconds(),
                     )
                 else:
                     observed_callback(golden.input)
@@ -1793,7 +1799,7 @@ async def _a_execute_agentic_test_case(
                 try:
                     await asyncio.wait_for(
                         asyncio.gather(*child_tasks),
-                        timeout=_maybe_timeout(_gather_timeout()),
+                        timeout=get_gather_timeout(),
                     )
                 except (asyncio.TimeoutError, TimeoutError):
                     for t in child_tasks:
@@ -2519,7 +2525,7 @@ def a_execute_agentic_test_cases_from_loop(
 
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
-            timeout = _per_task_timeout()
+            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(coroutine, timeout=timeout)
 
     def evaluate_test_cases(
@@ -2742,7 +2748,7 @@ def a_execute_agentic_test_cases_from_loop(
                 loop.run_until_complete(
                     asyncio.wait_for(
                         asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=_maybe_timeout(_gather_timeout()),
+                        timeout=get_gather_timeout(),
                     )
                 )
 
@@ -2752,25 +2758,8 @@ def a_execute_agentic_test_cases_from_loop(
                 settings = get_settings()
                 pending = [t for t in created_tasks if not t.done()]
 
-                if settings.DEEPEVAL_DISABLE_TIMEOUTS:
-                    logger.warning(
-                        "[deepeval] A task raised %s while waiting for gathered results; "
-                        "DeepEval gather/per-task timeouts are disabled. pending=%d. "
-                        "This likely came from the provider SDK or network layer.",
-                        type(e).__name__,
-                        len(pending),
-                        exc_info=settings.DEEPEVAL_LOG_STACK_TRACES,
-                    )
-                else:
-                    # DeepEval-enforced timeout path
-                    logger.warning(
-                        "[deepeval] gather TIMEOUT after %.1fs; pending=%d tasks. "
-                        "To give tasks more time, consider increasing "
-                        "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or "
-                        "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE.",
-                        _gather_timeout(),
-                        len(pending),
-                    )
+                _log_gather_timeout(logger, exc=e, pending=len(pending))
+
                 # Log the elapsed time for each task that was pending
                 for t in pending:
                     meta = task_meta.get(t, {})
@@ -2781,7 +2770,7 @@ def a_execute_agentic_test_cases_from_loop(
                     if not settings.DEEPEVAL_DISABLE_TIMEOUTS:
                         timeout_type = (
                             "per-task"
-                            if elapsed_time >= _per_task_timeout()
+                            if elapsed_time >= get_per_task_timeout_seconds()
                             else "gather"
                         )
                         logger.info(
@@ -2980,7 +2969,7 @@ async def _a_evaluate_traces(
 
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = _per_task_timeout()
+            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
                 func, *args, timeout=timeout, **kwargs
             )
@@ -3030,7 +3019,7 @@ async def _a_evaluate_traces(
     try:
         await asyncio.wait_for(
             asyncio.gather(*eval_tasks),
-            timeout=_maybe_timeout(_gather_timeout()),
+            timeout=get_gather_timeout(),
         )
     except (asyncio.TimeoutError, TimeoutError):
         for t in eval_tasks:
@@ -3060,7 +3049,7 @@ async def _evaluate_test_case_pairs(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            timeout = _per_task_timeout()
+            timeout = get_per_task_timeout_seconds()
             return await _await_with_outer_deadline(
                 func, *args, timeout=timeout, **kwargs
             )
@@ -3100,7 +3089,7 @@ async def _evaluate_test_case_pairs(
     try:
         await asyncio.wait_for(
             asyncio.gather(*tasks),
-            timeout=_maybe_timeout(_gather_timeout()),
+            timeout=get_gather_timeout(),
         )
     except (asyncio.TimeoutError, TimeoutError):
         # Cancel any still-pending tasks and drain them
