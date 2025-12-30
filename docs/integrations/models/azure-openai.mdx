@@ -62,8 +62,8 @@ There are **ZERO** mandatory and **NINE** optional parameters when creating an `
 - [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if `deepeval` has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `deployment_name`: A string specifying the name of your Azure OpenAI deployment. Defaults to `AZURE_DEPLOYMENT_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_version`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed; raises an error at runtime if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.

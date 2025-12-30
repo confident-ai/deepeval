@@ -161,6 +161,13 @@ class ToolUseTemplate:
             - The key patterns or trends in the sub-reasons (e.g., consistent correct choices, repeated irrelevant tool calls, missed best-fit tools).
             - A clear statement linking the **score** and **threshold** outcome (e.g., “The agent passed because…” or “Failed because…”).
 
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+            Example JSON:
+            {{
+                "reason": "The score is <score> because <your_reason>."
+            }}
+
             RULES:
             - Focus on *which tools were selected* and *why that selection pattern was or wasn't appropriate*.
             - Mention specific issues or strengths like redundancy, misuse, or perfect matching.
@@ -178,7 +185,7 @@ class ToolUseTemplate:
             Threshold: {threshold}
             Result: {"PASS" if final_score >= threshold else "FAIL"}
 
-            Final Reason:
+            JSON:
             """
         )
 
@@ -199,6 +206,13 @@ class ToolUseTemplate:
             - The dominant strengths or weaknesses from the sub-reasons (e.g., correct parameterization, missing required fields, generic values, or misaligned arguments).
             - Whether the agent met or fell short of the threshold and why.
 
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+            Example JSON:
+            {{
+                "reason": "The score is <score> because <your_reason>."
+            }}
+
             RULES:
             - Focus strictly on **argument correctness** and **context alignment** — not which tools were chosen.
             - Reference specific argument-level problems or successes where helpful.
@@ -215,6 +229,6 @@ class ToolUseTemplate:
             Threshold: {threshold}
             Result: {"PASS" if final_score >= threshold else "FAIL"}
 
-            Final Reason:
+            JSON:
             """
         )

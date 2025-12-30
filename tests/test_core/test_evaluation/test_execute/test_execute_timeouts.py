@@ -150,3 +150,116 @@ def test_per_attempt_timeout_sync_path(settings):
     last_exc = err.value.last_attempt.exception()
     assert isinstance(last_exc, (asyncio.TimeoutError, TimeoutError))
     assert 2.0 <= dur <= 6.0
+
+
+@pytest.mark.asyncio
+async def test_disable_timeouts_disables_per_task_async(settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DISABLE_TIMEOUTS = True
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = (
+            0.1  # would normally trip
+        )
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 1
+
+    tc = LLMTestCase(input="hello", actual_output="test")
+    metric = _SleepyMetric(sleep_s=0.2)
+
+    async_config = AsyncConfig(max_concurrent=1, throttle_value=0)
+    display_config = DisplayConfig(show_indicator=False, verbose_mode=False)
+    cache_config = CacheConfig(write_cache=False, use_cache=False)
+    error_config = ErrorConfig(
+        ignore_errors=False, skip_on_missing_params=False
+    )
+
+    # the test itself must not hang
+    await asyncio.wait_for(
+        execute_module.a_execute_test_cases(
+            test_cases=[tc],
+            metrics=[metric],
+            error_config=error_config,
+            display_config=display_config,
+            cache_config=cache_config,
+            async_config=async_config,
+        ),
+        timeout=2.0,
+    )
+
+
+def test_disable_timeouts_disables_per_task_sync(settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DISABLE_TIMEOUTS = True
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.1
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 1
+
+    tc = LLMTestCase(input="hello", actual_output="test")
+    metric = _SleepyMetric(sleep_s=0.2)
+
+    display_config = DisplayConfig(show_indicator=False, verbose_mode=False)
+    cache_config = CacheConfig(write_cache=False, use_cache=False)
+    error_config = ErrorConfig(
+        ignore_errors=False, skip_on_missing_params=False
+    )
+
+    execute_module.execute_test_cases(
+        test_cases=[tc],
+        metrics=[metric],
+        error_config=error_config,
+        display_config=display_config,
+        cache_config=cache_config,
+    )
+
+
+@pytest.mark.asyncio
+async def test_disable_timeouts_disables_per_attempt_async(settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DISABLE_TIMEOUTS = True
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 5
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE = 0.05
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 1
+
+    tc = LLMTestCase(input="hello", actual_output="test")
+    metric = _PerAttemptTimeoutMetric(sleep_s=0.2)
+
+    async_config = AsyncConfig(max_concurrent=1, throttle_value=0)
+    display_config = DisplayConfig(show_indicator=False, verbose_mode=False)
+    cache_config = CacheConfig(write_cache=False, use_cache=False)
+    error_config = ErrorConfig(
+        ignore_errors=False, skip_on_missing_params=False
+    )
+
+    await asyncio.wait_for(
+        execute_module.a_execute_test_cases(
+            test_cases=[tc],
+            metrics=[metric],
+            error_config=error_config,
+            display_config=display_config,
+            cache_config=cache_config,
+            async_config=async_config,
+        ),
+        timeout=2.0,
+    )
+
+
+def test_disable_timeouts_disables_per_attempt_sync(settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DISABLE_TIMEOUTS = True
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 5
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE = 0.05
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 1
+
+    tc = LLMTestCase(input="hello", actual_output="test")
+    metric = _PerAttemptTimeoutMetric(sleep_s=0.2)
+
+    display_config = DisplayConfig(show_indicator=False, verbose_mode=False)
+    cache_config = CacheConfig(write_cache=False, use_cache=False)
+    error_config = ErrorConfig(
+        ignore_errors=False, skip_on_missing_params=False
+    )
+
+    execute_module.execute_test_cases(
+        test_cases=[tc],
+        metrics=[metric],
+        error_config=error_config,
+        display_config=display_config,
+        cache_config=cache_config,
+    )

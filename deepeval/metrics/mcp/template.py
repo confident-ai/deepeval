@@ -148,6 +148,13 @@ JSON:
         Context:
         The reasons are from metrics that were used to evaluate an MCP application by determining whether the model accurately completed a task or called toos and resources with the right arguments.
 
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+        Example JSON:
+        {{
+            "reason": "The score is <score> because <your_reason>."
+        }}
+
         Inputs:
         - final_score: the averaged score across all interactions.
         - success: whether the metric passed or failed
@@ -173,5 +180,5 @@ JSON:
 
         Now give me a final reason that explains why the metric passed or failed. Output ONLY the reason and nothing else.
 
-        The final reason:
+        JSON:
         """

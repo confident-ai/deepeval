@@ -11,12 +11,14 @@ By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To e
 DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
 
 **Recommended (local dev):**
+
 ```bash
 # .env.local
 OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 Alternative (Shell/CI)
+
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
@@ -81,8 +83,8 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `
 - [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying your OpenAI URL.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if DeepEval has no pricing metadata for the model and the parameter is unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
 
 :::info
