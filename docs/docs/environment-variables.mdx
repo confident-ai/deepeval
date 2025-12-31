@@ -6,6 +6,23 @@ sidebar_label: Environment Variables
 
 `deepeval` automatically loads environment variables from dotenv files in this order: `.env` → `.env.{APP_ENV}` → `.env.local` (highest precedence). Existing process environment variables are never overwritten—process env always wins.
 
+## Boolean flags
+
+Boolean environment variables in DeepEval are parsed using env-style boolean semantics. Tokens are case-insensitive and any surrounding quotes or whitespace is ignored.
+
+- **Truthy tokens**:
+  `1`, `true`, `t`, `yes`, `y`, `on`, `enable`, `enabled`
+- **Falsy tokens**:
+  `0`, `false`, `f`, `no`, `n`, `off`, `disable`, `disabled`
+
+Rules:
+- `bool` values are used as-is.
+- Numeric values are `False` when `0`, otherwise `True`.
+- Strings are matched against the tokens above.
+- If a value is **unset** (or doesn't match any token), DeepEval falls back to the setting's default.
+
+In the tables below, boolean variables are shown as `1` / `0` / `unset` (or `1` / `unset`), but all of the tokens above are accepted.
+
 ## General Settings
 
 These are the core settings for controlling `deepeval`'s behavior, file paths, and run identifiers.
@@ -64,7 +81,7 @@ These options let you tune timeout limits and concurrency for parallel execution
 | `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE` | `float` / unset    | Per-attempt timeout override for provider calls (preferred override key).                   |
 | `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`    | `float` / unset    | Outer timeout budget override for a metric/test-case (preferred override key).              |
 | `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`  | `float` / unset    | Override extra buffer time added to gather/drain after tasks complete.                      |
-| `DEEPEVAL_DISABLE_TIMEOUTS`                     | `bool`  / unset    | Disable DeepEval enforced timeouts (per-attempt, per-task, gather).                         |
+| `DEEPEVAL_DISABLE_TIMEOUTS`                     | `1` / `0` / unset  | Disable DeepEval enforced timeouts (per-attempt, per-task, gather).                         |
 | `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS`          | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE`. |
 | `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS`             | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE`.    |
 | `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS`           | `float` (computed) | Read-only computed value. To override, set `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`.  |
