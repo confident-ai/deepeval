@@ -106,7 +106,7 @@ else:
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 # OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
-OTLP_ENDPOINT = str(settings.CONFIDENT_BASE_OTEL_URL) + "v1/traces"
+OTLP_ENDPOINT = str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
 init_clock_bridge()  # initialize clock bridge for perf_counter() to epoch_nanos conversion
 
 

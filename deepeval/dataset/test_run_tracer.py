@@ -28,7 +28,7 @@ def is_opentelemetry_available():
 from deepeval.confident.api import get_confident_api_key
 
 settings = get_settings()
-OTLP_ENDPOINT = str(settings.CONFIDENT_BASE_OTEL_URL)
+OTLP_ENDPOINT = str(settings.CONFIDENT_OTEL_URL)
 # OTLP_ENDPOINT = "http://127.0.0.1:4318"
 
 # Module-level globals to be imported and used by other code
