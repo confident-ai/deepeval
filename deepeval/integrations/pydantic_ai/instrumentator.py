@@ -27,6 +27,7 @@ from deepeval.tracing.types import (
 )
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 try:
     # Optional dependencies
@@ -48,7 +49,7 @@ except ImportError as e:
     dependency_installed = False
 
     # Preserve previous behavior: only log when verbose mode is enabled.
-    if get_settings().DEEPEVAL_VERBOSE_MODE:
+    if settings.DEEPEVAL_VERBOSE_MODE:
         if isinstance(e, ModuleNotFoundError):
             logger.warning(
                 "Optional tracing dependency not installed: %s",
@@ -104,7 +105,8 @@ else:
     ReadableSpan = _ReadableSpan
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
-OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
+# OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
+OTLP_ENDPOINT = str(settings.CONFIDENT_BASE_OTEL_URL) + "v1/traces"
 init_clock_bridge()  # initialize clock bridge for perf_counter() to epoch_nanos conversion
 
 
