@@ -65,7 +65,7 @@ def init_global_test_run_tracer(api_key: Optional[str] = None):
 
     provider = TracerProvider()
     exporter = OTLPSpanExporter(
-        endpoint=f"{OTLP_ENDPOINT}/v1/traces",
+        endpoint=f"{OTLP_ENDPOINT}v1/traces",
         headers={"x-confident-api-key": api_key},
     )
     provider.add_span_processor(RunIdSpanProcessor())
