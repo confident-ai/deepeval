@@ -5,6 +5,7 @@ from opentelemetry.trace import Tracer as OTelTracer
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from deepeval.config.settings import get_settings
 
 try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -26,11 +27,8 @@ def is_opentelemetry_available():
 
 from deepeval.confident.api import get_confident_api_key
 
-OTLP_ENDPOINT = (
-    os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-    if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-    else "https://otel.confident-ai.com"
-)
+settings = get_settings()
+OTLP_ENDPOINT = str(settings.CONFIDENT_BASE_OTEL_URL)
 # OTLP_ENDPOINT = "http://127.0.0.1:4318"
 
 # Module-level globals to be imported and used by other code

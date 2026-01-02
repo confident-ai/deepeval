@@ -7,7 +7,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
 
-OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+OTLP_ENDPOINT = os.getenv("CONFIDENT_BASE_OTEL_URL")
 CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
 
 trace_provider = TracerProvider()
