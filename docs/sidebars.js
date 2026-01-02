@@ -279,5 +279,13 @@ module.exports = {
       items: ["command-line-interface", "environment-variables", "troubleshooting", "data-privacy", "miscellaneous"],
       collapsed: false,
     },
+    {
+      type: "category",
+      label: "Changelog",
+      className: "sidebar-item-icon-changelog",
+      link: { type: "doc", id: "changelog/changelog-index" },
+      items: ["changelog/changelog-2025"],
+      collapsed: false,
+    },
   ],
 };
