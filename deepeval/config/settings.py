@@ -783,8 +783,8 @@ class Settings(BaseSettings):
         True, description="Enable metric logging to Confident where supported."
     )
 
-    OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = Field(
-        None,
+    CONFIDENT_OTEL_URL: Optional[AnyUrl] = Field(
+        "https://otel.confident-ai.com",
         description="OpenTelemetry OTLP exporter endpoint (if using OTEL export).",
     )
 
