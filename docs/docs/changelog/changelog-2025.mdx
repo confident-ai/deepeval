@@ -1,0 +1,1121 @@
+---
+id: changelog-2025
+title: 2025
+sidebar_label: 2025
+---
+
+<!-- DeepEval release notes start -->
+
+## December
+
+### New Feature
+
+#### v3.7.6
+- Support for conversational test cases, goldens and convo goldens for multimodal. ([#2373](https://github.com/confident-ai/deepeval/pull/2373)) <!-- pr:2373 -->
+- Added tests for metrics. ([#2375](https://github.com/confident-ai/deepeval/pull/2375)) <!-- pr:2375 -->
+
+#### v3.7.5
+- make Ollama, Anthropic, and Gemini optional in DeepEval. ([#2345](https://github.com/confident-ai/deepeval/pull/2345)) <!-- pr:2345 -->
+- add optional model deps to dev deps for CI. ([#2357](https://github.com/confident-ai/deepeval/pull/2357)) <!-- pr:2357 -->
+
+#### v3.7.4
+- introduce GEPA-based prompt optimization. ([#2293](https://github.com/confident-ai/deepeval/pull/2293)) <!-- pr:2293 -->
+- unwrap Anthropic SecretStr API key and add coverage. ([#2329](https://github.com/confident-ai/deepeval/pull/2329)) <!-- pr:2329 -->
+- Update stalness policy with link to new MAINTAINERS.md. ([#2331](https://github.com/confident-ai/deepeval/pull/2331)) <!-- pr:2331 -->
+- add MIPROv2, COPRO and SIMBA algorithms. ([#2341](https://github.com/confident-ai/deepeval/pull/2341)) <!-- pr:2341 -->
+- add Portkey model with settings-based config. ([#2342](https://github.com/confident-ai/deepeval/pull/2342)) <!-- pr:2342 -->
+- Add missing __init__.py to make tests suite a module. ([#2349](https://github.com/confident-ai/deepeval/pull/2349)) <!-- pr:2349 -->
+
+#### v3.7.3
+- Feature/mllm azure OpenAI. ([#2319](https://github.com/confident-ai/deepeval/pull/2319)) <!-- pr:2319 -->
+- 'additional_metadata' to be stored in goldens after conversion. ([#2336](https://github.com/confident-ai/deepeval/pull/2336)) <!-- pr:2336 -->
+
+
+### Experimental Feature
+
+#### v3.7.5
+- New multi-modal approach POC. ([#2346](https://github.com/confident-ai/deepeval/pull/2346)) <!-- pr:2346 -->
+
+
+### Improvement
+
+#### v3.7.6
+- Multimodal refactor. ([#2369](https://github.com/confident-ai/deepeval/pull/2369)) <!-- pr:2369 -->
+- consistent metric output and llm interface. ([#2378](https://github.com/confident-ai/deepeval/pull/2378)) <!-- pr:2378 -->
+- resolve model data factories in multimodal validation. ([#2382](https://github.com/confident-ai/deepeval/pull/2382)) <!-- pr:2382 -->
+
+#### v3.7.5
+- updating lockfile to match pyproject.toml. ([#2358](https://github.com/confident-ai/deepeval/pull/2358)) <!-- pr:2358 -->
+- avoid double finalization under cli test run. ([#2360](https://github.com/confident-ai/deepeval/pull/2360)) <!-- pr:2360 -->
+- Replace python style boolean with JSON boolean. ([#2365](https://github.com/confident-ai/deepeval/pull/2365)) <!-- pr:2365 -->
+- set exclude=True for goldens. ([#2368](https://github.com/confident-ai/deepeval/pull/2368)) <!-- pr:2368 -->
+
+#### v3.7.4
+- unify llm api key management. ([#2330](https://github.com/confident-ai/deepeval/pull/2330)) <!-- pr:2330 -->
+- avoid raising on gather timeout in non-indicator path. ([#2335](https://github.com/confident-ai/deepeval/pull/2335)) <!-- pr:2335 -->
+- sync JSON writes to avoid corruption on NFS. ([#2338](https://github.com/confident-ai/deepeval/pull/2338)) <!-- pr:2338 -->
+- correct URL and endpoint fallbacks. ([#2344](https://github.com/confident-ai/deepeval/pull/2344)) <!-- pr:2344 -->
+- update pytest plugin reference to "deepeval" in cli/test.py. ([#2348](https://github.com/confident-ai/deepeval/pull/2348)) <!-- pr:2348 -->
+
+#### v3.7.3
+- Rename plugin entity from "plugins" to "deepeval". ([#2308](https://github.com/confident-ai/deepeval/pull/2308)) <!-- pr:2308 -->
+- verbose_mode argument and creation of predictions dataframe in HumanEval. ([#2323](https://github.com/confident-ai/deepeval/pull/2323)) <!-- pr:2323 -->
+- Dynamic Api Keys. ([#2337](https://github.com/confident-ai/deepeval/pull/2337)) <!-- pr:2337 -->
+
+
+### Bug Fix
+
+#### v3.7.6
+- Fix arena test case validation. ([#2372](https://github.com/confident-ai/deepeval/pull/2372)) <!-- pr:2372 -->
+- Fix new multi-turn metrics for no retrieval context provided turns. ([#2376](https://github.com/confident-ai/deepeval/pull/2376)) <!-- pr:2376 -->
+- Minor bugs in MCP metrics. ([#2381](https://github.com/confident-ai/deepeval/pull/2381)) <!-- pr:2381 -->
+
+#### v3.7.5
+- initial fix. ([#2347](https://github.com/confident-ai/deepeval/pull/2347)) <!-- pr:2347 -->
+- avoid pydantic-ai import errors for pydantic_ai integration. ([#2354](https://github.com/confident-ai/deepeval/pull/2354)) <!-- pr:2354 -->
+
+#### v3.7.4
+- restore provider prefixed model name parsing. ([#2343](https://github.com/confident-ai/deepeval/pull/2343)) <!-- pr:2343 -->
+
+#### v3.7.3
+- Agentic metrics docs fixes. ([#2316](https://github.com/confident-ai/deepeval/pull/2316)) <!-- pr:2316 -->
+
+
+
+## November
+
+### New Feature
+
+#### v3.7.1
+- add support for CONFIDENT_BASE_URL. ([#2305](https://github.com/confident-ai/deepeval/pull/2305)) <!-- pr:2305 -->
+- support base64 initialization for MLLMImage. ([#2306](https://github.com/confident-ai/deepeval/pull/2306)) <!-- pr:2306 -->
+
+#### v3.7.2
+- New conversational golden synthesizer. ([#2310](https://github.com/confident-ai/deepeval/pull/2310)) <!-- pr:2310 -->
+
+#### v3.7.0
+- add anthropic. ([#2224](https://github.com/confident-ai/deepeval/pull/2224)) <!-- pr:2224 -->
+- add test_async_messages_create_with_trace.json…. ([#2258](https://github.com/confident-ai/deepeval/pull/2258)) <!-- pr:2258 -->
+- crewai knowledge retirver added for. ([#2261](https://github.com/confident-ai/deepeval/pull/2261)) <!-- pr:2261 -->
+- Update `bool | None` -&gt; `Optional[bool]`. ([#2264](https://github.com/confident-ai/deepeval/pull/2264)) <!-- pr:2264 -->
+- Revert "Revert "feat(settings): auto-refresh on env change and unskip test_settings. ([#2266](https://github.com/confident-ai/deepeval/pull/2266)) <!-- pr:2266 -->
+- add 12-month stale issue policy. ([#2273](https://github.com/confident-ai/deepeval/pull/2273)) <!-- pr:2273 -->
+- add telemetry logging for OpenAI and Anthropic. ([#2279](https://github.com/confident-ai/deepeval/pull/2279)) <!-- pr:2279 -->
+- update posthog version range to support 5.4.0 to &lt;7.0.0. ([#2283](https://github.com/confident-ai/deepeval/pull/2283)) <!-- pr:2283 -->
+
+
+### Improvement
+
+#### v3.7.1
+- [Compare] - send experiments. ([#2287](https://github.com/confident-ai/deepeval/pull/2287)) <!-- pr:2287 -->
+- return custom mask result in TaskManager.mask. ([#2289](https://github.com/confident-ai/deepeval/pull/2289)) <!-- pr:2289 -->
+- update vertex ai. ([#2291](https://github.com/confident-ai/deepeval/pull/2291)) <!-- pr:2291 -->
+- handle read-only filesystems gracefully. ([#2297](https://github.com/confident-ai/deepeval/pull/2297)) <!-- pr:2297 -->
+- use valid JSON booleans in Example JSON Output. ([#2301](https://github.com/confident-ai/deepeval/pull/2301)) <!-- pr:2301 -->
+- cleanup unused temp scripts. ([#2309](https://github.com/confident-ai/deepeval/pull/2309)) <!-- pr:2309 -->
+
+#### v3.7.0
+- `tools_called` list for langchain and llamaindex. ([#2251](https://github.com/confident-ai/deepeval/pull/2251)) <!-- pr:2251 -->
+- anthropic &amp; openai. ([#2256](https://github.com/confident-ai/deepeval/pull/2256)) <!-- pr:2256 -->
+- use deepeval.anthropic. ([#2259](https://github.com/confident-ai/deepeval/pull/2259)) <!-- pr:2259 -->
+- task completion reset if not provided in the init. ([#2260](https://github.com/confident-ai/deepeval/pull/2260)) <!-- pr:2260 -->
+- migrate Pydantic models to use ConfigDict instead of class-based Config. ([#2272](https://github.com/confident-ai/deepeval/pull/2272)) <!-- pr:2272 -->
+- Non-LLM metrics, exact match and pattern match. ([#2274](https://github.com/confident-ai/deepeval/pull/2274)) <!-- pr:2274 -->
+- [docs] Openai agents evals iterator. ([#2275](https://github.com/confident-ai/deepeval/pull/2275)) <!-- pr:2275 -->
+- Non LLM Metric docs Updates. ([#2276](https://github.com/confident-ai/deepeval/pull/2276)) <!-- pr:2276 -->
+- enforce schema-aware batching and remove invalid kwarg. ([#2278](https://github.com/confident-ai/deepeval/pull/2278)) <!-- pr:2278 -->
+- test(langchain): use stable import path for `create_tool_calling_agent`. ([#2281](https://github.com/confident-ai/deepeval/pull/2281)) <!-- pr:2281 -->
+
+
+### Bug Fix
+
+#### v3.7.1
+- add missing imports, replace wildcard to avoid NameError &amp; Ruff F405. ([#2290](https://github.com/confident-ai/deepeval/pull/2290)) <!-- pr:2290 -->
+- catch errors from makedirs, narrow JSON parse except, remove debug print. ([#2295](https://github.com/confident-ai/deepeval/pull/2295)) <!-- pr:2295 -->
+- bootstrap temp cache on read failure. ([#2296](https://github.com/confident-ai/deepeval/pull/2296)) <!-- pr:2296 -->
+- Allow any version of pytest-rerunfailures. ([#2304](https://github.com/confident-ai/deepeval/pull/2304)) <!-- pr:2304 -->
+
+#### v3.7.2
+- Fix code block formatting in README.md. ([#2312](https://github.com/confident-ai/deepeval/pull/2312)) <!-- pr:2312 -->
+
+#### v3.7.0
+- otel token count fix. ([#2263](https://github.com/confident-ai/deepeval/pull/2263)) <!-- pr:2263 -->
+- preserve in-memory TestRun on disk I/O failures. ([#2267](https://github.com/confident-ai/deepeval/pull/2267)) <!-- pr:2267 -->
+- Fixed integration tests. ([#2269](https://github.com/confident-ai/deepeval/pull/2269)) <!-- pr:2269 -->
+
+
+
+## October
+
+### New Feature
+
+#### v3.6.9
+- Revert "feat(settings): auto-refresh on env change and unskip test_settings". ([#2253](https://github.com/confident-ai/deepeval/pull/2253)) <!-- pr:2253 -->
+
+#### v3.6.8
+- add per-task timeouts to semaphore-guarded awaits (#2125). ([#2125](https://github.com/confident-ai/deepeval/pull/2125)) <!-- pr:2125 -->
+- add per-task timeouts to semaphore-guarded awaits. ([#2134](https://github.com/confident-ai/deepeval/pull/2134)) <!-- pr:2134 -->
+- Add timeouts to asyncio.gather orchestrations in execute.py. ([#2136](https://github.com/confident-ai/deepeval/pull/2136)) <!-- pr:2136 -->
+- Support arguments for embedding models + evaluation_template for ConversationalGEval + docs in quickstart. ([#2203](https://github.com/confident-ai/deepeval/pull/2203)) <!-- pr:2203 -->
+- New Agent Metrics. ([#2238](https://github.com/confident-ai/deepeval/pull/2238)) <!-- pr:2238 -->
+
+#### v3.6.7
+- Features/metric logging. ([#2174](https://github.com/confident-ai/deepeval/pull/2174)) <!-- pr:2174 -->
+- add o4-mini to unsupported logprobs models list. ([#2184](https://github.com/confident-ai/deepeval/pull/2184)) <!-- pr:2184 -->
+
+#### v3.6.6
+- downgrade optional-deps messages to warnings in verbose mode. ([#2159](https://github.com/confident-ai/deepeval/pull/2159)) <!-- pr:2159 -->
+
+#### v3.6.3
+- Added tests. ([#2154](https://github.com/confident-ai/deepeval/pull/2154)) <!-- pr:2154 -->
+
+#### v3.6.2
+- Add per-task timeouts to `observed_callback` in execute.py. ([#2127](https://github.com/confident-ai/deepeval/pull/2127)) <!-- pr:2127 -->
+
+
+### Improvement
+
+#### v3.6.9
+- Solving "EvaluationDataset save_as method loses critical fields (tools_called, metadata, etc.)". ([#2227](https://github.com/confident-ai/deepeval/pull/2227)) <!-- pr:2227 -->
+- cooperative timeouts and persist on cancel. ([#2247](https://github.com/confident-ai/deepeval/pull/2247)) <!-- pr:2247 -->
+- auto-refresh on env change and unskip test_settings. ([#2249](https://github.com/confident-ai/deepeval/pull/2249)) <!-- pr:2249 -->
+- Unclosed client session using AmazonBedrockModel with aiobotocore. ([#2250](https://github.com/confident-ai/deepeval/pull/2250)) <!-- pr:2250 -->
+
+#### v3.6.8
+- Refactor test_run. ([#2153](https://github.com/confident-ai/deepeval/pull/2153)) <!-- pr:2153 -->
+- crewai tool span eval. ([#2206](https://github.com/confident-ai/deepeval/pull/2206)) <!-- pr:2206 -->
+- interchanged generation_kwargs and kwargs. ([#2209](https://github.com/confident-ai/deepeval/pull/2209)) <!-- pr:2209 -->
+- display model request parameters on input message. ([#2210](https://github.com/confident-ai/deepeval/pull/2210)) <!-- pr:2210 -->
+- Open AI integrations changes. ([#2211](https://github.com/confident-ai/deepeval/pull/2211)) <!-- pr:2211 -->
+- compare span status to `TraceSpanApiStatus.SUCCESS` in `extract_span_test_results`. ([#2214](https://github.com/confident-ai/deepeval/pull/2214)) <!-- pr:2214 -->
+- Move Hallucination required params to class var like all other metrics. ([#2215](https://github.com/confident-ai/deepeval/pull/2215)) <!-- pr:2215 -->
+- 2229 json.dumps in ToolCall.__repr__ needs ensure_ascii=False. ([#2230](https://github.com/confident-ai/deepeval/pull/2230)) <!-- pr:2230 -->
+- Removed patch from llama index integration. ([#2233](https://github.com/confident-ai/deepeval/pull/2233)) <!-- pr:2233 -->
+- use singular `reason` key in verdicts. ([#2234](https://github.com/confident-ai/deepeval/pull/2234)) <!-- pr:2234 -->
+- use singular `reason` key in verdicts to match template and schema. ([#2235](https://github.com/confident-ai/deepeval/pull/2235)) <!-- pr:2235 -->
+- OpenAI cookbook. ([#2237](https://github.com/confident-ai/deepeval/pull/2237)) <!-- pr:2237 -->
+- Trev/pydantic ai evals iterator. ([#2241](https://github.com/confident-ai/deepeval/pull/2241)) <!-- pr:2241 -->
+
+#### v3.6.7
+- [Mergeable] Prompt Changes. ([#2102](https://github.com/confident-ai/deepeval/pull/2102)) <!-- pr:2102 -->
+- Message types for Llm span. ([#2116](https://github.com/confident-ai/deepeval/pull/2116)) <!-- pr:2116 -->
+- enforce Confident boundary by clearing keys in-memory. ([#2165](https://github.com/confident-ai/deepeval/pull/2165)) <!-- pr:2165 -->
+- lint cleanup. ([#2166](https://github.com/confident-ai/deepeval/pull/2166)) <!-- pr:2166 -->
+- sandbox env per test to prevent settings leaks. ([#2168](https://github.com/confident-ai/deepeval/pull/2168)) <!-- pr:2168 -->
+- Correct function name to `check_mllm_test_case_params`. ([#2170](https://github.com/confident-ai/deepeval/pull/2170)) <!-- pr:2170 -->
+- Open AI integration. ([#2173](https://github.com/confident-ai/deepeval/pull/2173)) <!-- pr:2173 -->
+- `tools_called` to all the parenting spans of tool spans. ([#2175](https://github.com/confident-ai/deepeval/pull/2175)) <!-- pr:2175 -->
+- Deepeval docs changes for integrations. ([#2177](https://github.com/confident-ai/deepeval/pull/2177)) <!-- pr:2177 -->
+- always run trace evaluation unless event loop is closed. ([#2178](https://github.com/confident-ai/deepeval/pull/2178)) <!-- pr:2178 -->
+- Update dataset/utils.py format_turns , json dumps set ensure_ascii is False. ([#2186](https://github.com/confident-ai/deepeval/pull/2186)) <!-- pr:2186 -->
+- assign success in `is_successful` happy path. ([#2188](https://github.com/confident-ai/deepeval/pull/2188)) <!-- pr:2188 -->
+- Crew AI integration using `with trace(metrics=...)`. ([#2189](https://github.com/confident-ai/deepeval/pull/2189)) <!-- pr:2189 -->
+- map traces to goldens and skip if unmapped. ([#2190](https://github.com/confident-ai/deepeval/pull/2190)) <!-- pr:2190 -->
+- . ([#2191](https://github.com/confident-ai/deepeval/pull/2191)) <!-- pr:2191 -->
+- model integration tabs. ([#2196](https://github.com/confident-ai/deepeval/pull/2196)) <!-- pr:2196 -->
+
+#### v3.6.6
+- display conversational turns in multi-turn evals. ([#2113](https://github.com/confident-ai/deepeval/pull/2113)) <!-- pr:2113 -->
+- CI's for integration. ([#2131](https://github.com/confident-ai/deepeval/pull/2131)) <!-- pr:2131 -->
+- Saving trace in Pydanic AI instrumentator for accessing in the future. ([#2140](https://github.com/confident-ai/deepeval/pull/2140)) <!-- pr:2140 -->
+- Crew AI update. ([#2152](https://github.com/confident-ai/deepeval/pull/2152)) <!-- pr:2152 -->
+- evaluate function now returns test run id. ([#2156](https://github.com/confident-ai/deepeval/pull/2156)) <!-- pr:2156 -->
+- Pydantic AI instrunctions and flattening agent output. ([#2160](https://github.com/confident-ai/deepeval/pull/2160)) <!-- pr:2160 -->
+- enforce per-attempt timeouts &amp; Tenacity retries for sync HTTP requests to prevent indefinite hangs. ([#2162](https://github.com/confident-ai/deepeval/pull/2162)) <!-- pr:2162 -->
+
+#### v3.6.3
+- Removed snake_case to camelCase mapping from amazon bedrock. ([#2106](https://github.com/confident-ai/deepeval/pull/2106)) <!-- pr:2106 -->
+- Remove gpt-5-chat-latest from models_requiring_temperature_1. ([#2121](https://github.com/confident-ai/deepeval/pull/2121)) <!-- pr:2121 -->
+- Trace input and output if final result missing. ([#2149](https://github.com/confident-ai/deepeval/pull/2149)) <!-- pr:2149 -->
+
+#### v3.6.2
+- otel parts and stringifying metadata. ([#2114](https://github.com/confident-ai/deepeval/pull/2114)) <!-- pr:2114 -->
+- flatten trace and agent too + cleanup. ([#2115](https://github.com/confident-ai/deepeval/pull/2115)) <!-- pr:2115 -->
+- Updated `async_mode=True` by default for Hallucination Metric. ([#2117](https://github.com/confident-ai/deepeval/pull/2117)) <!-- pr:2117 -->
+- broken doc code examples. ([#2132](https://github.com/confident-ai/deepeval/pull/2132)) <!-- pr:2132 -->
+
+
+### Bug Fix
+
+#### v3.6.8
+- friendlier error surfacing. ([#2207](https://github.com/confident-ai/deepeval/pull/2207)) <!-- pr:2207 -->
+- minor crewai notebook fix. ([#2212](https://github.com/confident-ai/deepeval/pull/2212)) <!-- pr:2212 -->
+- Fixes the issue with `a_generate_goldens_from_contexts` assigning wrong source_file. ([#2213](https://github.com/confident-ai/deepeval/pull/2213)) <!-- pr:2213 -->
+
+#### v3.6.7
+- Synthesizer fix and docs update. ([#2171](https://github.com/confident-ai/deepeval/pull/2171)) <!-- pr:2171 -->
+- assert_test validation update and multimodal metric fix. ([#2193](https://github.com/confident-ai/deepeval/pull/2193)) <!-- pr:2193 -->
+- Fix typos in metrics-dag documentation. ([#2198](https://github.com/confident-ai/deepeval/pull/2198)) <!-- pr:2198 -->
+- stringify multimodal user content to prevent pydantic errors. ([#2199](https://github.com/confident-ai/deepeval/pull/2199)) <!-- pr:2199 -->
+
+#### v3.6.6
+- apply Black formatting and fix Ruff violations to pass CI. ([#2158](https://github.com/confident-ai/deepeval/pull/2158)) <!-- pr:2158 -->
+- fix broken tests. ([#2167](https://github.com/confident-ai/deepeval/pull/2167)) <!-- pr:2167 -->
+
+#### v3.6.3
+- google colab button fix. ([#2130](https://github.com/confident-ai/deepeval/pull/2130)) <!-- pr:2130 -->
+- Revert " fixed the bug for Expected_tools was empty". ([#2139](https://github.com/confident-ai/deepeval/pull/2139)) <!-- pr:2139 -->
+- Fix incorrect score normalization in GEval metric. ([#2142](https://github.com/confident-ai/deepeval/pull/2142)) <!-- pr:2142 -->
+- Amazon bedrock fix to remove default temperature. ([#2151](https://github.com/confident-ai/deepeval/pull/2151)) <!-- pr:2151 -->
+
+#### v3.6.2
+- fix ruff and black complaints. ([#2119](https://github.com/confident-ai/deepeval/pull/2119)) <!-- pr:2119 -->
+- [FIX]: improve readability of cards and expandable sections in dark mode. ([#2122](https://github.com/confident-ai/deepeval/pull/2122)) <!-- pr:2122 -->
+- fix open ai agents not working. ([#2123](https://github.com/confident-ai/deepeval/pull/2123)) <!-- pr:2123 -->
+- fixed the bug for Expected_tools was empty. ([#2135](https://github.com/confident-ai/deepeval/pull/2135)) <!-- pr:2135 -->
+
+
+
+## September
+
+### New Feature
+
+#### v3.5.9
+- Add name and comments to save_as and loading goldens. ([#2066](https://github.com/confident-ai/deepeval/pull/2066)) <!-- pr:2066 -->
+- add `evaluation_template` support. ([#2090](https://github.com/confident-ai/deepeval/pull/2090)) <!-- pr:2090 -->
+
+#### v3.5.6
+- open ai agents trace support. ([#2087](https://github.com/confident-ai/deepeval/pull/2087)) <!-- pr:2087 -->
+
+#### v3.5.2
+- Pydantic AI additional changes after docs. ([#2060](https://github.com/confident-ai/deepeval/pull/2060)) <!-- pr:2060 -->
+- Support general async loop prompt polling. ([#2062](https://github.com/confident-ai/deepeval/pull/2062)) <!-- pr:2062 -->
+
+#### v3.5.0
+- add SDK-agnostic retry policy and wire OpenAI LLM to it. ([#1941](https://github.com/confident-ai/deepeval/pull/1941)) <!-- pr:1941 -->
+- test: add __init__.py to nested test dirs to avoid module name collisions. ([#2037](https://github.com/confident-ai/deepeval/pull/2037)) <!-- pr:2037 -->
+- build(dev): add pre-commit and ruff; update lockfile. ([#2038](https://github.com/confident-ai/deepeval/pull/2038)) <!-- pr:2038 -->
+
+#### v2.4.8
+- [RFR] New Docs Quickstarts. ([#1818](https://github.com/confident-ai/deepeval/pull/1818)) <!-- pr:1818 -->
+- new release. ([#1879](https://github.com/confident-ai/deepeval/pull/1879)) <!-- pr:1879 -->
+- trace input and output attributes added to exporter. ([#1887](https://github.com/confident-ai/deepeval/pull/1887)) <!-- pr:1887 -->
+- MCP Metrics added. ([#1894](https://github.com/confident-ai/deepeval/pull/1894)) <!-- pr:1894 -->
+- added `confident.trace.*` attributes. ([#1897](https://github.com/confident-ai/deepeval/pull/1897)) <!-- pr:1897 -->
+- MCP Support for single-turn test cases and new MCP utility metric. ([#1908](https://github.com/confident-ai/deepeval/pull/1908)) <!-- pr:1908 -->
+- new tracing interface. ([#1909](https://github.com/confident-ai/deepeval/pull/1909)) <!-- pr:1909 -->
+- GPT-5 models support structured output and defaulting temperature. ([#1930](https://github.com/confident-ai/deepeval/pull/1930)) <!-- pr:1930 -->
+- Add __all__ to modes module. ([#1932](https://github.com/confident-ai/deepeval/pull/1932)) <!-- pr:1932 -->
+- Add missing type annotations to base_model.py. ([#1936](https://github.com/confident-ai/deepeval/pull/1936)) <!-- pr:1936 -->
+- autoload .env/.env.local at import time; add example &amp; docs. ([#1938](https://github.com/confident-ai/deepeval/pull/1938)) <!-- pr:1938 -->
+- add missing commas in model lists to prevent silen…. ([#1939](https://github.com/confident-ai/deepeval/pull/1939)) <!-- pr:1939 -->
+- make OpenAI token cost flags optional for known models. ([#1953](https://github.com/confident-ai/deepeval/pull/1953)) <!-- pr:1953 -->
+- add dotenv support and expand provider set/unset commands. ([#1967](https://github.com/confident-ai/deepeval/pull/1967)) <!-- pr:1967 -->
+- pydanticai new interface. ([#1978](https://github.com/confident-ai/deepeval/pull/1978)) <!-- pr:1978 -->
+- Added dataset 'save_as' support for ConversationalGoldens. ([#1991](https://github.com/confident-ai/deepeval/pull/1991)) <!-- pr:1991 -->
+- add black[jupyter], reformat example notebooks. ([#2011](https://github.com/confident-ai/deepeval/pull/2011)) <!-- pr:2011 -->
+- restore --confident-api-key flag; persist key to dotenv by default. ([#2015](https://github.com/confident-ai/deepeval/pull/2015)) <!-- pr:2015 -->
+- add markdown loaders and improve lazy imports. ([#2018](https://github.com/confident-ai/deepeval/pull/2018)) <!-- pr:2018 -->
+
+
+### Experimental Feature
+
+#### v3.5.0
+- Corrected typo in kimi-k2-0711-preview output divisor. ([#2054](https://github.com/confident-ai/deepeval/pull/2054)) <!-- pr:2054 -->
+
+
+### Improvement
+
+#### v3.6.0
+- resolve component level expected_output from dataset context. ([#2096](https://github.com/confident-ai/deepeval/pull/2096)) <!-- pr:2096 -->
+- agents processor. ([#2110](https://github.com/confident-ai/deepeval/pull/2110)) <!-- pr:2110 -->
+
+#### v3.5.9
+- Update getting-started-agents.mdx. ([#2095](https://github.com/confident-ai/deepeval/pull/2095)) <!-- pr:2095 -->
+- pydantic ai otel instrumentation revival. ([#2098](https://github.com/confident-ai/deepeval/pull/2098)) <!-- pr:2098 -->
+- release. ([#2100](https://github.com/confident-ai/deepeval/pull/2100)) <!-- pr:2100 -->
+
+#### v3.5.5
+- prevent coroutine re-await &amp; stabilize async evals. ([#2068](https://github.com/confident-ai/deepeval/pull/2068)) <!-- pr:2068 -->
+- OpenAI agents types. ([#2084](https://github.com/confident-ai/deepeval/pull/2084)) <!-- pr:2084 -->
+
+#### v3.5.3
+- apply retry policy to all models. ([#2047](https://github.com/confident-ai/deepeval/pull/2047)) <!-- pr:2047 -->
+- Prompt test version number. ([#2064](https://github.com/confident-ai/deepeval/pull/2064)) <!-- pr:2064 -->
+- Correct a typo in the metrics introduction documentation. ([#2065](https://github.com/confident-ai/deepeval/pull/2065)) <!-- pr:2065 -->
+- pushing maintainer only workflow to upstream. ([#2069](https://github.com/confident-ai/deepeval/pull/2069)) <!-- pr:2069 -->
+- Trace Generators. ([#2074](https://github.com/confident-ai/deepeval/pull/2074)) <!-- pr:2074 -->
+
+#### v3.5.2
+- Leveraging context vars for langchain. ([#2052](https://github.com/confident-ai/deepeval/pull/2052)) <!-- pr:2052 -->
+- await async embedding requests in LocalEmbeddingModel. ([#2061](https://github.com/confident-ai/deepeval/pull/2061)) <!-- pr:2061 -->
+- Removed Duplicate arguments in `update_current_trace function` call. ([#2063](https://github.com/confident-ai/deepeval/pull/2063)) <!-- pr:2063 -->
+
+#### v3.5.0
+- otlp test run. ([#2008](https://github.com/confident-ai/deepeval/pull/2008)) <!-- pr:2008 -->
+- implement AWS Bedrock parameter translation. ([#2017](https://github.com/confident-ai/deepeval/pull/2017)) <!-- pr:2017 -->
+- trace data validation. ([#2019](https://github.com/confident-ai/deepeval/pull/2019)) <!-- pr:2019 -->
+- centralize env &amp; persistence with Pydantic Settings; refactor CLI to use it. ([#2026](https://github.com/confident-ai/deepeval/pull/2026)) <!-- pr:2026 -->
+- otel late import. ([#2032](https://github.com/confident-ai/deepeval/pull/2032)) <!-- pr:2032 -->
+- test(core): DRY settings env reset and ensure hidden store dir. ([#2033](https://github.com/confident-ai/deepeval/pull/2033)) <!-- pr:2033 -->
+- Ensure no deepeval hidden dir exists when not expected. ([#2035](https://github.com/confident-ai/deepeval/pull/2035)) <!-- pr:2035 -->
+- strip NUL bytes from JSON to prevent Postgres 22P05. ([#2036](https://github.com/confident-ai/deepeval/pull/2036)) <!-- pr:2036 -->
+- test(config,cli): skip env persistence suites during refactor. ([#2041](https://github.com/confident-ai/deepeval/pull/2041)) <!-- pr:2041 -->
+- pydantic ai component. ([#2042](https://github.com/confident-ai/deepeval/pull/2042)) <!-- pr:2042 -->
+- correct grok-3-fast output cost divisor to 1e6. ([#2046](https://github.com/confident-ai/deepeval/pull/2046)) <!-- pr:2046 -->
+
+#### v3.5.1
+- LangGraph Streaming (Token Times Dict). ([#2048](https://github.com/confident-ai/deepeval/pull/2048)) <!-- pr:2048 -->
+- [Prompt] DeepEval Changes. ([#2057](https://github.com/confident-ai/deepeval/pull/2057)) <!-- pr:2057 -->
+
+#### v2.4.8
+- Pydantic AI [depends on Otel exporter v1]. ([#1851](https://github.com/confident-ai/deepeval/pull/1851)) <!-- pr:1851 -->
+- Updated tutorial evaluation sections. ([#1885](https://github.com/confident-ai/deepeval/pull/1885)) <!-- pr:1885 -->
+- changed telemetry namespacing. ([#1888](https://github.com/confident-ai/deepeval/pull/1888)) <!-- pr:1888 -->
+- [update_current_span] set input/output for spans. ([#1893](https://github.com/confident-ai/deepeval/pull/1893)) <!-- pr:1893 -->
+- Updated arena quick start. ([#1896](https://github.com/confident-ai/deepeval/pull/1896)) <!-- pr:1896 -->
+- make ConversationSimulator language configurable. ([#1899](https://github.com/confident-ai/deepeval/pull/1899)) <!-- pr:1899 -->
+- LangChain Docs Example. ([#1900](https://github.com/confident-ai/deepeval/pull/1900)) <!-- pr:1900 -->
+- Crewai tracing enhancement. ([#1902](https://github.com/confident-ai/deepeval/pull/1902)) <!-- pr:1902 -->
+- Update deepseek docs, from model_name to model in the initialization.mdx. ([#1906](https://github.com/confident-ai/deepeval/pull/1906)) <!-- pr:1906 -->
+- . ([#1911](https://github.com/confident-ai/deepeval/pull/1911)) <!-- pr:1911 -->
+- Reason-first in G-Eval. ([#1912](https://github.com/confident-ai/deepeval/pull/1912)) <!-- pr:1912 -->
+- otel env, metric collection and test case. ([#1919](https://github.com/confident-ai/deepeval/pull/1919)) <!-- pr:1919 -->
+- MCP Quickstart. ([#1921](https://github.com/confident-ai/deepeval/pull/1921)) <!-- pr:1921 -->
+- Update openai.mdx. ([#1924](https://github.com/confident-ai/deepeval/pull/1924)) <!-- pr:1924 -->
+- E2E eval docs. ([#1926](https://github.com/confident-ai/deepeval/pull/1926)) <!-- pr:1926 -->
+- v1 confident api. ([#1933](https://github.com/confident-ai/deepeval/pull/1933)) <!-- pr:1933 -->
+- Upgrade PostHog client. ([#1935](https://github.com/confident-ai/deepeval/pull/1935)) <!-- pr:1935 -->
+- pydantic ai otel server. ([#1940](https://github.com/confident-ai/deepeval/pull/1940)) <!-- pr:1940 -->
+- feedback removed from exporter. ([#1942](https://github.com/confident-ai/deepeval/pull/1942)) <!-- pr:1942 -->
+- trace level metrics for e2e evals. ([#1949](https://github.com/confident-ai/deepeval/pull/1949)) <!-- pr:1949 -->
+- write input/output token costs to correct keys in CLI. ([#1952](https://github.com/confident-ai/deepeval/pull/1952)) <!-- pr:1952 -->
+- 📝 Import `ConversationalGEval` in code example. ([#1954](https://github.com/confident-ai/deepeval/pull/1954)) <!-- pr:1954 -->
+- Improve polymorphism of DeepEvalBaseBenchmark. ([#1955](https://github.com/confident-ai/deepeval/pull/1955)) <!-- pr:1955 -->
+- Remote simulation. ([#1959](https://github.com/confident-ai/deepeval/pull/1959)) <!-- pr:1959 -->
+- populate trace api. ([#1961](https://github.com/confident-ai/deepeval/pull/1961)) <!-- pr:1961 -->
+- Aggregate results are getting duplicated in results. ([#1962](https://github.com/confident-ai/deepeval/pull/1962)) <!-- pr:1962 -->
+- GPT 5 Completion Params. ([#1965](https://github.com/confident-ai/deepeval/pull/1965)) <!-- pr:1965 -->
+- LiteLLMModel - max retry and proxy environment variables. ([#1972](https://github.com/confident-ai/deepeval/pull/1972)) <!-- pr:1972 -->
+- ContextualRelevancy - handling issue with context containing no statements. ([#1973](https://github.com/confident-ai/deepeval/pull/1973)) <!-- pr:1973 -->
+- Change benchmarks to use pydantic classes for evaluate results. ([#1975](https://github.com/confident-ai/deepeval/pull/1975)) <!-- pr:1975 -->
+- respect opt-out and ensure dir exists before writing. ([#1976](https://github.com/confident-ai/deepeval/pull/1976)) <!-- pr:1976 -->
+- MCP Evals examples. ([#1979](https://github.com/confident-ai/deepeval/pull/1979)) <!-- pr:1979 -->
+- overwrite metrics. ([#1980](https://github.com/confident-ai/deepeval/pull/1980)) <!-- pr:1980 -->
+- E2E, Component Level and Unit testing docs updated. ([#1986](https://github.com/confident-ai/deepeval/pull/1986)) <!-- pr:1986 -->
+- cookbooks (langgraph/pydanticai/crewai). ([#1987](https://github.com/confident-ai/deepeval/pull/1987)) <!-- pr:1987 -->
+- confident exporter improvements. ([#1990](https://github.com/confident-ai/deepeval/pull/1990)) <!-- pr:1990 -->
+- public dataset for cookbooks. ([#1995](https://github.com/confident-ai/deepeval/pull/1995)) <!-- pr:1995 -->
+- langgraph compenend level metrics. ([#2000](https://github.com/confident-ai/deepeval/pull/2000)) <!-- pr:2000 -->
+- Tracing Prompt. ([#2001](https://github.com/confident-ai/deepeval/pull/2001)) <!-- pr:2001 -->
+- ConversationalDAGMetric. ([#2002](https://github.com/confident-ai/deepeval/pull/2002)) <!-- pr:2002 -->
+- pydantic ai tool evaluation. ([#2003](https://github.com/confident-ai/deepeval/pull/2003)) <!-- pr:2003 -->
+- open ai agents evals. ([#2005](https://github.com/confident-ai/deepeval/pull/2005)) <!-- pr:2005 -->
+- open ai tool comp. eval. ([#2010](https://github.com/confident-ai/deepeval/pull/2010)) <!-- pr:2010 -->
+- openAI agents improvements. ([#2012](https://github.com/confident-ai/deepeval/pull/2012)) <!-- pr:2012 -->
+- Conversational DAG docs. ([#2014](https://github.com/confident-ai/deepeval/pull/2014)) <!-- pr:2014 -->
+
+
+### Bug Fix
+
+#### v3.6.0
+- add CLI guide, document MultimodalGEval evaluation_template, and fix broken links. ([#2109](https://github.com/confident-ai/deepeval/pull/2109)) <!-- pr:2109 -->
+- Fixed Info &amp; Caution sections not rendering properly in Docs (DarkMode). ([#2111](https://github.com/confident-ai/deepeval/pull/2111)) <!-- pr:2111 -->
+
+#### v3.5.9
+- streaming error fix (also contain llm output fix for streamed). ([#2097](https://github.com/confident-ai/deepeval/pull/2097)) <!-- pr:2097 -->
+
+#### v3.5.5
+- Fixed calculation of `NonAdvice` Metric score. ([#2070](https://github.com/confident-ai/deepeval/pull/2070)) <!-- pr:2070 -->
+- pydantic ai fixes. ([#2071](https://github.com/confident-ai/deepeval/pull/2071)) <!-- pr:2071 -->
+- mcp_use_metric support to multiple MCPs fixed. ([#2076](https://github.com/confident-ai/deepeval/pull/2076)) <!-- pr:2076 -->
+- Fixed sidebar headings not visible clearly in darkmode. ([#2077](https://github.com/confident-ai/deepeval/pull/2077)) <!-- pr:2077 -->
+- Fixed failing `deepeval login` for python=3.9. ([#2079](https://github.com/confident-ai/deepeval/pull/2079)) <!-- pr:2079 -->
+- Fixed wrong argument in `set_local_model_env` function call. ([#2083](https://github.com/confident-ai/deepeval/pull/2083)) <!-- pr:2083 -->
+
+#### v3.5.6
+- add `set-debug`/`unset-debug` commands for configurable verbose logging. ([#2082](https://github.com/confident-ai/deepeval/pull/2082)) <!-- pr:2082 -->
+- [Evals] - fix async. ([#2088](https://github.com/confident-ai/deepeval/pull/2088)) <!-- pr:2088 -->
+- Fixed incorrect imports from deepeval.models. ([#2089](https://github.com/confident-ai/deepeval/pull/2089)) <!-- pr:2089 -->
+
+#### v3.5.3
+- Fixed calculation of `pii_leakage` metric score. ([#2067](https://github.com/confident-ai/deepeval/pull/2067)) <!-- pr:2067 -->
+- Fixed argument `strict` -&gt; `strict_mode`. ([#2073](https://github.com/confident-ai/deepeval/pull/2073)) <!-- pr:2073 -->
+
+#### v3.5.2
+- Fix typo in getting-started-chatbots.mdx. ([#2058](https://github.com/confident-ai/deepeval/pull/2058)) <!-- pr:2058 -->
+- Fixed passing of missing `test_case_content` argument. ([#2059](https://github.com/confident-ai/deepeval/pull/2059)) <!-- pr:2059 -->
+
+#### v3.5.0
+- Fixed empty tools score. ([#2027](https://github.com/confident-ai/deepeval/pull/2027)) <!-- pr:2027 -->
+- ran black on fix lint errors. ([#2028](https://github.com/confident-ai/deepeval/pull/2028)) <!-- pr:2028 -->
+- Fixed typo in DAG docs. ([#2029](https://github.com/confident-ai/deepeval/pull/2029)) <!-- pr:2029 -->
+
+#### v3.5.1
+- differentiate context index from input evolution loop index to fix possible IndexError. ([#2053](https://github.com/confident-ai/deepeval/pull/2053)) <!-- pr:2053 -->
+
+#### v2.4.8
+- [Fix] dynamic api key for trace. ([#1889](https://github.com/confident-ai/deepeval/pull/1889)) <!-- pr:1889 -->
+- [Conversation Simulator] duplicate user input bug fix. ([#1891](https://github.com/confident-ai/deepeval/pull/1891)) <!-- pr:1891 -->
+- [Ollama/docs] fix parameter name in model initialization. ([#1892](https://github.com/confident-ai/deepeval/pull/1892)) <!-- pr:1892 -->
+- fix CLI identifier. ([#1903](https://github.com/confident-ai/deepeval/pull/1903)) <!-- pr:1903 -->
+- llm test case warning fix. ([#1904](https://github.com/confident-ai/deepeval/pull/1904)) <!-- pr:1904 -->
+- otel metadata fix. ([#1910](https://github.com/confident-ai/deepeval/pull/1910)) <!-- pr:1910 -->
+- Fix score normalization in G-Eval. ([#1915](https://github.com/confident-ai/deepeval/pull/1915)) <!-- pr:1915 -->
+- [minor] dataset iterator tests fixes. ([#1920](https://github.com/confident-ai/deepeval/pull/1920)) <!-- pr:1920 -->
+- Tracing Doc Fixes. ([#1927](https://github.com/confident-ai/deepeval/pull/1927)) <!-- pr:1927 -->
+- otel and pydantic fixes. ([#1934](https://github.com/confident-ai/deepeval/pull/1934)) <!-- pr:1934 -->
+- fix conversation simulator. ([#1943](https://github.com/confident-ai/deepeval/pull/1943)) <!-- pr:1943 -->
+- api response and trace meadata fix. ([#1944](https://github.com/confident-ai/deepeval/pull/1944)) <!-- pr:1944 -->
+- fix task completion for langgraph and langchain. ([#1946](https://github.com/confident-ai/deepeval/pull/1946)) <!-- pr:1946 -->
+- Fixed the zero division error in ToolCorrectnessMetric. ([#1947](https://github.com/confident-ai/deepeval/pull/1947)) <!-- pr:1947 -->
+- Fix duplicate items in synthesizer when generating goldens. ([#1951](https://github.com/confident-ai/deepeval/pull/1951)) <!-- pr:1951 -->
+- Fix variable name in Arena Docs. ([#1960](https://github.com/confident-ai/deepeval/pull/1960)) <!-- pr:1960 -->
+- fix on_llm_end in langchain callbacak handler. ([#1963](https://github.com/confident-ai/deepeval/pull/1963)) <!-- pr:1963 -->
+- Fix AzureOpenAIModel: add **self.generation_kwargs to API calls to fix LengthFinishReasonError. ([#1969](https://github.com/confident-ai/deepeval/pull/1969)) <!-- pr:1969 -->
+- Fix Progress Bar [Conversation Simulator]. ([#1974](https://github.com/confident-ai/deepeval/pull/1974)) <!-- pr:1974 -->
+- Fix benchmarks for Datasets 4.0.0. ([#1977](https://github.com/confident-ai/deepeval/pull/1977)) <!-- pr:1977 -->
+- fix doc import error in example getting-started-llm-arena.mdx. ([#1981](https://github.com/confident-ai/deepeval/pull/1981)) <!-- pr:1981 -->
+- synthesizer fix. ([#1984](https://github.com/confident-ai/deepeval/pull/1984)) <!-- pr:1984 -->
+- (fix for jupyter notebooks) Reset `trace_manager.integration_traces_to_evaluate` for a fresh eval runs. ([#1985](https://github.com/confident-ai/deepeval/pull/1985)) <!-- pr:1985 -->
+- otel trace error. ([#1993](https://github.com/confident-ai/deepeval/pull/1993)) <!-- pr:1993 -->
+- Trace error. ([#1999](https://github.com/confident-ai/deepeval/pull/1999)) <!-- pr:1999 -->
+- style: ran black to fix lint errors. ([#2016](https://github.com/confident-ai/deepeval/pull/2016)) <!-- pr:2016 -->
+
+
+
+## August
+
+### New Feature
+
+#### v3.3.5
+- new release. ([#1784](https://github.com/confident-ai/deepeval/pull/1784)) <!-- pr:1784 -->
+- Llm attribute output to be updated with the new UI change. ([#1786](https://github.com/confident-ai/deepeval/pull/1786)) <!-- pr:1786 -->
+- Medical Chatbot added. ([#1802](https://github.com/confident-ai/deepeval/pull/1802)) <!-- pr:1802 -->
+- new deepeval models. ([#1807](https://github.com/confident-ai/deepeval/pull/1807)) <!-- pr:1807 -->
+- Added tech stacks to intros. ([#1808](https://github.com/confident-ai/deepeval/pull/1808)) <!-- pr:1808 -->
+- Updated conversational test cases to support MCP params. ([#1839](https://github.com/confident-ai/deepeval/pull/1839)) <!-- pr:1839 -->
+- Added missing temperature params. ([#1857](https://github.com/confident-ai/deepeval/pull/1857)) <!-- pr:1857 -->
+- New test files. ([#1858](https://github.com/confident-ai/deepeval/pull/1858)) <!-- pr:1858 -->
+- New Conversation Simulator. ([#1876](https://github.com/confident-ai/deepeval/pull/1876)) <!-- pr:1876 -->
+
+
+### Improvement
+
+#### v3.3.5
+- Documentation Updates. ([#1782](https://github.com/confident-ai/deepeval/pull/1782)) <!-- pr:1782 -->
+- Updated Meeting Summarizer tutorial. ([#1783](https://github.com/confident-ai/deepeval/pull/1783)) <!-- pr:1783 -->
+- Updated meeting summarizer tutorial. ([#1788](https://github.com/confident-ai/deepeval/pull/1788)) <!-- pr:1788 -->
+- Updated RAG QA Agent Tutorial. ([#1793](https://github.com/confident-ai/deepeval/pull/1793)) <!-- pr:1793 -->
+- Updated images. ([#1794](https://github.com/confident-ai/deepeval/pull/1794)) <!-- pr:1794 -->
+- Update g_eval.py. ([#1796](https://github.com/confident-ai/deepeval/pull/1796)) <!-- pr:1796 -->
+- Changed variable in snippet code to 'metric' instead of 'professionalism_metric'. ([#1799](https://github.com/confident-ai/deepeval/pull/1799)) <!-- pr:1799 -->
+- Correct schema usage in SummarizationMetric. ([#1804](https://github.com/confident-ai/deepeval/pull/1804)) <!-- pr:1804 -->
+- Dataset golden logic updated. ([#1810](https://github.com/confident-ai/deepeval/pull/1810)) <!-- pr:1810 -->
+- Medical Chatbot tutorial. ([#1814](https://github.com/confident-ai/deepeval/pull/1814)) <!-- pr:1814 -->
+- Updated all tutorials. ([#1825](https://github.com/confident-ai/deepeval/pull/1825)) <!-- pr:1825 -->
+- [PENDING] model kwargs. ([#1827](https://github.com/confident-ai/deepeval/pull/1827)) <!-- pr:1827 -->
+- Update CONTRIBUTING.md. ([#1828](https://github.com/confident-ai/deepeval/pull/1828)) <!-- pr:1828 -->
+- Langgraph metrics. ([#1829](https://github.com/confident-ai/deepeval/pull/1829)) <!-- pr:1829 -->
+- CrewAI evaluation. ([#1833](https://github.com/confident-ai/deepeval/pull/1833)) <!-- pr:1833 -->
+- Llama index metrics rebased. ([#1836](https://github.com/confident-ai/deepeval/pull/1836)) <!-- pr:1836 -->
+- OTEL Exporter V1. ([#1838](https://github.com/confident-ai/deepeval/pull/1838)) <!-- pr:1838 -->
+- Ensure LiteLLMModel returns cost when schema is provided. ([#1841](https://github.com/confident-ai/deepeval/pull/1841)) <!-- pr:1841 -->
+- [Model CLI] Separate KeyValue Enums. ([#1855](https://github.com/confident-ai/deepeval/pull/1855)) <!-- pr:1855 -->
+- Update human_eval.py. ([#1856](https://github.com/confident-ai/deepeval/pull/1856)) <!-- pr:1856 -->
+- Updated tutorials. ([#1860](https://github.com/confident-ai/deepeval/pull/1860)) <!-- pr:1860 -->
+- langchain trace attributes. ([#1862](https://github.com/confident-ai/deepeval/pull/1862)) <!-- pr:1862 -->
+- Rename parameter 'misuses' to 'misuse_violations' in generate_reason. ([#1863](https://github.com/confident-ai/deepeval/pull/1863)) <!-- pr:1863 -->
+- Argument correctness. ([#1866](https://github.com/confident-ai/deepeval/pull/1866)) <!-- pr:1866 -->
+- Enforce limit on generated inputs. ([#1867](https://github.com/confident-ai/deepeval/pull/1867)) <!-- pr:1867 -->
+- Refactor response format handling in LiteLLMModel to directly use schema. ([#1871](https://github.com/confident-ai/deepeval/pull/1871)) <!-- pr:1871 -->
+- Import Scorer class in IFEval constructor to avoid circular import. ([#1875](https://github.com/confident-ai/deepeval/pull/1875)) <!-- pr:1875 -->
+
+
+### Bug Fix
+
+#### v3.3.5
+- fix LLM cost. ([#1787](https://github.com/confident-ai/deepeval/pull/1787)) <!-- pr:1787 -->
+- Fixed typos. ([#1789](https://github.com/confident-ai/deepeval/pull/1789)) <!-- pr:1789 -->
+- fix openai async integration. ([#1790](https://github.com/confident-ai/deepeval/pull/1790)) <!-- pr:1790 -->
+- fix few shot example for Synthesizer's Constrained Evolution. ([#1800](https://github.com/confident-ai/deepeval/pull/1800)) <!-- pr:1800 -->
+- Conversation Evals Bug. ([#1811](https://github.com/confident-ai/deepeval/pull/1811)) <!-- pr:1811 -->
+- fixed typo in tutorials. ([#1830](https://github.com/confident-ai/deepeval/pull/1830)) <!-- pr:1830 -->
+- fix init of AzureOpenAIModel. ([#1832](https://github.com/confident-ai/deepeval/pull/1832)) <!-- pr:1832 -->
+- Fixed dev section. ([#1837](https://github.com/confident-ai/deepeval/pull/1837)) <!-- pr:1837 -->
+- Fixed a few typos. ([#1842](https://github.com/confident-ai/deepeval/pull/1842)) <!-- pr:1842 -->
+- Fix type hint. ([#1847](https://github.com/confident-ai/deepeval/pull/1847)) <!-- pr:1847 -->
+- [Fix LangGraph/LangChain] prompt parsing bug. ([#1848](https://github.com/confident-ai/deepeval/pull/1848)) <!-- pr:1848 -->
+- [Fix Tracing] make llm output lose. ([#1849](https://github.com/confident-ai/deepeval/pull/1849)) <!-- pr:1849 -->
+- [Model CLI Fix] clear keys after setting new llm/embedding model. ([#1852](https://github.com/confident-ai/deepeval/pull/1852)) <!-- pr:1852 -->
+- otel fix. ([#1859](https://github.com/confident-ai/deepeval/pull/1859)) <!-- pr:1859 -->
+- Fixed conversationa relevancy turn logic. ([#1873](https://github.com/confident-ai/deepeval/pull/1873)) <!-- pr:1873 -->
+- [Conversation Simulator] Fixes. ([#1878](https://github.com/confident-ai/deepeval/pull/1878)) <!-- pr:1878 -->
+
+
+
+## July
+
+### New Feature
+
+#### v3.2.6
+- new release. ([#1721](https://github.com/confident-ai/deepeval/pull/1721)) <!-- pr:1721 -->
+- IFEval benchmark support. ([#1729](https://github.com/confident-ai/deepeval/pull/1729)) <!-- pr:1729 -->
+- add twitter icon. ([#1731](https://github.com/confident-ai/deepeval/pull/1731)) <!-- pr:1731 -->
+- New test run interface. ([#1737](https://github.com/confident-ai/deepeval/pull/1737)) <!-- pr:1737 -->
+- Added a missing tab to deepeval.models.Anthropic.model.calculate_cost. ([#1739](https://github.com/confident-ai/deepeval/pull/1739)) <!-- pr:1739 -->
+- New metrics. ([#1747](https://github.com/confident-ai/deepeval/pull/1747)) <!-- pr:1747 -->
+- Add Core Safety Metrics with Required Parameters. ([#1749](https://github.com/confident-ai/deepeval/pull/1749)) <!-- pr:1749 -->
+- open ai cost support. ([#1766](https://github.com/confident-ai/deepeval/pull/1766)) <!-- pr:1766 -->
+- added blog sidebar. ([#1767](https://github.com/confident-ai/deepeval/pull/1767)) <!-- pr:1767 -->
+- Add Misuse metric with documentation. ([#1773](https://github.com/confident-ai/deepeval/pull/1773)) <!-- pr:1773 -->
+
+
+### Improvement
+
+#### v3.2.6
+- langchain and langgraph callback handler. ([#1722](https://github.com/confident-ai/deepeval/pull/1722)) <!-- pr:1722 -->
+- Crew AI itegration. ([#1723](https://github.com/confident-ai/deepeval/pull/1723)) <!-- pr:1723 -->
+- crewai (2nd iteration). ([#1724](https://github.com/confident-ai/deepeval/pull/1724)) <!-- pr:1724 -->
+- telemetry for tracing integration. ([#1725](https://github.com/confident-ai/deepeval/pull/1725)) <!-- pr:1725 -->
+- update default model to gpt-4.1. ([#1727](https://github.com/confident-ai/deepeval/pull/1727)) <!-- pr:1727 -->
+- updated deepeval docs. ([#1732](https://github.com/confident-ai/deepeval/pull/1732)) <!-- pr:1732 -->
+- Revamped task completion. ([#1734](https://github.com/confident-ai/deepeval/pull/1734)) <!-- pr:1734 -->
+- crewai 3rd iteration. ([#1740](https://github.com/confident-ai/deepeval/pull/1740)) <!-- pr:1740 -->
+- llama index 2nd iteration. ([#1745](https://github.com/confident-ai/deepeval/pull/1745)) <!-- pr:1745 -->
+- OpenAI integration. ([#1746](https://github.com/confident-ai/deepeval/pull/1746)) <!-- pr:1746 -->
+- Synthetic generation failing when context = 1. ([#1748](https://github.com/confident-ai/deepeval/pull/1748)) <!-- pr:1748 -->
+- [inegration]: langchain and langgraph (2nd iteration). ([#1752](https://github.com/confident-ai/deepeval/pull/1752)) <!-- pr:1752 -->
+- Reason models renamed to force tool_calls response. ([#1753](https://github.com/confident-ai/deepeval/pull/1753)) <!-- pr:1753 -->
+- Update README.md. ([#1754](https://github.com/confident-ai/deepeval/pull/1754)) <!-- pr:1754 -->
+- Docs three metrics. ([#1755](https://github.com/confident-ai/deepeval/pull/1755)) <!-- pr:1755 -->
+- updated tutorial introduction. ([#1759](https://github.com/confident-ai/deepeval/pull/1759)) <!-- pr:1759 -->
+- Loosening restriction for click with package compatibility. ([#1760](https://github.com/confident-ai/deepeval/pull/1760)) <!-- pr:1760 -->
+- updated tutorial intro. ([#1761](https://github.com/confident-ai/deepeval/pull/1761)) <!-- pr:1761 -->
+- Update azure_model.py. ([#1772](https://github.com/confident-ai/deepeval/pull/1772)) <!-- pr:1772 -->
+- Updated tutorials. ([#1775](https://github.com/confident-ai/deepeval/pull/1775)) <!-- pr:1775 -->
+- Loosen tenacity version pin. ([#1776](https://github.com/confident-ai/deepeval/pull/1776)) <!-- pr:1776 -->
+- Datasets improvement. ([#1777](https://github.com/confident-ai/deepeval/pull/1777)) <!-- pr:1777 -->
+- [docs]: task completion. ([#1779](https://github.com/confident-ai/deepeval/pull/1779)) <!-- pr:1779 -->
+
+
+### Bug Fix
+
+#### v3.2.6
+- Fix broken login link. ([#1726](https://github.com/confident-ai/deepeval/pull/1726)) <!-- pr:1726 -->
+- update openai completions bug. ([#1728](https://github.com/confident-ai/deepeval/pull/1728)) <!-- pr:1728 -->
+- Fix serialization issue with component-level evals. ([#1744](https://github.com/confident-ai/deepeval/pull/1744)) <!-- pr:1744 -->
+- Fix EvaluationDataset.evaluate type hints to match all cases and specify return type. ([#1756](https://github.com/confident-ai/deepeval/pull/1756)) <!-- pr:1756 -->
+- fix openai cost error. ([#1768](https://github.com/confident-ai/deepeval/pull/1768)) <!-- pr:1768 -->
+- [fix]: Component level mertic data not visible in test results. ([#1769](https://github.com/confident-ai/deepeval/pull/1769)) <!-- pr:1769 -->
+- Syntactical error correction in test cases. ([#1770](https://github.com/confident-ai/deepeval/pull/1770)) <!-- pr:1770 -->
+- fix task completion example. ([#1778](https://github.com/confident-ai/deepeval/pull/1778)) <!-- pr:1778 -->
+
+
+
+## June
+
+### New Feature
+
+#### v3.1.9
+- new release. ([#1710](https://github.com/confident-ai/deepeval/pull/1710)) <!-- pr:1710 -->
+- add claude-opus-4 and claude-sonnet-4 models support. ([#1715](https://github.com/confident-ai/deepeval/pull/1715)) <!-- pr:1715 -->
+- openai multimodal support. ([#1716](https://github.com/confident-ai/deepeval/pull/1716)) <!-- pr:1716 -->
+- New blog post on multi-turn chatbots. ([#1718](https://github.com/confident-ai/deepeval/pull/1718)) <!-- pr:1718 -->
+
+#### v3.1.5
+- Support read only file systems. ([#1654](https://github.com/confident-ai/deepeval/pull/1654)) <!-- pr:1654 -->
+- new release. ([#1676](https://github.com/confident-ai/deepeval/pull/1676)) <!-- pr:1676 -->
+- telemetry: new traceable evaluate users. ([#1678](https://github.com/confident-ai/deepeval/pull/1678)) <!-- pr:1678 -->
+- add links to other language versions of README. ([#1687](https://github.com/confident-ai/deepeval/pull/1687)) <!-- pr:1687 -->
+- Make OpenAI model support proxy config (base_url). ([#1703](https://github.com/confident-ai/deepeval/pull/1703)) <!-- pr:1703 -->
+- Mulitmodal Platform Support. ([#1704](https://github.com/confident-ai/deepeval/pull/1704)) <!-- pr:1704 -->
+
+#### v3.0.8
+- new release. ([#1668](https://github.com/confident-ai/deepeval/pull/1668)) <!-- pr:1668 -->
+- Feat/litellm integration. ([#1670](https://github.com/confident-ai/deepeval/pull/1670)) <!-- pr:1670 -->
+- Features/convo test case. ([#1673](https://github.com/confident-ai/deepeval/pull/1673)) <!-- pr:1673 -->
+
+#### v3.0.6
+- new release. ([#1631](https://github.com/confident-ai/deepeval/pull/1631)) <!-- pr:1631 -->
+- add in jsonl file format to save data. ([#1652](https://github.com/confident-ai/deepeval/pull/1652)) <!-- pr:1652 -->
+
+
+### Improvement
+
+#### v3.1.9
+- docs on role-adherence updated. ([#1711](https://github.com/confident-ai/deepeval/pull/1711)) <!-- pr:1711 -->
+- [integration] LlamaIndex handler. ([#1714](https://github.com/confident-ai/deepeval/pull/1714)) <!-- pr:1714 -->
+- Arena G-Eval. ([#1717](https://github.com/confident-ai/deepeval/pull/1717)) <!-- pr:1717 -->
+
+#### v3.1.5
+- client removed kwargs. ([#1667](https://github.com/confident-ai/deepeval/pull/1667)) <!-- pr:1667 -->
+- Multimodal G-Eval. ([#1684](https://github.com/confident-ai/deepeval/pull/1684)) <!-- pr:1684 -->
+- updated blog. ([#1686](https://github.com/confident-ai/deepeval/pull/1686)) <!-- pr:1686 -->
+- blog update. ([#1694](https://github.com/confident-ai/deepeval/pull/1694)) <!-- pr:1694 -->
+- OpenAI Agents Tracing Integration. ([#1699](https://github.com/confident-ai/deepeval/pull/1699)) <!-- pr:1699 -->
+
+#### v3.0.6
+- docs update. ([#1635](https://github.com/confident-ai/deepeval/pull/1635)) <!-- pr:1635 -->
+- Use the async a_embed_text in _a_get_n_random_contexts_per_source_file. ([#1641](https://github.com/confident-ai/deepeval/pull/1641)) <!-- pr:1641 -->
+- Improvements to AnswerRelevancy templates. ([#1642](https://github.com/confident-ai/deepeval/pull/1642)) <!-- pr:1642 -->
+- traceable bars. ([#1649](https://github.com/confident-ai/deepeval/pull/1649)) <!-- pr:1649 -->
+- reformat tracing. ([#1651](https://github.com/confident-ai/deepeval/pull/1651)) <!-- pr:1651 -->
+
+
+### Bug Fix
+
+#### v3.1.9
+- Fix key not string error. ([#1712](https://github.com/confident-ai/deepeval/pull/1712)) <!-- pr:1712 -->
+
+#### v3.1.5
+- Fixing evaluate function raise TypeError: 'TestResult' object is not iterable. ([#1705](https://github.com/confident-ai/deepeval/pull/1705)) <!-- pr:1705 -->
+- Fixing IndexError list index out of range in Synthesizer.generate_goldens_from_docs(). ([#1706](https://github.com/confident-ai/deepeval/pull/1706)) <!-- pr:1706 -->
+
+#### v3.0.6
+- handle tuple responses in model output to avoid AttributeError (#1612). ([#1612](https://github.com/confident-ai/deepeval/pull/1612)) <!-- pr:1612 -->
+- Fix/gsm8k tuple response attribute error. ([#1628](https://github.com/confident-ai/deepeval/pull/1628)) <!-- pr:1628 -->
+- fix traceable evals bug. ([#1632](https://github.com/confident-ai/deepeval/pull/1632)) <!-- pr:1632 -->
+- Removed the grammatical errors and threatening language. ([#1636](https://github.com/confident-ai/deepeval/pull/1636)) <!-- pr:1636 -->
+- Issue #1611 Fixes. ([#1638](https://github.com/confident-ai/deepeval/pull/1638)) <!-- pr:1638 -->
+- fix openai tracing integration. ([#1639](https://github.com/confident-ai/deepeval/pull/1639)) <!-- pr:1639 -->
+- resolved none type error in otel exporter. ([#1646](https://github.com/confident-ai/deepeval/pull/1646)) <!-- pr:1646 -->
+- Online metric fix: span test cases. ([#1650](https://github.com/confident-ai/deepeval/pull/1650)) <!-- pr:1650 -->
+- fix traceable progress bar. ([#1655](https://github.com/confident-ai/deepeval/pull/1655)) <!-- pr:1655 -->
+- fix tracing confident api key. ([#1656](https://github.com/confident-ai/deepeval/pull/1656)) <!-- pr:1656 -->
+- Fix documentation typo. ([#1664](https://github.com/confident-ai/deepeval/pull/1664)) <!-- pr:1664 -->
+- circular import error fix. ([#1665](https://github.com/confident-ai/deepeval/pull/1665)) <!-- pr:1665 -->
+
+
+
+## May
+
+### New Feature
+
+#### v3.0
+- new release. ([#1600](https://github.com/confident-ai/deepeval/pull/1600)) <!-- pr:1600 -->
+- add write utils. ([#1601](https://github.com/confident-ai/deepeval/pull/1601)) <!-- pr:1601 -->
+- add saving of expected_output. ([#1602](https://github.com/confident-ai/deepeval/pull/1602)) <!-- pr:1602 -->
+- add thread Id. ([#1604](https://github.com/confident-ai/deepeval/pull/1604)) <!-- pr:1604 -->
+- add input and output to trace level. ([#1606](https://github.com/confident-ai/deepeval/pull/1606)) <!-- pr:1606 -->
+- add reason to thrown failed metrics string in assert_test. ([#1623](https://github.com/confident-ai/deepeval/pull/1623)) <!-- pr:1623 -->
+
+#### v2.9.0
+- [feat]: Patch client to observer attributes. ([#1560](https://github.com/confident-ai/deepeval/pull/1560)) <!-- pr:1560 -->
+- new release. ([#1567](https://github.com/confident-ai/deepeval/pull/1567)) <!-- pr:1567 -->
+- [Tracing Features] Tags, Sampling, Masks, Environment. ([#1578](https://github.com/confident-ai/deepeval/pull/1578)) <!-- pr:1578 -->
+- Add `py.typed` marker file to support type checking. ([#1592](https://github.com/confident-ai/deepeval/pull/1592)) <!-- pr:1592 -->
+
+#### v2.9.1
+- new release. ([#1597](https://github.com/confident-ai/deepeval/pull/1597)) <!-- pr:1597 -->
+
+#### v2.8.5
+- Introduce get_actual_model_name() model helper. ([#1555](https://github.com/confident-ai/deepeval/pull/1555)) <!-- pr:1555 -->
+- new release. ([#1558](https://github.com/confident-ai/deepeval/pull/1558)) <!-- pr:1558 -->
+
+#### v2.8.4
+- Add gpt-4.1 to structured_outputs_models. ([#1547](https://github.com/confident-ai/deepeval/pull/1547)) <!-- pr:1547 -->
+
+
+### Improvement
+
+#### v3.0
+- Pass extra/unknown arguments from deepeval test run to pytest. ([#1589](https://github.com/confident-ai/deepeval/pull/1589)) <!-- pr:1589 -->
+- Telemetry Updates. ([#1596](https://github.com/confident-ai/deepeval/pull/1596)) <!-- pr:1596 -->
+- Implemented Opentelemetry exporter to detect gen_ai signals. ([#1603](https://github.com/confident-ai/deepeval/pull/1603)) <!-- pr:1603 -->
+- user Id. ([#1605](https://github.com/confident-ai/deepeval/pull/1605)) <!-- pr:1605 -->
+- Restricted click and typer for compatibility. ([#1607](https://github.com/confident-ai/deepeval/pull/1607)) <!-- pr:1607 -->
+- telemetry opt out. ([#1614](https://github.com/confident-ai/deepeval/pull/1614)) <!-- pr:1614 -->
+- Trace Input/Output default behaviour. ([#1620](https://github.com/confident-ai/deepeval/pull/1620)) <!-- pr:1620 -->
+- Removed signal hook. ([#1621](https://github.com/confident-ai/deepeval/pull/1621)) <!-- pr:1621 -->
+
+#### v2.9.0
+- Amazon bedrock model. ([#1570](https://github.com/confident-ai/deepeval/pull/1570)) <!-- pr:1570 -->
+- Update Current Span. ([#1574](https://github.com/confident-ai/deepeval/pull/1574)) <!-- pr:1574 -->
+- update current span metadata. ([#1575](https://github.com/confident-ai/deepeval/pull/1575)) <!-- pr:1575 -->
+- Update synthesizer-generate-from-scratch.mdx. ([#1587](https://github.com/confident-ai/deepeval/pull/1587)) <!-- pr:1587 -->
+
+#### v2.9.1
+- Conversation Simulator. ([#1584](https://github.com/confident-ai/deepeval/pull/1584)) <!-- pr:1584 -->
+
+#### v2.8.5
+- First commit. ([#1561](https://github.com/confident-ai/deepeval/pull/1561)) <!-- pr:1561 -->
+- Disable Logging for Eval Traces. ([#1565](https://github.com/confident-ai/deepeval/pull/1565)) <!-- pr:1565 -->
+
+#### v2.8.4
+- update mmlu.py. ([#1](https://github.com/confident-ai/deepeval/pull/1)) <!-- pr:1 -->
+- Model temperature. ([#1541](https://github.com/confident-ai/deepeval/pull/1541)) <!-- pr:1541 -->
+- Remove Langchain Dependency. ([#1544](https://github.com/confident-ai/deepeval/pull/1544)) <!-- pr:1544 -->
+- Correct typing. ([#1550](https://github.com/confident-ai/deepeval/pull/1550)) <!-- pr:1550 -->
+- DeepEval Hidden Folder. ([#1556](https://github.com/confident-ai/deepeval/pull/1556)) <!-- pr:1556 -->
+- Tracing Logs. ([#1557](https://github.com/confident-ai/deepeval/pull/1557)) <!-- pr:1557 -->
+
+
+### Bug Fix
+
+#### v3.0
+- TaskNodeOutput fix: Make all types in the `output` union valid for openai response formats. ([#1599](https://github.com/confident-ai/deepeval/pull/1599)) <!-- pr:1599 -->
+- Fix tool ToolCorrectnessMetric InputParameters comparison. ([#1608](https://github.com/confident-ai/deepeval/pull/1608)) <!-- pr:1608 -->
+- Added @Sam120204's fix for issue 1526. Tested only on Windows 10. ([#1609](https://github.com/confident-ai/deepeval/pull/1609)) <!-- pr:1609 -->
+- Fix ZeroDivisionError for HellaSwag benchmark. ([#1616](https://github.com/confident-ai/deepeval/pull/1616)) <!-- pr:1616 -->
+- Fix ValueError for TruthfulQA. ([#1619](https://github.com/confident-ai/deepeval/pull/1619)) <!-- pr:1619 -->
+- Fix ToolCall __hash__ to handle unhashable input/output types. ([#1625](https://github.com/confident-ai/deepeval/pull/1625)) <!-- pr:1625 -->
+- Fix FileNotFoundError in telemetry.py - missing dot in filename. ([#1630](https://github.com/confident-ai/deepeval/pull/1630)) <!-- pr:1630 -->
+
+#### v2.9.0
+- Fix Azure Open AI. ([#1571](https://github.com/confident-ai/deepeval/pull/1571)) <!-- pr:1571 -->
+- Fix bedrock model imports. ([#1573](https://github.com/confident-ai/deepeval/pull/1573)) <!-- pr:1573 -->
+- Fix shots_dataset typo. ([#1580](https://github.com/confident-ai/deepeval/pull/1580)) <!-- pr:1580 -->
+- fix broken URL for integration of frameworks. ([#1582](https://github.com/confident-ai/deepeval/pull/1582)) <!-- pr:1582 -->
+- [Urgent fix] Client type checking if None fixed. ([#1585](https://github.com/confident-ai/deepeval/pull/1585)) <!-- pr:1585 -->
+- Fix used Ollama model name in `OllamaModel.a_generate()` method. ([#1594](https://github.com/confident-ai/deepeval/pull/1594)) <!-- pr:1594 -->
+
+#### v2.8.5
+- Fix tracing queue. ([#1559](https://github.com/confident-ai/deepeval/pull/1559)) <!-- pr:1559 -->
+- fix warning trace message. ([#1566](https://github.com/confident-ai/deepeval/pull/1566)) <!-- pr:1566 -->
+
+#### v2.8.4
+- Generating goldens type fixes and dead code removal. ([#1534](https://github.com/confident-ai/deepeval/pull/1534)) <!-- pr:1534 -->
+- deepeval - mmlu.py - model.generate() - output format fix. ([#1546](https://github.com/confident-ai/deepeval/pull/1546)) <!-- pr:1546 -->
+- fix typo in json_correctness.py. ([#1552](https://github.com/confident-ai/deepeval/pull/1552)) <!-- pr:1552 -->
+
+
+### Security
+
+#### v3.0
+- Updated deepeval/benchmarks/human_eval/human_eval.py to fix security vulnerability [python.lang.security.audit.exec-detected.exec-detected]. ([#1626](https://github.com/confident-ai/deepeval/pull/1626)) <!-- pr:1626 -->
+
+
+
+## April
+
+### New Feature
+
+#### v2.7.7
+- new release. ([#1525](https://github.com/confident-ai/deepeval/pull/1525)) <!-- pr:1525 -->
+- Make `update_current_span_attributes` optional for LLMSpan and RetrieverSpan. ([#1530](https://github.com/confident-ai/deepeval/pull/1530)) <!-- pr:1530 -->
+
+#### v2.7.9
+- new release. ([#1539](https://github.com/confident-ai/deepeval/pull/1539)) <!-- pr:1539 -->
+- new release. ([#1540](https://github.com/confident-ai/deepeval/pull/1540)) <!-- pr:1540 -->
+
+#### v2.7.6
+- Synthesizer: add min context length and min contexts per document. ([#1508](https://github.com/confident-ai/deepeval/pull/1508)) <!-- pr:1508 -->
+
+#### v2.7.3
+- Features/tracing. ([#1513](https://github.com/confident-ai/deepeval/pull/1513)) <!-- pr:1513 -->
+
+#### v2.6.8
+- Gemini Native Model Support. ([#1493](https://github.com/confident-ai/deepeval/pull/1493)) <!-- pr:1493 -->
+
+#### v2.6.6
+- Additional Blogs. ([#1475](https://github.com/confident-ai/deepeval/pull/1475)) <!-- pr:1475 -->
+- additional metadata added in test results. ([#1477](https://github.com/confident-ai/deepeval/pull/1477)) <!-- pr:1477 -->
+- Features/convo simulator. ([#1481](https://github.com/confident-ai/deepeval/pull/1481)) <!-- pr:1481 -->
+- Features/convo simulator. ([#1491](https://github.com/confident-ai/deepeval/pull/1491)) <!-- pr:1491 -->
+
+
+### Improvement
+
+#### v2.7.7
+- Traceable Evals. ([#1523](https://github.com/confident-ai/deepeval/pull/1523)) <!-- pr:1523 -->
+- Improve string representation `LLMTestCase` in `g_eval.py`. ([#1531](https://github.com/confident-ai/deepeval/pull/1531)) <!-- pr:1531 -->
+- Traceable Evals: Progress + Assert Test + Named Goldens. ([#1532](https://github.com/confident-ai/deepeval/pull/1532)) <!-- pr:1532 -->
+
+#### v2.7.9
+- docs for deepeval 2.9.9. ([#1537](https://github.com/confident-ai/deepeval/pull/1537)) <!-- pr:1537 -->
+
+#### v2.7.6
+- Remove async from `get_model_name` of `DeepEvalBaseEmbeddingModel`. ([#1516](https://github.com/confident-ai/deepeval/pull/1516)) <!-- pr:1516 -->
+- . ([#1517](https://github.com/confident-ai/deepeval/pull/1517)) <!-- pr:1517 -->
+- . ([#1519](https://github.com/confident-ai/deepeval/pull/1519)) <!-- pr:1519 -->
+- Update metrics-bias.mdx. ([#1520](https://github.com/confident-ai/deepeval/pull/1520)) <!-- pr:1520 -->
+- late imports and dependency resolve. ([#1524](https://github.com/confident-ai/deepeval/pull/1524)) <!-- pr:1524 -->
+
+#### v2.7.3
+- Update qa-agent-choosing-metrics.mdx. ([#1505](https://github.com/confident-ai/deepeval/pull/1505)) <!-- pr:1505 -->
+- Generate from goldens. ([#1506](https://github.com/confident-ai/deepeval/pull/1506)) <!-- pr:1506 -->
+
+#### v2.6.8
+- Retention Analytics. ([#1486](https://github.com/confident-ai/deepeval/pull/1486)) <!-- pr:1486 -->
+- Correction of type hints. ([#1490](https://github.com/confident-ai/deepeval/pull/1490)) <!-- pr:1490 -->
+- Azure GEval Log Probs. ([#1492](https://github.com/confident-ai/deepeval/pull/1492)) <!-- pr:1492 -->
+- integration docs. ([#1495](https://github.com/confident-ai/deepeval/pull/1495)) <!-- pr:1495 -->
+- update package dependencies. ([#1499](https://github.com/confident-ai/deepeval/pull/1499)) <!-- pr:1499 -->
+
+#### v2.6.6
+- Remaining Blogs. ([#1471](https://github.com/confident-ai/deepeval/pull/1471)) <!-- pr:1471 -->
+- Make OllamaEmbeddingModel consistent with OllamaModel. ([#1474](https://github.com/confident-ai/deepeval/pull/1474)) <!-- pr:1474 -->
+- tokenCost and completionTime for test cases. ([#1476](https://github.com/confident-ai/deepeval/pull/1476)) <!-- pr:1476 -->
+- Update qa-agent-running-evaluations.mdx. ([#1483](https://github.com/confident-ai/deepeval/pull/1483)) <!-- pr:1483 -->
+
+
+### Bug Fix
+
+#### v2.7.7
+- Invalid enum error resolved. ([#1536](https://github.com/confident-ai/deepeval/pull/1536)) <!-- pr:1536 -->
+- fix assert test for agentic test cases. ([#1538](https://github.com/confident-ai/deepeval/pull/1538)) <!-- pr:1538 -->
+
+#### v2.7.6
+- Fix type of `synthetic_input_quality_threshold` in `FiltrationConfig`. ([#1515](https://github.com/confident-ai/deepeval/pull/1515)) <!-- pr:1515 -->
+- nit: fix grammar/typos. ([#1521](https://github.com/confident-ai/deepeval/pull/1521)) <!-- pr:1521 -->
+
+#### v2.7.3
+- Fixes: Gemini model classes should not hardcode valid models #1502. ([#1503](https://github.com/confident-ai/deepeval/pull/1503)) <!-- pr:1503 -->
+- fix anthropic. ([#1504](https://github.com/confident-ai/deepeval/pull/1504)) <!-- pr:1504 -->
+- fix typo in docs/docs/benchmarks-introduction.mdx. ([#1511](https://github.com/confident-ai/deepeval/pull/1511)) <!-- pr:1511 -->
+
+#### v2.6.8
+- Fix Synthetic Dataset Generation Encoding Issues (UnicodeDecodeError). ([#1485](https://github.com/confident-ai/deepeval/pull/1485)) <!-- pr:1485 -->
+
+#### v2.6.6
+- fix azure deployment. ([#1480](https://github.com/confident-ai/deepeval/pull/1480)) <!-- pr:1480 -->
+- fixed issue where the tool correctness metric was failing due to an unhashable type error. ([#1487](https://github.com/confident-ai/deepeval/pull/1487)) <!-- pr:1487 -->
+
+
+
+## March
+
+### New Feature
+
+#### v2.6.5
+- new release. ([#1446](https://github.com/confident-ai/deepeval/pull/1446)) <!-- pr:1446 -->
+- Add retries for calls to Confident AI. ([#1452](https://github.com/confident-ai/deepeval/pull/1452)) <!-- pr:1452 -->
+- Add custom filename support to Synthesizer.save_as(). ([#1455](https://github.com/confident-ai/deepeval/pull/1455)) <!-- pr:1455 -->
+
+#### v2.5.9
+- new models. ([#1441](https://github.com/confident-ai/deepeval/pull/1441)) <!-- pr:1441 -->
+- new release. ([#1445](https://github.com/confident-ai/deepeval/pull/1445)) <!-- pr:1445 -->
+
+#### v2.5.8
+- new release. ([#1399](https://github.com/confident-ai/deepeval/pull/1399)) <!-- pr:1399 -->
+- Enable the API cost tracking in Synthesizer. ([#1406](https://github.com/confident-ai/deepeval/pull/1406)) <!-- pr:1406 -->
+- Added the ensure_ascii attribute to prettify_list() function in utils.py. ([#1437](https://github.com/confident-ai/deepeval/pull/1437)) <!-- pr:1437 -->
+
+
+### Improvement
+
+#### v2.6.5
+- Retry on more than rate limit exceptions. ([#1450](https://github.com/confident-ai/deepeval/pull/1450)) <!-- pr:1450 -->
+- Open AI Azure Endpoint. ([#1451](https://github.com/confident-ai/deepeval/pull/1451)) <!-- pr:1451 -->
+- Allow GPT 4.5. ([#1453](https://github.com/confident-ai/deepeval/pull/1453)) <!-- pr:1453 -->
+- don't replace test case metadata with conversational metadata. ([#1456](https://github.com/confident-ai/deepeval/pull/1456)) <!-- pr:1456 -->
+- Makes synthesizer work with Azure Open Ai. ([#1459](https://github.com/confident-ai/deepeval/pull/1459)) <!-- pr:1459 -->
+- ollama base_url setting. ([#1460](https://github.com/confident-ai/deepeval/pull/1460)) <!-- pr:1460 -->
+- Update guides-red-teaming.mdx. ([#1463](https://github.com/confident-ai/deepeval/pull/1463)) <!-- pr:1463 -->
+
+#### v2.5.8
+- JSON Confinement for Ollama Models. ([#1401](https://github.com/confident-ai/deepeval/pull/1401)) <!-- pr:1401 -->
+- When using ragas metric, it shows async_mode is missing. ([#1402](https://github.com/confident-ai/deepeval/pull/1402)) <!-- pr:1402 -->
+- Update metrics json correctness. ([#1403](https://github.com/confident-ai/deepeval/pull/1403)) <!-- pr:1403 -->
+- Update template.py. ([#1408](https://github.com/confident-ai/deepeval/pull/1408)) <!-- pr:1408 -->
+- missing comma in __all__. ([#1412](https://github.com/confident-ai/deepeval/pull/1412)) <!-- pr:1412 -->
+- Update big_bench_hard.py. ([#1414](https://github.com/confident-ai/deepeval/pull/1414)) <!-- pr:1414 -->
+- gpt-4 to gpt-4o in metrics-task-completion.mdx. ([#1415](https://github.com/confident-ai/deepeval/pull/1415)) <!-- pr:1415 -->
+- . ([#1416](https://github.com/confident-ai/deepeval/pull/1416)) <!-- pr:1416 -->
+- use StringSchema instead of MultipleChoiceSchemaLower. ([#1423](https://github.com/confident-ai/deepeval/pull/1423)) <!-- pr:1423 -->
+- update g_eval.py. ([#1425](https://github.com/confident-ai/deepeval/pull/1425)) <!-- pr:1425 -->
+- Solved the issue for no key in 'login_with_confident_api_key()' in utils. ([#1427](https://github.com/confident-ai/deepeval/pull/1427)) <!-- pr:1427 -->
+- Corrected spelling mistake in docs/guides/guides-rag-evaluation.mdx. ([#1431](https://github.com/confident-ai/deepeval/pull/1431)) <!-- pr:1431 -->
+- Remove synthesizer caching. ([#1433](https://github.com/confident-ai/deepeval/pull/1433)) <!-- pr:1433 -->
+- DAG NonBinary template. ([#1434](https://github.com/confident-ai/deepeval/pull/1434)) <!-- pr:1434 -->
+- Release v2.5.6. ([#1440](https://github.com/confident-ai/deepeval/pull/1440)) <!-- pr:1440 -->
+- Synthesizer. ([#1442](https://github.com/confident-ai/deepeval/pull/1442)) <!-- pr:1442 -->
+
+
+### Bug Fix
+
+#### v2.6.5
+- Fix the verbose printing going into an infinite loop in notebook. ([#1444](https://github.com/confident-ai/deepeval/pull/1444)) <!-- pr:1444 -->
+- Fix type on tracing example. ([#1448](https://github.com/confident-ai/deepeval/pull/1448)) <!-- pr:1448 -->
+- Fixing Native Model Logic in Synthesizer. ([#1461](https://github.com/confident-ai/deepeval/pull/1461)) <!-- pr:1461 -->
+- Fix async return logic in measure method. ([#1464](https://github.com/confident-ai/deepeval/pull/1464)) <!-- pr:1464 -->
+
+#### v2.5.8
+- Fix import in tutorial-metrics-selection. ([#1407](https://github.com/confident-ai/deepeval/pull/1407)) <!-- pr:1407 -->
+- Fix reversed tool call output. ([#1409](https://github.com/confident-ai/deepeval/pull/1409)) <!-- pr:1409 -->
+- Fix keyword argument in tutorial-dataset-synthesis.mdx. ([#1411](https://github.com/confident-ai/deepeval/pull/1411)) <!-- pr:1411 -->
+- Fix azure embedding command. ([#1424](https://github.com/confident-ai/deepeval/pull/1424)) <!-- pr:1424 -->
+- Fix variable name in confident-ai-llm-monitoring.mdx. ([#1432](https://github.com/confident-ai/deepeval/pull/1432)) <!-- pr:1432 -->
+
+
+
+## February
+
+### New Feature
+
+#### v2.4.7
+- new release. ([#1392](https://github.com/confident-ai/deepeval/pull/1392)) <!-- pr:1392 -->
+
+#### v2.4.6
+- new release. ([#1385](https://github.com/confident-ai/deepeval/pull/1385)) <!-- pr:1385 -->
+- feat/add-tool-correctness-to-mllm. ([#1386](https://github.com/confident-ai/deepeval/pull/1386)) <!-- pr:1386 -->
+- new pr. ([#1387](https://github.com/confident-ai/deepeval/pull/1387)) <!-- pr:1387 -->
+- new release. ([#1388](https://github.com/confident-ai/deepeval/pull/1388)) <!-- pr:1388 -->
+
+#### v2.3.9
+- Feature/add synthetic query generation. ([#1](https://github.com/confident-ai/deepeval/pull/1)) <!-- pr:1 -->
+- new release. ([#1334](https://github.com/confident-ai/deepeval/pull/1334)) <!-- pr:1334 -->
+- Added missing comma in the code block syntax of red_teamer.scan. ([#1351](https://github.com/confident-ai/deepeval/pull/1351)) <!-- pr:1351 -->
+- conversational test case additional metadata. ([#1352](https://github.com/confident-ai/deepeval/pull/1352)) <!-- pr:1352 -->
+- add metric async telemetry. ([#1365](https://github.com/confident-ai/deepeval/pull/1365)) <!-- pr:1365 -->
+- Add missing word in prompt. ([#1369](https://github.com/confident-ai/deepeval/pull/1369)) <!-- pr:1369 -->
+
+#### v2.3.1
+- new release. ([#1328](https://github.com/confident-ai/deepeval/pull/1328)) <!-- pr:1328 -->
+- add o3-mini models. ([#1331](https://github.com/confident-ai/deepeval/pull/1331)) <!-- pr:1331 -->
+
+
+### Improvement
+
+#### v2.4.7
+- Typo: Update metrics-faithfulness.mdx. ([#1391](https://github.com/confident-ai/deepeval/pull/1391)) <!-- pr:1391 -->
+- template injection. ([#1393](https://github.com/confident-ai/deepeval/pull/1393)) <!-- pr:1393 -->
+- Typo Update getting-started.mdx. ([#1395](https://github.com/confident-ai/deepeval/pull/1395)) <!-- pr:1395 -->
+- Typo Update getting-started.mdx. ([#1396](https://github.com/confident-ai/deepeval/pull/1396)) <!-- pr:1396 -->
+
+#### v2.4.6
+- updated grpc. ([#1383](https://github.com/confident-ai/deepeval/pull/1383)) <!-- pr:1383 -->
+- migrate required params. ([#1389](https://github.com/confident-ai/deepeval/pull/1389)) <!-- pr:1389 -->
+
+#### v2.4.3
+- Release v2.3.9. ([#1373](https://github.com/confident-ai/deepeval/pull/1373)) <!-- pr:1373 -->
+- pull telemetry. ([#1377](https://github.com/confident-ai/deepeval/pull/1377)) <!-- pr:1377 -->
+- Relax grpcio version constraint "1.67.1" -&gt; "^1.67.1". ([#1379](https://github.com/confident-ai/deepeval/pull/1379)) <!-- pr:1379 -->
+- Updated first example in readme. ([#1382](https://github.com/confident-ai/deepeval/pull/1382)) <!-- pr:1382 -->
+
+#### v2.3.9
+- logged in with. ([#1341](https://github.com/confident-ai/deepeval/pull/1341)) <!-- pr:1341 -->
+- deepeval recommend metrics. ([#1342](https://github.com/confident-ai/deepeval/pull/1342)) <!-- pr:1342 -->
+- typos in metrics templates. ([#1344](https://github.com/confident-ai/deepeval/pull/1344)) <!-- pr:1344 -->
+- recommend metrics telemetry. ([#1346](https://github.com/confident-ai/deepeval/pull/1346)) <!-- pr:1346 -->
+- finish dag. ([#1348](https://github.com/confident-ai/deepeval/pull/1348)) <!-- pr:1348 -->
+- Use valid JSON booleans in DAG template. ([#1349](https://github.com/confident-ai/deepeval/pull/1349)) <!-- pr:1349 -->
+- update docs. ([#1353](https://github.com/confident-ai/deepeval/pull/1353)) <!-- pr:1353 -->
+- elastic integration. ([#1354](https://github.com/confident-ai/deepeval/pull/1354)) <!-- pr:1354 -->
+- elasticsearch integration docs. ([#1355](https://github.com/confident-ai/deepeval/pull/1355)) <!-- pr:1355 -->
+- Chroma integration docs. ([#1357](https://github.com/confident-ai/deepeval/pull/1357)) <!-- pr:1357 -->
+- ollama integration. ([#1360](https://github.com/confident-ai/deepeval/pull/1360)) <!-- pr:1360 -->
+- Update integration docs. ([#1361](https://github.com/confident-ai/deepeval/pull/1361)) <!-- pr:1361 -->
+- evaluate function example. ([#1364](https://github.com/confident-ai/deepeval/pull/1364)) <!-- pr:1364 -->
+- update docs. ([#1366](https://github.com/confident-ai/deepeval/pull/1366)) <!-- pr:1366 -->
+- delegate template parameter for dynamic loading o…. ([#1367](https://github.com/confident-ai/deepeval/pull/1367)) <!-- pr:1367 -->
+- Update tutorial-introduction.mdx. ([#1370](https://github.com/confident-ai/deepeval/pull/1370)) <!-- pr:1370 -->
+
+#### v2.3.1
+- revise the logic of deciding whether should_use_batch. ([#1327](https://github.com/confident-ai/deepeval/pull/1327)) <!-- pr:1327 -->
+
+
+### Bug Fix
+
+#### v2.4.7
+- Fixed Typo Update getting-started.mdx. ([#1394](https://github.com/confident-ai/deepeval/pull/1394)) <!-- pr:1394 -->
+
+#### v2.4.6
+- Fix delete_test_case_instance_ids in test_run.py. ([#1384](https://github.com/confident-ai/deepeval/pull/1384)) <!-- pr:1384 -->
+
+#### v2.4.3
+- Fix faithfulness.py. ([#1374](https://github.com/confident-ai/deepeval/pull/1374)) <!-- pr:1374 -->
+- Fixing ValidationErrors when using a custom LLM for evaluation. ([#1375](https://github.com/confident-ai/deepeval/pull/1375)) <!-- pr:1375 -->
+
+#### v2.3.9
+- Fix broken link to GEval paper in metrics-conversational-g-eval.mdx. ([#1336](https://github.com/confident-ai/deepeval/pull/1336)) <!-- pr:1336 -->
+- auto_evaluate bug fixes. ([#1338](https://github.com/confident-ai/deepeval/pull/1338)) <!-- pr:1338 -->
+- fix-logged-in-with. ([#1345](https://github.com/confident-ai/deepeval/pull/1345)) <!-- pr:1345 -->
+- Hotfix/guardrails again. ([#1372](https://github.com/confident-ai/deepeval/pull/1372)) <!-- pr:1372 -->
+
+#### v2.3.1
+- Fix typo in telemetry. ([#1329](https://github.com/confident-ai/deepeval/pull/1329)) <!-- pr:1329 -->
+- embedder bug fix. ([#1330](https://github.com/confident-ai/deepeval/pull/1330)) <!-- pr:1330 -->
+
+
+
+## January
+
+### Backward Incompatible Change
+
+#### v2.2.7
+- Jailbreaking Crescendo Schematic Change. ([#1311](https://github.com/confident-ai/deepeval/pull/1311)) <!-- pr:1311 -->
+
+
+### New Feature
+
+#### v2.2.7
+- new release. ([#1302](https://github.com/confident-ai/deepeval/pull/1302)) <!-- pr:1302 -->
+
+#### v2.2.2
+- new release. ([#1217](https://github.com/confident-ai/deepeval/pull/1217)) <!-- pr:1217 -->
+- Feature/synthesis cost. ([#1218](https://github.com/confident-ai/deepeval/pull/1218)) <!-- pr:1218 -->
+- 3 new MLLM metrics. ([#1230](https://github.com/confident-ai/deepeval/pull/1230)) <!-- pr:1230 -->
+- new release. ([#1245](https://github.com/confident-ai/deepeval/pull/1245)) <!-- pr:1245 -->
+- new release. ([#1254](https://github.com/confident-ai/deepeval/pull/1254)) <!-- pr:1254 -->
+- new release. ([#1270](https://github.com/confident-ai/deepeval/pull/1270)) <!-- pr:1270 -->
+- Expand openai models support. ([#1277](https://github.com/confident-ai/deepeval/pull/1277)) <!-- pr:1277 -->
+- Add update warning opt out. ([#1278](https://github.com/confident-ai/deepeval/pull/1278)) <!-- pr:1278 -->
+- new release. ([#1279](https://github.com/confident-ai/deepeval/pull/1279)) <!-- pr:1279 -->
+- ToolCall support. ([#1290](https://github.com/confident-ai/deepeval/pull/1290)) <!-- pr:1290 -->
+- feature status telemetry. ([#1296](https://github.com/confident-ai/deepeval/pull/1296)) <!-- pr:1296 -->
+- add validated openai models. ([#1299](https://github.com/confident-ai/deepeval/pull/1299)) <!-- pr:1299 -->
+- add conditional displaying. ([#1301](https://github.com/confident-ai/deepeval/pull/1301)) <!-- pr:1301 -->
+
+
+### Improvement
+
+#### v2.2.7
+- auto-eval. ([#1283](https://github.com/confident-ai/deepeval/pull/1283)) <!-- pr:1283 -->
+- task completion metric. ([#1295](https://github.com/confident-ai/deepeval/pull/1295)) <!-- pr:1295 -->
+- update docs g-eval. ([#1303](https://github.com/confident-ai/deepeval/pull/1303)) <!-- pr:1303 -->
+- updated task-completion doc. ([#1310](https://github.com/confident-ai/deepeval/pull/1310)) <!-- pr:1310 -->
+- Update benchmarks-MMLU.mdx with MMLUTask. ([#1313](https://github.com/confident-ai/deepeval/pull/1313)) <!-- pr:1313 -->
+- tool correctness. ([#1317](https://github.com/confident-ai/deepeval/pull/1317)) <!-- pr:1317 -->
+- Update synthesizer-introduction.mdx. ([#1319](https://github.com/confident-ai/deepeval/pull/1319)) <!-- pr:1319 -->
+- delete .vector_db folder if chunking is unsuccesful. ([#1320](https://github.com/confident-ai/deepeval/pull/1320)) <!-- pr:1320 -->
+- Use Case Tutorials Legal Doc Summarizer. ([#1323](https://github.com/confident-ai/deepeval/pull/1323)) <!-- pr:1323 -->
+- Use Case Tutorials QA agent. ([#1325](https://github.com/confident-ai/deepeval/pull/1325)) <!-- pr:1325 -->
+- qa agent tutorial. ([#1326](https://github.com/confident-ai/deepeval/pull/1326)) <!-- pr:1326 -->
+
+#### v2.2.2
+- redteaming 2.0 docs. ([#1209](https://github.com/confident-ai/deepeval/pull/1209)) <!-- pr:1209 -->
+- Update pyproject.toml by updating version of tenacity. ([#1226](https://github.com/confident-ai/deepeval/pull/1226)) <!-- pr:1226 -->
+- MMLUTemplate.format_subject should be a static method. ([#1229](https://github.com/confident-ai/deepeval/pull/1229)) <!-- pr:1229 -->
+- Ensure opentelemetry only loaded if telemetry is not opted outed. ([#1231](https://github.com/confident-ai/deepeval/pull/1231)) <!-- pr:1231 -->
+- red teaming updates. ([#1236](https://github.com/confident-ai/deepeval/pull/1236)) <!-- pr:1236 -->
+- identifier. ([#1237](https://github.com/confident-ai/deepeval/pull/1237)) <!-- pr:1237 -->
+- Benchmarks. ([#1239](https://github.com/confident-ai/deepeval/pull/1239)) <!-- pr:1239 -->
+- benchmark docs. ([#1240](https://github.com/confident-ai/deepeval/pull/1240)) <!-- pr:1240 -->
+- Multimodal rag. ([#1241](https://github.com/confident-ai/deepeval/pull/1241)) <!-- pr:1241 -->
+- a few benchmark optimizations. ([#1246](https://github.com/confident-ai/deepeval/pull/1246)) <!-- pr:1246 -->
+- guardrails. ([#1247](https://github.com/confident-ai/deepeval/pull/1247)) <!-- pr:1247 -->
+- update `target_model_callback` in red-teaming docs. ([#1250](https://github.com/confident-ai/deepeval/pull/1250)) <!-- pr:1250 -->
+- guardrails base url change. ([#1252](https://github.com/confident-ai/deepeval/pull/1252)) <!-- pr:1252 -->
+- change guardrails URL. ([#1255](https://github.com/confident-ai/deepeval/pull/1255)) <!-- pr:1255 -->
+- Release v2.1.3. ([#1257](https://github.com/confident-ai/deepeval/pull/1257)) <!-- pr:1257 -->
+- update base url. ([#1258](https://github.com/confident-ai/deepeval/pull/1258)) <!-- pr:1258 -->
+- . ([#1259](https://github.com/confident-ai/deepeval/pull/1259)) <!-- pr:1259 -->
+- . ([#1260](https://github.com/confident-ai/deepeval/pull/1260)) <!-- pr:1260 -->
+- top_logprobs configurable. ([#1261](https://github.com/confident-ai/deepeval/pull/1261)) <!-- pr:1261 -->
+- docs posthog. ([#1268](https://github.com/confident-ai/deepeval/pull/1268)) <!-- pr:1268 -->
+- update README.md. ([#1273](https://github.com/confident-ai/deepeval/pull/1273)) <!-- pr:1273 -->
+- telemetry. ([#1276](https://github.com/confident-ai/deepeval/pull/1276)) <!-- pr:1276 -->
+- updated telemetry. ([#1280](https://github.com/confident-ai/deepeval/pull/1280)) <!-- pr:1280 -->
+- structured outputs using OpenAI API. ([#1285](https://github.com/confident-ai/deepeval/pull/1285)) <!-- pr:1285 -->
+- OpenAI model updates. ([#1287](https://github.com/confident-ai/deepeval/pull/1287)) <!-- pr:1287 -->
+- update link. ([#1288](https://github.com/confident-ai/deepeval/pull/1288)) <!-- pr:1288 -->
+- specify synthesizer context length. ([#1289](https://github.com/confident-ai/deepeval/pull/1289)) <!-- pr:1289 -->
+- Release v2.1.9. ([#1291](https://github.com/confident-ai/deepeval/pull/1291)) <!-- pr:1291 -->
+- . ([#1292](https://github.com/confident-ai/deepeval/pull/1292)) <!-- pr:1292 -->
+- tool correctness + input parameters and output. ([#1293](https://github.com/confident-ai/deepeval/pull/1293)) <!-- pr:1293 -->
+- Exclude tests folder during installation. ([#1300](https://github.com/confident-ai/deepeval/pull/1300)) <!-- pr:1300 -->
+
+
+### Bug Fix
+
+#### v2.2.7
+- local model/azure fix. ([#1304](https://github.com/confident-ai/deepeval/pull/1304)) <!-- pr:1304 -->
+- Typo fix. "Confidnet" -&gt; "Confident". ([#1307](https://github.com/confident-ai/deepeval/pull/1307)) <!-- pr:1307 -->
+- make red teamer surface errors. ([#1309](https://github.com/confident-ai/deepeval/pull/1309)) <!-- pr:1309 -->
+- Fix circular import in Scorer. ([#1315](https://github.com/confident-ai/deepeval/pull/1315)) <!-- pr:1315 -->
+- async fixes for tracing. ([#1318](https://github.com/confident-ai/deepeval/pull/1318)) <!-- pr:1318 -->
+- Generate from scratch fixes. ([#1321](https://github.com/confident-ai/deepeval/pull/1321)) <!-- pr:1321 -->
+- ollama fix. ([#1322](https://github.com/confident-ai/deepeval/pull/1322)) <!-- pr:1322 -->
+
+#### v2.2.2
+- Add doc count to the ContextualPrecision template (Fixes #1205). ([#1222](https://github.com/confident-ai/deepeval/pull/1222)) <!-- pr:1222 -->
+- Grammar fix in RAG eval guide. ([#1233](https://github.com/confident-ai/deepeval/pull/1233)) <!-- pr:1233 -->
+- Changed Error type. ([#1242](https://github.com/confident-ai/deepeval/pull/1242)) <!-- pr:1242 -->
+- fix text-to-image metric bug. ([#1253](https://github.com/confident-ai/deepeval/pull/1253)) <!-- pr:1253 -->
+- Fix import path of sensitive information disclosure attacks. ([#1256](https://github.com/confident-ai/deepeval/pull/1256)) <!-- pr:1256 -->
+- fix task reloading of MMLU. ([#1267](https://github.com/confident-ai/deepeval/pull/1267)) <!-- pr:1267 -->
+- fix. ([#1271](https://github.com/confident-ai/deepeval/pull/1271)) <!-- pr:1271 -->
+- fix batched evaluate() behavior. ([#1274](https://github.com/confident-ai/deepeval/pull/1274)) <!-- pr:1274 -->
+- Fix typo in Update guides-using-custom-llms.mdx. ([#1294](https://github.com/confident-ai/deepeval/pull/1294)) <!-- pr:1294 -->
