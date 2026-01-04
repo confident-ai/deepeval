@@ -402,14 +402,22 @@ class DummyProgress:
     Records update / advance calls.
     """
 
-    def __init__(self):
+    def __init__(self, tasks=None):
         self.records = []
+        self.tasks = list(tasks) if tasks is not None else []
 
     def update(self, task_id, **kwargs):
         self.records.append(("update", task_id, kwargs))
 
     def advance(self, task_id, amount):
         self.records.append(("advance", task_id, {"amount": amount}))
+
+    def remove_task(self, task_id):
+        # rich removes the task from its task list and so shall we
+        self.records.append(("remove_task", task_id, {}))
+        self.tasks = [
+            t for t in self.tasks if getattr(t, "id", None) != task_id
+        ]
 
 
 ###############

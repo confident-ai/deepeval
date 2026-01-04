@@ -739,14 +739,29 @@ def update_pbar(
     if progress is None or pbar_id is None:
         return
     # Get amount to advance
-    current_task = next(t for t in progress.tasks if t.id == pbar_id)
+    current_task = next((t for t in progress.tasks if t.id == pbar_id), None)
+    if current_task is None:
+        return
+
     if advance_to_end:
-        advance = current_task.remaining
+        remaining = current_task.remaining
+        if remaining is not None:
+            advance = remaining
+
     # Advance
-    progress.update(pbar_id, advance=advance, total=total)
-    # Remove if finished
-    if current_task.finished and remove:
-        progress.remove_task(pbar_id)
+    try:
+        progress.update(pbar_id, advance=advance, total=total)
+    except KeyError:
+        # progress task may be removed concurrently via callbacks which can race with teardown.
+        return
+
+    # Remove if finished and refetch before remove to avoid acting on a stale object
+    updated_task = next((t for t in progress.tasks if t.id == pbar_id), None)
+    if updated_task is not None and updated_task.finished and remove:
+        try:
+            progress.remove_task(pbar_id)
+        except KeyError:
+            pass
 
 
 def add_pbar(progress: Optional[Progress], description: str, total: int = 1):
