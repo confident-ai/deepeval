@@ -57,7 +57,7 @@ module.exports = {
     // ],
   ],
 
-  title: 'DeepEval - The Open-Source LLM Evaluation Framework',
+  title: 'DeepEval by Confident AI - The LLM Evaluation Framework',
   tagline: 'Evaluation Framework for LLMs',
   favicon: 'img/favicon.ico',
 
