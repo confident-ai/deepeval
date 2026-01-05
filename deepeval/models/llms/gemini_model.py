@@ -371,25 +371,6 @@ class GeminiModel(DeepEvalBaseLLM):
         client_kwargs = self._client_kwargs(**self.kwargs)
 
         if self.should_use_vertexai():
-            service_account_key_json = require_secret_api_key(
-                self.service_account_key,
-                provider_label="Google Gemini",
-                env_var_name="GOOGLE_SERVICE_ACCOUNT_KEY",
-                param_hint="`service_account_key` to GeminiModel(...)",
-            )
-
-            try:
-                service_account_key = json.loads(service_account_key_json)
-            except Exception as e:
-                raise DeepEvalError(
-                    "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
-                ) from e
-
-            if not isinstance(service_account_key, dict):
-                raise DeepEvalError(
-                    "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
-                )
-
             if not self.project or not self.location:
                 raise DeepEvalError(
                     "When using Vertex AI API, both project and location are required. "
@@ -397,17 +378,34 @@ class GeminiModel(DeepEvalBaseLLM):
                     "GOOGLE_CLOUD_LOCATION in your DeepEval configuration."
                 )
 
-            oauth2 = self._require_oauth2()
-            credentials = (
-                oauth2.service_account.Credentials.from_service_account_info(
-                    service_account_key,
-                    scopes=[
-                        "https://www.googleapis.com/auth/cloud-platform",
-                    ],
+            # if no service account key is provided, allow the SDK
+            # to resolve Application Default Credentials automatically.
+            credentials = None
+            if self.service_account_key is not None:
+                service_account_key_json = require_secret_api_key(
+                    self.service_account_key,
+                    provider_label="Google Gemini",
+                    env_var_name="GOOGLE_SERVICE_ACCOUNT_KEY",
+                    param_hint="`service_account_key` to GeminiModel(...)",
                 )
-                if service_account_key
-                else None
-            )
+
+                try:
+                    service_account_key = json.loads(service_account_key_json)
+                except Exception as e:
+                    raise DeepEvalError(
+                        "GOOGLE_SERVICE_ACCOUNT_KEY must be valid JSON for a Google service account."
+                    ) from e
+
+                if not isinstance(service_account_key, dict):
+                    raise DeepEvalError(
+                        "GOOGLE_SERVICE_ACCOUNT_KEY must decode to a JSON object."
+                    )
+
+                oauth2 = self._require_oauth2()
+                credentials = oauth2.service_account.Credentials.from_service_account_info(
+                    service_account_key,
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                )
 
             client = self._module.Client(
                 vertexai=True,
