@@ -279,8 +279,11 @@ class DROP(DeepEvalBaseBenchmark):
             prediction = predictions[i]
             golden = goldens[i]
             # Define Metric
-            score = self.scorer.quasi_exact_match_score(
-                golden.expected_output, prediction
+            expected_output = DROPTemplate.parse_str_to_list(
+                golden.expected_output, DELIMITER
+            )
+            score = self.scorer.quasi_contains_score(
+                expected_output, prediction
             )
             res.append({"prediction": prediction, "score": score})
 
