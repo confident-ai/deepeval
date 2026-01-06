@@ -1437,7 +1437,7 @@ class Synthesizer:
         else:
             for golden in self.synthetic_conversational_goldens:
                 # Extract basic fields
-                scenario_text = golden.scenario
+                scenario = golden.scenario
                 expected_outcome = golden.expected_outcome
                 context = golden.context
                 metadata = golden.additional_metadata
@@ -1464,7 +1464,7 @@ class Synthesizer:
 
                 # Prepare a row for the DataFrame
                 row = {
-                    "scenario_text": scenario_text,
+                    "scenario": scenario,
                     "expected_outcome": expected_outcome,
                     "context": context,
                     "n_chunks_per_context": num_context,
