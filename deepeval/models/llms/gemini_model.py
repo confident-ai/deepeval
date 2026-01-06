@@ -22,7 +22,7 @@ from deepeval.models.llms.constants import GEMINI_MODELS_DATA
 if TYPE_CHECKING:
     from google.genai import Client
 
-default_gemini_model = "gemini-1.5-pro"
+default_gemini_model = "gemini-2.5-pro"
 
 # consistent retry rules
 retry_gemini = create_retry_decorator(PS.GOOGLE)

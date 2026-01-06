@@ -12,7 +12,7 @@ Run the following command in your terminal to configure your deepeval environmen
 
 ```bash
 deepeval set-gemini \
-    --model=<model> # e.g. "gemini-2.0-flash-001"
+    --model=<model> # e.g. "gemini-2.5-flash"
 ```
 
 :::info
@@ -31,14 +31,14 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 ### Python
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-1.5-pro`.
+Alternatively, you can specify your model directly in code using `GeminiModel` from `deepeval`'s model collection. By default, `model` is set to `gemini-2.5-pro`.
 
 ```python
 from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GeminiModel(
-    model="gemini-1.5-pro",
+    model="gemini-2.5-pro",
     api_key="Your Gemini API Key",
     temperature=0
 )
@@ -67,17 +67,13 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Gemini models:
 
-`gemini-1.5-pro`
-`gemini-1.5-pro-002`
-`gemini-1.5-flash`
-`gemini-1.5-flash-002`
-`gemini-1.5-flash-8b`
-`gemini-2.0-flash`
-`gemini-2.0-flash-lite`
+`gemini-3-pro-preview`
+`gemini-3-flash-preview`
 `gemini-2.5-pro`
 `gemini-2.5-flash`
 `gemini-2.5-flash-lite`
-`gemini-3-pro`
-`gemini-3-pro-preview`
-`gemini-pro`
-`gemini-pro-vision`
+`gemini-2.0-flash`
+`gemini-2.0-flash-lite`
+`gemini-pro-latest`
+`gemini-flash-latest`
+`gemini-flash-lite-latest`
