@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import threading
 import time
 import json
 import os
@@ -7,12 +9,9 @@ from enum import Enum
 from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
-from pydantic import BaseModel, ValidationError
-import asyncio
-import threading
+from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from deepeval.utils import make_model_config, is_read_only_env
-
 from deepeval.prompt.api import (
     PromptHttpResponse,
     PromptMessage,
@@ -26,6 +25,7 @@ from deepeval.prompt.api import (
     OutputSchema,
     OutputType,
 )
+from deepeval.prompt.types import PromptBase
 from deepeval.prompt.utils import (
     interpolate_text,
     construct_base_model,
@@ -103,7 +103,16 @@ class CachedPrompt(BaseModel):
     output_schema: Optional[OutputSchema]
 
 
-class Prompt:
+class Prompt(PromptBase):
+    _lock: threading.Lock = PrivateAttr(
+        default_factory=threading.Lock
+    )  # Protect instance attributes from race conditions
+    _version: Optional[str] = PrivateAttr(default=None)
+    _prompt_version_id: Optional[str] = PrivateAttr(default=None)
+    _polling_tasks: Dict[str, Dict[str, asyncio.Task]] = PrivateAttr(
+        default_factory=dict
+    )
+    _refresh_map: Dict[str, Dict[str, int]] = PrivateAttr(default_factory=dict)
 
     def __init__(
         self,
@@ -119,24 +128,17 @@ class Prompt:
             raise TypeError(
                 "Unable to create Prompt where 'text_template' and 'messages_template' are both provided. Please provide only one to continue."
             )
-        self.alias = alias
-        self.text_template = text_template
-        self.messages_template = messages_template
-        self.model_settings: Optional[ModelSettings] = model_settings
-        self.output_type: Optional[OutputType] = output_type
-        self.output_schema: Optional[Type[BaseModel]] = output_schema
-        self.label: Optional[str] = None
-        self.interpolation_type: PromptInterpolationType = (
-            interpolation_type or PromptInterpolationType.FSTRING
+        super().__init__(
+            alias=alias,
+            text_template=text_template,
+            messages_template=messages_template,
+            model_settings=model_settings,
+            output_type=output_type,
+            output_schema=output_schema,
+            interpolation_type=(
+                interpolation_type or PromptInterpolationType.FSTRING
+            ),
         )
-
-        self._version = None
-        self._prompt_version_id: Optional[str] = None
-        self._polling_tasks: Dict[str, Dict[str, asyncio.Task]] = {}
-        self._refresh_map: Dict[str, Dict[str, int]] = {}
-        self._lock = (
-            threading.Lock()
-        )  # Protect instance attributes from race conditions
 
         self.type: Optional[PromptType] = None
         if text_template:
