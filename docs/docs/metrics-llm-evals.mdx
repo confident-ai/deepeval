@@ -66,7 +66,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 - [Optional] `evaluation_template`: a class of type `GEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `GEval` score. Defaulted to `deepeval`'s `GEvalTemplate`.
 
 :::danger
-For accurate and valid results, only the parameters that are mentioned in `criteria`/`evaluation_params` should be included as a member of `evaluation_params`.
+For accurate and valid results, only the parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
 :::
 
 As mentioned in the [metrics introduction section](/docs/metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`, and `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval` metric:
