@@ -1383,7 +1383,10 @@ class Synthesizer:
         # Prepare data for the DataFrame
         data = []
 
-        if self.synthetic_goldens is not None and len(self.synthetic_goldens) > 0:
+        if (
+            self.synthetic_goldens is not None
+            and len(self.synthetic_goldens) > 0
+        ):
             for golden in self.synthetic_goldens:
                 # Extract basic fields
                 input_text = golden.input
@@ -1522,7 +1525,10 @@ class Synthesizer:
                 "parameter."
             )
 
-        if len(self.synthetic_goldens) == 0 and len(self.synthetic_conversational_goldens) == 0:
+        if (
+            len(self.synthetic_goldens) == 0
+            and len(self.synthetic_conversational_goldens) == 0
+        ):
             raise ValueError(
                 "No synthetic goldens found. Please generate goldens before saving goldens."
             )
@@ -1537,7 +1543,10 @@ class Synthesizer:
         full_file_path = os.path.join(directory, new_filename)
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
-                if self.synthetic_goldens is not None and len(self.synthetic_goldens) > 0:
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
                     json_data = [
                         {
                             "input": golden.input,
@@ -1554,7 +1563,9 @@ class Synthesizer:
                             "scenario": golden.scenario,
                             "expected_outcome": golden.expected_outcome,
                             "context": golden.context,
-                            "source_files": golden.additional_metadata.get("source_files", None),
+                            "source_files": golden.additional_metadata.get(
+                                "source_files", None
+                            ),
                         }
                         for golden in self.synthetic_conversational_goldens
                     ]
@@ -1564,7 +1575,10 @@ class Synthesizer:
                 full_file_path, "w", newline="", encoding="utf-8"
             ) as file:
                 writer = csv.writer(file)
-                if self.synthetic_goldens is not None and len(self.synthetic_goldens) > 0:
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
                     writer.writerow(
                         [
                             "input",
@@ -1599,12 +1613,17 @@ class Synthesizer:
                                 golden.scenario,
                                 golden.expected_outcome,
                                 "|".join(golden.context),
-                                golden.additional_metadata.get("source_files", None),
+                                golden.additional_metadata.get(
+                                    "source_files", None
+                                ),
                             ]
                         )
         elif file_type == "jsonl":
             with open(full_file_path, "w", encoding="utf-8") as file:
-                if self.synthetic_goldens is not None and len(self.synthetic_goldens) > 0:
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
                     for golden in self.synthetic_goldens:
                         record = {
                             "input": golden.input,
@@ -1613,16 +1632,22 @@ class Synthesizer:
                             "context": golden.context,
                             "source_file": golden.source_file,
                         }
-                        file.write(json.dumps(record, ensure_ascii=False) + "\n")
+                        file.write(
+                            json.dumps(record, ensure_ascii=False) + "\n"
+                        )
                 else:
                     for golden in self.synthetic_conversational_goldens:
                         record = {
                             "scenario": golden.scenario,
                             "expected_outcome": golden.expected_outcome,
                             "context": golden.context,
-                            "source_files": golden.additional_metadata.get("source_files", None),
+                            "source_files": golden.additional_metadata.get(
+                                "source_files", None
+                            ),
                         }
-                        file.write(json.dumps(record, ensure_ascii=False) + "\n")
+                        file.write(
+                            json.dumps(record, ensure_ascii=False) + "\n"
+                        )
         if not quiet:
             print(f"Synthetic goldens saved at {full_file_path}!")
 
