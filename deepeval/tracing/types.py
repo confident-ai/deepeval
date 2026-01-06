@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 from enum import Enum
 from dataclasses import dataclass, field
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union, Literal
 from rich.progress import Progress
 
 from deepeval.utils import make_model_config
 
-from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
+from deepeval.prompt.types import PromptBase
 
 
 class Message(BaseModel):
@@ -104,7 +106,7 @@ class AgentSpan(BaseSpan):
 class LlmSpan(BaseSpan):
 
     model: Optional[str] = None
-    prompt: Optional[Prompt] = None
+    prompt: Optional[PromptBase] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
     )
