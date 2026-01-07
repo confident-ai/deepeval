@@ -2,6 +2,7 @@
 
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict, Type
+from rich.console import Console
 import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
@@ -11,6 +12,8 @@ from deepeval.metrics.g_eval.utils import (
     format_rubrics,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
+    CONVERSATIONAL_G_EVAL_API_PARAMS,
+    construct_geval_upload_payload,
 )
 from deepeval.test_case import (
     TurnParams,
@@ -33,6 +36,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.metrics.api import metric_data_manager
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
 class ConversationalGEval(BaseConversationalMetric):
@@ -411,6 +415,37 @@ class ConversationalGEval(BaseConversationalMetric):
             except TypeError:
                 self.success = False
         return self.success
+    
+    def upload(self):
+        api = Api()
+
+        payload =construct_geval_upload_payload(
+            name=self.name,
+            evaluation_params=self.evaluation_params,
+            g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
+            criteria=self.criteria,
+            evaluation_steps=self.evaluation_steps,
+            multi_turn=True,
+            rubric=self.rubric
+        )
+        
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+
+        if metric_id:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
 
     @property
     def __name__(self):
