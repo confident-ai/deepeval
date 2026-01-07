@@ -7,6 +7,7 @@ from deepeval.metrics.g_eval import Rubric
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.confident.types import ConfidentApiError
 
+
 def _fetch_all_metrics():
     api = Api()
     data, _ = api.send_request(
@@ -14,6 +15,7 @@ def _fetch_all_metrics():
         endpoint=Endpoints.METRICS_ENDPOINT,
     )
     return data["metrics"]
+
 
 class TestGEval:
 
@@ -28,7 +30,7 @@ class TestGEval:
                 LLMTestCaseParams.EXPECTED_OUTPUT,
                 LLMTestCaseParams.CONTEXT,
                 # LLMTestCaseParams.TOOLS_CALLED,
-                LLMTestCaseParams.RETRIEVAL_CONTEXT
+                LLMTestCaseParams.RETRIEVAL_CONTEXT,
             ],
             criteria="Test whether actual output is relevant to the input given",
             rubric=[
@@ -60,7 +62,7 @@ class TestGEval:
             "expectedOutput",
             "context",
             # "toolsCalled",
-            "retrievalContext"
+            "retrievalContext",
         }
 
         duplicate_metric = GEval(

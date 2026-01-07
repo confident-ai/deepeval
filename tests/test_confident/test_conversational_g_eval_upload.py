@@ -7,6 +7,7 @@ from deepeval.metrics.g_eval import Rubric
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.confident.types import ConfidentApiError
 
+
 def _fetch_all_metrics():
     api = Api()
     data, _ = api.send_request(
@@ -14,6 +15,7 @@ def _fetch_all_metrics():
         endpoint=Endpoints.METRICS_ENDPOINT,
     )
     return data["metrics"]
+
 
 class TestConversationalGEval:
 
