@@ -1,7 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 import asyncio
-
+from rich.console import Console
 from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -32,9 +32,12 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
     get_score_range,
+    construct_geval_upload_payload,
+    G_EVAL_API_PARAMS,
 )
 from deepeval.metrics.api import metric_data_manager
 from deepeval.config.settings import get_settings
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
 class GEval(BaseMetric):
@@ -407,6 +410,37 @@ class GEval(BaseMetric):
             except TypeError:
                 self.success = False
         return self.success
+    
+    def upload(self):
+        api = Api()
+
+        payload =construct_geval_upload_payload(
+            name=self.name,
+            evaluation_params=self.evaluation_params,
+            g_eval_api_params=G_EVAL_API_PARAMS,
+            criteria=self.criteria,
+            evaluation_steps=self.evaluation_steps,
+            multi_turn=False,
+            rubric=self.rubric
+        )
+        
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+
+        if metric_id:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
 
     @property
     def __name__(self):
