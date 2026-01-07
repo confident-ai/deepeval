@@ -106,6 +106,8 @@ class AgentSpan(BaseSpan):
 class LlmSpan(BaseSpan):
 
     model: Optional[str] = None
+    # NOTE: PromptBase avoids a circular import. Pydantic resolves `"Prompt"` at runtime, so a
+    # string forward-ref would still require importing Prompt and calling `model_rebuild()`.
     prompt: Optional[PromptBase] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
