@@ -410,20 +410,20 @@ class GEval(BaseMetric):
             except TypeError:
                 self.success = False
         return self.success
-    
+
     def upload(self):
         api = Api()
 
-        payload =construct_geval_upload_payload(
+        payload = construct_geval_upload_payload(
             name=self.name,
             evaluation_params=self.evaluation_params,
             g_eval_api_params=G_EVAL_API_PARAMS,
             criteria=self.criteria,
             evaluation_steps=self.evaluation_steps,
             multi_turn=False,
-            rubric=self.rubric
+            rubric=self.rubric,
         )
-        
+
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,

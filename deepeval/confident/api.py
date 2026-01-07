@@ -108,6 +108,7 @@ class Endpoints(Enum):
 
     METRICS_ENDPOINT = "/v1/metrics"
 
+
 class Api:
     def __init__(self, api_key: Optional[str] = None):
         if api_key is None:
