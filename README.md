@@ -68,7 +68,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 # 🔥 Metrics and Features
 
-> 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
+> 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)
 
 - Supports both end-to-end and component-level LLM evaluation.
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
@@ -111,7 +111,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
   - TruthfulQA
   - HumanEval
   - GSM8K
-- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation lifecycle:
+- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation & observability lifecycle:
   - Curate/annotate evaluation datasets on the cloud
   - Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
   - Fine-tune metrics for custom results
@@ -120,7 +120,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
   - Repeat until perfection
 
 > [!NOTE]
-> Confident AI is the DeepEval platform. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
+> DeepEval is available on Confident AI, an LLM evals platform for AI observability and quality. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
 
@@ -347,7 +347,7 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-DeepEval's cloud platform, [Confident AI](https://confident-ai.com?utm_source=Github), allows you to:
+DeepEval is available on [Confident AI](https://confident-ai.com?utm_source=Github), an evals & observability platform that allows you to:
 
 1. Curate/annotate evaluation datasets on the cloud
 2. Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
