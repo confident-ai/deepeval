@@ -211,6 +211,7 @@ def bind_trace_and_span(
     trace_uuid: Optional[str],
     span_uuid: Optional[str] = None,
     parent_uuid: Optional[str] = None,
+    reset_on_exit: bool = True,
 ):
     from deepeval.tracing.tracing import trace_manager
 
@@ -224,15 +225,19 @@ def bind_trace_and_span(
 
         if span_uuid is not None:
             span = trace_manager.get_span_by_uuid(span_uuid)
-            span_token = current_span_context.set(span)
+            if span is not None:
+                span_token = current_span_context.set(span)
         elif parent_uuid is not None:
             parent = trace_manager.get_span_by_uuid(parent_uuid)
-            span_token = current_span_context.set(parent)
+            if parent is not None:
+                span_token = current_span_context.set(parent)
         else:
-            span_token = current_span_context.set(None)
+            if reset_on_exit:
+                span_token = current_span_context.set(None)
         yield
     finally:
-        if span_token is not None:
-            current_span_context.reset(span_token)
-        if trace_token is not None:
-            current_trace_context.reset(trace_token)
+        if reset_on_exit:
+            if span_token is not None:
+                current_span_context.reset(span_token)
+            if trace_token is not None:
+                current_trace_context.reset(trace_token)

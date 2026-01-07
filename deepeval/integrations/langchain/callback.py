@@ -66,6 +66,7 @@ class CallbackHandler(BaseCallbackHandler):
         metric_collection: Optional[str] = None,
     ):
         is_langchain_installed()
+        self._root_span_uuid: Optional[str] = None
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
             trace = trace_manager.start_new_trace()
 
@@ -93,10 +94,10 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> Any:
         if parent_run_id is None:
-            uuid_str = str(run_id)
-            with self._ctx(parent_run_id=parent_run_id):
+            self._root_span_uuid = str(run_id)
+            with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
                 base_span = enter_current_context(
-                    uuid_str=uuid_str,
+                    uuid_str=self._root_span_uuid,
                     span_type="custom",
                     func_name=extract_name(serialized, **kwargs),
                 )
@@ -149,7 +150,7 @@ class CallbackHandler(BaseCallbackHandler):
         metric_collection = metadata.get("metric_collection")
         prompt = metadata.get("prompt")
         model = safe_extract_model_name(metadata, **kwargs)
-        with self._ctx(parent_run_id=parent_run_id):
+        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
             llm_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="llm",
@@ -298,7 +299,7 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         uuid_str = str(run_id)
 
-        with self._ctx(parent_run_id=parent_run_id):
+        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
             tool_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="tool",
@@ -342,10 +343,20 @@ class CallbackHandler(BaseCallbackHandler):
                 if parent_run_id is not None
                 else None
             )
+
             if parent_span is not None:
-                if parent_span.tools_called is None:
-                    parent_span.tools_called = []
+                parent_span.tools_called = parent_span.tools_called or []
                 parent_span.tools_called.append(tool_call)
+
+            # root/base span (LangGraph / base span)
+            root_span = (
+                trace_manager.get_span_by_uuid(self._root_span_uuid)
+                if self._root_span_uuid
+                else None
+            )
+            if root_span is not None and root_span is not parent_span:
+                root_span.tools_called = root_span.tools_called or []
+                root_span.tools_called.append(tool_call)
 
             trace = current_trace_context.get()
             if trace:
@@ -391,7 +402,7 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         uuid_str = str(run_id)
         metadata = metadata or {}
-        with self._ctx(parent_run_id=parent_run_id):
+        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
             retriever_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="retriever",
@@ -465,6 +476,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: Optional[UUID] = None,
         parent_run_id: Optional[UUID] = None,
+        reset_on_exit: bool = True,
     ):
         return bind_trace_and_span(
             trace_uuid=self.trace_uuid,
@@ -472,4 +484,5 @@ class CallbackHandler(BaseCallbackHandler):
             parent_uuid=(
                 str(parent_run_id) if parent_run_id is not None else None
             ),
+            reset_on_exit=reset_on_exit,
         )
