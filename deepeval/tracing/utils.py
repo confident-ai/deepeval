@@ -1,11 +1,14 @@
 import asyncio
 import os
-from typing import Dict, Any
+from contextlib import contextmanager
+from collections import deque
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-from collections import deque
+from typing import Any, Dict, Optional
+
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
+from deepeval.tracing.context import current_trace_context, current_span_context
 
 
 class Environment(Enum):
@@ -183,8 +186,8 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except:
-        return f"<self>"
+    except Exception:
+        return "<self>"
 
 
 def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
@@ -200,3 +203,36 @@ def is_async_context() -> bool:
         return True
     except RuntimeError:
         return False
+
+
+@contextmanager
+def bind_trace_and_span(
+    *,
+    trace_uuid: Optional[str],
+    span_uuid: Optional[str] = None,
+    parent_uuid: Optional[str] = None,
+):
+    from deepeval.tracing.tracing import trace_manager
+
+    trace_token = None
+    span_token = None
+    try:
+        if trace_uuid:
+            trace = trace_manager.get_trace_by_uuid(trace_uuid)
+            if trace is not None:
+                trace_token = current_trace_context.set(trace)
+
+        if span_uuid is not None:
+            span = trace_manager.get_span_by_uuid(span_uuid)
+            span_token = current_span_context.set(span)
+        elif parent_uuid is not None:
+            parent = trace_manager.get_span_by_uuid(parent_uuid)
+            span_token = current_span_context.set(parent)
+        else:
+            span_token = current_span_context.set(None)
+        yield
+    finally:
+        if span_token is not None:
+            current_span_context.reset(span_token)
+        if trace_token is not None:
+            current_trace_context.reset(trace_token)
