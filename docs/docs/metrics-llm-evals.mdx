@@ -92,6 +92,17 @@ evaluate(test_cases=[test_case], metrics=[correctness_metric])
 This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), where your LLM application is treated as a black-box.
 :::
 
+:::tip
+You can upload your `GEval` metrics to [Confident AI](https://app.confident-ai.com/) and use them as custom evaluation metrics. To upload a metric simply call the `upload` method of a `GEval` metric instance:
+
+```python
+...
+
+metric = GEval(...)
+metric.upload()
+```
+:::
+
 ### Evaluation Steps
 
 Providing `evaluation_steps` tells `GEval` to follow your `evaluation_steps` for evaluation instead of first generating one from `criteria`, which allows for more controllable metric scores (more info [here](#how-is-it-calculated)):

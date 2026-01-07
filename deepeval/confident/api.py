@@ -106,6 +106,8 @@ class Endpoints(Enum):
     EVALUATE_TRACE_ENDPOINT = "/v1/evaluate/traces/:traceUuid"
     EVALUATE_SPAN_ENDPOINT = "/v1/evaluate/spans/:spanUuid"
 
+    METRICS_ENDPOINT = "/v1/metrics"
+
 
 class Api:
     def __init__(self, api_key: Optional[str] = None):
