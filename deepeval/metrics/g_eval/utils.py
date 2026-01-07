@@ -52,6 +52,70 @@ CONVERSATIONAL_G_EVAL_PARAMS = {
     TurnParams.SCENARIO: "Scenario",
 }
 
+G_EVAL_API_PARAMS = {
+    LLMTestCaseParams.INPUT: "input",
+    LLMTestCaseParams.ACTUAL_OUTPUT: "actualOutput",
+    LLMTestCaseParams.EXPECTED_OUTPUT: "expectedOutput",
+    LLMTestCaseParams.CONTEXT: "context",
+    LLMTestCaseParams.RETRIEVAL_CONTEXT: "retrievalContext",
+    LLMTestCaseParams.EXPECTED_TOOLS: "expectedTools",
+    LLMTestCaseParams.TOOLS_CALLED: "toolsCalled",
+}
+
+CONVERSATIONAL_G_EVAL_API_PARAMS = {
+    TurnParams.ROLE: "role",
+    TurnParams.CONTENT: "content",
+    TurnParams.SCENARIO: "scenario",
+    TurnParams.EXPECTED_OUTCOME: "expectedOutcome",
+    TurnParams.RETRIEVAL_CONTEXT: "retrievalContext",
+    TurnParams.TOOLS_CALLED: "toolsCalled",
+}
+
+
+def construct_geval_upload_payload(
+    name: str,
+    evaluation_params: List[LLMTestCaseParams],
+    g_eval_api_params: Dict,
+    criteria: Optional[str] = None,
+    evaluation_steps: Optional[List[str]] = None,
+    multi_turn: bool = False,
+    rubric: Optional[List[Rubric]] = None,
+) -> Dict:
+    if not evaluation_params:
+        raise ValueError("GEval requires at least one evaluation parameter.")
+
+    unsupported_params = [
+        param for param in evaluation_params if param not in g_eval_api_params
+    ]
+    if unsupported_params:
+        raise ValueError(
+            "Unsupported evaluation params for GEval upload: "
+            + ", ".join(param.name for param in unsupported_params)
+        )
+
+    payload = {
+        "name": name,
+        "evaluationParams": [
+            g_eval_api_params[param] for param in evaluation_params
+        ],
+        "multiTurn": multi_turn,
+    }
+
+    if criteria is not None:
+        payload["criteria"] = criteria
+    else:
+        payload["evaluationSteps"] = evaluation_steps
+
+    if rubric is not None:
+        payload["rubric"] = [
+            {
+                "scoreRange": list(r.score_range),
+                "expectedOutcome": r.expected_outcome,
+            }
+            for r in rubric
+        ]
+
+    return payload
 
 def validate_criteria_and_evaluation_steps(
     criteria: Optional[str] = None,
