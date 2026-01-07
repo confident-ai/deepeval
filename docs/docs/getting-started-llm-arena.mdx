@@ -4,11 +4,11 @@ title: LLM Arena Evaluation Quickstart
 sidebar_label: LLM Arena
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import NavigationCards from "@site/src/components/NavigationCards";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import NavigationCards from '@site/src/components/NavigationCards';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 Learn how to evaluate different versions of your LLM app using LLM Arena-as-a-Judge in `deepeval`, a comparison-based LLM eval.
 
@@ -314,7 +314,7 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
 
 ## Next Steps
 
-`deepeval` lets you run Arena comparisons locally but isn’t optimized for iterative prompt or model improvements. If you’re looking for a more comprehensive and streamlined way to run Arena comparisons, [**Confident AI**](https://app.confident-ai.com) (DeepEval Cloud) enables you to easily test different prompts, models, tools, and output configurations **side by side**, and evaluate them using any `deepeval` metric beyond `ArenaGEval`—all directly on the platform.
+`deepeval` lets you run Arena comparisons locally but isn’t optimized for iterative prompt or model improvements. If you’re looking for a more comprehensive and streamlined way to run Arena comparisons, [**Confident AI**](https://app.confident-ai.com) enables you to easily test different prompts, models, tools, and output configurations **side by side**, and evaluate them using any `deepeval` metric beyond `ArenaGEval`—all directly on the platform.
 
 <Tabs>
 <TabItem value="quick-run" label="Quick Comparisons">
@@ -382,34 +382,34 @@ The arena metric is only used for picking winners among the contestants, it's no
   columns={3}
   items={[
     {
-      title: "AI Agents",
-      icon: "Bot",
+      title: 'AI Agents',
+      icon: 'Bot',
       listDescription: [
-        "Setup LLM tracing",
-        "Test end-to-end task completion",
-        "Evaluate individual components",
+        'Setup LLM tracing',
+        'Test end-to-end task completion',
+        'Evaluate individual components',
       ],
-      to: "/docs/getting-started-agents",
+      to: '/docs/getting-started-agents',
     },
     {
-      title: "RAG",
-      icon: "FileSearch",
+      title: 'RAG',
+      icon: 'FileSearch',
       listDescription: [
-        "Evaluate RAG end-to-end",
-        "Test retriever and generator separately",
-        "Multi-turn RAG evals",
+        'Evaluate RAG end-to-end',
+        'Test retriever and generator separately',
+        'Multi-turn RAG evals',
       ],
-      to: "/docs/getting-started-rag",
+      to: '/docs/getting-started-rag',
     },
     {
-      title: "Chatbots",
-      icon: "MessagesSquare",
+      title: 'Chatbots',
+      icon: 'MessagesSquare',
       listDescription: [
-        "Setup multi-turn test cases",
-        "Evaluate turns in a conversation",
-        "Simulate user interactions",
+        'Setup multi-turn test cases',
+        'Evaluate turns in a conversation',
+        'Simulate user interactions',
       ],
-      to: "/docs/getting-started-chatbots",
+      to: '/docs/getting-started-chatbots',
     },
   ]}
 />
