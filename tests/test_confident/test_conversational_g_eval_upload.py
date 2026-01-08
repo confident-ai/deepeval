@@ -62,7 +62,7 @@ class TestConversationalGEval:
             "expectedOutcome",
             "retrievalContext",
             "scenario",
-            "toolsCalled"
+            "toolsCalled",
         }
 
         duplicate_metric = ConversationalGEval(
