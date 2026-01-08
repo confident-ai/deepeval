@@ -31,7 +31,8 @@ class Rubric(BaseModel):
                 "Rubric's 'score_range' start must be less than or equal to end."
             )
         return value
-    
+
+
 class ApiGEval(BaseModel):
     name: str = Field(alias="name")
     evaluation_params: List[str] = Field(alias="evaluationParams")
@@ -100,7 +101,7 @@ def construct_api_g_eval(
             "Unsupported evaluation params for GEval upload: "
             + ", ".join(param.name for param in unsupported_params)
         )
-    
+
     api_g_eval = ApiGEval(
         name=name,
         evaluationParams=[
@@ -109,7 +110,7 @@ def construct_api_g_eval(
         multiTurn=multi_turn,
         criteria=criteria,
         evaluationSteps=evaluation_steps,
-        rubric=rubric
+        rubric=rubric,
     )
 
     return api_g_eval
