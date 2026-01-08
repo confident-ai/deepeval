@@ -6,31 +6,13 @@ import json
 import os
 import re
 import subprocess
-import sys
 import time
 import urllib.request
+import urllib.error
+from rich import print
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Tuple
-
-
-##############
-# Data types #
-##############
-
-
-@dataclass
-class Commit:
-    sha: str
-    subject: str
-
-
-@dataclass
-class Pull:
-    number: int
-    title: str
-    body: str
-    merged_at: str
-    html_url: str
+from pydantic import BaseModel, Field, field_validator
 
 
 #################
@@ -67,12 +49,67 @@ MONTH_NAMES = [
 ]
 MONTH_INDEX = {name: i for i, name in enumerate(MONTH_NAMES, start=1)}
 
+
+##############
+# Data types #
+##############
+
+
+@dataclass
+class Commit:
+    sha: str
+    subject: str
+
+
+@dataclass
+class Pull:
+    number: int
+    title: str
+    body: str
+    merged_at: str
+    html_url: str
+    user_login: str
+    user_html_url: str
+
+
+class AiReleaseNote(BaseModel):
+    entry: str = Field(
+        ...,
+        description="User-facing changelog entry. Plain text. No markdown. No PR numbers/links.",
+        min_length=10,
+        max_length=500,
+    )
+    category: str
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Optional confidence score.",
+    )
+    notes: Optional[str] = Field(
+        default=None,
+        description="Optional internal notes; not written to changelog.",
+        max_length=400,
+    )
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, category: str) -> str:
+        if category not in CATEGORY_ORDER:
+            raise ValueError(f"category must be one of: {CATEGORY_ORDER}")
+        return category
+
+
 #######################
-# Git and PR parasing #
+# Git and PR parsing  #
 #######################
 
 PR_NUM_RE = re.compile(r"\(#(\d+)\)|pull request #(\d+)", re.IGNORECASE)
 MERGE_SUBJECT_RE = re.compile(r"^Merge pull request #(\d+)\b", re.IGNORECASE)
+user_cache: Dict[str, Tuple[str, str]] = (
+    {}
+)  # maps login to (display_name, html_url)
+tag_to_date: Dict[str, str] = {}
 
 ###################################
 # Changelog index and MDX parsing #
@@ -90,7 +127,6 @@ VERSION_RE = re.compile(r"^####\s+(v[0-9].+?)\s*$")
 # - Fall back to parsing the link if the marker is missing
 BULLET_PR_RE = re.compile(r"\[#(\d+)\]\(")
 BULLET_PR_MARKER_RE = re.compile(r"<!--\s*pr:(\d+)\s*-->")
-
 
 # Optional ignore list to be placed right after START_MARKER to avoid confusing the parser:
 # add a list of PR numbers you would like to be excluded from the generated changelog.
@@ -114,7 +150,10 @@ def sh(cmd: List[str]) -> str:
 
 
 def git_tag_date_ymd(tag: str) -> str:
-    return sh(["git", "log", "-1", "--format=%cs", tag])
+    if tag not in tag_to_date:
+        date_value = sh(["git", "log", "-1", "--format=%cs", tag])
+        tag_to_date[tag] = date_value
+    return tag_to_date[tag]
 
 
 def get_prev_tag(tag: str) -> str:
@@ -197,7 +236,16 @@ def latest_tag() -> str:
 
 def commits_in_range(base: str, head: str) -> List[Commit]:
     # get sha and subject for commit subjects in range
-    raw = sh(["git", "log", "--format=%H%x00%s", f"{base}..{head}"])
+    raw = sh(
+        [
+            "git",
+            "log",
+            "--first-parent",
+            "--merges",
+            "--format=%H%x00%s",
+            f"{base}..{head}",
+        ]
+    )
     commits: List[Commit] = []
     for line in raw.splitlines():
         if "\x00" not in line:
@@ -252,6 +300,25 @@ def offline_pr_title_from_merge_commit(
     return fallback_subject
 
 
+def stitch_truncated_title(title: str, body: str) -> str:
+    t = (title or "").strip()
+    if not body:
+        return t
+
+    # If title ends with ellipsis, try to append the first non-empty line of the body.
+    if t.endswith("…") or t.endswith("..."):
+        first_line = next(
+            (ln.strip() for ln in body.splitlines() if ln.strip()), ""
+        )
+        if first_line:
+            t2 = t[:-1].rstrip() if t.endswith("…") else t[:-3].rstrip()
+            # Avoid doubling if body starts with same prefix
+            if not first_line.lower().startswith(t2.lower()):
+                return f"{t2} {first_line}"
+            return first_line
+    return t
+
+
 ######################
 # GitHub API helpers #
 ######################
@@ -271,6 +338,7 @@ def gh_request(path: str, timeout_s: int = 20) -> dict:
 
 def fetch_pr(pr_number: int) -> Pull:
     data = gh_request(f"/repos/{OWNER}/{REPO}/pulls/{pr_number}")
+    user_data = data.get("user") or {}
     return Pull(
         number=pr_number,
         title=data.get("title") or "",
@@ -278,7 +346,142 @@ def fetch_pr(pr_number: int) -> Pull:
         merged_at=data.get("merged_at") or "",
         html_url=data.get("html_url")
         or f"https://github.com/{OWNER}/{REPO}/pull/{pr_number}",
+        user_login=user_data.get("login") or "",
+        user_html_url=user_data.get("html_url") or "",
     )
+
+
+def fetch_user_display(login: str) -> Tuple[str, str]:
+    """
+    Returns (display_name, html_url). display_name falls back to login.
+    Cached per-login to avoid repeated requests.
+    """
+    login = (login or "").strip()
+    if not login:
+        return "", ""
+    if login in user_cache:
+        return user_cache[login]
+
+    data = gh_request(f"/users/{login}")
+    name = (data.get("name") or "").strip()
+    html_url = (data.get("html_url") or "").strip()
+    display = name or login
+    user_cache[login] = (display, html_url)
+    return user_cache[login]
+
+
+###############
+# LLM Helpers #
+###############
+
+
+def get_ai_model(model_name: str):
+    from deepeval.models import GPTModel
+
+    return GPTModel(model=model_name)
+
+
+def build_ai_prompt(*, title: str, body: str) -> str:
+    # Keep the instructions short + strict; rely on the schema for structure.
+    return f"""
+You are writing release notes for an open-source Python developer tool.
+
+Task:
+Given a PR title and PR body, produce:
+- entry: one short, ClickHouse-style release note line (no markdown, no PR refs, no URLs)
+- category: choose the best match from the allowed categories
+
+Style rules (very important):
+- Focus on the user-visible change and outcome.
+- Use plain language; avoid internal jargon, code names, branch names, and "merge pull request".
+- Prefer an action verb: "Add", "Fix", "Improve", "Reduce", "Prevent", "Support".
+- Keep it to 1-4 sentences, plain text, target 120-500 chars not exceeding 500.
+- If PR body provides enough detail, write 2-4 sentences. Otherwise keep to 1 sentence.
+- Don’t mention "DeepEval" unless it is essential for clarity. Use your existing confidence to decide if you should fall back to title-only.
+- If PR body is empty, write a single sentence based on title only.
+- No version numbers, no PR numbers, no links, no backticks, no markdown.
+
+If the PR is unclear, write the safest high-level improvement without guessing details.
+IMPORTANT: Output only valid JSON with no code fences or comments.
+
+Allowed categories:
+- Backward Incompatible Change
+- New Feature
+- Experimental Feature
+- Improvement
+- Bug Fix
+- Security
+
+PR title:
+{title.strip()}
+
+PR body (may include templates/checklists):
+{(body or "").strip()}
+""".strip()
+
+
+def ai_release_note_for_pr(
+    model,
+    *,
+    pr_number: int,
+    title: str,
+    body: str,
+) -> tuple[AiReleaseNote, float]:
+    prompt = build_ai_prompt(title=title, body=body)
+    try:
+        parsed, cost = model.generate(prompt, schema=AiReleaseNote)
+        # GPTModel returns (BaseModel, cost) when schema is provided
+        assert isinstance(parsed, AiReleaseNote)
+    except Exception as e:
+        raise RuntimeError(
+            f"--ai failed for PR #{pr_number}. "
+            f"Title={title!r}. Error={type(e).__name__}: {e}"
+        ) from e
+    return parsed, cost
+
+
+def clean_pr_body_for_ai(body: str, *, max_chars: int = 2000) -> str:
+    if not body:
+        return ""
+
+    s = body
+
+    # Remove HTML comments (often template hints)
+    s = re.sub(r"(?s)<!--.*?-->", "", s)
+
+    # Remove <details> blocks (often long checklists / screenshots)
+    s = re.sub(r"(?is)<details.*?>.*?</details>", "", s)
+
+    lines: list[str] = []
+    for raw in s.splitlines():
+        line = raw.strip()
+
+        if not line:
+            continue
+
+        # Drop common checklist/template noise
+        if re.match(r"^-\s*\[[ xX]\]\s+", line):
+            continue
+        if re.match(
+            r"^(##|###)\s*(Checklist|Changelog|Testing|Test Plan|Screenshots|Notes)\b",
+            line,
+            re.I,
+        ):
+            continue
+        if re.match(r"^(Closes|Fixes|Resolves)\s+#\d+", line, re.I):
+            continue
+
+        # Drop link dumps
+        if re.match(r"^https?://\S+$", line):
+            continue
+
+        lines.append(line)
+
+    out = "\n".join(lines).strip()
+
+    if len(out) > max_chars:
+        out = out[:max_chars].rstrip() + "\n\n[TRUNCATED]"
+    return out
 
 
 #################################
@@ -604,8 +807,12 @@ def month_name_from_ymd(ymd: str) -> Tuple[int, str]:
 def build_release_entries(
     tag: str,
     use_github: bool,
+    use_ai: bool = False,
+    ai_model: str = "gpt-4.1",
     sleep_s: float = 0.0,
     ignore_prs: Optional[set[int]] = None,
+    existing_keys: Optional[set[tuple[str, int]]] = None,
+    overwrite_existing: bool = False,
 ) -> Tuple[int, str, ChangelogIndex, Dict[str, str]]:
     prev = get_prev_tag(tag)
     tag_date = git_tag_date_ymd(tag)
@@ -621,36 +828,103 @@ def build_release_entries(
     # collect entries for this tag into an index shape
     idx: ChangelogIndex = {month: {}}
     version_date = {tag: tag_date}
+    ai = None
+    ai_cache: dict[int, AiReleaseNote] = {}
+    ai_total_cost = 0.0
+    if use_ai:
+        ai = get_ai_model(ai_model)
 
     for pr_num, commit in sorted(pr_map.items(), key=lambda kv: kv[0]):
+        key = (tag, pr_num)
+        if existing_keys and (key in existing_keys) and not overwrite_existing:
+            # Preserve manual edits/moves and avoid useless LLM calls
+            continue
+
         # offline title from merge commit body if possible
         title = offline_pr_title_from_merge_commit(commit.sha, commit.subject)
         body = ""
+        user_login = ""
+        user_html_url = ""
+        user_display = ""
+        user_profile_url = ""
 
-        if use_github and title_needs_github(title):
-            print(
-                f"Fetching PR #{pr_num} from GitHub…",
-                file=sys.stderr,
-                flush=True,
-            )
-            pr = fetch_pr(pr_num)
+        if use_github and (use_ai or title_needs_github(title)):
+            print(f"Fetching PR #{pr_num} from GitHub…")
+            try:
+                pr = fetch_pr(pr_num)
+            except urllib.error.HTTPError as e:
+                print(
+                    f"Unable to fetch PR #{pr_num} for tag {tag} (commit {commit.sha[:8]}): HTTP {e.code} {e.reason}"
+                )
+                if e.code == 404:
+                    continue
+                raise
+            except Exception as e:
+                print(
+                    f"Unable to fetch PR #{pr_num} for tag {tag} (commit {commit.sha[:8]}): {e}"
+                )
+                raise
+
             title = pr.title or title
             body = pr.body or ""
             if sleep_s:
                 time.sleep(sleep_s)
+            user_login = pr.user_login
+            user_html_url = pr.user_html_url
+            user_display, user_profile_url = fetch_user_display(user_login)
+            # prefer profile url from user endpoint if present
+            user_profile_url = user_profile_url or user_html_url
 
-        title = clean_title(title)
-        title = mdx_escape(title)
-        if not title.endswith("."):
-            title += "."
+        body_clean = clean_pr_body_for_ai(body)
+        has_detail = len(body_clean) >= 200
+        title = stitch_truncated_title(title, body_clean)
 
-        category = classify(title, body)
+        # Use AI to generate a higher-quality bullet.
+        if use_ai:
+            if pr_num in ai_cache:
+                note = ai_cache[pr_num]
+            else:
+                note, cost = ai_release_note_for_pr(
+                    ai,
+                    pr_number=pr_num,
+                    title=title,
+                    body=body_clean if has_detail else "",
+                )
+                ai_cache[pr_num] = note
+                ai_total_cost += cost if cost is not None else 0
+
+            bullet = mdx_escape(clean_title(note.entry.strip()))
+            if not bullet.endswith("."):
+                bullet += "."
+            category = note.category
+            title_out = bullet
+        else:
+            title_out = mdx_escape(clean_title(title))
+            if not title_out.endswith("."):
+                title_out += "."
+            category = classify(title, body)
 
         idx[month].setdefault(category, {}).setdefault(tag, {})
-        line = f"- {title} ([#{pr_num}](https://github.com/{OWNER}/{REPO}/pull/{pr_num})) <!-- pr:{pr_num} -->"
+        author = ""
+        if user_display:
+            if user_profile_url:
+                author = f" ([{user_display}]({user_profile_url}))"
+            else:
+                author = f" ({user_display})"
+        line = f"- {title_out} ([#{pr_num}](https://github.com/{OWNER}/{REPO}/pull/{pr_num})) <!-- pr:{pr_num} -->{author}"
         idx[month][category][tag][pr_num] = line
 
-    return year, month, idx, version_date
+    return year, month, idx, version_date, ai_total_cost
+
+
+def collect_existing_keys(idx: ChangelogIndex) -> set[tuple[str, int]]:
+    out: set[tuple[str, int]] = set()
+    for _month, categories in idx.items():
+        for _category, versions in categories.items():
+            for version, prs in versions.items():
+                for pr in prs.keys():
+                    out.add((version, pr))
+    return out
 
 
 def merge_idx(
@@ -696,7 +970,7 @@ def merge_idx(
                         existing[month0][category0][version][pr] = line
                         continue
 
-                    # brand-new entry
+                    # new entry
                     added += 1
                     existing[month][category][version][pr] = line
                     loc_by_key[key] = (month, category)
@@ -732,6 +1006,12 @@ def main() -> int:
         help="Enrich titles/bodies from GitHub API (needs token for speed)",
     )
     ap.add_argument(
+        "--ai",
+        action="store_true",
+        help="Use an LLM to generate release-note bullets",
+    )
+    ap.add_argument("--ai-model", default="gpt-5.2", help="Model name for --ai")
+    ap.add_argument(
         "--overwrite-existing",
         action="store_true",
         help="Overwrite existing entries for the same PR (default preserves manual edits)",
@@ -745,6 +1025,7 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
+    ai_total_cost = 0.0
     if args.latest:
         tags = [latest_tag()]
     elif args.tag:
@@ -774,6 +1055,13 @@ def main() -> int:
                     prefix
                 )  # ignore block is kept in prefix
                 per_year[y] = parse_body(body)
+                for _month, categories in per_year[y].items():
+                    for _cat, versions in categories.items():
+                        for version in versions.keys():
+                            if version not in version_date_entries:
+                                version_date_entries[version] = (
+                                    git_tag_date_ymd(version)
+                                )
             else:
                 os.makedirs(args.output_dir, exist_ok=True)
                 per_year_prefix[y] = (
@@ -787,12 +1075,18 @@ def main() -> int:
                 per_year_ignore[y] = set()
                 per_year[y] = {}
 
-        year, month, idx_update, vd = build_release_entries(
+        existing_keys = collect_existing_keys(per_year[y])
+        year, month, idx_update, vd, ai_cost = build_release_entries(
             tag,
             use_github=args.github,
+            use_ai=args.ai,
+            ai_model=args.ai_model,
             sleep_s=args.sleep,
             ignore_prs=per_year_ignore[y],
+            existing_keys=existing_keys,
+            overwrite_existing=args.overwrite_existing,
         )
+        ai_total_cost += ai_cost
         version_date_entries.update(vd)
 
         merge_idx(
@@ -816,6 +1110,9 @@ def main() -> int:
             f.write(text)
 
         print(f"Wrote {out_path}")
+
+    if args.ai:
+        print(f"AI total cost: ${ai_total_cost:.4f}")
 
     return 0
 
