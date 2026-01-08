@@ -7,7 +7,7 @@ class ApiMetric(BaseModel):
     name: str = Field(alias="name")
 
 class ApiBinaryJudgementNode(BaseModel):
-    name: str = Field(alias="name", default="binaryJudegementNode")
+    name: str = Field(alias="name", default="binaryJudgementNode")
     criteria: str = Field(alias="criteria")
     label: Optional[str] = Field(alias="label")
     evaluation_params: Optional[List[str]] = Field(alias="evaluationParams")
