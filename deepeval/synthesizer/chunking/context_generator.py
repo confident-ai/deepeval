@@ -12,6 +12,7 @@ import os
 import gc
 import tempfile
 import logging
+import re
 
 from deepeval.synthesizer.utils import (
     print_synthesizer_status,
@@ -35,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 # Monkey patch shutil.rmtree to handle locked files better on Windows
 original_rmtree = shutil.rmtree
+PATTERN = r'[a-zA-Z0-9][a-zA-Z0-9._-]{1,510}[a-zA-Z0-9]'
 
 
 def safe_rmtree(
@@ -103,6 +105,15 @@ class ContextGenerator:
     ):
         if not document_paths:
             raise ValueError("`document_path` is empty or missing.")
+        
+        for path in document_paths:
+            if not re.fullmatch(PATTERN, path):
+                raise ValueError(
+                    f"Invalid document name: '{path}'. "
+                    "Document names must be 3-512 characters, contain only [a-zA-Z0-9._-], "
+                    "and start/end with an alphanumeric character."
+                )
+
         if chunk_overlap > chunk_size - 1:
             raise ValueError(
                 f"`chunk_overlap` must not exceed {chunk_size - 1} (chunk_size - 1)."
