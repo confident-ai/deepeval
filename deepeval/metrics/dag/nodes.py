@@ -15,12 +15,19 @@ from deepeval.metrics.dag.templates import (
     BinaryJudgementTemplate,
     NonBinaryJudgementTemplate,
 )
+from deepeval.metrics.dag.types import (
+    ApiBinaryJudgementNode,
+    ApiNonBinaryJudgementNode,
+    ApiTaskNode,
+    ApiVerdictNode,
+    ApiMetric
+)
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import GEval
 from deepeval.metrics.g_eval.utils import (
     G_EVAL_PARAMS,
     G_EVAL_API_PARAMS,
-    construct_geval_upload_payload,
+    construct_api_g_eval,
 )
 from deepeval.metrics.utils import (
     copy_metrics,
@@ -55,9 +62,9 @@ class BaseNode:
             "This node type must implement the _a_execute method."
         )
 
-    def _convert_to_dict(self):
+    def _convert_to_api_node(self):
         raise NotImplementedError(
-            "This node type must implement the _convert_to_dict method."
+            "This node type must implement the _convert_to_api_node method."
         )
 
 
@@ -257,13 +264,12 @@ class VerdictNode(BaseNode):
             extract_json=lambda data: data["reason"],
         )
 
-    def _convert_to_dict(self):
-        return {
-            "name": "verdictNode",
-            "verdict": self.verdict,
-            "score": self.score,
-            "child": _convert_child_to_dict(self.child) if self.child else None,
-        }
+    def _convert_to_api_node(self):
+        return ApiVerdictNode(
+            verdict=self.verdict,
+            score=self.score,
+            child=_handle_child_node(self.child) if self.child else None
+        )
 
 
 @dataclass
@@ -389,7 +395,7 @@ class TaskNode(BaseNode):
             )
         )
 
-    def _convert_to_dict(self):
+    def _convert_to_api_node(self):
 
         if self.evaluation_params:
             unsupported_params = [
@@ -402,19 +408,18 @@ class TaskNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-
-        return {
-            "name": "taskNode",
-            "instructions": self.instructions,
-            "label": self.label,
-            "outputLabel": self.output_label,
-            "evaluationParams": (
+            
+        return ApiTaskNode(
+            instructions=self.instructions,
+            label=self.label,
+            outputLabel=self.output_label,
+            evaluationParams=(
                 [G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
                 if self.evaluation_params
                 else None
             ),
-            "children": [child._convert_to_dict() for child in self.children],
-        }
+            children=[child._convert_to_api_node() for child in self.children],
+        )
 
 
 @dataclass
@@ -546,7 +551,7 @@ class BinaryJudgementNode(BaseNode):
             )
         )
 
-    def _convert_to_dict(self):
+    def _convert_to_api_node(self):
 
         if self.evaluation_params:
             unsupported_params = [
@@ -559,18 +564,17 @@ class BinaryJudgementNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-
-        return {
-            "name": "binaryJudgementNode",
-            "criteria": self.criteria,
-            "label": self.label,
-            "evaluationParams": (
+            
+        return ApiBinaryJudgementNode(
+            criteria=self.criteria,
+            label=self.label,
+            evaluationParams=(
                 [G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
                 if self.evaluation_params
                 else None
             ),
-            "children": [child._convert_to_dict() for child in self.children],
-        }
+            children=[child._convert_to_api_node() for child in self.children],
+        )
 
 
 @dataclass
@@ -714,7 +718,7 @@ class NonBinaryJudgementNode(BaseNode):
             )
         )
 
-    def _convert_to_dict(self):
+    def _convert_to_api_node(self):
 
         if self.evaluation_params:
             unsupported_params = [
@@ -727,18 +731,17 @@ class NonBinaryJudgementNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-
-        return {
-            "name": "nonBinaryJudgementNode",
-            "criteria": self.criteria,
-            "label": self.label,
-            "evaluationParams": (
+        
+        return ApiNonBinaryJudgementNode(
+            criteria=self.criteria,
+            label=self.label,
+            evaluationParams=(
                 [G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
                 if self.evaluation_params
                 else None
             ),
-            "children": [child._convert_to_dict() for child in self.children],
-        }
+            children=[child._convert_to_api_node() for child in self.children],
+        )
 
 
 def construct_node_verbose_log(
@@ -810,11 +813,11 @@ def construct_node_verbose_log(
         return verbose_log
 
 
-def _convert_child_to_dict(child: Union[BaseNode, GEval, BaseMetric]):
+def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
     if isinstance(child, BaseNode):
-        return child._convert_to_dict()
+        return child._convert_to_api_node()
     elif isinstance(child, GEval):
-        return construct_geval_upload_payload(
+        return construct_api_g_eval(
             child.name,
             child.evaluation_params,
             G_EVAL_API_PARAMS,
@@ -824,7 +827,9 @@ def _convert_child_to_dict(child: Union[BaseNode, GEval, BaseMetric]):
             child.rubric,
         )
     elif isinstance(child, BaseMetric):
-        return {"name": child.__class__.__name__}
+        return ApiMetric(
+            name=child.__class__.__name__
+        )
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"
