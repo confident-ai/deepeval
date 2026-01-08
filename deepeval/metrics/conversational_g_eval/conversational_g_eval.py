@@ -13,7 +13,7 @@ from deepeval.metrics.g_eval.utils import (
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
-    construct_geval_upload_payload,
+    construct_api_g_eval,
 )
 from deepeval.test_case import (
     TurnParams,
@@ -419,7 +419,7 @@ class ConversationalGEval(BaseConversationalMetric):
     def upload(self):
         api = Api()
 
-        payload = construct_geval_upload_payload(
+        api_g_eval = construct_api_g_eval(
             name=self.name,
             evaluation_params=self.evaluation_params,
             g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
@@ -429,10 +429,16 @@ class ConversationalGEval(BaseConversationalMetric):
             rubric=self.rubric,
         )
 
+        try:
+            body = api_g_eval.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_g_eval.dict(by_alias=True, exclude_none=True)
+
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,
-            body=payload,
+            body=body,
         )
 
         metric_id = data.get("id")
