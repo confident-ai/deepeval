@@ -191,7 +191,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, VerdictNode) and node.child:
@@ -208,7 +208,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, ConversationalVerdictNode) and node.child:
@@ -225,6 +225,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
     new_root_nodes = [copy_node(root) for root in original_dag.root_nodes]
     return DeepAcyclicGraph(new_root_nodes)
 
+
 def normalize_params(payload: dict, param_mapping: Dict) -> dict:
     normalized = {}
 
@@ -237,10 +238,11 @@ def normalize_params(payload: dict, param_mapping: Dict) -> dict:
 
     return normalized
 
+
 def deserialize_node(
     node_dict: Dict,
     multi_turn: bool,
-):  
+):
     if multi_turn is False:
         nodes_mapping = DAG_NODE_MAPPING
         api_params_mapping = DAG_API_PARAMS_MAPPING
@@ -279,6 +281,7 @@ def deserialize_node(
         return cls(**kwargs)
 
     return cls(**kwargs)
+
 
 def create_dag_from_dict(dag_dict: Dict):
     from deepeval.metrics import DAGMetric, ConversationalDAGMetric

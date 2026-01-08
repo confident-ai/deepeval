@@ -166,7 +166,7 @@ class DAGMetric(BaseMetric):
                 rootNodes=[
                     node._convert_to_api_node() for node in self.dag.root_nodes
                 ]
-            )
+            ),
         )
 
         try:

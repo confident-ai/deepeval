@@ -36,7 +36,7 @@ from deepeval.metrics.dag.types import (
     ApiNonBinaryJudgementNode,
     ApiTaskNode,
     ApiVerdictNode,
-    ApiMetric
+    ApiMetric,
 )
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
@@ -311,7 +311,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         return ApiVerdictNode(
             verdict=self.verdict,
             score=self.score,
-            child=_handle_child_node(self.child) if self.child else None
+            child=_handle_child_node(self.child) if self.child else None,
         )
 
 
@@ -479,13 +479,16 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     "Unsupported evaluation params for ConversationalDAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-            
+
         return ApiTaskNode(
             instructions=self.instructions,
             label=self.label,
             outputLabel=self.output_label,
             evaluationParams=(
-                [CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
                 if self.evaluation_params
                 else None
             ),
@@ -673,12 +676,15 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     "Unsupported evaluation params for ConversationalDAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-            
+
         return ApiBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
-                [CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
                 if self.evaluation_params
                 else None
             ),
@@ -875,12 +881,15 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     "Unsupported evaluation params for ConversationalDAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-        
+
         return ApiNonBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
-                [CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params]
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
                 if self.evaluation_params
                 else None
             ),
@@ -999,9 +1008,7 @@ def _handle_child_node(
             child.rubric,
         )
     elif isinstance(child, BaseConversationalMetric):
-        return ApiMetric(
-            name=child.__class__.__name__
-        )
+        return ApiMetric(name=child.__class__.__name__)
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"

@@ -20,7 +20,7 @@ from deepeval.metrics.dag.types import (
     ApiNonBinaryJudgementNode,
     ApiTaskNode,
     ApiVerdictNode,
-    ApiMetric
+    ApiMetric,
 )
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import GEval
@@ -268,7 +268,7 @@ class VerdictNode(BaseNode):
         return ApiVerdictNode(
             verdict=self.verdict,
             score=self.score,
-            child=_handle_child_node(self.child) if self.child else None
+            child=_handle_child_node(self.child) if self.child else None,
         )
 
 
@@ -408,7 +408,7 @@ class TaskNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-            
+
         return ApiTaskNode(
             instructions=self.instructions,
             label=self.label,
@@ -564,7 +564,7 @@ class BinaryJudgementNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-            
+
         return ApiBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
@@ -731,7 +731,7 @@ class NonBinaryJudgementNode(BaseNode):
                     "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
-        
+
         return ApiNonBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
@@ -827,9 +827,7 @@ def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
             child.rubric,
         )
     elif isinstance(child, BaseMetric):
-        return ApiMetric(
-            name=child.__class__.__name__
-        )
+        return ApiMetric(name=child.__class__.__name__)
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"
