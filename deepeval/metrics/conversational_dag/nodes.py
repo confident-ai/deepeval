@@ -7,7 +7,11 @@ from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
     ConversationalGEval,
 )
-from deepeval.metrics.g_eval.utils import CONVERSATIONAL_G_EVAL_PARAMS, CONVERSATIONAL_G_EVAL_API_PARAMS, construct_geval_upload_payload
+from deepeval.metrics.g_eval.utils import (
+    CONVERSATIONAL_G_EVAL_PARAMS,
+    CONVERSATIONAL_G_EVAL_API_PARAMS,
+    construct_geval_upload_payload,
+)
 from deepeval.metrics.utils import (
     copy_metrics,
     a_generate_with_schema_and_extract,
@@ -71,6 +75,7 @@ class ConversationalBaseNode:
         raise NotImplementedError(
             "This node type must implement the _convert_to_dict method."
         )
+
 
 def increment_indegree(node: ConversationalBaseNode):
     node._indegree += 1
@@ -294,13 +299,13 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             extract_schema=lambda score_reason: score_reason.reason,
             extract_json=lambda data: data["reason"],
         )
-    
+
     def _convert_to_dict(self):
         return {
             "name": "verdictNode",
             "verdict": self.verdict,
             "score": self.score,
-            "child": _convert_child_to_dict(self.child) if self.child else None
+            "child": _convert_child_to_dict(self.child) if self.child else None,
         }
 
 
@@ -459,7 +464,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
 
         if self.evaluation_params:
             unsupported_params = [
-                param for param in self.evaluation_params if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
             ]
             if unsupported_params:
                 raise ValueError(
@@ -472,12 +479,15 @@ class ConversationalTaskNode(ConversationalBaseNode):
             "instructions": self.instructions,
             "label": self.label,
             "outputLabel": self.output_label,
-            "evaluationParams": [
-                CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params
-            ] if self.evaluation_params else None,
-            "children": [
-                child._convert_to_dict() for child in self.children
-            ]
+            "evaluationParams": (
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            "children": [child._convert_to_dict() for child in self.children],
         }
 
 
@@ -652,7 +662,9 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
 
         if self.evaluation_params:
             unsupported_params = [
-                param for param in self.evaluation_params if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
             ]
             if unsupported_params:
                 raise ValueError(
@@ -664,12 +676,15 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             "name": "binaryJudgementNode",
             "criteria": self.criteria,
             "label": self.label,
-            "evaluationParams": [
-                CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params
-            ] if self.evaluation_params else None,
-            "children": [
-                child._convert_to_dict() for child in self.children
-            ]
+            "evaluationParams": (
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            "children": [child._convert_to_dict() for child in self.children],
         }
 
 
@@ -853,7 +868,9 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
 
         if self.evaluation_params:
             unsupported_params = [
-                param for param in self.evaluation_params if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
             ]
             if unsupported_params:
                 raise ValueError(
@@ -865,12 +882,15 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
             "name": "nonBinaryJudgementNode",
             "criteria": self.criteria,
             "label": self.label,
-            "evaluationParams": [
-                CONVERSATIONAL_G_EVAL_API_PARAMS[param] for param in self.evaluation_params
-            ] if self.evaluation_params else None,
-            "children": [
-                child._convert_to_dict() for child in self.children
-            ]
+            "evaluationParams": (
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            "children": [child._convert_to_dict() for child in self.children],
         }
 
 
@@ -966,7 +986,12 @@ def is_valid_turn_window(
         )
     return True
 
-def _convert_child_to_dict(child: Union[ConversationalBaseNode, ConversationalGEval, BaseConversationalMetric]):
+
+def _convert_child_to_dict(
+    child: Union[
+        ConversationalBaseNode, ConversationalGEval, BaseConversationalMetric
+    ]
+):
     if isinstance(child, ConversationalBaseNode):
         return child._convert_to_dict()
     elif isinstance(child, ConversationalGEval):
@@ -977,12 +1002,10 @@ def _convert_child_to_dict(child: Union[ConversationalBaseNode, ConversationalGE
             child.criteria,
             child.evaluation_steps,
             True,
-            child.rubric
+            child.rubric,
         )
     elif isinstance(child, BaseConversationalMetric):
-        return {
-            "name": child.__class__.__name__
-        }
+        return {"name": child.__class__.__name__}
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"

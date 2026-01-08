@@ -166,9 +166,9 @@ class DAGMetric(BaseMetric):
                 "rootNodes": [
                     node._convert_to_dict() for node in self.dag.root_nodes
                 ]
-            }
+            },
         }
-        
+
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,

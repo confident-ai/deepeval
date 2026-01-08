@@ -160,7 +160,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
                 "rootNodes": [
                     node._convert_to_dict() for node in self.dag.root_nodes
                 ]
-            }
+            },
         }
 
         data, _ = api.send_request(

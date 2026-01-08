@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 # Monkey patch shutil.rmtree to handle locked files better on Windows
 original_rmtree = shutil.rmtree
-PATTERN = r'[a-zA-Z0-9][a-zA-Z0-9._-]{1,510}[a-zA-Z0-9]'
+PATTERN = r"[a-zA-Z0-9][a-zA-Z0-9._-]{1,510}[a-zA-Z0-9]"
 
 
 def safe_rmtree(
@@ -105,7 +105,7 @@ class ContextGenerator:
     ):
         if not document_paths:
             raise ValueError("`document_path` is empty or missing.")
-        
+
         for path in document_paths:
             if not re.fullmatch(PATTERN, path):
                 raise ValueError(
