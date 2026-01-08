@@ -14,6 +14,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 from deepeval.metrics.dag.graph import DeepAcyclicGraph
+from deepeval.metrics.dag.types import ApiDAG, ApiDAGMetric
 from deepeval.metrics.dag.utils import (
     copy_graph,
     is_valid_dag_from_roots,
@@ -158,21 +159,26 @@ class DAGMetric(BaseMetric):
     def upload(self):
         api = Api()
 
-        payload = {
-            "name": self.name,
-            "multiTurn": False,
-            "isDag": True,
-            "dag": {
-                "rootNodes": [
-                    node._convert_to_dict() for node in self.dag.root_nodes
+        api_dag_metric = ApiDAGMetric(
+            name=self.name,
+            multiTurn=False,
+            dag=ApiDAG(
+                rootNodes=[
+                    node._convert_to_api_node() for node in self.dag.root_nodes
                 ]
-            },
-        }
+            )
+        )
+
+        try:
+            body = api_dag_metric.model_dump(by_alias=True, exclude_none=False)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_dag_metric.dict(by_alias=True, exclude_none=False)
 
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,
-            body=payload,
+            body=body,
         )
 
         metric_id = data.get("id")
