@@ -280,7 +280,7 @@ def deserialize_node(
 
     return cls(**kwargs)
 
-def parse_dag_metric(dag_dict: Dict):
+def create_dag_from_dict(dag_dict: Dict):
     from deepeval.metrics import DAGMetric, ConversationalDAGMetric
 
     if not dag_dict.get("isDag") or "dag" not in dag_dict:
