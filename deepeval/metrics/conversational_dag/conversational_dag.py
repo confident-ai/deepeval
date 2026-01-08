@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+from rich.console import Console
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.test_case import (
     ConversationalTestCase,
@@ -17,6 +18,7 @@ from deepeval.metrics.dag.utils import (
     extract_required_params,
     copy_graph,
 )
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -146,6 +148,38 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             except TypeError:
                 self.success = False
         return self.success
+
+    def upload(self):
+        api = Api()
+
+        payload = {
+            "name": self.name,
+            "multiTurn": True,
+            "isDag": True,
+            "dag": {
+                "rootNodes": [
+                    node._convert_to_dict() for node in self.dag.root_nodes
+                ]
+            }
+        }
+
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+
+        if metric_id:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
 
     @property
     def __name__(self):
