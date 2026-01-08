@@ -32,7 +32,7 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
     get_score_range,
-    construct_geval_upload_payload,
+    construct_api_g_eval,
     G_EVAL_API_PARAMS,
 )
 from deepeval.metrics.api import metric_data_manager
@@ -414,7 +414,7 @@ class GEval(BaseMetric):
     def upload(self):
         api = Api()
 
-        payload = construct_geval_upload_payload(
+        api_g_eval = construct_api_g_eval(
             name=self.name,
             evaluation_params=self.evaluation_params,
             g_eval_api_params=G_EVAL_API_PARAMS,
@@ -424,10 +424,16 @@ class GEval(BaseMetric):
             rubric=self.rubric,
         )
 
+        try:
+            body = api_g_eval.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_g_eval.dict(by_alias=True, exclude_none=True)
+
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,
-            body=payload,
+            body=body,
         )
 
         metric_id = data.get("id")

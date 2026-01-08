@@ -9,15 +9,15 @@ from deepeval.test_case import (
     LLMTestCase,
     ToolCall,
 )
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
 
 class Rubric(BaseModel):
-    score_range: Tuple[int, int]
-    expected_outcome: str
+    score_range: Tuple[int, int] = Field(serialization_alias="scoreRange")
+    expected_outcome: str = Field(serialization_alias="expectedOutcome")
 
     @field_validator("score_range")
     def validate_score_range(cls, value):
@@ -31,6 +31,14 @@ class Rubric(BaseModel):
                 "Rubric's 'score_range' start must be less than or equal to end."
             )
         return value
+    
+class ApiGEval(BaseModel):
+    name: str = Field(alias="name")
+    evaluation_params: List[str] = Field(alias="evaluationParams")
+    multi_turn: bool = Field(alias="multiTurn")
+    criteria: Optional[str] = Field(alias="criteria")
+    evaluation_steps: Optional[List[str]] = Field(alias="evaluationSteps")
+    rubric: Optional[List[Rubric]] = Field(alias="rubric")
 
 
 G_EVAL_PARAMS = {
@@ -72,7 +80,7 @@ CONVERSATIONAL_G_EVAL_API_PARAMS = {
 }
 
 
-def construct_geval_upload_payload(
+def construct_api_g_eval(
     name: str,
     evaluation_params: List[LLMTestCaseParams],
     g_eval_api_params: Dict,
@@ -80,7 +88,7 @@ def construct_geval_upload_payload(
     evaluation_steps: Optional[List[str]] = None,
     multi_turn: bool = False,
     rubric: Optional[List[Rubric]] = None,
-) -> Dict:
+) -> ApiGEval:
     if not evaluation_params:
         raise ValueError("GEval requires at least one evaluation parameter.")
 
@@ -92,30 +100,19 @@ def construct_geval_upload_payload(
             "Unsupported evaluation params for GEval upload: "
             + ", ".join(param.name for param in unsupported_params)
         )
-
-    payload = {
-        "name": name,
-        "evaluationParams": [
+    
+    api_g_eval = ApiGEval(
+        name=name,
+        evaluationParams=[
             g_eval_api_params[param] for param in evaluation_params
         ],
-        "multiTurn": multi_turn,
-    }
+        multiTurn=multi_turn,
+        criteria=criteria,
+        evaluationSteps=evaluation_steps,
+        rubric=rubric
+    )
 
-    if criteria is not None:
-        payload["criteria"] = criteria
-    else:
-        payload["evaluationSteps"] = evaluation_steps
-
-    if rubric is not None:
-        payload["rubric"] = [
-            {
-                "scoreRange": list(r.score_range),
-                "expectedOutcome": r.expected_outcome,
-            }
-            for r in rubric
-        ]
-
-    return payload
+    return api_g_eval
 
 
 def validate_criteria_and_evaluation_steps(
