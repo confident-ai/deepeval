@@ -258,7 +258,7 @@ class VerdictNode(BaseNode):
             "name": "verdictNode",
             "verdict": self.verdict,
             "score": self.score,
-            "child": _convert_child_to_dict(self.child)
+            "child": _convert_child_to_dict(self.child) if self.child else None
         }
 
 
@@ -393,7 +393,7 @@ class TaskNode(BaseNode):
             ]
             if unsupported_params:
                 raise ValueError(
-                    "Unsupported evaluation params for GEval upload: "
+                    "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
@@ -548,7 +548,7 @@ class BinaryJudgementNode(BaseNode):
             ]
             if unsupported_params:
                 raise ValueError(
-                    "Unsupported evaluation params for GEval upload: "
+                    "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
@@ -714,7 +714,7 @@ class NonBinaryJudgementNode(BaseNode):
             ]
             if unsupported_params:
                 raise ValueError(
-                    "Unsupported evaluation params for GEval upload: "
+                    "Unsupported evaluation params for DAG upload: "
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
@@ -800,8 +800,6 @@ def construct_node_verbose_log(
         return verbose_log
 
 def _convert_child_to_dict(child: Union[BaseNode, GEval, BaseMetric]):
-    if child is None:
-        return None
     if isinstance(child, BaseNode):
         return child._convert_to_dict()
     elif isinstance(child, GEval):
