@@ -13,6 +13,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics import DeepAcyclicGraph
+from deepeval.metrics.dag.types import ApiDAG, ApiDAGMetric
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
@@ -152,21 +153,26 @@ class ConversationalDAGMetric(BaseConversationalMetric):
     def upload(self):
         api = Api()
 
-        payload = {
-            "name": self.name,
-            "multiTurn": True,
-            "isDag": True,
-            "dag": {
-                "rootNodes": [
-                    node._convert_to_dict() for node in self.dag.root_nodes
+        api_dag_metric = ApiDAGMetric(
+            name=self.name,
+            multiTurn=True,
+            dag=ApiDAG(
+                rootNodes=[
+                    node._convert_to_api_node() for node in self.dag.root_nodes
                 ]
-            },
-        }
+            )
+        )
+
+        try:
+            body = api_dag_metric.model_dump(by_alias=True, exclude_none=False)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_dag_metric.dict(by_alias=True, exclude_none=False)
 
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.METRICS_ENDPOINT,
-            body=payload,
+            body=body,
         )
 
         metric_id = data.get("id")
