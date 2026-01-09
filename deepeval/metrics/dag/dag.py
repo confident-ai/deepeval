@@ -165,7 +165,8 @@ class DAGMetric(BaseMetric):
             multiTurn=False,
             dag=ApiDAG(
                 rootNodes=[
-                    node._convert_to_api_node(visited=visited) for node in self.dag.root_nodes
+                    node._convert_to_api_node(visited=visited)
+                    for node in self.dag.root_nodes
                 ]
             ),
         )
@@ -177,7 +178,7 @@ class DAGMetric(BaseMetric):
             body = api_dag_metric.dict(by_alias=True, exclude_none=False)
 
         return body
-    
+
         # data, _ = api.send_request(
         #     method=HttpMethods.POST,
         #     endpoint=Endpoints.METRICS_ENDPOINT,

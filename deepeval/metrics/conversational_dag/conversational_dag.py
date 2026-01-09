@@ -159,7 +159,8 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             multiTurn=True,
             dag=ApiDAG(
                 rootNodes=[
-                    node._convert_to_api_node(visited=visited) for node in self.dag.root_nodes
+                    node._convert_to_api_node(visited=visited)
+                    for node in self.dag.root_nodes
                 ]
             ),
         )

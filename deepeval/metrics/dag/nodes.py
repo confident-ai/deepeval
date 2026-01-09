@@ -270,11 +270,13 @@ class VerdictNode(BaseNode):
     def _convert_to_api_node(self, visited: dict):
         if id(self) in visited:
             return visited[id(self)]
-        
+
         api_node = ApiVerdictNode(
             verdict=self.verdict,
             score=self.score,
-            child=_handle_child_node(self.child, visited) if self.child else None,
+            child=(
+                _handle_child_node(self.child, visited) if self.child else None
+            ),
         )
 
         visited[id(self)] = api_node
@@ -429,9 +431,12 @@ class TaskNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node(visited=visited) for child in self.children],
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
         )
-    
+
         visited[id(self)] = api_node
         return api_node
 
@@ -589,9 +594,12 @@ class BinaryJudgementNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node(visited=visited) for child in self.children],
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
         )
-    
+
         visited[id(self)] = api_node
         return api_node
 
@@ -761,9 +769,12 @@ class NonBinaryJudgementNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node(visited=visited) for child in self.children],
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
         )
-    
+
         visited[id(self)] = api_node
         return api_node
 
@@ -837,7 +848,9 @@ def construct_node_verbose_log(
         return verbose_log
 
 
-def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric], visited: dict):
+def _handle_child_node(
+    child: Union[BaseNode, GEval, BaseMetric], visited: dict
+):
     if isinstance(child, BaseNode):
         return child._convert_to_api_node(visited=visited)
     elif isinstance(child, GEval):
@@ -861,7 +874,9 @@ def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric], visited: dict)
             child.upload()
             metric_id = child.metric_id
         except Exception as e:
-            print(f"There was an error uploading child GEval metric: {child.name}")
+            print(
+                f"There was an error uploading child GEval metric: {child.name}"
+            )
             raise e
 
         return ApiMetric(name=child.__class__.__name__, data=body, id=metric_id)
