@@ -1,7 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union, Dict
-from deepeval.metrics.g_eval.utils import ApiGEval
 
 
 class ApiMetric(BaseModel):
@@ -47,7 +46,6 @@ class ApiVerdictNode(BaseModel):
             ApiBinaryJudgementNode,
             ApiNonBinaryJudgementNode,
             ApiMetric,
-            ApiGEval,
         ]
     ] = Field(alias="child")
 
