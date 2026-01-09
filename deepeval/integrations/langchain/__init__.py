@@ -1,4 +1,5 @@
-from .callback import CallbackHandler, tool
+from .callback import CallbackHandler
+from .patch import tool
 
 
 __all__ = ["CallbackHandler", "tool"]

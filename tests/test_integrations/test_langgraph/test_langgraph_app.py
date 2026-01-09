@@ -1,12 +1,9 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain import CallbackHandler, tool
 import os
-import json
 from tests.test_integrations.utils import (
     assert_trace_json,
-    generate_trace_json,
 )
-from deepeval.tracing.trace_test_manager import trace_testing_manager
 from langchain_openai import ChatOpenAI
 from deepeval.prompt import Prompt
 
