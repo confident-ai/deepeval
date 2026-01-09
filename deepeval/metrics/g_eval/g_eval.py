@@ -442,7 +442,7 @@ class GEval(BaseMetric):
 
         if metric_id:
             console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] [{self.name}] Metric (GEval) uploaded successfully "
                 f"(id: [bold]{metric_id}[/bold])"
             )
 
