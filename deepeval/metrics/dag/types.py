@@ -1,11 +1,12 @@
 from __future__ import annotations
-from typing import List, Optional, Union
 from pydantic import BaseModel, Field
+from typing import List, Optional, Union, Dict
 from deepeval.metrics.g_eval.utils import ApiGEval
 
 
 class ApiMetric(BaseModel):
     name: str = Field(alias="name")
+    data: Optional[Dict] = Field(alias="data")
 
 
 class ApiBinaryJudgementNode(BaseModel):
