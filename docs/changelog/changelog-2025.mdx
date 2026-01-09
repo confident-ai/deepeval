@@ -1,76 +1,93 @@
 ---
 id: changelog-2025
-title: 2025
-sidebar_label: 2025
+title: 🐍 2025
+sidebar_label: 🐍 2025
 ---
 
-<!-- DeepEval release notes start -->
+2025 was all about making LLM evaluation production-ready:
+
+- **Tracing & observability** matured with deep integrations across LangChain, LlamaIndex, CrewAI, PydanticAI, and OpenAI Agents—plus first-class OpenTelemetry support
+- **Agent evaluation** took center stage with new metrics for task completion, tool correctness, and MCP interactions
+- **Multimodal capabilities** expanded across test cases and metrics
+- **Provider support** broadened to include Anthropic, Gemini, Amazon Bedrock, and improved Ollama/Azure setups
+- **Safety coverage** grew with guardrails, red-teaming, and compliance metrics
+- **Reliability** improved with better async handling, timeouts, and retries
+- **Documentation** expanded with comprehensive tutorials to help teams ship confidently
 
 ## December
 
-December focused on strengthening evaluation, multimodal support, and prompt optimization while tightening reliability across providers and CI. Multimodal test cases and goldens now flow through the same evaluation paths as standard LLM cases, with better placeholder detection, Azure OpenAI multimodal support, improved metric coverage, and clearer validation errors when models or metrics are incompatible. Prompt optimization expanded significantly with GEPA plus new algorithms and runner improvements, alongside more consistent schema-based metric outputs and broader provider configuration via typed `Settings`. The month also delivered sturdier dataset conversions and exports, safer optional/
+December strengthened evaluation, multimodal support, and prompt optimization. Multimodal test cases now flow through standard evaluation paths with better placeholder detection, Azure OpenAI support, and clearer validation errors. Prompt optimization expanded with GEPA plus new algorithms, alongside more consistent schema-based outputs and broader provider configuration via typed `Settings`.
 
 ### New Feature
 
 #### v3.7.6
+
 - Add support for multimodal conversational test cases and goldens by automatically detecting `[DEEPEVAL:IMG:...]` placeholders across fields and attaching an `imagesMapping` so referenced images can be resolved during dataset loading. ([#2373](https://github.com/confident-ai/deepeval/pull/2373)) <!-- pr:2373 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.7.5
+
 - Add an example script showing how to run prompt optimization with a model callback, a small golden dataset, and relevancy metrics to print original vs optimized prompts. ([#2347](https://github.com/confident-ai/deepeval/pull/2347)) <!-- pr:2347 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v3.7.4
+
 - Add GEPA (Genetic-Pareto) prompt optimization to automatically improve prompt templates against goldens and metrics. Provide `GEPARunner.optimize(...)` with reusable runner state, sync/async execution, configurable tie-breaking, and an `OptimizationReport` attached to the returned prompt. ([#2293](https://github.com/confident-ai/deepeval/pull/2293)) <!-- pr:2293 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add MIPROv2, COPRO, and SIMBA prompt-optimization algorithms with new configuration options and runner support, enabling additional search strategies and cooperative candidate proposals during optimization. ([#2341](https://github.com/confident-ai/deepeval/pull/2341)) <!-- pr:2341 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add support for a Portkey-backed model configured via settings. Introduce Portkey-specific options (API key, model name, base URL, provider) and validate required values early to reduce misconfiguration errors. ([#2342](https://github.com/confident-ai/deepeval/pull/2342)) <!-- pr:2342 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.3
-- Add Azure OpenAI support for multimodal models, including image+text prompts and optional structured/JSON outputs. Multimodal model initialization can now select Azure based on configuration, using your deployment settings and tracking token-based cost. ([#2319](https://github.com/confident-ai/deepeval/pull/2319)) <!-- pr:2319 --> ([dhinkris](https://github.com/dhinkris))
 
+- Add Azure OpenAI support for multimodal models, including image+text prompts and optional structured/JSON outputs. Multimodal model initialization can now select Azure based on configuration, using your deployment settings and tracking token-based cost. ([#2319](https://github.com/confident-ai/deepeval/pull/2319)) <!-- pr:2319 --> ([dhinkris](https://github.com/dhinkris))
 
 ### Experimental Feature
 
 #### v3.7.5
-- Add a proof-of-concept multimodal path by auto-detecting image placeholders in dataset inputs/turns and routing supported RAG-style metrics accordingly, without requiring a separate test case type. ([#2346](https://github.com/confident-ai/deepeval/pull/2346)) <!-- pr:2346 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
+- Add a proof-of-concept multimodal path by auto-detecting image placeholders in dataset inputs/turns and routing supported RAG-style metrics accordingly, without requiring a separate test case type. ([#2346](https://github.com/confident-ai/deepeval/pull/2346)) <!-- pr:2346 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 ### Improvement
 
 #### v3.7.6
+
 - Refactor evaluation to treat multimodal LLM test cases like standard LLM cases, simplifying metric execution and removing special multimodal-only handling paths. ([#2369](https://github.com/confident-ai/deepeval/pull/2369)) <!-- pr:2369 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Add a dedicated CI workflow and pytest coverage for metrics, including multimodal conversational cases. Improve multimodal detection and propagate the `multimodal` flag through evaluation step generation and scoring. Prevent invalid model usage for multimodal metrics by raising an error. ([#2375](https://github.com/confident-ai/deepeval/pull/2375)) <!-- pr:2375 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Improve LLM metric output consistency by standardizing schema-based generation and fallback parsing. Add configuration options for more model providers (including token pricing and Bedrock settings) and align defaults for Ollama and OpenAI model selection. ([#2378](https://github.com/confident-ai/deepeval/pull/2378)) <!-- pr:2378 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.5
+
 - Make the Ollama, Anthropic, and Gemini integrations optional at runtime. If an integration isn’t installed, raise a clear error explaining the missing dependency and how to install it. ([#2345](https://github.com/confident-ai/deepeval/pull/2345)) <!-- pr:2345 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Improve CI reliability by including optional model provider dependencies (`ollama`, `anthropic`, `google-genai`) in the development dependency set, reducing failures when running tests that require these integrations. ([#2357](https://github.com/confident-ai/deepeval/pull/2357)) <!-- pr:2357 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Prevent `multimodal` from being serialized in golden records by excluding it from model output. This reduces noisy fields in exported datasets and API payloads. ([#2368](https://github.com/confident-ai/deepeval/pull/2368)) <!-- pr:2368 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.7.4
+
 - Improve API key management across LLM providers by standardizing on typed `Settings` for model name, endpoint/base URL, and secrets. Constructor arguments still take precedence, and secret values are only unwrapped when building the client. ([#2330](https://github.com/confident-ai/deepeval/pull/2330)) <!-- pr:2330 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Improve the staleness policy docs by pointing reopen requests to a new `MAINTAINERS.md` file. This clarifies who to mention when reviving inactive issues and what details to include. ([#2331](https://github.com/confident-ai/deepeval/pull/2331)) <!-- pr:2331 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.3
+
 - Rename the pytest plugin entry point from `plugins` to `deepeval` so the plugin is registered under a clearer name. ([#2308](https://github.com/confident-ai/deepeval/pull/2308)) <!-- pr:2308 --> ([Gavin Morgan](https://github.com/gavmor))
 - Improve agentic metric docs with corrected code samples and clearer guidance that PlanAdherence, PlanQuality, and StepEfficiency are trace-only metrics that must run via `evals_iterator` or the `observe` decorator. ([#2316](https://github.com/confident-ai/deepeval/pull/2316)) <!-- pr:2316 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Improve dataset conversions to carry `additional_metadata` from test cases into generated goldens, preserving metadata through CSV/JSON imports. Also prevent mixing single-turn and multi-turn items in the same dataset with clearer type errors. ([#2336](https://github.com/confident-ai/deepeval/pull/2336)) <!-- pr:2336 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Support per-trace API keys when sending and flushing traces, so background flush uses the correct credentials. This prevents traces from being uploaded with the wrong API key when multiple keys are used in the same process. ([#2337](https://github.com/confident-ai/deepeval/pull/2337)) <!-- pr:2337 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
 ### Bug Fix
 
 #### v3.7.6
+
 - Fix arena test case parameter validation by passing the correct arguments when checking each case, preventing incorrect validation failures for arena-based evaluations. ([#2372](https://github.com/confident-ai/deepeval/pull/2372)) <!-- pr:2372 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix multi-turn Arena G-Eval comparisons when some turns have no retrieval context, and correctly apply multimodal evaluation rules when images are present. ([#2376](https://github.com/confident-ai/deepeval/pull/2376)) <!-- pr:2376 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix MCP metrics to generate a single unified `reason` from all interaction reasons, with consistent sync/async behavior and correct cost tracking for native models. Also relax PlanAdherenceMetric required inputs and update tests to use a valid default model name. ([#2381](https://github.com/confident-ai/deepeval/pull/2381)) <!-- pr:2381 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix multimodal model validation by resolving callable model metadata factories and improving prompt concatenation for image inputs, preventing errors when checking supported multimodal models. ([#2382](https://github.com/confident-ai/deepeval/pull/2382)) <!-- pr:2382 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.5
+
 - Fix `pydantic_ai` integration imports so the package no longer crashes when optional `pydantic-ai` and OpenTelemetry dependencies are missing, using safe fallbacks and clearer optional-dependency errors. ([#2354](https://github.com/confident-ai/deepeval/pull/2354)) <!-- pr:2354 --> ([trevor-cai](https://github.com/trevor-cai))
 - Fix dependency lockfile to match `pyproject.toml`, preventing CI failures and inconsistent installs caused by mismatched dependency groups and markers. ([#2358](https://github.com/confident-ai/deepeval/pull/2358)) <!-- pr:2358 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix CLI test runs to avoid finalizing the same test run twice. This prevents duplicate uploads or local saves and reduces temp file race issues when `deepeval test run` hands off finalization to the CLI. ([#2360](https://github.com/confident-ai/deepeval/pull/2360)) <!-- pr:2360 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix binary verdict JSON examples to use lowercase booleans (`true`/`false`) instead of Python-style `True`/`False`, reducing invalid JSON output from metric templates. ([#2365](https://github.com/confident-ai/deepeval/pull/2365)) <!-- pr:2365 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.4
+
 - Fix Anthropic client initialization to unwrap `SecretStr` API keys and consistently prefer an explicit constructor key over settings. Raise a clear error when the key is missing or empty, and add tests to prevent regressions. ([#2329](https://github.com/confident-ai/deepeval/pull/2329)) <!-- pr:2329 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix `execute` to avoid raising on async gather timeouts when errors are configured to be ignored, allowing timed-out metrics to be marked and execution to continue. ([#2335](https://github.com/confident-ai/deepeval/pull/2335)) <!-- pr:2335 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix JSON corruption on NFS by flushing and fsyncing lock-protected writes for test runs and the prompt cache. This prevents truncated or partially written files during parallel runs on network storage, with added tests to verify the behavior. ([#2338](https://github.com/confident-ai/deepeval/pull/2338)) <!-- pr:2338 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -80,51 +97,55 @@ December focused on strengthening evaluation, multimodal support, and prompt opt
 - Fix test discovery by adding a missing `__init__.py`, ensuring the test suite is treated as a module and runs reliably across environments. ([#2349](https://github.com/confident-ai/deepeval/pull/2349)) <!-- pr:2349 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.3
+
 - Fix `HumanEval` so `verbose_mode` is respected and not always treated as enabled. Also fix predictions DataFrame creation by aligning the collected row fields with the DataFrame columns, preventing a column mismatch `ValueError` during evaluation. ([#2323](https://github.com/confident-ai/deepeval/pull/2323)) <!-- pr:2323 --> ([Levent K. (M.Sc.)](https://github.com/dermodmaster))
-
-
 
 ## November
 
-November focused on stronger observability and evaluation workflows across modern LLM stacks. Tracing expanded with first-class Anthropic `messages.create` capture, richer tool-call visibility for LangChain and LlamaIndex, and clearer spans for CrewAI knowledge retrieval, alongside improved telemetry around provider patching and more reliable token counting. Evaluation capabilities grew with experiment support for `compare()` runs, new non-LLM `ExactMatchMetric` and `PatternMatchMetric`, and a conversational golden synthesizer plus updated docs for end-to-end agent evaluations. The month also delivered practical platform and reliability upgrades, including Vertex AI service account auth for
+November improved observability and evaluation workflows. Tracing expanded with Anthropic `messages.create` capture, richer tool-call visibility for LangChain and LlamaIndex, and clearer CrewAI spans. Evaluation grew with experiment support for `compare()` runs, new `ExactMatchMetric` and `PatternMatchMetric`, and a conversational golden synthesizer plus updated agent evaluation docs.
 
 ### New Feature
 
 #### v3.7.1
+
 - Add support for sending `compare()` runs as experiments, including test run summaries, hyperparameters, and run duration, and optionally opening the results in a browser. ([#2287](https://github.com/confident-ai/deepeval/pull/2287)) <!-- pr:2287 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for passing a Google service account key when using Gemini via Vertex AI, including a new CLI option to save it in config. This enables authenticated Vertex AI access without relying on default credentials. ([#2291](https://github.com/confident-ai/deepeval/pull/2291)) <!-- pr:2291 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for overriding the Confident API base URL via `CONFIDENT_BASE_URL`, allowing use of custom or self-hosted endpoints. Also align the API key header name to `CONFIDENT-API-KEY` for better compatibility. ([#2305](https://github.com/confident-ai/deepeval/pull/2305)) <!-- pr:2305 --> ([Tanay](https://github.com/tanayvaswani))
 - Support creating `MLLMImage` from Base64 data by providing `dataBase64` and `mimeType`, and prevent invalid combinations like setting both `url` and `dataBase64`. Add `as_data_uri()` to return a data URI when Base64 data is available. ([#2306](https://github.com/confident-ai/deepeval/pull/2306)) <!-- pr:2306 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.7.2
+
 - Add a conversational golden synthesizer to generate multi-turn scenarios from docs, contexts, or from scratch, with sync/async APIs and optional expected outcomes. Include new conversational styling options to control scenario context, roles, and task. ([#2310](https://github.com/confident-ai/deepeval/pull/2310)) <!-- pr:2310 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.7.0
+
 - Add Anthropic integration that automatically captures `messages.create` (sync and async) calls for tracing, including model, inputs/outputs, token usage, and tool calls when available. ([#2224](https://github.com/confident-ai/deepeval/pull/2224)) <!-- pr:2224 --> ([Tanay](https://github.com/tanayvaswani))
 - Add tracing for CrewAI knowledge retrieval events, recording the query as span input and the retrieved knowledge as span output for clearer observability. ([#2261](https://github.com/confident-ai/deepeval/pull/2261)) <!-- pr:2261 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add non-LLM metrics for exact equality and regex full matching. Use `ExactMatchMetric` to compare `actual_output` vs `expected_output`, and `PatternMatchMetric` to validate `actual_output` against a pattern with optional case-insensitive matching and verbose logs. ([#2274](https://github.com/confident-ai/deepeval/pull/2274)) <!-- pr:2274 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
-
 ### Improvement
 
 #### v3.7.1
+
 - Relax the dependency pin for `pytest-rerunfailures` to allow newer versions, improving compatibility with modern pytest releases and reducing dependency conflicts during installation. ([#2304](https://github.com/confident-ai/deepeval/pull/2304)) <!-- pr:2304 --> ([Konstantin Kutsy](https://github.com/bostadynamics))
 - Remove unused temporary scripts from the repository to keep the codebase cleaner and reduce clutter. ([#2309](https://github.com/confident-ai/deepeval/pull/2309)) <!-- pr:2309 --> ([Bowen Liang](https://github.com/bowenliang123))
 
 #### v3.7.2
+
 - Fix README code block formatting so the `.env.local` setup snippet renders correctly and is easier to copy and follow. ([#2312](https://github.com/confident-ai/deepeval/pull/2312)) <!-- pr:2312 --> ([Bhuvnesh](https://github.com/DevilsAutumn))
 
 #### v3.7.0
+
 - Add `tools_called` tracking for LangChain and LlamaIndex traces, capturing tool name, inputs, and outputs on both the parent span and trace. This makes tool usage visible in recorded runs and improves debugging of agent workflows. ([#2251](https://github.com/confident-ai/deepeval/pull/2251)) <!-- pr:2251 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add a documented issue lifecycle policy: inactive issues may be closed after 12 months, with guidance on how to request reopening and which issues are excluded. ([#2273](https://github.com/confident-ai/deepeval/pull/2273)) <!-- pr:2273 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add documentation for running end-to-end evaluations with OpenAI Agents using `evals_iterator()`, including synchronous and asynchronous examples and automatic trace generation per golden. ([#2275](https://github.com/confident-ai/deepeval/pull/2275)) <!-- pr:2275 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve non-LLM metric documentation with clearer wording, corrected references, and more consistent parameter and calculation descriptions for `ExactMatchMetric` and `PatternMatchMetric`. ([#2276](https://github.com/confident-ai/deepeval/pull/2276)) <!-- pr:2276 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add telemetry logging around OpenAI and Anthropic integrations to capture tracing when their client classes are patched. This improves observability of provider integration behavior during runtime. ([#2279](https://github.com/confident-ai/deepeval/pull/2279)) <!-- pr:2279 --> ([Tanay](https://github.com/tanayvaswani))
 
-
 ### Bug Fix
 
 #### v3.7.1
+
 - Fix tracing masking to return the value from a custom mask function in `TaskManager.mask`, so masked data is actually propagated instead of being discarded. ([#2289](https://github.com/confident-ai/deepeval/pull/2289)) <!-- pr:2289 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix runtime crashes in the OpenAI Agents callback handler by adding missing explicit imports and replacing wildcard imports. This prevents `NameError` issues and cleans up linting problems around undefined names. ([#2290](https://github.com/confident-ai/deepeval/pull/2290)) <!-- pr:2290 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix prompt template handling by catching `JSONDecodeError` and `TypeError` during parsing, and prevent crashes by wrapping `os.makedirs` in a try/except. Remove stray debug output and avoid overly broad exception handling for clearer failures. ([#2295](https://github.com/confident-ai/deepeval/pull/2295)) <!-- pr:2295 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -133,6 +154,7 @@ November focused on stronger observability and evaluation workflows across moder
 - Fix the simulator’s example JSON output to use valid JSON booleans (`false` instead of `False`), preventing JSON parse errors. Add an `AlwaysJsonModel` stub and a regression test to ensure JSON mode output stays parseable. ([#2301](https://github.com/confident-ai/deepeval/pull/2301)) <!-- pr:2301 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.7.0
+
 - Fix Anthropic and OpenAI integration tests to use `LlmSpanContext` for prompt and metric collection, with `thread_id` passed separately. This aligns tracing usage with the current API and prevents test failures. ([#2256](https://github.com/confident-ai/deepeval/pull/2256)) <!-- pr:2256 --> ([Tanay](https://github.com/tanayvaswani))
 - Fix Anthropic async integration tests by switching to the tool’s Anthropic client, updating prompt version handling, and adding a new trace fixture for `messages.create`. ([#2258](https://github.com/confident-ai/deepeval/pull/2258)) <!-- pr:2258 --> ([Tanay](https://github.com/tanayvaswani))
 - Fix Anthropic integration tests to use the official `anthropic` client and updated tracing expectations, keeping async/sync trace fixtures in sync with current outputs. ([#2259](https://github.com/confident-ai/deepeval/pull/2259)) <!-- pr:2259 --> ([Tanay](https://github.com/tanayvaswani))
@@ -147,52 +169,57 @@ November focused on stronger observability and evaluation workflows across moder
 - Fix LangChain integration tests by importing `create_tool_calling_agent` from a stable module path, reducing breakage across LangChain versions. ([#2281](https://github.com/confident-ai/deepeval/pull/2281)) <!-- pr:2281 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix PostHog dependency constraints to allow versions from 5.4.0 up to (but not including) 7.0.0, improving compatibility with supported PostHog releases. ([#2283](https://github.com/confident-ai/deepeval/pull/2283)) <!-- pr:2283 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
-
-
 ## October
 
-October focused heavily on making tracing and evaluation more robust and serializable, with broad normalization of `gen_ai.*.messages`, structured message types for LLM spans, JSON-safe metadata handling, and better capture of model settings and agent outputs across integrations like OpenAI, PydanticAI, and CrewAI. Async reliability improved with per-task and per-callback timeouts, cooperative timeout budgeting across retries, and safer orchestration so stalled work fails fast while runs still finalize and persist results. Metric execution and reporting saw notable upgrades, including async-by-default Hallucination evaluation, new agent-focused metrics, configurable metric logging controls,和
+October made tracing and evaluation more robust with `gen_ai.*.messages` normalization, structured message types, JSON-safe metadata, and better agent output capture across OpenAI, PydanticAI, and CrewAI. Async reliability improved with per-task timeouts and cooperative timeout budgeting so stalled work fails fast while runs finalize. Metrics gained async-by-default Hallucination evaluation, new agent-focused metrics, and configurable logging.
 
 ### Backward Incompatible Change
 
 #### v3.6.9
+
 - Add cooperative timeout budgeting across retries and tasks, and always persist test cases and metrics when runs are cancelled or time out. Introduce `*_OVERRIDE` env settings for per-attempt and per-task timeouts, gather buffer, and stack-trace logging, and default the OpenAI client timeout from settings. ([#2247](https://github.com/confident-ai/deepeval/pull/2247)) <!-- pr:2247 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Revert settings auto-refresh based on environment changes, restoring the previous cached Settings behavior. Telemetry and error reporting now read `DEEPEVAL_TELEMETRY_OPT_OUT` and `ERROR_REPORTING` directly from environment variables again. ([#2253](https://github.com/confident-ai/deepeval/pull/2253)) <!-- pr:2253 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v3.6.8
+
 - Remove patched LlamaIndex agent wrappers and attach metrics/metric collections via tracing context instead. This simplifies the integration and keeps LlamaIndex agents unmodified while still enriching agent and LLM spans with the expected metadata. ([#2233](https://github.com/confident-ai/deepeval/pull/2233)) <!-- pr:2233 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.6.6
-- Update the CrewAI integration to use the latest event APIs and simplify setup. Remove the custom `Agent` wrapper so you can use CrewAI’s built-in `Agent` directly while still enabling tracing via `instrument_crewai()`. ([#2152](https://github.com/confident-ai/deepeval/pull/2152)) <!-- pr:2152 --> ([Mayank](https://github.com/spike-spiegel-21))
 
+- Update the CrewAI integration to use the latest event APIs and simplify setup. Remove the custom `Agent` wrapper so you can use CrewAI’s built-in `Agent` directly while still enabling tracing via `instrument_crewai()`. ([#2152](https://github.com/confident-ai/deepeval/pull/2152)) <!-- pr:2152 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 ### New Feature
 
 #### v3.6.8
+
 - Add per-task timeouts to semaphore-guarded async evaluation work, so individual stalled tasks fail fast instead of hanging the whole run. When exceeded, the task raises `asyncio.TimeoutError`. ([#2134](https://github.com/confident-ai/deepeval/pull/2134)) <!-- pr:2134 --> ([Harsh S](https://github.com/yujiiroo))
 - Add a `tool` decorator for the CrewAI integration that propagates `metric` and `metric_collection` onto tool spans while staying compatible with existing CrewAI decorator usage patterns. ([#2206](https://github.com/confident-ai/deepeval/pull/2206)) <!-- pr:2206 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add new agent evaluation metrics (Goal Accuracy, Topic Adherence, Plan Adherence, Plan Quality, Tool Use, and Step Efficiency), and improve trace handling by relying on a metric’s `requires_trace` flag. Also prevent duplicate trace results from being reported in test output. ([#2238](https://github.com/confident-ai/deepeval/pull/2238)) <!-- pr:2238 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Add async-friendly eval iteration for the PydanticAI integration so `evals_iterator()` can collect and await tasks while finalizing and serializing traces, with optional agent-level metrics during runs. ([#2241](https://github.com/confident-ai/deepeval/pull/2241)) <!-- pr:2241 --> ([trevor-cai](https://github.com/trevor-cai))
 
 #### v3.6.7
+
 - Add OpenAI integration support with clearer dependency errors, and update evaluation flow to avoid relying on OpenAI-specific test case queues. CI now runs integration tests when API keys are available and safely skips them otherwise. ([#2173](https://github.com/confident-ai/deepeval/pull/2173)) <!-- pr:2173 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add CrewAI wrappers `Crew`, `Agent`, and `LLM` that accept `metrics` and `metric_collection` and pass them into tracing spans. This lets you capture per-run metrics automatically when using `with trace(metrics=...)`. ([#2189](https://github.com/confident-ai/deepeval/pull/2189)) <!-- pr:2189 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.6.6
+
 - Add display of conversational turns in multi-turn evaluations, showing role, truncated content, and any tools used. Turns are now included in test results and appear in CLI output and log/file reports. ([#2113](https://github.com/confident-ai/deepeval/pull/2113)) <!-- pr:2113 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add saving of the trace ID in the Pydantic AI instrumentator so it can be accessed later from the same `run` context. This makes it possible to reference past traces for follow-up actions like annotation. ([#2140](https://github.com/confident-ai/deepeval/pull/2140)) <!-- pr:2140 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add `test_run_id` to the `EvaluationResult` returned by `evaluate`, so you can reference the created test run programmatically. The existing `confident_link` is still returned when available. ([#2156](https://github.com/confident-ai/deepeval/pull/2156)) <!-- pr:2156 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.6.3
-- Add support for pulling prompts by `label` and cache them separately from version-based pulls. Improve prompt cache reliability by using file locking and falling back to the API when the cache is missing, locked, or unreadable. ([#2154](https://github.com/confident-ai/deepeval/pull/2154)) <!-- pr:2154 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
+- Add support for pulling prompts by `label` and cache them separately from version-based pulls. Improve prompt cache reliability by using file locking and falling back to the API when the cache is missing, locked, or unreadable. ([#2154](https://github.com/confident-ai/deepeval/pull/2154)) <!-- pr:2154 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 ### Improvement
 
 #### v3.6.9
+
 - Add automatic settings refresh when environment variables change and expand dotenv-related tests using the `enable_dotenv` marker to validate boolean coercion. Update telemetry env handling to use `DEEPEVAL_TELEMETRY_OPT_OUT` for clearer opt-out behavior. ([#2249](https://github.com/confident-ai/deepeval/pull/2249)) <!-- pr:2249 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.6.8
+
 - Add timeouts around async task orchestration to prevent `asyncio.gather` from hanging indefinitely. On timeout, pending tasks are cancelled and drained before the error is raised, improving reliability of async evaluations. ([#2136](https://github.com/confident-ai/deepeval/pull/2136)) <!-- pr:2136 --> ([S3lc0uth](https://github.com/S3lc0uth))
 - Improve test run metrics aggregation and results table output by refactoring into clearer helper functions. The results table formatting is now more consistent, easier to extend, and handles separators and empty rows more cleanly. ([#2153](https://github.com/confident-ai/deepeval/pull/2153)) <!-- pr:2153 --> ([Ayesha Shafique](https://github.com/Aisha630))
 - Add support for passing arguments to embedding models and for customizing ConversationalGEval prompts via an `evaluation_template`. Fix MCP scoring to avoid division-by-zero when no scores are produced, and expand quickstart/docs with a template customization example. ([#2203](https://github.com/confident-ai/deepeval/pull/2203)) <!-- pr:2203 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -203,6 +230,7 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Add an OpenAI integration cookbook with a ready-to-run Colab notebook showing how to trace OpenAI SDK calls and run evaluations for standalone requests and full LLM apps. ([#2237](https://github.com/confident-ai/deepeval/pull/2237)) <!-- pr:2237 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.6.7
+
 - Add structured prompt metadata and improved `Prompt.load()` parsing, including safer fallbacks when JSON is invalid or malformed. Test runs now capture and persist prompts seen during LLM spans for easier tracking and reproducibility. ([#2102](https://github.com/confident-ai/deepeval/pull/2102)) <!-- pr:2102 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add structured message types for LLM spans, including text, tool call, and tool output payloads. This improves typing and serialization for `input` and `output` when tracing multi-part model interactions. ([#2116](https://github.com/confident-ai/deepeval/pull/2116)) <!-- pr:2116 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve code formatting and lint compliance in OpenAI integration and trace test helpers, reducing lint noise and keeping patching logic easier to maintain. ([#2166](https://github.com/confident-ai/deepeval/pull/2166)) <!-- pr:2166 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -215,6 +243,7 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Fix typos and wording in the metrics DAG documentation to improve clarity and readability. ([#2198](https://github.com/confident-ai/deepeval/pull/2198)) <!-- pr:2198 --> ([Simone Busoli](https://github.com/simoneb))
 
 #### v3.6.6
+
 - Add a test mode for tracing integrations so spans can be captured in-memory instead of exported over OTLP. This makes integration CI tests more reliable by avoiding network calls and letting tests assert on collected trace data. ([#2131](https://github.com/confident-ai/deepeval/pull/2131)) <!-- pr:2131 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve optional CrewAI integration imports by handling missing dependencies cleanly and logging details in verbose mode, while also applying consistent formatting and lint fixes to keep CI passing. ([#2158](https://github.com/confident-ai/deepeval/pull/2158)) <!-- pr:2158 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Improve verbose logging for missing optional dependencies by emitting warnings instead of errors. Logs now show the missing module name when available and avoid tracebacks while pointing to the caller for easier debugging. Messages are only shown when `DEEPEVAL_VERBOSE_MODE` is enabled. ([#2159](https://github.com/confident-ai/deepeval/pull/2159)) <!-- pr:2159 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -222,9 +251,11 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Prevent sync HTTP calls from hanging indefinitely by enforcing per-attempt timeouts and retrying failures with a configurable Tenacity backoff policy. ([#2162](https://github.com/confident-ai/deepeval/pull/2162)) <!-- pr:2162 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.6.3
+
 - Improve Amazon Bedrock request building by passing `generation_kwargs` through as-is, removing automatic snake_case-to-camelCase parameter translation. This makes parameter names consistent with what Bedrock expects and avoids unexpected remapping. ([#2106](https://github.com/confident-ai/deepeval/pull/2106)) <!-- pr:2106 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.6.2
+
 - Improve OpenTelemetry tracing by normalizing `gen_ai.*.messages` that use `parts` into plain role/content messages and by forcing trace/span metadata into JSON-safe strings, including circular-reference handling, to prevent export/serialization failures. ([#2114](https://github.com/confident-ai/deepeval/pull/2114)) <!-- pr:2114 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve trace and agent input/output flattening by normalizing message parts and making non-text content JSON-serializable. This reduces errors when traces include structured or non-text payloads. ([#2115](https://github.com/confident-ai/deepeval/pull/2115)) <!-- pr:2115 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve the Hallucination metric by enabling `async_mode=True` by default, so evaluations run asynchronously unless you opt out. This can reduce blocking during metric execution in async-capable workflows. ([#2117](https://github.com/confident-ai/deepeval/pull/2117)) <!-- pr:2117 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
@@ -232,14 +263,15 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Improve readability of cards and expandable sections in dark mode by refining background, borders, and text contrast. Adjust hover and focus states to keep interactive elements clear and accessible. ([#2122](https://github.com/confident-ai/deepeval/pull/2122)) <!-- pr:2122 --> ([Debangshu](https://github.com/debangshu919))
 - Add per-task timeouts for async `observed_callback` execution so slow callbacks don’t block evaluation indefinitely, raising `asyncio.TimeoutError` after the configured limit. Synchronous callbacks are unaffected. ([#2127](https://github.com/confident-ai/deepeval/pull/2127)) <!-- pr:2127 --> ([Tharun K](https://github.com/tharun634))
 
-
 ### Bug Fix
 
 #### v3.6.9
+
 - Fix `EvaluationDataset.save_as` serialization so critical fields (like `tools_called`, `expected_tools`, metadata, and custom columns) are preserved across JSON, JSONL, and CSV. Multi-turn datasets now save turns as structured objects in JSON/JSONL, and CSV embeds full turn data as a JSON string while extending headers accordingly. ([#2227](https://github.com/confident-ai/deepeval/pull/2227)) <!-- pr:2227 --> ([Wang Junwei](https://github.com/wjunwei2001))
 - Fix unclosed `aiohttp` client sessions when using `AmazonBedrockModel` with `aiobotocore`, preventing post-evaluation warnings about unclosed sessions and connectors. ([#2250](https://github.com/confident-ai/deepeval/pull/2250)) <!-- pr:2250 --> ([m.tsukada](https://github.com/licux))
 
 #### v3.6.8
+
 - Fix embedding model initialization so `generation_kwargs` is passed as a dict and client options are provided via `**client_kwargs`. Also add explicit parameters for required connection settings (like API keys, endpoints, and host) to reduce confusion when configuring clients. ([#2209](https://github.com/confident-ai/deepeval/pull/2209)) <!-- pr:2209 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix the CrewAI example notebook by adding tracing around `crew.kickoff()` and reusing the answer relevancy metric, so execution traces and metric reporting work more reliably in the walkthrough. ([#2212](https://github.com/confident-ai/deepeval/pull/2212)) <!-- pr:2212 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Fix `a_generate_goldens_from_contexts` so generated goldens use the correct `source_file` for each context instead of mismatching indices, and keep progress/scores aligned with the right input. ([#2213](https://github.com/confident-ai/deepeval/pull/2213)) <!-- pr:2213 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -249,6 +281,7 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Fix multimodal contextual precision verdict parsing by using the singular `reason` field to match the expected template and schema. Prevents missing reasons and related TypeErrors when generating or reading verdicts. ([#2235](https://github.com/confident-ai/deepeval/pull/2235)) <!-- pr:2235 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.6.7
+
 - Prevent core tests from unintentionally calling the Confident backend by clearing Confident API keys from the environment and in-memory settings, and disabling dotenv autoload for these tests. This keeps `tests/test_core` isolated and avoids accidental external network use. ([#2165](https://github.com/confident-ai/deepeval/pull/2165)) <!-- pr:2165 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix test isolation by sandboxing `os.environ` per test and resetting settings before and after each run. This prevents `settings.edit(persist=False)` from leaking environment changes across tests and altering timeouts, retry policies, and other settings. ([#2168](https://github.com/confident-ai/deepeval/pull/2168)) <!-- pr:2168 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix multimodal metric parameter validation by using `check_mllm_test_case_params` instead of the LLM-only checker. This ensures multimodal test cases are validated with the correct rules and avoids incorrect parameter errors. ([#2170](https://github.com/confident-ai/deepeval/pull/2170)) <!-- pr:2170 --> ([Ayesha Shafique](https://github.com/Aisha630))
@@ -261,9 +294,11 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Fix OpenAI multimodal user messages by stringifying mixed content to avoid Pydantic validation errors. Preserve the original list payload in `messages` for Responses, and add tests to prevent import-time side effects from SDK patching. ([#2199](https://github.com/confident-ai/deepeval/pull/2199)) <!-- pr:2199 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.6.6
+
 - Fix broken tracing integration tests by moving the trace test manager into the package and updating imports so tests no longer depend on a `tests.*` module path. ([#2167](https://github.com/confident-ai/deepeval/pull/2167)) <!-- pr:2167 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.6.3
+
 - Fix `gpt-5-chat-latest` being treated as a reasoning model that forces `temperature=1`. This restores support for `temperature=0.0` and lets users control output determinism as expected. ([#2121](https://github.com/confident-ai/deepeval/pull/2121)) <!-- pr:2121 --> ([himanushi](https://github.com/himanushi))
 - Fix Google Colab buttons in the framework integration docs by pointing them to the correct example notebook paths, so the notebooks open properly from the documentation. ([#2130](https://github.com/confident-ai/deepeval/pull/2130)) <!-- pr:2130 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Revert the previous handling for empty `expected_tools` in the tool correctness metric, restoring the earlier scoring behavior when no expected tools are provided. ([#2139](https://github.com/confident-ai/deepeval/pull/2139)) <!-- pr:2139 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -272,48 +307,54 @@ October focused heavily on making tracing and evaluation more robust and seriali
 - Fix Amazon Bedrock requests to stop forcing a default `temperature` value. `temperature` is now only sent when provided via `generation_kwargs`, letting Bedrock apply its own defaults. ([#2151](https://github.com/confident-ai/deepeval/pull/2151)) <!-- pr:2151 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.6.2
+
 - Fix OpenAI Agents span handling so LLM span properties update only for spans marked as `llm`. This prevents spans from being skipped due to an incorrect early return and restores expected agent behavior. ([#2123](https://github.com/confident-ai/deepeval/pull/2123)) <!-- pr:2123 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Fix documentation code examples to correctly iterate over datasets, preventing `TypeError: 'EvaluationDataset' object is not iterable` when following the testing snippets. ([#2132](https://github.com/confident-ai/deepeval/pull/2132)) <!-- pr:2132 --> ([Denis](https://github.com/denis-snyk))
 - Fix ToolCorrectnessMetric crashing with ZeroDivisionError when `expected_tools` is empty. It now returns 1.0 when both `tools_called` and `expected_tools` are empty, and 0.0 when tools are called but none are expected. Added tests for these edge cases. ([#2135](https://github.com/confident-ai/deepeval/pull/2135)) <!-- pr:2135 --> ([Priyank Bansal](https://github.com/Stu-ops))
 
-
-
 ## September
 
-September focused on making agent evaluation and tracing easier to adopt, with a big expansion of quickstarts, cookbooks, and end-to-end guides across frameworks like LangChain, LangGraph, CrewAI, PydanticAI, and OpenAI Agents. Tracing became richer and more reliable through better capture of inputs/outputs at both span and trace levels, improved OpenTelemetry/OTLP export behavior, standardized integration event naming, and new APIs like `update_current_span`, `update_current_trace()`, and `update_llm_span`. Evaluation quality and flexibility improved with updates to G-Eval prompting and templating, new MCP and conversational/DAG evaluation capabilities, and better dataset round-tripping and
+September made agent evaluation and tracing easier to adopt with expanded quickstarts and guides across LangChain, LangGraph, CrewAI, PydanticAI, and OpenAI Agents. Tracing improved with better input/output capture, OpenTelemetry/OTLP export behavior, and new APIs like `update_current_span` and `update_current_trace()`. Evaluation added G-Eval templating updates, MCP and conversational/DAG capabilities, and better dataset round-tripping.
 
 ### Backward Incompatible Change
 
 #### v2.4.8
+
 - Remove span feedback from the OpenTelemetry exporter so traces no longer parse or emit the `confident.span.feedback` attribute, reducing exporter dependencies and payload. ([#1942](https://github.com/confident-ai/deepeval/pull/1942)) <!-- pr:1942 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Change benchmark `evaluate` results to return strongly typed Pydantic models instead of untyped dicts or floats, with a consistent `overall_accuracy` interface and optional benchmark-specific fields. This is a breaking change for code expecting raw primitives. Also pin `datasets` to &lt;4.0.0 to avoid failures from deprecated loader scripts. ([#1975](https://github.com/confident-ai/deepeval/pull/1975)) <!-- pr:1975 --> ([trevor-inflection](https://github.com/trevor-inflection))
-
 
 ### New Feature
 
 #### v3.5.9
+
 - Add `evaluation_template` support to MultimodalGEval so you can customize how evaluation steps and results are generated, including strict results. Also tighten exception handling and imports to satisfy lint rules. ([#2090](https://github.com/confident-ai/deepeval/pull/2090)) <!-- pr:2090 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add Jinja template interpolation for prompt rendering, with `template` and `messages_template` now validated to be mutually exclusive to prevent ambiguous prompt types. ([#2100](https://github.com/confident-ai/deepeval/pull/2100)) <!-- pr:2100 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v3.5.5
+
 - Add a PydanticAI `Agent` wrapper that automatically captures traces and metrics and patches the underlying model. Also export an OpenTelemetry instrumentation helper so you can instrument PydanticAI more easily without manual setup each run. ([#2071](https://github.com/confident-ai/deepeval/pull/2071)) <!-- pr:2071 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.6
+
 - Add `set-debug` and `unset-debug` CLI commands to configure verbose logging, tracing, gRPC verbosity, and error reporting. Settings can be applied immediately and optionally persisted to a dotenv file, with a no-op guard to avoid output when nothing changes. ([#2082](https://github.com/confident-ai/deepeval/pull/2082)) <!-- pr:2082 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add support for capturing OpenAI Agents `trace` context into tool tracing, including workflow name, group/thread id, and metadata. Improve input/output handling so traced runs keep the initial input and select the correct output when running inside a trace. ([#2087](https://github.com/confident-ai/deepeval/pull/2087)) <!-- pr:2087 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.3
+
 - Add a unified, configurable retry policy across all supported model providers. Improve transient error detection and provider-specific handling, with opt-in delegation to provider SDK retries. Allow runtime-tunable retry logging levels and env-driven backoff settings. ([#2047](https://github.com/confident-ai/deepeval/pull/2047)) <!-- pr:2047 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add tracing support for sync and async generator functions, ensuring observer spans stay open while items are yielded and close cleanly on completion or errors. ([#2074](https://github.com/confident-ai/deepeval/pull/2074)) <!-- pr:2074 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v3.5.0
+
 - Add optional OpenTelemetry (OTLP) tracing for dataset evaluation runs via `run_otel`, generating a per-run ID and emitting start/stop spans plus per-item dummy spans. This enables exporting evaluation traces to an OTLP endpoint for run-level observability. ([#2008](https://github.com/confident-ai/deepeval/pull/2008)) <!-- pr:2008 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.1
+
 - Add token-level streaming timestamps to LLM tracing spans, recording each emitted token with a precise ISO time to help analyze generation latency and pacing. ([#2048](https://github.com/confident-ai/deepeval/pull/2048)) <!-- pr:2048 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add prompt version listing and update prompt pulling to use version IDs, with optional background refresh that keeps the local cache up to date. ([#2057](https://github.com/confident-ai/deepeval/pull/2057)) <!-- pr:2057 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.4.8
+
 - Add a PydanticAI integration that instruments `Agent.run` with OpenTelemetry spans and exports agent input/output and optional custom trace attributes. Provide `setup_instrumentation()` to patch the agent safely and configure span exporting when the OpenTelemetry SDK is available. ([#1851](https://github.com/confident-ai/deepeval/pull/1851)) <!-- pr:1851 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add MCP metrics for conversational evaluations, including args correctness, task completion, and tool correctness. These metrics support async execution, strict scoring, and verbose reasoning to help debug tool-using interactions. ([#1894](https://github.com/confident-ai/deepeval/pull/1894)) <!-- pr:1894 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Add support for setting trace name, tags, metadata, thread ID, and user ID via `confident.trace.*` span attributes. Existing `confident.trace.attributes` is still read for compatibility but is planned for deprecation. ([#1897](https://github.com/confident-ai/deepeval/pull/1897)) <!-- pr:1897 --> ([Mayank](https://github.com/spike-spiegel-21))
@@ -338,32 +379,37 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Add a `function_tool` wrapper for OpenAI Agents that automatically traces tool calls with `observe` and supports passing metrics or a metric collection. Tool spans are skipped in the tracing processor to reduce noise during component evaluation. ([#2010](https://github.com/confident-ai/deepeval/pull/2010)) <!-- pr:2010 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add Markdown document support (`.md`, `.markdown`, `.mdx`) in the synthesizer loaders. Improve lazy imports and type hints so heavy optional deps like LangChain and Chroma are only required when used, with clearer errors and updated docs on required packages. ([#2018](https://github.com/confident-ai/deepeval/pull/2018)) <!-- pr:2018 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
-
 ### Improvement
 
 #### v3.6.0
+
 - Add a documented, explicit way to access the active dataset golden and pass its `expected_output` during component-level evaluation. The executor now sets and resets the current golden around user code, and tests ensure `expected_output` is preserved across spans and traces with sensible override and `None` handling. ([#2096](https://github.com/confident-ai/deepeval/pull/2096)) <!-- pr:2096 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add a new CLI guide covering install, secrets, provider switching, debug flags, retries, examples, and troubleshooting. Improve Multimodal G-Eval docs by documenting `evaluation_template` behavior, expected JSON return shapes, and a minimal customization example. Fix multiple broken links across metrics, guides, integrations, and tutorials. ([#2109](https://github.com/confident-ai/deepeval/pull/2109)) <!-- pr:2109 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Improve the OpenAI Agents integration by simplifying agent/model processing and exposing only the supported public API (`DeepEvalTracingProcessor`, `Agent`, and `function_tool`). This reduces unused imports and avoids exporting `Runner` from the package namespace. ([#2110](https://github.com/confident-ai/deepeval/pull/2110)) <!-- pr:2110 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.9
+
 - Add support for `name` and `comments` fields when loading goldens from CSV/JSON and when exporting datasets via `save_as`, preserving this metadata across round-trips. ([#2066](https://github.com/confident-ai/deepeval/pull/2066)) <!-- pr:2066 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix a typo in the agents getting-started guide so the end-to-end evaluation instructions read correctly. ([#2095](https://github.com/confident-ai/deepeval/pull/2095)) <!-- pr:2095 --> ([Raj Ravi](https://github.com/RajRavi05))
 - Improve PydanticAI OpenTelemetry instrumentation by reviving and consolidating it under `ConfidentInstrumentationSettings`. Agent-level tracing and metric wiring is now configured via the `instrument` setting, and the old `instrument_pydantic_ai` path is deprecated. ([#2098](https://github.com/confident-ai/deepeval/pull/2098)) <!-- pr:2098 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.5
+
 - Improve OpenAI Agents tracing and metrics by using typed `BaseMetric` lists and recording a `Prompt` on LLM spans. Also serialize streamed and non-streamed outputs for more reliable observability and downstream processing. ([#2084](https://github.com/confident-ai/deepeval/pull/2084)) <!-- pr:2084 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.3
+
 - Improve prompt tests by asserting the pulled prompt version starts at `0`, ensuring versioning behavior is validated alongside template and message content. ([#2064](https://github.com/confident-ai/deepeval/pull/2064)) <!-- pr:2064 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix a typo in the metrics introduction docs by changing “read-to-use” to “ready-to-use” for clearer wording. ([#2065](https://github.com/confident-ai/deepeval/pull/2065)) <!-- pr:2065 --> ([Jason Smith](https://github.com/jhs))
 - Add a maintainer-only GitHub Actions workflow to manually run the full test suite against a PR’s head or merge ref, with concurrency control and optional secret-based tests. ([#2069](https://github.com/confident-ai/deepeval/pull/2069)) <!-- pr:2069 --> ([trevor-cai](https://github.com/trevor-cai))
 
 #### v3.5.2
+
 - Improve LangChain/LangGraph tracing by using context variables to keep the active trace consistent across tool calls and nested runs. Also expose the `tool` decorator from the integration so you can attach `metric_collection` metadata and keep span attributes in the correct trace. ([#2052](https://github.com/confident-ai/deepeval/pull/2052)) <!-- pr:2052 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve the PydanticAI integration by adding safer one-time instrumentation, tracing for `run_sync`, and consistent trace argument names (e.g., `name`, `tags`, `metadata`). This also sanitizes run context data to avoid noisy or circular payloads in captured traces. ([#2060](https://github.com/confident-ai/deepeval/pull/2060)) <!-- pr:2060 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.0
+
 - Add a provider-agnostic retry policy with env-tunable defaults and clearer transient vs non-retryable classification. OpenAI requests now use the shared policy, disable SDK internal retries to avoid double backoff, and log retries more consistently. Quota-exhausted 429s are treated as non-retryable while timeouts and 5xx errors still retry. ([#1941](https://github.com/confident-ai/deepeval/pull/1941)) <!-- pr:1941 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Add a trace JSON validation flow for integration tests. Provide commands to generate trace test data and then validate the generated JSON to catch regressions earlier. ([#2019](https://github.com/confident-ai/deepeval/pull/2019)) <!-- pr:2019 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add a centralized, validated Settings system and refactor CLI config commands to use it for consistent env and persistence behavior. Prevent secrets from being written to the legacy JSON store, and allow safe persistence to dotenv files when `--save` (or the default save setting) is enabled. ([#2026](https://github.com/confident-ai/deepeval/pull/2026)) <!-- pr:2026 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -376,6 +422,7 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Add a simplified PydanticAI integration API by exposing `instrument_pydantic_ai` and removing the custom Agent wrapper, with updated CLI trace flag names and tests to ensure trace output is generated as expected. ([#2042](https://github.com/confident-ai/deepeval/pull/2042)) <!-- pr:2042 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v2.4.8
+
 - Add new documentation quickstarts for AI agent evaluation, including setup for LLM tracing and both end-to-end and component-level evals across popular frameworks. Improve clarity in existing evaluation docs with updated titles and expanded dataset terminology. ([#1818](https://github.com/confident-ai/deepeval/pull/1818)) <!-- pr:1818 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve documentation site styling for collapsible sections, sidebar menu, and code blocks for a more consistent reading experience. ([#1879](https://github.com/confident-ai/deepeval/pull/1879)) <!-- pr:1879 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve tutorials by reorganizing evaluation sections, renaming pages to simpler routes, and adding a dedicated RAG QA evaluation guide with setup and synthetic data generation examples. ([#1885](https://github.com/confident-ai/deepeval/pull/1885)) <!-- pr:1885 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -408,16 +455,18 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Fix async execution in Conversational DAG nodes by awaiting model generation and metric evaluation calls, preventing missed results during traversal. Add detailed Conversational-DAG documentation with end-to-end examples for building and running multi-turn decision-tree evaluations. ([#2014](https://github.com/confident-ai/deepeval/pull/2014)) <!-- pr:2014 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Improve code formatting to satisfy linting and keep tests and DAG modules consistent with Black style. ([#2016](https://github.com/confident-ai/deepeval/pull/2016)) <!-- pr:2016 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
-
 ### Bug Fix
 
 #### v3.6.0
+
 - Fix Info and Caution callouts not rendering correctly in the documentation when using dark mode, improving readability and visual consistency. ([#2111](https://github.com/confident-ai/deepeval/pull/2111)) <!-- pr:2111 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 
 #### v3.5.9
+
 - Fix streaming completion handling so the final result is captured reliably and the streamed LLM output is JSON-serializable, preventing errors when consuming streamed responses. ([#2097](https://github.com/confident-ai/deepeval/pull/2097)) <!-- pr:2097 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.5.5
+
 - Fix async evaluations by tracking and gathering only tasks created on the active event loop, preventing coroutine re-await and cross-loop errors. Normalize awaitables via `coerce_to_task()`, cancel pending tasks when clearing, and properly shut down async generators. Replace blocking sleeps in async tests and stabilize CI workflows. ([#2068](https://github.com/confident-ai/deepeval/pull/2068)) <!-- pr:2068 --> ([Trevor Wilson](https://github.com/BloggerBust))
 - Fix `NonAdvice` metric scoring in `strict_mode`: enforce a threshold of 1 and return 0 when the computed score falls below that threshold. ([#2070](https://github.com/confident-ai/deepeval/pull/2070)) <!-- pr:2070 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 - Fix `mcp_use_metric` when multiple MCP servers are configured by correctly including primitives from all servers in the interaction text. ([#2076](https://github.com/confident-ai/deepeval/pull/2076)) <!-- pr:2076 --> ([Diego Rani Mazine](https://github.com/dmazine))
@@ -426,14 +475,17 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Fix incorrect argument name when configuring local models by passing `model_format` to `set_local_model_env`, preventing misconfiguration in LM Studio and vLLM setup. ([#2083](https://github.com/confident-ai/deepeval/pull/2083)) <!-- pr:2083 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 
 #### v3.5.6
+
 - Fix async eval execution to use the current trace when building `LLMTestCase`, so outputs, expected output, context, and tool expectations are recorded correctly. ([#2088](https://github.com/confident-ai/deepeval/pull/2088)) <!-- pr:2088 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix incorrect model imports so faithfulness and answer relevancy scoring load `SummaCModels` and answer relevancy models from the correct modules instead of failing at runtime. ([#2089](https://github.com/confident-ai/deepeval/pull/2089)) <!-- pr:2089 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 
 #### v3.5.3
+
 - Fix `pii_leakage` metric scoring in `strict_mode` by enforcing a threshold of 1 and returning 0 when the computed score falls below that threshold. ([#2067](https://github.com/confident-ai/deepeval/pull/2067)) <!-- pr:2067 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 - Fix the getting-started example to use `strict_mode` instead of `strict` when creating metrics, preventing confusion and failures with the current API. ([#2073](https://github.com/confident-ai/deepeval/pull/2073)) <!-- pr:2073 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 
 #### v3.5.2
+
 - Fix a typo in the getting-started chatbots guide so the “metrics” link text is spelled correctly. ([#2058](https://github.com/confident-ai/deepeval/pull/2058)) <!-- pr:2058 --> ([grant-sobkowski](https://github.com/grant-sobkowski))
 - Fix passing `test_case_content` when generating conversational evaluation prompts so evaluations run correctly instead of failing due to a missing argument. ([#2059](https://github.com/confident-ai/deepeval/pull/2059)) <!-- pr:2059 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 - Fix LocalEmbeddingModel async embedding methods to properly await embedding requests, preventing missed awaits and ensuring async calls return embeddings reliably. ([#2061](https://github.com/confident-ai/deepeval/pull/2061)) <!-- pr:2061 --> ([Trevor Wilson](https://github.com/BloggerBust))
@@ -441,6 +493,7 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Fix duplicate arguments being passed to `update_current_trace`, preventing conflicting trace updates in online metrics tests. ([#2063](https://github.com/confident-ai/deepeval/pull/2063)) <!-- pr:2063 --> ([Sai-Suraj-27](https://github.com/Sai-Suraj-27))
 
 #### v3.5.0
+
 - Fix AWS Bedrock Converse requests by translating `generation_kwargs` from snake_case to the required camelCase. Prevents `ParamValidationError` when using parameters like `max_tokens`, `top_p`, `top_k`, and `stop_sequences`. ([#2017](https://github.com/confident-ai/deepeval/pull/2017)) <!-- pr:2017 --> ([Active FigureX](https://github.com/karankulshrestha))
 - Fix tool correctness scoring when no tools are expected. If both expected and called tools lists are empty, the score is now 1.0 instead of 0.0, avoiding false failures in tool-free runs. ([#2027](https://github.com/confident-ai/deepeval/pull/2027)) <!-- pr:2027 --> ([Kema Uday Kiran](https://github.com/udaykiran2427))
 - Fix a documentation import typo for `DeepAcyclicGraph` so the Conversational DAG example uses the correct module path. ([#2029](https://github.com/confident-ai/deepeval/pull/2029)) <!-- pr:2029 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -450,9 +503,11 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Fix Kimi `kimi-k2-0711-preview` output cost divisor so output usage is calculated with the correct scale. ([#2054](https://github.com/confident-ai/deepeval/pull/2054)) <!-- pr:2054 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
 #### v3.5.1
+
 - Fix `generate_goldens_from_contexts` when using `source_files` so generated goldens map to the correct source file. This prevents a possible `IndexError` when `max_goldens_per_context` exceeds the number of source files. ([#2053](https://github.com/confident-ai/deepeval/pull/2053)) <!-- pr:2053 --> ([Evan Livelo](https://github.com/vandenn))
 
 #### v2.4.8
+
 - Fix trace posting to allow a dynamic API key set on each trace, instead of always relying on a global configured key. This prevents traces from being skipped when the per-trace key is provided at runtime. ([#1889](https://github.com/confident-ai/deepeval/pull/1889)) <!-- pr:1889 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Fix Conversation Simulator generating the first user turn twice, which could duplicate user messages. First-turn prompts are now only created when starting a new conversation or after an opening message. ([#1891](https://github.com/confident-ai/deepeval/pull/1891)) <!-- pr:1891 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix Ollama integration docs to use the correct `model` parameter when initializing `OllamaModel`, avoiding confusion and incorrect example code. ([#1892](https://github.com/confident-ai/deepeval/pull/1892)) <!-- pr:1892 --> ([Phil Nash](https://github.com/philnash))
@@ -488,15 +543,14 @@ September focused on making agent evaluation and tracing easier to adopt, with a
 - Fix trace status reporting so traces are marked as errored when any span fails, and include a `status` field in the trace API payload for more accurate error visibility. ([#1999](https://github.com/confident-ai/deepeval/pull/1999)) <!-- pr:1999 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Fix `--confident-api-key` so it works again, and make login save the key to `.env.local` by default unless `--save` is set. Logout now also removes the saved key from both the JSON keystore and dotenv, and commands no longer write "None" values for optional model settings. ([#2015](https://github.com/confident-ai/deepeval/pull/2015)) <!-- pr:2015 --> ([Trevor Wilson](https://github.com/BloggerBust))
 
-
-
 ## August
 
-August focused on making evaluation and tracing more production-ready, with significantly refreshed docs and tutorials that clarify component-level evaluation, tracing concepts, and deployment patterns like continuous evaluation and dataset reuse. Tracing and telemetry saw major upgrades, including richer structured LLM trace outputs, a new v1 OpenTelemetry exporter, better span ordering and attribute naming, and deeper integrations for LangChain/LangGraph, LlamaIndex, and CrewAI with support for `metrics` and `metric_collection`. The toolchain also expanded with new tutorials such as the Medical Chatbot series and improved RAG and meeting summarizer guides, alongside better navigation, lean
+August made evaluation and tracing more production-ready with refreshed docs covering component-level evaluation, tracing, and deployment patterns. Tracing gained richer LLM outputs, a v1 OpenTelemetry exporter, better span ordering, and deeper LangChain/LlamaIndex/CrewAI integrations with `metrics` and `metric_collection` support. New tutorials included the Medical Chatbot series and improved RAG guides.
 
 ### New Feature
 
 #### v3.3.5
+
 - Add a new Medical Chatbot tutorial series to the docs, covering development, evaluation, improvement, and deployment of a multi-turn chatbot. Improve and correct several evaluation docs examples and parameter descriptions for multi-turn test cases and datasets. ([#1802](https://github.com/confident-ai/deepeval/pull/1802)) <!-- pr:1802 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Add CLI support to configure Grok, Moonshot, and DeepSeek as the LLM provider for evaluations, including setting the model name, API key, and temperature. You can switch back to the default OpenAI setup with corresponding `unset-*` commands. ([#1807](https://github.com/confident-ai/deepeval/pull/1807)) <!-- pr:1807 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add a Medical Chatbot tutorial to the docs and navigation, with updated walkthrough content and links for building, configuring, and evaluating the example app. ([#1814](https://github.com/confident-ai/deepeval/pull/1814)) <!-- pr:1814 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -508,10 +562,10 @@ August focused on making evaluation and tracing more production-ready, with sign
 - Add an `ArgumentCorrectnessMetric` to score whether tool call arguments match the user input, with optional reasons and async support. Returns a perfect score when no tool calls are provided. ([#1866](https://github.com/confident-ai/deepeval/pull/1866)) <!-- pr:1866 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add a revamped conversation simulator that generates conversational test cases from `ConversationalGolden` inputs using a provided model callback, with configurable opening message, concurrency, and async or sync execution. ([#1876](https://github.com/confident-ai/deepeval/pull/1876)) <!-- pr:1876 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
 ### Improvement
 
 #### v3.3.5
+
 - Improve component-level evaluation docs with clearer guidance on when to use it, what tracing means, and how to log in to view traces. Reorganize sections and examples for easier navigation and fewer confusing callouts. ([#1782](https://github.com/confident-ai/deepeval/pull/1782)) <!-- pr:1782 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve the Meeting Summarizer tutorial with a new Deployment section covering CI/CD-style continuous evaluation, dataset reuse, and optional tracing setup. Also update tutorial navigation and fix a broken docs anchor link. ([#1783](https://github.com/confident-ai/deepeval/pull/1783)) <!-- pr:1783 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Bump the package release metadata and version number for a new release. ([#1784](https://github.com/confident-ai/deepeval/pull/1784)) <!-- pr:1784 --> ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -530,10 +584,10 @@ August focused on making evaluation and tracing more production-ready, with sign
 - Improve model CLI config handling by separating stored keys for evaluation LLMs vs embeddings, reducing key collisions when switching providers or running `unset-*` commands. ([#1855](https://github.com/confident-ai/deepeval/pull/1855)) <!-- pr:1855 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve tutorials with clearer section titles, updated wording, and expanded guidance for building and evaluating RAG QA and summarization agents, including a better focus on production eval setup. ([#1860](https://github.com/confident-ai/deepeval/pull/1860)) <!-- pr:1860 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
-
 ### Bug Fix
 
 #### v3.3.5
+
 - Fix LLM span cost calculation by honoring `cost_per_input_token` and `cost_per_output_token` passed to `observe`, ensuring traced runs report the correct token costs. ([#1787](https://github.com/confident-ai/deepeval/pull/1787)) <!-- pr:1787 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix async OpenAI integration by restoring `asyncio.create_task` safely after evaluation, preventing leaked monkeypatching across runs and improving stability when running concurrent test cases. ([#1790](https://github.com/confident-ai/deepeval/pull/1790)) <!-- pr:1790 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix `g_eval` to prevent a crash when accumulating evaluation cost if the initial cost is `None`. This avoids a `TypeError` during async evaluation and allows scoring to complete normally. ([#1796](https://github.com/confident-ai/deepeval/pull/1796)) <!-- pr:1796 --> ([高汝貞](https://github.com/TheNeuAra))
@@ -559,15 +613,14 @@ August focused on making evaluation and tracing more production-ready, with sign
 - Fix an ImportError caused by a circular import between the scorer module and the IFEval benchmark. The `Scorer` import is now deferred to IFEval initialization so modules load cleanly and IFEval can be imported reliably. ([#1875](https://github.com/confident-ai/deepeval/pull/1875)) <!-- pr:1875 --> ([Rohit ojha](https://github.com/siesto1elemento))
 - Fix Conversation Simulator turn generation and progress tracking: `max_turns` is now validated, opening messages count toward the limit, and async vs sync callbacks are handled automatically without raising type errors. Simulated test cases now carry over scenario and metadata fields from the golden inputs. ([#1878](https://github.com/confident-ai/deepeval/pull/1878)) <!-- pr:1878 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
-
 ## July
 
-July focused on deeper tracing and evaluation reliability across popular agent frameworks, with major improvements to LangChain/LangGraph, CrewAI, LlamaIndex, and OpenTelemetry span handling, plus new telemetry around integration initialization that respects opt-out settings. Safety and compliance coverage expanded significantly with new and improved metrics (including PII leakage, role violations, non-advice, misuse, and broader harmful-content checks) alongside added support for the IFEval benchmark and better task-completion evaluation via span-based tracing and clearer error reporting. The default model moved from `gpt-4o` to `gpt-4.1`, with matching updates to cost calculations, docs, a
+July improved tracing and evaluation across agent frameworks with major upgrades to LangChain/LangGraph, CrewAI, LlamaIndex, and OpenTelemetry span handling. Safety coverage expanded with new metrics for PII leakage, role violations, non-advice, and misuse, plus IFEval benchmark support and better task-completion evaluation. The default model moved from `gpt-4o` to `gpt-4.1` with updated costs and docs.
 
 ### New Feature
 
 #### v3.2.6
+
 - Add a LangChain/LangGraph callback handler that captures chain, tool, LLM, and retriever events into tracing spans, and automatically starts and ends a trace for top-level runs. ([#1722](https://github.com/confident-ai/deepeval/pull/1722)) <!-- pr:1722 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add a CrewAI integration to instrument `crewai.LLM.call` and capture LLM input/output in traces. Raises a clear error if CrewAI is not installed and supports optional API key login before patching. ([#1723](https://github.com/confident-ai/deepeval/pull/1723)) <!-- pr:1723 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add a revised CrewAI tracing integration with an `instrumentator()` helper that listens to CrewAI events and captures agent and LLM calls as trace spans. Also emit integration telemetry to New Relic in addition to existing PostHog tracking. ([#1724](https://github.com/confident-ai/deepeval/pull/1724)) <!-- pr:1724 --> ([Mayank](https://github.com/spike-spiegel-21))
@@ -578,10 +631,10 @@ July focused on deeper tracing and evaluation reliability across popular agent f
 - Add CLI support to set/unset the default OpenAI model and per-token pricing used by metrics. `GPTModel` can now read model name and pricing from saved settings, and will prompt for pricing when using an unknown model. ([#1766](https://github.com/confident-ai/deepeval/pull/1766)) <!-- pr:1766 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add the Misuse metric to detect when an LLM uses a specialized domain chatbot inappropriately (for example, asking a finance bot to write poetry). This helps keep outputs aligned with domain expertise and prevents scope creep in specialized AI use cases. ([#1773](https://github.com/confident-ai/deepeval/pull/1773)) <!-- pr:1773 --> ([sid-murali](https://github.com/sid-murali))
 
-
 ### Improvement
 
 #### v3.2.6
+
 - Prepare a new release by updating package metadata and internal version information. ([#1721](https://github.com/confident-ai/deepeval/pull/1721)) <!-- pr:1721 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Add telemetry events that record when tracing integrations are initialized (LangChain, LlamaIndex, and OpenTelemetry exporter), respecting telemetry opt-out settings. ([#1725](https://github.com/confident-ai/deepeval/pull/1725)) <!-- pr:1725 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Update the default OpenAI and multimodal GPT model from `gpt-4o` to `gpt-4.1`. Cost calculations and documentation examples now also default to `gpt-4.1` when a model name is not specified. ([#1727](https://github.com/confident-ai/deepeval/pull/1727)) <!-- pr:1727 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -604,10 +657,10 @@ July focused on deeper tracing and evaluation reliability across popular agent f
 - Improve dataset handling by aligning dataset endpoints, making golden lists optional, and supporting extra conversational metadata like `scenario`, `userDescription`, and `comments` when sending test runs. ([#1777](https://github.com/confident-ai/deepeval/pull/1777)) <!-- pr:1777 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve the TaskCompletionMetric docs with a clearer tracing example, including the correct `Golden` input format and updated imports for `evaluate` and `ToolCall`. This makes it easier to run the sample code without adjustments. ([#1779](https://github.com/confident-ai/deepeval/pull/1779)) <!-- pr:1779 --> ([Mayank](https://github.com/spike-spiegel-21))
 
-
 ### Bug Fix
 
 #### v3.2.6
+
 - Fix the quickstart link shown after CLI login so it points to the correct setup page. ([#1726](https://github.com/confident-ai/deepeval/pull/1726)) <!-- pr:1726 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix OpenAI Completions examples in the docs to use the current `OpenAI()` client and `chat.completions.create`, preventing runtime errors and incorrect response parsing in sample code. ([#1728](https://github.com/confident-ai/deepeval/pull/1728)) <!-- pr:1728 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix `AnthropicModel.calculate_cost` indentation so cost calculation and fallback pricing warning run correctly when pricing is missing. ([#1739](https://github.com/confident-ai/deepeval/pull/1739)) <!-- pr:1739 --> ([nsking02](https://github.com/nsking02))
@@ -620,49 +673,53 @@ July focused on deeper tracing and evaluation reliability across popular agent f
 - Fix syntax errors in the evaluation test case documentation examples so `ToolCall` snippets parse correctly and can be copied into Python without edits. ([#1770](https://github.com/confident-ai/deepeval/pull/1770)) <!-- pr:1770 --> ([Dhanesh Gujrathi](https://github.com/dhanesh24g))
 - Fix the Task Completion metric documentation example by using valid sample inputs for `destination` and `days`, preventing the snippet from failing when copied and run. ([#1778](https://github.com/confident-ai/deepeval/pull/1778)) <!-- pr:1778 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
-
 ## June
 
-June focused on making evaluations and tracing far more robust across providers, async workloads, and odd-shaped model outputs, with multiple fixes to prevent crashes, missing spans, and broken serialization. Tracing and instrumentation matured with improved OpenAI and OTEL integrations, context-variable based internals, and new hooks for OpenAI Agents and LlamaIndex, alongside clearer configuration via `trace_manager.configure`. On the evaluation side, the month added native LiteLLM provider support, expanded OpenAI and Anthropic model handling, new multimodal capabilities like `MultimodalGEval`, arena-style `GEval`, and `jsonl` dataset saving for large exports. Documentation and content on
+June made evaluations and tracing more robust across providers and async workloads with fixes to prevent crashes and broken serialization. Tracing matured with improved OpenAI/OTEL integrations and new hooks for OpenAI Agents and LlamaIndex via `trace_manager.configure`. Evaluation added native LiteLLM support, `MultimodalGEval`, arena-style `GEval`, and `jsonl` dataset saving.
 
 ### Backward Incompatible Change
 
 #### v3.1.5
+
 - Remove the `client` parameter from `observe()` and rely on `trace_manager.configure(openai_client=...)` for LLM spans. LLM tracing now requires either a `model` in `observe` or a configured `openai_client`, otherwise a clear error is raised. ([#1667](https://github.com/confident-ai/deepeval/pull/1667)) <!-- pr:1667 --> ([Mayank](https://github.com/spike-spiegel-21))
 
 #### v3.0.8
-- Improve the packaged API by removing the `monitor` helpers from top-level imports, leaving only `send_feedback` and `a_send_feedback` available via `deepeval`. ([#1673](https://github.com/confident-ai/deepeval/pull/1673)) <!-- pr:1673 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
+- Improve the packaged API by removing the `monitor` helpers from top-level imports, leaving only `send_feedback` and `a_send_feedback` available via `deepeval`. ([#1673](https://github.com/confident-ai/deepeval/pull/1673)) <!-- pr:1673 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 ### New Feature
 
 #### v3.1.9
+
 - Add a LlamaIndex integration entry point via `instrument_llama_index` to hook into LlamaIndex instrumentation and capture agent runs for monitoring. ([#1714](https://github.com/confident-ai/deepeval/pull/1714)) <!-- pr:1714 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add expanded OpenAI multimodal model support, including newer GPT-4.1 and o-series options. Improve structured output handling by using native parsing when available and falling back to JSON parsing when needed, while tracking log-prob limitations for unsupported models. ([#1716](https://github.com/confident-ai/deepeval/pull/1716)) <!-- pr:1716 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add arena-style evaluation to `GEval` by allowing a list of test cases and selecting the best output. Validate that all candidates share the same input and expose `best_test_case` and `best_test_case_index` for easier comparisons. ([#1717](https://github.com/confident-ai/deepeval/pull/1717)) <!-- pr:1717 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v3.1.5
+
 - Add `MultimodalGEval`, a GEval-based metric to score multimodal test cases using configurable criteria, rubrics, and evaluation steps. Supports async evaluation and can incorporate inputs like context, retrieval context, and tool calls. Also improve image encoding by converting non-RGB images before JPEG serialization. ([#1684](https://github.com/confident-ai/deepeval/pull/1684)) <!-- pr:1684 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add OpenAI Agents tracing integration via `DeepEvalTracingProcessor`, capturing agent, tool, and LLM spans and mapping key metadata like prompts, responses, and token usage into the tracing system. ([#1699](https://github.com/confident-ai/deepeval/pull/1699)) <!-- pr:1699 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add broader multimodal test case support in the platform API by sending expected output, context, and retrieval context fields. Improve handling of local image inputs by detecting `file://` paths, capturing filenames and MIME types, and embedding file data as Base64. ([#1704](https://github.com/confident-ai/deepeval/pull/1704)) <!-- pr:1704 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v3.0.8
+
 - Add native LiteLLM model support so you can run evaluations with any LiteLLM-supported provider. Includes sync/async text generation, schema validation, cost tracking, and improved error handling, plus tests and updated docs. ([#1670](https://github.com/confident-ai/deepeval/pull/1670)) <!-- pr:1670 --> ([Prahlad Sahu](https://github.com/ps2program))
 
 #### v3.0.6
-- Add support for saving datasets in `jsonl` format, making it easier to write large datasets without loading everything into memory. This is especially useful for generating and exporting datasets with more than 10k rows. ([#1652](https://github.com/confident-ai/deepeval/pull/1652)) <!-- pr:1652 --> ([Yudhiesh Ravindranath](https://github.com/yudhiesh))
 
+- Add support for saving datasets in `jsonl` format, making it easier to write large datasets without loading everything into memory. This is especially useful for generating and exporting datasets with more than 10k rows. ([#1652](https://github.com/confident-ai/deepeval/pull/1652)) <!-- pr:1652 --> ([Yudhiesh Ravindranath](https://github.com/yudhiesh))
 
 ### Improvement
 
 #### v3.1.9
+
 - Bump package version metadata for a new release, updating the published version string and release date. ([#1710](https://github.com/confident-ai/deepeval/pull/1710)) <!-- pr:1710 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve the RoleAdherenceMetric documentation by fixing wording, removing a duplicate argument entry, and clarifying how assistant turns are evaluated against `chatbot_role` using prior context. ([#1711](https://github.com/confident-ai/deepeval/pull/1711)) <!-- pr:1711 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Add pricing support for `claude-opus-4` and `claude-sonnet-4`. Raise a clear `ValueError` when cost pricing is missing for an unknown Anthropic model, preventing silent fallbacks and `TypeError` crashes. ([#1715](https://github.com/confident-ai/deepeval/pull/1715)) <!-- pr:1715 --> ([Abhishek Ranjan](https://github.com/AbhishekRP2002))
 - Add a new blog guide on building and evaluating multi-turn chatbots, covering conversation simulation, metrics for memory and tone, and CI-friendly regression testing. ([#1718](https://github.com/confident-ai/deepeval/pull/1718)) <!-- pr:1718 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.1.5
+
 - Bump the package version metadata for a new release. ([#1676](https://github.com/confident-ai/deepeval/pull/1676)) <!-- pr:1676 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve telemetry for `traceable evaluate()` runs by tracking them as a separate component evaluation feature. This records the correct feature status and updates the last-used feature accordingly. ([#1678](https://github.com/confident-ai/deepeval/pull/1678)) <!-- pr:1678 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add a new blog post covering an evaluation-first approach to building and testing RAG apps, including automated test data generation, retriever/generator metrics, and CI test integration. Add a new blog author profile and related images. ([#1686](https://github.com/confident-ai/deepeval/pull/1686)) <!-- pr:1686 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -670,9 +727,11 @@ June focused on making evaluations and tracing far more robust across providers,
 - Improve the RAG evaluation blog guide with updated wording, clearer code examples, and revised diagrams. Rename the article file and slug to better reflect its focus, and simplify CI/CD integration examples for easier copy-paste. ([#1694](https://github.com/confident-ai/deepeval/pull/1694)) <!-- pr:1694 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 
 #### v3.0.8
+
 - Prepare a new release by updating the package version metadata and reported `__version__`. ([#1668](https://github.com/confident-ai/deepeval/pull/1668)) <!-- pr:1668 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v3.0.6
+
 - Prepare the 3.0.0 release by updating package version metadata and release date. ([#1631](https://github.com/confident-ai/deepeval/pull/1631)) <!-- pr:1631 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve multimodal metrics docs by fixing the Answer Relevancy example to use `MultimodalAnswerRelevancyMetric`, and by aligning output and bulk-evaluation snippets to print score and reason consistently. ([#1635](https://github.com/confident-ai/deepeval/pull/1635)) <!-- pr:1635 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve the faithfulness verdict prompt wording by fixing grammar and removing threatening language, making instructions clearer and more professional for LLM evaluations. ([#1636](https://github.com/confident-ai/deepeval/pull/1636)) <!-- pr:1636 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -680,19 +739,21 @@ June focused on making evaluations and tracing far more robust across providers,
 - Improve conversation simulation progress output by switching to Rich traceable progress bars and showing per-conversation and per-step progress during scenario setup and turn simulation, in both sync and async modes. ([#1649](https://github.com/confident-ai/deepeval/pull/1649)) <!-- pr:1649 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve tracing internals by moving current span/trace state to context variables and reorganizing attribute and type definitions. This makes trace updates more consistent across sync and async execution, and enables centralized OpenAI client patching via the trace manager. ([#1651](https://github.com/confident-ai/deepeval/pull/1651)) <!-- pr:1651 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
-
 ### Bug Fix
 
 #### v3.1.9
+
 - Fix JSON serialization failures when a dictionary contains non-string keys by converting keys to strings during tracing serialization. ([#1712](https://github.com/confident-ai/deepeval/pull/1712)) <!-- pr:1712 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v3.1.5
+
 - Fix import failures on read-only file systems by skipping telemetry-related filesystem setup when `DEEPEVAL_TELEMETRY_OPT_OUT` is set. This prevents evaluations from failing in restricted environments like serverless runtimes. ([#1654](https://github.com/confident-ai/deepeval/pull/1654)) <!-- pr:1654 --> ([Leo Kacenjar](https://github.com/lkacenja))
 - Fix OpenAI model initialization to pass `base_url`, enabling proxy or custom endpoint configurations in both sync and async clients. ([#1703](https://github.com/confident-ai/deepeval/pull/1703)) <!-- pr:1703 --> ([jnchen](https://github.com/jnchen))
 - Fix `evaluate` so it no longer raises TypeError when a single `TestResult` is passed. The metric pass rate aggregation now wraps non-list results into a list before processing. ([#1705](https://github.com/confident-ai/deepeval/pull/1705)) <!-- pr:1705 --> ([Aditya Bharadwaj](https://github.com/adityabharadwaj198))
 - Fix an `IndexError` in `Synthesizer.generate_goldens_from_docs()` by safely handling missing or shorter `source_files`, preventing crashes when generating goldens from documentation inputs. ([#1706](https://github.com/confident-ai/deepeval/pull/1706)) <!-- pr:1706 --> ([Aditya Bharadwaj](https://github.com/adityabharadwaj198))
 
 #### v3.0.6
+
 - Fix GSM8K benchmark crashes when a model returns a tuple or other non-standard response. Prediction extraction now handles `NumberSchema`, tuples, strings, dicts, and `.text`/`.content` objects, and avoids unsafe `.values()` unpacking to prevent `AttributeError`/`TypeError`. ([#1628](https://github.com/confident-ai/deepeval/pull/1628)) <!-- pr:1628 --> ([Muhammad Hussain](https://github.com/SYED-M-HUSSAIN))
 - Fix traceable span evaluation traversal so child spans are always processed and recorded, even when a parent span has no metrics or test case. This prevents missing spans in trace output and avoids incomplete evaluations. ([#1632](https://github.com/confident-ai/deepeval/pull/1632)) <!-- pr:1632 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix TruthfulQA evaluation with AnthropicModel by handling JSON parsing failures and falling back to text-based prompting when structured output isn’t supported. This prevents crashes from uncaught errors and improves robustness across models. ([#1638](https://github.com/confident-ai/deepeval/pull/1638)) <!-- pr:1638 --> ([Pradyun Magal](https://github.com/PradyMagal))
@@ -705,24 +766,24 @@ June focused on making evaluations and tracing far more robust across providers,
 - Fix a typo in the conversation simulator docs so the `user_intentions` example is valid Python and can be copied and run without errors. ([#1664](https://github.com/confident-ai/deepeval/pull/1664)) <!-- pr:1664 --> ([Eduardo Arndt](https://github.com/eduardoarndt))
 - Fix a circular import in the tracing API by importing `current_trace_context` from the context module, preventing import-time errors when using tracing. ([#1665](https://github.com/confident-ai/deepeval/pull/1665)) <!-- pr:1665 --> ([Mayank](https://github.com/spike-spiegel-21))
 
-
-
 ## May
 
-May focused on making evaluations and tracing more robust, configurable, and easier to integrate into real-world workflows. LLM wrappers gained a configurable `temperature` with validation, new providers and models were added (including Amazon Bedrock and `gpt-4.1` structured outputs), and benchmarks and typing saw multiple fixes and PEP 561 support to improve static analysis. Tracing and telemetry were significantly upgraded with cleaner defaults, richer metadata and tagging, optional sampling and masking, improved queue/flush behavior, and better OpenTelemetry interoperability, while also reducing noise and respecting opt-out more consistently. The CLI and project layout were streamlined,,
+May made evaluations and tracing more robust and configurable. LLM wrappers gained configurable `temperature`, new providers including Amazon Bedrock, and PEP 561 support for static analysis. Tracing improved with cleaner defaults, richer metadata, optional sampling/masking, and better OpenTelemetry interoperability while respecting opt-out more consistently.
 
 ### Backward Incompatible Change
 
 #### v2.8.5
+
 - Rename the tracing callback parameter from `traceable_callback` to `observed_callback` in `evaluate()` and `assert_test()` when running agentic golden tests, improving naming consistency for traced runs. ([#1561](https://github.com/confident-ai/deepeval/pull/1561)) <!-- pr:1561 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.8.4
-- Remove the LangChain dependency so installs are lighter and avoid importing LangChain modules. Update conversational GEval to use OpenAI `ChatCompletion` responses directly when parsing content and logprobs. ([#1544](https://github.com/confident-ai/deepeval/pull/1544)) <!-- pr:1544 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
+- Remove the LangChain dependency so installs are lighter and avoid importing LangChain modules. Update conversational GEval to use OpenAI `ChatCompletion` responses directly when parsing content and logprobs. ([#1544](https://github.com/confident-ai/deepeval/pull/1544)) <!-- pr:1544 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 ### New Feature
 
 #### v3.0
+
 - Add utility functions to write evaluation logs to a file, making it easier to track results when running large batches without a web app. This also helps spot missing results caused by connection errors. ([#1601](https://github.com/confident-ai/deepeval/pull/1601)) <!-- pr:1601 --> ([Daehui Kim](https://github.com/daehuikim))
 - Add an OpenTelemetry span exporter that detects `gen_ai` operations and converts spans into LLM, tool, agent, and retriever traces with inputs, outputs, token usage, and cost metadata for export. ([#1603](https://github.com/confident-ai/deepeval/pull/1603)) <!-- pr:1603 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add optional `thread_id` to traces and support sending it as `threadId` in the tracing API. This lets you associate a trace with a specific conversation thread when updating the current trace. ([#1604](https://github.com/confident-ai/deepeval/pull/1604)) <!-- pr:1604 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -730,24 +791,28 @@ May focused on making evaluations and tracing more robust, configurable, and eas
 - Add `input` and `output` fields to trace data so you can record request payloads and final results at the trace level, including via `update_current_trace`. ([#1606](https://github.com/confident-ai/deepeval/pull/1606)) <!-- pr:1606 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.9.0
+
 - Add support for tracing `LlmAttributes` on the OpenAI client by patching it into `Observer`, so `@observe(type="llm", client=...)` captures LLM call attributes automatically. ([#1560](https://github.com/confident-ai/deepeval/pull/1560)) <!-- pr:1560 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Add `AmazonBedrockModel` to run LLM-based evaluations using Amazon Bedrock, with async and sync generation plus optional Pydantic schema parsing. Includes usage docs and recognizes Bedrock models as native for metric execution. ([#1570](https://github.com/confident-ai/deepeval/pull/1570)) <!-- pr:1570 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for setting per-span `metadata` via `update_current_span`, and include it when exporting spans to the tracing API. ([#1575](https://github.com/confident-ai/deepeval/pull/1575)) <!-- pr:1575 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add trace-level tags and metadata, plus an optional environment label for better trace filtering and context. Support masking trace inputs/outputs via a configurable mask function. Allow sampling with `CONFIDENT_SAMPLE_RATE` to skip posting a portion of traces. ([#1578](https://github.com/confident-ai/deepeval/pull/1578)) <!-- pr:1578 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.9.1
+
 - Add a more flexible conversation simulator: generate a configurable number of conversations per intent, accept either `user_profile_items` or predefined `user_profiles`, and optionally stop early using a `stopping_criteria`. Progress tracking now reflects the total conversations generated across intents. ([#1584](https://github.com/confident-ai/deepeval/pull/1584)) <!-- pr:1584 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.8.5
+
 - Add `get_actual_model_name()` helper to extract the underlying model ID from provider-prefixed strings like `openai/gpt-4.1-mini`, as used by proxies such as LiteLLM. This makes it easier to work with provider/model formats consistently. ([#1555](https://github.com/confident-ai/deepeval/pull/1555)) <!-- pr:1555 --> ([Serghei Iakovlev](https://github.com/sergeyklay))
 
 #### v2.8.4
-- Add support for `gpt-4.1` in structured output mode by including it in the list of supported models. This lets you use `gpt-4.1` where structured outputs are required without extra configuration. ([#1547](https://github.com/confident-ai/deepeval/pull/1547)) <!-- pr:1547 --> ([Serghei Iakovlev](https://github.com/sergeyklay))
 
+- Add support for `gpt-4.1` in structured output mode by including it in the list of supported models. This lets you use `gpt-4.1` where structured outputs are required without extra configuration. ([#1547](https://github.com/confident-ai/deepeval/pull/1547)) <!-- pr:1547 --> ([Serghei Iakovlev](https://github.com/sergeyklay))
 
 ### Improvement
 
 #### v3.0
+
 - Support passing through unknown command-line options from `deepeval test run` to pytest, so third-party and custom pytest plugins can receive their flags without the CLI rejecting them. ([#1589](https://github.com/confident-ai/deepeval/pull/1589)) <!-- pr:1589 --> ([Matt Barr](https://github.com/marr75))
 - Improve telemetry and tracing reliability by propagating an internal `_in_component` flag through metric evaluation and wrapping trace flush sends with capture logic, reducing noisy progress output and ensuring in-flight tasks are cleaned up more safely. ([#1596](https://github.com/confident-ai/deepeval/pull/1596)) <!-- pr:1596 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Bump package version to 2.9.1 for the latest release. ([#1600](https://github.com/confident-ai/deepeval/pull/1600)) <!-- pr:1600 --> ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -757,18 +822,22 @@ May focused on making evaluations and tracing more robust, configurable, and eas
 - Improve `assert_test` AssertionError messages by including the failure reason in the thrown metrics string. This makes it easier to understand failures when logging exceptions, abstracting tests, or running under pytest. ([#1623](https://github.com/confident-ai/deepeval/pull/1623)) <!-- pr:1623 --> ([Orel Lazri](https://github.com/orellazri))
 
 #### v2.9.0
+
 - Update package metadata and internal version to 2.8.5 for the new release. ([#1567](https://github.com/confident-ai/deepeval/pull/1567)) <!-- pr:1567 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve tracing span updates by consolidating `update_current_span_test_case` and `update_current_span_attributes` into a single `update_current_span` API. This makes it easier to attach both span attributes and an `LLMTestCase`, and updates docs and error messages to match the new call pattern. ([#1574](https://github.com/confident-ai/deepeval/pull/1574)) <!-- pr:1574 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add the PEP 561 `py.typed` marker so type checkers like mypy can analyze installed package imports without reporting missing stubs or `import-untyped` errors. ([#1592](https://github.com/confident-ai/deepeval/pull/1592)) <!-- pr:1592 --> ([Sigurd Spieckermann](https://github.com/sisp))
 
 #### v2.9.1
+
 - Bump the package release to 2.9.0 and update version metadata across the project. ([#1597](https://github.com/confident-ai/deepeval/pull/1597)) <!-- pr:1597 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.8.5
+
 - Update package metadata and internal `__version__` to reflect the latest release. ([#1558](https://github.com/confident-ai/deepeval/pull/1558)) <!-- pr:1558 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Prevent trace status logs from printing during evaluations unless `CONFIDENT_TRACE_VERBOSE` explicitly enables them, reducing noisy console output while running eval traces. ([#1565](https://github.com/confident-ai/deepeval/pull/1565)) <!-- pr:1565 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.8.4
+
 - Improve type safety and simplify golden/context generation by removing legacy `_nodes` paths. Add a ChromaDB availability check and clearer error messages to fail fast when optional dependencies are missing. ([#1534](https://github.com/confident-ai/deepeval/pull/1534)) <!-- pr:1534 --> ([Rami Pellumbi](https://github.com/ramipellumbi))
 - Add configurable `temperature` to supported LLM model wrappers (including Anthropic, Azure OpenAI, and Gemini) and pass it through on generation calls. Prevent invalid settings by rejecting negative temperatures with a clear error. ([#1541](https://github.com/confident-ai/deepeval/pull/1541)) <!-- pr:1541 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve type hints in the MMLU benchmark by making `tasks` optional and simplifying prompt variable typing for better static analysis and editor support. ([#1550](https://github.com/confident-ai/deepeval/pull/1550)) <!-- pr:1550 --> ([Serghei Iakovlev](https://github.com/sergeyklay))
@@ -776,10 +845,10 @@ May focused on making evaluations and tracing more robust, configurable, and eas
 - Move telemetry, cache, temp test-run data, and key storage into a `.deepeval/` folder to reduce clutter in the project root. Automatically migrates legacy files to the new location when found. ([#1556](https://github.com/confident-ai/deepeval/pull/1556)) <!-- pr:1556 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve tracing logs with clearer success/failure messages, a queue-size status, and an exit warning when traces are still pending. Add optional flushing on shutdown via `CONFIDENT_TRACE_FLUSH`, and control log verbosity with `CONFIDENT_TRACE_VERBOSE`. ([#1557](https://github.com/confident-ai/deepeval/pull/1557)) <!-- pr:1557 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
 ### Bug Fix
 
 #### v3.0
+
 - Fix `TaskNodeOutput` response format types so list and dict outputs are fully specified and accepted by OpenAI. This prevents confusing bad request errors that only appeared when the model tried to emit those previously invalid shapes. ([#1599](https://github.com/confident-ai/deepeval/pull/1599)) <!-- pr:1599 --> ([Matt Barr](https://github.com/marr75))
 - Restrict `typer` and `click` dependency versions to improve compatibility and prevent install issues with newer releases. ([#1607](https://github.com/confident-ai/deepeval/pull/1607)) <!-- pr:1607 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Fix `ToolCorrectnessMetric` input parameter comparison so identical dictionaries are treated as a full match, improving scoring consistency when tool inputs are the same. ([#1608](https://github.com/confident-ai/deepeval/pull/1608)) <!-- pr:1608 --> ([Nathan-Kr](https://github.com/Nathan-Kr))
@@ -791,6 +860,7 @@ May focused on making evaluations and tracing more robust, configurable, and eas
 - Fix a `FileNotFoundError` in telemetry by using a consistent temp run data filename when moving it into the `.deepeval` directory. This prevents failures caused by a mismatch between dotted and non-dotted filenames. ([#1630](https://github.com/confident-ai/deepeval/pull/1630)) <!-- pr:1630 --> ([Jakub Koněrza](https://github.com/konerzajakub))
 
 #### v2.9.0
+
 - Fix Azure OpenAI initialization to use the correct `deployment_name` when setting `azure_deployment`, preventing misconfigured clients and failed requests. ([#1571](https://github.com/confident-ai/deepeval/pull/1571)) <!-- pr:1571 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix Amazon Bedrock model imports to avoid unnecessary dependencies being loaded when using the Bedrock LLM integration. ([#1573](https://github.com/confident-ai/deepeval/pull/1573)) <!-- pr:1573 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix a typo in the MMLU benchmark that could cause an assertion failure when validating the example dataset, so `load_benchmark` and prediction run as expected. ([#1580](https://github.com/confident-ai/deepeval/pull/1580)) <!-- pr:1580 --> ([Tri Dao](https://github.com/dmtri35))
@@ -800,75 +870,86 @@ May focused on making evaluations and tracing more robust, configurable, and eas
 - Fix `OllamaModel.a_generate()` to use the model name set in the constructor. This keeps async generation consistent with `OllamaModel.generate()` and prevents using the wrong Ollama model. ([#1594](https://github.com/confident-ai/deepeval/pull/1594)) <!-- pr:1594 --> ([Sigurd Spieckermann](https://github.com/sisp))
 
 #### v2.8.5
+
 - Fix trace queue handling so queued and in-flight traces are posted more reliably on exit or interruption. Add SIGINT/SIGTERM handling and improve warnings to report remaining traces and support optional flushing via `CONFIDENT_TRACE_FLUSH`. ([#1559](https://github.com/confident-ai/deepeval/pull/1559)) <!-- pr:1559 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix the exit warning to only appear when there are pending traces to post. This prevents misleading warnings when the trace queue and in-flight tasks are empty. ([#1566](https://github.com/confident-ai/deepeval/pull/1566)) <!-- pr:1566 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.8.4
+
 - Fix MMLU evaluation when `model.generate()` returns a tuple or list by extracting the first result before reading `.answer`. This prevents `AttributeError`/`TypeError` and improves compatibility across different model implementations. ([#1546](https://github.com/confident-ai/deepeval/pull/1546)) <!-- pr:1546 --> ([krishna0125](https://github.com/krishna0125))
-
-
 
 ## April
 
-April focused on making evaluations more traceable, reliable, and easier to configure across providers. We expanded native model support with Gemini and Anthropic, improved Azure OpenAI and Ollama setup (including aligned `base_url` handling for embeddings), and added deeper metrics and timing/cost metadata via `token_cost`, `completion_time`, and `additional_metadata`. The conversation simulator and tracing upgrades made multi-turn test generation and agent/tool/LLM step debugging smoother, while a round of robustness fixes reduced import-time failures, encoding issues, and edge-case crashes. Documentation also grew with new and refreshed comparison posts plus clearer G-Eval guidance and ty
+April made evaluations more traceable and easier to configure. Native model support expanded with Gemini and Anthropic, plus improved Azure OpenAI and Ollama setup. New metadata fields (`token_cost`, `completion_time`, `additional_metadata`) and tracing upgrades made multi-turn test generation and debugging smoother, while robustness fixes reduced import failures and crashes.
 
 ### Backward Incompatible Change
 
 #### v2.7.6
+
 - Remove async from `get_model_name` on the base embedding model interface, making model name retrieval a synchronous call for simpler implementations and call sites. ([#1516](https://github.com/confident-ai/deepeval/pull/1516)) <!-- pr:1516 --> ([Rami Pellumbi](https://github.com/ramipellumbi))
 
 #### v2.7.3
-- Remove the `auto_evaluate` helper from the public API to streamline the tracing-focused surface area and reduce unused functionality. ([#1513](https://github.com/confident-ai/deepeval/pull/1513)) <!-- pr:1513 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
+- Remove the `auto_evaluate` helper from the public API to streamline the tracing-focused surface area and reduce unused functionality. ([#1513](https://github.com/confident-ai/deepeval/pull/1513)) <!-- pr:1513 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 ### New Feature
 
 #### v2.7.7
+
 - Add traceable eval runs so agent/tool/LLM steps can be captured and attached to each test case during evaluation. This improves debugging and makes it easier to understand how outputs were produced, including when running evals over pulled datasets. ([#1523](https://github.com/confident-ai/deepeval/pull/1523)) <!-- pr:1523 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for named goldens and allow `assert_test` to run traceable evals using a Golden plus callback, in both sync and async modes. Improve input validation for `assert_test` to prevent invalid argument combinations. ([#1532](https://github.com/confident-ai/deepeval/pull/1532)) <!-- pr:1532 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.7.6
+
 - Add `min_context_length` and `min_contexts_per_document` to Synthesizer document context generation, so you can enforce a minimum context size and minimum number of contexts per document while still capping with the existing max settings. ([#1508](https://github.com/confident-ai/deepeval/pull/1508)) <!-- pr:1508 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.7.3
+
 - Add `generate_goldens_from_goldens` to expand an existing set of Goldens into new ones, reusing available contexts for grounded generation or falling back to scratch generation when context is missing. Optionally generates expected outputs and can infer prompt styling from the provided examples. ([#1506](https://github.com/confident-ai/deepeval/pull/1506)) <!-- pr:1506 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.6.8
+
 - Add native Gemini model support, including multimodal judging and structured outputs. Configure it via `set-gemini` using either a Google API key or Vertex AI project/location, and disable it with `unset-gemini` to revert to the default provider. ([#1493](https://github.com/confident-ai/deepeval/pull/1493)) <!-- pr:1493 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for running evaluations with Anthropic Claude models via a new `AnthropicModel`, including sync/async generation and token cost tracking. ([#1495](https://github.com/confident-ai/deepeval/pull/1495)) <!-- pr:1495 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.6.6
-- Add a conversation simulator that generates multi-turn conversational test cases from user profile items and intentions, with optional opening messages. Supports async concurrency and tracks simulation cost when using native models. ([#1481](https://github.com/confident-ai/deepeval/pull/1481)) <!-- pr:1481 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
+- Add a conversation simulator that generates multi-turn conversational test cases from user profile items and intentions, with optional opening messages. Supports async concurrency and tracks simulation cost when using native models. ([#1481](https://github.com/confident-ai/deepeval/pull/1481)) <!-- pr:1481 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 ### Improvement
 
 #### v2.7.7
+
 - Prepare a new release by updating the package version metadata. ([#1525](https://github.com/confident-ai/deepeval/pull/1525)) <!-- pr:1525 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Allow LLM and retriever spans to be recorded without calling `update_current_span_attributes`. Missing attributes no longer raise errors, and span conversion skips optional fields when they aren’t provided. Improve error handling for non-JSON API responses. ([#1530](https://github.com/confident-ai/deepeval/pull/1530)) <!-- pr:1530 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve how `LLMTestCase` is converted to a string for g-eval prompts by centralizing the formatting and ensuring tool-call values are rendered consistently via `repr()`. ([#1531](https://github.com/confident-ai/deepeval/pull/1531)) <!-- pr:1531 --> ([João Matias](https://github.com/joaopmatias))
 
 #### v2.7.9
+
 - Improve documentation by clarifying CLI usage (`deepeval test run`), updating command examples to `bash`, and fixing links to the correct evaluation guide sections. ([#1537](https://github.com/confident-ai/deepeval/pull/1537)) <!-- pr:1537 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Prepare a new package release by bumping the project version metadata. ([#1539](https://github.com/confident-ai/deepeval/pull/1539)) <!-- pr:1539 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Bump the package version to 2.7.8 for the latest release metadata. ([#1540](https://github.com/confident-ai/deepeval/pull/1540)) <!-- pr:1540 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.7.6
+
 - Add a new documentation article showcasing popular G-Eval metric examples, with sample code and guidance for defining custom LLM-judge criteria and RAG-focused evaluations. ([#1517](https://github.com/confident-ai/deepeval/pull/1517)) <!-- pr:1517 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve the G-Eval documentation with research context, clearer RAG evaluation criteria, and a new advanced section explaining limitations and when to use DAG-based metrics, including an end-to-end example. ([#1519](https://github.com/confident-ai/deepeval/pull/1519)) <!-- pr:1519 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix typos and improve wording in synthesizer prompt templates to make instructions clearer and reduce confusion in generated outputs. ([#1521](https://github.com/confident-ai/deepeval/pull/1521)) <!-- pr:1521 --> ([Song Luar](https://github.com/luarss))
 - Improve import-time dependency resolution by deferring optional integration imports, reducing startup failures when LangChain or LlamaIndex aren’t installed. Change update checks to be opt-in via `DEEPEVAL_UPDATE_WARNING_OPT_IN`. ([#1524](https://github.com/confident-ai/deepeval/pull/1524)) <!-- pr:1524 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.7.3
+
 - Fix a typo in the QA agent metrics tutorial by correcting “weather” to “whether” in the `Faithfulness` description, improving documentation clarity. ([#1505](https://github.com/confident-ai/deepeval/pull/1505)) <!-- pr:1505 --> ([Justin Nauman](https://github.com/jrnt30))
 - Fix typos in the benchmarks introduction docs to use the correct `prompts` variable name and improve wording for clarity. ([#1511](https://github.com/confident-ai/deepeval/pull/1511)) <!-- pr:1511 --> ([Russell-Day](https://github.com/Russell-Day))
 
 #### v2.6.8
+
 - Add retention analytics by sending PostHog events for evaluation runs and synthesizer invocations when telemetry is enabled, improving visibility into feature usage over time. ([#1486](https://github.com/confident-ai/deepeval/pull/1486)) <!-- pr:1486 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add log-probability support for Azure OpenAI in `GEval`, including Azure models in log-probability compatibility checks and enabling raw response generation with cost tracking via the LangChain client. ([#1492](https://github.com/confident-ai/deepeval/pull/1492)) <!-- pr:1492 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add `google-genai` and `posthog` as dependencies and refresh the lockfile to pull in required transitive packages. ([#1499](https://github.com/confident-ai/deepeval/pull/1499)) <!-- pr:1499 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.6.6
+
 - Add a new comparison blog post and author profile to the documentation, expanding the site’s blog content and attribution. ([#1471](https://github.com/confident-ai/deepeval/pull/1471)) <!-- pr:1471 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve Ollama embedding configuration by using the same underlying `ollama` module as the chat model. This aligns `base_url` handling so embeddings and chat can share the same Ollama host without requiring different `/v1` URL variants, reducing setup confusion. ([#1474](https://github.com/confident-ai/deepeval/pull/1474)) <!-- pr:1474 --> ([Paul Lewis](https://github.com/paul91))
 - Add a new documentation blog post comparing the tool with Langfuse, and update existing comparison content for clearer messaging about provider integration and metric support. ([#1475](https://github.com/confident-ai/deepeval/pull/1475)) <!-- pr:1475 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -876,60 +957,67 @@ April focused on making evaluations more traceable, reliable, and easier to conf
 - Add `additional_metadata` to test results so extra per-test details are preserved and returned for conversational, multimodal, and standard evaluations. ([#1477](https://github.com/confident-ai/deepeval/pull/1477)) <!-- pr:1477 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Improve the conversation simulator API by moving `model_callback`, turn limits, and conversation count into `simulate()` and adding clearer progress reporting during generation for both sync and async runs. ([#1491](https://github.com/confident-ai/deepeval/pull/1491)) <!-- pr:1491 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
-
 ### Bug Fix
 
 #### v2.7.7
+
 - Fix invalid enum errors in tracing by aligning span status values to use `ERRORED` instead of `ERROR`, so failed spans serialize and report correctly. ([#1536](https://github.com/confident-ai/deepeval/pull/1536)) <!-- pr:1536 --> ([Mayank](https://github.com/spike-spiegel-21))
 - Fix agentic `assert_test` runs so they no longer always disable saving results. Test runs now respect the `save_to_disk` setting and correctly reuse or create the current test run by identifier. ([#1538](https://github.com/confident-ai/deepeval/pull/1538)) <!-- pr:1538 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.7.6
+
 - Fix `FiltrationConfig.synthetic_input_quality_threshold` to use a `float` instead of an `int`, matching its default value and preventing type-related configuration errors. ([#1515](https://github.com/confident-ai/deepeval/pull/1515)) <!-- pr:1515 --> ([Rami Pellumbi](https://github.com/ramipellumbi))
 - Fix the Bias metric docs example to import `evaluate` from `deepeval`, so the sample code runs as written. ([#1520](https://github.com/confident-ai/deepeval/pull/1520)) <!-- pr:1520 --> ([snsk](https://github.com/snsk))
 
 #### v2.7.3
+
 - Fix Gemini model wrappers to stop hardcoding an allowlist of model names. You can now pass newer or custom Gemini model IDs without getting an unnecessary "Invalid model" error. ([#1503](https://github.com/confident-ai/deepeval/pull/1503)) <!-- pr:1503 --> ([Mete Atamel](https://github.com/meteatamel))
 - Fix Anthropic model initialization and async generation by treating `AnthropicModel` as a native provider and loading the client in async mode, preventing failures when calling `a_generate`. ([#1504](https://github.com/confident-ai/deepeval/pull/1504)) <!-- pr:1504 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.6.8
+
 - Fix synthetic dataset generation from documents failing with `UnicodeDecodeError` on non-UTF-8 text. Default to auto-detecting file encoding instead of Windows defaults, and allow manually setting an encoding for edge cases. ([#1485](https://github.com/confident-ai/deepeval/pull/1485)) <!-- pr:1485 --> ([Aahil Shaikh](https://github.com/AahilShaikh))
 - Fix type hints for `context_quality_threshold` and `context_similarity_threshold` to use `float`, matching their default values and preventing misleading type checking. ([#1490](https://github.com/confident-ai/deepeval/pull/1490)) <!-- pr:1490 --> ([Jakub Koněrza](https://github.com/konerzajakub))
 
 #### v2.6.6
+
 - Fix Azure OpenAI setup by separating `openai_model_name` from the deployment name and using the deployment name when creating the client. The CLI now prompts for `--openai-model-name` and stores/clears it alongside other Azure settings. ([#1480](https://github.com/confident-ai/deepeval/pull/1480)) <!-- pr:1480 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix the QA agent evaluation tutorial to import `EvaluationDataset` from `deepeval.dataset`, matching the current package structure and preventing import errors when following the docs. ([#1483](https://github.com/confident-ai/deepeval/pull/1483)) <!-- pr:1483 --> ([Anton](https://github.com/tonton-golio))
 - Fix ToolCorrectness metric crashing with an unhashable type error when a tool call output is a list and expected tools are provided without a guaranteed order. This lets tool-correctness evaluation run reliably for list outputs. ([#1487](https://github.com/confident-ai/deepeval/pull/1487)) <!-- pr:1487 --> ([Sai Pavan Kumar](https://github.com/pavan555))
 
-
-
 ## March
 
-March focused on making evaluations and synthesis more reliable across providers while tightening up configuration and documentation. Defaults and CLI behavior were improved for Ollama and Azure OpenAI, broader native model support landed (including `gpt-4.5-preview-2025-02-27`), and structured outputs were made more consistent in synthesizers and multimodal metrics. Large runs became more resilient with expanded retry handling for transient OpenAI and HTTPS/SSL failures, alongside fixes for async scoring, Ragas async mode, G-Eval strict mode, and benchmark parsing fallbacks. Documentation and examples were refreshed for JSON correctness validation, task completion configs, and multiple typo
+March made evaluations and synthesis more reliable. Defaults improved for Ollama and Azure OpenAI, broader model support landed (including `gpt-4.5-preview`), and structured outputs became more consistent. Large runs gained resilience with expanded retry handling for transient failures, plus fixes for async scoring, G-Eval strict mode, and benchmark parsing.
 
 ### New Feature
 
 #### v2.6.5
+
 - Add support for the `gpt-4.5-preview-2025-02-27` model, including pricing metadata and compatibility flags for features like structured outputs and JSON mode. ([#1453](https://github.com/confident-ai/deepeval/pull/1453)) <!-- pr:1453 --> ([John Lemmon](https://github.com/john-lemmon-lime))
 - Add `file_name` and `quiet` options to `Synthesizer.save_as()` so you can control the output filename and suppress console output. Improve validation for file types and synthetic goldens, with updated docs and tests. ([#1455](https://github.com/confident-ai/deepeval/pull/1455)) <!-- pr:1455 --> ([Serghei Iakovlev](https://github.com/sergeyklay))
 
 #### v2.5.9
+
 - Support additional native model providers when initializing metrics and evaluators, including Azure OpenAI, Ollama, and local models. Model selection can now be driven by configuration without changing code. ([#1441](https://github.com/confident-ai/deepeval/pull/1441)) <!-- pr:1441 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.5.8
-- Add optional `cost_tracking` to Synthesizer to enable full API cost tracking, disabled by default. When enabled, generation runs report detailed cost information alongside the output. ([#1406](https://github.com/confident-ai/deepeval/pull/1406)) <!-- pr:1406 --> ([Chuqing Gao](https://github.com/chuqingG))
 
+- Add optional `cost_tracking` to Synthesizer to enable full API cost tracking, disabled by default. When enabled, generation runs report detailed cost information alongside the output. ([#1406](https://github.com/confident-ai/deepeval/pull/1406)) <!-- pr:1406 --> ([Chuqing Gao](https://github.com/chuqingG))
 
 ### Improvement
 
 #### v2.6.5
+
 - Update package metadata for a new release, including the published version and release date. ([#1446](https://github.com/confident-ai/deepeval/pull/1446)) <!-- pr:1446 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve resilience of large runs by retrying on additional OpenAI connection-related exceptions, not just rate limits. This reduces failures from transient network issues during long parallel evaluations. ([#1450](https://github.com/confident-ai/deepeval/pull/1450)) <!-- pr:1450 --> ([John Lemmon](https://github.com/john-lemmon-lime))
 - Improve reliability of uploads to Confident AI by adding retries on transient HTTPS/SSL failures, especially for large batch test runs, so evaluations are more likely to complete successfully. ([#1452](https://github.com/confident-ai/deepeval/pull/1452)) <!-- pr:1452 --> ([John Lemmon](https://github.com/john-lemmon-lime))
 
 #### v2.5.9
+
 - Update package metadata to the latest release version for more accurate reporting in builds and tooling. ([#1445](https://github.com/confident-ai/deepeval/pull/1445)) <!-- pr:1445 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.5.8
+
 - Bump package metadata to the latest release version. ([#1399](https://github.com/confident-ai/deepeval/pull/1399)) <!-- pr:1399 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve Ollama model configuration by defaulting the base URL to `http://localhost:11434` and removing the response format option from `set-ollama`. This reduces mismatches with Ollama endpoints and keeps CLI setup focused on LLM configuration. ([#1401](https://github.com/confident-ai/deepeval/pull/1401)) <!-- pr:1401 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Improve documentation for JSON correctness metrics by showing how to validate `actual_output` that is a list of JSON objects using a Pydantic `RootModel` list schema. ([#1403](https://github.com/confident-ai/deepeval/pull/1403)) <!-- pr:1403 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -938,10 +1026,10 @@ March focused on making evaluations and synthesis more reliable across providers
 - Improve `prettify_list()` JSON formatting by enabling `ensure_ascii`, making output consistently ASCII-escaped for non-ASCII characters and easier to paste into logs and terminals. ([#1437](https://github.com/confident-ai/deepeval/pull/1437)) <!-- pr:1437 --> ([Vamshi Adimalla](https://github.com/A-Vamshi))
 - Improve benchmark imports by loading `datasets` only when needed, reducing import-time failures for users who don’t use those benchmarks. Update packaging metadata to broaden the supported Python range and remove the legacy `setup.py`. ([#1440](https://github.com/confident-ai/deepeval/pull/1440)) <!-- pr:1440 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
-
 ### Bug Fix
 
 #### v2.6.5
+
 - Fix infinite verbose output in notebooks by only constructing verbose logs when verbose mode is enabled, and by writing logs via `sys.stdout` with an explicit flush. ([#1444](https://github.com/confident-ai/deepeval/pull/1444)) <!-- pr:1444 --> ([fetz236](https://github.com/fetz236))
 - Fix a typo in the tracing example prompt so the sample question reads correctly when you run the demo. ([#1448](https://github.com/confident-ai/deepeval/pull/1448)) <!-- pr:1448 --> ([Mert Doğruca](https://github.com/meroo36))
 - Fix Azure OpenAI initialization to always use the configured deployment name from settings, ensuring the correct `azure_deployment` is passed to sync and async clients. Improve the docs for `set-azure-openai` with clearer endpoint examples and a minimum required API version note. ([#1451](https://github.com/confident-ai/deepeval/pull/1451)) <!-- pr:1451 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -953,6 +1041,7 @@ March focused on making evaluations and synthesis more reliable across providers
 - Fix async `measure` to return `self.score` when `async_mode=True`, instead of returning `None`. Async and sync metric execution now produce a consistent, non-empty score value. ([#1464](https://github.com/confident-ai/deepeval/pull/1464)) <!-- pr:1464 --> ([Roman Makeev](https://github.com/RomaanMkv))
 
 #### v2.5.8
+
 - Fix Ragas metrics failing with an “async_mode is missing” error by explicitly running metric tracking in non-async mode during evaluation. ([#1402](https://github.com/confident-ai/deepeval/pull/1402)) <!-- pr:1402 --> ([Tanay Agrawal](https://github.com/tanayag))
 - Fix the import path for `LLMTestCaseParams` in the metrics selection tutorial so the example code runs without import errors. ([#1407](https://github.com/confident-ai/deepeval/pull/1407)) <!-- pr:1407 --> ([Obada Khalili](https://github.com/obadakhalili))
 - Fix a typo in the synthetic input generation template to clarify instructions about avoiding repetitive `input`. ([#1408](https://github.com/confident-ai/deepeval/pull/1408)) <!-- pr:1408 --> ([John D. McDonald](https://github.com/Rasputin2))
@@ -970,31 +1059,32 @@ March focused on making evaluations and synthesis more reliable across providers
 - Fix the DAG non-binary verdict prompt to require a consistent JSON response with `verdict` and `reason`, including an example format. This reduces malformed outputs and makes results easier to parse reliably. ([#1434](https://github.com/confident-ai/deepeval/pull/1434)) <!-- pr:1434 --> ([Hani Cierlak](https://github.com/shrimpnoodles))
 - Fix synthesizer chunking with ChromaDB by handling missing collections more robustly, avoiding failures when the collection error type differs across versions. ([#1442](https://github.com/confident-ai/deepeval/pull/1442)) <!-- pr:1442 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
-
 ## February
 
-February focused on making evaluation and the CLI more reliable while expanding customization and retrieval integrations. Key fixes landed across batching detection, async `auto_evaluate`, custom LLM validation, concurrent evaluation stability, and more accurate telemetry, alongside a smoother login pairing flow and richer usage signals. Metrics grew more flexible with injectable templates (including `FaithfulnessTemplate`), improved DAG-based reasoning with `include_reason`, and a new `MultimodalToolCorrectnessMetric`, plus support for additional conversational metadata and `Prompt` hyperparameters. Documentation and onboarding were polished with clearer examples and navigation, and new/imn
+February improved evaluation reliability and expanded customization. Fixes landed for batching detection, async `auto_evaluate`, custom LLM validation, and concurrent evaluation stability. Metrics gained injectable templates including `FaithfulnessTemplate`, improved DAG reasoning with `include_reason`, and `MultimodalToolCorrectnessMetric`, plus conversational metadata and `Prompt` hyperparameters.
 
 ### New Feature
 
 #### v2.4.6
+
 - Add `MultimodalToolCorrectnessMetric` to score whether an MLLM called the expected tools correctly. Evaluation can check tool name, input parameters, and outputs, with optional exact-match and ordering rules. Results now include expected and called tool data in API test cases. ([#1386](https://github.com/confident-ai/deepeval/pull/1386)) <!-- pr:1386 --> ([Umut Hope YILDIRIM](https://github.com/umuthopeyildirim))
 - Support passing `Prompt` objects as hyperparameters in test runs and monitoring, preserving prompt version metadata when available. Improve prompt pulling and validation so prompts can be created from an alias or a manually provided template. ([#1387](https://github.com/confident-ai/deepeval/pull/1387)) <!-- pr:1387 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.3.9
+
 - Add `deepeval recommend metrics`, an interactive CLI flow that asks a few yes/no questions and returns recommended evaluation metrics for your use case. ([#1342](https://github.com/confident-ai/deepeval/pull/1342)) <!-- pr:1342 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for passing `additional_metadata` on conversational test cases, and include it in the generated API payload as `additionalMetadata`. This preserves extra context when creating and evaluating test runs. ([#1352](https://github.com/confident-ai/deepeval/pull/1352)) <!-- pr:1352 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add CLI support for running LLM-based evaluations with local Ollama models via `set-ollama` and `unset-ollama`, including configurable base URL and response format. Documentation was updated with setup and usage guidance. ([#1360](https://github.com/confident-ai/deepeval/pull/1360)) <!-- pr:1360 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add support for injecting a custom `FaithfulnessTemplate` into `FaithfulnessMetric` for dynamic prompt generation. This lets you plug in domain-specific or few-shot templates without overriding claim generation methods. ([#1367](https://github.com/confident-ai/deepeval/pull/1367)) <!-- pr:1367 --> ([Lei WANG](https://github.com/realei))
 
 #### v2.3.1
-- Add support for the `o3-mini` and `o3-mini-2025-01-31` models, including pricing metadata and enabling use in structured outputs and JSON mode where supported. ([#1331](https://github.com/confident-ai/deepeval/pull/1331)) <!-- pr:1331 --> ([Song Luar](https://github.com/luarss))
 
+- Add support for the `o3-mini` and `o3-mini-2025-01-31` models, including pricing metadata and enabling use in structured outputs and JSON mode where supported. ([#1331](https://github.com/confident-ai/deepeval/pull/1331)) <!-- pr:1331 --> ([Song Luar](https://github.com/luarss))
 
 ### Improvement
 
 #### v2.4.7
+
 - Update package metadata and internal `__version__` to match the latest release. ([#1392](https://github.com/confident-ai/deepeval/pull/1392)) <!-- pr:1392 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Add support for injecting custom evaluation templates into metrics, making it easier to customize the prompts used to generate statements, verdicts, and reasons. ([#1393](https://github.com/confident-ai/deepeval/pull/1393)) <!-- pr:1393 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Fix a typo in the getting started guide so the `GEval` description correctly refers to evaluating outputs on any custom metric. ([#1394](https://github.com/confident-ai/deepeval/pull/1394)) <!-- pr:1394 --> ([Christian Bernhard](https://github.com/ChristianBernhard))
@@ -1002,15 +1092,18 @@ February focused on making evaluation and the CLI more reliable while expanding 
 - Fix a typo in the getting-started guide by correcting “somewhre” to “somewhere” for clearer documentation. ([#1396](https://github.com/confident-ai/deepeval/pull/1396)) <!-- pr:1396 --> ([Christian Bernhard](https://github.com/ChristianBernhard))
 
 #### v2.4.6
+
 - Improve dependency compatibility by relaxing the `grpcio` pin to allow newer 1.x releases while staying below 2.0. This reduces install and resolver conflicts across environments. ([#1383](https://github.com/confident-ai/deepeval/pull/1383)) <!-- pr:1383 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Bump the package release metadata to 2.4.3 so the published version and citation information reflect the latest release. ([#1385](https://github.com/confident-ai/deepeval/pull/1385)) <!-- pr:1385 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Update package metadata and internal version to 2.4.4 for the new release. ([#1388](https://github.com/confident-ai/deepeval/pull/1388)) <!-- pr:1388 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve metric parameter validation by moving each metric’s required test-case fields into the metric class, ensuring consistent checks in both sync and async evaluation. ([#1389](https://github.com/confident-ai/deepeval/pull/1389)) <!-- pr:1389 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.4.3
+
 - Add telemetry for dataset pulls, capturing login method, environment, and basic user identifiers to help monitor usage and diagnose issues. ([#1377](https://github.com/confident-ai/deepeval/pull/1377)) <!-- pr:1377 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.3.9
+
 - Update package metadata for a new release, including the version and release date. ([#1334](https://github.com/confident-ai/deepeval/pull/1334)) <!-- pr:1334 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve CLI login by opening a paired browser flow and recording the login provider for telemetry. Evaluation and run events now include a `logged_in_with` attribute to help diagnose usage patterns. ([#1341](https://github.com/confident-ai/deepeval/pull/1341)) <!-- pr:1341 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix typos and small wording issues in the contextual precision and contextual recall metric templates to make the generated prompts clearer and more consistent. ([#1344](https://github.com/confident-ai/deepeval/pull/1344)) <!-- pr:1344 --> ([Filippo Paganelli](https://github.com/FilippoPaganelli))
@@ -1027,18 +1120,21 @@ February focused on making evaluation and the CLI more reliable while expanding 
 - Fix a typo in the tutorial introduction so the guidance on choosing evaluation criteria reads correctly. ([#1370](https://github.com/confident-ai/deepeval/pull/1370)) <!-- pr:1370 --> ([JonasHildershavnUke](https://github.com/JonasHildershavnUke))
 
 #### v2.3.1
-- Prepare a new release by updating package metadata and reported version. ([#1328](https://github.com/confident-ai/deepeval/pull/1328)) <!-- pr:1328 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
+- Prepare a new release by updating package metadata and reported version. ([#1328](https://github.com/confident-ai/deepeval/pull/1328)) <!-- pr:1328 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 ### Bug Fix
 
 #### v2.4.7
+
 - Fix a typo in the Faithfulness metric docs by correcting a sentence in the `truths_extraction_limit` parameter description. ([#1391](https://github.com/confident-ai/deepeval/pull/1391)) <!-- pr:1391 --> ([Christian Bernhard](https://github.com/ChristianBernhard))
 
 #### v2.4.6
+
 - Fix cleanup of test case instance IDs so concurrent `evaluate` calls with multiple non-conversational metrics no longer crash in the same process. ([#1384](https://github.com/confident-ai/deepeval/pull/1384)) <!-- pr:1384 --> ([cancelself](https://github.com/cancelself))
 
 #### v2.4.3
+
 - Fix the faithfulness prompt example to use the correct `truths` JSON key instead of `claims`. ([#1373](https://github.com/confident-ai/deepeval/pull/1373)) <!-- pr:1373 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Fix initialization of the faithfulness metric by ensuring the prompt template is created during construction. This prevents missing template errors and makes metric setup more reliable. ([#1374](https://github.com/confident-ai/deepeval/pull/1374)) <!-- pr:1374 --> ([Jaime Enríquez](https://github.com/ebjaime))
 - Fix ValidationErrors when evaluating with a custom LLM after the verdict-based schema change, ensuring custom models validate correctly and evaluation runs without failing. ([#1375](https://github.com/confident-ai/deepeval/pull/1375)) <!-- pr:1375 --> ([Tyler Ball](https://github.com/tyler-ball))
@@ -1046,6 +1142,7 @@ February focused on making evaluation and the CLI more reliable while expanding 
 - Fix the first README example by adding missing imports and providing `expected_output` in `LLMTestCase`, so the snippet runs without NameError and matches the documented setup. ([#1382](https://github.com/confident-ai/deepeval/pull/1382)) <!-- pr:1382 --> ([dokato](https://github.com/dokato))
 
 #### v2.3.9
+
 - Fix the broken link to the G-Eval paper in the `ConversationalGEval` documentation so readers can access the referenced source directly. ([#1336](https://github.com/confident-ai/deepeval/pull/1336)) <!-- pr:1336 --> ([Jonathan du Mesnil](https://github.com/j-mesnil))
 - Fix `auto_evaluate` async execution by passing the correct `async_mode` flag, and export `auto_evaluate` at the package top level so it can be imported directly from the main module. ([#1338](https://github.com/confident-ai/deepeval/pull/1338)) <!-- pr:1338 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix CLI login pairing flow by starting the local server on an available port and opening a direct pairing URL. Show which provider you logged in with after login (and on failure) to make troubleshooting easier. ([#1345](https://github.com/confident-ai/deepeval/pull/1345)) <!-- pr:1345 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -1055,25 +1152,26 @@ February focused on making evaluation and the CLI more reliable while expanding 
 - Fix the CybersecurityGuard API by renaming `CyberattackType` to `CyberattackCategory` and switching configuration from `vulnerabilities` to `categories`. Remove stray debug prints and make input/output guard type selection consistent. ([#1372](https://github.com/confident-ai/deepeval/pull/1372)) <!-- pr:1372 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
 #### v2.3.1
+
 - Fix `should_use_batch` detection by checking for a `batch_generate` method instead of calling it and swallowing errors. This prevents false negatives when `batch_generate` requires extra arguments (for example `schemas`) and ensures batching is enabled when supported. ([#1327](https://github.com/confident-ai/deepeval/pull/1327)) <!-- pr:1327 --> ([Ruiqi(Ricky) Zhu](https://github.com/ruiqizhu-ricky))
 - Fix typos in generated telemetry output to improve accuracy and readability of telemetry files. ([#1329](https://github.com/confident-ai/deepeval/pull/1329)) <!-- pr:1329 --> ([Paul-Louis NECH](https://github.com/PLNech))
 - Fix passing document paths to the context generator when building embeddings, preventing incorrect argument mapping during golden generation from docs. ([#1330](https://github.com/confident-ai/deepeval/pull/1330)) <!-- pr:1330 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
-
 ## January
 
-January focused on making evaluations and red-teaming easier to adopt and more reliable, with major documentation cleanups, new tutorials, and clearer configuration patterns like `target_model_callback`, `ignore_errors`, and CLI display controls. The release added deeper observability and cost awareness through expanded telemetry, run identifiers, safer tracing behavior, and `synthesis_cost` tracking, while also improving compatibility and import stability across environments. On the feature side, benchmarks and tool-calling evaluation advanced with new ARC runners, richer logging, structured ToolCall support, and an upgraded `TaskCompletionMetric`, alongside a revamped Guardrails API and a
+January made evaluations and red-teaming easier to adopt with documentation cleanups, new tutorials, and clearer configuration patterns like `target_model_callback` and `ignore_errors`. Observability improved with expanded telemetry, run identifiers, and `synthesis_cost` tracking. Features advanced with new ARC benchmark runners, structured ToolCall support, an upgraded `TaskCompletionMetric`, and a revamped Guardrails API.
 
 ### New Feature
 
 #### v2.2.7
+
 - Add `auto_evaluate` to automatically generate evaluation datasets from captured LangChain or LlamaIndex context, run a target model, and score results with selected metrics. Supports async execution and optional dataset/result caching. ([#1283](https://github.com/confident-ai/deepeval/pull/1283)) <!-- pr:1283 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add `TaskCompletionMetric` to score whether an agent completed the user’s goal based on the actual outcome and tools called, with optional reasons and async support. ([#1295](https://github.com/confident-ai/deepeval/pull/1295)) <!-- pr:1295 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add a new Legal Document Summarizer tutorial series, covering how to define summarization criteria, pick metrics, run evaluations, iterate on hyperparameters, and catch regressions by comparing test runs. ([#1323](https://github.com/confident-ai/deepeval/pull/1323)) <!-- pr:1323 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add a new RAG QA Agent tutorial in the docs, including guidance on choosing metrics, running evaluations, and improving hyperparameters. The tutorials sidebar now includes this section and surfaces it by default. ([#1326](https://github.com/confident-ai/deepeval/pull/1326)) <!-- pr:1326 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.2.2
+
 - Add three new multimodal evaluation metrics: `ImageCoherenceMetric`, `ImageHelpfulnessMetric`, and `ImageReferenceMetric` for scoring how well images align with surrounding context, user intent, and provided references. ([#1230](https://github.com/confident-ai/deepeval/pull/1230)) <!-- pr:1230 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add an optional `identifier` to tag and persist test runs, available via the CLI flag `--identifier` and the pytest plugin option. This helps you distinguish and group results across multiple runs more easily. ([#1237](https://github.com/confident-ai/deepeval/pull/1237)) <!-- pr:1237 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Add an ARC benchmark runner with ARC-Easy and ARC-Challenge modes, configurable `n_shots` and problem count, and built-in accuracy reporting with per-example predictions. Expand the docs to include new benchmark pages and navigation entries for additional benchmark suites. ([#1239](https://github.com/confident-ai/deepeval/pull/1239)) <!-- pr:1239 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -1083,10 +1181,10 @@ January focused on making evaluations and red-teaming easier to adopt and more r
 - Add ToolCall support for tool evaluation data. Datasets can now load `tools_called` and `expected_tools` from JSON/CSV into structured ToolCall objects, with more robust JSON parsing. Metrics like ToolCorrectness and GEval now handle ToolCall values when evaluating and formatting outputs. ([#1290](https://github.com/confident-ai/deepeval/pull/1290)) <!-- pr:1290 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Add configurable tool correctness scoring to validate tool names, input parameters, or outputs. Improve verbose logs by showing expected vs called values and the final score and reason, making tool-call mismatches easier to diagnose. ([#1293](https://github.com/confident-ai/deepeval/pull/1293)) <!-- pr:1293 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
-
 ### Improvement
 
 #### v2.2.7
+
 - Bump package version metadata to 2.2.2 for the latest release. ([#1302](https://github.com/confident-ai/deepeval/pull/1302)) <!-- pr:1302 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Improve the G-Eval documentation by adding guidance for running evaluations on Confident AI, including the `deepeval login` step to get started. ([#1303](https://github.com/confident-ai/deepeval/pull/1303)) <!-- pr:1303 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix a typo in the dataset push success message and docs, correcting “Confidnet” to “Confident” for clearer branding and guidance. ([#1307](https://github.com/confident-ai/deepeval/pull/1307)) <!-- pr:1307 --> ([Rahul Shah](https://github.com/r-sniper))
@@ -1099,6 +1197,7 @@ January focused on making evaluations and red-teaming easier to adopt and more r
 - Add a new RAG QA Agent tutorial series covering synthetic dataset generation, evaluation criteria, and metric selection, and reorganize the tutorials sidebar to keep other sections collapsed by default. ([#1325](https://github.com/confident-ai/deepeval/pull/1325)) <!-- pr:1325 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.2.2
+
 - Improve red-teaming 2.0 documentation with clearer setup and scan examples, including how to define vulnerabilities and a target model callback. Reorganize the docs sidebar to add OWASP guidance and a dedicated vulnerabilities section for easier navigation. ([#1209](https://github.com/confident-ai/deepeval/pull/1209)) <!-- pr:1209 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Bump package version to 2.0.5. ([#1217](https://github.com/confident-ai/deepeval/pull/1217)) <!-- pr:1217 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 - Add tracking of `synthesis_cost` when synthesizing goldens by accumulating model call costs, so you can see the estimated spend for synthesis runs. ([#1218](https://github.com/confident-ai/deepeval/pull/1218)) <!-- pr:1218 --> ([Vytenis Šliogeris](https://github.com/vjsliogeris))
@@ -1131,10 +1230,10 @@ January focused on making evaluations and red-teaming easier to adopt and more r
 - Add validation and pricing metadata for OpenAI `o1` models (`o1`, `o1-preview`, `o1-2024-12-17`) so they can be used with JSON mode and structured outputs where supported. ([#1299](https://github.com/confident-ai/deepeval/pull/1299)) <!-- pr:1299 --> ([Song Luar](https://github.com/luarss))
 - Add a `--display` option to control which test cases are shown in the final results output, so you can view all, only failing, or only passing cases in CLI runs and `evaluate()` printing. ([#1301](https://github.com/confident-ai/deepeval/pull/1301)) <!-- pr:1301 --> ([Jeffrey Ip](https://github.com/penguine-ip))
 
-
 ### Bug Fix
 
 #### v2.2.7
+
 - Fix structured (`schema`) responses when using non-OpenAI models (including Azure/local) by correctly invoking the loaded model and returning the parsed JSON along with the tracked cost. ([#1304](https://github.com/confident-ai/deepeval/pull/1304)) <!-- pr:1304 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 - Fix circular imports involving `Scorer` by deferring its import in benchmark modules, preventing import-time crashes when loading benchmarks. ([#1315](https://github.com/confident-ai/deepeval/pull/1315)) <!-- pr:1315 --> ([Song Luar](https://github.com/luarss))
 - Fix async tracing in the LangChain callback by making trace state thread-safe and correctly linking parent/child spans. This prevents missing or mis-associated traces when runs execute concurrently. ([#1318](https://github.com/confident-ai/deepeval/pull/1318)) <!-- pr:1318 --> ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -1143,6 +1242,7 @@ January focused on making evaluations and red-teaming easier to adopt and more r
 - Fix local Ollama embedding requests by routing through the OpenAI client when the base URL points to localhost. This restores embedding support for both single text and batch inputs without changing cloud OpenAI behavior. ([#1322](https://github.com/confident-ai/deepeval/pull/1322)) <!-- pr:1322 --> ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v2.2.2
+
 - Prevent endless verdict generation in ContextualPrecision by including the explicit document count in the prompt, helping LLMs stay aligned on long or complex context lists. ([#1222](https://github.com/confident-ai/deepeval/pull/1222)) <!-- pr:1222 --> ([enrico-stauss](https://github.com/enrico-stauss))
 - Fix `MMLUTemplate.format_subject` to be a static method, allowing it to be called without an instance and preventing incorrect usage in MMLU prompt formatting. ([#1229](https://github.com/confident-ai/deepeval/pull/1229)) <!-- pr:1229 --> ([Terrasse](https://github.com/Jerry-Terrasse))
 - Prevent OpenTelemetry from loading on import when telemetry is opted out. This avoids importing protobuf dependencies unnecessarily and reduces conflicts with other libraries. ([#1231](https://github.com/confident-ai/deepeval/pull/1231)) <!-- pr:1231 --> ([Mykhailo Chalyi (Mike Chaliy)](https://github.com/chaliy))
