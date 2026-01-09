@@ -284,8 +284,36 @@ module.exports = {
       label: "Changelog",
       className: "sidebar-item-icon-changelog",
       link: { type: "doc", id: "changelog/changelog-index" },
-      items: ["changelog/changelog-2025"],
       collapsed: false,
+      items: [
+      {
+        type: "category",
+        label: "2026",
+        link: { type: "doc", id: "changelog/changelog-2026" },
+        collapsed: false,
+        items: [
+        ],
+      }],
+    },
+    {
+      type: "category",
+      label: "2025",
+      link: { type: "doc", id: "changelog/changelog-2025" },
+      collapsed: false,
+      items: [
+        { type: "link", label: "December", href: "/docs/changelog/changelog-2025#december" },
+        { type: "link", label: "November", href: "/docs/changelog/changelog-2025#november" },
+        { type: "link", label: "October", href: "/docs/changelog/changelog-2025#october" },
+        { type: "link", label: "September", href: "/docs/changelog/changelog-2025#september" },
+        { type: "link", label: "August", href: "/docs/changelog/changelog-2025#august" },
+        { type: "link", label: "July", href: "/docs/changelog/changelog-2025#july" },
+        { type: "link", label: "June", href: "/docs/changelog/changelog-2025#june" },
+        { type: "link", label: "May", href: "/docs/changelog/changelog-2025#may" },
+        { type: "link", label: "April", href: "/docs/changelog/changelog-2025#april" },
+        { type: "link", label: "March", href: "/docs/changelog/changelog-2025#march" },
+        { type: "link", label: "February", href: "/docs/changelog/changelog-2025#february" },
+        { type: "link", label: "January", href: "/docs/changelog/changelog-2025#january" },
+      ],
     },
   ],
 };
