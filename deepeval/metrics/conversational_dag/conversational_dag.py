@@ -171,25 +171,23 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             # Pydantic version below 2.0
             body = api_dag_metric.dict(by_alias=True, exclude_none=False)
 
-        return body
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=body,
+        )
 
-        # data, _ = api.send_request(
-        #     method=HttpMethods.POST,
-        #     endpoint=Endpoints.METRICS_ENDPOINT,
-        #     body=body,
-        # )
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
 
-        # metric_id = data.get("id")
-        # self.metric_id = metric_id
-        # console = Console()
+        if metric_id:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
 
-        # if metric_id:
-        #     console.print(
-        #         "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
-        #         f"(id: [bold]{metric_id}[/bold])"
-        #     )
-
-        # return data
+        return data
 
     @property
     def __name__(self):
