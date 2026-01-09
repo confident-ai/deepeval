@@ -1007,23 +1007,17 @@ def _handle_child_node(
             True,
             child.rubric,
         )
-    
+
         try:
             body = api_g_eval.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
             body = api_g_eval.dict(by_alias=True, exclude_none=True)
 
-        return ApiMetric(
-            name=child.__class__.__name__,
-            data=body
-        )
-    
+        return ApiMetric(name=child.__class__.__name__, data=body)
+
     elif isinstance(child, BaseConversationalMetric):
-        return ApiMetric(
-            name=child.__class__.__name__,
-            data={}
-        )
+        return ApiMetric(name=child.__class__.__name__, data={})
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"

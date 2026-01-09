@@ -17,7 +17,10 @@ from deepeval.metrics.conversational_dag import (
     ConversationalVerdictNode,
 )
 from deepeval.test_case import LLMTestCaseParams, TurnParams
-from deepeval.metrics.constants import SINGLE_TURN_METRICS_MAPPING, MULTI_TURN_METRICS_MAPPING
+from deepeval.metrics.constants import (
+    SINGLE_TURN_METRICS_MAPPING,
+    MULTI_TURN_METRICS_MAPPING,
+)
 
 DAG_NODE_MAPPING = {
     "taskNode": TaskNode,
@@ -239,7 +242,10 @@ def normalize_params(payload: dict, param_mapping: Dict) -> dict:
 
     return normalized
 
-def handle_metric_child(node_dict: Dict, metric_mapping: Dict, api_params_mapping: Dict):
+
+def handle_metric_child(
+    node_dict: Dict, metric_mapping: Dict, api_params_mapping: Dict
+):
     metric_name = node_dict["name"]
     metric_data = node_dict["data"]
     if metric_name in ["GEval", "ConversationalGEval"]:
@@ -275,7 +281,9 @@ def deserialize_node(
 
     if node_type not in nodes_mapping:
         if node_type in metric_mapping.keys():
-            return handle_metric_child(node_dict, metric_mapping, api_params_mapping)
+            return handle_metric_child(
+                node_dict, metric_mapping, api_params_mapping
+            )
         raise ValueError(f"Unknown node type: {node_type}")
 
     cls = nodes_mapping[node_type]

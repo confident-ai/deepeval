@@ -833,16 +833,10 @@ def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
             # Pydantic version below 2.0
             body = api_g_eval.dict(by_alias=True, exclude_none=True)
 
-        return ApiMetric(
-            name=child.__class__.__name__,
-            data=body
-        )
-        
+        return ApiMetric(name=child.__class__.__name__, data=body)
+
     elif isinstance(child, BaseMetric):
-        return ApiMetric(
-            name=child.__class__.__name__,
-            data={}
-        )
+        return ApiMetric(name=child.__class__.__name__, data={})
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"
