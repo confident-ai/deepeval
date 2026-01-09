@@ -1014,10 +1014,17 @@ def _handle_child_node(
             # Pydantic version below 2.0
             body = api_g_eval.dict(by_alias=True, exclude_none=True)
 
-        return ApiMetric(name=child.__class__.__name__, data=body)
+        try:
+            child.upload()
+            metric_id = child.metric_id
+        except Exception as e:
+            print(f"There was an error uploading child ConversationalGEval metric: {child.name}")
+            raise e
+
+        return ApiMetric(name=child.__class__.__name__, data=body, id=metric_id)
 
     elif isinstance(child, BaseConversationalMetric):
-        return ApiMetric(name=child.__class__.__name__, data={})
+        return ApiMetric(name=child.__class__.__name__, data={}, id=None)
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"

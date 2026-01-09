@@ -7,6 +7,7 @@ from deepeval.metrics.g_eval.utils import ApiGEval
 class ApiMetric(BaseModel):
     name: str = Field(alias="name")
     data: Optional[Dict] = Field(alias="data")
+    id: Optional[str] = Field(alias="id")
 
 
 class ApiBinaryJudgementNode(BaseModel):
