@@ -158,13 +158,14 @@ class DAGMetric(BaseMetric):
 
     def upload(self):
         api = Api()
+        visited = dict()
 
         api_dag_metric = ApiDAGMetric(
             name=self.name,
             multiTurn=False,
             dag=ApiDAG(
                 rootNodes=[
-                    node._convert_to_api_node() for node in self.dag.root_nodes
+                    node._convert_to_api_node(visited=visited) for node in self.dag.root_nodes
                 ]
             ),
         )
@@ -175,23 +176,25 @@ class DAGMetric(BaseMetric):
             # Pydantic version below 2.0
             body = api_dag_metric.dict(by_alias=True, exclude_none=False)
 
-        data, _ = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.METRICS_ENDPOINT,
-            body=body,
-        )
+        return body
+    
+        # data, _ = api.send_request(
+        #     method=HttpMethods.POST,
+        #     endpoint=Endpoints.METRICS_ENDPOINT,
+        #     body=body,
+        # )
 
-        metric_id = data.get("id")
-        self.metric_id = metric_id
-        console = Console()
+        # metric_id = data.get("id")
+        # self.metric_id = metric_id
+        # console = Console()
 
-        if metric_id:
-            console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
-                f"(id: [bold]{metric_id}[/bold])"
-            )
+        # if metric_id:
+        #     console.print(
+        #         "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+        #         f"(id: [bold]{metric_id}[/bold])"
+        #     )
 
-        return data
+        # return data
 
     @property
     def __name__(self):

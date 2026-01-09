@@ -42,6 +42,9 @@ class BaseNode:
     _indegree: int = 0
     _depth: int = 0
 
+    def __init__(self):
+        self._node_id = id(self)
+
     def set_parent(self, parent: "BaseNode"):
         if hasattr(self, "_parent"):
             self._parent = parent
@@ -62,7 +65,7 @@ class BaseNode:
             "This node type must implement the _a_execute method."
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
         raise NotImplementedError(
             "This node type must implement the _convert_to_api_node method."
         )
@@ -264,12 +267,18 @@ class VerdictNode(BaseNode):
             extract_json=lambda data: data["reason"],
         )
 
-    def _convert_to_api_node(self):
-        return ApiVerdictNode(
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+        
+        api_node = ApiVerdictNode(
             verdict=self.verdict,
             score=self.score,
-            child=_handle_child_node(self.child) if self.child else None,
+            child=_handle_child_node(self.child, visited) if self.child else None,
         )
+
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -395,7 +404,9 @@ class TaskNode(BaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -409,7 +420,7 @@ class TaskNode(BaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiTaskNode(
+        api_node = ApiTaskNode(
             instructions=self.instructions,
             label=self.label,
             outputLabel=self.output_label,
@@ -418,8 +429,11 @@ class TaskNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -551,7 +565,9 @@ class BinaryJudgementNode(BaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -565,7 +581,7 @@ class BinaryJudgementNode(BaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiBinaryJudgementNode(
+        api_node = ApiBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
@@ -573,8 +589,11 @@ class BinaryJudgementNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -718,7 +737,9 @@ class NonBinaryJudgementNode(BaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -732,7 +753,7 @@ class NonBinaryJudgementNode(BaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiNonBinaryJudgementNode(
+        api_node = ApiNonBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
@@ -740,8 +761,11 @@ class NonBinaryJudgementNode(BaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 def construct_node_verbose_log(
@@ -813,9 +837,9 @@ def construct_node_verbose_log(
         return verbose_log
 
 
-def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
+def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric], visited: dict):
     if isinstance(child, BaseNode):
-        return child._convert_to_api_node()
+        return child._convert_to_api_node(visited=visited)
     elif isinstance(child, GEval):
         api_g_eval = construct_api_g_eval(
             child.name,

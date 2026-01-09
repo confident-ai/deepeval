@@ -78,7 +78,7 @@ class ConversationalBaseNode:
             "This node type must implement the _a_execute method."
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
         raise NotImplementedError(
             "This node type must implement the _convert_to_api_node method."
         )
@@ -307,12 +307,18 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             extract_json=lambda data: data["reason"],
         )
 
-    def _convert_to_api_node(self):
-        return ApiVerdictNode(
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+        
+        api_node = ApiVerdictNode(
             verdict=self.verdict,
             score=self.score,
-            child=_handle_child_node(self.child) if self.child else None,
+            child=_handle_child_node(self.child, visited) if self.child else None,
         )
+
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -466,7 +472,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -480,7 +488,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiTaskNode(
+        api_node = ApiTaskNode(
             instructions=self.instructions,
             label=self.label,
             outputLabel=self.output_label,
@@ -492,8 +500,11 @@ class ConversationalTaskNode(ConversationalBaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -663,7 +674,9 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -677,7 +690,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiBinaryJudgementNode(
+        api_node = ApiBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
@@ -688,8 +701,11 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -868,7 +884,9 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
             )
         )
 
-    def _convert_to_api_node(self):
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
 
         if self.evaluation_params:
             unsupported_params = [
@@ -882,7 +900,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                     + ", ".join(param.name for param in unsupported_params)
                 )
 
-        return ApiNonBinaryJudgementNode(
+        api_node = ApiNonBinaryJudgementNode(
             criteria=self.criteria,
             label=self.label,
             evaluationParams=(
@@ -893,8 +911,11 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                 if self.evaluation_params
                 else None
             ),
-            children=[child._convert_to_api_node() for child in self.children],
+            children=[child._convert_to_api_node(visited=visited) for child in self.children],
         )
+    
+        visited[id(self)] = api_node
+        return api_node
 
 
 def construct_node_verbose_log(
@@ -994,9 +1015,10 @@ def _handle_child_node(
     child: Union[
         ConversationalBaseNode, ConversationalGEval, BaseConversationalMetric
     ],
+    visited: dict
 ):
     if isinstance(child, ConversationalBaseNode):
-        return child._convert_to_api_node()
+        return child._convert_to_api_node(visited=visited)
     elif isinstance(child, ConversationalGEval):
         api_g_eval = construct_api_g_eval(
             child.name,
