@@ -817,7 +817,7 @@ def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
     if isinstance(child, BaseNode):
         return child._convert_to_api_node()
     elif isinstance(child, GEval):
-        return construct_api_g_eval(
+        api_g_eval = construct_api_g_eval(
             child.name,
             child.evaluation_params,
             G_EVAL_API_PARAMS,
@@ -826,8 +826,23 @@ def _handle_child_node(child: Union[BaseNode, GEval, BaseMetric]):
             False,
             child.rubric,
         )
+
+        try:
+            body = api_g_eval.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_g_eval.dict(by_alias=True, exclude_none=True)
+
+        return ApiMetric(
+            name=child.__class__.__name__,
+            data=body
+        )
+        
     elif isinstance(child, BaseMetric):
-        return ApiMetric(name=child.__class__.__name__)
+        return ApiMetric(
+            name=child.__class__.__name__,
+            data={}
+        )
     else:
         raise ValueError(
             f"Invalid child in DAG: {child}, cannot convert to dictionary"
