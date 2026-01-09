@@ -726,7 +726,7 @@ class MIPROV2(BaseAlgorithm):
         prompt_config_snapshots = build_prompt_config_snapshots(
             self.prompt_configurations_by_id
         )
-        
+
         accepted_iterations = [
             AcceptedIteration(
                 parent=self._instruction_candidates[0].id,
@@ -734,7 +734,8 @@ class MIPROV2(BaseAlgorithm):
                 module=self.SINGLE_MODULE_ID,
                 before=0.0,
                 after=trial.get("score", 0.0),
-            ) for trial in self._trial_history
+            )
+            for trial in self._trial_history
         ]
 
         report = OptimizationReport(
