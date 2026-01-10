@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-import logging
 import os
 import socket
 import sys
@@ -85,13 +84,6 @@ if not telemetry_opt_out():
 anonymous_public_ip = None
 
 if not telemetry_opt_out():
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-        OTLPSpanExporter,
-    )
-
     anonymous_public_ip = get_anonymous_public_ip()
     sentry_sdk.init(
         dsn="https://5ef587d58109ee45d6544f3657efdd1f@o4506098477236224.ingest.sentry.io/4506098479136768",
@@ -101,27 +93,6 @@ if not telemetry_opt_out():
         attach_stacktrace=False,  # Don't attach stack traces to messages
         default_integrations=False,  # Disable Sentry's default integrations
     )
-
-    # Set up the Tracer Provider
-    trace.set_tracer_provider(TracerProvider())
-    tracer_provider = trace.get_tracer_provider()
-
-    # New Relic License Key and OTLP Endpoint
-    NEW_RELIC_LICENSE_KEY = "1711c684db8a30361a7edb0d0398772cFFFFNRAL"
-    NEW_RELIC_OTLP_ENDPOINT = "https://otlp.nr-data.net:4317"
-    otlp_exporter = OTLPSpanExporter(
-        endpoint=NEW_RELIC_OTLP_ENDPOINT,
-        headers={"api-key": NEW_RELIC_LICENSE_KEY},
-    )
-
-    # Add the OTLP exporter to the span processor
-    span_processor = BatchSpanProcessor(otlp_exporter)
-    tracer_provider.add_span_processor(span_processor)
-
-    logging.getLogger("opentelemetry.exporter.otlp").setLevel(logging.CRITICAL)
-
-    # Create a tracer for your application
-    tracer = trace.get_tracer(__name__)
 
     # Initialize PostHog
     posthog = Posthog(
@@ -199,11 +170,7 @@ def capture_evaluation_run(type: str):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -227,11 +194,7 @@ def capture_recommend_metrics():
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -259,11 +222,7 @@ def capture_metric_type(
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -297,11 +256,7 @@ def capture_synthesizer_run(
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -330,11 +285,7 @@ def capture_conversation_simulator_run(num_conversations: int):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -360,11 +311,7 @@ def capture_guardrails(guards: List[str]):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -391,11 +338,7 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -421,11 +364,7 @@ def capture_login_event():
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -451,11 +390,7 @@ def capture_view_event():
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 @contextmanager
@@ -478,11 +413,7 @@ def capture_pull_dataset():
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 # track metrics that are components and metrics that aren't components
@@ -509,11 +440,7 @@ def capture_send_trace():
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            yield span
+        yield
 
 
 # tracing integration
@@ -542,13 +469,7 @@ def capture_tracing_integration(integration_name: str):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            for property, value in properties.items():
-                span.set_attribute(property, value)
-            # OTEL/New Relic filtering attributes
-            span.set_attribute("integration.name", integration_name)
-            yield span
+        yield
 
 
 #########################################################
