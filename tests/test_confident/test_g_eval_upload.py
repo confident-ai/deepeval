@@ -29,7 +29,7 @@ class TestGEval:
                 LLMTestCaseParams.ACTUAL_OUTPUT,
                 LLMTestCaseParams.EXPECTED_OUTPUT,
                 LLMTestCaseParams.CONTEXT,
-                # LLMTestCaseParams.TOOLS_CALLED,
+                LLMTestCaseParams.TOOLS_CALLED,
                 LLMTestCaseParams.RETRIEVAL_CONTEXT,
             ],
             criteria="Test whether actual output is relevant to the input given",
@@ -61,7 +61,7 @@ class TestGEval:
             "actualOutput",
             "expectedOutput",
             "context",
-            # "toolsCalled",
+            "toolsCalled",
             "retrievalContext",
         }
 
