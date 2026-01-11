@@ -1,42 +1,40 @@
-from openai.types.chat.chat_completion import ChatCompletion
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
-from typing import Optional, Tuple, Union, Dict, Callable, Any, Type
-from pydantic import BaseModel
 import warnings
 import inspect
 
+from typing import Optional, Tuple, Union, Dict, Type
+from pydantic import BaseModel, SecretStr
+from openai.types.chat.chat_completion import ChatCompletion
 from openai import (
     OpenAI,
     AsyncOpenAI,
 )
 
 from deepeval.config.settings import get_settings
-from deepeval.constants import ProviderSlug as PS
+from deepeval.constants import ProviderSlug as PS, DEFAULT_OPENROUTER_MODEL
+from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
+from deepeval.models.utils import require_secret_api_key
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
 
+
 retry_openrouter = create_retry_decorator(PS.OPENROUTER)
 
-# OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
-# We accept ANY model string - no validation against a hardcoded list
-# This allows flexibility as OpenRouter's model catalog changes frequently
-
-default_openrouter_model = "openai/gpt-4o-mini"
 
 def _request_timeout_seconds() -> float:
     timeout = float(get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
     return timeout if timeout > 0 else 30.0
 
 
-def _convert_schema_to_openrouter_format(schema: Union[Type[BaseModel], BaseModel]) -> Dict:
+def _convert_schema_to_openrouter_format(
+    schema: Union[Type[BaseModel], BaseModel],
+) -> Dict:
     """
     Convert Pydantic BaseModel to OpenRouter's JSON Schema format.
-    
+
     OpenRouter expects:
     {
         "type": "json_schema",
@@ -48,8 +46,12 @@ def _convert_schema_to_openrouter_format(schema: Union[Type[BaseModel], BaseMode
     }
     """
     json_schema = schema.model_json_schema()
-    schema_name = schema.__name__ if inspect.isclass(schema) else schema.__class__.__name__
-    
+    schema_name = (
+        schema.__name__
+        if inspect.isclass(schema)
+        else schema.__class__.__name__
+    )
+
     # OpenRouter requires additionalProperties: false when strict: true
     # Ensure it's set at the root level of the schema
     if "additionalProperties" not in json_schema:
@@ -61,7 +63,7 @@ def _convert_schema_to_openrouter_format(schema: Union[Type[BaseModel], BaseMode
             "name": schema_name,
             "strict": True,
             "schema": json_schema,
-        }
+        },
     }
 
 
@@ -69,60 +71,66 @@ class OpenRouterModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: Optional[str] = None,
-        _openrouter_api_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        temperature: Optional[float] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
-        temperature: float = 0,
         generation_kwargs: Optional[Dict] = None,
-        http_referer: Optional[str] = None,
-        x_title: Optional[str] = None,
         **kwargs,
     ):
-        model_name = None
-        model = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENROUTER_MODEL_NAME
-        )
+        settings = get_settings()
+        model = model or settings.OPENROUTER_MODEL_NAME
+        if model is None:
+            model = DEFAULT_OPENROUTER_MODEL
+
+        if api_key is not None:
+            # keep it secret, keep it safe from serializings, logging and alike
+            self.api_key: Optional[SecretStr] = SecretStr(api_key)
+        else:
+            self.api_key = settings.OPENROUTER_API_KEY
+
+        if base_url is not None:
+            base_url = str(base_url).rstrip("/")
+        elif settings.OPENROUTER_BASE_URL is not None:
+            base_url = str(settings.OPENROUTER_BASE_URL).rstrip("/")
+        else:
+            base_url = "https://openrouter.ai/api/v1"
+
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENROUTER_COST_PER_INPUT_TOKEN
-            )
+            else settings.OPENROUTER_COST_PER_INPUT_TOKEN
         )
         cost_per_output_token = (
             cost_per_output_token
             if cost_per_output_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENROUTER_COST_PER_OUTPUT_TOKEN
-            )
+            else settings.OPENROUTER_COST_PER_OUTPUT_TOKEN
         )
 
-        if isinstance(model, str):
-            model_name = parse_model_name(model)
-        elif model is None:
-            model_name = default_openrouter_model
+        if temperature is not None:
+            temperature = float(temperature)
+        elif settings.TEMPERATURE is not None:
+            temperature = settings.TEMPERATURE
+        else:
+            temperature = 0.0
 
-        # Store user-provided pricing (if given) - highest priority
-        self.cost_per_input_token = (
-            float(cost_per_input_token) if cost_per_input_token is not None else None
-        )
-        self.cost_per_output_token = (
-            float(cost_per_output_token) if cost_per_output_token is not None else None
-        )
-
-        self._openrouter_api_key = _openrouter_api_key
-        # Default to OpenRouter's API endpoint if not provided
-        self.base_url = base_url or "https://openrouter.ai/api/v1"
-        self.http_referer = http_referer
-        self.x_title = x_title
-
+        # validation
         if temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
+            raise DeepEvalError("Temperature must be >= 0.")
+
+        self.base_url = base_url
+        self.cost_per_input_token = cost_per_input_token
+        self.cost_per_output_token = cost_per_output_token
         self.temperature = temperature
-        self.kwargs = kwargs
-        self.generation_kwargs = generation_kwargs or {}
-        super().__init__(model_name)
+
+        self.kwargs = dict(kwargs)
+        self.kwargs.pop("temperature", None)
+
+        self.generation_kwargs = dict(generation_kwargs or {})
+        self.generation_kwargs.pop("temperature", None)
+
+        super().__init__(model)
 
     ###############################################
     # Generate functions
@@ -136,29 +144,33 @@ class OpenRouterModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         """
         Core generation logic shared between generate() and a_generate().
-        
+
         Args:
             client: AsyncOpenAI client
             prompt: The prompt to send
             schema: Optional Pydantic schema for structured outputs
-            
+
         Returns:
             Tuple of (output, cost)
         """
         if schema:
             # Try OpenRouter's native JSON Schema format
             try:
-                openrouter_response_format = _convert_schema_to_openrouter_format(schema)
+                openrouter_response_format = (
+                    _convert_schema_to_openrouter_format(schema)
+                )
                 completion = await client.chat.completions.create(
-                    model=self.model_name,
+                    model=self.name,
                     messages=[{"role": "user", "content": prompt}],
                     response_format=openrouter_response_format,
                     temperature=self.temperature,
                     **self.generation_kwargs,
                 )
-                
+
                 # Parse the JSON response and validate against schema
-                json_output = trim_and_load_json(completion.choices[0].message.content)
+                json_output = trim_and_load_json(
+                    completion.choices[0].message.content
+                )
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
@@ -168,7 +180,7 @@ class OpenRouterModel(DeepEvalBaseLLM):
             except Exception as e:
                 # Warn if structured outputs fail
                 warnings.warn(
-                    f"Structured outputs not supported for model '{self.model_name}'. "
+                    f"Structured outputs not supported for model '{self.name}'. "
                     f"Falling back to regular generation with JSON parsing. "
                     f"Error: {str(e)}",
                     UserWarning,
@@ -180,12 +192,12 @@ class OpenRouterModel(DeepEvalBaseLLM):
 
         # Regular generation (or fallback if structured outputs failed)
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        
+
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
@@ -204,8 +216,11 @@ class OpenRouterModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         from deepeval.models.llms.utils import safe_asyncio_run
+
         client = self.load_model(async_mode=True)
-        return safe_asyncio_run(self._generate_with_client(client, prompt, schema))
+        return safe_asyncio_run(
+            self._generate_with_client(client, prompt, schema)
+        )
 
     @retry_openrouter
     async def a_generate(
@@ -227,7 +242,7 @@ class OpenRouterModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=False)
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -237,7 +252,9 @@ class OpenRouterModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens, response=completion)
+        cost = self.calculate_cost(
+            input_tokens, output_tokens, response=completion
+        )
 
         return completion, cost
 
@@ -250,7 +267,7 @@ class OpenRouterModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=True)
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -260,7 +277,9 @@ class OpenRouterModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens, response=completion)
+        cost = self.calculate_cost(
+            input_tokens, output_tokens, response=completion
+        )
 
         return completion, cost
 
@@ -270,7 +289,7 @@ class OpenRouterModel(DeepEvalBaseLLM):
     ) -> Tuple[list[str], float]:
         client = self.load_model(async_mode=False)
         response = client.chat.completions.create(
-            model=self.model_name,
+            model=self.name,
             messages=[{"role": "user", "content": prompt}],
             n=n,
             temperature=temperature,
@@ -334,7 +353,7 @@ class OpenRouterModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        return self.model_name
+        return f"{self.name} (OpenRouter)"
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
@@ -354,25 +373,16 @@ class OpenRouterModel(DeepEvalBaseLLM):
         if not kwargs.get("timeout"):
             kwargs["timeout"] = _request_timeout_seconds()
 
-        # Add OpenRouter-specific headers
-        default_headers = kwargs.get("default_headers", {})
-        if self.http_referer:
-            default_headers["HTTP-Referer"] = self.http_referer
-        if self.x_title:
-            default_headers["X-Title"] = self.x_title
-        if default_headers:
-            kwargs["default_headers"] = default_headers
-
         return kwargs
 
     def _build_client(self, cls):
-        settings = get_settings()
-        api_key = (
-            settings.OPENROUTER_API_KEY.get_secret_value() 
-            if settings.OPENROUTER_API_KEY is not None 
-            else None
-        ) or self._openrouter_api_key
-        
+        api_key = require_secret_api_key(
+            self.api_key,
+            provider_label="OpenRouter",
+            env_var_name="OPENROUTER_API_KEY",
+            param_hint="`api_key` to OpenRouterModel(...)",
+        )
+
         kw = dict(
             api_key=api_key,
             base_url=self.base_url,

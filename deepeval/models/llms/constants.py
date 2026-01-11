@@ -3,6 +3,11 @@ from typing import Any, Callable, Union
 from deepeval.models.base_model import DeepEvalModelData
 
 
+DEFAULT_GPT_MODEL = "gpt-4.1"
+# OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
+# DeepEval does not validate OpenRouter model strings.
+DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
+
 ModelDataFactory = Callable[[], DeepEvalModelData]
 ModelDataValue = Union[DeepEvalModelData, ModelDataFactory]
 

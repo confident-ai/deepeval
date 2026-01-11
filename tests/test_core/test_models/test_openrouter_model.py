@@ -10,6 +10,7 @@ from deepeval.models.llms.openrouter_model import OpenRouterModel
 
 class SampleSchema(BaseModel):
     """Sample schema for structured output testing"""
+
     field1: str
     field2: int
 
@@ -24,7 +25,7 @@ class TestOpenRouterModel:
 
         model = OpenRouterModel(model="openai/gpt-4o-mini")
         assert model.generation_kwargs == {}
-        assert model.model_name == "openai/gpt-4o-mini"
+        assert model.name == "openai/gpt-4o-mini"
         assert model.base_url == "https://openrouter.ai/api/v1"
 
     def test_init_with_generation_kwargs(self, settings):
@@ -37,8 +38,7 @@ class TestOpenRouterModel:
             "top_p": 0.9,
         }
         model = OpenRouterModel(
-            model="openai/gpt-4o-mini",
-            generation_kwargs=generation_kwargs
+            model="openai/gpt-4o-mini", generation_kwargs=generation_kwargs
         )
         assert model.generation_kwargs == generation_kwargs
 
@@ -55,21 +55,10 @@ class TestOpenRouterModel:
         assert model.cost_per_input_token == 0.0001
         assert model.cost_per_output_token == 0.0002
 
-    def test_init_with_custom_headers(self, settings):
-        """Test that custom headers (HTTP-Referer, X-Title) are stored"""
-        with settings.edit(persist=False):
-            settings.OPENROUTER_API_KEY = "test-key"
-
-        model = OpenRouterModel(
-            model="openai/gpt-4o-mini",
-            http_referer="https://example.com",
-            x_title="My App",
-        )
-        assert model.http_referer == "https://example.com"
-        assert model.x_title == "My App"
-
     @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
-    def test_generate_with_generation_kwargs(self, mock_async_openai_class, settings):
+    def test_generate_with_generation_kwargs(
+        self, mock_async_openai_class, settings
+    ):
         """Test that generation_kwargs are passed to generate method"""
         # Setup mock
         mock_client = MagicMock()
@@ -100,7 +89,9 @@ class TestOpenRouterModel:
 
         # Verify the completion was called with generation_kwargs
         assert call_args["model"] == "openai/gpt-4o-mini"
-        assert call_args["messages"] == [{"role": "user", "content": "test prompt"}]
+        assert call_args["messages"] == [
+            {"role": "user", "content": "test prompt"}
+        ]
         assert call_args["temperature"] == 0
         assert call_args["max_tokens"] == 1000
         assert call_args["top_p"] == 0.9
@@ -130,13 +121,17 @@ class TestOpenRouterModel:
         assert output == "async response"
 
     @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
-    def test_generate_with_structured_outputs(self, mock_async_openai_class, settings):
+    def test_generate_with_structured_outputs(
+        self, mock_async_openai_class, settings
+    ):
         """Test structured outputs with OpenRouter's JSON Schema format"""
         mock_client = MagicMock()
         mock_async_openai_class.return_value = mock_client
         mock_completion = Mock()
         # OpenRouter returns JSON string in message.content
-        mock_completion.choices = [Mock(message=Mock(content='{"field1": "test", "field2": 42}'))]
+        mock_completion.choices = [
+            Mock(message=Mock(content='{"field1": "test", "field2": 42}'))
+        ]
         mock_completion.usage.prompt_tokens = 10
         mock_completion.usage.completion_tokens = 20
 
@@ -168,7 +163,9 @@ class TestOpenRouterModel:
         assert output.field2 == 42
 
     @patch("deepeval.models.llms.openrouter_model.AsyncOpenAI")
-    def test_generate_with_structured_outputs_fallback(self, mock_async_openai_class, settings):
+    def test_generate_with_structured_outputs_fallback(
+        self, mock_async_openai_class, settings
+    ):
         """Test that structured outputs fall back to JSON parsing if native format fails"""
         mock_client = MagicMock()
         mock_async_openai_class.return_value = mock_client
@@ -176,7 +173,9 @@ class TestOpenRouterModel:
         # First call (structured output) raises error
         # Second call (fallback) succeeds
         mock_completion_fallback = Mock()
-        mock_completion_fallback.choices = [Mock(message=Mock(content='{"field1": "fallback", "field2": 99}'))]
+        mock_completion_fallback.choices = [
+            Mock(message=Mock(content='{"field1": "fallback", "field2": 99}'))
+        ]
         mock_completion_fallback.usage.prompt_tokens = 10
         mock_completion_fallback.usage.completion_tokens = 20
 
@@ -238,7 +237,9 @@ class TestOpenRouterModel:
         mock_response.usage = Mock()
         mock_response.usage.cost = 0.015
 
-        cost = model.calculate_cost(input_tokens=100, output_tokens=50, response=mock_response)
+        cost = model.calculate_cost(
+            input_tokens=100, output_tokens=50, response=mock_response
+        )
         assert cost == 0.015
 
     def test_calculate_cost_fallback_to_zero(self, settings):
@@ -253,8 +254,10 @@ class TestOpenRouterModel:
         assert cost == 0.0
 
     @patch("deepeval.models.llms.openrouter_model.OpenAI")
-    def test_client_kwargs_includes_custom_headers(self, mock_openai_class, settings):
-        """Test that custom headers are included in client kwargs"""
+    def test_client_kwargs_includes_custom_headers(
+        self, mock_openai_class, settings
+    ):
+        """Test that custom headers passed via kwargs are included in client kwargs"""
         mock_client = Mock()
         mock_openai_class.return_value = mock_client
 
@@ -263,8 +266,10 @@ class TestOpenRouterModel:
 
         model = OpenRouterModel(
             model="openai/gpt-4o-mini",
-            http_referer="https://example.com",
-            x_title="My App",
+            default_headers={
+                "HTTP-Referer": "https://example.com",
+                "X-Title": "My App",
+            },
         )
 
         _ = model.load_model(async_mode=False)
@@ -272,7 +277,10 @@ class TestOpenRouterModel:
         # Verify client was called with headers
         call_kwargs = mock_openai_class.call_args[1]
         assert "default_headers" in call_kwargs
-        assert call_kwargs["default_headers"]["HTTP-Referer"] == "https://example.com"
+        assert (
+            call_kwargs["default_headers"]["HTTP-Referer"]
+            == "https://example.com"
+        )
         assert call_kwargs["default_headers"]["X-Title"] == "My App"
 
     def test_default_model(self, settings):
@@ -281,7 +289,7 @@ class TestOpenRouterModel:
             settings.OPENROUTER_API_KEY = "test-key"
 
         model = OpenRouterModel()
-        assert model.model_name == "openai/gpt-4o-mini"
+        assert model.name == "openai/gpt-4o-mini"
 
     def test_dynamic_model_name(self, settings):
         """Test that any model string is accepted (dynamic model support)"""
@@ -298,7 +306,7 @@ class TestOpenRouterModel:
 
         for model_name in models:
             model = OpenRouterModel(model=model_name)
-            assert model.model_name == model_name
+            assert model.name == model_name
 
     @patch("deepeval.models.llms.openrouter_model.OpenAI")
     def test_generate_raw_response(self, mock_openai_class, settings):
@@ -315,7 +323,9 @@ class TestOpenRouterModel:
             settings.OPENROUTER_API_KEY = "test-key"
 
         model = OpenRouterModel(model="openai/gpt-4o-mini")
-        completion, cost = model.generate_raw_response("test prompt", top_logprobs=3)
+        completion, cost = model.generate_raw_response(
+            "test prompt", top_logprobs=3
+        )
 
         mock_client.chat.completions.create.assert_called_once_with(
             model="openai/gpt-4o-mini",
@@ -344,7 +354,9 @@ class TestOpenRouterModel:
             settings.OPENROUTER_API_KEY = "test-key"
 
         model = OpenRouterModel(model="openai/gpt-4o-mini")
-        samples, cost = model.generate_samples("test prompt", n=2, temperature=0.7)
+        samples, cost = model.generate_samples(
+            "test prompt", n=2, temperature=0.7
+        )
 
         mock_client.chat.completions.create.assert_called_once_with(
             model="openai/gpt-4o-mini",
@@ -353,3 +365,22 @@ class TestOpenRouterModel:
             temperature=0.7,
         )
         assert samples == ["sample1", "sample2"]
+
+    def test_base_url_uses_settings_when_not_passed(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENROUTER_API_KEY = "test-key"
+            settings.OPENROUTER_BASE_URL = (
+                "https://proxy.example.com/openrouter"
+            )
+
+        model = OpenRouterModel(model="openai/gpt-4o-mini")
+        assert model.base_url == "https://proxy.example.com/openrouter"
+
+    def test_init_rejects_negative_temperature(self, settings):
+        from deepeval.errors import DeepEvalError
+
+        with settings.edit(persist=False):
+            settings.OPENROUTER_API_KEY = "test-key"
+
+        with pytest.raises(DeepEvalError):
+            OpenRouterModel(model="openai/gpt-4o-mini", temperature=-0.1)

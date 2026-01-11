@@ -10,7 +10,7 @@ from openai import (
 from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
-from deepeval.constants import ProviderSlug as PS
+from deepeval.constants import ProviderSlug as PS, DEFAULT_GPT_MODEL
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
@@ -29,8 +29,6 @@ from deepeval.models.llms.constants import (
 
 
 retry_openai = create_retry_decorator(PS.OPENAI)
-
-default_gpt_model = "gpt-4.1"
 
 
 def _request_timeout_seconds() -> float:
@@ -70,7 +68,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         model = model or settings.OPENAI_MODEL_NAME
         if model is None:
-            model = default_gpt_model
+            model = DEFAULT_GPT_MODEL
 
         cost_per_input_token = (
             cost_per_input_token
