@@ -82,6 +82,74 @@ module.exports = {
             },
           ],
         },
+        {
+          type: 'category',
+          label: '🐲 2024',
+          link: { type: 'doc', id: 'changelog-2024' },
+          collapsed: true,
+          items: [
+            {
+              type: 'link',
+              label: 'December',
+              href: '/changelog/changelog-2024#december',
+            },
+            {
+              type: 'link',
+              label: 'November',
+              href: '/changelog/changelog-2024#november',
+            },
+            {
+              type: 'link',
+              label: 'October',
+              href: '/changelog/changelog-2024#october',
+            },
+            {
+              type: 'link',
+              label: 'September',
+              href: '/changelog/changelog-2024#september',
+            },
+            {
+              type: 'link',
+              label: 'August',
+              href: '/changelog/changelog-2024#august',
+            },
+            {
+              type: 'link',
+              label: 'July',
+              href: '/changelog/changelog-2024#july',
+            },
+            {
+              type: 'link',
+              label: 'June',
+              href: '/changelog/changelog-2024#june',
+            },
+            {
+              type: 'link',
+              label: 'May',
+              href: '/changelog/changelog-2024#may',
+            },
+            {
+              type: 'link',
+              label: 'April',
+              href: '/changelog/changelog-2024#april',
+            },
+            {
+              type: 'link',
+              label: 'March',
+              href: '/changelog/changelog-2024#march',
+            },
+            {
+              type: 'link',
+              label: 'February',
+              href: '/changelog/changelog-2024#february',
+            },
+            {
+              type: 'link',
+              label: 'January',
+              href: '/changelog/changelog-2024#january',
+            },
+          ],
+        },
       ],
     },
   ],
