@@ -4,6 +4,7 @@ module.exports = {
       type: 'category',
       label: 'Changelog',
       className: 'sidebar-item-icon-changelog',
+      link: { type: 'doc', id: 'changelog' },
       collapsed: false,
       items: [
         {
