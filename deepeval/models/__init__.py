@@ -16,6 +16,7 @@ from deepeval.models.llms import (
     GrokModel,
     DeepSeekModel,
     PortkeyModel,
+    OpenRouterModel,
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
@@ -44,4 +45,5 @@ __all__ = [
     "LocalEmbeddingModel",
     "OllamaEmbeddingModel",
     "PortkeyModel",
+    "OpenRouterModel",
 ]

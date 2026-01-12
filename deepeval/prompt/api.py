@@ -30,6 +30,7 @@ class ModelProvider(Enum):
     X_AI = "X_AI"
     DEEPSEEK = "DEEPSEEK"
     BEDROCK = "BEDROCK"
+    OPENROUTER = "OPENROUTER"
 
 
 class ModelSettings(BaseModel):
