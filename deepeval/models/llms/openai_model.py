@@ -377,7 +377,9 @@ class GPTModel(DeepEvalBaseLLM):
     # Utilities #
     #############
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[float]:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
