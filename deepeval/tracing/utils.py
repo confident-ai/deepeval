@@ -227,13 +227,24 @@ def bind_trace_and_span(
             span = trace_manager.get_span_by_uuid(span_uuid)
             if span is not None:
                 span_token = current_span_context.set(span)
+            elif parent_uuid is not None:
+                # If the child span doesn’t exist yet but we do have parent_uuid, bind the parent span
+                # into context so enter_current_context() can correctly set the child span’s parent_uuid.
+                parent = trace_manager.get_span_by_uuid(parent_uuid)
+                if parent is not None:
+                    span_token = current_span_context.set(parent)
+                elif reset_on_exit:
+                    span_token = current_span_context.set(None)
+            elif reset_on_exit:
+                span_token = current_span_context.set(None)
         elif parent_uuid is not None:
             parent = trace_manager.get_span_by_uuid(parent_uuid)
             if parent is not None:
                 span_token = current_span_context.set(parent)
-        else:
-            if reset_on_exit:
+            elif reset_on_exit:
                 span_token = current_span_context.set(None)
+        elif reset_on_exit:
+            span_token = current_span_context.set(None)
         yield
     finally:
         if reset_on_exit:

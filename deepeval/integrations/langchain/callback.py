@@ -93,15 +93,22 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        uuid_str = str(run_id)
         if parent_run_id is None:
-            self._root_span_uuid = str(run_id)
-            with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
-                base_span = enter_current_context(
-                    uuid_str=self._root_span_uuid,
-                    span_type="custom",
-                    func_name=extract_name(serialized, **kwargs),
-                )
-                base_span.input = inputs
+            self._root_span_uuid = uuid_str
+
+        with self._ctx(
+            run_id=run_id, parent_run_id=parent_run_id, reset_on_exit=False
+        ):
+            base_span = enter_current_context(
+                uuid_str=uuid_str,
+                span_type="custom",
+                func_name=extract_name(serialized, **kwargs),
+            )
+            base_span.input = inputs
+
+            # Only populate trace input and metric defaults at root.
+            if parent_run_id is None:
                 trace = current_trace_context.get()
                 if trace is not None:
                     trace.input = inputs
@@ -132,6 +139,28 @@ class CallbackHandler(BaseCallbackHandler):
                 trace.output = output
             exit_current_context(uuid_str=uuid_str)
 
+    def on_chain_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        uuid_str = str(run_id)
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            base_span = trace_manager.get_span_by_uuid(uuid_str)
+            if base_span is None:
+                logger.debug(
+                    "Missing span for chain error run_id=%s parent=%s",
+                    run_id,
+                    parent_run_id,
+                )
+                return
+            base_span.status = TraceSpanStatus.ERRORED
+            base_span.error = str(error)
+            exit_current_context(uuid_str=uuid_str)
+
     def on_llm_start(
         self,
         serialized: dict[str, Any],
@@ -150,7 +179,9 @@ class CallbackHandler(BaseCallbackHandler):
         metric_collection = metadata.get("metric_collection")
         prompt = metadata.get("prompt")
         model = safe_extract_model_name(metadata, **kwargs)
-        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
+        with self._ctx(
+            run_id=run_id, parent_run_id=parent_run_id, reset_on_exit=False
+        ):
             llm_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="llm",
@@ -299,7 +330,9 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         uuid_str = str(run_id)
 
-        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
+        with self._ctx(
+            run_id=run_id, parent_run_id=parent_run_id, reset_on_exit=False
+        ):
             tool_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="tool",
@@ -402,7 +435,9 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         uuid_str = str(run_id)
         metadata = metadata or {}
-        with self._ctx(parent_run_id=parent_run_id, reset_on_exit=False):
+        with self._ctx(
+            run_id=run_id, parent_run_id=parent_run_id, reset_on_exit=False
+        ):
             retriever_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="retriever",
