@@ -3,11 +3,13 @@
 import os
 import pytest
 from pydantic import BaseModel
+
 from deepeval.models.llms.openrouter_model import OpenRouterModel
 
 
 class SampleSchema(BaseModel):
     """Sample schema for structured output testing"""
+
     name: str
     age: int
 
@@ -30,6 +32,7 @@ class TestOpenRouterModelIntegration:
         output, cost = model.generate("Say hello in one word.")
         assert isinstance(output, str)
         assert len(output) > 0
+        assert cost is not None
         assert cost > 0
 
     @pytest.mark.asyncio
@@ -43,6 +46,7 @@ class TestOpenRouterModelIntegration:
         output, cost = await model.a_generate("Say hello in one word.")
         assert isinstance(output, str)
         assert len(output) > 0
+        assert cost is not None
         assert cost > 0
 
     def test_structured_outputs(self):
@@ -54,11 +58,12 @@ class TestOpenRouterModelIntegration:
         )
         output, cost = model.generate(
             "Return a JSON object with name='Alice' and age=30",
-            schema=SampleSchema
+            schema=SampleSchema,
         )
         assert isinstance(output, SampleSchema)
         assert output.name == "Alice"
         assert output.age == 30
+        assert cost is not None
         assert cost > 0
 
     def test_different_models(self):
@@ -74,3 +79,6 @@ class TestOpenRouterModelIntegration:
             output, cost = model.generate("Say 'test'")
             assert isinstance(output, str)
             assert len(output) > 0
+            # Cost may be None if no user pricing is set and OpenRouter doesn't return metadata
+            if cost is not None:
+                assert cost >= 0
