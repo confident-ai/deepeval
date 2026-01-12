@@ -107,9 +107,10 @@ class ContextGenerator:
             raise ValueError("`document_path` is empty or missing.")
 
         for path in document_paths:
-            if not re.fullmatch(PATTERN, path):
+            doc_name = path.split("/")[-1]
+            if not re.fullmatch(PATTERN, doc_name):
                 raise ValueError(
-                    f"Invalid document name: '{path}'. "
+                    f"Invalid document name: '{doc_name}'. "
                     "Document names must be 3-512 characters, contain only [a-zA-Z0-9._-], "
                     "and start/end with an alphanumeric character."
                 )
