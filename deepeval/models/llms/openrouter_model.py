@@ -10,9 +10,10 @@ from openai import (
 )
 
 from deepeval.config.settings import get_settings
-from deepeval.constants import ProviderSlug as PS, DEFAULT_OPENROUTER_MODEL
+from deepeval.constants import ProviderSlug as PS
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.constants import DEFAULT_OPENROUTER_MODEL
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import require_secret_api_key
 from deepeval.models.retry_policy import (
@@ -309,12 +310,12 @@ class OpenRouterModel(DeepEvalBaseLLM):
 
     def calculate_cost(
         self, input_tokens: int, output_tokens: int, response=None
-    ) -> float:
+    ) -> Optional[float]:
         """
         Calculate cost with priority:
         1. User-provided pricing (highest priority)
         2. Try to extract from API response (if OpenRouter includes pricing)
-        3. Return 0 (cost tracking disabled for unknown models)
+        3. Return None if cost cannot be determined
         """
         # Priority 1: User-provided pricing
         if (
@@ -344,9 +345,8 @@ class OpenRouterModel(DeepEvalBaseLLM):
                 except (ValueError, TypeError):
                     pass
 
-        # Priority 3: Return 0 (cost tracking disabled for unknown models)
-        # This allows the model to work even without pricing information
-        return 0.0
+        # Priority 3: Return None since cost is unknown
+        return None
 
     ###############################################
     # Model

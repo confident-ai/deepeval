@@ -10,7 +10,7 @@ from openai import (
 from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
-from deepeval.constants import ProviderSlug as PS, DEFAULT_GPT_MODEL
+from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
@@ -24,6 +24,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.constants import (
+    DEFAULT_GPT_MODEL,
     OPENAI_MODELS_DATA,
 )
 

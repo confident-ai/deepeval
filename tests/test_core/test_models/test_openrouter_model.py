@@ -1,10 +1,9 @@
-"""Tests for OpenRouterModel"""
-
-from unittest.mock import Mock, patch, MagicMock
-from pydantic import BaseModel
 import pytest
 import warnings
+from unittest.mock import Mock, patch, MagicMock
+from pydantic import BaseModel
 
+from deepeval.models.llms.constants import DEFAULT_OPENROUTER_MODEL
 from deepeval.models.llms.openrouter_model import OpenRouterModel
 
 
@@ -242,8 +241,8 @@ class TestOpenRouterModel:
         )
         assert cost == 0.015
 
-    def test_calculate_cost_fallback_to_zero(self, settings):
-        """Test cost calculation falls back to 0 if no pricing available"""
+    def test_calculate_cost_when_cost_is_unknown_returns_none(self, settings):
+        """Test cost calculation falls back to None if no pricing available"""
         with settings.edit(persist=False):
             settings.OPENROUTER_API_KEY = "test-key"
 
@@ -251,7 +250,7 @@ class TestOpenRouterModel:
 
         # No pricing provided, no cost in response
         cost = model.calculate_cost(input_tokens=100, output_tokens=50)
-        assert cost == 0.0
+        assert cost is None
 
     @patch("deepeval.models.llms.openrouter_model.OpenAI")
     def test_client_kwargs_includes_custom_headers(
@@ -289,7 +288,7 @@ class TestOpenRouterModel:
             settings.OPENROUTER_API_KEY = "test-key"
 
         model = OpenRouterModel()
-        assert model.name == "openai/gpt-4o-mini"
+        assert model.name == DEFAULT_OPENROUTER_MODEL
 
     def test_dynamic_model_name(self, settings):
         """Test that any model string is accepted (dynamic model support)"""
