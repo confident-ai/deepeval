@@ -223,32 +223,39 @@ def bind_trace_and_span(
             if trace is not None:
                 trace_token = current_trace_context.set(trace)
 
+        # Prefer binding the span if it exists.
         if span_uuid is not None:
             span = trace_manager.get_span_by_uuid(span_uuid)
             if span is not None:
                 span_token = current_span_context.set(span)
-            elif parent_uuid is not None:
-                # If the child span doesn’t exist yet but we do have parent_uuid, bind the parent span
-                # into context so enter_current_context() can correctly set the child span’s parent_uuid.
-                parent = trace_manager.get_span_by_uuid(parent_uuid)
-                if parent is not None:
-                    span_token = current_span_context.set(parent)
+            else:
+                # Span doesn't exist yet (e.g., *_start callbacks). Bind parent if possible.
+                if parent_uuid is not None:
+                    parent = trace_manager.get_span_by_uuid(parent_uuid)
+                    if parent is not None:
+                        span_token = current_span_context.set(parent)
+                    elif reset_on_exit:
+                        span_token = current_span_context.set(None)
                 elif reset_on_exit:
                     span_token = current_span_context.set(None)
-            elif reset_on_exit:
-                span_token = current_span_context.set(None)
+
         elif parent_uuid is not None:
             parent = trace_manager.get_span_by_uuid(parent_uuid)
             if parent is not None:
                 span_token = current_span_context.set(parent)
             elif reset_on_exit:
                 span_token = current_span_context.set(None)
-        elif reset_on_exit:
-            span_token = current_span_context.set(None)
+
+        else:
+            if reset_on_exit:
+                span_token = current_span_context.set(None)
+
         yield
+
     finally:
-        if reset_on_exit:
-            if span_token is not None:
-                current_span_context.reset(span_token)
-            if trace_token is not None:
-                current_trace_context.reset(trace_token)
+        if not reset_on_exit:
+            return
+        if span_token is not None:
+            current_span_context.reset(span_token)
+        if trace_token is not None:
+            current_trace_context.reset(trace_token)

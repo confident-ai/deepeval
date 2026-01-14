@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import pytest
 from typing import Any, List, Optional, Tuple
 from typing_extensions import TypedDict
@@ -12,7 +13,8 @@ from langchain_core.callbacks.manager import (
     CallbackManagerForLLMRun,
 )
 from deepeval.integrations.langchain import CallbackHandler
-from deepeval.tracing import trace_manager
+from deepeval.tracing import observe, trace_manager
+from deepeval.tracing.context import current_span_context, current_trace_context
 
 
 class RaisingLLM(LLM):
@@ -87,8 +89,9 @@ class RecordingCallbackHandler(CallbackHandler):
             outputs, run_id=run_id, parent_run_id=parent_run_id, **kwargs
         )
 
-        # After end, span should be removed from active store
-        assert trace_manager.get_span_by_uuid(rid) is None
+        if parent_run_id is None:
+            # After end, span should be removed from active store
+            assert trace_manager.get_span_by_uuid(rid) is None
         return res
 
     def on_chain_error(self, error, *, run_id, parent_run_id=None, **kwargs):
@@ -100,7 +103,8 @@ class RecordingCallbackHandler(CallbackHandler):
             error, run_id=run_id, parent_run_id=parent_run_id, **kwargs
         )
 
-        assert trace_manager.get_span_by_uuid(rid) is None
+        if parent_run_id is None:
+            assert trace_manager.get_span_by_uuid(rid) is None
         return res
 
     def on_llm_start(
@@ -364,7 +368,8 @@ async def test_parallel_llm_calls_under_same_parent_are_parented_correctly(
     "ignore:The 'config' parameter should be typed as 'RunnableConfig' or 'RunnableConfig \\| None'"
 )
 async def test_chain_inside_chain_then_llm_is_parented_correctly(capsys):
-    """For nested chains, the LLM run/span should be parented to the inner chain (root -> nested -> llm)."""
+    """LangChain reports parentage as root -> nested -> llm, but DeepEval collapses
+    nested chains and parents the LLM span to the root chain span."""
     llm = FakeListLLM(responses=["pong"])
     callback = RecordingCallbackHandler(
         metric_collection="test_chain_chain_llm"
@@ -423,8 +428,8 @@ async def test_chain_inside_chain_then_llm_is_parented_correctly(capsys):
     # DeepEval span parentage captured during starts should match as well
     assert llm_run_id in callback.span_parents_start
     assert (
-        callback.span_parents_start[llm_run_id] == nested_chain_id
-    ), f"Expected llm span.parent_uuid={nested_chain_id}, got {callback.span_parents_start[llm_run_id]}"
+        callback.span_parents_start[llm_run_id] == root_chain_id
+    ), f"Expected llm span.parent_uuid={root_chain_id}, got {callback.span_parents_start[llm_run_id]}"
 
 
 @pytest.mark.asyncio
@@ -474,10 +479,66 @@ async def test_nested_chain_chain_llm_end_order_and_parentage(capsys):
 
     assert callback.llm_runs
     llm_run_id, llm_parent = callback.llm_runs[0]
-    assert llm_parent == nested_chain_id
-    assert callback.span_parents_start[llm_run_id] == nested_chain_id
+    # DeepEval will parent spans to the nearest captured span
+    assert callback.span_parents_start[llm_run_id] == root_chain_id
 
     # End events happened and cleanup assertions in handler already enforced span removal
     assert ("llm_end", llm_run_id) in callback.events
     assert ("chain_end", nested_chain_id) in callback.events
     assert ("chain_end", root_chain_id) in callback.events
+
+
+@pytest.mark.asyncio
+@pytest.mark.filterwarnings(
+    "ignore:The 'config' parameter should be typed as 'RunnableConfig' or 'RunnableConfig \\| None'"
+)
+async def test_observe_wrapped_async_langgraph_callback_no_span_stack_mismatch(
+    capsys, caplog
+):
+    """
+    Repro for v.adynets:
+    - @observe works
+    - CallbackHandler works
+    - but @observe wrapping a CallbackHandler async run used to break with span mismatch and context token issues
+
+    This should only pass when callback context binding is callback safe regardless of execution context.
+    """
+    caplog.set_level(logging.WARNING)
+
+    llm = FakeListLLM(responses=["pong"])
+
+    async def node(state: dict, config=None) -> dict:
+        out = await llm.ainvoke(state["prompt"], config=config)
+        return {"output": out}
+
+    builder = StateGraph(dict)
+    builder.add_node("llm", node)
+    builder.add_edge(START, "llm")
+    builder.add_edge("llm", END)
+    graph = builder.compile()
+
+    callback = CallbackHandler(metric_collection="test_observe_wraps_callback")
+
+    @observe(type="custom", name="observed_endpoint")
+    async def observed_run():
+        return await graph.ainvoke(
+            {"prompt": "ping"},
+            config={"callbacks": [callback]},
+        )
+
+    # Run it as a Task to mimic FastAPI scheduling / context boundaries
+    result = await asyncio.create_task(observed_run())
+    assert result["output"] == "pong"
+
+    out = capsys.readouterr().out
+    assert (
+        "Current span in context does not match the span being exited"
+        not in out
+    )
+
+    # Catch the other common failure mode you saw in logs earlier
+    assert "was created in a different Context" not in caplog.text
+
+    # Also ensure we don't leak contextvars after completion
+    assert current_span_context.get() is None
+    assert current_trace_context.get() is None

@@ -195,6 +195,16 @@ class TraceManager:
             confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
+        print(
+            "start_new_trace:",
+            "self id=",
+            id(self),
+            "trace_uuid=",
+            trace_uuid,
+            "active_traces size=",
+            len(self.active_traces),
+        )
+
         self.traces.append(new_trace)
         if self.evaluation_loop:
             self.traces_to_evaluate_order.append(trace_uuid)
@@ -285,7 +295,23 @@ class TraceManager:
     def add_span_to_trace(self, span: BaseSpan):
         """Add a span to its trace."""
         trace_uuid = span.trace_uuid
+
         if trace_uuid not in self.active_traces:
+            print(
+                "add_span_to_trace FAIL:",
+                "self id=",
+                id(self),
+                "span.uuid=",
+                span.uuid,
+                "span.trace_uuid=",
+                span.trace_uuid,
+                "active_traces has?",
+                span.trace_uuid in self.active_traces,
+                "active_traces size=",
+                len(self.active_traces),
+                "active_traces keys sample=",
+                list(self.active_traces.keys())[:5],
+            )
             raise ValueError(
                 f"Trace with UUID {trace_uuid} does not exist. A span must have a valid trace."
             )
