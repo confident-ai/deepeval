@@ -47,3 +47,10 @@ def mock_openai_chat_completion(monkeypatch, request):
     monkeypatch.setattr(
         test_mod.client.chat.completions, "create", _create, raising=True
     )
+
+
+# More edge cases
+# agent specific spans to be tested
+# cover all span types, tools, retrievers
+# combination of metrics and no metrics on these different spans
+#

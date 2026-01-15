@@ -1,4 +1,3 @@
-import asyncio
 import os
 
 from typing import List
@@ -7,6 +6,10 @@ from openai import OpenAI
 from tests.utils.trace_assertions import assert_trace_json
 from tests.test_docs.test_deepeval.test_llm_evals.helpers import (
     find_span_by_name,
+    span_names_by_key,
+    all_spans,
+    get_latest_trace_dict,
+    debug_span_names,
 )
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
 from deepeval.tracing import observe, update_current_span
@@ -17,6 +20,9 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 client = OpenAI()
+
+
+# Apps
 
 
 def your_llm_app(input: str):
@@ -56,29 +62,127 @@ def your_llm_app(input: str):
     return generator(input, retriever(input))
 
 
-def _all_spans(trace_dict: dict):
-    spans = []
-    for key in (
-        "llmSpans",
-        "retrieverSpans",
-        "toolSpans",
-        "agentSpans",
-        "baseSpans",
-    ):
-        spans.extend(trace_dict.get(key) or [])
-    return spans
+def your_llm_app_rooted(input: str):
+    @observe(type="retriever")
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = (
+            client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Use the provided context to answer the question.",
+                    },
+                    {
+                        "role": "user",
+                        "content": "\n\n".join(retrieved_chunks)
+                        + "\n\nQuestion: "
+                        + input,
+                    },
+                ],
+            )
+            .choices[0]
+            .message.content
+        )
+
+        # Create test case at runtime
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+
+        return res
+
+    @observe(type="agent", name="app")
+    def app():
+        return generator(input, retriever(input))
+
+    return app()
 
 
-def _get_latest_trace_dict():
-    """
-    trace_testing_manager.test_dict is often populated synchronously,
-    but we keep a fallback to the async wait to avoid flakes.
-    """
-    if trace_testing_manager.test_dict is not None:
-        return trace_testing_manager.test_dict
+def your_llm_app_with_tool(input: str):
+    @observe(type="tool")
+    def tool_call(q: str) -> str:
+        return "TOOL_RESULT"
 
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(trace_testing_manager.wait_for_test_dict())
+    @observe(type="retriever")
+    def retriever(input: str):
+        _ = tool_call("lookup")
+        return ["Hardcoded text chunks from your vector database"]
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    @observe(type="agent", name="app_with_tool")
+    def app():
+        chunks = retriever(input)
+        return generator(input, chunks)
+
+    return app()
+
+
+def your_llm_app_with_agent(input: str):
+    @observe(type="retriever")
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    @observe(type="agent", name="app_with_agent")
+    def agent(input: str):
+        return generator(input, retriever(input))
+
+    return agent(input)
+
+
+def your_llm_app_no_metrics(input: str):
+    @observe(type="retriever")
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
+
+    @observe()
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    @observe(type="agent", name="app_no_metrics")
+    def app():
+        chunks = retriever(input)
+        return generator(input, chunks)
+
+    return app()
+
+
+def your_llm_app_update_twice(input: str):
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str):
+        res = "MOCK_RESPONSE"
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output="FIRST")
+        )
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    return generator(input)
 
 
 ###############################
@@ -91,16 +195,7 @@ def _get_latest_trace_dict():
         current_dir, "test_component_level_observed_generator.json"
     )
 )
-def test_observed_generator_span_emitted_shape():
-    """
-    Shape test: asserts a trace payload is emitted and contains the generator span structure.
-    Only assert structure and types.
-    """
-    out = your_llm_app("How are you?")
-    assert out == "MOCK_RESPONSE"
-
-
-def test_observed_generator_span_emitted():
+def test_observed_generator_span():
     """asserts a span is created for the @observed generator (name/type present)"""
     # Run the app
     user_input = "How are you?"
@@ -125,15 +220,6 @@ def test_observed_generator_span_emitted():
         current_dir, "test_component_level_update_current_span.json"
     )
 )
-def test_update_current_span_attaches_llm_test_case_to_generator_span_shape():
-    """
-    Shape test: asserts that calling update_current_span(test_case=...) results in the span
-    including the expected fields in the emitted trace payload. Only assert structure and types.
-    """
-    out = your_llm_app("How are you?")
-    assert out == "MOCK_RESPONSE"
-
-
 def test_update_current_span_attaches_llm_test_case_to_generator_span():
     """asserts the generator span carries an attached LLMTestCase with correct input/output"""
     user_input = "How are you?"
@@ -209,8 +295,8 @@ def test_metrics_not_applied_to_non_metric_components():
     trace_dict = trace_testing_manager.test_dict
     assert trace_dict is not None, "Expected trace payload to be captured."
 
-    print([s.get("name") for s in _all_spans(trace_dict)])
-    spans = _all_spans(trace_dict)
+    print([s.get("name") for s in all_spans(trace_dict)])
+    spans = all_spans(trace_dict)
     assert (
         spans
     ), f"Expected at least one span. Keys: {sorted(trace_dict.keys())}"
@@ -234,6 +320,29 @@ def test_metrics_not_applied_to_non_metric_components():
         assert not retriever_span.get(
             "metricsData"
         ), "Expected retriever to have no metricsData"
+
+
+@assert_trace_json(
+    json_path=os.path.join(
+        current_dir, "test_component_level_rooted_app_spans.json"
+    ),
+    # mode="generate",
+)
+def test_rooted_app_emits_agent_retriever_generator_and_metrics():
+    user_input = "How are you?"
+    out = your_llm_app_rooted(user_input)
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = trace_testing_manager.test_dict
+    assert trace_dict is not None
+
+    # Typed checks (this is the point of rooted)
+    assert "app" in span_names_by_key(trace_dict, "agentSpans")
+    assert "retriever" in span_names_by_key(trace_dict, "retrieverSpans")
+
+    gen = find_span_by_name(trace_dict, "generator")
+    assert gen is not None
+    assert gen.get("metricsData"), "Expected metrics on generator"
 
 
 ####################
@@ -308,7 +417,7 @@ def test_evals_iterator_invokes_app_for_each_golden_and_emits_spans():
         out = your_llm_app(golden.input)
         assert out == "MOCK_RESPONSE"
 
-        trace_dict = _get_latest_trace_dict()
+        trace_dict = get_latest_trace_dict()
         assert trace_dict is not None
 
         gen = find_span_by_name(trace_dict, "generator")
@@ -342,3 +451,113 @@ def test_evals_iterator_optional_parameters_smoke():
     goldens = list(it)
     assert len(goldens) == 2
     assert [g.input for g in goldens] == ["Ping?", "Pong?"]
+
+
+# Tools
+
+
+def test_tool_span_emitted():
+    out = your_llm_app_with_tool("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    tool_names = span_names_by_key(trace_dict, "toolSpans")
+    base_names = span_names_by_key(trace_dict, "baseSpans")
+
+    # Accept either: dedicated toolSpans OR baseSpans.
+    assert ("tool_call" in tool_names) or (
+        "tool_call" in base_names
+    ), f"Expected a tool span named 'tool_call'. Span keys: {debug_span_names(trace_dict)}"
+
+
+# Agents
+
+
+def test_agent_span_emitted():
+    out = your_llm_app_with_agent("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    agent_names = span_names_by_key(trace_dict, "agentSpans")
+    assert (
+        agent_names
+    ), f"Expected at least one agent span. Span keys: {debug_span_names(trace_dict)}"
+    assert (
+        "app_with_agent" in agent_names
+    ), f"Expected agent span named 'app_with_agent'. Span keys: {debug_span_names(trace_dict)}"
+
+
+# Metrics
+
+
+def test_metrics_only_on_metric_configured_span():
+    out = your_llm_app_with_agent("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    spans = all_spans(trace_dict)
+
+    assert spans, f"No spans emitted. Keys: {sorted(trace_dict.keys())}"
+
+    # generator should have metricsData
+    generator = next((s for s in spans if s.get("name") == "generator"), None)
+    assert (
+        generator is not None
+    ), f"Missing generator span. {debug_span_names(trace_dict)}"
+    assert generator.get(
+        "metricsData"
+    ), "Expected generator.metricsData to be present and non-empty."
+
+    # everyone else should not
+    offenders = [
+        s.get("name")
+        for s in spans
+        if s.get("name") != "generator"
+        and (s.get("metricsData") or "metricsData" in s)
+    ]
+    assert (
+        not offenders
+    ), f"Expected no metricsData on non-generator spans; found on: {offenders}"
+
+
+def test_generator_span_no_metrics_when_not_configured():
+    out = your_llm_app_no_metrics("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    gen = find_span_by_name(trace_dict, "generator")
+    assert gen is not None
+
+    assert ("metricsData" not in gen) or (
+        not gen.get("metricsData")
+    ), f"Expected no metricsData when metrics not configured; got: {gen.get('metricsData')}"
+
+
+def test_update_current_span_last_write_wins():
+    out = your_llm_app_update_twice("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    gen = find_span_by_name(trace_dict, "generator")
+    assert gen is not None
+    assert gen.get("output") == "MOCK_RESPONSE"
+
+
+def test_evals_iterator_emits_span_with_matching_input_per_golden():
+    dataset = EvaluationDataset(
+        goldens=[Golden(input="A"), Golden(input="B"), Golden(input="C")]
+    )
+
+    for golden in dataset.evals_iterator():
+        trace_testing_manager.test_dict = None
+        out = your_llm_app(golden.input)
+        assert out == "MOCK_RESPONSE"
+
+        trace_dict = get_latest_trace_dict()
+        gen = find_span_by_name(trace_dict, "generator")
+        assert gen is not None
+        assert gen.get("input") == golden.input
