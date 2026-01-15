@@ -1,0 +1,1176 @@
+{
+  "uuid": "d2bccac2-a1a4-4731-9712-dc781e3a7434",
+  "baseSpans": [
+    {
+      "uuid": "019bc088-6b6b-72f1-8827-ede71c55c233",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-15T07:22:04.523Z",
+      "endTime": "2026-01-15T07:22:07.377Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          },
+          {
+            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED, meaning I was unable to confirm it through the fact-checking tool. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is round but slightly flattened at the poles and bulging at the equator.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 69,
+                "prompt_tokens": 148,
+                "total_tokens": 217,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy9ID4dFkO8BhXiq7JCK0R50UK8",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6f19-7d22-b920-06808a50f702-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 69,
+              "total_tokens": 217,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ],
+        "intent": "fact_check"
+      }
+    },
+    {
+      "uuid": "019bc088-6f19-7d22-b920-067d03afcc26",
+      "name": "fact_check",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6b-72f1-8827-ede71c55c233",
+      "startTime": "2026-01-15T07:22:05.465Z",
+      "endTime": "2026-01-15T07:22:07.377Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED, meaning I was unable to confirm it through the fact-checking tool. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is round but slightly flattened at the poles and bulging at the equator.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 69,
+                "prompt_tokens": 148,
+                "total_tokens": 217,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy9ID4dFkO8BhXiq7JCK0R50UK8",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6f19-7d22-b920-06808a50f702-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 69,
+              "total_tokens": 217,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-7691-7e53-a154-fb29ccf82a65",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6f19-7d22-b920-067d03afcc26",
+      "startTime": "2026-01-15T07:22:07.377Z",
+      "endTime": "2026-01-15T07:22:07.377Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          },
+          {
+            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED, meaning I was unable to confirm it through the fact-checking tool. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is round but slightly flattened at the poles and bulging at the equator.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 69,
+                "prompt_tokens": 148,
+                "total_tokens": 217,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy9ID4dFkO8BhXiq7JCK0R50UK8",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6f19-7d22-b920-06808a50f702-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 148,
+              "output_tokens": 69,
+              "total_tokens": 217,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": "__end__"
+    },
+    {
+      "uuid": "019bc088-6f17-7081-99cd-0441ff1f2c43",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6b-72f1-8827-ede71c55c233",
+      "startTime": "2026-01-15T07:22:05.463Z",
+      "endTime": "2026-01-15T07:22:05.465Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "fact_check",
+          "output": {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          },
+          "inputParameters": {
+            "claim": "The earth is round"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "019bc088-6f19-7d22-b920-0667059db448",
+      "name": "route_after_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6f17-7081-99cd-0441ff1f2c43",
+      "startTime": "2026-01-15T07:22:05.465Z",
+      "endTime": "2026-01-15T07:22:05.465Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "fact_check",
+            "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+            "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "status": "success"
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": "fact_check"
+    },
+    {
+      "uuid": "019bc088-6b6c-75c2-8681-66b2d86d398a",
+      "name": "fact_check",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6b-72f1-8827-ede71c55c233",
+      "startTime": "2026-01-15T07:22:04.524Z",
+      "endTime": "2026-01-15T07:22:05.463Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-6f17-7081-99cd-043e864413c9",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6c-75c2-8681-66b2d86d398a",
+      "startTime": "2026-01-15T07:22:05.463Z",
+      "endTime": "2026-01-15T07:22:05.463Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                  "function": {
+                    "arguments": "{\"claim\":\"The earth is round\"}",
+                    "name": "fact_check"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 110,
+                "total_tokens": 127,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+            "tool_calls": [
+              {
+                "name": "fact_check",
+                "args": {
+                  "claim": "The earth is round"
+                },
+                "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 110,
+              "output_tokens": 17,
+              "total_tokens": 127,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": "tools"
+    },
+    {
+      "uuid": "019bc088-6b6c-75c2-8681-66916bdf5e2e",
+      "name": "classifier",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6b-72f1-8827-ede71c55c233",
+      "startTime": "2026-01-15T07:22:04.524Z",
+      "endTime": "2026-01-15T07:22:04.524Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          }
+        ],
+        "intent": "fact_check"
+      }
+    },
+    {
+      "uuid": "019bc088-6b6c-75c2-8681-66a3d3686b06",
+      "name": "route_by_intent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-6b6c-75c2-8681-66916bdf5e2e",
+      "startTime": "2026-01-15T07:22:04.524Z",
+      "endTime": "2026-01-15T07:22:04.524Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Fact check: The earth is round",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+          }
+        ],
+        "intent": "fact_check"
+      },
+      "output": "fact_check"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bc088-6f19-7d22-b920-06808a50f702",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-6f19-7d22-b920-067d03afcc26",
+      "startTime": "2026-01-15T07:22:05.465Z",
+      "endTime": "2026-01-15T07:22:07.376Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a fact checker. Use the fact_check tool to verify claims."
+        },
+        {
+          "role": "human",
+          "content": "Fact check: The earth is round"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'fact_check', 'args': {'claim': 'The earth is round'}, 'id': 'call_HrnkGKEQe8tpMQNZMZUVe8Bf', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Fact check: UNVERIFIED - Unable to confirm this claim."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The claim that \"The earth is round\" is marked as UNVERIFIED, meaning I was unable to confirm it through the fact-checking tool. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is round but slightly flattened at the poles and bulging at the equator.",
+        "tool_calls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 148.0,
+      "outputTokenCount": 69.0
+    },
+    {
+      "uuid": "019bc088-6b6c-75c2-8681-66ca80b1cbd1",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-6b6c-75c2-8681-66b2d86d398a",
+      "startTime": "2026-01-15T07:22:04.524Z",
+      "endTime": "2026-01-15T07:22:05.462Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a fact checker. Use the fact_check tool to verify claims."
+        },
+        {
+          "role": "human",
+          "content": "Fact check: The earth is round"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "fact_check",
+            "args": {
+              "claim": "The earth is round"
+            },
+            "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf"
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 110.0,
+      "outputTokenCount": 17.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bc088-6f18-7641-a1b9-28c174cd3e1d",
+      "name": "fact_check",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bc088-6f17-7081-99cd-0441ff1f2c43",
+      "startTime": "2026-01-15T07:22:05.464Z",
+      "endTime": "2026-01-15T07:22:05.464Z",
+      "input": {
+        "claim": "The earth is round"
+      },
+      "output": {
+        "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "fact_check",
+        "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+        "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-15T07:22:04.522Z",
+  "endTime": "2026-01-15T07:22:07.377Z",
+  "name": "langgraph-conditional-factcheck",
+  "tags": [
+    "langgraph",
+    "conditional",
+    "fact-check"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Fact check: The earth is round",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Fact check: The earth is round",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "81d410c1-9d98-4cc7-8ac4-50e9ef0f86f5"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+              "function": {
+                "arguments": "{\"claim\":\"The earth is round\"}",
+                "name": "fact_check"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 17,
+            "prompt_tokens": 110,
+            "total_tokens": 127,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyBy8KgKaV2A45cEEUUqMHQ171giS",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-6b6c-75c2-8681-66ca80b1cbd1-0",
+        "tool_calls": [
+          {
+            "name": "fact_check",
+            "args": {
+              "claim": "The earth is round"
+            },
+            "id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 110,
+          "output_tokens": 17,
+          "total_tokens": 127,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "fact_check",
+        "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+        "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+        "status": "success"
+      },
+      {
+        "content": "The claim that \"The earth is round\" is marked as UNVERIFIED, meaning I was unable to confirm it through the fact-checking tool. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is round but slightly flattened at the poles and bulging at the equator.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 69,
+            "prompt_tokens": 148,
+            "total_tokens": 217,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyBy9ID4dFkO8BhXiq7JCK0R50UK8",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-6f19-7d22-b920-06808a50f702-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 148,
+          "output_tokens": 69,
+          "total_tokens": 217,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ],
+    "intent": "fact_check"
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "fact_check",
+      "output": {
+        "content": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "fact_check",
+        "id": "1500daf3-aef6-46c1-9349-ffa922c65cfd",
+        "tool_call_id": "call_HrnkGKEQe8tpMQNZMZUVe8Bf",
+        "status": "success"
+      },
+      "inputParameters": {
+        "claim": "The earth is round"
+      }
+    }
+  ]
+}
