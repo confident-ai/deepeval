@@ -1,0 +1,3268 @@
+{
+  "uuid": "795d8952-f959-47be-a6ef-b5ed6fb1f5e6",
+  "baseSpans": [
+    {
+      "uuid": "019bc088-c2ae-7072-958a-27c8f4fe8b93",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-15T07:22:26.862Z",
+      "endTime": "2026-01-15T07:22:31.192Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "10% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+            "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "status": "success"
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+            "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "status": "success"
+          },
+          {
+            "content": "The coupon **SAVE10** has been applied, giving you a 10% discount. \n\nThe checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 47,
+                "prompt_tokens": 470,
+                "total_tokens": 517,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByXzLixDSgM3jYF5mgsCCYyLPaO",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-cccd-74e1-a0e8-d065f6d4a068-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 470,
+              "output_tokens": 47,
+              "total_tokens": 517,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-cccd-74e1-a0e8-d0524d4153fe",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-c2ae-7072-958a-27c8f4fe8b93",
+      "startTime": "2026-01-15T07:22:29.453Z",
+      "endTime": "2026-01-15T07:22:31.190Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "10% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+            "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "status": "success"
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+            "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "The coupon **SAVE10** has been applied, giving you a 10% discount. \n\nThe checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 47,
+                "prompt_tokens": 470,
+                "total_tokens": 517,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByXzLixDSgM3jYF5mgsCCYyLPaO",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-cccd-74e1-a0e8-d065f6d4a068-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 470,
+              "output_tokens": 47,
+              "total_tokens": 517,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-d396-7341-b2e8-5ee8a21c3e99",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-cccd-74e1-a0e8-d0524d4153fe",
+      "startTime": "2026-01-15T07:22:31.190Z",
+      "endTime": "2026-01-15T07:22:31.190Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "10% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+            "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "status": "success"
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+            "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "status": "success"
+          },
+          {
+            "content": "The coupon **SAVE10** has been applied, giving you a 10% discount. \n\nThe checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 47,
+                "prompt_tokens": 470,
+                "total_tokens": 517,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByXzLixDSgM3jYF5mgsCCYyLPaO",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-cccd-74e1-a0e8-d065f6d4a068-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 470,
+              "output_tokens": 47,
+              "total_tokens": 517,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": "__end__"
+    },
+    {
+      "uuid": "019bc088-ccc6-73b0-9a0e-3a94180605c4",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-c2ae-7072-958a-27c8f4fe8b93",
+      "startTime": "2026-01-15T07:22:29.446Z",
+      "endTime": "2026-01-15T07:22:29.452Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "10% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+            "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "status": "success"
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+            "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "status": "success"
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "apply_coupon",
+          "output": {
+            "content": "10% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+            "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "status": "success"
+          },
+          "inputParameters": {
+            "code": "SAVE10"
+          }
+        },
+        {
+          "name": "checkout",
+          "output": {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+            "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "status": "success"
+          },
+          "inputParameters": {}
+        }
+      ]
+    },
+    {
+      "uuid": "019bc088-c2b3-7a83-bb0d-c13a1a5fe0ff",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-c2ae-7072-958a-27c8f4fe8b93",
+      "startTime": "2026-01-15T07:22:26.867Z",
+      "endTime": "2026-01-15T07:22:29.444Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-ccc4-7d13-9341-8ad7360b6b8f",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-c2b3-7a83-bb0d-c13a1a5fe0ff",
+      "startTime": "2026-01-15T07:22:29.444Z",
+      "endTime": "2026-01-15T07:22:29.444Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples and 1 banana to my cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "ba58a96f-a740-4a22-a360-408311892262"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                  "function": {
+                    "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                  "function": {
+                    "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 54,
+                "prompt_tokens": 198,
+                "total_tokens": 252,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apple",
+                  "quantity": 2
+                },
+                "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+                "type": "tool_call"
+              },
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "banana",
+                  "quantity": 1
+                },
+                "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 198,
+              "output_tokens": 54,
+              "total_tokens": 252,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apple to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+            "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "status": "success"
+          },
+          {
+            "content": "Added 1x banana to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+            "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 22,
+                "prompt_tokens": 280,
+                "total_tokens": 302,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 280,
+              "output_tokens": 22,
+              "total_tokens": 302,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "What's in my cart?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "view_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 314,
+                "total_tokens": 324,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+            "tool_calls": [
+              {
+                "name": "view_cart",
+                "args": {},
+                "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 314,
+              "output_tokens": 10,
+              "total_tokens": 324,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "view_cart",
+            "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+            "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "status": "success"
+          },
+          {
+            "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 34,
+                "prompt_tokens": 348,
+                "total_tokens": 382,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 348,
+              "output_tokens": 34,
+              "total_tokens": 382,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply coupon SAVE10 and checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                  "function": {
+                    "arguments": "{\"code\": \"SAVE10\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                },
+                {
+                  "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 42,
+                "prompt_tokens": 395,
+                "total_tokens": 437,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE10"
+                },
+                "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+                "type": "tool_call"
+              },
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 395,
+              "output_tokens": 42,
+              "total_tokens": 437,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": "tools"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bc088-cccd-74e1-a0e8-d065f6d4a068",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-cccd-74e1-a0e8-d0524d4153fe",
+      "startTime": "2026-01-15T07:22:29.454Z",
+      "endTime": "2026-01-15T07:22:31.189Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+        },
+        {
+          "role": "human",
+          "content": "Add 2 apples and 1 banana to my cart"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'add_to_cart', 'args': {'item': 'apple', 'quantity': 2}, 'id': 'call_mx8Bfa1v8a6Gy9jDRDRXWMUJ', 'type': 'tool_call'}, {'name': 'add_to_cart', 'args': {'item': 'banana', 'quantity': 1}, 'id': 'call_CR1KFHRFojPODlrxlcRcvAPE', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Added 2x apple to cart"
+        },
+        {
+          "role": "tool",
+          "content": "Added 1x banana to cart"
+        },
+        {
+          "role": "ai",
+          "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?"
+        },
+        {
+          "role": "human",
+          "content": "What's in my cart?"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'view_cart', 'args': {}, 'id': 'call_ZUZR2eTTC8gStyBLPPEHlPsL', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Cart: 2x Apple, 1x Banana, 3x Orange"
+        },
+        {
+          "role": "ai",
+          "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\nIs there anything else you would like to do?"
+        },
+        {
+          "role": "human",
+          "content": "Apply coupon SAVE10 and checkout"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'apply_coupon', 'args': {'code': 'SAVE10'}, 'id': 'call_RbtCJkiXJjItBg822c29Lcxz', 'type': 'tool_call'}, {'name': 'checkout', 'args': {}, 'id': 'call_rBEbbsfpdgNZDWPAaPfBklwi', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "10% discount applied"
+        },
+        {
+          "role": "tool",
+          "content": "Checkout initiated. Total: $25.99. Confirm to place order."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The coupon **SAVE10** has been applied, giving you a 10% discount. \n\nThe checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+        "tool_calls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 470.0,
+      "outputTokenCount": 47.0
+    },
+    {
+      "uuid": "019bc088-c2b4-70e3-8c54-903f1affa007",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-c2b3-7a83-bb0d-c13a1a5fe0ff",
+      "startTime": "2026-01-15T07:22:26.868Z",
+      "endTime": "2026-01-15T07:22:29.442Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+        },
+        {
+          "role": "human",
+          "content": "Add 2 apples and 1 banana to my cart"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'add_to_cart', 'args': {'item': 'apple', 'quantity': 2}, 'id': 'call_mx8Bfa1v8a6Gy9jDRDRXWMUJ', 'type': 'tool_call'}, {'name': 'add_to_cart', 'args': {'item': 'banana', 'quantity': 1}, 'id': 'call_CR1KFHRFojPODlrxlcRcvAPE', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Added 2x apple to cart"
+        },
+        {
+          "role": "tool",
+          "content": "Added 1x banana to cart"
+        },
+        {
+          "role": "ai",
+          "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?"
+        },
+        {
+          "role": "human",
+          "content": "What's in my cart?"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'view_cart', 'args': {}, 'id': 'call_ZUZR2eTTC8gStyBLPPEHlPsL', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Cart: 2x Apple, 1x Banana, 3x Orange"
+        },
+        {
+          "role": "ai",
+          "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\nIs there anything else you would like to do?"
+        },
+        {
+          "role": "human",
+          "content": "Apply coupon SAVE10 and checkout"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "apply_coupon",
+            "args": {
+              "code": "SAVE10"
+            },
+            "id": "call_RbtCJkiXJjItBg822c29Lcxz"
+          },
+          {
+            "name": "checkout",
+            "args": {},
+            "id": "call_rBEbbsfpdgNZDWPAaPfBklwi"
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 395.0,
+      "outputTokenCount": 42.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bc088-cccb-7d90-89ba-f0e162156464",
+      "name": "checkout",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bc088-ccc6-73b0-9a0e-3a94180605c4",
+      "startTime": "2026-01-15T07:22:29.451Z",
+      "endTime": "2026-01-15T07:22:29.452Z",
+      "input": {},
+      "output": {
+        "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "checkout",
+        "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+        "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+        "status": "success"
+      }
+    },
+    {
+      "uuid": "019bc088-ccc9-77a3-b168-b67252f680f3",
+      "name": "apply_coupon",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bc088-ccc6-73b0-9a0e-3a94180605c4",
+      "startTime": "2026-01-15T07:22:29.449Z",
+      "endTime": "2026-01-15T07:22:29.451Z",
+      "input": {
+        "code": "SAVE10"
+      },
+      "output": {
+        "content": "10% discount applied",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "apply_coupon",
+        "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+        "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-15T07:22:26.862Z",
+  "endTime": "2026-01-15T07:22:31.192Z",
+  "name": "langgraph-multi-turn-3",
+  "tags": [
+    "langgraph",
+    "multi-turn",
+    "turn-3"
+  ],
+  "environment": "development",
+  "threadId": "test-shopping-001",
+  "userId": "shopper-1",
+  "input": {
+    "messages": [
+      {
+        "content": "Apply coupon SAVE10 and checkout",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Add 2 apples and 1 banana to my cart",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "ba58a96f-a740-4a22-a360-408311892262"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+              "function": {
+                "arguments": "{\"item\": \"apple\", \"quantity\": 2}",
+                "name": "add_to_cart"
+              },
+              "type": "function"
+            },
+            {
+              "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+              "function": {
+                "arguments": "{\"item\": \"banana\", \"quantity\": 1}",
+                "name": "add_to_cart"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 198,
+            "total_tokens": 252,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByQWpw8w3gOYhNMEWYzJhZo8El9",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-af75-7781-9544-42dd49a92be9-0",
+        "tool_calls": [
+          {
+            "name": "add_to_cart",
+            "args": {
+              "item": "apple",
+              "quantity": 2
+            },
+            "id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+            "type": "tool_call"
+          },
+          {
+            "name": "add_to_cart",
+            "args": {
+              "item": "banana",
+              "quantity": 1
+            },
+            "id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 198,
+          "output_tokens": 54,
+          "total_tokens": 252,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Added 2x apple to cart",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "add_to_cart",
+        "id": "5aa99f6c-0f89-4aab-8d34-b1eaf709dbe5",
+        "tool_call_id": "call_mx8Bfa1v8a6Gy9jDRDRXWMUJ",
+        "status": "success"
+      },
+      {
+        "content": "Added 1x banana to cart",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "add_to_cart",
+        "id": "7c5b62ec-4781-4a6f-8f79-115dc36af968",
+        "tool_call_id": "call_CR1KFHRFojPODlrxlcRcvAPE",
+        "status": "success"
+      },
+      {
+        "content": "I've added 2 apples and 1 banana to your cart. Would you like to do anything else?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 22,
+            "prompt_tokens": 280,
+            "total_tokens": 302,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyBySUe1Vs2wIuKVFzU5yAPVGYStD",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-b60a-7582-8146-f9e40fdddf8d-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 280,
+          "output_tokens": 22,
+          "total_tokens": 302,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "What's in my cart?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "236ba4b5-d6ff-40a2-8b29-93ace4e76ded"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+              "function": {
+                "arguments": "{}",
+                "name": "view_cart"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 314,
+            "total_tokens": 324,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByTHkUtdHL6FQxCUraghUwxya4N",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-ba11-76b1-b86b-6f58987a6496-0",
+        "tool_calls": [
+          {
+            "name": "view_cart",
+            "args": {},
+            "id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 314,
+          "output_tokens": 10,
+          "total_tokens": 324,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "view_cart",
+        "id": "d9671fed-ad66-4e2d-88b5-c987907d3bae",
+        "tool_call_id": "call_ZUZR2eTTC8gStyBLPPEHlPsL",
+        "status": "success"
+      },
+      {
+        "content": "Your cart contains the following items:\n- 2 Apples\n- 1 Banana\n- 3 Oranges\n\nIs there anything else you would like to do?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 34,
+            "prompt_tokens": 348,
+            "total_tokens": 382,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByTmpaQCHux4CqaSnpCMMMBs5su",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-bd2e-7463-a094-704decf651b7-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 348,
+          "output_tokens": 34,
+          "total_tokens": 382,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Apply coupon SAVE10 and checkout",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "fdc6a1c8-9147-4db5-9593-bacc520b677e"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+              "function": {
+                "arguments": "{\"code\": \"SAVE10\"}",
+                "name": "apply_coupon"
+              },
+              "type": "function"
+            },
+            {
+              "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+              "function": {
+                "arguments": "{}",
+                "name": "checkout"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 42,
+            "prompt_tokens": 395,
+            "total_tokens": 437,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByVFwnQ1V021CmLGD1DO5EEX4rD",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-c2b4-70e3-8c54-903f1affa007-0",
+        "tool_calls": [
+          {
+            "name": "apply_coupon",
+            "args": {
+              "code": "SAVE10"
+            },
+            "id": "call_RbtCJkiXJjItBg822c29Lcxz",
+            "type": "tool_call"
+          },
+          {
+            "name": "checkout",
+            "args": {},
+            "id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 395,
+          "output_tokens": 42,
+          "total_tokens": 437,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "10% discount applied",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "apply_coupon",
+        "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+        "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+        "status": "success"
+      },
+      {
+        "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "checkout",
+        "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+        "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+        "status": "success"
+      },
+      {
+        "content": "The coupon **SAVE10** has been applied, giving you a 10% discount. \n\nThe checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 47,
+            "prompt_tokens": 470,
+            "total_tokens": 517,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByXzLixDSgM3jYF5mgsCCYyLPaO",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-cccd-74e1-a0e8-d065f6d4a068-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 470,
+          "output_tokens": 47,
+          "total_tokens": 517,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "apply_coupon",
+      "output": {
+        "content": "10% discount applied",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "apply_coupon",
+        "id": "b9f9c8a3-278d-4e2a-b502-31ed8877dc18",
+        "tool_call_id": "call_RbtCJkiXJjItBg822c29Lcxz",
+        "status": "success"
+      },
+      "inputParameters": {
+        "code": "SAVE10"
+      }
+    },
+    {
+      "name": "checkout",
+      "output": {
+        "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "checkout",
+        "id": "fc3b9417-9c20-48ad-93df-b11f188cbc1c",
+        "tool_call_id": "call_rBEbbsfpdgNZDWPAaPfBklwi",
+        "status": "success"
+      },
+      "inputParameters": {}
+    }
+  ]
+}

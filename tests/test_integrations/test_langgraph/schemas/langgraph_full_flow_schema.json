@@ -1,0 +1,3752 @@
+{
+  "uuid": "f4885b36-5246-400b-9188-5ea551e8185b",
+  "baseSpans": [
+    {
+      "uuid": "019bc088-f771-7a53-9741-0f62efb375da",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-15T07:22:40.369Z",
+      "endTime": "2026-01-15T07:22:42.568Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "confirm_order",
+            "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+            "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "status": "success"
+          },
+          {
+            "content": "Your order has been placed successfully! Your order number is #12345, and the estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 40,
+                "prompt_tokens": 423,
+                "total_tokens": 463,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByjTMhczbGN676im2XVN9a8C6xW",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-fb04-7480-99d1-eaad30490e3b-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 423,
+              "output_tokens": 40,
+              "total_tokens": 463,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-fb04-7480-99d1-ea967d225855",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-f771-7a53-9741-0f62efb375da",
+      "startTime": "2026-01-15T07:22:41.284Z",
+      "endTime": "2026-01-15T07:22:42.567Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "confirm_order",
+            "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+            "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Your order has been placed successfully! Your order number is #12345, and the estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 40,
+                "prompt_tokens": 423,
+                "total_tokens": 463,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByjTMhczbGN676im2XVN9a8C6xW",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-fb04-7480-99d1-eaad30490e3b-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 423,
+              "output_tokens": 40,
+              "total_tokens": 463,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc089-0007-76c3-9b5e-5ad12e58f8f2",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-fb04-7480-99d1-ea967d225855",
+      "startTime": "2026-01-15T07:22:42.567Z",
+      "endTime": "2026-01-15T07:22:42.567Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "confirm_order",
+            "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+            "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "status": "success"
+          },
+          {
+            "content": "Your order has been placed successfully! Your order number is #12345, and the estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 40,
+                "prompt_tokens": 423,
+                "total_tokens": 463,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByjTMhczbGN676im2XVN9a8C6xW",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-fb04-7480-99d1-eaad30490e3b-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 423,
+              "output_tokens": 40,
+              "total_tokens": 463,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": "__end__"
+    },
+    {
+      "uuid": "019bc088-fb01-7591-9943-06d9e4862136",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-f771-7a53-9741-0f62efb375da",
+      "startTime": "2026-01-15T07:22:41.281Z",
+      "endTime": "2026-01-15T07:22:41.283Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "confirm_order",
+            "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+            "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "status": "success"
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "confirm_order",
+          "output": {
+            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "confirm_order",
+            "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+            "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "status": "success"
+          },
+          "inputParameters": {}
+        }
+      ]
+    },
+    {
+      "uuid": "019bc088-f773-74f2-90df-e89ebfdc4aa1",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-f771-7a53-9741-0f62efb375da",
+      "startTime": "2026-01-15T07:22:40.371Z",
+      "endTime": "2026-01-15T07:22:41.280Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc088-faff-79d0-8d5d-f2002358245b",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc088-f773-74f2-90df-e89ebfdc4aa1",
+      "startTime": "2026-01-15T07:22:41.279Z",
+      "endTime": "2026-01-15T07:22:41.280Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Add 2 apples",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                  "function": {
+                    "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                    "name": "add_to_cart"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 20,
+                "prompt_tokens": 191,
+                "total_tokens": 211,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+            "tool_calls": [
+              {
+                "name": "add_to_cart",
+                "args": {
+                  "item": "apples",
+                  "quantity": 2
+                },
+                "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 191,
+              "output_tokens": 20,
+              "total_tokens": 211,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Added 2x apples to cart",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "add_to_cart",
+            "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+            "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "status": "success"
+          },
+          {
+            "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 227,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 227,
+              "output_tokens": 18,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Apply SAVE20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                  "function": {
+                    "arguments": "{\"code\":\"SAVE20\"}",
+                    "name": "apply_coupon"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 15,
+                "prompt_tokens": 255,
+                "total_tokens": 270,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+            "tool_calls": [
+              {
+                "name": "apply_coupon",
+                "args": {
+                  "code": "SAVE20"
+                },
+                "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 255,
+              "output_tokens": 15,
+              "total_tokens": 270,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "20% discount applied",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "apply_coupon",
+            "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+            "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "status": "success"
+          },
+          {
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 32,
+                "prompt_tokens": 282,
+                "total_tokens": 314,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 282,
+              "output_tokens": 32,
+              "total_tokens": 314,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "checkout"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 9,
+                "prompt_tokens": 322,
+                "total_tokens": 331,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+            "tool_calls": [
+              {
+                "name": "checkout",
+                "args": {},
+                "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 322,
+              "output_tokens": 9,
+              "total_tokens": 331,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "checkout",
+            "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+            "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "status": "success"
+          },
+          {
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 26,
+                "prompt_tokens": 353,
+                "total_tokens": 379,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 353,
+              "output_tokens": 26,
+              "total_tokens": 379,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Confirm my order",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                  "function": {
+                    "arguments": "{}",
+                    "name": "confirm_order"
+                  },
+                  "type": "function"
+                }
+              ],
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+            "tool_calls": [
+              {
+                "name": "confirm_order",
+                "args": {},
+                "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 389,
+              "output_tokens": 10,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "output": "tools"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bc088-fb04-7480-99d1-eaad30490e3b",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-fb04-7480-99d1-ea967d225855",
+      "startTime": "2026-01-15T07:22:41.284Z",
+      "endTime": "2026-01-15T07:22:42.567Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+        },
+        {
+          "role": "human",
+          "content": "Add 2 apples"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'add_to_cart', 'args': {'item': 'apples', 'quantity': 2}, 'id': 'call_s9L8I84wBaH4JehVOsW22r8d', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Added 2x apples to cart"
+        },
+        {
+          "role": "ai",
+          "content": "I've added 2 apples to your cart. Would you like to do anything else?"
+        },
+        {
+          "role": "human",
+          "content": "Apply SAVE20"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'apply_coupon', 'args': {'code': 'SAVE20'}, 'id': 'call_2hJiwKIPvaIrdibz6GE3jODm', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "20% discount applied"
+        },
+        {
+          "role": "ai",
+          "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?"
+        },
+        {
+          "role": "human",
+          "content": "Checkout"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'checkout', 'args': {}, 'id': 'call_Mw49ZMdZa5GpQ35u7jzMn1IL', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Checkout initiated. Total: $25.99. Confirm to place order."
+        },
+        {
+          "role": "ai",
+          "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?"
+        },
+        {
+          "role": "human",
+          "content": "Confirm my order"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'confirm_order', 'args': {}, 'id': 'call_EcWwktYLncUPm0DLMCxL69QH', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Your order has been placed successfully! Your order number is #12345, and the estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+        "tool_calls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 423.0,
+      "outputTokenCount": 40.0
+    },
+    {
+      "uuid": "019bc088-f773-74f2-90df-e8acedd77013",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc088-f773-74f2-90df-e89ebfdc4aa1",
+      "startTime": "2026-01-15T07:22:40.371Z",
+      "endTime": "2026-01-15T07:22:41.279Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+        },
+        {
+          "role": "human",
+          "content": "Add 2 apples"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'add_to_cart', 'args': {'item': 'apples', 'quantity': 2}, 'id': 'call_s9L8I84wBaH4JehVOsW22r8d', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Added 2x apples to cart"
+        },
+        {
+          "role": "ai",
+          "content": "I've added 2 apples to your cart. Would you like to do anything else?"
+        },
+        {
+          "role": "human",
+          "content": "Apply SAVE20"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'apply_coupon', 'args': {'code': 'SAVE20'}, 'id': 'call_2hJiwKIPvaIrdibz6GE3jODm', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "20% discount applied"
+        },
+        {
+          "role": "ai",
+          "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?"
+        },
+        {
+          "role": "human",
+          "content": "Checkout"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'checkout', 'args': {}, 'id': 'call_Mw49ZMdZa5GpQ35u7jzMn1IL', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "Checkout initiated. Total: $25.99. Confirm to place order."
+        },
+        {
+          "role": "ai",
+          "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?"
+        },
+        {
+          "role": "human",
+          "content": "Confirm my order"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "confirm_order",
+            "args": {},
+            "id": "call_EcWwktYLncUPm0DLMCxL69QH"
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "inputTokenCount": 389.0,
+      "outputTokenCount": 10.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bc088-fb02-7042-b1e8-f89181137b13",
+      "name": "confirm_order",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bc088-fb01-7591-9943-06d9e4862136",
+      "startTime": "2026-01-15T07:22:41.282Z",
+      "endTime": "2026-01-15T07:22:41.283Z",
+      "input": {},
+      "output": {
+        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "confirm_order",
+        "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+        "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-15T07:22:40.368Z",
+  "endTime": "2026-01-15T07:22:42.568Z",
+  "name": "langgraph-full-flow-4",
+  "environment": "development",
+  "threadId": "full-flow-001",
+  "input": {
+    "messages": [
+      {
+        "content": "Confirm my order",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Add 2 apples",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "11e636c5-d190-4896-be11-8e7a3ca0f594"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+              "function": {
+                "arguments": "{\"item\":\"apples\",\"quantity\":2}",
+                "name": "add_to_cart"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 20,
+            "prompt_tokens": 191,
+            "total_tokens": 211,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyBycdNfQCAukNEbgDamnROPhW7GM",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-e021-77e1-bbaa-320cf33e6f43-0",
+        "tool_calls": [
+          {
+            "name": "add_to_cart",
+            "args": {
+              "item": "apples",
+              "quantity": 2
+            },
+            "id": "call_s9L8I84wBaH4JehVOsW22r8d",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 191,
+          "output_tokens": 20,
+          "total_tokens": 211,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Added 2x apples to cart",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "add_to_cart",
+        "id": "e71188e1-28c7-404c-b6d4-e252b1128554",
+        "tool_call_id": "call_s9L8I84wBaH4JehVOsW22r8d",
+        "status": "success"
+      },
+      {
+        "content": "I've added 2 apples to your cart. Would you like to do anything else?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 18,
+            "prompt_tokens": 227,
+            "total_tokens": 245,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByduYdnmfCmxoXR7ofFJZS8cx3c",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-e3cf-7481-889d-b3bd1483e6c5-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 227,
+          "output_tokens": 18,
+          "total_tokens": 245,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Apply SAVE20",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "669d175c-88cc-4a85-a33a-d3b8fdf82c18"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+              "function": {
+                "arguments": "{\"code\":\"SAVE20\"}",
+                "name": "apply_coupon"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 15,
+            "prompt_tokens": 255,
+            "total_tokens": 270,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByeHAVq6DjnykzP6FpTTTDUL72e",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-e7a3-7163-a281-cd857ebed25f-0",
+        "tool_calls": [
+          {
+            "name": "apply_coupon",
+            "args": {
+              "code": "SAVE20"
+            },
+            "id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 255,
+          "output_tokens": 15,
+          "total_tokens": 270,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "20% discount applied",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "apply_coupon",
+        "id": "40c07953-1e07-485f-a1b6-eaf4746a75a5",
+        "tool_call_id": "call_2hJiwKIPvaIrdibz6GE3jODm",
+        "status": "success"
+      },
+      {
+        "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 32,
+            "prompt_tokens": 282,
+            "total_tokens": 314,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByfA8YDfcMmBA6tIQsTaHNBTI3J",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-eabb-74f1-a2da-2c9b3cc7b116-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 282,
+          "output_tokens": 32,
+          "total_tokens": 314,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Checkout",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "3a5741a0-90b6-4fde-bd28-6bd571f43351"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+              "function": {
+                "arguments": "{}",
+                "name": "checkout"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 9,
+            "prompt_tokens": 322,
+            "total_tokens": 331,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyBygp2uT3S2pRyxTkRm9pba724tI",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-eefd-7ad2-8092-b3a2d9337e6a-0",
+        "tool_calls": [
+          {
+            "name": "checkout",
+            "args": {},
+            "id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 322,
+          "output_tokens": 9,
+          "total_tokens": 331,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "checkout",
+        "id": "554a69ba-e3b4-44cc-9b36-baef8de7522b",
+        "tool_call_id": "call_Mw49ZMdZa5GpQ35u7jzMn1IL",
+        "status": "success"
+      },
+      {
+        "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 26,
+            "prompt_tokens": 353,
+            "total_tokens": 379,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByhkH4agK2oq1gIoFpXmfWqhEYy",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-f2c1-7e61-a89e-05dbf103b852-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 353,
+          "output_tokens": 26,
+          "total_tokens": 379,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Confirm my order",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "7121aac2-c8af-4640-95ca-e773992d2f51"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+              "function": {
+                "arguments": "{}",
+                "name": "confirm_order"
+              },
+              "type": "function"
+            }
+          ],
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 389,
+            "total_tokens": 399,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByi53Yfoz0UhbXV8Rs0jxntKtvU",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-f773-74f2-90df-e8acedd77013-0",
+        "tool_calls": [
+          {
+            "name": "confirm_order",
+            "args": {},
+            "id": "call_EcWwktYLncUPm0DLMCxL69QH",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 389,
+          "output_tokens": 10,
+          "total_tokens": 399,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "confirm_order",
+        "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+        "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+        "status": "success"
+      },
+      {
+        "content": "Your order has been placed successfully! Your order number is #12345, and the estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 423,
+            "total_tokens": 463,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-CyByjTMhczbGN676im2XVN9a8C6xW",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bc088-fb04-7480-99d1-eaad30490e3b-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 423,
+          "output_tokens": 40,
+          "total_tokens": 463,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "confirm_order",
+      "output": {
+        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "confirm_order",
+        "id": "6202a6a2-8c66-4a47-8553-579711213b51",
+        "tool_call_id": "call_EcWwktYLncUPm0DLMCxL69QH",
+        "status": "success"
+      },
+      "inputParameters": {}
+    }
+  ]
+}

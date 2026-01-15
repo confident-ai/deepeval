@@ -847,7 +847,12 @@ class Observer:
             self.trace_uuid = parent_span.trace_uuid
         else:
             current_trace = current_trace_context.get()
-            if current_trace:
+            # IMPORTANT: Verify trace is still active, not just in context
+            # (a previous failed async operation might leave a dead trace in context)
+            if (
+                current_trace
+                and current_trace.uuid in trace_manager.active_traces
+            ):
                 self.trace_uuid = current_trace.uuid
             else:
                 trace = trace_manager.start_new_trace(
