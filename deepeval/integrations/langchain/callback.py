@@ -10,7 +10,15 @@ from deepeval.tracing.types import (
     LlmToolCall,
 )
 from deepeval.metrics import BaseMetric
+from deepeval.tracing import trace_manager
 from deepeval.tracing.utils import prepare_tool_call_input_parameters
+from deepeval.tracing.types import (
+    LlmSpan,
+    RetrieverSpan,
+    TraceSpanStatus,
+    ToolSpan,
+)
+from deepeval.telemetry import capture_tracing_integration
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -27,10 +35,10 @@ try:
         enter_current_context,
         exit_current_context,
     )
-    from deepeval.integrations.langchain.patch import tool
+    from deepeval.integrations.langchain.patch import tool  # noqa: F401
 
     langchain_installed = True
-except:
+except ImportError:
     langchain_installed = False
 
 
@@ -39,16 +47,6 @@ def is_langchain_installed():
         raise ImportError(
             "LangChain is not installed. Please install it with `pip install langchain`."
         )
-
-
-from deepeval.tracing import trace_manager
-from deepeval.tracing.types import (
-    LlmSpan,
-    RetrieverSpan,
-    TraceSpanStatus,
-    ToolSpan,
-)
-from deepeval.telemetry import capture_tracing_integration
 
 
 class CallbackHandler(BaseCallbackHandler):
@@ -65,44 +63,78 @@ class CallbackHandler(BaseCallbackHandler):
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
-            # Check if there's already an active trace (e.g., from @observe wrapper)
-            # If so, reuse it instead of creating a new one
-            # IMPORTANT: Verify the trace is still in active_traces, not just in context
-            # (a previous failed async operation might leave a dead trace in context)
-            existing_trace = current_trace_context.get()
-            if (
-                existing_trace
-                and existing_trace.uuid in trace_manager.active_traces
-            ):
-                trace = existing_trace
-            else:
-                trace = trace_manager.start_new_trace()
-                current_trace_context.set(trace)
+            # Do not create or set a trace in __init__.
+            # CallbackHandler instances are often constructed outside the async Task
+            # that actually runs LangGraph/LangChain. Creating a trace here can
+            # corrupt ContextVars and break observe wrapped async execution
+            self._trace = None
+            self.trace_uuid = None
 
-            self.trace_uuid = trace.uuid
-            self._trace = trace  # Store reference for context restoration
+            # Lazily captured fallback parent when callbacks execute.
+            self._parent_span = None
 
-            # Capture the current span from @observe wrapper if present
-            # This ensures LangChain spans are nested under the Observer's span
-            self._parent_span = current_span_context.get()
+            # Stash trace metadata to apply once we know which trace we are using.
+            self._trace_init_fields: Dict[str, Any] = {
+                "name": name,
+                "tags": tags,
+                "metadata": metadata,
+                "thread_id": thread_id,
+                "user_id": user_id,
+            }
 
             # Map LangChain run_id -> our span uuid for parent span restoration
             self._run_id_to_span_uuid: Dict[str, str] = {}
 
             # Only set trace metadata if values are provided
-            if name is not None:
-                trace.name = name
-            if tags is not None:
-                trace.tags = tags
-            if metadata is not None:
-                trace.metadata = metadata
-            if thread_id is not None:
-                trace.thread_id = thread_id
-            if user_id is not None:
-                trace.user_id = user_id
             self.metrics = metrics
             self.metric_collection = metric_collection
             super().__init__()
+
+    def _ensure_trace(self):
+        """
+        Ensure there's an active trace in ContextVars for this callback invocation.
+        This is done lazily during actual callback execution to avoid context
+        corruption when the handler is constructed outside the async task/context.
+        """
+        # Prefer current context trace if it is active.
+        ctx_trace = current_trace_context.get()
+        if ctx_trace and ctx_trace.uuid in trace_manager.active_traces:
+            trace = ctx_trace
+        else:
+            # Otherwise, restore our stored trace if still active.
+            if self._trace and self._trace.uuid in trace_manager.active_traces:
+                trace = self._trace
+                current_trace_context.set(trace)
+            else:
+                # Otherwise, create a fresh trace now (in the right context).
+                trace = trace_manager.start_new_trace()
+                current_trace_context.set(trace)
+                self._trace = trace
+
+        # Keep a copy for quick access.
+        self.trace_uuid = trace.uuid
+
+        # Apply stashed metadata once.
+        fields = getattr(self, "_trace_init_fields", None) or {}
+        if fields:
+            if fields.get("name") is not None:
+                trace.name = fields["name"]
+            if fields.get("tags") is not None:
+                trace.tags = fields["tags"]
+            if fields.get("metadata") is not None:
+                trace.metadata = fields["metadata"]
+            if fields.get("thread_id") is not None:
+                trace.thread_id = fields["thread_id"]
+            if fields.get("user_id") is not None:
+                trace.user_id = fields["user_id"]
+            # prevent re-applying on every callback
+            self._trace_init_fields = {}
+
+        # Lazily capture the observe parent span if present.
+        if self._parent_span is None:
+            self._parent_span = current_span_context.get()
+
+        return trace
 
     @contextmanager
     def _ctx(self, run_id: UUID, parent_run_id: Optional[UUID] = None):
@@ -114,15 +146,12 @@ class CallbackHandler(BaseCallbackHandler):
         IMPORTANT: parent_run_id from LangChain is the source of truth for hierarchy.
         We ALWAYS use it to set the correct parent span, not just when context is lost.
         """
-        trace_token = None
         span_token = None
 
         try:
-            # Restore trace context if lost
-            # IMPORTANT: Verify trace is still active before restoring
-            if current_trace_context.get() is None and self._trace:
-                if self._trace.uuid in trace_manager.active_traces:
-                    trace_token = current_trace_context.set(self._trace)
+            # Ensure we have a valid trace in this execution context.
+            # May start a trace here, or restore a stored one, or reuse an @observe trace.
+            self._ensure_trace()
 
             # Set parent span based on LangChain's parent_run_id (source of truth for hierarchy)
             # Priority order:
@@ -161,8 +190,6 @@ class CallbackHandler(BaseCallbackHandler):
         finally:
             if span_token is not None:
                 current_span_context.reset(span_token)
-            if trace_token is not None:
-                current_trace_context.reset(trace_token)
 
     def on_chain_start(
         self,
