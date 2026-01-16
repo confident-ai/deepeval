@@ -65,26 +65,3 @@ def debug_span_names(trace_dict: dict) -> dict:
         "toolSpans": span_names_by_key(trace_dict, "toolSpans"),
         "agentSpans": span_names_by_key(trace_dict, "agentSpans"),
     }
-
-
-# def get_span_test_case(span: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-#     """
-#     Return the test case payload from a span if present.
-#     Supports a few common serialization shapes.
-#     """
-#     # Most direct: `testCase` or `test_case`
-#     for k in ("testCase", "test_case", "llmTestCase", "llm_test_case"):
-#         v = span.get(k)
-#         if isinstance(v, dict):
-#             return v
-
-#     # Sometimes nested under metadata/attributes
-#     for outer in ("metadata", "attributes", "attr", "spanAttributes"):
-#         outer_v = span.get(outer)
-#         if isinstance(outer_v, dict):
-#             for k in ("testCase", "test_case", "llmTestCase", "llm_test_case"):
-#                 v = outer_v.get(k)
-#                 if isinstance(v, dict):
-#                     return v
-
-#     return None

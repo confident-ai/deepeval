@@ -24,8 +24,6 @@ client = OpenAI()
 
 
 # Apps
-
-
 def your_llm_app(input: str):
     @observe(type="retriever")
     def retriever(input: str):
@@ -349,7 +347,7 @@ def your_llm_app_with_tools_called(input: str):
     Docs: LLMTestCase supports tools_called and expected_tools fields.
     """
 
-    @observe(type="tool", name="search_tool")
+    @observe(type="tool", name="observe_search_tool")
     def search_tool(query: str):
         return "search result"
 
@@ -467,15 +465,12 @@ def test_metrics_configured_on_observe_execute_for_generator_span():
         "Answer Relevancy" in metric_names
     ), f"Expected 'Answer Relevancy' metric in metricsData. Got: {metric_names}"
 
-    # Optional: assert stable config fields for that metric entry
     answer_rel = next(
         m for m in metrics_data if m.get("name") == "Answer Relevancy"
     )
     assert answer_rel.get("threshold") == 0.5
     assert answer_rel.get("strictMode") is False
     assert answer_rel.get("evaluationModel") == "gpt-4.1"
-    # success might vary depending on how/when metrics are actually computed,
-    # so only assert it exists as a boolean if you want:
     assert isinstance(answer_rel.get("success"), bool)
 
 
@@ -504,7 +499,6 @@ def test_metrics_not_applied_to_non_metric_components():
         not offenders
     ), f"Expected no metricsData on non-generator spans; found on: {offenders}"
 
-    # (Optional) if retriever span exists, assert it specifically
     retriever_span = next(
         (s for s in spans if s.get("name") == "retriever"), None
     )
@@ -755,12 +749,6 @@ def test_evals_iterator_emits_span_with_matching_input_per_golden():
         assert gen.get("input") == golden.input
 
 
-###############################
-# Additional coverage tests   #
-###############################
-
-
-# Consider deleting this test
 def test_update_current_trace_sets_trace_level_test_case():
     """
     Docs: update_current_trace can be used to set end-to-end test cases for the trace.
@@ -785,7 +773,6 @@ def test_update_current_trace_sets_trace_level_test_case():
     )
 
 
-# consider deleting this test: not asserting anything of value
 def test_update_current_span_with_individual_params():
     """
     Docs: update_current_span can take individual LLMTestCase params
@@ -808,7 +795,6 @@ def test_update_current_span_with_individual_params():
     assert gen.get("output") == "MOCK_RESPONSE"
 
 
-# consider deleting this test: Low value
 def test_observe_name_parameter_customizes_span_name():
     """
     Docs: The @observe decorator accepts a `name` parameter to customize
@@ -894,15 +880,49 @@ def test_llm_test_case_with_tools_called():
     assert gen is not None
 
     # Also verify tool span was created
-    tool_span = find_span_by_name(trace_dict, "search_tool")
+    tool_span = find_span_by_name(trace_dict, "observe_search_tool")
     tool_names = span_names_by_key(trace_dict, "toolSpans")
     base_names = span_names_by_key(trace_dict, "baseSpans")
 
     assert (
         tool_span is not None
-        or "search_tool" in tool_names
-        or "search_tool" in base_names
-    ), f"Expected search_tool span. Got: {debug_span_names(trace_dict)}"
+        or "observe_search_tool" in tool_names
+        or "observe_search_tool" in base_names
+    ), f"Expected observe_search_tool span. Got: {debug_span_names(trace_dict)}"
+
+    assert find_span_by_name(trace_dict, "search_tool") is None
+
+
+def test_update_current_span_name_overrides_observer_name():
+    @observe(type="tool", name="observer_name")
+    def tool_fn(x: str):
+        update_current_span(name="update_name")
+        return "ok"
+
+    out = tool_fn("x")
+    assert out == "ok"
+
+    trace_dict = get_latest_trace_dict()
+    span = find_span_by_name(trace_dict, "update_name")
+    assert span is not None, (
+        "Expected update_current_span(name=...) to override @observe(name=...). "
+        f"Got: {debug_span_names(trace_dict)}"
+    )
+    assert find_span_by_name(trace_dict, "observer_name") is None
+
+
+def test_update_current_span_output_not_overridden_by_observer_kwargs():
+    @observe(name="tool_span", type="tool", output="SHOULD_NOT_WIN")
+    def tool_fn(x: str):
+        update_current_span(output="SHOULD_WIN")
+        return "ok"
+
+    tool_fn("x")
+
+    trace_dict = get_latest_trace_dict()
+    span = find_span_by_name(trace_dict, "tool_span")
+    assert span is not None
+    assert span.get("output") == "SHOULD_WIN"
 
 
 def test_golden_with_expected_output():
@@ -1068,3 +1088,163 @@ def test_agent_span_type():
         "test_agent" in agent_names
         or find_span_by_name(trace_dict, "test_agent") is not None
     ), f"Expected test_agent span. Got: {debug_span_names(trace_dict)}"
+
+
+###############################################################
+# Checklist: Nested execution contexts produce parent/child   #
+#            span relationships with explicit UUID edges      #
+###############################################################
+
+
+def test_nested_spans_parent_child_uuid_relationships():
+    """
+    Checklist item 1: Nested execution contexts correctly produce parent and
+    child span relationships.
+
+    This test verifies:
+    - All spans have a uuid field
+    - Parent-child relationships are explicitly linked via parentUuid == parent.uuid
+    - The tree structure is: nested_app (root) -> outer_retriever -> inner_retriever
+                                              -> generator
+    """
+    out = your_llm_app_nested_spans("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    spans = all_spans(trace_dict)
+
+    def by_name(n: str):
+        return next((s for s in spans if s.get("name") == n), None)
+
+    app_span = by_name("nested_app")
+    outer_span = by_name("outer_retriever")
+    inner_span = by_name("inner_retriever")
+    gen_span = by_name("generator")
+
+    # All spans must exist
+    assert (
+        app_span is not None
+    ), f"Missing nested_app. Available: {[s.get('name') for s in spans]}"
+    assert (
+        outer_span is not None
+    ), f"Missing outer_retriever. Available: {[s.get('name') for s in spans]}"
+    assert (
+        inner_span is not None
+    ), f"Missing inner_retriever. Available: {[s.get('name') for s in spans]}"
+    assert (
+        gen_span is not None
+    ), f"Missing generator. Available: {[s.get('name') for s in spans]}"
+
+    # All spans must have a uuid
+    assert app_span.get("uuid"), "nested_app must have uuid"
+    assert outer_span.get("uuid"), "outer_retriever must have uuid"
+    assert inner_span.get("uuid"), "inner_retriever must have uuid"
+    assert gen_span.get("uuid"), "generator must have uuid"
+
+    # Verify explicit parent-child UUID relationships
+    # nested_app is root (parentUuid is None or missing)
+    assert (
+        app_span.get("parentUuid") is None
+    ), f"nested_app should be root span with no parent, got parentUuid={app_span.get('parentUuid')}"
+
+    # outer_retriever.parentUuid == nested_app.uuid
+    assert outer_span.get("parentUuid") == app_span.get("uuid"), (
+        f"outer_retriever.parentUuid should equal nested_app.uuid. "
+        f"Got parentUuid={outer_span.get('parentUuid')}, expected={app_span.get('uuid')}"
+    )
+
+    # inner_retriever.parentUuid == outer_retriever.uuid
+    assert inner_span.get("parentUuid") == outer_span.get("uuid"), (
+        f"inner_retriever.parentUuid should equal outer_retriever.uuid. "
+        f"Got parentUuid={inner_span.get('parentUuid')}, expected={outer_span.get('uuid')}"
+    )
+
+    # generator.parentUuid == nested_app.uuid
+    assert gen_span.get("parentUuid") == app_span.get("uuid"), (
+        f"generator.parentUuid should equal nested_app.uuid. "
+        f"Got parentUuid={gen_span.get('parentUuid')}, expected={app_span.get('uuid')}"
+    )
+
+
+###############################################################
+# Checklist: Component-level outputs convert to serialized    #
+#            structure (TraceApi) with expected keys          #
+###############################################################
+
+
+def test_trace_serialization_contains_expected_top_level_keys():
+    """
+    Checklist item 2: Component-level outputs can be converted into a test run
+    or serialized structure with the expected keys.
+
+    Verifies the trace_dict (TraceApi serialized output) contains:
+    - Top-level keys: uuid, startTime, endTime, status
+    - Typed span bucket keys: baseSpans, agentSpans, llmSpans, retrieverSpans, toolSpans
+    - Each bucket is a list
+    - Spans in buckets have required keys: uuid, name, status, startTime, endTime
+    """
+    out = your_llm_app_rooted("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    # Top-level trace keys
+    assert "uuid" in trace_dict, "Trace must have 'uuid' key"
+    assert "startTime" in trace_dict, "Trace must have 'startTime' key"
+    assert "endTime" in trace_dict, "Trace must have 'endTime' key"
+    assert "status" in trace_dict, "Trace must have 'status' key"
+
+    # Typed span bucket keys must exist as lists
+    expected_buckets = [
+        "baseSpans",
+        "agentSpans",
+        "llmSpans",
+        "retrieverSpans",
+        "toolSpans",
+    ]
+    for bucket in expected_buckets:
+        assert bucket in trace_dict, f"Trace must have '{bucket}' key"
+        assert isinstance(
+            trace_dict[bucket], list
+        ), f"'{bucket}' must be a list"
+
+    # Verify spans have required per-span keys
+    required_span_keys = {"uuid", "name", "status", "startTime", "endTime"}
+    for bucket in expected_buckets:
+        for span in trace_dict[bucket]:
+            missing = required_span_keys - set(span.keys())
+            assert (
+                not missing
+            ), f"Span '{span.get('name')}' in {bucket} missing keys: {missing}"
+
+
+###############################################################
+# Regression: ToolSpan kwargs collision fix                   #
+###############################################################
+
+
+def test_observe_tool_with_name_kwarg_does_not_crash():
+    """
+    Regression test: @observe(type="tool", name="...") previously crashed due to
+    kwargs collision when 'name' was passed both in observe_kwargs and span_kwargs.
+    The fix filters observe_kwargs to ToolSpan model fields and drops colliding keys.
+    """
+
+    @observe(type="tool", name="my_named_tool")
+    def named_tool_func(arg: str) -> str:
+        return f"tool output: {arg}"
+
+    result = named_tool_func("test_input")
+    assert result == "tool output: test_input"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    # The tool span should be in toolSpans with the custom name
+    tool_names = span_names_by_key(trace_dict, "toolSpans")
+    assert (
+        "my_named_tool" in tool_names
+    ), f"Expected 'my_named_tool' in toolSpans. Got: {tool_names}"
