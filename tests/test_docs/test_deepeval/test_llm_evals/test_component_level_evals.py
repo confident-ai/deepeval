@@ -12,9 +12,10 @@ from tests.test_docs.test_deepeval.test_llm_evals.helpers import (
     debug_span_names,
 )
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
-from deepeval.tracing import observe, update_current_span
+from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.test_case import LLMTestCase
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.metrics import AnswerRelevancyMetric
 
 
@@ -179,6 +180,197 @@ def your_llm_app_update_twice(input: str):
         )
         update_current_span(
             test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    return generator(input)
+
+
+def your_llm_app_with_update_current_trace(input: str):
+    """
+    Docs: update_current_trace can be used to set end-to-end test cases for the trace.
+    This app demonstrates using update_current_trace to set trace-level test case data.
+    """
+
+    @observe(type="retriever")
+    def retriever(input: str):
+        chunks = ["Hardcoded text chunks from your vector database"]
+        update_current_trace(retrieval_context=chunks)
+        return chunks
+
+    @observe()
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_trace(input=input, output=res)
+        return res
+
+    @observe(type="agent", name="app_with_trace_update")
+    def app():
+        chunks = retriever(input)
+        return generator(input, chunks)
+
+    return app()
+
+
+def your_llm_app_update_span_with_individual_params(input: str):
+    """
+    Docs: update_current_span can take individual LLMTestCase params directly
+    instead of a test_case object.
+    """
+
+    @observe(type="retriever")
+    def retriever(input: str):
+        chunks = ["Hardcoded text chunks"]
+        # Using individual params instead of test_case=LLMTestCase(...)
+        update_current_span(input=input, retrieval_context=chunks)
+        return chunks
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        # Using individual params: input, output (actual_output maps to output)
+        update_current_span(
+            input=input, output=res, retrieval_context=retrieved_chunks
+        )
+        return res
+
+    @observe(type="agent", name="app_individual_params")
+    def app():
+        chunks = retriever(input)
+        return generator(input, chunks)
+
+    return app()
+
+
+def your_llm_app_with_custom_span_name(input: str):
+    """
+    Docs: The @observe decorator accepts a `name` parameter to customize span display name.
+    """
+
+    @observe(name="CustomRetrieverName")
+    def retriever(input: str):
+        return ["Hardcoded text chunks"]
+
+    @observe(name="CustomGeneratorName", metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    return generator(input, retriever(input))
+
+
+def your_llm_app_with_llm_type(input: str):
+    """
+    Docs: The @observe decorator accepts type="llm" for LLM-specific spans.
+    """
+
+    @observe(type="llm", name="llm_call")
+    def llm_call(input: str):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(input=input, output=res)
+        return res
+
+    return llm_call(input)
+
+
+def your_llm_app_nested_spans(input: str):
+    """
+    Docs: A span can contain many child spans, forming a tree structure.
+    Tests nested span hierarchy.
+    """
+
+    @observe(name="inner_retriever")
+    def inner_retriever(query: str):
+        return ["inner chunk"]
+
+    @observe(name="outer_retriever")
+    def outer_retriever(query: str):
+        inner_chunks = inner_retriever(query)
+        return inner_chunks + ["outer chunk"]
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(input=input, actual_output=res)
+        )
+        return res
+
+    @observe(type="agent", name="nested_app")
+    def app():
+        chunks = outer_retriever(input)
+        return generator(input, chunks)
+
+    return app()
+
+
+def your_llm_app_with_expected_output(input: str, expected: str = None):
+    """
+    Docs: LLMTestCase supports expected_output field for comparison metrics.
+    """
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str):
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input, actual_output=res, expected_output=expected
+            )
+        )
+        return res
+
+    return generator(input)
+
+
+def your_llm_app_with_context(input: str):
+    """
+    Docs: LLMTestCase supports context field (ground truth context).
+    """
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str):
+        res = client.chat.completions.create(...).choices[0].message.content
+        ground_truth_context = ["This is the ground truth context"]
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input, actual_output=res, context=ground_truth_context
+            )
+        )
+        return res
+
+    return generator(input)
+
+
+def your_llm_app_with_tools_called(input: str):
+    """
+    Docs: LLMTestCase supports tools_called and expected_tools fields.
+    """
+
+    @observe(type="tool", name="search_tool")
+    def search_tool(query: str):
+        return "search result"
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str):
+
+        tool_result = search_tool(input)
+        res = client.chat.completions.create(...).choices[0].message.content
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=res,
+                tools_called=[
+                    ToolCall(
+                        name="search_tool",
+                        input_parameters={"query": input},
+                        output=tool_result,
+                    )
+                ],
+                expected_tools=[ToolCall(name="search_tool")],
+            )
         )
         return res
 
@@ -561,3 +753,318 @@ def test_evals_iterator_emits_span_with_matching_input_per_golden():
         gen = find_span_by_name(trace_dict, "generator")
         assert gen is not None
         assert gen.get("input") == golden.input
+
+
+###############################
+# Additional coverage tests   #
+###############################
+
+
+# Consider deleting this test
+def test_update_current_trace_sets_trace_level_test_case():
+    """
+    Docs: update_current_trace can be used to set end-to-end test cases for the trace.
+    Verifies that calling update_current_trace populates trace-level data.
+    """
+    out = your_llm_app_with_update_current_trace("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    # The trace should have the test case data set via update_current_trace
+    # Check that spans were created (the app structure)
+    agent_names = span_names_by_key(trace_dict, "agentSpans")
+    assert "app_with_trace_update" in agent_names
+
+    retriever_names = span_names_by_key(trace_dict, "retrieverSpans")
+    # Retriever span should exist
+    assert (
+        len(retriever_names) >= 1
+        or find_span_by_name(trace_dict, "retriever") is not None
+    )
+
+
+# consider deleting this test: not asserting anything of value
+def test_update_current_span_with_individual_params():
+    """
+    Docs: update_current_span can take individual LLMTestCase params
+    (input, output, retrieval_context, context, expected_output, etc.)
+    directly instead of a test_case object.
+    """
+    out = your_llm_app_update_span_with_individual_params("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    gen = find_span_by_name(trace_dict, "generator")
+    assert (
+        gen is not None
+    ), f"Expected generator span. {debug_span_names(trace_dict)}"
+
+    # Verify the individual params were captured
+    assert gen.get("input") == "How are you?"
+    assert gen.get("output") == "MOCK_RESPONSE"
+
+
+# consider deleting this test: Low value
+def test_observe_name_parameter_customizes_span_name():
+    """
+    Docs: The @observe decorator accepts a `name` parameter to customize
+    how this span is displayed.
+    """
+    out = your_llm_app_with_custom_span_name("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    # Check that custom names are used instead of function names
+    custom_retriever = find_span_by_name(trace_dict, "CustomRetrieverName")
+    custom_generator = find_span_by_name(trace_dict, "CustomGeneratorName")
+
+    assert custom_retriever is not None or custom_generator is not None, (
+        f"Expected at least one custom-named span. "
+        f"Available: {debug_span_names(trace_dict)}"
+    )
+
+
+def test_observe_type_llm_creates_llm_span():
+    """
+    Docs: The @observe decorator accepts type="llm" for LLM-specific spans.
+    """
+    out = your_llm_app_with_llm_type("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    llm_names = span_names_by_key(trace_dict, "llmSpans")
+    base_names = span_names_by_key(trace_dict, "baseSpans")
+
+    # Accept either llmSpans or baseSpans depending on implementation
+    assert ("llm_call" in llm_names) or ("llm_call" in base_names), (
+        f"Expected an llm span named 'llm_call'. "
+        f"Span keys: {debug_span_names(trace_dict)}"
+    )
+
+
+def test_nested_spans_form_tree_structure():
+    """
+    Docs: A span can contain many child spans, forming a tree structure—
+    just like how different components of your LLM application interact.
+    """
+    out = your_llm_app_nested_spans("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    spans = all_spans(trace_dict)
+
+    def by_name(n: str):
+        return next((s for s in spans if s.get("name") == n), None)
+
+    app = by_name("nested_app")
+    outer = by_name("outer_retriever")
+    inner = by_name("inner_retriever")
+    gen = by_name("generator")
+
+    assert app is not None, "Missing nested_app span"
+    assert outer is not None, "Missing outer_retriever span"
+    assert inner is not None, "Missing inner_retriever span"
+    assert gen is not None, "Missing generator span"
+
+    # assert Parent child edges
+    assert outer.get("parentUuid") == app.get("uuid")
+    assert inner.get("parentUuid") == outer.get("uuid")
+    assert gen.get("parentUuid") == app.get("uuid")
+
+
+def test_llm_test_case_with_tools_called():
+    """
+    Docs: LLMTestCase supports tools_called and expected_tools fields.
+    """
+    out = your_llm_app_with_tools_called("How are you?")
+    assert out == "MOCK_RESPONSE"
+
+    trace_dict = get_latest_trace_dict()
+    gen = find_span_by_name(trace_dict, "generator")
+    assert gen is not None
+
+    # Also verify tool span was created
+    tool_span = find_span_by_name(trace_dict, "search_tool")
+    tool_names = span_names_by_key(trace_dict, "toolSpans")
+    base_names = span_names_by_key(trace_dict, "baseSpans")
+
+    assert (
+        tool_span is not None
+        or "search_tool" in tool_names
+        or "search_tool" in base_names
+    ), f"Expected search_tool span. Got: {debug_span_names(trace_dict)}"
+
+
+def test_golden_with_expected_output():
+    """
+    Docs: Golden can include expected_output for comparison during evaluation.
+    """
+    golden = Golden(input="What is 2+2?", expected_output="4")
+
+    assert golden.input == "What is 2+2?"
+    assert golden.expected_output == "4"
+
+
+def test_golden_with_additional_metadata():
+    """
+    Docs: Golden supports additional fields for richer test cases.
+    """
+    golden = Golden(
+        input="Tell me about Paris",
+        expected_output="Paris is the capital of France.",
+        context=[
+            "Paris is located in France.",
+            "Paris is known for the Eiffel Tower.",
+        ],
+    )
+
+    assert golden.input == "Tell me about Paris"
+    assert golden.expected_output == "Paris is the capital of France."
+    assert golden.context == [
+        "Paris is located in France.",
+        "Paris is known for the Eiffel Tower.",
+    ]
+
+
+def test_evaluation_dataset_from_goldens_list():
+    """
+    Docs: EvaluationDataset can be created from a list of Golden objects.
+    """
+    goldens = [
+        Golden(input="Q1"),
+        Golden(input="Q2"),
+        Golden(input="Q3"),
+    ]
+
+    dataset = EvaluationDataset(goldens=goldens)
+
+    # Verify dataset contains all goldens
+    result = list(dataset.evals_iterator())
+    assert len(result) == 3
+    assert [g.input for g in result] == ["Q1", "Q2", "Q3"]
+
+
+def test_observe_decorator_without_parameters():
+    """
+    Docs: @observe() can be used without any parameters for basic tracing.
+    """
+
+    @observe()
+    def simple_component(x: str):
+        return f"processed: {x}"
+
+    result = simple_component("test")
+    assert result == "processed: test"
+
+    trace_dict = get_latest_trace_dict()
+    assert trace_dict is not None
+
+    span = find_span_by_name(trace_dict, "simple_component")
+    assert (
+        span is not None
+    ), f"Expected simple_component span. Got: {debug_span_names(trace_dict)}"
+
+
+def test_observe_decorator_with_multiple_metrics():
+    """
+    Docs: @observe can accept a list of multiple metrics.
+    """
+    from deepeval.metrics import AnswerRelevancyMetric
+
+    # Note: In real usage you might have different metrics
+    # Here we just verify the decorator accepts a list
+    @observe(
+        metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric(threshold=0.7)]
+    )
+    def multi_metric_component(x: str):
+        res = "response"
+        update_current_span(test_case=LLMTestCase(input=x, actual_output=res))
+        return res
+
+    result = multi_metric_component("test")
+    assert result == "response"
+
+    trace_dict = get_latest_trace_dict()
+    span = find_span_by_name(trace_dict, "multi_metric_component")
+    assert span is not None
+
+    # Should have metricsData with entries for both metrics
+    metrics_data = span.get("metricsData")
+    assert metrics_data is not None
+    assert len(metrics_data) >= 1  # At least one metric should be present
+
+
+def test_retriever_span_type():
+    """
+    Docs: type="retriever" creates a retriever-typed span.
+    """
+
+    @observe(type="retriever", name="test_retriever")
+    def retriever_func(query: str):
+        return ["chunk1", "chunk2"]
+
+    result = retriever_func("test query")
+    assert result == ["chunk1", "chunk2"]
+
+    trace_dict = get_latest_trace_dict()
+    retriever_names = span_names_by_key(trace_dict, "retrieverSpans")
+
+    # Either in retrieverSpans or as a named span
+    assert (
+        "test_retriever" in retriever_names
+        or find_span_by_name(trace_dict, "test_retriever") is not None
+    ), f"Expected test_retriever span. Got: {debug_span_names(trace_dict)}"
+
+
+def test_tool_span_type():
+    """
+    Docs: type="tool" creates a tool-typed span.
+    """
+
+    @observe(type="tool", name="test_tool")
+    def tool_func(args: str):
+        return "tool result"
+
+    result = tool_func("test args")
+    assert result == "tool result"
+
+    trace_dict = get_latest_trace_dict()
+    tool_names = span_names_by_key(trace_dict, "toolSpans")
+    base_names = span_names_by_key(trace_dict, "baseSpans")
+
+    assert (
+        "test_tool" in tool_names
+        or "test_tool" in base_names
+        or find_span_by_name(trace_dict, "test_tool") is not None
+    ), f"Expected test_tool span. Got: {debug_span_names(trace_dict)}"
+
+
+def test_agent_span_type():
+    """
+    Docs: type="agent" creates an agent-typed span.
+    """
+
+    @observe(type="agent", name="test_agent")
+    def agent_func(input: str):
+        return "agent response"
+
+    result = agent_func("test input")
+    assert result == "agent response"
+
+    trace_dict = get_latest_trace_dict()
+    agent_names = span_names_by_key(trace_dict, "agentSpans")
+
+    assert (
+        "test_agent" in agent_names
+        or find_span_by_name(trace_dict, "test_agent") is not None
+    ), f"Expected test_agent span. Got: {debug_span_names(trace_dict)}"

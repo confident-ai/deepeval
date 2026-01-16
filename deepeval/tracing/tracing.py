@@ -63,6 +63,7 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
+    filter_model_kwargs,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -1037,7 +1038,13 @@ class Observer:
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
-            return ToolSpan(**span_kwargs, **self.observe_kwargs)
+            kwargs = filter_model_kwargs(ToolSpan, dict(self.observe_kwargs))
+
+            # Only drop keys that would collide with explicit span_kwargs
+            collisions = set(kwargs).intersection(span_kwargs)
+            for k in collisions:
+                kwargs.pop(k, None)
+            return ToolSpan(**span_kwargs, **kwargs)
         else:
             return BaseSpan(**span_kwargs)
 
