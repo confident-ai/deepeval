@@ -1,0 +1,64 @@
+{
+  "uuid": "2fdad2ee-0b3e-4bf3-b369-18190dd087b2",
+  "baseSpans": [
+    {
+      "uuid": "b4369528-7639-42bd-9e16-82cc8c1441b5",
+      "name": "generator",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "de7bb0c4-f60b-4026-ac4a-94f5a1b5a613",
+      "startTime": "2026-01-15T23:20:40.180Z",
+      "endTime": "2026-01-15T23:20:40.180Z",
+      "input": "How are you?",
+      "output": "MOCK_RESPONSE",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "de7bb0c4-f60b-4026-ac4a-94f5a1b5a613",
+      "name": "app",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-15T23:20:40.180Z",
+      "endTime": "2026-01-15T23:20:40.180Z",
+      "input": {},
+      "output": "MOCK_RESPONSE",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "0ceaf7ac-dd9d-4e9a-b85c-3c1acde6a227",
+      "name": "retriever",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "de7bb0c4-f60b-4026-ac4a-94f5a1b5a613",
+      "startTime": "2026-01-15T23:20:40.180Z",
+      "endTime": "2026-01-15T23:20:40.180Z",
+      "input": {
+        "input": "How are you?"
+      },
+      "output": [
+        "Hardcoded text chunks from your vector database"
+      ]
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-15T23:20:40.180Z",
+  "endTime": "2026-01-15T23:20:40.180Z",
+  "environment": "development",
+  "input": {},
+  "output": "MOCK_RESPONSE",
+  "status": "SUCCESS"
+}

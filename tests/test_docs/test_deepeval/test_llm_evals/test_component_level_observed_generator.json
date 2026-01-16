@@ -1,0 +1,39 @@
+{
+  "uuid": "ca1f50ef-341c-4557-a3ba-179eecc45d5e",
+  "baseSpans": [
+    {
+      "uuid": "c4c3bd90-9451-4f74-977e-7d974c6262e2",
+      "name": "generator",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-14T00:51:14.060Z",
+      "endTime": "2026-01-14T00:51:14.060Z",
+      "input": "How are you?",
+      "output": "MOCK_RESPONSE",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-14T00:51:14.060Z",
+  "endTime": "2026-01-14T00:51:14.060Z",
+  "environment": "development",
+  "input": {
+    "input": "How are you?",
+    "retrieved_chunks": [
+      "Hardcoded text chunks from your vector database"
+    ]
+  },
+  "output": "MOCK_RESPONSE",
+  "status": "SUCCESS"
+}
