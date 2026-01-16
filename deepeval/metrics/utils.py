@@ -375,6 +375,15 @@ def trimAndLoadJson(
     input_string: str,
     metric: Optional[BaseMetric] = None,
 ) -> Any:
+    # Remove <think>...</think> blocks (multiline-safe, non-greedy)
+    input_string = re.sub(
+        r"<think>.*?</think>",
+        "",
+        input_string,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # JSON trimming logic
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
 
