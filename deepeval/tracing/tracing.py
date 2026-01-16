@@ -1039,11 +1039,8 @@ class Observer:
 
         elif self.span_type == SpanType.TOOL.value:
             kwargs = filter_model_kwargs(ToolSpan, dict(self.observe_kwargs))
-
-            # Only drop keys that would collide with explicit span_kwargs
-            collisions = set(kwargs).intersection(span_kwargs)
-            for k in collisions:
-                kwargs.pop(k, None)
+            # explicit span_kwargs always win over observe_kwargs
+            kwargs = {k: v for k, v in kwargs.items() if k not in span_kwargs}
             return ToolSpan(**span_kwargs, **kwargs)
         else:
             return BaseSpan(**span_kwargs)
