@@ -4,7 +4,16 @@ import asyncio
 from contextlib import contextmanager
 from unittest.mock import MagicMock
 from types import SimpleNamespace
-from typing import Callable, List, Optional, Protocol, runtime_checkable
+from typing import (
+    Any,
+    Callable,
+    List,
+    Optional,
+    Protocol,
+    Type,
+    TypeVar,
+    runtime_checkable,
+)
 
 from deepeval.constants import ProviderSlug as PS
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
@@ -85,6 +94,12 @@ class StubPrompt:
 class DummyModel:
     def get_model_name(self):
         return "dummy"
+
+    def generate_with_schema(self, *args, **kwargs):
+        raise AssertionError("LLM should not be called for empty actual_output")
+
+    async def a_generate_with_schema(self, *args, **kwargs):
+        raise AssertionError("LLM should not be called for empty actual_output")
 
 
 class AlwaysJsonModel:
@@ -212,6 +227,7 @@ def _make_fake_genai_module():
 ###########
 # Metrics #
 ###########
+M = TypeVar("M")
 
 
 class _DummyMetric(BaseMetric):
@@ -346,6 +362,35 @@ class _PerAttemptTimeoutMetric(BaseMetric):
     # required by BaseMetric
     def is_successful(self) -> bool:
         return False
+
+
+def make_metric(
+    metric_cls: Type[M],
+    *,
+    metric_template: Any = None,
+    async_mode: bool = False,
+    threshold: float = 0.5,
+    model: Optional[Any] = None,
+    include_reason: bool = True,
+    strict_mode: bool = False,
+    verbose_mode: bool = False,
+) -> M:
+    metric = metric_cls.__new__(metric_cls)
+
+    metric.threshold = threshold
+    metric.model = model if model is not None else DummyModel()
+    metric.using_native_model = False
+    metric.evaluation_model = metric.model.get_model_name()
+
+    metric.include_reason = include_reason
+    metric.async_mode = async_mode
+    metric.strict_mode = strict_mode
+    metric.verbose_mode = verbose_mode
+
+    if metric_template is not None:
+        metric.evaluation_template = metric_template
+
+    return metric
 
 
 #########
