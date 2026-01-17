@@ -1,4 +1,5 @@
 import functools
+import logging
 
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,8 @@ from deepeval.tracing.types import LlmSpan
 
 if TYPE_CHECKING:
     from anthropic import Anthropic
+
+logger = logging.getLogger(__name__)
 
 
 def patch_openai_client(client: OpenAI):
@@ -31,14 +34,14 @@ def patch_openai_client(client: OpenAI):
         # Navigate to the parent object
         for part in parts[:-1]:
             if not hasattr(current_obj, part):
-                print(f"Warning: Cannot find {part} in the path {method_path}")
+                logger.warning(f"Cannot find {part} in the path {method_path}")
                 continue
             current_obj = getattr(current_obj, part)
 
         method_name = parts[-1]
         if not hasattr(current_obj, method_name):
-            print(
-                f"Warning: Cannot find method {method_name} in the path {method_path}"
+            logger.warning(
+                f"Cannot find method {method_name} in the path {method_path}"
             )
             continue
 
@@ -110,14 +113,14 @@ def patch_anthropic_client(client: "Anthropic"):
 
         for part in parts[:-1]:
             if not hasattr(current_obj, part):
-                print(f"Warning: Cannot find {part} in the path {method_path}")
+                logger.warning(f"Cannot find {part} in the path {method_path}")
                 continue
             current_obj = getattr(current_obj, part)
 
         method_name = parts[-1]
         if not hasattr(current_obj, method_name):
-            print(
-                f"Warning: Cannot find method {method_name} in the path {method_path}"
+            logger.warning(
+                f"Cannot find method {method_name} in the path {method_path}"
             )
             continue
 
