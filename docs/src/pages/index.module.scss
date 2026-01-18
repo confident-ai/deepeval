@@ -428,46 +428,158 @@ $dollar-sign-color: rgb(119, 0, 255);
 }
 
 .logoCloud {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
   width: 100%;
-  margin: 0 auto;
   border-top: 1px dashed $border-dotted-color;
-  border-left: 1px dashed $border-dotted-color;
+  border-bottom: 1px dashed $border-dotted-color;
+  display: flex;
+  align-items: stretch;
+}
 
-  .logoItem {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1.5rem;
-    border-right: 1px dashed $border-dotted-color;
-    border-bottom: 1px dashed $border-dotted-color;
+.logoLabel {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: white;
+  text-transform: uppercase;
+  white-space: nowrap;
+  position: relative;
+  font-family:
+    'Geist',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 
-    img {
-      max-width: 80px;
-      max-height: 28px;
-      filter: grayscale(100%) brightness(2);
-      transition: opacity 0.2s ease;
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 50%;
+    width: 1px;
+    background-image: linear-gradient(
+      to bottom,
+      $border-dotted-color 50%,
+      transparent 50%
+    );
+    background-size: 1px 8px;
+  }
+}
 
-      &:hover {
-        opacity: 0.8;
-      }
+.logoTrackWrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  // Fade left edge only
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 100%);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 100%
+  );
+}
+
+.logoTrack {
+  display: flex;
+  width: max-content;
+  animation: scroll 45s linear infinite;
+}
+
+.logoSlide {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+  padding: 0 2rem;
+
+  img {
+    height: 32px;
+    width: auto;
+    min-width: 60px;
+    max-width: 120px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    // Size adjustments for specific logos
+    &[alt='OpenAI'] {
+      height: 24px;
+      max-width: 100px;
+    }
+
+    &[alt='Panasonic'] {
+      height: 15px;
+    }
+
+    &[alt='AXA'] {
+      height: 20px;
+    }
+
+    &[alt='China Unicom'] {
+      height: 22px;
+    }
+
+    &[alt='Google'],
+    &[alt='BCG'],
+    &[alt='Adobe'] {
+      height: 24px;
+      max-width: 90px;
     }
   }
+}
 
-  .logoPlaceholder {
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+@keyframes scroll {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
 @media (max-width: 768px) {
   .logoCloud {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 300px;
+    flex-direction: column;
+    align-items: stretch;
+    border-top: none;
+  }
+
+  .logoLabel {
+    padding: 1rem 1.5rem;
+    justify-content: center;
+    border-bottom: 1px dashed $border-dotted-color;
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .logoTrackWrapper {
+    padding: 1rem 0;
+  }
+
+  .logoSlide {
+    gap: 3rem;
+    padding: 0 1.5rem;
+
+    img {
+      height: 20px;
+      max-width: 100px;
+    }
   }
 }
 
