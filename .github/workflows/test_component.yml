@@ -1,0 +1,186 @@
+name: Component Tests
+
+on:
+  # Auto run for maintainer PRs
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  # Auto run when code lands on main
+  push:
+    branches: [main]
+
+  # Manual for forks (maintainer provides PR number)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR number (MUST REVIEW CODE FIRST)"
+        required: true
+      ref_kind:
+        description: "Which ref to test (merge|head)"
+        required: false
+        default: "merge"
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request'
+    && format('full-tests-pr-{0}-merge', github.event.pull_request.number)
+    || github.event_name == 'workflow_dispatch'
+    && format('full-tests-pr-{0}-{1}', github.event.inputs.pr, github.event.inputs.ref_kind)
+    || format('full-tests-push-{0}', github.ref_name) }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Run if:
+    # - workflow_dispatch (manual)
+    # - OR IF pull_request where PR head repo == this repo and owner is confident-ai
+    # - OR IF push to main on confident-ai/*
+    if: ${{ github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.repository, 'confident-ai/') &&
+      !github.event.pull_request.draft) ||
+      (github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      startsWith(github.repository, 'confident-ai/')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ci-secrets
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DEEPEVAL_TELEMETRY_OPT_OUT: 1
+      DEEPEVAL_LOG_STACK_TRACES: 1
+      LOG_LEVEL: "debug"
+      PYTHONFAULTHANDLER: "1"
+      PYTHONASYNCIODEBUG: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTEST_ADDOPTS: >-
+        -vv -rA --maxfail=1 --capture=tee-sys
+        --durations=25
+        -o log_cli=true -o log_cli_level=DEBUG
+        --log-cli-format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
+
+    steps:
+      - name: Resolve ref
+        id: refsel
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
+              echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
+            else
+              echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ref=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout PR/main ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refsel.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Log target
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "PR: #${{ github.event.pull_request.number }} (merge ref)"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual PR: #${{ github.event.inputs.pr }} (ref_kind=${{ github.event.inputs.ref_kind }})"
+          else
+            echo "Push target: ${GITHUB_REF_NAME} @ ${GITHUB_SHA}"
+          fi
+
+      # Manual run: create a Check Run against the exact checked-out commit
+      - name: Compute checked-out SHA (manual only)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        id: headsha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR Check Run (manual only)
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.ref_kind == 'merge' }}
+        id: createcheck
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const head_sha = '${{ steps.headsha.outputs.sha }}';
+            const { data: check } = await github.rest.checks.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            name: 'Component Tests',
+            head_sha,
+            status: 'in_progress',
+            details_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('check_id', String(check.id));
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-docs-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies (no cache)
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --with integrations
+
+      - name: Show installed integrations
+        run: |
+          poetry show crewai || true
+          poetry run python - <<'PY'
+          import importlib, pkgutil, sys
+          for m in ("crewai", "crewai.events", "crewai.utilities.events.events"):
+              try:
+                  mod = importlib.import_module(m)
+                  print(f"{m} OK version=", getattr(mod, "__version__", "?"))
+              except Exception as e:
+                  print(f"{m} IMPORT FAIL:", repr(e), file=sys.stderr)
+          PY
+
+      - name: Run deepeval component tests (with secrets)
+        if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
+        run: >
+          poetry run pytest
+          -vv -rA --maxfail=1 --capture=tee-sys
+          tests/test_component
+
+      - name: Finalize PR Check (manual only)
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.ref_kind == 'merge' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const check_id = parseInt(core.getInput('check_id') || '${{ steps.createcheck.outputs.check_id }}');
+            await github.rest.checks.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              check_run_id: check_id,
+              status: 'completed',
+              conclusion: '${{ job.status }}',
+              completed_at: new Date().toISOString(),
+              output: {
+                title: 'Component Tests',
+                summary: 'Manual maintainer run of component tests.',
+              }
+            });

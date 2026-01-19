@@ -4,7 +4,7 @@ from typing import List
 from openai import OpenAI
 
 from tests.utils.trace_assertions import assert_trace_json
-from tests.test_end_to_end.test_deepeval.test_llm_evals.helpers import (
+from tests.test_component.helpers import (
     find_span_by_name,
     span_names_by_key,
     all_spans,
