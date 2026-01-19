@@ -5,14 +5,23 @@ import pytest
 
 from deepeval import evaluate
 from deepeval.dataset import EvaluationDataset
-from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
+from deepeval.evaluate.configs import (
+    AsyncConfig,
+    CacheConfig,
+    DisplayConfig,
+    ErrorConfig,
+)
 from deepeval.evaluate.types import EvaluationResult, TestResult
+from deepeval.errors import MissingTestCaseParamsError
+from deepeval.test_case import LLMTestCase
 
 from .helpers import (
     DeterministicContainsExpectedOutputMetric,
     DeterministicConversationalMetric,
     DeterministicFailingMetric,
     DeterministicPassingMetric,
+    DeterministicRaisingMetric,
+    DeterministicRequiresRetrievalContextMetric,
     build_llm_test_cases_from_goldens,
     build_single_turn_dataset,
     build_multi_turn_dataset,
@@ -532,3 +541,567 @@ def test_cli_smoke():
         f"STDOUT:\n{proc.stdout}\n"
         f"STDERR:\n{proc.stderr}"
     )
+
+
+# ===========================================================================
+# ErrorConfig.skip_on_missing_params tests
+# Docs: "skip_on_missing_params=True skips all metric executions for test
+#        cases with missing parameters"
+# ===========================================================================
+
+
+def test_docs_error_config_skip_on_missing_params_false_raises():
+    """
+    Doc-driven test for ErrorConfig.skip_on_missing_params=False (default).
+
+    From docs (evaluation-flags-and-configs.mdx):
+        "skip_on_missing_params: a boolean which when set to True, skips all
+         metric executions for test cases with missing parameters. Defaulted
+         to False."
+
+    When False (default), a metric requiring a missing param should raise
+    MissingTestCaseParamsError.
+    """
+    # Create a test case WITHOUT retrieval_context
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+        retrieval_context=None,  # Missing required param
+    )
+
+    with pytest.raises(MissingTestCaseParamsError):
+        evaluate(
+            test_cases=[test_case],
+            metrics=[DeterministicRequiresRetrievalContextMetric()],
+            hyperparameters={"model": "offline-stub"},
+            async_config=AsyncConfig(run_async=False),
+            cache_config=CacheConfig(write_cache=False, use_cache=False),
+            display_config=DisplayConfig(
+                show_indicator=False, print_results=False
+            ),
+            error_config=ErrorConfig(skip_on_missing_params=False),
+        )
+
+
+def test_docs_error_config_skip_on_missing_params_true_skips_metric():
+    """
+    Doc-driven test for ErrorConfig.skip_on_missing_params=True.
+
+    From docs:
+        "skip_on_missing_params=True skips all metric executions for test
+         cases with missing parameters"
+
+    When True, metrics requiring missing params should be skipped and the
+    result should NOT contain metrics_data for that metric.
+    """
+    # Create a test case WITHOUT retrieval_context
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+        retrieval_context=None,  # Missing required param
+    )
+
+    result = evaluate(
+        test_cases=[test_case],
+        metrics=[DeterministicRequiresRetrievalContextMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(skip_on_missing_params=True),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == 1
+
+    tr = result.test_results[0]
+    # When metric is skipped, it should not appear in metrics_data
+    assert (
+        len(tr.metrics_data) == 0
+    ), "Skipped metric should not appear in metrics_data"
+
+
+def test_docs_error_config_skip_on_missing_params_with_valid_test_case():
+    """
+    Doc-driven test: when test case HAS all required params,
+    skip_on_missing_params=True should NOT skip the metric.
+    """
+    # Create a test case WITH retrieval_context
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+        retrieval_context=["context chunk 1", "context chunk 2"],
+    )
+
+    result = evaluate(
+        test_cases=[test_case],
+        metrics=[DeterministicRequiresRetrievalContextMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(skip_on_missing_params=True),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == 1
+
+    tr = result.test_results[0]
+    # Metric should be evaluated and present
+    assert len(tr.metrics_data) == 1
+    assert tr.metrics_data[0].success is True
+
+
+def test_docs_error_config_skip_on_missing_params_takes_precedence():
+    """
+    Doc-driven test for precedence behavior.
+
+    From docs:
+        "If both skip_on_missing_params and ignore_errors are set to True,
+         skip_on_missing_params takes precedence. This means that if a metric
+         is missing required test case parameters, it will be skipped (and the
+         result will be missing) rather than appearing as an ignored error in
+         the final test run."
+
+    When both are True and params are missing, the metric should be skipped
+    (not appear in metrics_data) rather than show as an ignored error.
+    """
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+        retrieval_context=None,  # Missing required param
+    )
+
+    result = evaluate(
+        test_cases=[test_case],
+        metrics=[DeterministicRequiresRetrievalContextMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(
+            skip_on_missing_params=True,
+            ignore_errors=True,
+        ),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == 1
+
+    tr = result.test_results[0]
+    # skip_on_missing_params takes precedence: metric should be skipped entirely
+    # (not present in metrics_data), rather than showing as ignored error
+    assert len(tr.metrics_data) == 0, (
+        "skip_on_missing_params should take precedence: metric should be "
+        "skipped (absent from metrics_data), not shown as ignored error"
+    )
+
+
+# ===========================================================================
+# ErrorConfig.ignore_errors tests
+# Docs: "ignore_errors=True ignores all exceptions raised during metrics
+#        execution for each test case"
+# ===========================================================================
+
+
+def test_docs_error_config_ignore_errors_false_raises():
+    """
+    Doc-driven test for ErrorConfig.ignore_errors=False (default).
+
+    From docs:
+        "ignore_errors: a boolean which when set to True, ignores all
+         exceptions raised during metrics execution for each test case.
+         Defaulted to False."
+
+    When False (default), a metric that raises should propagate the exception.
+    """
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+    )
+
+    with pytest.raises(RuntimeError, match="always raises"):
+        evaluate(
+            test_cases=[test_case],
+            metrics=[DeterministicRaisingMetric()],
+            hyperparameters={"model": "offline-stub"},
+            async_config=AsyncConfig(run_async=False),
+            cache_config=CacheConfig(write_cache=False, use_cache=False),
+            display_config=DisplayConfig(
+                show_indicator=False, print_results=False
+            ),
+            error_config=ErrorConfig(ignore_errors=False),
+        )
+
+
+def test_docs_error_config_ignore_errors_true_captures_error():
+    """
+    Doc-driven test for ErrorConfig.ignore_errors=True.
+
+    From docs:
+        "ignore_errors=True ignores all exceptions raised during metrics
+         execution for each test case"
+
+    When True, exceptions should be captured and the evaluation should
+    complete. The metric should show as failed with an error message.
+    """
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+    )
+
+    result = evaluate(
+        test_cases=[test_case],
+        metrics=[DeterministicRaisingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(ignore_errors=True),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == 1
+
+    tr = result.test_results[0]
+    assert len(tr.metrics_data) == 1
+
+    md = tr.metrics_data[0]
+    # When error is ignored, metric should be marked as failed
+    assert md.success is False
+    # Error message should be captured
+    assert md.error is not None
+    assert "always raises" in md.error
+
+
+def test_docs_error_config_ignore_errors_with_mixed_metrics():
+    """
+    Doc-driven test: ignore_errors should only affect metrics that raise,
+    not metrics that succeed.
+    """
+    test_case = LLMTestCase(
+        input="What is your name?",
+        actual_output="My name is DeepEval.",
+    )
+
+    result = evaluate(
+        test_cases=[test_case],
+        metrics=[
+            DeterministicPassingMetric(),
+            DeterministicRaisingMetric(),
+        ],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(ignore_errors=True),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == 1
+
+    tr = result.test_results[0]
+    assert len(tr.metrics_data) == 2
+
+    # Find each metric's data by name
+    passing_md = next(
+        md for md in tr.metrics_data if md.name == "DeterministicPassingMetric"
+    )
+    raising_md = next(
+        md for md in tr.metrics_data if md.name == "DeterministicRaisingMetric"
+    )
+
+    # Passing metric should succeed
+    assert passing_md.success is True
+    assert passing_md.error is None
+
+    # Raising metric should fail with captured error
+    assert raising_md.success is False
+    assert raising_md.error is not None
+
+
+# ===========================================================================
+# AsyncConfig tests
+# Docs: "run_async=True enables concurrent evaluation of test cases AND metrics"
+# ===========================================================================
+
+
+def test_docs_async_config_sync_vs_async_equivalent_results():
+    """
+    Doc-driven test for AsyncConfig.run_async variations.
+
+    From docs:
+        "run_async: a boolean which when set to True, enables concurrent
+         evaluation of test cases AND metrics. Defaulted to True."
+
+    Both sync and async execution should produce equivalent results for
+    deterministic metrics.
+    """
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    # Run with run_async=False (sync)
+    result_sync = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+    )
+
+    # Run with run_async=True (async)
+    result_async = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(
+            run_async=True, max_concurrent=1, throttle_value=0
+        ),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+    )
+
+    # Both should return valid results
+    assert isinstance(result_sync, EvaluationResult)
+    assert isinstance(result_async, EvaluationResult)
+
+    # Same number of test results
+    assert len(result_sync.test_results) == len(result_async.test_results)
+
+    # Each test result should have same success status
+    for tr_sync, tr_async in zip(
+        result_sync.test_results, result_async.test_results
+    ):
+        assert tr_sync.success == tr_async.success
+        assert len(tr_sync.metrics_data) == len(tr_async.metrics_data)
+
+        # Metric names and success should match
+        for md_sync, md_async in zip(
+            tr_sync.metrics_data, tr_async.metrics_data
+        ):
+            assert md_sync.name == md_async.name
+            assert md_sync.success == md_async.success
+
+
+def test_docs_async_config_max_concurrent_validation():
+    """
+    Doc-driven test for AsyncConfig.max_concurrent validation.
+
+    From docs:
+        "max_concurrent: an integer that determines the maximum number of
+         test cases that can be ran in parallel at any point in time."
+
+    This verifies max_concurrent must be at least 1.
+    """
+    with pytest.raises(ValueError, match="max_concurrent"):
+        AsyncConfig(max_concurrent=0)
+
+
+def test_docs_async_config_throttle_value_validation():
+    """
+    Doc-driven test for AsyncConfig.throttle_value validation.
+
+    From docs:
+        "throttle_value: an integer that determines how long (in seconds)
+         to throttle the evaluation of each test case."
+
+    This verifies throttle_value must be non-negative.
+    """
+    with pytest.raises(ValueError, match="throttle_value"):
+        AsyncConfig(throttle_value=-1)
+
+
+# ===========================================================================
+# CacheConfig tests
+# Docs: "write_cache=True writes test run results to DISK"
+# ===========================================================================
+
+
+def test_docs_cache_config_disabled_caching_works():
+    """
+    Doc-driven test for CacheConfig with caching disabled.
+
+    From docs:
+        "write_cache: a boolean which when set to True, uses writes test
+         run results to DISK. Defaulted to True."
+        "The write_cache parameter writes to disk and so you should disable
+         it if that is causing any errors in your environment."
+
+    This verifies evaluation works correctly with caching completely disabled.
+    """
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    result = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == len(test_cases)
+
+    for tr in result.test_results:
+        assert tr.success is True
+        assert len(tr.metrics_data) >= 1
+
+
+# ===========================================================================
+# DisplayConfig tests
+# Docs: "display: a str of either 'all', 'failing' or 'passing'"
+# ===========================================================================
+
+
+def test_docs_display_config_display_all():
+    """
+    Doc-driven test for DisplayConfig.display_option="all".
+
+    From docs:
+        "display: a str of either 'all', 'failing' or 'passing', which allows
+         you to selectively decide which type of test cases to display as the
+         final result. Defaulted to 'all'."
+
+    Verifies that display="all" does not crash and returns expected results.
+    Note: display_option only affects printing, not underlying evaluation.
+    """
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    result = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            display_option=TestRunResultDisplay.ALL,
+        ),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == len(test_cases)
+
+
+def test_docs_display_config_display_failing():
+    """
+    Doc-driven test for DisplayConfig.display_option="failing".
+
+    Verifies that display="failing" does not crash and returns expected results.
+    Note: display_option only affects printing, not underlying evaluation.
+    """
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    result = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicFailingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            display_option=TestRunResultDisplay.FAILING,
+        ),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == len(test_cases)
+
+    # All results should be failures (we used DeterministicFailingMetric)
+    for tr in result.test_results:
+        assert tr.success is False
+
+
+def test_docs_display_config_display_passing():
+    """
+    Doc-driven test for DisplayConfig.display_option="passing".
+
+    Verifies that display="passing" does not crash and returns expected results.
+    Note: display_option only affects printing, not underlying evaluation.
+    """
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    result = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            display_option=TestRunResultDisplay.PASSING,
+        ),
+    )
+
+    assert isinstance(result, EvaluationResult)
+    assert len(result.test_results) == len(test_cases)
+
+    # All results should be successes (we used DeterministicPassingMetric)
+    for tr in result.test_results:
+        assert tr.success is True
+
+
+def test_docs_display_config_does_not_affect_evaluation_results():
+    """
+    Doc-driven test: DisplayConfig options should NOT affect evaluation results,
+    only the display/printing behavior.
+
+    Run the same evaluation with different display options and verify
+    identical evaluation outcomes.
+    """
+    from deepeval.test_run.test_run import TestRunResultDisplay
+
+    dataset = build_single_turn_dataset()
+    test_cases = build_llm_test_cases_from_goldens(dataset)
+
+    # Run with display="all"
+    result_all = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            display_option=TestRunResultDisplay.ALL,
+        ),
+    )
+
+    # Run with display="passing"
+    result_passing = evaluate(
+        test_cases=test_cases,
+        metrics=[DeterministicPassingMetric()],
+        hyperparameters={"model": "offline-stub"},
+        async_config=AsyncConfig(run_async=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            display_option=TestRunResultDisplay.PASSING,
+        ),
+    )
+
+    # Results should be identical regardless of display option
+    assert len(result_all.test_results) == len(result_passing.test_results)
+
+    for tr_all, tr_pass in zip(
+        result_all.test_results, result_passing.test_results
+    ):
+        assert tr_all.success == tr_pass.success
+        assert len(tr_all.metrics_data) == len(tr_pass.metrics_data)

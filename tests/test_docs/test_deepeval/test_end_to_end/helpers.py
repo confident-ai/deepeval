@@ -164,6 +164,77 @@ class DeterministicPassingMetric(BaseMetric):
         return True
 
 
+class DeterministicRequiresRetrievalContextMetric(BaseMetric):
+    """
+    Deterministic metric that requires RETRIEVAL_CONTEXT.
+    Used to test skip_on_missing_params behavior when test case lacks retrieval_context.
+    """
+
+    _required_params = [
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    ]
+
+    def __init__(self, threshold: float = 0.5):
+        self.threshold = threshold
+        self.async_mode = False
+        self.include_reason = True
+
+    @property
+    def __name__(self) -> str:
+        return "DeterministicRequiresRetrievalContextMetric"
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        # This will only be called if retrieval_context is present
+        # The check_llm_test_case_params in BaseMetric handles the validation
+        from deepeval.metrics.utils import check_llm_test_case_params
+
+        check_llm_test_case_params(
+            test_case=test_case,
+            test_case_params=self._required_params,
+            input_image_count=None,
+            actual_output_image_count=None,
+            metric=self,
+        )
+        self.score = 1.0
+        self.reason = "Retrieval context was present"
+        self.success = True
+        return self.score
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        return self.measure(test_case, *args, **kwargs)
+
+    def is_successful(self) -> bool:
+        return bool(self.score is not None and self.score >= self.threshold)
+
+
+class DeterministicRaisingMetric(BaseMetric):
+    """
+    Deterministic metric that always raises an exception.
+    Used to test ignore_errors behavior.
+    """
+
+    _required_params = [LLMTestCaseParams.ACTUAL_OUTPUT]
+
+    def __init__(self, threshold: float = 0.5):
+        self.threshold = threshold
+        self.async_mode = False
+        self.include_reason = True
+
+    @property
+    def __name__(self) -> str:
+        return "DeterministicRaisingMetric"
+
+    def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        raise RuntimeError("This metric always raises for testing purposes")
+
+    async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
+        raise RuntimeError("This metric always raises for testing purposes")
+
+    def is_successful(self) -> bool:
+        return False
+
+
 def save_dataset_as_json_and_load(
     dataset: EvaluationDataset, directory: Path, file_name: str
 ) -> list:
