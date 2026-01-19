@@ -1,4 +1,4 @@
-name: Docs Tests
+name: End To End Tests
 
 on:
   # Auto run for maintainer PRs
@@ -115,7 +115,7 @@ jobs:
             const { data: check } = await github.rest.checks.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            name: 'Docs Tests',
+            name: 'End To End Tests',
             head_sha,
             status: 'in_progress',
             details_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
@@ -159,19 +159,12 @@ jobs:
                   print(f"{m} IMPORT FAIL:", repr(e), file=sys.stderr)
           PY
 
-      - name: Run deepeval docs tests (with secrets)
+      - name: Run deepeval e2e tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
         run: >
           poetry run pytest
           -vv -rA --maxfail=1 --capture=tee-sys
-          tests/test_docs/test_deepeval
-          --ignore=tests/test_docs/test_deepeval/test_ai_agent_evals
-
-      # TODO: Re-enable once tests/test_docs/test_confident is green in CI
-      - name: Run confident docs tests (disabled)
-        #if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
-        if: ${{ false }
-        run: poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_docs/test_confident
+          tests/test_end_to_end/test_deepeval
 
       - name: Finalize PR Check (manual only)
         if: ${{ always() && github.event_name == 'workflow_dispatch' && github.event.inputs.ref_kind == 'merge' }}
@@ -187,7 +180,7 @@ jobs:
               conclusion: '${{ job.status }}',
               completed_at: new Date().toISOString(),
               output: {
-                title: 'Docs Tests',
-                summary: 'Manual maintainer run of docs tests.',
+                title: 'End To End Tests',
+                summary: 'Manual maintainer run of e2e tests.',
               }
             });
