@@ -925,6 +925,24 @@ def test_update_current_span_output_not_overridden_by_observer_kwargs():
     assert span.get("output") == "SHOULD_WIN"
 
 
+def test_update_current_span_name_overrides_function_name():
+    @observe(type="tool")
+    def tool_fn(x: str):
+        update_current_span(name="update_name")
+        return "ok"
+
+    out = tool_fn("x")
+    assert out == "ok"
+
+    trace_dict = get_latest_trace_dict()
+    span = find_span_by_name(trace_dict, "update_name")
+    assert span is not None, (
+        "Expected update_current_span(name=...) to override function name. "
+        f"Got: {debug_span_names(trace_dict)}"
+    )
+    assert find_span_by_name(trace_dict, "tool_fn") is None
+
+
 def test_golden_with_expected_output():
     """
     Docs: Golden can include expected_output for comparison during evaluation.
