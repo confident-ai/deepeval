@@ -78,6 +78,9 @@ def _env_sandbox(_session_env_baseline, request, monkeypatch):
     for k, v in preserved.items():
         monkeypatch.setenv(k, v)
 
+    # Always silence telemetry in tests
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
+
     # Never open the Confident AI browser UI during tests
     monkeypatch.setenv("CONFIDENT_OPEN_BROWSER", "0")
 
