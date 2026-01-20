@@ -24,7 +24,7 @@ try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
-    from langchain_core.messages import AIMessage
+    from langchain_core.messages import AIMessage, BaseMessage
 
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
@@ -246,6 +246,67 @@ class CallbackHandler(BaseCallbackHandler):
                         trace.output = output
                 exit_current_context(uuid_str=uuid_str)
 
+    def on_chat_model_start(
+        self,
+        serialized: dict[str, Any],
+        messages: List[List[BaseMessage]],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Handle chat model start callback (used by ChatOpenAI and similar).
+
+        This is called instead of on_llm_start for chat models. The messages
+        parameter contains a list of message lists (one per batch item).
+        """
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            uuid_str = str(run_id)
+
+            # Capture parent span BEFORE creating the llm span
+            parent_span = current_span_context.get()
+
+            # Convert BaseMessage objects to dict format
+            all_messages = []
+            for msg_list in messages:
+                for msg in msg_list:
+                    role = getattr(msg, "type", "unknown")
+                    content = getattr(msg, "content", str(msg))
+                    all_messages.append({"role": role, "content": content})
+
+            model = safe_extract_model_name(metadata, **kwargs)
+
+            llm_span: LlmSpan = enter_current_context(
+                uuid_str=uuid_str,
+                span_type="llm",
+                func_name=extract_name(serialized, **kwargs),
+            )
+            self._run_id_to_span_uuid[str(run_id)] = uuid_str
+
+            llm_span.input = all_messages
+            llm_span.model = model
+
+            # Default: inherit from parent span
+            if parent_span is not None:
+                llm_span.metric_collection = getattr(
+                    parent_span, "metric_collection", None
+                )
+                llm_span.metrics = getattr(parent_span, "metrics", None)
+
+            # Override: user-provided metadata on the LLM instance
+            # This is userland config, not deepeval internal transport
+            if metadata:
+                if metadata.get("metric_collection") is not None:
+                    llm_span.metric_collection = metadata.get(
+                        "metric_collection"
+                    )
+                if metadata.get("metrics") is not None:
+                    llm_span.metrics = metadata.get("metrics")
+                if metadata.get("prompt") is not None:
+                    llm_span.prompt = metadata.get("prompt")
+
     def on_llm_start(
         self,
         serialized: dict[str, Any],
@@ -259,6 +320,10 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             uuid_str = str(run_id)
+
+            # Capture parent span BEFORE creating the llm span
+            parent_span = current_span_context.get()
+
             input_messages = parse_prompts_to_messages(prompts, **kwargs)
             model = safe_extract_model_name(metadata, **kwargs)
 
@@ -272,12 +337,25 @@ class CallbackHandler(BaseCallbackHandler):
 
             llm_span.input = input_messages
             llm_span.model = model
-            metrics = metadata.pop("metrics", None)
-            metric_collection = metadata.pop("metric_collection", None)
-            prompt = metadata.pop("prompt", None)
-            llm_span.metrics = metrics
-            llm_span.metric_collection = metric_collection
-            llm_span.prompt = prompt
+
+            # Default: inherit from parent span
+            if parent_span is not None:
+                llm_span.metric_collection = getattr(
+                    parent_span, "metric_collection", None
+                )
+                llm_span.metrics = getattr(parent_span, "metrics", None)
+
+            # Override: user-provided metadata on the LLM instance
+            # This is userland config, not deepeval internal transport
+            if metadata:
+                if metadata.get("metric_collection") is not None:
+                    llm_span.metric_collection = metadata.get(
+                        "metric_collection"
+                    )
+                if metadata.get("metrics") is not None:
+                    llm_span.metrics = metadata.get("metrics")
+                if metadata.get("prompt") is not None:
+                    llm_span.prompt = metadata.get("prompt")
 
     def on_llm_end(
         self,
@@ -399,6 +477,10 @@ class CallbackHandler(BaseCallbackHandler):
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             uuid_str = str(run_id)
 
+            # Capture parent span BEFORE creating the tool span
+            # _ctx() restores the parent span context based on parent_run_id
+            parent_span = current_span_context.get()
+
             tool_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="tool",
@@ -409,6 +491,27 @@ class CallbackHandler(BaseCallbackHandler):
             # Register this run_id -> span mapping for child callbacks
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
             tool_span.input = inputs
+
+            # Default: inherit metric_collection and metrics from parent span
+            if parent_span is not None:
+                tool_span.metric_collection = getattr(
+                    parent_span, "metric_collection", None
+                )
+                tool_span.metrics = getattr(parent_span, "metrics", None)
+
+            # Override: check for deepeval overrides stored on the tool instance
+            # These are stored under tool_instance.metadata["deepeval"] by our @tool decorator
+            # LangChain passes this via serialized["kwargs"]["metadata"] or serialized["metadata"]
+            tool_meta = (
+                serialized.get("kwargs", {}).get("metadata")
+                or serialized.get("metadata")
+                or {}
+            )
+            deepeval_meta = tool_meta.get("deepeval") or {}
+            if deepeval_meta.get("metric_collection") is not None:
+                tool_span.metric_collection = deepeval_meta["metric_collection"]
+            if deepeval_meta.get("metrics") is not None:
+                tool_span.metrics = deepeval_meta["metrics"]
 
     def on_tool_end(
         self,
