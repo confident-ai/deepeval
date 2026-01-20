@@ -1,6 +1,8 @@
 import json
 import os
+from pathlib import Path
 import subprocess
+
 import pytest
 
 from deepeval import evaluate
@@ -25,6 +27,7 @@ from .helpers import (
     save_dataset_as_json_and_load,
 )
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 def test_single_turn_evaluate_returns_result_and_dataset_json_schema(
     tmp_path,
@@ -430,6 +433,7 @@ def test_cli_smoke():
     proc = subprocess.run(
         ["poetry", "run", "deepeval", "test", "run", str(test_file)],
         capture_output=True,
+        cwd=PROJECT_ROOT,
         text=True,
         timeout=120,  # 2 minute timeout for network calls
     )
