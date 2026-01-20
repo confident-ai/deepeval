@@ -1,7 +1,14 @@
 import csv
 import json
-
+import pytest
+import os
 from deepeval.dataset import EvaluationDataset, Golden
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
 
 
 def test_dataset_add_goldens_from_json_file_loads_inputs(tmp_path):

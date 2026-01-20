@@ -1,5 +1,5 @@
 import os
-
+import pytest
 from typing import List
 from openai import OpenAI
 
@@ -18,6 +18,11 @@ from deepeval.test_case import LLMTestCase
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.metrics import AnswerRelevancyMetric
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="OPENAI_API_KEY is not set",
+)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 client = OpenAI()
