@@ -2,7 +2,7 @@ import logging
 import deepeval
 
 from contextlib import contextmanager
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
@@ -20,12 +20,17 @@ try:
         CrewKickoffCompletedEvent,
         LLMCallStartedEvent,
         LLMCallCompletedEvent,
-        AgentExecutionStartedEvent,
-        AgentExecutionCompletedEvent,
         ToolUsageStartedEvent,
         ToolUsageFinishedEvent,
         KnowledgeRetrievalStartedEvent,
         KnowledgeRetrievalCompletedEvent,
+    )
+
+    # Agent events use lazy loading in CrewAI 1.6.1 to avoid circular imports
+    # Import from specific module path
+    from crewai.events.types.agent_events import (
+        AgentExecutionStartedEvent,
+        AgentExecutionCompletedEvent,
     )
 
     crewai_installed = True
@@ -74,6 +79,9 @@ class CrewAIEventsListener(BaseEventListener):
         # Store both Observer and captured context for each span
         # Key: execution_id, Value: dict with 'observer', 'trace', 'parent_span'
         self.span_data: Dict[str, Dict[str, Any]] = {}
+        # For LLM calls, use FIFO queues keyed by (agent_id, task_id, model)
+        # because CrewAI creates different message objects for start/complete events
+        self.llm_span_queues: Dict[str, List[Dict[str, Any]]] = {}
 
     @contextmanager
     def _restore_context(
@@ -184,45 +192,46 @@ class CrewAIEventsListener(BaseEventListener):
 
     @staticmethod
     def get_tool_execution_id(source, event) -> str:
+        """Generate stable execution ID for tool events.
+
+        Uses string attributes that CrewAI preserves across start/finish events.
+        """
         source_id = id(source)
-        task_id = getattr(event, "task_id", "unknown")
-        agent_id = getattr(event, "agent_id", "unknown")
-        tool_name = getattr(event, "tool_name", "unknown")
+        # CrewAI 1.6.1 clears from_agent/from_task but preserves these string attrs
+        task_id = getattr(event, "task_id", None) or "unknown"
+        agent_id = getattr(event, "agent_id", None) or "unknown"
+        tool_name = getattr(event, "tool_name", None) or "unknown"
         execution_id = f"tool_{source_id}_{task_id}_{agent_id}_{tool_name}"
 
         return execution_id
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
+        """Generate stable execution ID for knowledge retrieval events."""
         source_id = id(source)
-        agent_id = id(event.agent) if hasattr(event, "agent") else "unknown"
-        execution_id = f"_knowledge_{source_id}_{agent_id}"
+        # Use string agent_id if available, fall back to object id
+        agent_id = getattr(event, "agent_id", None)
+        if agent_id is None:
+            agent = getattr(event, "agent", None)
+            agent_id = id(agent) if agent is not None else "unknown"
+        execution_id = f"knowledge_{source_id}_{agent_id}"
 
         return execution_id
 
     @staticmethod
-    def get_llm_execution_id(source, event) -> str:
-        """Generate a unique ID for LLM call execution."""
-        source_id = id(source)
-        # Use from_agent and from_task if available
-        agent_id = (
-            id(event.from_agent)
-            if hasattr(event, "from_agent") and event.from_agent
-            else "unknown"
-        )
-        task_id = (
-            id(event.from_task)
-            if hasattr(event, "from_task") and event.from_task
-            else "unknown"
-        )
-        model = getattr(event, "model", "unknown")
-        # Include a hash of messages to differentiate multiple calls
-        messages_hash = hash(str(getattr(event, "messages", "")))
-        execution_id = (
-            f"llm_{source_id}_{agent_id}_{task_id}_{model}_{messages_hash}"
-        )
+    def get_llm_execution_key(source, event) -> str:
+        """Generate a grouping key for LLM call events.
 
-        return execution_id
+        Uses string attributes that CrewAI preserves in both start and complete events.
+        This key groups LLM calls by agent/task/model - actual correlation uses FIFO.
+        """
+        source_id = id(source)
+        # CrewAI 1.6.1 clears from_agent/from_task in event __init__,
+        # but preserves agent_id and task_id as string attributes
+        agent_id = getattr(event, "agent_id", None) or "unknown"
+        task_id = getattr(event, "task_id", None) or "unknown"
+        model = getattr(event, "model", None) or "unknown"
+        return f"llm_{source_id}_{agent_id}_{task_id}_{model}"
 
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
@@ -276,8 +285,12 @@ class CrewAIEventsListener(BaseEventListener):
             )
             context_data["observer"] = observer
 
-            execution_id = self.get_llm_execution_id(source, event)
-            self.span_data[execution_id] = context_data
+            # Use FIFO queue for LLM calls - CrewAI creates different message
+            # objects for start vs complete events, so we can't use message id
+            llm_key = self.get_llm_execution_key(source, event)
+            if llm_key not in self.llm_span_queues:
+                self.llm_span_queues[llm_key] = []
+            self.llm_span_queues[llm_key].append(context_data)
             observer.__enter__()
 
             # Set input on the newly created span
@@ -289,8 +302,10 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(LLMCallCompletedEvent)
         def on_llm_completed(source, event: LLMCallCompletedEvent):
-            execution_id = self.get_llm_execution_id(source, event)
-            stored_data = self.span_data.pop(execution_id, None)
+            # Use FIFO queue - pop the first (oldest) entry for this key
+            llm_key = self.get_llm_execution_key(source, event)
+            queue = self.llm_span_queues.get(llm_key)
+            stored_data = queue.pop(0) if queue else None
 
             if stored_data:
                 observer = stored_data.get("observer")

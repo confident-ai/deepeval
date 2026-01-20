@@ -273,7 +273,7 @@ description = "A small Python module for determining appropriate platform-specif
 optional = false
 python-versions = "*"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
@@ -363,7 +363,7 @@ files = [
     {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
     {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "backports-asyncio-runner"
@@ -385,7 +385,7 @@ description = "Backport of CPython tarfile module"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
-markers = "python_version < \"3.12\""
+markers = "python_version <= \"3.11\""
 files = [
     {file = "backports.tarfile-1.2.0-py3-none-any.whl", hash = "sha256:77e284d754527b01fb1e6fa8a1afe577858ebe4e9dad8919e34c862cb399bc34"},
     {file = "backports_tarfile-1.2.0.tar.gz", hash = "sha256:d75e02c268746e1b8144c278978b6e98e85de6ad16f8e4b0844a154557eca991"},
@@ -490,7 +490,7 @@ files = [
     {file = "bcrypt-5.0.0-pp311-pypy311_pp73-manylinux_2_34_x86_64.whl", hash = "sha256:6b8f520b61e8781efee73cba14e3e8c9556ccfb375623f4f97429544734545b4"},
     {file = "bcrypt-5.0.0.tar.gz", hash = "sha256:f748f7c2d6fd375cc93d3fba7ef4a9e3a092421b8dbf34d8d4dc06be9492dfdd"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 tests = ["pytest (>=3.2.1,!=3.3.0)"]
@@ -647,7 +647,7 @@ files = [
     {file = "build-1.3.0-py3-none-any.whl", hash = "sha256:7145f0b5061ba90a1500d60bd1b13ca0a8a4cebdd0cc16ed8adf1c0e739f43b4"},
     {file = "build-1.3.0.tar.gz", hash = "sha256:698edd0ea270bde950f53aed21f3a0135672206f3911e0176261a31e0e07b397"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 colorama = {version = "*", markers = "os_name == \"nt\""}
@@ -671,7 +671,7 @@ files = [
     {file = "cachetools-6.2.2-py3-none-any.whl", hash = "sha256:6c09c98183bf58560c97b2abfcedcbaf6a896a490f534b031b661d3723b45ace"},
     {file = "cachetools-6.2.2.tar.gz", hash = "sha256:8e6d266b25e539df852251cfd6f990b4bc3a141db73b939058d809ebd2590fc6"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "certifi"
@@ -778,7 +778,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\"", integrations = "python_version >= \"3.10\" and platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -803,11 +803,11 @@ description = "Validate configuration and produce human readable error messages.
 optional = false
 python-versions = ">=3.10"
 groups = ["dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "cfgv-3.5.0-py2.py3-none-any.whl", hash = "sha256:a8dc6b26ad22ff227d2634a65cb388215ce6cc96bbcc5cfde7641ae87e8dacc0"},
     {file = "cfgv-3.5.0.tar.gz", hash = "sha256:d5b1034354820651caa73ede66a6294d6e95c1b00acc5e9b098e917404669132"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [[package]]
 name = "charset-normalizer"
@@ -939,7 +939,7 @@ description = "Chroma."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev", "integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "chromadb-1.1.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:27fe0e25ef0f83fb09c30355ab084fe6f246808a7ea29e8c19e85cf45785b90d"},
     {file = "chromadb-1.1.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:95aed58869683f12e7dcbf68b039fe5f576dbe9d1b86b8f4d014c9d077ccafd2"},
@@ -988,7 +988,7 @@ description = "Chroma."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\""
 files = [
     {file = "chromadb-1.3.5-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d4e5b3bd1bf879a4fffa5644ccb175b98ee18799d8447140f3f893d350068d1b"},
     {file = "chromadb-1.3.5-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:59d35ea15a5765da751e2bc0804054b7ade81f564119c88a1b3310c18c696d92"},
@@ -1110,7 +1110,7 @@ files = [
     {file = "coloredlogs-15.0.1-py2.py3-none-any.whl", hash = "sha256:612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934"},
     {file = "coloredlogs-15.0.1.tar.gz", hash = "sha256:7c991aa71a4577af2f82600d8f8f3a89f936baeaf9b50a9c197da014e5bf16b0"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 humanfriendly = ">=9.1"
@@ -1125,7 +1125,7 @@ description = "Cutting-edge framework for orchestrating role-playing, autonomous
 optional = false
 python-versions = "<3.14,>=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "crewai-1.6.1-py3-none-any.whl", hash = "sha256:8cec403ab89183bda28b830c722b6bc22457a2151a6aa46f07730e6fe7ab2723"},
     {file = "crewai-1.6.1.tar.gz", hash = "sha256:b7d73a8a333abf71b30ab20c54086004cd0c016dfd86bba9c035ad5eb31e22a7"},
@@ -1290,7 +1290,7 @@ files = [
     {file = "cryptography-46.0.3-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:6b5063083824e5509fdba180721d55909ffacccc8adbec85268b48439423d78c"},
     {file = "cryptography-46.0.3.tar.gz", hash = "sha256:a8b17438104fed022ce745b362294d9ce35b4c2e45c1d958ad4a4b019285f4a1"},
 ]
-markers = {dev = "sys_platform == \"linux\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
+markers = {dev = "python_version >= \"3.10\" and sys_platform == \"linux\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "python_full_version >= \"3.9.0\" and platform_python_implementation != \"PyPy\""}
@@ -1412,7 +1412,7 @@ description = "Disk Cache -- Disk and file backed persistent cache."
 optional = false
 python-versions = ">=3"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19"},
     {file = "diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc"},
@@ -1429,7 +1429,7 @@ files = [
     {file = "distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16"},
     {file = "distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "distro"
@@ -1476,7 +1476,7 @@ files = [
     {file = "docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708"},
     {file = "docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [package.extras]
 dev = ["pre-commit (>=2.16.0) ; python_version >= \"3.9\"", "pydoctor (>=25.4.0)", "pytest"]
@@ -1519,7 +1519,7 @@ files = [
     {file = "durationpy-0.10-py3-none-any.whl", hash = "sha256:3b41e1b601234296b4fb368338fdcd3e13e0b4fb5b67345948f4f2bf9868b286"},
     {file = "durationpy-0.10.tar.gz", hash = "sha256:1fa6893409a6e739c9c72334fc65cca1f355dbdd93405d30f726deb5bde42fba"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "email-validator"
@@ -1545,7 +1545,7 @@ description = "An implementation of lxml.xmlfile for the standard library"
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"},
     {file = "et_xmlfile-2.0.0.tar.gz", hash = "sha256:dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54"},
@@ -1749,11 +1749,11 @@ description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "filelock-3.20.0-py3-none-any.whl", hash = "sha256:339b4732ffda5cd79b13f4e2711a31b0365ce445d95d243bb996273d072546a2"},
     {file = "filelock-3.20.0.tar.gz", hash = "sha256:711e943b4ec6be42e1d4e6690b48dc175c822967466bb31c0c293f34334c13f4"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [[package]]
 name = "filetype"
@@ -1778,7 +1778,7 @@ files = [
     {file = "flatbuffers-25.9.23-py2.py3-none-any.whl", hash = "sha256:255538574d6cb6d0a79a17ec8bc0d30985913b87513a01cce8bcdb6b4c44d0e2"},
     {file = "flatbuffers-25.9.23.tar.gz", hash = "sha256:676f9fa62750bb50cf531b42a0a2a118ad8f7f797a511eda12881c016f093b12"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "frozenlist"
@@ -2031,7 +2031,7 @@ files = [
     {file = "google_auth-2.43.0-py2.py3-none-any.whl", hash = "sha256:af628ba6fa493f75c7e9dbe9373d148ca9f4399b5ea29976519e0a3848eddd16"},
     {file = "google_auth-2.43.0.tar.gz", hash = "sha256:88228eee5fc21b62a1b5fe773ca15e67778cb07dc8363adcb4a8827b52d81483"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 cachetools = ">=2.0.0,<7.0"
@@ -2114,7 +2114,7 @@ files = [
     {file = "googleapis_common_protos-1.72.0-py3-none-any.whl", hash = "sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038"},
     {file = "googleapis_common_protos-1.72.0.tar.gz", hash = "sha256:e55a601c1b32b52d7a3e65f43563e2aa61bcd737998ee672ac9b951cd49319f5"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 protobuf = ">=3.20.2,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
@@ -2128,7 +2128,7 @@ version = "3.2.4"
 description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["integrations"]
 markers = "python_version == \"3.9\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.2.4-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:8c68325b0d0acf8d91dde4e6f930967dd52a5302cd4062932a6b2e7c2969f47c"},
@@ -2198,7 +2198,7 @@ description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "(platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.3.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:6f8496d434d5cb2dce025773ba5597f71f5410ae499d5dd9533e0653258cdb3d"},
     {file = "greenlet-3.3.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b96dc7eef78fd404e022e165ec55327f935b9b52ff355b067eb4a0267fc1cffb"},
@@ -2383,7 +2383,7 @@ files = [
     {file = "grpcio-1.76.0-cp39-cp39-win_amd64.whl", hash = "sha256:acab0277c40eff7143c2323190ea57b9ee5fd353d8190ee9652369fae735668a"},
     {file = "grpcio-1.76.0.tar.gz", hash = "sha256:7be78388d6da1a25c0d5ec506523db58b18be22d9c37d8d3a32c08be4987bd73"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 typing-extensions = ">=4.12,<5.0"
@@ -2434,7 +2434,7 @@ files = [
     {file = "hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69"},
     {file = "hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f"},
 ]
-markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version == \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
+markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or python_version >= \"3.11\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version >= \"3.10\" and (python_version < \"3.13\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and (python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or platform_machine == \"AMD64\")"}
 
 [package.extras]
 tests = ["pytest"]
@@ -2513,7 +2513,7 @@ files = [
     {file = "httptools-0.7.1-cp39-cp39-win_amd64.whl", hash = "sha256:5ddbd045cfcb073db2449563dd479057f2c2b681ebc232380e63ef15edc9c023"},
     {file = "httptools-0.7.1.tar.gz", hash = "sha256:abd72556974f8e7c74a259655924a717a2365b236c882c3f6f8a45fe94703ac9"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "httpx"
@@ -2564,7 +2564,7 @@ files = [
     {file = "httpx_sse-0.4.3-py3-none-any.whl", hash = "sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"},
     {file = "httpx_sse-0.4.3.tar.gz", hash = "sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d"},
 ]
-markers = {dev = "python_version >= \"3.11\" or python_version == \"3.9\"", integrations = "python_version >= \"3.11\""}
+markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [[package]]
 name = "huggingface-hub"
@@ -2613,12 +2613,12 @@ version = "1.1.7"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.9.0"
-groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+groups = ["dev", "integrations"]
 files = [
     {file = "huggingface_hub-1.1.7-py3-none-any.whl", hash = "sha256:f3efa4779f4890e44c957bbbb0f197e6028887ad09f0cf95a21659fa7753605d"},
     {file = "huggingface_hub-1.1.7.tar.gz", hash = "sha256:3c84b6283caca928595f08fd42e9a572f17ec3501dec508c3f2939d94bfbd9d2"},
 ]
+markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [package.dependencies]
 filelock = "*"
@@ -2655,7 +2655,7 @@ files = [
     {file = "humanfriendly-10.0-py2.py3-none-any.whl", hash = "sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477"},
     {file = "humanfriendly-10.0.tar.gz", hash = "sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 pyreadline3 = {version = "*", markers = "sys_platform == \"win32\" and python_version >= \"3.8\""}
@@ -2671,7 +2671,7 @@ files = [
     {file = "identify-2.6.15-py2.py3-none-any.whl", hash = "sha256:1181ef7608e00704db228516541eb83a88a9f94433a8c80bb9b5bd54b1d81757"},
     {file = "identify-2.6.15.tar.gz", hash = "sha256:e4f4864b96c6557ef2a1e1c951771838f4edc9df3a72ec7118b338801b11c7bf"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 license = ["ukkonen"]
@@ -2702,7 +2702,7 @@ files = [
     {file = "importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd"},
     {file = "importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 zipp = ">=3.20"
@@ -2727,7 +2727,7 @@ files = [
     {file = "importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec"},
     {file = "importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 zipp = {version = ">=3.1.0", markers = "python_version < \"3.10\""}
@@ -2773,7 +2773,7 @@ description = "structured outputs for llm"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "instructor-1.12.0-py3-none-any.whl", hash = "sha256:88c2161c5ac7ccb60f9b9fc3e93e6a5750a0a28f2927d835b7d198018c3165d9"},
     {file = "instructor-1.12.0.tar.gz", hash = "sha256:f0e4dd7f275120f49200df0204af6a2d4e3e2f1f698b6b8c0f776e3a8c977e54"},
@@ -3083,7 +3083,7 @@ description = "Fast iterable JSON parser."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev", "integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "jiter-0.10.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:cd2fb72b02478f06a900a5782de2ef47e0396b3e1f7d5aba30daeb1fce66f303"},
     {file = "jiter-0.10.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:32bb468e3af278f095d3fa5b90314728a6916d89ba3d0ffb726dd9bf7367285e"},
@@ -3171,7 +3171,7 @@ description = "Fast iterable JSON parser."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev", "integrations"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\""
 files = [
     {file = "jiter-0.12.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:e7acbaba9703d5de82a2c98ae6a0f59ab9770ab5af5fa35e43a303aee962cf65"},
     {file = "jiter-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:364f1a7294c91281260364222f535bc427f56d4de1d8ffd718162d21fbbd602e"},
@@ -3309,7 +3309,7 @@ description = "A package to repair broken json strings"
 optional = false
 python-versions = ">=3.7"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "json_repair-0.25.2-py3-none-any.whl", hash = "sha256:51d67295c3184b6c41a3572689661c6128cef6cfc9fb04db63130709adfc5bf0"},
     {file = "json_repair-0.25.2.tar.gz", hash = "sha256:161a56d7e6bbfd4cad3a614087e3e0dbd0e10d402dd20dc7db418432428cb32b"},
@@ -3322,7 +3322,7 @@ description = "A Python implementation of the JSON5 data format."
 optional = false
 python-versions = ">=3.8.0"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "json5-0.12.1-py3-none-any.whl", hash = "sha256:d9c9b3bc34a5f54d43c35e11ef7cb87d8bdd098c6ace87117a7b7e83e705c1d5"},
     {file = "json5-0.12.1.tar.gz", hash = "sha256:b2743e77b3242f8d03c143dd975a6ec7c52e2f2afe76ed934e53503dd4ad4990"},
@@ -3365,7 +3365,7 @@ description = "jsonref is a library for automatic dereferencing of JSON Referenc
 optional = false
 python-versions = ">=3.7"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "jsonref-1.1.0-py3-none-any.whl", hash = "sha256:590dc7773df6c21cbf948b5dac07a72a251db28b0238ceecce0a2abfa8ec30a9"},
     {file = "jsonref-1.1.0.tar.gz", hash = "sha256:32fe8e1d85af0fdefbebce950af85590b22b60f9e95443176adbde4e1ecea552"},
@@ -3470,7 +3470,7 @@ files = [
     {file = "kubernetes-34.1.0-py2.py3-none-any.whl", hash = "sha256:bffba2272534e224e6a7a74d582deb0b545b7c9879d2cd9e4aae9481d1f2cc2a"},
     {file = "kubernetes-34.1.0.tar.gz", hash = "sha256:8fe8edb0b5d290a2f3ac06596b23f87c658977d46b5f8df9d0f4ea83d0003912"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 certifi = ">=14.05.14"
@@ -4133,11 +4133,11 @@ description = "Python port of markdown-it. Markdown parsing, done right!"
 optional = false
 python-versions = ">=3.10"
 groups = ["main", "dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "markdown_it_py-4.0.0-py3-none-any.whl", hash = "sha256:87327c59b172c5011896038353a81343b6754500a08cd7a4973bb48c6d578147"},
     {file = "markdown_it_py-4.0.0.tar.gz", hash = "sha256:cb0a2b4aa34f932c007117b194e945bd74e0ec24133ceb5bac59009cda1cb9f3"},
 ]
-markers = {main = "python_version >= \"3.10\"", dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [package.dependencies]
 mdurl = ">=0.1,<1.0"
@@ -4367,7 +4367,7 @@ files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "mistralai"
@@ -4525,7 +4525,7 @@ files = [
     {file = "mmh3-5.2.0-cp39-cp39-win_arm64.whl", hash = "sha256:33576136c06b46a7046b6d83a3d75fbca7d25f84cec743f1ae156362608dc6d2"},
     {file = "mmh3-5.2.0.tar.gz", hash = "sha256:1efc8fec8478e9243a78bb993422cf79f8ff85cb4cf6b79647480a31e0d950a8"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 benchmark = ["pymmh3 (==0.0.5)", "pyperf (==2.9.0)", "xxhash (==3.5.0)"]
@@ -4558,7 +4558,7 @@ files = [
     {file = "mpmath-1.3.0-py3-none-any.whl", hash = "sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"},
     {file = "mpmath-1.3.0.tar.gz", hash = "sha256:7a28eb2a9774d00c7bc92411c19a89209d5da7c4c9a9e227be8330a23a25b91f"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 develop = ["codecov", "pycodestyle", "pytest (>=4.6)", "pytest-cov", "wheel"]
@@ -4903,7 +4903,7 @@ files = [
     {file = "nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9"},
     {file = "nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "numpy"
@@ -5123,7 +5123,7 @@ files = [
     {file = "oauthlib-3.3.1-py3-none-any.whl", hash = "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1"},
     {file = "oauthlib-3.3.1.tar.gz", hash = "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 rsa = ["cryptography (>=3.0.0)"]
@@ -5193,6 +5193,7 @@ description = "ONNX Runtime is a runtime accelerator for Machine Learning models
 optional = false
 python-versions = ">=3.10"
 groups = ["dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "onnxruntime-1.23.2-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:a7730122afe186a784660f6ec5807138bf9d792fa1df76556b27307ea9ebcbe3"},
     {file = "onnxruntime-1.23.2-cp310-cp310-macosx_13_0_x86_64.whl", hash = "sha256:b28740f4ecef1738ea8f807461dd541b8287d5650b5be33bca7b474e3cbd1f36"},
@@ -5217,7 +5218,6 @@ files = [
     {file = "onnxruntime-1.23.2-cp313-cp313t-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9d2385e774f46ac38f02b3a91a91e30263d41b2f1f4f26ae34805b2a9ddef466"},
     {file = "onnxruntime-1.23.2-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e2b9233c4947907fd1818d0e581c049c41ccc39b2856cc942ff6d26317cee145"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [package.dependencies]
 coloredlogs = "*"
@@ -5308,7 +5308,7 @@ description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "openpyxl-3.1.5-py2.py3-none-any.whl", hash = "sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"},
     {file = "openpyxl-3.1.5.tar.gz", hash = "sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050"},
@@ -5328,7 +5328,7 @@ files = [
     {file = "opentelemetry_api-1.39.0-py3-none-any.whl", hash = "sha256:3c3b3ca5c5687b1b5b37e5c5027ff68eacea8675241b29f13110a8ffbb8f0459"},
     {file = "opentelemetry_api-1.39.0.tar.gz", hash = "sha256:6130644268c5ac6bdffaf660ce878f10906b3e789f7e2daa5e169b047a2933b9"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 importlib-metadata = ">=6.0,<8.8.0"
@@ -5345,7 +5345,7 @@ files = [
     {file = "opentelemetry_exporter_otlp_proto_common-1.39.0-py3-none-any.whl", hash = "sha256:3d77be7c4bdf90f1a76666c934368b8abed730b5c6f0547a2ec57feb115849ac"},
     {file = "opentelemetry_exporter_otlp_proto_common-1.39.0.tar.gz", hash = "sha256:a135fceed1a6d767f75be65bd2845da344dd8b9258eeed6bc48509d02b184409"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 opentelemetry-proto = "1.39.0"
@@ -5361,7 +5361,7 @@ files = [
     {file = "opentelemetry_exporter_otlp_proto_grpc-1.39.0-py3-none-any.whl", hash = "sha256:758641278050de9bb895738f35ff8840e4a47685b7e6ef4a201fe83196ba7a05"},
     {file = "opentelemetry_exporter_otlp_proto_grpc-1.39.0.tar.gz", hash = "sha256:7e7bb3f436006836c0e0a42ac619097746ad5553ad7128a5bd4d3e727f37fc06"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 googleapis-common-protos = ">=1.57,<2.0"
@@ -5385,7 +5385,7 @@ description = "OpenTelemetry Collector Protobuf over HTTP Exporter"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "opentelemetry_exporter_otlp_proto_http-1.39.0-py3-none-any.whl", hash = "sha256:5789cb1375a8b82653328c0ce13a054d285f774099faf9d068032a49de4c7862"},
     {file = "opentelemetry_exporter_otlp_proto_http-1.39.0.tar.gz", hash = "sha256:28d78fc0eb82d5a71ae552263d5012fa3ebad18dfd189bf8d8095ba0e65ee1ed"},
@@ -5456,7 +5456,7 @@ files = [
     {file = "opentelemetry_proto-1.39.0-py3-none-any.whl", hash = "sha256:1e086552ac79acb501485ff0ce75533f70f3382d43d0a30728eeee594f7bf818"},
     {file = "opentelemetry_proto-1.39.0.tar.gz", hash = "sha256:c1fa48678ad1a1624258698e59be73f990b7fc1f39e73e16a9d08eef65dd838c"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 protobuf = ">=5.0,<7.0"
@@ -5472,7 +5472,7 @@ files = [
     {file = "opentelemetry_sdk-1.39.0-py3-none-any.whl", hash = "sha256:90cfb07600dfc0d2de26120cebc0c8f27e69bf77cd80ef96645232372709a514"},
     {file = "opentelemetry_sdk-1.39.0.tar.gz", hash = "sha256:c22204f12a0529e07aa4d985f1bca9d6b0e7b29fe7f03e923548ae52e0e15dde"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 opentelemetry-api = "1.39.0"
@@ -5490,7 +5490,7 @@ files = [
     {file = "opentelemetry_semantic_conventions-0.60b0-py3-none-any.whl", hash = "sha256:069530852691136018087b52688857d97bba61cd641d0f8628d2d92788c4f78a"},
     {file = "opentelemetry_semantic_conventions-0.60b0.tar.gz", hash = "sha256:227d7aa73cbb8a2e418029d6b6465553aa01cf7e78ec9d0bc3255c7b3ac5bf8f"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 opentelemetry-api = "1.39.0"
@@ -5743,7 +5743,7 @@ files = [
     {file = "overrides-7.7.0-py3-none-any.whl", hash = "sha256:c7ed9d062f78b8e4c1a7b70bd8796b35ead4d9f510227ef9c5dc7626c60d7e49"},
     {file = "overrides-7.7.0.tar.gz", hash = "sha256:55158fa3d93b98cc75299b1e67078ad9003ca27945c76162c1c0766d6f91820a"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "packaging"
@@ -5910,7 +5910,7 @@ description = "PDF parser and analyzer"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pdfminer_six-20251107-py3-none-any.whl", hash = "sha256:c09df33e4cbe6b26b2a79248a4ffcccafaa5c5d39c9fff0e6e81567f165b5401"},
     {file = "pdfminer_six-20251107.tar.gz", hash = "sha256:5fb0c553799c591777f22c0c72b77fc2522d7d10c70654e25f4c5f1fd996e008"},
@@ -5932,7 +5932,7 @@ description = "Plumb a PDF for detailed information about each char, rectangle, 
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pdfplumber-0.11.8-py3-none-any.whl", hash = "sha256:7dda117b8ed21bca9c8e7d7808fee2439f93c8bd6ea45989bfb1aead6dc3cad3"},
     {file = "pdfplumber-0.11.8.tar.gz", hash = "sha256:db29b04bc8bb62f39dd444533bcf2e0ba33584bd24f5a54644f3ba30f4f22d31"},
@@ -6269,7 +6269,7 @@ description = "Wraps the portalocker recipe for easy usage"
 optional = false
 python-versions = ">=3.5"
 groups = ["main", "integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "portalocker-2.7.0-py2.py3-none-any.whl", hash = "sha256:a07c5b4f3985c3cf4798369631fb7011adb498e2a46d8440efc75a8f29a0f983"},
     {file = "portalocker-2.7.0.tar.gz", hash = "sha256:032e81d534a88ec1736d03f780ba073f047a06c478b06e2937486f334e955c51"},
@@ -6290,7 +6290,7 @@ description = "Wraps the portalocker recipe for easy usage"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+markers = "python_version == \"3.9\""
 files = [
     {file = "portalocker-3.2.0-py3-none-any.whl", hash = "sha256:3cdc5f565312224bc570c49337bd21428bba0ef363bbcf58b9ef4a9f11779968"},
     {file = "portalocker-3.2.0.tar.gz", hash = "sha256:1f3002956a54a8c3730586c5c77bf18fae4149e07eaf1c29fc3faf4d5a3f89ac"},
@@ -6315,7 +6315,7 @@ files = [
     {file = "posthog-5.4.0-py3-none-any.whl", hash = "sha256:284dfa302f64353484420b52d4ad81ff5c2c2d1d607c4e2db602ac72761831bd"},
     {file = "posthog-5.4.0.tar.gz", hash = "sha256:701669261b8d07cdde0276e5bc096b87f9e200e3b9589c5ebff14df658c5893c"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 backoff = ">=1.10.0"
@@ -6356,11 +6356,11 @@ description = "A framework for managing and maintaining multi-language pre-commi
 optional = false
 python-versions = ">=3.10"
 groups = ["dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "pre_commit-4.5.0-py2.py3-none-any.whl", hash = "sha256:25e2ce09595174d9c97860a95609f9f852c0614ba602de3561e267547f2335e1"},
     {file = "pre_commit-4.5.0.tar.gz", hash = "sha256:dc5a065e932b19fc1d4c653c6939068fe54325af8e741e74e88db4d28a4dd66b"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [package.dependencies]
 cfgv = ">=2.0.0"
@@ -6536,7 +6536,7 @@ files = [
     {file = "protobuf-6.33.1-py3-none-any.whl", hash = "sha256:d595a9fd694fdeb061a62fbe10eb039cc1e444df81ec9bb70c7fc59ebcb1eafa"},
     {file = "protobuf-6.33.1.tar.gz", hash = "sha256:97f65757e8d09870de6fd973aeddb92f85435607235d20b2dfed93405d00c85b"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "ptyprocess"
@@ -6632,7 +6632,7 @@ files = [
     {file = "pyasn1-0.6.1-py3-none-any.whl", hash = "sha256:0d632f46f2ba09143da3a8afe9e33fb6f92fa2320ab7e886e2d0f7672af84629"},
     {file = "pyasn1-0.6.1.tar.gz", hash = "sha256:6f580d2bdd84365380830acf45550f2511469f673cb4a5ae3857a3170128b034"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "pyasn1-modules"
@@ -6645,7 +6645,7 @@ files = [
     {file = "pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a"},
     {file = "pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 pyasn1 = ">=0.6.1,<0.7.0"
@@ -6867,7 +6867,7 @@ files = [
     {file = "pybase64-1.4.2-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:21e72a662a62eba34a91e9424b21db99b8fc5cce99932ce736167496965fa154"},
     {file = "pybase64-1.4.2.tar.gz", hash = "sha256:46cdefd283ed9643315d952fe44de80dc9b9a811ce6e3ec97fd1827af97692d0"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "pycparser"
@@ -6880,7 +6880,7 @@ files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", integrations = "python_version >= \"3.10\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -7258,7 +7258,7 @@ files = [
     {file = "pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"},
     {file = "pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 windows-terminal = ["colorama (>=0.4.6)"]
@@ -7315,7 +7315,7 @@ description = "Python bindings to PDFium"
 optional = false
 python-versions = ">=3.6"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pypdfium2-5.1.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:f3dde94d320d582d3c20255b600f1e7e03261bfdea139b7064b54126fc3db4e2"},
     {file = "pypdfium2-5.1.0-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:dee09b7a3ab1860a17decc97c179a5aaba5a74b2780d53c91daa18d742945892"},
@@ -7355,7 +7355,7 @@ groups = ["dev", "integrations"]
 files = [
     {file = "PyPika-0.48.9.tar.gz", hash = "sha256:838836a61747e7c8380cd1b7ff638694b7a7335345d0f559b04b2cd832ad5378"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "pyproject-hooks"
@@ -7368,7 +7368,7 @@ files = [
     {file = "pyproject_hooks-1.2.0-py3-none-any.whl", hash = "sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913"},
     {file = "pyproject_hooks-1.2.0.tar.gz", hash = "sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "pyreadline3"
@@ -7381,7 +7381,7 @@ files = [
     {file = "pyreadline3-3.5.4-py3-none-any.whl", hash = "sha256:eaf8e6cc3c49bcccf145fc6067ba8643d1df34d604a1ec0eccbf7a18e6d3fae6"},
     {file = "pyreadline3-3.5.4.tar.gz", hash = "sha256:8d57d53039a1c75adba8e50dd3d992b28143480816187ea5efbd5c78e6c885b7"},
 ]
-markers = {dev = "sys_platform == \"win32\"", integrations = "python_version == \"3.10\" and sys_platform == \"win32\""}
+markers = {dev = "sys_platform == \"win32\"", integrations = "sys_platform == \"win32\" and python_version >= \"3.10\""}
 
 [package.extras]
 dev = ["build", "flake8", "mypy", "pytest", "twine"]
@@ -7666,7 +7666,7 @@ files = [
     {file = "pywin32-311-cp39-cp39-win_amd64.whl", hash = "sha256:e0c4cfb0621281fe40387df582097fd796e80430597cb9944f0ae70447bacd91"},
     {file = "pywin32-311-cp39-cp39-win_arm64.whl", hash = "sha256:62ea666235135fee79bb154e695f3ff67370afefd71bd7fea7512fc70ef31e3d"},
 ]
-markers = {main = "platform_system == \"Windows\"", integrations = "sys_platform == \"win32\" and python_version >= \"3.10\" or python_version == \"3.10\" and platform_system == \"Windows\""}
+markers = {main = "platform_system == \"Windows\"", integrations = "python_version >= \"3.10\" and (sys_platform == \"win32\" or platform_system == \"Windows\")"}
 
 [[package]]
 name = "pywin32-ctypes"
@@ -7978,7 +7978,7 @@ files = [
     {file = "requests-oauthlib-2.0.0.tar.gz", hash = "sha256:b3dffaebd884d8cd778494369603a9e7b58d29111bf6b41bdc2dcd87203af4e9"},
     {file = "requests_oauthlib-2.0.0-py2.py3-none-any.whl", hash = "sha256:7dd8a5c40426b779b0868c404bdef9768deccf22749cde15852df527e6269b36"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 oauthlib = ">=3.0.0"
@@ -8028,7 +8028,7 @@ files = [
     {file = "rich-14.2.0-py3-none-any.whl", hash = "sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd"},
     {file = "rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
@@ -8360,7 +8360,7 @@ files = [
     {file = "rsa-4.9.1-py3-none-any.whl", hash = "sha256:68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762"},
     {file = "rsa-4.9.1.tar.gz", hash = "sha256:e7bdbfdb5497da4c07dfd35530e1a902659db6ff241e39d9953cad06ebd0ae75"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 pyasn1 = ">=0.1.3"
@@ -8437,7 +8437,7 @@ description = "Python bindings to FreeDesktop.org Secret Service API"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
-markers = "sys_platform == \"linux\" and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and sys_platform == \"linux\""
 files = [
     {file = "secretstorage-3.5.0-py3-none-any.whl", hash = "sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137"},
     {file = "secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be"},
@@ -8542,7 +8542,7 @@ files = [
     {file = "shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"},
     {file = "shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "six"
@@ -8761,7 +8761,7 @@ files = [
     {file = "sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"},
     {file = "sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 mpmath = ">=1.1.0,<1.4"
@@ -8939,7 +8939,7 @@ files = [
     {file = "tokenizers-0.22.1-cp39-abi3-win_amd64.whl", hash = "sha256:65fd6e3fb11ca1e78a6a93602490f134d1fdeb13bcef99389d5102ea318ed138"},
     {file = "tokenizers-0.22.1.tar.gz", hash = "sha256:61de6522785310a309b3407bac22d99c4db5dba349935e99e4d15ea2226af2d9"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 huggingface-hub = ">=0.16.4,<2.0"
@@ -9000,7 +9000,7 @@ files = [
     {file = "tomli-2.3.0-py3-none-any.whl", hash = "sha256:e95b1af3c5b07d9e643909b5abbec77cd9f1217e6d0bca72b0234736b9fb1f1b"},
     {file = "tomli-2.3.0.tar.gz", hash = "sha256:64be704a875d2a59753d80ee8a533c3fe183e3f06807ff7dc2232938ccb01549"},
 ]
-markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", integrations = "python_version == \"3.10\""}
+markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [[package]]
 name = "tomli-w"
@@ -9009,7 +9009,7 @@ description = "A lil' TOML writer"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90"},
     {file = "tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021"},
@@ -9087,7 +9087,7 @@ files = [
     {file = "typer-0.20.0-py3-none-any.whl", hash = "sha256:5b463df6793ec1dca6213a3cf4c0f03bc6e322ac5e16e13ddd622a889489784a"},
     {file = "typer-0.20.0.tar.gz", hash = "sha256:1aaf6494031793e4876fb0bacfa6a912b551cf43c1e63c800df8b1a866720c37"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 click = ">=8.0.0"
@@ -9101,12 +9101,12 @@ version = "0.20.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+groups = ["dev", "integrations"]
 files = [
     {file = "typer_slim-0.20.0-py3-none-any.whl", hash = "sha256:f42a9b7571a12b97dddf364745d29f12221865acef7a2680065f9bb29c7dc89d"},
     {file = "typer_slim-0.20.0.tar.gz", hash = "sha256:9fc6607b3c6c20f5c33ea9590cbeb17848667c51feee27d9e314a579ab07d1a3"},
 ]
+markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [package.dependencies]
 click = ">=8.0.0"
@@ -9256,7 +9256,7 @@ description = "An extremely fast Python package and project manager, written in 
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "uv-0.9.15-py3-none-linux_armv6l.whl", hash = "sha256:4ccf2aa7f2e0fcb553dccc8badceb2fc533000e5baf144fd982bb9be88b304b8"},
     {file = "uv-0.9.15-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:944cd6d500974f9693994ec990c5b263a185e66cbc1cbd230f319445f8330e4e"},
@@ -9290,7 +9290,7 @@ files = [
     {file = "uvicorn-0.38.0-py3-none-any.whl", hash = "sha256:48c0afd214ceb59340075b4a052ea1ee91c16fbc2a9b1469cca0e54566977b02"},
     {file = "uvicorn-0.38.0.tar.gz", hash = "sha256:fd97093bdd120a2609fc0d3afe931d4d4ad688b6e75f0f929fde1bc36fe0e91d"},
 ]
-markers = {integrations = "sys_platform != \"emscripten\" and python_version >= \"3.10\" or python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 click = ">=7.0"
@@ -9365,7 +9365,7 @@ files = [
     {file = "uvloop-0.22.1-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:286322a90bea1f9422a470d5d2ad82d38080be0a29c4dd9b3e6384320a4d11e7"},
     {file = "uvloop-0.22.1.tar.gz", hash = "sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f"},
 ]
-markers = {dev = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", integrations = "python_version == \"3.10\" and sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""}
+markers = {dev = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", integrations = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\" and python_version >= \"3.10\""}
 
 [package.extras]
 dev = ["Cython (>=3.0,<4.0)", "setuptools (>=60)"]
@@ -9383,7 +9383,7 @@ files = [
     {file = "virtualenv-20.35.4-py3-none-any.whl", hash = "sha256:c21c9cede36c9753eeade68ba7d523529f228a403463376cf821eaae2b650f1b"},
     {file = "virtualenv-20.35.4.tar.gz", hash = "sha256:643d3914d73d3eeb0c552cbb12d7e82adf0e504dbf86a3182f8771a153a1971c"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 distlib = ">=0.3.7,<1"
@@ -9513,7 +9513,7 @@ files = [
     {file = "watchfiles-1.1.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4b943d3668d61cfa528eb949577479d3b077fd25fb83c641235437bc0b5bc60e"},
     {file = "watchfiles-1.1.1.tar.gz", hash = "sha256:a173cb5c16c4f40ab19cecf48a534c409f7ea983ab8fed0741304a1c0a31b3f2"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 anyio = ">=3.0.0"
@@ -9542,7 +9542,7 @@ files = [
     {file = "websocket_client-1.9.0-py3-none-any.whl", hash = "sha256:af248a825037ef591efbf6ed20cc5faa03d3b47b9e5a2230a529eeee1c1fc3ef"},
     {file = "websocket_client-1.9.0.tar.gz", hash = "sha256:9e813624b6eb619999a97dc7958469217c3176312b3a16a4bd1bc7e08a46ec98"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx_rtd_theme (>=1.1.0)"]
@@ -9627,7 +9627,7 @@ files = [
     {file = "websockets-15.0.1-py3-none-any.whl", hash = "sha256:f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f"},
     {file = "websockets-15.0.1.tar.gz", hash = "sha256:82544de02076bafba038ce055ee6412d68da13ab47f0c60cab827346de828dee"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "wheel"
@@ -10041,7 +10041,7 @@ files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
@@ -10166,4 +10166,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "c9613bfda630eb6fbfc0313068c164e79a15f123e356de90ca87ef4d8411f63b"
+content-hash = "109574690841ff5d5a54aeace83d3cfe6c9b899add18058fecaa84c7a63888b3"

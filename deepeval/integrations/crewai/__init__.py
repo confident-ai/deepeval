@@ -20,8 +20,7 @@ except RuntimeError as exc:
     pysqlite3 = require_dependency(
         "pysqlite3",
         provider_label="DeepEval CrewAI integration",
-        install_hint="Install it with `poetry add --group integrations pysqlite3-binary` "
-        "or `pip install pysqlite3-binary`.",
+        install_hint="Install it with `pip install pysqlite3-binary`",
     )
     sys.modules["sqlite3"] = pysqlite3
 
