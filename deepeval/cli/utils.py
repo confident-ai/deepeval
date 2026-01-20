@@ -52,10 +52,10 @@ USE_EMBED_KEYS = [
 
 def render_login_message():
     print(
-        "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
+        "🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the evals cloud platform 🏡❤️"
     )
     print("")
-    print(pyfiglet.Figlet(font="big_money-ne").renderText("DeepEval Cloud"))
+    print(pyfiglet.Figlet(font="big_money-ne").renderText("Confident AI"))
 
 
 def upload_and_open_link(_span: Span):

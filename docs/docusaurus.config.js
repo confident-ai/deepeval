@@ -42,19 +42,18 @@ module.exports = {
         showLastUpdateTime: true,
       },
     ],
-    // [
-    //   '@docusaurus/plugin-content-blog',
-    //   {
-    //     id: 'changelog',
-    //     path: 'changelog',
-    //     routeBasePath: 'changelog',
-    //     blogTitle: 'Changelog',
-    //     blogDescription: 'Release notes and updates',
-    //     blogSidebarTitle: 'Releases',
-    //     blogSidebarCount: 'ALL',
-    //     showReadingTime: false,
-    //   },
-    // ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'changelog',
+        path: 'changelog',
+        routeBasePath: 'changelog',
+        sidebarPath: require.resolve('./sidebarChangelog.js'),
+        editUrl: 'https://github.com/confident-ai/deepeval/edit/main/docs/',
+        showLastUpdateAuthor: true,
+        showLastUpdateTime: true,
+      },
+    ],
   ],
 
   title: 'DeepEval by Confident AI - The LLM Evaluation Framework',
@@ -165,7 +164,12 @@ module.exports = {
             activeBasePath: 'integrations',
           },
           { to: 'blog', label: 'Blog', position: 'left' },
-          // { to: 'changelog', label: 'Changelog', position: 'left' },
+          {
+            to: 'changelog',
+            position: 'left',
+            label: 'Changelog',
+            activeBasePath: 'changelog',
+          },
           {
             href: 'https://www.confident-ai.com/docs',
             position: 'left',

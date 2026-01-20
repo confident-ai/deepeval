@@ -10,6 +10,7 @@ from .kimi_model import KimiModel
 from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
 from .portkey_model import PortkeyModel
+from .openrouter_model import OpenRouterModel
 
 __all__ = [
     "AzureOpenAIModel",
@@ -24,4 +25,5 @@ __all__ = [
     "GrokModel",
     "DeepSeekModel",
     "PortkeyModel",
+    "OpenRouterModel",
 ]

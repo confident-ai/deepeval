@@ -145,6 +145,7 @@ def enter_current_context(
     progress: Optional[Progress] = None,
     pbar_callback_id: Optional[int] = None,
     uuid_str: Optional[str] = None,
+    fallback_trace_uuid: Optional[str] = None,
 ) -> BaseSpan:
     start_time = perf_counter()
     observe_kwargs = observe_kwargs or {}
@@ -159,12 +160,27 @@ def enter_current_context(
     parent_uuid: Optional[str] = None
 
     if parent_span:
-        parent_uuid = parent_span.uuid
-        trace_uuid = parent_span.trace_uuid
-    else:
+        # Validate that the parent span's trace is still active
+        if parent_span.trace_uuid in trace_manager.active_traces:
+            parent_uuid = parent_span.uuid
+            trace_uuid = parent_span.trace_uuid
+        else:
+            # Parent span references a dead trace - treat as if no parent
+            parent_span = None
+
+    if not parent_span:
         current_trace = current_trace_context.get()
-        if current_trace:
+        # IMPORTANT: Verify trace is still active, not just in context
+        # (a previous failed async operation might leave a dead trace in context)
+        if current_trace and current_trace.uuid in trace_manager.active_traces:
             trace_uuid = current_trace.uuid
+        elif (
+            fallback_trace_uuid
+            and fallback_trace_uuid in trace_manager.active_traces
+        ):
+            # In async contexts, ContextVar may not propagate. Use the fallback trace_uuid
+            # provided by the CallbackHandler to avoid creating duplicate traces.
+            trace_uuid = fallback_trace_uuid
         else:
             trace = trace_manager.start_new_trace(
                 metric_collection=metric_collection
@@ -258,11 +274,13 @@ def exit_current_context(
 
     current_span = current_span_context.get()
 
+    # In async contexts (LangChain/LangGraph), context variables don't propagate
+    # reliably across task boundaries. Fall back to direct span lookup.
     if not current_span or current_span.uuid != uuid_str:
-        print(
-            f"Error: Current span in context does not match the span being exited. Expected UUID: {uuid_str}, Got: {current_span.uuid if current_span else 'None'}"
-        )
-        return
+        current_span = trace_manager.get_span_by_uuid(uuid_str)
+        if not current_span:
+            # Span already removed or never existed
+            return
 
     current_span.end_time = end_time
     if exc_type is not None:
@@ -295,7 +313,12 @@ def exit_current_context(
         else:
             current_span_context.set(None)
     else:
+        # Try context first, then fall back to direct trace lookup for async contexts
         current_trace = current_trace_context.get()
+        if not current_trace and current_span.trace_uuid:
+            current_trace = trace_manager.get_trace_by_uuid(
+                current_span.trace_uuid
+            )
         if current_span.status == TraceSpanStatus.ERRORED and current_trace:
             current_trace.status = TraceSpanStatus.ERRORED
         if current_trace and current_trace.uuid == current_span.trace_uuid:

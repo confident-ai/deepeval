@@ -14,6 +14,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.test_case import MLLMImage
+from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
@@ -155,27 +156,28 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, BaseModel], float]:
+    ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         return safe_asyncio_run(self.a_generate(prompt, schema))
 
     @retry_bedrock
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, BaseModel], float]:
+    ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             payload = self.generate_payload(prompt)
         else:
             payload = self.get_converse_request_body(prompt)
 
-        payload = self.get_converse_request_body(prompt)
         client = await self._ensure_client()
         response = await client.converse(
             modelId=self.get_model_name(),
             messages=payload["messages"],
             inferenceConfig=payload["inferenceConfig"],
         )
-        message = response["output"]["message"]["content"][0]["text"]
+
+        message = self._extract_text_from_converse_response(response)
+
         cost = self.calculate_cost(
             response["usage"]["inputTokens"],
             response["usage"]["outputTokens"],
@@ -206,7 +208,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 try:
                     image_raw_bytes = base64.b64decode(element.dataBase64)
                 except Exception:
-                    raise ValueError(
+                    raise DeepEvalError(
                         f"Invalid base64 data in MLLMImage: {element._id}"
                     )
 
@@ -294,6 +296,46 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     # Helpers
     ###############################################
 
+    @staticmethod
+    def _extract_text_from_converse_response(response: dict) -> str:
+        try:
+            content = response["output"]["message"]["content"]
+        except Exception as e:
+            raise DeepEvalError(
+                "Missing output.message.content in Bedrock response"
+            ) from e
+
+        # Collect any text blocks (ignore reasoning/tool blocks)
+        text_parts = []
+        for block in content:
+            if isinstance(block, dict) and "text" in block:
+                v = block.get("text")
+                if isinstance(v, str) and v.strip():
+                    text_parts.append(v)
+
+        if text_parts:
+            # join in case there are multiple text blocks
+            return "\n".join(text_parts)
+
+        # No text blocks present; raise an actionable error
+        keys = []
+        for b in content:
+            if isinstance(b, dict):
+                keys.append(list(b.keys()))
+            else:
+                keys.append(type(b).__name__)
+
+        stop_reason = (
+            response.get("stopReason")
+            or response.get("output", {}).get("stopReason")
+            or response.get("output", {}).get("message", {}).get("stopReason")
+        )
+
+        raise DeepEvalError(
+            f"Bedrock response contained no text content blocks. "
+            f"content keys={keys}, stopReason={stop_reason}"
+        )
+
     def get_converse_request_body(self, prompt: str) -> dict:
 
         return {
@@ -303,11 +345,14 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             },
         }
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[float]:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
             return input_cost + output_cost
+        return None
 
     def load_model(self):
         pass

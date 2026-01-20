@@ -69,6 +69,17 @@ There are **THREE** mandatory and **SIX** optional parameters required when inst
 For accurate and valid results, only turn parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
 :::
 
+:::tip
+You can upload your `ConversationalGEval` metrics to [Confident AI](https://app.confident-ai.com/) and use them as custom evaluation metrics. To upload a metric simply call the `upload` method of a `ConversationalGEval` metric instance:
+
+```python
+...
+
+metric = ConversationalGEval(...)
+metric.upload()
+```
+:::
+
 ### As a standalone
 
 You can also run the `ConversationalGEval` on a single test case as a standalone, one-off execution.
