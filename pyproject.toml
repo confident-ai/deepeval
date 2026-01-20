@@ -90,7 +90,7 @@ optional = true
 
 [tool.poetry.group.integrations.dependencies]
 crewai = { version = "^1.6.1", python = ">=3.10,<3.14" }
-pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.11" }
+pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.14" }
 langgraph = "^0.6.10"
 llama-index = "^0.14.4"
 langchain_openai = "^0.3.35"

@@ -7,7 +7,7 @@ description = ""
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "ag_ui_protocol-0.1.10-py3-none-any.whl", hash = "sha256:c81e6981f30aabdf97a7ee312bfd4df0cd38e718d9fc10019c7d438128b93ab5"},
     {file = "ag_ui_protocol-0.1.10.tar.gz", hash = "sha256:3213991c6b2eb24bb1a8c362ee270c16705a07a4c5962267a083d0959ed894f4"},
@@ -229,7 +229,7 @@ files = [
     {file = "anthropic-0.75.0-py3-none-any.whl", hash = "sha256:ea8317271b6c15d80225a9f3c670152746e88805a7a61e14d4a374577164965b"},
     {file = "anthropic-0.75.0.tar.gz", hash = "sha256:e8607422f4ab616db2ea5baacc215dd5f028da99ce2f022e33c7c535b29f3dfb"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 anyio = ">=3.5.0,<5"
@@ -286,7 +286,7 @@ description = "Bash tab completion for argparse"
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "argcomplete-3.6.3-py3-none-any.whl", hash = "sha256:f5007b3a600ccac5d25bbce33089211dfd49eab4a7718da3f10e3082525a92ce"},
     {file = "argcomplete-3.6.3.tar.gz", hash = "sha256:62e8ed4fd6a45864acc8235409461b72c9a28ee785a2011cc5eb78318786c89c"},
@@ -343,7 +343,7 @@ description = "The ultimate Python library in building OAuth and OpenID Connect 
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "authlib-1.6.5-py2.py3-none-any.whl", hash = "sha256:3e0e0507807f842b02175507bdee8957a1d5707fd4afb17c32fb43fee90b6e3a"},
     {file = "authlib-1.6.5.tar.gz", hash = "sha256:6aaf9c79b7cc96c900f0b284061691c5d4e61221640a948fe690b556a6d6d10b"},
@@ -503,7 +503,7 @@ description = "Unbearably fast near-real-time pure-Python runtime-static type-ch
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "beartype-0.22.8-py3-none-any.whl", hash = "sha256:b832882d04e41a4097bab9f63e6992bc6de58c414ee84cba9b45b67314f5ab2e"},
     {file = "beartype-0.22.8.tar.gz", hash = "sha256:b19b21c9359722ee3f7cc433f063b3e13997b27ae8226551ea5062e621f61165"},
@@ -601,7 +601,7 @@ description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "boto3-1.42.3-py3-none-any.whl", hash = "sha256:163df55a774402fa940e95a152c308a33fb0f49cbcb5ec1725936e48635512f7"},
     {file = "boto3-1.42.3.tar.gz", hash = "sha256:f7fe002c39806d5efe9105f0d74e836f001230e9520b4502c752dd4951f60041"},
@@ -622,7 +622,7 @@ description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "botocore-1.42.3-py3-none-any.whl", hash = "sha256:fa174f53224ab2adc3a01bb3215b41d314df2f6578381a4a0051bd60d5c718d9"},
     {file = "botocore-1.42.3.tar.gz", hash = "sha256:6bad2e512ab85926bbfb391a9486bb3120f4be71419e2f70b556d99783dcb1ce"},
@@ -1069,7 +1069,7 @@ description = ""
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\" and platform_system != \"Emscripten\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\" and platform_system != \"Emscripten\""
 files = [
     {file = "cohere-5.20.0-py3-none-any.whl", hash = "sha256:a95f17ed22be3f978363703beb6008b55000ce0e85124ddb976fa5b688014fea"},
     {file = "cohere-5.20.0.tar.gz", hash = "sha256:fb5ad5afa47447dd7eb090ad29bdb3a8181b0e758a3b03ba6ed8ca48d68d11a7"},
@@ -1313,7 +1313,7 @@ description = "Intuitive, easy CLIs based on type hints."
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "cyclopts-4.3.0-py3-none-any.whl", hash = "sha256:91a30b69faf128ada7cfeaefd7d9649dc222e8b2a8697f1fc99e4ee7b7ca44f3"},
     {file = "cyclopts-4.3.0.tar.gz", hash = "sha256:e95179cd0a959ce250ecfb2f0262a5996a92c1f9467bccad2f3d829e6833cef5"},
@@ -1450,7 +1450,7 @@ description = "DNS toolkit"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af"},
     {file = "dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f"},
@@ -1476,7 +1476,7 @@ files = [
     {file = "docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708"},
     {file = "docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 dev = ["pre-commit (>=2.16.0) ; python_version >= \"3.9\"", "pydoctor (>=25.4.0)", "pytest"]
@@ -1494,7 +1494,7 @@ files = [
     {file = "docutils-0.22.3-py3-none-any.whl", hash = "sha256:bd772e4aca73aff037958d44f2be5229ded4c09927fcf8690c577b66234d6ceb"},
     {file = "docutils-0.22.3.tar.gz", hash = "sha256:21486ae730e4ca9f622677b1412b879af1791efcfba517e4c6f60be543fc8cdd"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [[package]]
 name = "docx2txt"
@@ -1528,7 +1528,7 @@ description = "A robust email address syntax and deliverability validation libra
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "email_validator-2.3.0-py3-none-any.whl", hash = "sha256:80f13f623413e6b197ae73bb10bf4eb0908faf509ad8362c5edeb0be7fd450b4"},
     {file = "email_validator-2.3.0.tar.gz", hash = "sha256:9fc05c37f2f6cf439ff414f8fc46d917929974a82244c20eb10231ba60c54426"},
@@ -1574,7 +1574,7 @@ description = "Like `typing._eval_type`, but lets older Python versions use newe
 optional = false
 python-versions = ">=3.7"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "eval_type_backport-0.3.1-py3-none-any.whl", hash = "sha256:279ab641905e9f11129f56a8a78f493518515b83402b860f6f06dd7c011fdfa8"},
     {file = "eval_type_backport-0.3.1.tar.gz", hash = "sha256:57e993f7b5b69d271e37482e62f74e76a0276c82490cf8e4f0dffeb6b332d5ed"},
@@ -1590,11 +1590,11 @@ description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
 groups = ["main", "dev", "integrations"]
-markers = "python_version < \"3.11\""
 files = [
     {file = "exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"},
     {file = "exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219"},
 ]
+markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", integrations = "python_version <= \"3.13\""}
 
 [package.dependencies]
 typing-extensions = {version = ">=4.6.0", markers = "python_version < \"3.13\""}
@@ -1628,7 +1628,7 @@ files = [
     {file = "executing-2.2.1-py2.py3-none-any.whl", hash = "sha256:760643d3452b4d777d295bb167ccc74c64a81df23fb5e08eff250c425a4b2017"},
     {file = "executing-2.2.1.tar.gz", hash = "sha256:3632cc370565f6648cc328b32435bd120a1e4ebb20c77e3fdde9a13cd1e533c4"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [package.extras]
 tests = ["asttokens (>=2.1.0)", "coverage", "coverage-enable-subprocess", "ipython", "littleutils", "pytest", "rich ; python_version >= \"3.11\""]
@@ -1640,7 +1640,7 @@ description = "Fast read/write of AVRO files"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\" and platform_system != \"Emscripten\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\" and platform_system != \"Emscripten\""
 files = [
     {file = "fastavro-1.12.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:00650ca533907361edda22e6ffe8cf87ab2091c5d8aee5c8000b0f2dcdda7ed3"},
     {file = "fastavro-1.12.1-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ac76d6d95f909c72ee70d314b460b7e711d928845771531d823eb96a10952d26"},
@@ -1703,7 +1703,7 @@ description = "The fast, Pythonic way to build MCP servers and clients."
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "fastmcp-2.13.3-py3-none-any.whl", hash = "sha256:5173d335f4e6aabcfb5a5131af3fa092f604b303130fd3a49226b7a844a48e65"},
     {file = "fastmcp-2.13.3.tar.gz", hash = "sha256:ebca59e99412c596dd75ebdd5147800f6abc2490d025af76fa8ea4fc5f68781d"},
@@ -2009,7 +2009,7 @@ description = "Calculate prices for calling LLM inference APIs."
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "genai_prices-0.0.47-py3-none-any.whl", hash = "sha256:735e45950d2299276f2c00cd18075b77a124cd24ee58243f236ee29af3210594"},
     {file = "genai_prices-0.0.47.tar.gz", hash = "sha256:3b8c514f0ce5818b3944a371861586ed9bfe10d02598e62c350b5bd2916d03c2"},
@@ -2083,11 +2083,11 @@ description = "GenAI Python SDK"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev", "integrations"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "google_genai-1.53.0-py3-none-any.whl", hash = "sha256:65a3f99e5c03c372d872cda7419f5940e723374bb12a2f3ffd5e3e56e8eb2094"},
     {file = "google_genai-1.53.0.tar.gz", hash = "sha256:938a26d22f3fd32c6eeeb4276ef204ef82884e63af9842ce3eac05ceb39cbd8d"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version == \"3.10\""}
 
 [package.dependencies]
 anyio = ">=4.8.0,<5.0.0"
@@ -2296,7 +2296,7 @@ description = "The official Python library for the groq API"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "groq-0.37.1-py3-none-any.whl", hash = "sha256:b49f8c8898c55eaec9f71f1342f3fcacc9560d67a08ce5f35fbfb84e8dacd3da"},
     {file = "groq-0.37.1.tar.gz", hash = "sha256:7353d6dfb60834fd7aacbb86af106e2dc2aeaff6d0edd65fb2fd0f16bd39314c"},
@@ -2434,7 +2434,7 @@ files = [
     {file = "hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69"},
     {file = "hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f"},
 ]
-markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or python_version >= \"3.11\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version >= \"3.10\" and (python_version < \"3.13\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and (python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or platform_machine == \"AMD64\")"}
+markers = {dev = "platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or platform_machine == \"AMD64\")", integrations = "python_version >= \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
 
 [package.extras]
 tests = ["pytest"]
@@ -2547,7 +2547,7 @@ description = "Consume Server-Sent Event (SSE) messages with HTTPX."
 optional = false
 python-versions = ">=3.8"
 groups = ["dev", "integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "httpx-sse-0.4.0.tar.gz", hash = "sha256:1e81a3a3070ce322add1d3529ed42eb5f70817f45ed6ec915ab753f961139721"},
     {file = "httpx_sse-0.4.0-py3-none-any.whl", hash = "sha256:f329af6eae57eaa2bdfd962b42524764af68075ea87370a2de920af5341e318f"},
@@ -2559,12 +2559,12 @@ version = "0.4.3"
 description = "Consume Server-Sent Event (SSE) messages with HTTPX."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev"]
+markers = "python_version == \"3.9\""
 files = [
     {file = "httpx_sse-0.4.3-py3-none-any.whl", hash = "sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"},
     {file = "httpx_sse-0.4.3.tar.gz", hash = "sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d"},
 ]
-markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [[package]]
 name = "huggingface-hub"
@@ -2573,7 +2573,7 @@ description = "Client library to download and publish models, datasets and other
 optional = false
 python-versions = ">=3.8.0"
 groups = ["dev", "integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "huggingface_hub-0.36.0-py3-none-any.whl", hash = "sha256:7bcc9ad17d5b3f07b57c78e79d527102d08313caa278a641993acddcb894548d"},
     {file = "huggingface_hub-0.36.0.tar.gz", hash = "sha256:47b3f0e2539c39bf5cde015d63b72ec49baff67b6931c3d97f3f84532e2b8d25"},
@@ -2613,12 +2613,12 @@ version = "1.1.7"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.9.0"
-groups = ["dev", "integrations"]
+groups = ["dev"]
+markers = "python_version == \"3.9\""
 files = [
     {file = "huggingface_hub-1.1.7-py3-none-any.whl", hash = "sha256:f3efa4779f4890e44c957bbbb0f197e6028887ad09f0cf95a21659fa7753605d"},
     {file = "huggingface_hub-1.1.7.tar.gz", hash = "sha256:3c84b6283caca928595f08fd42e9a572f17ec3501dec508c3f2939d94bfbd9d2"},
 ]
-markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [package.dependencies]
 filelock = "*"
@@ -2825,7 +2825,7 @@ description = "Pythonic task execution"
 optional = false
 python-versions = ">=3.6"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "invoke-2.2.1-py3-none-any.whl", hash = "sha256:2413bc441b376e5cd3f55bb5d364f973ad8bdd7bf87e53c79de3c11bf3feecc8"},
     {file = "invoke-2.2.1.tar.gz", hash = "sha256:515bf49b4a48932b79b024590348da22f39c4942dff991ad1fb8b8baea1be707"},
@@ -3284,7 +3284,7 @@ description = "JSON Matching Expressions"
 optional = false
 python-versions = ">=3.7"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980"},
     {file = "jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe"},
@@ -3401,7 +3401,7 @@ description = "JSONSchema Spec with object-oriented paths"
 optional = false
 python-versions = "<4.0.0,>=3.8.0"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "jsonschema_path-0.3.4-py3-none-any.whl", hash = "sha256:f502191fdc2b22050f9a81c9237be9d27145b9001c55842bece5e94e382e52f8"},
     {file = "jsonschema_path-0.3.4.tar.gz", hash = "sha256:8365356039f16cc65fddffafda5f58766e34bebab7d6d105616ab52bc4297001"},
@@ -4044,7 +4044,7 @@ description = "The best Python observability tool! 🪵🔥"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "logfire-4.16.0-py3-none-any.whl", hash = "sha256:8f895f6c2efa593ad6d49e1b06d8e6e351d3dd0cad61ce5def0c3d401f8ea707"},
     {file = "logfire-4.16.0.tar.gz", hash = "sha256:03a3ab8fdc13399309cb55d69cba7a6fcbad3526cfad85fc4f72e7d75e22b654"},
@@ -4094,7 +4094,7 @@ description = "Shim for the Logfire SDK which does nothing unless Logfire is ins
 optional = false
 python-versions = ">=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "logfire_api-4.16.0-py3-none-any.whl", hash = "sha256:7351153c35cb61f0f89d2d4123ebf99b5469d70ef34c613a5ce56f85bf1b14fb"},
     {file = "logfire_api-4.16.0.tar.gz", hash = "sha256:0efa62f5e73abdea670b5e9384c841b544474207110a089536a0fa8704f9e386"},
@@ -4295,44 +4295,10 @@ description = "Model Context Protocol SDK"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\""
 files = [
     {file = "mcp-1.22.0-py3-none-any.whl", hash = "sha256:bed758e24df1ed6846989c909ba4e3df339a27b4f30f1b8b627862a4bade4e98"},
     {file = "mcp-1.22.0.tar.gz", hash = "sha256:769b9ac90ed42134375b19e777a2858ca300f95f2e800982b3e2be62dfc0ba01"},
-]
-
-[package.dependencies]
-anyio = ">=4.5"
-httpx = ">=0.27.1"
-httpx-sse = ">=0.4"
-jsonschema = ">=4.20.0"
-pydantic = ">=2.11.0,<3.0.0"
-pydantic-settings = ">=2.5.2"
-pyjwt = {version = ">=2.10.1", extras = ["crypto"]}
-python-multipart = ">=0.0.9"
-pywin32 = {version = ">=310", markers = "sys_platform == \"win32\""}
-sse-starlette = ">=1.6.1"
-starlette = ">=0.27"
-typing-extensions = ">=4.9.0"
-typing-inspection = ">=0.4.1"
-uvicorn = {version = ">=0.31.1", markers = "sys_platform != \"emscripten\""}
-
-[package.extras]
-cli = ["python-dotenv (>=1.0.0)", "typer (>=0.16.0)"]
-rich = ["rich (>=13.9.4)"]
-ws = ["websockets (>=15.0.1)"]
-
-[[package]]
-name = "mcp"
-version = "1.23.1"
-description = "Model Context Protocol SDK"
-optional = false
-python-versions = ">=3.10"
-groups = ["integrations"]
-markers = "python_version >= \"3.11\""
-files = [
-    {file = "mcp-1.23.1-py3-none-any.whl", hash = "sha256:3ce897fcc20a41bd50b4c58d3aa88085f11f505dcc0eaed48930012d34c731d8"},
-    {file = "mcp-1.23.1.tar.gz", hash = "sha256:7403e053e8e2283b1e6ae631423cb54736933fea70b32422152e6064556cd298"},
 ]
 
 [package.dependencies]
@@ -4376,7 +4342,7 @@ description = "Python Client SDK for the Mistral AI API."
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "mistralai-1.9.11-py3-none-any.whl", hash = "sha256:7a3dc2b8ef3fceaa3582220234261b5c4e3e03a972563b07afa150e44a25a6d3"},
     {file = "mistralai-1.9.11.tar.gz", hash = "sha256:3df9e403c31a756ec79e78df25ee73cea3eb15f86693773e16b16adaf59c9b8a"},
@@ -4821,7 +4787,7 @@ description = "Nexus Python SDK"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "nexus_rpc-1.1.0-py3-none-any.whl", hash = "sha256:d1b007af2aba186a27e736f8eaae39c03aed05b488084ff6c3d1785c9ba2ad38"},
     {file = "nexus_rpc-1.1.0.tar.gz", hash = "sha256:d65ad6a2f54f14e53ebe39ee30555eaeb894102437125733fb13034a04a44553"},
@@ -5292,7 +5258,7 @@ description = "Pydantic OpenAPI schema implementation"
 optional = false
 python-versions = "<4.0,>=3.8"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "openapi_pydantic-0.5.1-py3-none-any.whl", hash = "sha256:a3a09ef4586f5bd760a8df7f43028b60cafb6d9f61de2acba9574766255ab146"},
     {file = "openapi_pydantic-0.5.1.tar.gz", hash = "sha256:ff6835af6bde7a459fb93eb93bb92b8749b754fc6e51b2f1590a19dc3005ee0d"},
@@ -5410,7 +5376,7 @@ description = "Instrumentation Tools & Auto Instrumentation for OpenTelemetry Py
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "opentelemetry_instrumentation-0.60b0-py3-none-any.whl", hash = "sha256:aaafa1483543a402819f1bdfb06af721c87d60dd109501f9997332862a35c76a"},
     {file = "opentelemetry_instrumentation-0.60b0.tar.gz", hash = "sha256:4e9fec930f283a2677a2217754b40aaf9ef76edae40499c165bc7f1d15366a74"},
@@ -5429,7 +5395,7 @@ description = "OpenTelemetry HTTPX Instrumentation"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "opentelemetry_instrumentation_httpx-0.60b0-py3-none-any.whl", hash = "sha256:3f5e6fc4ddf1d9de2aaddb5255110827154dbd4de9187da906c8c2a3cc2219e9"},
     {file = "opentelemetry_instrumentation_httpx-0.60b0.tar.gz", hash = "sha256:fcf349a92fb0b941a2a18bec65141f4ba62cbf7a457a1aa580794bad44dc477c"},
@@ -5503,7 +5469,7 @@ description = "Web util for OpenTelemetry"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "opentelemetry_util_http-0.60b0-py3-none-any.whl", hash = "sha256:4f366f1a48adb74ffa6f80aee26f96882e767e01b03cd1cfb948b6e1020341fe"},
     {file = "opentelemetry_util_http-0.60b0.tar.gz", hash = "sha256:e42b7bb49bba43b6f34390327d97e5016eb1c47949ceaf37c4795472a4e3a82d"},
@@ -5867,7 +5833,7 @@ description = "Object-oriented paths"
 optional = false
 python-versions = "<4.0.0,>=3.7.0"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pathable-0.4.4-py3-none-any.whl", hash = "sha256:5ae9e94793b6ef5a4cbe0a7ce9dbbefc1eec38df253763fd0aeeacf2762dbbc2"},
     {file = "pathable-0.4.4.tar.gz", hash = "sha256:6905a3cd17804edfac7875b5f6c9142a218c7caef78693c2dbbbfbac186d88b2"},
@@ -5892,7 +5858,7 @@ description = "pathvalidate is a Python library to sanitize/validate a string su
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pathvalidate-3.3.1-py3-none-any.whl", hash = "sha256:5263baab691f8e1af96092fa5137ee17df5bdfbd6cff1fcac4d6ef4bc2e1735f"},
     {file = "pathvalidate-3.3.1.tar.gz", hash = "sha256:b18c07212bfead624345bb8e1d6141cdcf15a39736994ea0b94035ad2b1ba177"},
@@ -6380,7 +6346,7 @@ files = [
     {file = "prompt_toolkit-3.0.52-py3-none-any.whl", hash = "sha256:9aac639a3bbd33284347de5ad8d68ecc044b91a762dc39b7c21095fcd6a19955"},
     {file = "prompt_toolkit-3.0.52.tar.gz", hash = "sha256:28cde192929c8e7321de85de1ddbe736f1375148b02f2e17edd840042b1be855"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [package.dependencies]
 wcwidth = "*"
@@ -6573,7 +6539,7 @@ description = "Async Key-Value"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "py_key_value_aio-0.3.0-py3-none-any.whl", hash = "sha256:1c781915766078bfd608daa769fefb97e65d1d73746a3dfb640460e322071b64"},
     {file = "py_key_value_aio-0.3.0.tar.gz", hash = "sha256:858e852fcf6d696d231266da66042d3355a7f9871650415feef9fca7a6cd4155"},
@@ -6611,7 +6577,7 @@ description = "Shared Key-Value"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "py_key_value_shared-0.3.0-py3-none-any.whl", hash = "sha256:5b0efba7ebca08bb158b1e93afc2f07d30b8f40c2fc12ce24a4c0d84f42f9298"},
     {file = "py_key_value_shared-0.3.0.tar.gz", hash = "sha256:8fdd786cf96c3e900102945f92aa1473138ebe960ef49da1c833790160c28a4b"},
@@ -6912,7 +6878,7 @@ description = "Agent Framework / shim to use Pydantic with LLMs"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pydantic_ai-1.27.0-py3-none-any.whl", hash = "sha256:cdb77c1a1f6569c42483ba05b1da99aa3b5f7f9042ad3492b5dac741f45d5450"},
     {file = "pydantic_ai-1.27.0.tar.gz", hash = "sha256:6741111d0be19c0fb5f9612beab5af12b945ce715780b19e861fe104e656d61d"},
@@ -6939,7 +6905,7 @@ description = "Agent Framework / shim to use Pydantic with LLMs, slim package"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pydantic_ai_slim-1.27.0-py3-none-any.whl", hash = "sha256:31c1ed7dec4d59b3d95c9bb59daeb37d57f9e7d18547e30a0b7c5f5ecc44e5c0"},
     {file = "pydantic_ai_slim-1.27.0.tar.gz", hash = "sha256:5bfd03bff477d708c4d5479ef0f1676b5cf9daa38f30d7f1cce3d63eead5297a"},
@@ -7149,7 +7115,7 @@ description = "Framework for evaluating stochastic code execution, especially co
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pydantic_evals-1.27.0-py3-none-any.whl", hash = "sha256:086b3264c6602dceddaeb66ee18df7f9a3d5def2acd27d5251018bc95430c47e"},
     {file = "pydantic_evals-1.27.0.tar.gz", hash = "sha256:d8f08c4a61c7adea8cabd84368d3acde88f196162ab37ca1f99ffbbac6872f8f"},
@@ -7173,7 +7139,7 @@ description = "Graph and state machine library"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pydantic_graph-1.27.0-py3-none-any.whl", hash = "sha256:eea771a77516c43d5adedb337863e2cd627658dbd46e1abf2197a62b7826e738"},
     {file = "pydantic_graph-1.27.0.tar.gz", hash = "sha256:5762956e6b002b0415ee78fcbc60da6c7f31778760fb82dbc263f8e1bdcc5f19"},
@@ -7339,7 +7305,7 @@ description = "A cross-platform clipboard module for Python. (Only handles plain
 optional = false
 python-versions = "*"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "pyperclip-1.11.0-py3-none-any.whl", hash = "sha256:299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273"},
     {file = "pyperclip-1.11.0.tar.gz", hash = "sha256:244035963e4428530d9e3a6101a1ef97209c6825edab1567beac148ccc1db1b6"},
@@ -7795,25 +7761,7 @@ files = [
     {file = "referencing-0.36.2-py3-none-any.whl", hash = "sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0"},
     {file = "referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa"},
 ]
-markers = {dev = "python_version < \"3.11\"", integrations = "python_version == \"3.10\""}
-
-[package.dependencies]
-attrs = ">=22.2.0"
-rpds-py = ">=0.7.0"
-typing-extensions = {version = ">=4.4.0", markers = "python_version < \"3.13\""}
-
-[[package]]
-name = "referencing"
-version = "0.37.0"
-description = "JSON Referencing + Python"
-optional = false
-python-versions = ">=3.10"
-groups = ["dev", "integrations"]
-markers = "python_version >= \"3.11\""
-files = [
-    {file = "referencing-0.37.0-py3-none-any.whl", hash = "sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231"},
-    {file = "referencing-0.37.0.tar.gz", hash = "sha256:44aefc3142c5b842538163acb373e24cce6632bd54bdb01b21ad5863489f50d8"},
-]
+markers = {integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 attrs = ">=22.2.0"
@@ -8044,7 +7992,7 @@ description = "A beautiful reStructuredText renderer for rich"
 optional = false
 python-versions = "*"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "rich_rst-1.3.2-py3-none-any.whl", hash = "sha256:a99b4907cbe118cf9d18b0b44de272efa61f15117c61e39ebdc431baf5df722a"},
     {file = "rich_rst-1.3.2.tar.gz", hash = "sha256:a1196fdddf1e364b02ec68a05e8ff8f6914fee10fbca2e6b6735f166bb0da8d4"},
@@ -8401,7 +8349,7 @@ description = "An Amazon S3 Transfer Manager"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "s3transfer-0.16.0-py3-none-any.whl", hash = "sha256:18e25d66fed509e3868dc1572b3f427ff947dd2c56f844a5bf09481ad3f3b2fe"},
     {file = "s3transfer-0.16.0.tar.gz", hash = "sha256:8e990f13268025792229cd52fa10cb7163744bf56e719e0b9cb925ab79abf920"},
@@ -8791,7 +8739,7 @@ description = "Temporal.io Python SDK"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "temporalio-1.19.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c2d6d5cad8aec56e048705aa4f0bab83fec15343757ea7acf8504f2e0c289b60"},
     {file = "temporalio-1.19.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:d85c89018cba9471ce529d90c9cee5bcc31790fd64176b9ada32cc76440f8d73"},
@@ -9101,12 +9049,12 @@ version = "0.20.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "integrations"]
+groups = ["dev"]
+markers = "python_version == \"3.9\""
 files = [
     {file = "typer_slim-0.20.0-py3-none-any.whl", hash = "sha256:f42a9b7571a12b97dddf364745d29f12221865acef7a2680065f9bb29c7dc89d"},
     {file = "typer_slim-0.20.0.tar.gz", hash = "sha256:9fc6607b3c6c20f5c33ea9590cbeb17848667c51feee27d9e314a579ab07d1a3"},
 ]
-markers = {dev = "python_version == \"3.9\" or python_version >= \"3.11\"", integrations = "python_version >= \"3.11\""}
 
 [package.dependencies]
 click = ">=8.0.0"
@@ -9122,7 +9070,7 @@ description = "Typing stubs for protobuf"
 optional = false
 python-versions = ">=3.9"
 groups = ["integrations"]
-markers = "python_version == \"3.10\""
+markers = "python_version >= \"3.10\" and python_version < \"3.14\""
 files = [
     {file = "types_protobuf-6.32.1.20251105-py3-none-any.whl", hash = "sha256:a15109d38f7cfefd2539ef86d3f93a6a41c7cad53924f8aa1a51eaddbb72a660"},
     {file = "types_protobuf-6.32.1.20251105.tar.gz", hash = "sha256:641002611ff87dd9fedc38a39a29cacb9907ae5ce61489b53e99ca2074bef764"},
@@ -9529,7 +9477,7 @@ files = [
     {file = "wcwidth-0.2.14-py2.py3-none-any.whl", hash = "sha256:a7bb560c8aee30f9957e5f9895805edd20602f2d7f720186dfd906e82b4982e1"},
     {file = "wcwidth-0.2.14.tar.gz", hash = "sha256:4d478375d31bc5395a3c55c40ccdf3354688364cd61c4f6adacaa9215d0b3605"},
 ]
-markers = {integrations = "python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.14\""}
 
 [[package]]
 name = "websocket-client"
@@ -10166,4 +10114,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "109574690841ff5d5a54aeace83d3cfe6c9b899add18058fecaa84c7a63888b3"
+content-hash = "b8b9e5e5a8f2c78969356b4ea8a1ce63f1d765cd54cc5a140d83b84432d983ed"
