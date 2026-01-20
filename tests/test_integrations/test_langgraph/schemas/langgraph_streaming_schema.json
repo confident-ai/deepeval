@@ -1,13 +1,13 @@
 {
-  "uuid": "47df2fd1-655a-47de-be5b-f38a72cc7c4d",
+  "uuid": "c0d1e0a5-fafc-4220-a430-4f506300d254",
   "baseSpans": [
     {
-      "uuid": "019bc088-4457-7402-95f0-1e423c59ee18",
+      "uuid": "903e1383-0b7a-4fd1-a9a1-0d9ac53ea094",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:21:54.519Z",
-      "endTime": "2026-01-15T07:21:56.624Z",
+      "startTime": "2026-01-20T19:37:40.088Z",
+      "endTime": "2026-01-20T19:37:42.414Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           }
         ]
       },
@@ -26,7 +27,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           },
           {
             "content": "",
@@ -34,7 +36,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -46,21 +48,36 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           },
           {
             "content": "$378.90 (+0.8%)",
@@ -68,34 +85,49 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-            "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+            "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "status": "success"
           },
           {
-            "content": "The current stock price of Microsoft Corporation (MSFT) is $378.90, with an increase of 0.8%.",
+            "content": "The current stock price of MSFT (Microsoft Corporation) is $378.90, with an increase of 0.8%.",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-48d4-7853-ab97-df2d587bf403",
+            "id": "run--28ff093e-5176-43b6-a831-886a4c220f3c-0",
+            "example": false,
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 113,
+              "output_tokens": 27,
+              "total_tokens": 140,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-48d4-7853-ab97-df10cb3d433d",
+      "uuid": "f9f531d5-6d88-4aed-8375-65dcce32f00d",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4457-7402-95f0-1e423c59ee18",
-      "startTime": "2026-01-15T07:21:55.668Z",
-      "endTime": "2026-01-15T07:21:56.624Z",
+      "parentUuid": "903e1383-0b7a-4fd1-a9a1-0d9ac53ea094",
+      "startTime": "2026-01-20T19:37:40.824Z",
+      "endTime": "2026-01-20T19:37:42.413Z",
       "input": {
         "messages": [
           {
@@ -103,7 +135,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           },
           {
             "content": "",
@@ -111,7 +144,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -123,21 +156,36 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           },
           {
             "content": "$378.90 (+0.8%)",
@@ -145,8 +193,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-            "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+            "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "status": "success"
           }
         ]
@@ -154,29 +202,44 @@
       "output": {
         "messages": [
           {
-            "content": "The current stock price of Microsoft Corporation (MSFT) is $378.90, with an increase of 0.8%.",
+            "content": "The current stock price of MSFT (Microsoft Corporation) is $378.90, with an increase of 0.8%.",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-48d4-7853-ab97-df2d587bf403",
+            "id": "run--28ff093e-5176-43b6-a831-886a4c220f3c-0",
+            "example": false,
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 113,
+              "output_tokens": 27,
+              "total_tokens": 140,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-4c8f-72b3-abef-eb085664a24d",
+      "uuid": "6d36f94c-c76f-465b-9ec8-33cd0eba3c59",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-48d4-7853-ab97-df10cb3d433d",
-      "startTime": "2026-01-15T07:21:56.623Z",
-      "endTime": "2026-01-15T07:21:56.624Z",
+      "parentUuid": "f9f531d5-6d88-4aed-8375-65dcce32f00d",
+      "startTime": "2026-01-20T19:37:42.412Z",
+      "endTime": "2026-01-20T19:37:42.413Z",
       "input": {
         "messages": [
           {
@@ -184,7 +247,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           },
           {
             "content": "",
@@ -192,7 +256,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -204,21 +268,36 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           },
           {
             "content": "$378.90 (+0.8%)",
@@ -226,35 +305,50 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-            "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+            "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "status": "success"
           },
           {
-            "content": "The current stock price of Microsoft Corporation (MSFT) is $378.90, with an increase of 0.8%.",
+            "content": "The current stock price of MSFT (Microsoft Corporation) is $378.90, with an increase of 0.8%.",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-48d4-7853-ab97-df2d587bf403",
+            "id": "run--28ff093e-5176-43b6-a831-886a4c220f3c-0",
+            "example": false,
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 113,
+              "output_tokens": 27,
+              "total_tokens": 140,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-48d1-7a73-9ace-5d40507f73c8",
+      "uuid": "0f5b35e5-5827-4f43-bd4f-60dfa8ca0611",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4457-7402-95f0-1e423c59ee18",
-      "startTime": "2026-01-15T07:21:55.665Z",
-      "endTime": "2026-01-15T07:21:55.667Z",
+      "parentUuid": "903e1383-0b7a-4fd1-a9a1-0d9ac53ea094",
+      "startTime": "2026-01-20T19:37:40.817Z",
+      "endTime": "2026-01-20T19:37:40.822Z",
       "input": {
         "messages": [
           {
@@ -262,7 +356,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           },
           {
             "content": "",
@@ -270,7 +365,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -282,21 +377,36 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
@@ -308,8 +418,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-            "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+            "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "status": "success"
           }
         ]
@@ -323,8 +433,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-            "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+            "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "status": "success"
           },
           "inputParameters": {
@@ -334,13 +444,13 @@
       ]
     },
     {
-      "uuid": "019bc088-4459-7da3-ba5f-3fbc977b1d64",
+      "uuid": "a80b663b-c834-470b-8bf6-3158f60a43fe",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4457-7402-95f0-1e423c59ee18",
-      "startTime": "2026-01-15T07:21:54.522Z",
-      "endTime": "2026-01-15T07:21:55.664Z",
+      "parentUuid": "903e1383-0b7a-4fd1-a9a1-0d9ac53ea094",
+      "startTime": "2026-01-20T19:37:40.090Z",
+      "endTime": "2026-01-20T19:37:40.816Z",
       "input": {
         "messages": [
           {
@@ -348,7 +458,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           }
         ]
       },
@@ -360,7 +471,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -372,33 +483,48 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-48d0-7851-98b4-aab75ed57393",
+      "uuid": "3ba89457-c6f8-41d4-99bc-fb7f1fed8f2e",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4459-7da3-ba5f-3fbc977b1d64",
-      "startTime": "2026-01-15T07:21:55.664Z",
-      "endTime": "2026-01-15T07:21:55.664Z",
+      "parentUuid": "a80b663b-c834-470b-8bf6-3158f60a43fe",
+      "startTime": "2026-01-20T19:37:40.815Z",
+      "endTime": "2026-01-20T19:37:40.815Z",
       "input": {
         "messages": [
           {
@@ -406,7 +532,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+            "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+            "example": false
           },
           {
             "content": "",
@@ -414,7 +541,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                  "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                   "function": {
                     "arguments": "{\"symbol\":\"MSFT\"}",
                     "name": "get_stock_price"
@@ -426,21 +553,36 @@
             "response_metadata": {
               "finish_reason": "tool_calls",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c"
+              "system_fingerprint": "fp_29330a9688",
+              "service_tier": "default"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+            "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+                "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 16,
+              "total_tokens": 95,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
@@ -450,13 +592,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-48d4-7853-ab97-df2d587bf403",
+      "uuid": "28ff093e-5176-43b6-a831-886a4c220f3c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-48d4-7853-ab97-df10cb3d433d",
-      "startTime": "2026-01-15T07:21:55.668Z",
-      "endTime": "2026-01-15T07:21:56.623Z",
+      "parentUuid": "f9f531d5-6d88-4aed-8375-65dcce32f00d",
+      "startTime": "2026-01-20T19:37:40.825Z",
+      "endTime": "2026-01-20T19:37:42.412Z",
       "input": [
         {
           "role": "human",
@@ -464,80 +606,64 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'MSFT'}, 'id': 'call_skq3wcxS2IecUBXFw8vw6s4L', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
           "content": "$378.90 (+0.8%)"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "The current stock price of Microsoft Corporation (MSFT) is $378.90, with an increase of 0.8%.",
+        "content": "The current stock price of MSFT (Microsoft Corporation) is $378.90, with an increase of 0.8%.",
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-15T07:21:56.252550Z": "",
-        "2026-01-15T07:21:56.283283Z": "The",
-        "2026-01-15T07:21:56.284165Z": " current",
-        "2026-01-15T07:21:56.316644Z": " stock",
-        "2026-01-15T07:21:56.317256Z": " price",
-        "2026-01-15T07:21:56.334131Z": " of",
-        "2026-01-15T07:21:56.335004Z": " Microsoft",
-        "2026-01-15T07:21:56.355210Z": " Corporation",
-        "2026-01-15T07:21:56.356017Z": " (",
-        "2026-01-15T07:21:56.406641Z": "MS",
-        "2026-01-15T07:21:56.407232Z": "FT",
-        "2026-01-15T07:21:56.430686Z": ")",
-        "2026-01-15T07:21:56.431261Z": " is",
-        "2026-01-15T07:21:56.455398Z": " $",
-        "2026-01-15T07:21:56.455950Z": "378",
-        "2026-01-15T07:21:56.479583Z": ".",
-        "2026-01-15T07:21:56.480163Z": "90",
-        "2026-01-15T07:21:56.502349Z": ",",
-        "2026-01-15T07:21:56.502580Z": " with",
-        "2026-01-15T07:21:56.529365Z": " an",
-        "2026-01-15T07:21:56.529933Z": " increase",
-        "2026-01-15T07:21:56.557350Z": " of",
-        "2026-01-15T07:21:56.557756Z": " ",
-        "2026-01-15T07:21:56.580726Z": "0",
-        "2026-01-15T07:21:56.581413Z": ".",
-        "2026-01-15T07:21:56.607411Z": "8",
-        "2026-01-15T07:21:56.607980Z": "%.",
-        "2026-01-15T07:21:56.621861Z": "",
-        "2026-01-15T07:21:56.622534Z": ""
+        "2026-01-20T19:37:41.844275Z": "",
+        "2026-01-20T19:37:41.896519Z": "The",
+        "2026-01-20T19:37:41.897178Z": " current",
+        "2026-01-20T19:37:41.919473Z": " stock",
+        "2026-01-20T19:37:41.920874Z": " price",
+        "2026-01-20T19:37:41.967187Z": " of",
+        "2026-01-20T19:37:41.968863Z": " MS",
+        "2026-01-20T19:37:42.011852Z": "FT",
+        "2026-01-20T19:37:42.013141Z": " (",
+        "2026-01-20T19:37:42.061855Z": "Microsoft",
+        "2026-01-20T19:37:42.063431Z": " Corporation",
+        "2026-01-20T19:37:42.097839Z": ")",
+        "2026-01-20T19:37:42.099245Z": " is",
+        "2026-01-20T19:37:42.118706Z": " $",
+        "2026-01-20T19:37:42.121320Z": "378",
+        "2026-01-20T19:37:42.158368Z": ".",
+        "2026-01-20T19:37:42.160212Z": "90",
+        "2026-01-20T19:37:42.195685Z": ",",
+        "2026-01-20T19:37:42.196994Z": " with",
+        "2026-01-20T19:37:42.222559Z": " an",
+        "2026-01-20T19:37:42.223957Z": " increase",
+        "2026-01-20T19:37:42.329206Z": " of",
+        "2026-01-20T19:37:42.331560Z": " ",
+        "2026-01-20T19:37:42.383703Z": "0",
+        "2026-01-20T19:37:42.385674Z": ".",
+        "2026-01-20T19:37:42.393891Z": "8",
+        "2026-01-20T19:37:42.395292Z": "%.",
+        "2026-01-20T19:37:42.403228Z": "",
+        "2026-01-20T19:37:42.405786Z": ""
       }
     },
     {
-      "uuid": "019bc088-4460-7712-8749-66646575d40e",
+      "uuid": "657dfff9-f298-4db2-97d7-36b375e19f6a",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-4459-7da3-ba5f-3fbc977b1d64",
-      "startTime": "2026-01-15T07:21:54.528Z",
-      "endTime": "2026-01-15T07:21:55.664Z",
+      "parentUuid": "a80b663b-c834-470b-8bf6-3158f60a43fe",
+      "startTime": "2026-01-20T19:37:40.091Z",
+      "endTime": "2026-01-20T19:37:40.814Z",
       "input": [
         {
           "role": "human",
           "content": "What's the stock price of MSFT?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -549,35 +675,35 @@
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_skq3wcxS2IecUBXFw8vw6s4L"
+            "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT"
           }
         ]
       },
       "model": "gpt-4o-mini-2024-07-18",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-15T07:21:55.508459Z": "",
-        "2026-01-15T07:21:55.586638Z": "",
-        "2026-01-15T07:21:55.587070Z": "",
-        "2026-01-15T07:21:55.635633Z": "",
-        "2026-01-15T07:21:55.636478Z": "",
-        "2026-01-15T07:21:55.655507Z": "",
-        "2026-01-15T07:21:55.655818Z": "",
-        "2026-01-15T07:21:55.663335Z": "",
-        "2026-01-15T07:21:55.663611Z": ""
+        "2026-01-20T19:37:40.712440Z": "",
+        "2026-01-20T19:37:40.772707Z": "",
+        "2026-01-20T19:37:40.774606Z": "",
+        "2026-01-20T19:37:40.779082Z": "",
+        "2026-01-20T19:37:40.780823Z": "",
+        "2026-01-20T19:37:40.800113Z": "",
+        "2026-01-20T19:37:40.802118Z": "",
+        "2026-01-20T19:37:40.805475Z": "",
+        "2026-01-20T19:37:40.806555Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-48d2-71b1-aa17-d1fb322f7cf6",
+      "uuid": "c73f987d-9ee1-491c-8ccc-4f709a6589ad",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-48d1-7a73-9ace-5d40507f73c8",
-      "startTime": "2026-01-15T07:21:55.666Z",
-      "endTime": "2026-01-15T07:21:55.667Z",
+      "parentUuid": "0f5b35e5-5827-4f43-bd4f-60dfa8ca0611",
+      "startTime": "2026-01-20T19:37:40.819Z",
+      "endTime": "2026-01-20T19:37:40.821Z",
       "input": {
         "symbol": "MSFT"
       },
@@ -587,14 +713,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-        "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+        "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+        "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:21:54.518Z",
-  "endTime": "2026-01-15T07:21:56.624Z",
+  "startTime": "2026-01-20T19:37:40.088Z",
+  "endTime": "2026-01-20T19:37:42.414Z",
   "name": "langgraph-streaming-sync",
   "metadata": {
     "test_type": "streaming_sync"
@@ -612,7 +738,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+        "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+        "example": false
       }
     ]
   },
@@ -623,7 +750,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "49be4483-7815-484f-a463-8cf78ebb3f7c"
+        "id": "edbc26c4-e2e9-422b-ae3f-9cba7d9ea64a",
+        "example": false
       },
       {
         "content": "",
@@ -631,7 +759,7 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+              "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
               "function": {
                 "arguments": "{\"symbol\":\"MSFT\"}",
                 "name": "get_stock_price"
@@ -643,21 +771,36 @@
         "response_metadata": {
           "finish_reason": "tool_calls",
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c"
+          "system_fingerprint": "fp_29330a9688",
+          "service_tier": "default"
         },
         "type": "ai",
-        "id": "lc_run--019bc088-4460-7712-8749-66646575d40e",
+        "id": "run--657dfff9-f298-4db2-97d7-36b375e19f6a-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+            "id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 79,
+          "output_tokens": 16,
+          "total_tokens": 95,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       },
       {
         "content": "$378.90 (+0.8%)",
@@ -665,22 +808,37 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-        "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+        "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+        "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
         "status": "success"
       },
       {
-        "content": "The current stock price of Microsoft Corporation (MSFT) is $378.90, with an increase of 0.8%.",
+        "content": "The current stock price of MSFT (Microsoft Corporation) is $378.90, with an increase of 0.8%.",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688"
+          "system_fingerprint": "fp_c4585b5b9c",
+          "service_tier": "default"
         },
         "type": "ai",
-        "id": "lc_run--019bc088-48d4-7853-ab97-df2d587bf403",
+        "id": "run--28ff093e-5176-43b6-a831-886a4c220f3c-0",
+        "example": false,
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 113,
+          "output_tokens": 27,
+          "total_tokens": 140,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       }
     ]
   },
@@ -694,8 +852,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "1c9a3ace-a7f5-472c-84d7-303767876201",
-        "tool_call_id": "call_skq3wcxS2IecUBXFw8vw6s4L",
+        "id": "6320d55a-71ef-4987-ab9d-ce7f84e6e2a9",
+        "tool_call_id": "call_PJKXBzv19Rz7yr7QuUjk8XTT",
         "status": "success"
       },
       "inputParameters": {

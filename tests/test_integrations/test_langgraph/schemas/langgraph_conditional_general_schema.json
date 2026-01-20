@@ -1,13 +1,13 @@
 {
-  "uuid": "807e6130-6183-4d51-9b57-56eab8a93c12",
+  "uuid": "54e3256d-ebeb-4b49-98df-4e14a2753ee0",
   "baseSpans": [
     {
-      "uuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
+      "uuid": "2bdb101f-72d8-453f-8e17-c58fbcbe4731",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:07.383Z",
-      "endTime": "2026-01-15T07:22:08.604Z",
+      "startTime": "2026-01-20T19:37:54.432Z",
+      "endTime": "2026-01-20T19:37:55.395Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           }
         ]
       },
@@ -26,7 +27,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           },
           {
             "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -50,13 +52,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0BpyQ3YZtlRC8js0IIZeagErMBP5",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--37510789-f49d-471e-808d-f53ed2cc08a5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -78,13 +82,13 @@
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-795816c223f6",
+      "uuid": "6e9cfcec-da7a-48b9-95ab-00e2e4c60ff3",
       "name": "general",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "2bdb101f-72d8-453f-8e17-c58fbcbe4731",
+      "startTime": "2026-01-20T19:37:54.434Z",
+      "endTime": "2026-01-20T19:37:55.395Z",
       "input": {
         "messages": [
           {
@@ -92,7 +96,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           }
         ],
         "intent": "general"
@@ -121,13 +126,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0BpyQ3YZtlRC8js0IIZeagErMBP5",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--37510789-f49d-471e-808d-f53ed2cc08a5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -148,13 +155,13 @@
       }
     },
     {
-      "uuid": "019bc088-7b5b-7c80-89f8-62b1a4a7454d",
+      "uuid": "f89bee60-2972-4f0e-90ed-e1ad75a0fe4c",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:08.603Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "6e9cfcec-da7a-48b9-95ab-00e2e4c60ff3",
+      "startTime": "2026-01-20T19:37:55.395Z",
+      "endTime": "2026-01-20T19:37:55.395Z",
       "input": {
         "messages": [
           {
@@ -162,7 +169,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           },
           {
             "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -186,13 +194,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0BpyQ3YZtlRC8js0IIZeagErMBP5",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--37510789-f49d-471e-808d-f53ed2cc08a5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -215,13 +225,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
+      "uuid": "0117f734-9972-4635-a0e8-2fb17f76cc30",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "2bdb101f-72d8-453f-8e17-c58fbcbe4731",
+      "startTime": "2026-01-20T19:37:54.433Z",
+      "endTime": "2026-01-20T19:37:54.434Z",
       "input": {
         "messages": [
           {
@@ -229,7 +239,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           }
         ]
       },
@@ -240,20 +251,21 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           }
         ],
         "intent": "general"
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-794664a30c5f",
+      "uuid": "32374dce-55f3-4d3e-9374-89dc57eeec92",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "0117f734-9972-4635-a0e8-2fb17f76cc30",
+      "startTime": "2026-01-20T19:37:54.434Z",
+      "endTime": "2026-01-20T19:37:54.434Z",
       "input": {
         "messages": [
           {
@@ -261,7 +273,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+            "example": false
           }
         ],
         "intent": "general"
@@ -272,29 +285,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-7698-7e53-82ea-79664a38748b",
+      "uuid": "37510789-f49d-471e-808d-f53ed2cc08a5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "6e9cfcec-da7a-48b9-95ab-00e2e4c60ff3",
+      "startTime": "2026-01-20T19:37:54.435Z",
+      "endTime": "2026-01-20T19:37:55.394Z",
       "input": [
         {
           "role": "human",
           "content": "Hello, how are you today?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -310,8 +311,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-15T07:22:07.383Z",
-  "endTime": "2026-01-15T07:22:08.604Z",
+  "startTime": "2026-01-20T19:37:54.432Z",
+  "endTime": "2026-01-20T19:37:55.395Z",
   "name": "langgraph-conditional-general",
   "tags": [
     "langgraph",
@@ -326,7 +327,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+        "example": false
       }
     ]
   },
@@ -337,7 +339,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "9fec59a6-1f21-4b96-91b5-d6a48bd92e63",
+        "example": false
       },
       {
         "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -361,13 +364,15 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+          "system_fingerprint": "fp_29330a9688",
+          "id": "chatcmpl-D0BpyQ3YZtlRC8js0IIZeagErMBP5",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+        "id": "run--37510789-f49d-471e-808d-f53ed2cc08a5-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {

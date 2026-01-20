@@ -1,13 +1,13 @@
 {
-  "uuid": "8a17dc36-fb09-4b89-9343-7a797dab8b84",
+  "uuid": "d45cf23e-86ad-41db-9c68-9e31f47d190d",
   "baseSpans": [
     {
-      "uuid": "019bc08b-1930-78e0-99e7-c02526aaa880",
+      "uuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:25:00.080Z",
-      "endTime": "2026-01-15T07:25:04.066Z",
+      "startTime": "2026-01-20T19:39:15.712Z",
+      "endTime": "2026-01-20T19:39:19.295Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           }
         ]
       },
@@ -26,14 +27,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -41,7 +43,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -49,7 +51,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -76,20 +78,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -97,7 +101,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -105,7 +109,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -130,8 +134,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-            "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "status": "success"
           },
           {
@@ -140,8 +144,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-            "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "status": "success"
           },
           {
@@ -150,12 +154,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-            "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "status": "success"
           },
           {
-            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, it has been reported that \"Tech stocks rally as AI boom continues.\"",
+            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, there is a report that \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -176,13 +180,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC109sabit5tEYsWp6ssVyaOsBpB",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-22e0-7232-acdd-e141da7e8306-0",
+            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -203,13 +209,13 @@
       }
     },
     {
-      "uuid": "019bc08b-22df-7521-8669-6ac58590b87e",
+      "uuid": "e054280b-1e3b-4c36-851e-36e309589ddd",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1930-78e0-99e7-c02526aaa880",
-      "startTime": "2026-01-15T07:25:02.559Z",
-      "endTime": "2026-01-15T07:25:04.065Z",
+      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
+      "startTime": "2026-01-20T19:39:18.013Z",
+      "endTime": "2026-01-20T19:39:19.294Z",
       "input": {
         "messages": [
           {
@@ -217,14 +223,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -232,7 +239,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -240,7 +247,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -267,20 +274,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -288,7 +297,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -296,7 +305,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -321,8 +330,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-            "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "status": "success"
           },
           {
@@ -331,8 +340,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-            "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "status": "success"
           },
           {
@@ -341,8 +350,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-            "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "status": "success"
           }
         ]
@@ -350,7 +359,7 @@
       "output": {
         "messages": [
           {
-            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, it has been reported that \"Tech stocks rally as AI boom continues.\"",
+            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, there is a report that \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -371,13 +380,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC109sabit5tEYsWp6ssVyaOsBpB",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-22e0-7232-acdd-e141da7e8306-0",
+            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -398,13 +409,13 @@
       }
     },
     {
-      "uuid": "019bc08b-28c0-7011-8002-2f5a791dd649",
+      "uuid": "1a455ce7-cc9f-428c-9d67-126e01426540",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-22df-7521-8669-6ac58590b87e",
-      "startTime": "2026-01-15T07:25:04.064Z",
-      "endTime": "2026-01-15T07:25:04.064Z",
+      "parentUuid": "e054280b-1e3b-4c36-851e-36e309589ddd",
+      "startTime": "2026-01-20T19:39:19.292Z",
+      "endTime": "2026-01-20T19:39:19.293Z",
       "input": {
         "messages": [
           {
@@ -412,14 +423,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -427,7 +439,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -435,7 +447,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -462,20 +474,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -483,7 +497,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -491,7 +505,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -516,8 +530,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-            "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "status": "success"
           },
           {
@@ -526,8 +540,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-            "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "status": "success"
           },
           {
@@ -536,12 +550,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-            "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "status": "success"
           },
           {
-            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, it has been reported that \"Tech stocks rally as AI boom continues.\"",
+            "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, there is a report that \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
@@ -562,13 +576,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC109sabit5tEYsWp6ssVyaOsBpB",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-22e0-7232-acdd-e141da7e8306-0",
+            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -590,13 +606,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc08b-22db-71b0-b20c-6877a24ab455",
+      "uuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1930-78e0-99e7-c02526aaa880",
-      "startTime": "2026-01-15T07:25:02.555Z",
-      "endTime": "2026-01-15T07:25:02.559Z",
+      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
+      "startTime": "2026-01-20T19:39:18.008Z",
+      "endTime": "2026-01-20T19:39:18.012Z",
       "input": {
         "messages": [
           {
@@ -604,14 +620,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -619,7 +636,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -627,7 +644,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -654,20 +671,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -675,7 +694,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -683,7 +702,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -712,8 +731,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-            "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "status": "success"
           },
           {
@@ -722,8 +741,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-            "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "status": "success"
           },
           {
@@ -732,8 +751,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-            "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "status": "success"
           }
         ]
@@ -747,8 +766,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-            "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "status": "success"
           },
           "inputParameters": {
@@ -763,8 +782,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-            "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "status": "success"
           },
           "inputParameters": {
@@ -779,8 +798,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-            "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "status": "success"
           },
           "inputParameters": {
@@ -790,13 +809,13 @@
       ]
     },
     {
-      "uuid": "019bc08b-1931-7063-b59f-6ae86d095e50",
+      "uuid": "fba0a051-d075-4f01-9966-56576d7aff17",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1930-78e0-99e7-c02526aaa880",
-      "startTime": "2026-01-15T07:25:00.081Z",
-      "endTime": "2026-01-15T07:25:02.554Z",
+      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
+      "startTime": "2026-01-20T19:39:15.713Z",
+      "endTime": "2026-01-20T19:39:18.007Z",
       "input": {
         "messages": [
           {
@@ -804,7 +823,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           }
         ]
       },
@@ -815,7 +835,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -823,7 +843,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -831,7 +851,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -858,20 +878,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -879,7 +901,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -887,7 +909,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -910,13 +932,13 @@
       }
     },
     {
-      "uuid": "019bc08b-22d9-7dd2-a80d-61889eb6fa18",
+      "uuid": "c4ea7831-d330-4aea-b506-79ad7b0f0812",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1931-7063-b59f-6ae86d095e50",
-      "startTime": "2026-01-15T07:25:02.553Z",
-      "endTime": "2026-01-15T07:25:02.554Z",
+      "parentUuid": "fba0a051-d075-4f01-9966-56576d7aff17",
+      "startTime": "2026-01-20T19:39:18.006Z",
+      "endTime": "2026-01-20T19:39:18.007Z",
       "input": {
         "messages": [
           {
@@ -924,14 +946,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -939,7 +962,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -947,7 +970,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -974,20 +997,22 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
                 "type": "tool_call"
               },
               {
@@ -995,7 +1020,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
                 "type": "tool_call"
               },
               {
@@ -1003,7 +1028,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
                 "type": "tool_call"
               }
             ],
@@ -1028,152 +1053,17 @@
     }
   ],
   "agentSpans": [],
-  "llmSpans": [
-    {
-      "uuid": "019bc08b-22e0-7232-acdd-e141da7e8306",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08b-22df-7521-8669-6ac58590b87e",
-      "startTime": "2026-01-15T07:25:02.560Z",
-      "endTime": "2026-01-15T07:25:04.063Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "You are a helpful assistant with access to multiple tools.\nWhen asked for multiple pieces of information, call all relevant tools in parallel."
-        },
-        {
-          "role": "human",
-          "content": "Get weather in Sydney and Tokyo, and search for tech news"
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'get_weather', 'args': {'city': 'Sydney'}, 'id': 'call_wfoH8Eb9y8xiq5hbIsV4TCMM', 'type': 'tool_call'}, {'name': 'get_weather', 'args': {'city': 'Tokyo'}, 'id': 'call_7xR2lk1l88o3TZi1unlbKHJS', 'type': 'tool_call'}, {'name': 'search_news', 'args': {'topic': 'tech'}, 'id': 'call_2nOMJNDEsfXLF23leeHJjxbQ', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "Clear, 78\u00b0F"
-        },
-        {
-          "role": "tool",
-          "content": "Sunny, 72\u00b0F"
-        },
-        {
-          "role": "tool",
-          "content": "Tech stocks rally as AI boom continues"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, it has been reported that \"Tech stocks rally as AI boom continues.\"",
-        "tool_calls": []
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 273.0,
-      "outputTokenCount": 48.0
-    },
-    {
-      "uuid": "019bc08b-1932-7b70-a220-c48ecab58e55",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08b-1931-7063-b59f-6ae86d095e50",
-      "startTime": "2026-01-15T07:25:00.082Z",
-      "endTime": "2026-01-15T07:25:02.552Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "You are a helpful assistant with access to multiple tools.\nWhen asked for multiple pieces of information, call all relevant tools in parallel."
-        },
-        {
-          "role": "human",
-          "content": "Get weather in Sydney and Tokyo, and search for tech news"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "Sydney"
-            },
-            "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM"
-          },
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_7xR2lk1l88o3TZi1unlbKHJS"
-          },
-          {
-            "name": "search_news",
-            "args": {
-              "topic": "tech"
-            },
-            "id": "call_2nOMJNDEsfXLF23leeHJjxbQ"
-          }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 174.0,
-      "outputTokenCount": 58.0
-    }
-  ],
+  "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08b-22de-79e0-b858-7d3813a3af86",
+      "uuid": "c0fa920f-0b8f-4faf-9301-ee518eb0df4d",
       "name": "search_news",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-22db-71b0-b20c-6877a24ab455",
-      "startTime": "2026-01-15T07:25:02.558Z",
-      "endTime": "2026-01-15T07:25:02.558Z",
+      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
+      "startTime": "2026-01-20T19:39:18.011Z",
+      "endTime": "2026-01-20T19:39:18.011Z",
       "input": {
         "topic": "tech"
       },
@@ -1183,19 +1073,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-        "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc08b-22dd-7ca2-9af4-0593144d4e93",
+      "uuid": "cc4ee014-95dd-4849-9862-70e46fb392c8",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-22db-71b0-b20c-6877a24ab455",
-      "startTime": "2026-01-15T07:25:02.557Z",
-      "endTime": "2026-01-15T07:25:02.558Z",
+      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
+      "startTime": "2026-01-20T19:39:18.010Z",
+      "endTime": "2026-01-20T19:39:18.010Z",
       "input": {
         "city": "Tokyo"
       },
@@ -1205,19 +1095,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-        "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc08b-22dd-7ca2-9af4-0581c4f3c69b",
+      "uuid": "dd816eda-8d21-4b51-9676-aed8207d846b",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-22db-71b0-b20c-6877a24ab455",
-      "startTime": "2026-01-15T07:25:02.557Z",
-      "endTime": "2026-01-15T07:25:02.557Z",
+      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
+      "startTime": "2026-01-20T19:39:18.009Z",
+      "endTime": "2026-01-20T19:39:18.010Z",
       "input": {
         "city": "Sydney"
       },
@@ -1227,14 +1117,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-        "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:25:00.079Z",
-  "endTime": "2026-01-15T07:25:04.066Z",
+  "startTime": "2026-01-20T19:39:15.712Z",
+  "endTime": "2026-01-20T19:39:19.295Z",
   "name": "langgraph-parallel-async",
   "tags": [
     "langgraph",
@@ -1249,7 +1139,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+        "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+        "example": false
       }
     ]
   },
@@ -1260,14 +1151,15 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "aea193c6-cda4-411c-899b-66f50aa5a649"
+        "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+        "example": false
       },
       {
         "content": "",
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+              "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
               "function": {
                 "arguments": "{\"city\": \"Sydney\"}",
                 "name": "get_weather"
@@ -1275,7 +1167,7 @@
               "type": "function"
             },
             {
-              "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+              "id": "call_LGtMUztg9iChuMym2l8w69pQ",
               "function": {
                 "arguments": "{\"city\": \"Tokyo\"}",
                 "name": "get_weather"
@@ -1283,7 +1175,7 @@
               "type": "function"
             },
             {
-              "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+              "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
               "function": {
                 "arguments": "{\"topic\": \"tech\"}",
                 "name": "search_news"
@@ -1310,20 +1202,22 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0yQNETybYpk3OQhHFp2d1GKRKA",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-1932-7b70-a220-c48ecab58e55-0",
+        "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Sydney"
             },
-            "id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+            "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
             "type": "tool_call"
           },
           {
@@ -1331,7 +1225,7 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+            "id": "call_LGtMUztg9iChuMym2l8w69pQ",
             "type": "tool_call"
           },
           {
@@ -1339,7 +1233,7 @@
             "args": {
               "topic": "tech"
             },
-            "id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+            "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
             "type": "tool_call"
           }
         ],
@@ -1364,8 +1258,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-        "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
         "status": "success"
       },
       {
@@ -1374,8 +1268,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-        "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
         "status": "success"
       },
       {
@@ -1384,12 +1278,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-        "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
         "status": "success"
       },
       {
-        "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, it has been reported that \"Tech stocks rally as AI boom continues.\"",
+        "content": "The current weather is as follows:\n- **Sydney**: Clear, 78\u00b0F\n- **Tokyo**: Sunny, 72\u00b0F\n\nIn tech news, there is a report that \"Tech stocks rally as AI boom continues.\"",
         "additional_kwargs": {
           "refusal": null
         },
@@ -1410,13 +1304,15 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC109sabit5tEYsWp6ssVyaOsBpB",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-22e0-7232-acdd-e141da7e8306-0",
+        "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -1445,8 +1341,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "a7f141e0-0572-4213-aba0-eb4330fd7360",
-        "tool_call_id": "call_wfoH8Eb9y8xiq5hbIsV4TCMM",
+        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
+        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
         "status": "success"
       },
       "inputParameters": {
@@ -1461,8 +1357,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "bf190f49-0830-4566-a016-392a7c38b72d",
-        "tool_call_id": "call_7xR2lk1l88o3TZi1unlbKHJS",
+        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
+        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
         "status": "success"
       },
       "inputParameters": {
@@ -1477,8 +1373,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "0b533ddd-8441-43e6-b491-4eca96c702eb",
-        "tool_call_id": "call_2nOMJNDEsfXLF23leeHJjxbQ",
+        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
+        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
         "status": "success"
       },
       "inputParameters": {

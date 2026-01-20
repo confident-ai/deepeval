@@ -1,13 +1,13 @@
 {
-  "uuid": "510f0a6f-a396-4cd9-82eb-5316ab5ce71e",
+  "uuid": "5aad03b9-a6c7-45b3-b2ae-ece6ef4bac53",
   "baseSpans": [
     {
-      "uuid": "777a6269-f005-443f-9148-8181aa7ff76c",
+      "uuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
       "name": "AgentExecutor",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-27T11:51:29.723Z",
-      "endTime": "2025-10-27T11:51:31.819Z",
+      "startTime": "2026-01-20T19:36:10.313Z",
+      "endTime": "2026-01-20T19:36:12.532Z",
       "input": {
         "input": "What is 8 multiplied by 6?"
       },
@@ -25,18 +25,860 @@
         }
       ],
       "metricCollection": "task_completion"
+    },
+    {
+      "uuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "name": "RunnableSequence",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
+      "startTime": "2026-01-20T19:36:11.976Z",
+      "endTime": "2026-01-20T19:36:12.532Z",
+      "input": {
+        "input": ""
+      },
+      "output": {
+        "return_values": {
+          "output": "8 multiplied by 6 is 48."
+        },
+        "log": "8 multiplied by 6 is 48.",
+        "type": "AgentFinish"
+      }
+    },
+    {
+      "uuid": "225cb7f2-5bb1-48d8-85fb-9c736998f783",
+      "name": "ToolsAgentOutputParser",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "startTime": "2026-01-20T19:36:12.531Z",
+      "endTime": "2026-01-20T19:36:12.532Z",
+      "input": {
+        "content": "8 multiplied by 6 is 48.",
+        "additional_kwargs": {},
+        "response_metadata": {
+          "finish_reason": "stop",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "service_tier": "default"
+        },
+        "type": "AIMessageChunk",
+        "id": "run--6ad185b2-2221-420b-b34d-c79b6541c354",
+        "example": false,
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 92,
+          "output_tokens": 10,
+          "total_tokens": 102,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        },
+        "tool_call_chunks": []
+      },
+      "output": {
+        "return_values": {
+          "output": "8 multiplied by 6 is 48."
+        },
+        "log": "8 multiplied by 6 is 48.",
+        "type": "AgentFinish"
+      }
+    },
+    {
+      "uuid": "ba7389ac-eb72-4a04-bcaa-3d39451335ac",
+      "name": "ChatPromptTemplate",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "startTime": "2026-01-20T19:36:11.987Z",
+      "endTime": "2026-01-20T19:36:11.989Z",
+      "input": {
+        "input": "What is 8 multiplied by 6?",
+        "intermediate_steps": [
+          [
+            {
+              "tool": "multiply",
+              "tool_input": {
+                "a": 8,
+                "b": 6
+              },
+              "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+              "type": "AgentActionMessageLog",
+              "message_log": [
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "function": {
+                          "arguments": "{\"a\":8,\"b\":6}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "response_metadata": {
+                    "finish_reason": "tool_calls",
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_c4585b5b9c",
+                    "service_tier": "default"
+                  },
+                  "type": "AIMessageChunk",
+                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                }
+              ],
+              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+            },
+            48
+          ]
+        ],
+        "agent_scratchpad": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "function": {
+                    "arguments": "{\"a\":8,\"b\":6}",
+                    "name": "multiply"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
+            },
+            "type": "AIMessageChunk",
+            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "example": false,
+            "tool_calls": [
+              {
+                "name": "multiply",
+                "args": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 67,
+              "output_tokens": 17,
+              "total_tokens": 84,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            },
+            "tool_call_chunks": [
+              {
+                "name": "multiply",
+                "args": "{\"a\":8,\"b\":6}",
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "index": 0,
+                "type": "tool_call_chunk"
+              }
+            ]
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {
+              "name": "multiply"
+            },
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "You are a helpful assistant that can perform mathematical operations.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "system"
+          },
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "function": {
+                    "arguments": "{\"a\":8,\"b\":6}",
+                    "name": "multiply"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
+            },
+            "type": "AIMessageChunk",
+            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {
+              "name": "multiply"
+            },
+            "response_metadata": {},
+            "type": "tool"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "d77cfeee-73dc-4d84-9ab2-6366867f2a57",
+      "name": "RunnableAssign<agent_scratchpad>",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "startTime": "2026-01-20T19:36:11.978Z",
+      "endTime": "2026-01-20T19:36:11.987Z",
+      "input": {
+        "input": ""
+      },
+      "output": {
+        "input": "What is 8 multiplied by 6?",
+        "intermediate_steps": [
+          [
+            {
+              "tool": "multiply",
+              "tool_input": {
+                "a": 8,
+                "b": 6
+              },
+              "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+              "type": "AgentActionMessageLog",
+              "message_log": [
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "function": {
+                          "arguments": "{\"a\":8,\"b\":6}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "response_metadata": {
+                    "finish_reason": "tool_calls",
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_c4585b5b9c",
+                    "service_tier": "default"
+                  },
+                  "type": "AIMessageChunk",
+                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                }
+              ],
+              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+            },
+            48
+          ]
+        ],
+        "agent_scratchpad": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "function": {
+                    "arguments": "{\"a\":8,\"b\":6}",
+                    "name": "multiply"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
+            },
+            "type": "AIMessageChunk",
+            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "example": false,
+            "tool_calls": [
+              {
+                "name": "multiply",
+                "args": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 67,
+              "output_tokens": 17,
+              "total_tokens": 84,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            },
+            "tool_call_chunks": [
+              {
+                "name": "multiply",
+                "args": "{\"a\":8,\"b\":6}",
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "index": 0,
+                "type": "tool_call_chunk"
+              }
+            ]
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {
+              "name": "multiply"
+            },
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "status": "success"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "13d1cd57-6cb2-4d83-b845-69732ef2514e",
+      "name": "RunnableParallel<agent_scratchpad>",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d77cfeee-73dc-4d84-9ab2-6366867f2a57",
+      "startTime": "2026-01-20T19:36:11.981Z",
+      "endTime": "2026-01-20T19:36:11.986Z",
+      "input": {
+        "input": ""
+      },
+      "output": {
+        "agent_scratchpad": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "function": {
+                    "arguments": "{\"a\":8,\"b\":6}",
+                    "name": "multiply"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "service_tier": "default"
+            },
+            "type": "AIMessageChunk",
+            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "example": false,
+            "tool_calls": [
+              {
+                "name": "multiply",
+                "args": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 67,
+              "output_tokens": 17,
+              "total_tokens": 84,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            },
+            "tool_call_chunks": [
+              {
+                "name": "multiply",
+                "args": "{\"a\":8,\"b\":6}",
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "index": 0,
+                "type": "tool_call_chunk"
+              }
+            ]
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {
+              "name": "multiply"
+            },
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "status": "success"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "f8a24e08-dbb6-45b4-bac7-05a53dee2b44",
+      "name": "RunnableLambda",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "13d1cd57-6cb2-4d83-b845-69732ef2514e",
+      "startTime": "2026-01-20T19:36:11.983Z",
+      "endTime": "2026-01-20T19:36:11.985Z",
+      "input": {
+        "input": ""
+      },
+      "output": [
+        {
+          "content": "",
+          "additional_kwargs": {
+            "tool_calls": [
+              {
+                "index": 0,
+                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "function": {
+                  "arguments": "{\"a\":8,\"b\":6}",
+                  "name": "multiply"
+                },
+                "type": "function"
+              }
+            ]
+          },
+          "response_metadata": {
+            "finish_reason": "tool_calls",
+            "model_name": "gpt-4o-mini-2024-07-18",
+            "system_fingerprint": "fp_c4585b5b9c",
+            "service_tier": "default"
+          },
+          "type": "AIMessageChunk",
+          "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+          "example": false,
+          "tool_calls": [
+            {
+              "name": "multiply",
+              "args": {
+                "a": 8,
+                "b": 6
+              },
+              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "type": "tool_call"
+            }
+          ],
+          "invalid_tool_calls": [],
+          "usage_metadata": {
+            "input_tokens": 67,
+            "output_tokens": 17,
+            "total_tokens": 84,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          },
+          "tool_call_chunks": [
+            {
+              "name": "multiply",
+              "args": "{\"a\":8,\"b\":6}",
+              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "index": 0,
+              "type": "tool_call_chunk"
+            }
+          ]
+        },
+        {
+          "content": "48",
+          "additional_kwargs": {
+            "name": "multiply"
+          },
+          "response_metadata": {},
+          "type": "tool",
+          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+          "status": "success"
+        }
+      ]
+    },
+    {
+      "uuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "name": "RunnableSequence",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
+      "startTime": "2026-01-20T19:36:10.314Z",
+      "endTime": "2026-01-20T19:36:11.972Z",
+      "input": {
+        "input": ""
+      },
+      "output": [
+        {
+          "tool": "multiply",
+          "tool_input": {
+            "a": 8,
+            "b": 6
+          },
+          "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+          "type": "AgentActionMessageLog",
+          "message_log": [
+            {
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "index": 0,
+                    "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                    "function": {
+                      "arguments": "{\"a\":8,\"b\":6}",
+                      "name": "multiply"
+                    },
+                    "type": "function"
+                  }
+                ]
+              },
+              "response_metadata": {
+                "finish_reason": "tool_calls",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_c4585b5b9c",
+                "service_tier": "default"
+              },
+              "type": "AIMessageChunk",
+              "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+            }
+          ],
+          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+        }
+      ]
+    },
+    {
+      "uuid": "85716edb-f28b-4ef8-ace7-25086fcc9c03",
+      "name": "ToolsAgentOutputParser",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "startTime": "2026-01-20T19:36:11.971Z",
+      "endTime": "2026-01-20T19:36:11.972Z",
+      "input": {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "function": {
+                "arguments": "{\"a\":8,\"b\":6}",
+                "name": "multiply"
+              },
+              "type": "function"
+            }
+          ]
+        },
+        "response_metadata": {
+          "finish_reason": "tool_calls",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "service_tier": "default"
+        },
+        "type": "AIMessageChunk",
+        "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+        "example": false,
+        "tool_calls": [
+          {
+            "name": "multiply",
+            "args": {
+              "a": 8,
+              "b": 6
+            },
+            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 67,
+          "output_tokens": 17,
+          "total_tokens": 84,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        },
+        "tool_call_chunks": [
+          {
+            "name": "multiply",
+            "args": "{\"a\":8,\"b\":6}",
+            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "index": 0,
+            "type": "tool_call_chunk"
+          }
+        ]
+      },
+      "output": [
+        {
+          "tool": "multiply",
+          "tool_input": {
+            "a": 8,
+            "b": 6
+          },
+          "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+          "type": "AgentActionMessageLog",
+          "message_log": [
+            {
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "index": 0,
+                    "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                    "function": {
+                      "arguments": "{\"a\":8,\"b\":6}",
+                      "name": "multiply"
+                    },
+                    "type": "function"
+                  }
+                ]
+              },
+              "response_metadata": {
+                "finish_reason": "tool_calls",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_c4585b5b9c",
+                "service_tier": "default"
+              },
+              "type": "AIMessageChunk",
+              "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+            }
+          ],
+          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+        }
+      ]
+    },
+    {
+      "uuid": "5a7067e8-abbf-4690-b29d-1f0d46d28947",
+      "name": "ChatPromptTemplate",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "startTime": "2026-01-20T19:36:10.317Z",
+      "endTime": "2026-01-20T19:36:10.318Z",
+      "input": {
+        "input": "What is 8 multiplied by 6?",
+        "intermediate_steps": [
+          [
+            {
+              "tool": "multiply",
+              "tool_input": {
+                "a": 8,
+                "b": 6
+              },
+              "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+              "type": "AgentActionMessageLog",
+              "message_log": [
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "function": {
+                          "arguments": "{\"a\":8,\"b\":6}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "response_metadata": {
+                    "finish_reason": "tool_calls",
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_c4585b5b9c",
+                    "service_tier": "default"
+                  },
+                  "type": "AIMessageChunk",
+                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                }
+              ],
+              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+            },
+            48
+          ]
+        ],
+        "agent_scratchpad": []
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "You are a helpful assistant that can perform mathematical operations.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "system"
+          },
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "55923bbc-18e1-4173-a9de-1e9f6d9019e4",
+      "name": "RunnableAssign<agent_scratchpad>",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "startTime": "2026-01-20T19:36:10.315Z",
+      "endTime": "2026-01-20T19:36:10.317Z",
+      "input": {
+        "input": ""
+      },
+      "output": {
+        "input": "What is 8 multiplied by 6?",
+        "intermediate_steps": [
+          [
+            {
+              "tool": "multiply",
+              "tool_input": {
+                "a": 8,
+                "b": 6
+              },
+              "log": "\nInvoking: `multiply` with `{'a': 8, 'b': 6}`\n\n\n",
+              "type": "AgentActionMessageLog",
+              "message_log": [
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "index": 0,
+                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "function": {
+                          "arguments": "{\"a\":8,\"b\":6}",
+                          "name": "multiply"
+                        },
+                        "type": "function"
+                      }
+                    ]
+                  },
+                  "response_metadata": {
+                    "finish_reason": "tool_calls",
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_c4585b5b9c",
+                    "service_tier": "default"
+                  },
+                  "type": "AIMessageChunk",
+                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                }
+              ],
+              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+            },
+            48
+          ]
+        ],
+        "agent_scratchpad": []
+      }
+    },
+    {
+      "uuid": "c6a8b124-d5b7-4a16-af15-d4ff0c69910f",
+      "name": "RunnableParallel<agent_scratchpad>",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "55923bbc-18e1-4173-a9de-1e9f6d9019e4",
+      "startTime": "2026-01-20T19:36:10.315Z",
+      "endTime": "2026-01-20T19:36:10.317Z",
+      "input": {
+        "input": ""
+      },
+      "output": {
+        "agent_scratchpad": []
+      }
+    },
+    {
+      "uuid": "54ac8289-f8ae-4826-9b53-e2f1440b5301",
+      "name": "RunnableLambda",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c6a8b124-d5b7-4a16-af15-d4ff0c69910f",
+      "startTime": "2026-01-20T19:36:10.316Z",
+      "endTime": "2026-01-20T19:36:10.316Z",
+      "input": {
+        "input": ""
+      },
+      "output": []
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "788ee75c-8d96-400f-be86-c80e156952e0",
+      "uuid": "6ad185b2-2221-420b-b34d-c79b6541c354",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:30.918Z",
-      "endTime": "2025-10-27T11:51:31.817Z",
+      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "startTime": "2026-01-20T19:36:11.990Z",
+      "endTime": "2026-01-20T19:36:12.530Z",
       "input": [
         {
           "role": "system",
@@ -47,16 +889,12 @@
           "content": "What is 8 multiplied by 6?"
         },
         {
-          "role": "ai",
+          "role": "AIMessageChunk",
           "content": ""
         },
         {
           "role": "tool",
           "content": "48"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -70,29 +908,29 @@
         "version": "00.00.01"
       },
       "tokenIntervals": {
-        "2025-10-27T11:51:31.601041Z": "",
-        "2025-10-27T11:51:31.625156Z": "8",
-        "2025-10-27T11:51:31.625846Z": " multiplied",
-        "2025-10-27T11:51:31.656635Z": " by",
-        "2025-10-27T11:51:31.657268Z": " ",
-        "2025-10-27T11:51:31.731089Z": "6",
-        "2025-10-27T11:51:31.731818Z": " is",
-        "2025-10-27T11:51:31.798890Z": " ",
-        "2025-10-27T11:51:31.799604Z": "48",
-        "2025-10-27T11:51:31.802986Z": ".",
-        "2025-10-27T11:51:31.803654Z": "",
-        "2025-10-27T11:51:31.804490Z": ""
+        "2026-01-20T19:36:12.339836Z": "",
+        "2026-01-20T19:36:12.378457Z": "8",
+        "2026-01-20T19:36:12.380335Z": " multiplied",
+        "2026-01-20T19:36:12.426922Z": " by",
+        "2026-01-20T19:36:12.428696Z": " ",
+        "2026-01-20T19:36:12.454785Z": "6",
+        "2026-01-20T19:36:12.456315Z": " is",
+        "2026-01-20T19:36:12.500952Z": " ",
+        "2026-01-20T19:36:12.502747Z": "48",
+        "2026-01-20T19:36:12.521833Z": ".",
+        "2026-01-20T19:36:12.523468Z": "",
+        "2026-01-20T19:36:12.524726Z": ""
       },
       "metricCollection": "test_collection_1"
     },
     {
-      "uuid": "efbbe7dc-b402-4d6b-8eb7-937a78efa7d2",
+      "uuid": "223ca3e6-0006-444e-bc9d-cbf2e2b09182",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:29.725Z",
-      "endTime": "2025-10-27T11:51:30.912Z",
+      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "startTime": "2026-01-20T19:36:10.318Z",
+      "endTime": "2026-01-20T19:36:11.970Z",
       "input": [
         {
           "role": "system",
@@ -101,10 +939,6 @@
         {
           "role": "human",
           "content": "What is 8 multiplied by 6?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -117,7 +951,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_qJmLsryAQS9bFYYJpBUpJ0k7"
+            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
           }
         ]
       },
@@ -127,18 +961,18 @@
         "version": "00.00.01"
       },
       "tokenIntervals": {
-        "2025-10-27T11:51:30.772180Z": "",
-        "2025-10-27T11:51:30.777234Z": "",
-        "2025-10-27T11:51:30.777621Z": "",
-        "2025-10-27T11:51:30.818538Z": "",
-        "2025-10-27T11:51:30.819034Z": "",
-        "2025-10-27T11:51:30.882415Z": "",
-        "2025-10-27T11:51:30.883403Z": "",
-        "2025-10-27T11:51:30.897397Z": "",
-        "2025-10-27T11:51:30.898656Z": "",
-        "2025-10-27T11:51:30.904001Z": "",
-        "2025-10-27T11:51:30.905056Z": "",
-        "2025-10-27T11:51:30.907320Z": ""
+        "2026-01-20T19:36:11.724768Z": "",
+        "2026-01-20T19:36:11.744368Z": "",
+        "2026-01-20T19:36:11.745297Z": "",
+        "2026-01-20T19:36:11.813923Z": "",
+        "2026-01-20T19:36:11.816190Z": "",
+        "2026-01-20T19:36:11.898283Z": "",
+        "2026-01-20T19:36:11.900612Z": "",
+        "2026-01-20T19:36:11.945493Z": "",
+        "2026-01-20T19:36:11.947841Z": "",
+        "2026-01-20T19:36:11.952273Z": "",
+        "2026-01-20T19:36:11.955614Z": "",
+        "2026-01-20T19:36:11.963430Z": ""
       },
       "metricCollection": "test_collection_1"
     }
@@ -146,23 +980,23 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "4a492248-4373-43b3-996e-0c478c84fd60",
+      "uuid": "6107e498-bf0e-4da6-bdd5-14657f00f4db",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:30.913Z",
-      "endTime": "2025-10-27T11:51:30.914Z",
+      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
+      "startTime": "2026-01-20T19:36:11.973Z",
+      "endTime": "2026-01-20T19:36:11.975Z",
       "input": {
         "a": 8,
         "b": 6
       },
       "output": 48,
-      "metricCollection": "test_collection_1"
+      "metricCollection": "task_completion"
     }
   ],
-  "startTime": "2025-10-27T11:51:29.723Z",
-  "endTime": "2025-10-27T11:51:31.819Z",
+  "startTime": "2026-01-20T19:36:10.313Z",
+  "endTime": "2026-01-20T19:36:12.532Z",
   "environment": "development",
   "input": {
     "input": "What is 8 multiplied by 6?"
