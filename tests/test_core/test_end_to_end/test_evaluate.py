@@ -29,6 +29,7 @@ from .helpers import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+
 def test_single_turn_evaluate_returns_result_and_dataset_json_schema(
     tmp_path,
 ):
