@@ -1,5 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
+from openai.lib.azure import AzureADTokenProvider, AsyncAzureADTokenProvider
 from typing import Optional, Tuple, Union, Dict, List, Callable, Awaitable
 from pydantic import BaseModel, SecretStr
 
@@ -45,6 +46,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         azure_ad_token_provider: Optional[
             Callable[[], "str | Awaitable[str]"]
         ] = None,
+        azure_ad_token: Optional[str] = None,
         temperature: Optional[float] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
@@ -77,6 +79,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             self.api_key: Optional[SecretStr] = SecretStr(api_key)
         else:
             self.api_key = settings.AZURE_OPENAI_API_KEY
+
+        if azure_ad_token is not None:
+            self.azure_ad_token = azure_ad_token
+        else:
+            self.azure_ad_token = settings.AZURE_OPENAI_AD_TOKEN
 
         api_version = api_version or settings.OPENAI_API_VERSION
         if base_url is not None:
@@ -437,7 +444,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         # Only require the API key if no token provider is supplied
-        if self.azure_ad_token_provider is None:
+        if self.azure_ad_token_provider is None and self.azure_ad_token is None:
             api_key = require_secret_api_key(
                 self.api_key,
                 provider_label="AzureOpenAI",
@@ -446,6 +453,13 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             )
         else:
             api_key = None  # Don't use an api_key when azure_ad_token_provider is provided
+            if self.azure_ad_token is not None:
+                self.azure_ad_token = require_secret_api_key(
+                    self.azure_ad_token,
+                    provider_label="AzureOpenAI",
+                    env_var_name="AZURE_OPENAI_AD_TOKEN",
+                    param_hint="`azure_ad_token` to AzureOpenAIModel(...)",
+                )
 
         kw = dict(
             api_key=api_key,
@@ -453,6 +467,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             azure_ad_token_provider=self.azure_ad_token_provider,
+            azure_ad_token=self.azure_ad_token,
             **self._client_kwargs(),
         )
         try:
