@@ -23,6 +23,7 @@ from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallVerdict,
     Verdicts,
     ContextualRecallScoreReason,
+    VerdictWithStatement,
 )
 from deepeval.metrics.api import metric_data_manager
 
@@ -247,7 +248,7 @@ class ContextualRecallMetric(BaseMetric):
             retrieval_context=retrieval_context,
             multimodal=multimodal,
         )
-        return await a_generate_with_schema_and_extract(
+        verdicts = await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
@@ -256,6 +257,15 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ],
         )
+        final_verdicts = []
+        for verdict in verdicts:
+            new_verdict = VerdictWithStatement(
+                verdict=verdict.verdict,
+                reason=verdict.reason,
+                expected_output=expected_output
+            )
+            final_verdicts.append(new_verdict)
+        return final_verdicts
 
     def _generate_verdicts(
         self,
@@ -268,7 +278,7 @@ class ContextualRecallMetric(BaseMetric):
             retrieval_context=retrieval_context,
             multimodal=multimodal,
         )
-        return generate_with_schema_and_extract(
+        verdicts = generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
@@ -277,6 +287,15 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ],
         )
+        final_verdicts = []
+        for verdict in verdicts:
+            new_verdict = VerdictWithStatement(
+                verdict=verdict.verdict,
+                reason=verdict.reason,
+                expected_output=expected_output
+            )
+            final_verdicts.append(new_verdict)
+        return final_verdicts
 
     def is_successful(self) -> bool:
         if self.error is not None:

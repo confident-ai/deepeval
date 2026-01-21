@@ -6,6 +6,10 @@ class ContextualRecallVerdict(BaseModel):
     verdict: str
     reason: str
 
+class VerdictWithStatement(BaseModel):
+    verdict: str
+    reason: str
+    expected_output: str
 
 class Verdicts(BaseModel):
     verdicts: List[ContextualRecallVerdict]
