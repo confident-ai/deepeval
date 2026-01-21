@@ -447,6 +447,9 @@ class Settings(BaseSettings):
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = Field(
         None, description="Azure OpenAI API key."
     )
+    AZURE_OPENAI_AD_TOKEN: Optional[SecretStr] = Field(
+        None, description="Azure OpenAI Ad Token."
+    )
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = Field(
         None, description="Azure OpenAI endpoint URL."
     )
