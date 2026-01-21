@@ -262,7 +262,7 @@ class ContextualRecallMetric(BaseMetric):
             new_verdict = VerdictWithStatement(
                 verdict=verdict.verdict,
                 reason=verdict.reason,
-                expected_output=expected_output
+                expected_output=expected_output,
             )
             final_verdicts.append(new_verdict)
         return final_verdicts
@@ -292,7 +292,7 @@ class ContextualRecallMetric(BaseMetric):
             new_verdict = VerdictWithStatement(
                 verdict=verdict.verdict,
                 reason=verdict.reason,
-                expected_output=expected_output
+                expected_output=expected_output,
             )
             final_verdicts.append(new_verdict)
         return final_verdicts
