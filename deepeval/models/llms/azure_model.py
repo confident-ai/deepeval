@@ -1,6 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from openai.lib.azure import AzureADTokenProvider, AsyncAzureADTokenProvider
 from typing import Optional, Tuple, Union, Dict, List, Callable, Awaitable
 from pydantic import BaseModel, SecretStr
 
@@ -444,22 +443,25 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def _build_client(self, cls):
         # Only require the API key if no token provider is supplied
-        if self.azure_ad_token_provider is None and self.azure_ad_token is None:
+        azure_ad_token = None
+        api_key = None
+
+        if self.azure_ad_token_provider is not None:
+            pass
+        elif self.azure_ad_token is not None:
+            azure_ad_token = require_secret_api_key(
+                self.azure_ad_token,
+                provider_label="AzureOpenAI",
+                env_var_name="AZURE_OPENAI_AD_TOKEN",
+                param_hint="`azure_ad_token` to AzureOpenAIModel(...)",
+            )
+        else:
             api_key = require_secret_api_key(
                 self.api_key,
                 provider_label="AzureOpenAI",
                 env_var_name="AZURE_OPENAI_API_KEY",
                 param_hint="`api_key` to AzureOpenAIModel(...)",
             )
-        else:
-            api_key = None  # Don't use an api_key when azure_ad_token_provider is provided
-            if self.azure_ad_token is not None:
-                self.azure_ad_token = require_secret_api_key(
-                    self.azure_ad_token,
-                    provider_label="AzureOpenAI",
-                    env_var_name="AZURE_OPENAI_AD_TOKEN",
-                    param_hint="`azure_ad_token` to AzureOpenAIModel(...)",
-                )
 
         kw = dict(
             api_key=api_key,
@@ -467,7 +469,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             azure_ad_token_provider=self.azure_ad_token_provider,
-            azure_ad_token=self.azure_ad_token,
+            azure_ad_token=azure_ad_token,
             **self._client_kwargs(),
         )
         try:
