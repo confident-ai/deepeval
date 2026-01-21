@@ -442,26 +442,25 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
-        # Only require the API key if no token provider is supplied
+        # Only require the API key / Azure ad token if no token provider is supplied
         azure_ad_token = None
         api_key = None
 
-        if self.azure_ad_token_provider is not None:
-            pass
-        elif self.azure_ad_token is not None:
-            azure_ad_token = require_secret_api_key(
-                self.azure_ad_token,
-                provider_label="AzureOpenAI",
-                env_var_name="AZURE_OPENAI_AD_TOKEN",
-                param_hint="`azure_ad_token` to AzureOpenAIModel(...)",
-            )
-        else:
-            api_key = require_secret_api_key(
-                self.api_key,
-                provider_label="AzureOpenAI",
-                env_var_name="AZURE_OPENAI_API_KEY",
-                param_hint="`api_key` to AzureOpenAIModel(...)",
-            )
+        if self.azure_ad_token_provider is None:
+            if self.azure_ad_token is not None:
+                azure_ad_token = require_secret_api_key(
+                    self.azure_ad_token,
+                    provider_label="AzureOpenAI",
+                    env_var_name="AZURE_OPENAI_AD_TOKEN",
+                    param_hint="`azure_ad_token` to AzureOpenAIModel(...)",
+                )
+            else:
+                api_key = require_secret_api_key(
+                    self.api_key,
+                    provider_label="AzureOpenAI",
+                    env_var_name="AZURE_OPENAI_API_KEY",
+                    param_hint="`api_key` to AzureOpenAIModel(...)",
+                )
 
         kw = dict(
             api_key=api_key,
