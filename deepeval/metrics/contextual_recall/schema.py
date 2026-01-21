@@ -7,7 +7,7 @@ class ContextualRecallVerdict(BaseModel):
     reason: str
 
 
-class VerdictWithStatement(BaseModel):
+class VerdictWithExpectedOutput(BaseModel):
     verdict: str
     reason: str
     expected_output: str
