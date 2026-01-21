@@ -35,7 +35,11 @@ from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import
 
 # Set to True to generate schemas, False to assert against existing schemas
 # Can be overridden via environment variable: GENERATE_SCHEMAS=true pytest ...
-GENERATE_MODE = os.environ.get("GENERATE_SCHEMAS", "").lower() in ("true", "1", "yes")
+GENERATE_MODE = os.environ.get("GENERATE_SCHEMAS", "").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")

@@ -86,5 +86,4 @@
 
 from deepeval.metrics import GEval
 
-metric = GEval(
-)
+metric = GEval()
