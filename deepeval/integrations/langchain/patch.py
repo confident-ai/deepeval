@@ -1,8 +1,9 @@
-import functools
 from deepeval.metrics import BaseMetric
-from deepeval.tracing.context import current_span_context
 from typing import List, Optional, Callable
 from langchain_core.tools import tool as original_tool, BaseTool
+
+# Collision-safe namespace key for deepeval metadata on tool instances
+DEEPEVAL_TOOL_METADATA_KEY = "deepeval"
 
 
 def tool(
@@ -12,32 +13,26 @@ def tool(
     **kwargs
 ):
     """
-    Patched version of langchain_core.tools.tool that prints inputs and outputs
+    Patched version of langchain_core.tools.tool that stores deepeval metadata
+    on the tool instance for retrieval in the callback handler.
+
+    The metric_collection and metrics are stored under tool_instance.metadata["deepeval"]
+    to avoid collision with user metadata.
     """
 
-    # original_tool returns a decorator function, so we need to return a decorator
     def decorator(func: Callable) -> BaseTool:
-        func = _patch_tool_decorator(func, metrics, metric_collection)
         tool_instance = original_tool(*args, **kwargs)(func)
+
+        # Store deepeval-specific overrides in a collision-safe namespace
+        # The callback handler will check this to override inherited values
+        if metrics is not None or metric_collection is not None:
+            if tool_instance.metadata is None:
+                tool_instance.metadata = {}
+            tool_instance.metadata[DEEPEVAL_TOOL_METADATA_KEY] = {
+                "metric_collection": metric_collection,
+                "metrics": metrics,
+            }
+
         return tool_instance
 
     return decorator
-
-
-def _patch_tool_decorator(
-    func: Callable,
-    metrics: Optional[List[BaseMetric]] = None,
-    metric_collection: Optional[str] = None,
-):
-    original_func = func
-
-    @functools.wraps(original_func)
-    def wrapper(*args, **kwargs):
-        current_span = current_span_context.get()
-        current_span.metrics = metrics
-        current_span.metric_collection = metric_collection
-        res = original_func(*args, **kwargs)
-        return res
-
-    tool = wrapper
-    return tool

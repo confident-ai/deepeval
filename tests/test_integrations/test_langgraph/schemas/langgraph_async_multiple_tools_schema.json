@@ -1,13 +1,13 @@
 {
-  "uuid": "64c37f06-7d74-4fe1-8e6c-b873bed42a96",
+  "uuid": "c4802de3-6b45-46c6-ae5d-423ec8351e00",
   "baseSpans": [
     {
-      "uuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
+      "uuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:47.116Z",
-      "endTime": "2026-01-15T07:24:50.943Z",
+      "startTime": "2026-01-20T21:08:29.891Z",
+      "endTime": "2026-01-20T21:08:33.039Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           }
         ]
       },
@@ -26,14 +27,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -61,19 +63,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -98,8 +102,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           {
@@ -107,7 +111,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -135,12 +139,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -148,7 +154,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -173,20 +179,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "translate",
-            "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-            "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "2261b334-5284-416d-acc9-496c855a6815",
+            "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "status": "success"
           },
           {
-            "content": "The information found is: \"Python is a high-level programming language.\"\n\nThe translation to Spanish is: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
+            "content": "The information about Python is: \"Python is a high-level programming language.\"\n\nIn Spanish, this translates to: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 32,
+                "completion_tokens": 34,
                 "prompt_tokens": 158,
-                "total_tokens": 190,
+                "total_tokens": 192,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -200,18 +206,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0oYPebrBQYOF8el1GUNvpskbvV",
+              "id": "chatcmpl-D0DFg3ckk089Hwip5vKDOUzVqMf7t",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-f1b0-7772-bcbd-ed640e901b7f-0",
+            "id": "run--69171576-84c1-4ebb-a87b-e9bdeceb3b2a-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 158,
-              "output_tokens": 32,
-              "total_tokens": 190,
+              "output_tokens": 34,
+              "total_tokens": 192,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -226,13 +234,13 @@
       }
     },
     {
-      "uuid": "019bc08a-f1af-72d1-ac94-f8dc7b72dd53",
+      "uuid": "a1ea501e-c0f3-431b-9d97-3d9955e180c0",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
-      "startTime": "2026-01-15T07:24:49.967Z",
-      "endTime": "2026-01-15T07:24:50.943Z",
+      "parentUuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
+      "startTime": "2026-01-20T21:08:31.945Z",
+      "endTime": "2026-01-20T21:08:33.038Z",
       "input": {
         "messages": [
           {
@@ -240,14 +248,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -275,19 +284,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -312,8 +323,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           {
@@ -321,7 +332,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -349,12 +360,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -362,7 +375,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -387,8 +400,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "translate",
-            "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-            "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "2261b334-5284-416d-acc9-496c855a6815",
+            "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "status": "success"
           }
         ]
@@ -396,15 +409,15 @@
       "output": {
         "messages": [
           {
-            "content": "The information found is: \"Python is a high-level programming language.\"\n\nThe translation to Spanish is: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
+            "content": "The information about Python is: \"Python is a high-level programming language.\"\n\nIn Spanish, this translates to: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 32,
+                "completion_tokens": 34,
                 "prompt_tokens": 158,
-                "total_tokens": 190,
+                "total_tokens": 192,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -418,18 +431,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0oYPebrBQYOF8el1GUNvpskbvV",
+              "id": "chatcmpl-D0DFg3ckk089Hwip5vKDOUzVqMf7t",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-f1b0-7772-bcbd-ed640e901b7f-0",
+            "id": "run--69171576-84c1-4ebb-a87b-e9bdeceb3b2a-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 158,
-              "output_tokens": 32,
-              "total_tokens": 190,
+              "output_tokens": 34,
+              "total_tokens": 192,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -444,13 +459,13 @@
       }
     },
     {
-      "uuid": "019bc08a-f57e-71c1-b1e8-0228fba838c9",
+      "uuid": "0b2aeb4f-5179-40aa-936f-37cdcb811d54",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-f1af-72d1-ac94-f8dc7b72dd53",
-      "startTime": "2026-01-15T07:24:50.942Z",
-      "endTime": "2026-01-15T07:24:50.943Z",
+      "parentUuid": "a1ea501e-c0f3-431b-9d97-3d9955e180c0",
+      "startTime": "2026-01-20T21:08:33.037Z",
+      "endTime": "2026-01-20T21:08:33.037Z",
       "input": {
         "messages": [
           {
@@ -458,14 +473,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -493,19 +509,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -530,8 +548,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           {
@@ -539,7 +557,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -567,12 +585,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -580,7 +600,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -605,20 +625,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "translate",
-            "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-            "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "2261b334-5284-416d-acc9-496c855a6815",
+            "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "status": "success"
           },
           {
-            "content": "The information found is: \"Python is a high-level programming language.\"\n\nThe translation to Spanish is: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
+            "content": "The information about Python is: \"Python is a high-level programming language.\"\n\nIn Spanish, this translates to: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 32,
+                "completion_tokens": 34,
                 "prompt_tokens": 158,
-                "total_tokens": 190,
+                "total_tokens": 192,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -632,18 +652,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0oYPebrBQYOF8el1GUNvpskbvV",
+              "id": "chatcmpl-D0DFg3ckk089Hwip5vKDOUzVqMf7t",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-f1b0-7772-bcbd-ed640e901b7f-0",
+            "id": "run--69171576-84c1-4ebb-a87b-e9bdeceb3b2a-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 158,
-              "output_tokens": 32,
-              "total_tokens": 190,
+              "output_tokens": 34,
+              "total_tokens": 192,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -659,13 +681,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc08a-f1ad-7581-8c57-27da437894b7",
+      "uuid": "3b502c19-892a-4982-9784-008cd93b4f21",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
-      "startTime": "2026-01-15T07:24:49.965Z",
-      "endTime": "2026-01-15T07:24:49.966Z",
+      "parentUuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
+      "startTime": "2026-01-20T21:08:31.943Z",
+      "endTime": "2026-01-20T21:08:31.944Z",
       "input": {
         "messages": [
           {
@@ -673,14 +695,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -708,19 +731,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -745,8 +770,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           {
@@ -754,7 +779,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -782,12 +807,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -795,7 +822,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -824,8 +851,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "translate",
-            "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-            "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "2261b334-5284-416d-acc9-496c855a6815",
+            "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "status": "success"
           }
         ]
@@ -839,8 +866,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "translate",
-            "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-            "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "2261b334-5284-416d-acc9-496c855a6815",
+            "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "status": "success"
           },
           "inputParameters": {
@@ -851,13 +878,13 @@
       ]
     },
     {
-      "uuid": "019bc08a-ec4e-7473-9422-c7789052e635",
+      "uuid": "ccc8d8b0-b59b-4ce0-bc44-484e5c90ac5c",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
-      "startTime": "2026-01-15T07:24:48.590Z",
-      "endTime": "2026-01-15T07:24:49.964Z",
+      "parentUuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
+      "startTime": "2026-01-20T21:08:31.257Z",
+      "endTime": "2026-01-20T21:08:31.942Z",
       "input": {
         "messages": [
           {
@@ -865,14 +892,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -900,19 +928,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -937,8 +967,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           }
         ]
@@ -950,7 +980,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -978,12 +1008,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -991,7 +1023,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -1014,13 +1046,13 @@
       }
     },
     {
-      "uuid": "019bc08a-f1ab-7450-8b99-c800374800ed",
+      "uuid": "636d2c12-412a-4b0e-b407-fcae2c877654",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-ec4e-7473-9422-c7789052e635",
-      "startTime": "2026-01-15T07:24:49.963Z",
-      "endTime": "2026-01-15T07:24:49.964Z",
+      "parentUuid": "ccc8d8b0-b59b-4ce0-bc44-484e5c90ac5c",
+      "startTime": "2026-01-20T21:08:31.941Z",
+      "endTime": "2026-01-20T21:08:31.941Z",
       "input": {
         "messages": [
           {
@@ -1028,14 +1060,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -1063,19 +1096,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -1100,8 +1135,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           {
@@ -1109,7 +1144,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                  "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                   "function": {
                     "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                     "name": "translate"
@@ -1137,12 +1172,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+              "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+            "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "translate",
@@ -1150,7 +1187,7 @@
                   "text": "Python is a high-level programming language.",
                   "target_language": "Spanish"
                 },
-                "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+                "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
                 "type": "tool_call"
               }
             ],
@@ -1174,13 +1211,13 @@
       "output": "tools"
     },
     {
-      "uuid": "019bc08a-ec4c-7ef0-af0c-9a6d59411581",
+      "uuid": "72f06887-8e95-4815-a80b-539bdad08630",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
-      "startTime": "2026-01-15T07:24:48.588Z",
-      "endTime": "2026-01-15T07:24:48.590Z",
+      "parentUuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
+      "startTime": "2026-01-20T21:08:31.255Z",
+      "endTime": "2026-01-20T21:08:31.257Z",
       "input": {
         "messages": [
           {
@@ -1188,14 +1225,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -1223,19 +1261,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -1264,8 +1304,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           }
         ]
@@ -1279,8 +1319,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_database",
-            "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-            "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+            "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "status": "success"
           },
           "inputParameters": {
@@ -1290,13 +1330,13 @@
       ]
     },
     {
-      "uuid": "019bc08a-e68d-7d71-a754-474e66110848",
+      "uuid": "9c15dade-1547-425e-a8e8-8463f512a400",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68b-7001-89ba-4efa7e318c69",
-      "startTime": "2026-01-15T07:24:47.117Z",
-      "endTime": "2026-01-15T07:24:48.587Z",
+      "parentUuid": "606a56e8-fe34-43e7-b492-81546b2bddd3",
+      "startTime": "2026-01-20T21:08:29.893Z",
+      "endTime": "2026-01-20T21:08:31.254Z",
       "input": {
         "messages": [
           {
@@ -1304,7 +1344,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           }
         ]
       },
@@ -1315,7 +1356,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -1343,19 +1384,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -1378,13 +1421,13 @@
       }
     },
     {
-      "uuid": "019bc08a-ec49-7232-a447-39ac9e0107e3",
+      "uuid": "3fc5cc49-02c0-4022-81d6-67bb2f788640",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e68d-7d71-a754-474e66110848",
-      "startTime": "2026-01-15T07:24:48.586Z",
-      "endTime": "2026-01-15T07:24:48.587Z",
+      "parentUuid": "9c15dade-1547-425e-a8e8-8463f512a400",
+      "startTime": "2026-01-20T21:08:31.253Z",
+      "endTime": "2026-01-20T21:08:31.254Z",
       "input": {
         "messages": [
           {
@@ -1392,14 +1435,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+            "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                  "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                   "function": {
                     "arguments": "{\"query\":\"Python\"}",
                     "name": "search_database"
@@ -1427,19 +1471,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+              "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+            "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "search_database",
                 "args": {
                   "query": "Python"
                 },
-                "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+                "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
                 "type": "tool_call"
               }
             ],
@@ -1464,155 +1510,17 @@
     }
   ],
   "agentSpans": [],
-  "llmSpans": [
-    {
-      "uuid": "019bc08a-f1b0-7772-bcbd-ed640e901b7f",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08a-f1af-72d1-ac94-f8dc7b72dd53",
-      "startTime": "2026-01-15T07:24:49.968Z",
-      "endTime": "2026-01-15T07:24:50.942Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "Search for information about Python and translate it to Spanish"
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'search_database', 'args': {'query': 'Python'}, 'id': 'call_zAXutn9qYiZ5srIgTcXEKxdY', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "Python is a high-level programming language."
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'translate', 'args': {'text': 'Python is a high-level programming language.', 'target_language': 'Spanish'}, 'id': 'call_S1iwYcSfvWEmYwps7VmgSKz1', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "[Spanish translation of: Python is a high-level programming language.]"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_database', 'description': 'Searches the database for information matching the query.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'translate', 'description': 'Translates text to the target language (mock).', 'parameters': {'properties': {'text': {'type': 'string'}, 'target_language': {'type': 'string'}}, 'required': ['text', 'target_language'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "The information found is: \"Python is a high-level programming language.\"\n\nThe translation to Spanish is: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
-        "tool_calls": []
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 158.0,
-      "outputTokenCount": 32.0
-    },
-    {
-      "uuid": "019bc08a-ec4f-7b01-9001-07b0e226bb9c",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08a-ec4e-7473-9422-c7789052e635",
-      "startTime": "2026-01-15T07:24:48.592Z",
-      "endTime": "2026-01-15T07:24:49.963Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "Search for information about Python and translate it to Spanish"
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'search_database', 'args': {'query': 'Python'}, 'id': 'call_zAXutn9qYiZ5srIgTcXEKxdY', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "Python is a high-level programming language."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_database', 'description': 'Searches the database for information matching the query.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'translate', 'description': 'Translates text to the target language (mock).', 'parameters': {'properties': {'text': {'type': 'string'}, 'target_language': {'type': 'string'}}, 'required': ['text', 'target_language'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "translate",
-            "args": {
-              "text": "Python is a high-level programming language.",
-              "target_language": "Spanish"
-            },
-            "id": "call_S1iwYcSfvWEmYwps7VmgSKz1"
-          }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 114.0,
-      "outputTokenCount": 24.0
-    },
-    {
-      "uuid": "019bc08a-e68d-7d71-a754-475e5c78dbe7",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08a-e68d-7d71-a754-474e66110848",
-      "startTime": "2026-01-15T07:24:47.118Z",
-      "endTime": "2026-01-15T07:24:48.585Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "Search for information about Python and translate it to Spanish"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_database', 'description': 'Searches the database for information matching the query.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'translate', 'description': 'Translates text to the target language (mock).', 'parameters': {'properties': {'text': {'type': 'string'}, 'target_language': {'type': 'string'}}, 'required': ['text', 'target_language'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "search_database",
-            "args": {
-              "query": "Python"
-            },
-            "id": "call_zAXutn9qYiZ5srIgTcXEKxdY"
-          }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 84.0,
-      "outputTokenCount": 14.0
-    }
-  ],
+  "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08a-f1ad-7581-8c57-27eec7ce9a60",
+      "uuid": "aedbde45-7301-46fa-94e1-96986dbe251a",
       "name": "translate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08a-f1ad-7581-8c57-27da437894b7",
-      "startTime": "2026-01-15T07:24:49.965Z",
-      "endTime": "2026-01-15T07:24:49.966Z",
+      "parentUuid": "3b502c19-892a-4982-9784-008cd93b4f21",
+      "startTime": "2026-01-20T21:08:31.943Z",
+      "endTime": "2026-01-20T21:08:31.944Z",
       "input": {
         "text": "Python is a high-level programming language.",
         "target_language": "Spanish"
@@ -1623,19 +1531,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "translate",
-        "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-        "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+        "id": "2261b334-5284-416d-acc9-496c855a6815",
+        "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc08a-ec4d-70f1-8174-583887c2e9b5",
+      "uuid": "f53fd832-eb75-406f-8148-c061bc542a8c",
       "name": "search_database",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08a-ec4c-7ef0-af0c-9a6d59411581",
-      "startTime": "2026-01-15T07:24:48.589Z",
-      "endTime": "2026-01-15T07:24:48.589Z",
+      "parentUuid": "72f06887-8e95-4815-a80b-539bdad08630",
+      "startTime": "2026-01-20T21:08:31.255Z",
+      "endTime": "2026-01-20T21:08:31.256Z",
       "input": {
         "query": "Python"
       },
@@ -1645,14 +1553,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_database",
-        "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-        "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+        "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+        "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:24:47.115Z",
-  "endTime": "2026-01-15T07:24:50.943Z",
+  "startTime": "2026-01-20T21:08:29.891Z",
+  "endTime": "2026-01-20T21:08:33.039Z",
   "name": "langgraph-async-multi",
   "metadata": {
     "test_type": "async_multi"
@@ -1672,7 +1580,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+        "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+        "example": false
       }
     ]
   },
@@ -1683,14 +1592,15 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "a8b57f7c-ff7f-4df1-944a-ffabcb701d78"
+        "id": "918481af-0e44-4d08-81d8-fcdf15f072e2",
+        "example": false
       },
       {
         "content": "",
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+              "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
               "function": {
                 "arguments": "{\"query\":\"Python\"}",
                 "name": "search_database"
@@ -1718,19 +1628,21 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0mSzLLwICyeExguctbjrGvkFVm",
+          "id": "chatcmpl-D0DFekKwIhoypnFgDXVuPx4NP6luN",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08a-e68d-7d71-a754-475e5c78dbe7-0",
+        "id": "run--c6a56f37-f6fd-4ef0-8f78-44e90ec161fc-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "search_database",
             "args": {
               "query": "Python"
             },
-            "id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+            "id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
             "type": "tool_call"
           }
         ],
@@ -1755,8 +1667,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_database",
-        "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-        "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+        "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+        "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
         "status": "success"
       },
       {
@@ -1764,7 +1676,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+              "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
               "function": {
                 "arguments": "{\"text\":\"Python is a high-level programming language.\",\"target_language\":\"Spanish\"}",
                 "name": "translate"
@@ -1792,12 +1704,14 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0n3pX8Rf0TgPL4WRJtGrlM4SHW",
+          "id": "chatcmpl-D0DFfBcCHzui0P0YbQNWIjV0eYJSv",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08a-ec4f-7b01-9001-07b0e226bb9c-0",
+        "id": "run--99bd1356-7160-4058-96cf-12b18e0670e0-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "translate",
@@ -1805,7 +1719,7 @@
               "text": "Python is a high-level programming language.",
               "target_language": "Spanish"
             },
-            "id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+            "id": "call_XDCSjWuFW9j8SUBleB3CQi90",
             "type": "tool_call"
           }
         ],
@@ -1830,20 +1744,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "translate",
-        "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-        "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+        "id": "2261b334-5284-416d-acc9-496c855a6815",
+        "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
         "status": "success"
       },
       {
-        "content": "The information found is: \"Python is a high-level programming language.\"\n\nThe translation to Spanish is: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
+        "content": "The information about Python is: \"Python is a high-level programming language.\"\n\nIn Spanish, this translates to: \"Python es un lenguaje de programaci\u00f3n de alto nivel.\"",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 32,
+            "completion_tokens": 34,
             "prompt_tokens": 158,
-            "total_tokens": 190,
+            "total_tokens": 192,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1857,18 +1771,20 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0oYPebrBQYOF8el1GUNvpskbvV",
+          "id": "chatcmpl-D0DFg3ckk089Hwip5vKDOUzVqMf7t",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08a-f1b0-7772-bcbd-ed640e901b7f-0",
+        "id": "run--69171576-84c1-4ebb-a87b-e9bdeceb3b2a-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 158,
-          "output_tokens": 32,
-          "total_tokens": 190,
+          "output_tokens": 34,
+          "total_tokens": 192,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1891,8 +1807,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_database",
-        "id": "909c2199-d4dd-4a1f-8bd2-3b5dc8a74d3c",
-        "tool_call_id": "call_zAXutn9qYiZ5srIgTcXEKxdY",
+        "id": "559c3bae-f103-426b-b674-d2b9c6077d4c",
+        "tool_call_id": "call_kjbhlIqNLQzKA7JlLO5paHAD",
         "status": "success"
       },
       "inputParameters": {
@@ -1907,8 +1823,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "translate",
-        "id": "c129f621-76ec-4904-a134-ec09e2264ad3",
-        "tool_call_id": "call_S1iwYcSfvWEmYwps7VmgSKz1",
+        "id": "2261b334-5284-416d-acc9-496c855a6815",
+        "tool_call_id": "call_XDCSjWuFW9j8SUBleB3CQi90",
         "status": "success"
       },
       "inputParameters": {

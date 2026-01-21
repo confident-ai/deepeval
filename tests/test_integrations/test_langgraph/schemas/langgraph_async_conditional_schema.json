@@ -1,13 +1,13 @@
 {
-  "uuid": "407326ec-d8dc-42e3-b49d-b5745223de72",
+  "uuid": "48df2926-a0a5-465e-bc77-c17d0eac3e11",
   "baseSpans": [
     {
-      "uuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
+      "uuid": "241a2dd4-5ec7-424e-90ca-9c4e7ed7f3d0",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:57.620Z",
-      "endTime": "2026-01-15T07:25:00.047Z",
+      "startTime": "2026-01-20T21:08:39.073Z",
+      "endTime": "2026-01-20T21:08:41.971Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           }
         ]
       },
@@ -26,16 +27,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -45,9 +47,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -60,28 +62,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -98,19 +102,19 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           },
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Recent developments in space exploration have led to the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This research highlights the ongoing efforts to identify potentially habitable worlds beyond our solar system.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
+                "completion_tokens": 52,
+                "prompt_tokens": 148,
                 "total_tokens": 200,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
@@ -125,17 +129,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "id": "chatcmpl-D0DFo5qtVMPeZj1zoUPefR8xDWHcA",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "run--56e1aa7a-f7a1-46f7-a0e4-d4126e52166d-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
+              "input_tokens": 148,
+              "output_tokens": 52,
               "total_tokens": 200,
               "input_token_details": {
                 "audio": 0,
@@ -152,13 +158,13 @@
       }
     },
     {
-      "uuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
+      "uuid": "343f8f93-f325-4d31-93fe-0da92379fbc1",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:58.638Z",
-      "endTime": "2026-01-15T07:25:00.046Z",
+      "parentUuid": "241a2dd4-5ec7-424e-90ca-9c4e7ed7f3d0",
+      "startTime": "2026-01-20T21:08:40.274Z",
+      "endTime": "2026-01-20T21:08:41.969Z",
       "input": {
         "messages": [
           {
@@ -166,16 +172,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -185,9 +192,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -200,28 +207,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -238,8 +247,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           }
         ],
@@ -248,14 +257,14 @@
       "output": {
         "messages": [
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Recent developments in space exploration have led to the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This research highlights the ongoing efforts to identify potentially habitable worlds beyond our solar system.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
+                "completion_tokens": 52,
+                "prompt_tokens": 148,
                 "total_tokens": 200,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
@@ -270,17 +279,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "id": "chatcmpl-D0DFo5qtVMPeZj1zoUPefR8xDWHcA",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "run--56e1aa7a-f7a1-46f7-a0e4-d4126e52166d-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
+              "input_tokens": 148,
+              "output_tokens": 52,
               "total_tokens": 200,
               "input_token_details": {
                 "audio": 0,
@@ -296,13 +307,13 @@
       }
     },
     {
-      "uuid": "019bc08b-190c-7063-95dd-5e4a6acc6637",
+      "uuid": "ef7d47d5-f1a8-4462-8897-ca8f916c0bb7",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
-      "startTime": "2026-01-15T07:25:00.044Z",
-      "endTime": "2026-01-15T07:25:00.045Z",
+      "parentUuid": "343f8f93-f325-4d31-93fe-0da92379fbc1",
+      "startTime": "2026-01-20T21:08:41.964Z",
+      "endTime": "2026-01-20T21:08:41.967Z",
       "input": {
         "messages": [
           {
@@ -310,16 +321,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -329,9 +341,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -344,28 +356,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -382,19 +396,19 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           },
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Recent developments in space exploration have led to the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This research highlights the ongoing efforts to identify potentially habitable worlds beyond our solar system.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
+                "completion_tokens": 52,
+                "prompt_tokens": 148,
                 "total_tokens": 200,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
@@ -409,17 +423,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "id": "chatcmpl-D0DFo5qtVMPeZj1zoUPefR8xDWHcA",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "run--56e1aa7a-f7a1-46f7-a0e4-d4126e52166d-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
+              "input_tokens": 148,
+              "output_tokens": 52,
               "total_tokens": 200,
               "input_token_details": {
                 "audio": 0,
@@ -437,13 +453,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
+      "uuid": "66077cc8-15ce-4699-9ad3-b63c6f9601bf",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:58.633Z",
-      "endTime": "2026-01-15T07:24:58.637Z",
+      "parentUuid": "241a2dd4-5ec7-424e-90ca-9c4e7ed7f3d0",
+      "startTime": "2026-01-20T21:08:40.262Z",
+      "endTime": "2026-01-20T21:08:40.272Z",
       "input": {
         "messages": [
           {
@@ -451,16 +467,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -470,9 +487,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -485,28 +502,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -528,8 +547,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           }
         ]
@@ -543,24 +562,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           },
           "inputParameters": {
-            "topic": "latest on space exploration"
+            "topic": "latest developments in space exploration"
           }
         }
       ]
     },
     {
-      "uuid": "019bc08b-138c-7fd3-b70f-7ac0b6f5c79f",
+      "uuid": "562afe30-62de-4af7-afaa-f39519d96263",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
-      "startTime": "2026-01-15T07:24:58.636Z",
-      "endTime": "2026-01-15T07:24:58.636Z",
+      "parentUuid": "66077cc8-15ce-4699-9ad3-b63c6f9601bf",
+      "startTime": "2026-01-20T21:08:40.268Z",
+      "endTime": "2026-01-20T21:08:40.270Z",
       "input": {
         "messages": [
           {
@@ -568,16 +587,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -587,9 +607,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -602,28 +622,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -640,8 +662,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+            "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "status": "success"
           }
         ],
@@ -650,13 +672,13 @@
       "output": "research"
     },
     {
-      "uuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
+      "uuid": "06ad7390-0402-427a-970f-b95f551b6f42",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:57.624Z",
-      "endTime": "2026-01-15T07:24:58.632Z",
+      "parentUuid": "241a2dd4-5ec7-424e-90ca-9c4e7ed7f3d0",
+      "startTime": "2026-01-20T21:08:39.077Z",
+      "endTime": "2026-01-20T21:08:40.259Z",
       "input": {
         "messages": [
           {
@@ -664,7 +686,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           }
         ],
         "intent": "research"
@@ -676,9 +699,9 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -688,9 +711,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -703,28 +726,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -739,13 +764,13 @@
       }
     },
     {
-      "uuid": "019bc08b-1386-72d0-acd8-cac5383731ff",
+      "uuid": "863d4da6-0d71-4fc9-b52f-f3578349a805",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
-      "startTime": "2026-01-15T07:24:58.630Z",
-      "endTime": "2026-01-15T07:24:58.631Z",
+      "parentUuid": "06ad7390-0402-427a-970f-b95f551b6f42",
+      "startTime": "2026-01-20T21:08:40.255Z",
+      "endTime": "2026-01-20T21:08:40.258Z",
       "input": {
         "messages": [
           {
@@ -753,16 +778,17 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                  "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                   "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
+                    "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                     "name": "research_topic"
                   },
                   "type": "function"
@@ -772,9 +798,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
+                "completion_tokens": 19,
                 "prompt_tokens": 109,
-                "total_tokens": 127,
+                "total_tokens": 128,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -787,28 +813,30 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "output_tokens": 19,
+              "total_tokens": 128,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -825,13 +853,13 @@
       "output": "tools"
     },
     {
-      "uuid": "019bc08b-0f96-7c82-8428-a970b40115f2",
+      "uuid": "e4f62ed3-d731-4dba-80da-6260a4130c16",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:57.622Z",
-      "endTime": "2026-01-15T07:24:57.623Z",
+      "parentUuid": "241a2dd4-5ec7-424e-90ca-9c4e7ed7f3d0",
+      "startTime": "2026-01-20T21:08:39.075Z",
+      "endTime": "2026-01-20T21:08:39.077Z",
       "input": {
         "messages": [
           {
@@ -839,7 +867,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           }
         ]
       },
@@ -850,20 +879,21 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           }
         ],
         "intent": "research"
       }
     },
     {
-      "uuid": "019bc08b-0f96-7c82-8428-a9800098ab03",
+      "uuid": "75f33da1-84bb-4110-bac4-3205ac1b8a9c",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f96-7c82-8428-a970b40115f2",
-      "startTime": "2026-01-15T07:24:57.622Z",
-      "endTime": "2026-01-15T07:24:57.623Z",
+      "parentUuid": "e4f62ed3-d731-4dba-80da-6260a4130c16",
+      "startTime": "2026-01-20T21:08:39.076Z",
+      "endTime": "2026-01-20T21:08:39.076Z",
       "input": {
         "messages": [
           {
@@ -871,7 +901,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+            "example": false
           }
         ],
         "intent": "research"
@@ -880,116 +911,19 @@
     }
   ],
   "agentSpans": [],
-  "llmSpans": [
-    {
-      "uuid": "019bc08b-138e-75e3-bef4-3345f9153f40",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
-      "startTime": "2026-01-15T07:24:58.639Z",
-      "endTime": "2026-01-15T07:25:00.043Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "You are a research assistant. Use the research_topic tool to find information."
-        },
-        {
-          "role": "human",
-          "content": "Research the latest on space exploration"
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'research_topic', 'args': {'topic': 'latest on space exploration'}, 'id': 'call_7s6lAiLTkeSwQhQgvoEyEztb', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "Space research reveals new exoplanets in habitable zones."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
-        "tool_calls": []
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 147.0,
-      "outputTokenCount": 53.0
-    },
-    {
-      "uuid": "019bc08b-0f99-7303-a714-ae0e46825491",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
-      "startTime": "2026-01-15T07:24:57.625Z",
-      "endTime": "2026-01-15T07:24:58.629Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "You are a research assistant. Use the research_topic tool to find information."
-        },
-        {
-          "role": "human",
-          "content": "Research the latest on space exploration"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "research_topic",
-            "args": {
-              "topic": "latest on space exploration"
-            },
-            "id": "call_7s6lAiLTkeSwQhQgvoEyEztb"
-          }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 109.0,
-      "outputTokenCount": 18.0
-    }
-  ],
+  "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08b-138a-75f0-9a7c-e858e2970908",
+      "uuid": "a5055e9b-5032-4617-8c62-5a7125dd102e",
       "name": "research_topic",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
-      "startTime": "2026-01-15T07:24:58.634Z",
-      "endTime": "2026-01-15T07:24:58.635Z",
+      "parentUuid": "66077cc8-15ce-4699-9ad3-b63c6f9601bf",
+      "startTime": "2026-01-20T21:08:40.264Z",
+      "endTime": "2026-01-20T21:08:40.266Z",
       "input": {
-        "topic": "latest on space exploration"
+        "topic": "latest developments in space exploration"
       },
       "output": {
         "content": "Space research reveals new exoplanets in habitable zones.",
@@ -997,14 +931,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+        "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:24:57.620Z",
-  "endTime": "2026-01-15T07:25:00.047Z",
+  "startTime": "2026-01-20T21:08:39.073Z",
+  "endTime": "2026-01-20T21:08:41.971Z",
   "name": "langgraph-conditional-async",
   "tags": [
     "langgraph",
@@ -1019,7 +953,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+        "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+        "example": false
       }
     ]
   },
@@ -1030,16 +965,17 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+        "id": "912b01d3-25c0-40dc-965d-7d0429564c64",
+        "example": false
       },
       {
         "content": "",
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+              "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
               "function": {
-                "arguments": "{\"topic\":\"latest on space exploration\"}",
+                "arguments": "{\"topic\":\"latest developments in space exploration\"}",
                 "name": "research_topic"
               },
               "type": "function"
@@ -1049,9 +985,9 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 18,
+            "completion_tokens": 19,
             "prompt_tokens": 109,
-            "total_tokens": 127,
+            "total_tokens": 128,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1064,28 +1000,30 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+          "system_fingerprint": "fp_29330a9688",
+          "id": "chatcmpl-D0DFnyrjXyWkH1tKuIAUgSBzDW3xk",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+        "id": "run--1714a20f-195d-48eb-9aa5-8e38f10b725b-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "research_topic",
             "args": {
-              "topic": "latest on space exploration"
+              "topic": "latest developments in space exploration"
             },
-            "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 109,
-          "output_tokens": 18,
-          "total_tokens": 127,
+          "output_tokens": 19,
+          "total_tokens": 128,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1102,19 +1040,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+        "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
         "status": "success"
       },
       {
-        "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+        "content": "Recent developments in space exploration have led to the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This research highlights the ongoing efforts to identify potentially habitable worlds beyond our solar system.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 53,
-            "prompt_tokens": 147,
+            "completion_tokens": 52,
+            "prompt_tokens": 148,
             "total_tokens": 200,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
@@ -1129,17 +1067,19 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+          "id": "chatcmpl-D0DFo5qtVMPeZj1zoUPefR8xDWHcA",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+        "id": "run--56e1aa7a-f7a1-46f7-a0e4-d4126e52166d-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 147,
-          "output_tokens": 53,
+          "input_tokens": 148,
+          "output_tokens": 52,
           "total_tokens": 200,
           "input_token_details": {
             "audio": 0,
@@ -1164,12 +1104,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "dee11ba7-94ec-4cd1-ba7a-9052d4c2e6fe",
+        "tool_call_id": "call_4XuJE8ykjAsZQcALVcDv9Tf3",
         "status": "success"
       },
       "inputParameters": {
-        "topic": "latest on space exploration"
+        "topic": "latest developments in space exploration"
       }
     }
   ]

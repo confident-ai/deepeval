@@ -1,13 +1,13 @@
 {
-  "uuid": "807e6130-6183-4d51-9b57-56eab8a93c12",
+  "uuid": "389c4d8f-0833-4547-aa70-1c0b11133752",
   "baseSpans": [
     {
-      "uuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
+      "uuid": "3cc21baf-7a2b-461d-af51-ecf5d92cd1d7",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:07.383Z",
-      "endTime": "2026-01-15T07:22:08.604Z",
+      "startTime": "2026-01-20T21:09:17.899Z",
+      "endTime": "2026-01-20T21:09:19.576Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           }
         ]
       },
@@ -26,7 +27,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           },
           {
             "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -51,12 +53,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "id": "chatcmpl-D0DGQsmjLWLqH50qhezzb2ixD6Uqq",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--0627d8a2-1053-4f1c-89ee-72ec072cf489-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -78,13 +82,13 @@
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-795816c223f6",
+      "uuid": "3704c1fb-275f-4c4a-b867-e57e683090cc",
       "name": "general",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "3cc21baf-7a2b-461d-af51-ecf5d92cd1d7",
+      "startTime": "2026-01-20T21:09:17.902Z",
+      "endTime": "2026-01-20T21:09:19.576Z",
       "input": {
         "messages": [
           {
@@ -92,7 +96,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           }
         ],
         "intent": "general"
@@ -122,12 +127,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "id": "chatcmpl-D0DGQsmjLWLqH50qhezzb2ixD6Uqq",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--0627d8a2-1053-4f1c-89ee-72ec072cf489-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -148,13 +155,13 @@
       }
     },
     {
-      "uuid": "019bc088-7b5b-7c80-89f8-62b1a4a7454d",
+      "uuid": "57f01fc4-0607-4615-8720-0576476eaa16",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:08.603Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "3704c1fb-275f-4c4a-b867-e57e683090cc",
+      "startTime": "2026-01-20T21:09:19.575Z",
+      "endTime": "2026-01-20T21:09:19.576Z",
       "input": {
         "messages": [
           {
@@ -162,7 +169,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           },
           {
             "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -187,12 +195,14 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "id": "chatcmpl-D0DGQsmjLWLqH50qhezzb2ixD6Uqq",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "run--0627d8a2-1053-4f1c-89ee-72ec072cf489-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -215,13 +225,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
+      "uuid": "19ca8759-2da7-4cf8-bc94-52c5d200d14d",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "3cc21baf-7a2b-461d-af51-ecf5d92cd1d7",
+      "startTime": "2026-01-20T21:09:17.900Z",
+      "endTime": "2026-01-20T21:09:17.901Z",
       "input": {
         "messages": [
           {
@@ -229,7 +239,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           }
         ]
       },
@@ -240,20 +251,21 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           }
         ],
         "intent": "general"
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-794664a30c5f",
+      "uuid": "90b1166a-b58f-4ceb-b80d-fab069606997",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "19ca8759-2da7-4cf8-bc94-52c5d200d14d",
+      "startTime": "2026-01-20T21:09:17.901Z",
+      "endTime": "2026-01-20T21:09:17.901Z",
       "input": {
         "messages": [
           {
@@ -261,7 +273,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+            "example": false
           }
         ],
         "intent": "general"
@@ -272,29 +285,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-7698-7e53-82ea-79664a38748b",
+      "uuid": "0627d8a2-1053-4f1c-89ee-72ec072cf489",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "3704c1fb-275f-4c4a-b867-e57e683090cc",
+      "startTime": "2026-01-20T21:09:17.902Z",
+      "endTime": "2026-01-20T21:09:19.575Z",
       "input": [
         {
           "role": "human",
           "content": "Hello, how are you today?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'research_topic', 'description': 'Research a topic and return findings.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'fact_check', 'description': 'Fact check a claim.', 'parameters': {'properties': {'claim': {'type': 'string'}}, 'required': ['claim'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -310,8 +311,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-15T07:22:07.383Z",
-  "endTime": "2026-01-15T07:22:08.604Z",
+  "startTime": "2026-01-20T21:09:17.898Z",
+  "endTime": "2026-01-20T21:09:19.576Z",
   "name": "langgraph-conditional-general",
   "tags": [
     "langgraph",
@@ -326,7 +327,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+        "example": false
       }
     ]
   },
@@ -337,7 +339,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "326857bd-6be3-44f0-8880-6a6e95d35bcd",
+        "example": false
       },
       {
         "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
@@ -362,12 +365,14 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+          "id": "chatcmpl-D0DGQsmjLWLqH50qhezzb2ixD6Uqq",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+        "id": "run--0627d8a2-1053-4f1c-89ee-72ec072cf489-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
