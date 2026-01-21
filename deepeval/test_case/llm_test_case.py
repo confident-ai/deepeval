@@ -386,6 +386,7 @@ class LLMTestCase(BaseModel):
                 [
                     re.search(pattern, self.input or "") is not None,
                     re.search(pattern, self.actual_output or "") is not None,
+                    re.search(pattern, self.expected_output or "") is not None,
                 ]
             )
             if isinstance(self.input, str)
