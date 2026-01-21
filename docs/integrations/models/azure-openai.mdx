@@ -59,7 +59,9 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
 
 - [Optional] `model`: A string specifying the name of the Azure OpenAI model to use. Defaults to `AZURE_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if `azure_ad_token` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token`: A string specifying your Azure Ad Token. Defaults to `AZURE_OPENAI_AD_TOKEN` if not passed; raises an error at runtime if `api_key` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token_provider`: A callback of either `AsyncAzureADTokenProvider` or `AzureADTokenProvider` that can be used for credentials [(see example usage)](https://github.com/openai/openai-python/blob/main/examples/azure_ad.py#L20). Raises an error at runtime if `api_key` and `azure_ad_token` are also unset.
 - [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
 - [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
