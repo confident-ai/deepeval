@@ -1,6 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Optional, Tuple, Union, Dict, List, Callable, Awaitable
 from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
@@ -42,6 +42,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        azure_ad_token_provider: Optional[
+            Callable[[], "str | Awaitable[str]"]
+        ] = None,
         temperature: Optional[float] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
@@ -66,6 +69,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # fetch Azure deployment parameters
         model = model or settings.AZURE_MODEL_NAME
         deployment_name = deployment_name or settings.AZURE_DEPLOYMENT_NAME
+
+        self.azure_ad_token_provider = azure_ad_token_provider
 
         if api_key is not None:
             # keep it secret, keep it safe from serializings, logging and alike
@@ -431,18 +436,23 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
-        api_key = require_secret_api_key(
-            self.api_key,
-            provider_label="AzureOpenAI",
-            env_var_name="AZURE_OPENAI_API_KEY",
-            param_hint="`api_key` to AzureOpenAIModel(...)",
-        )
+        # Only require the API key if no token provider is supplied
+        if self.azure_ad_token_provider is None:
+            api_key = require_secret_api_key(
+                self.api_key,
+                provider_label="AzureOpenAI",
+                env_var_name="AZURE_OPENAI_API_KEY",
+                param_hint="`api_key` to AzureOpenAIModel(...)",
+            )
+        else:
+            api_key = None  # Don't use an api_key when azure_ad_token_provider is provided
 
         kw = dict(
             api_key=api_key,
             api_version=self.api_version,
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
+            azure_ad_token_provider=self.azure_ad_token_provider,
             **self._client_kwargs(),
         )
         try:
