@@ -1,13 +1,13 @@
 {
-  "uuid": "cf825aa2-7891-4f6a-8d69-e6ccf90debde",
+  "uuid": "0372b36a-bc86-4f3a-91ab-ddc08286cb30",
   "baseSpans": [
     {
-      "uuid": "91670f7c-a862-4371-92f4-d526984305f3",
+      "uuid": "ffbab743-b026-4d0b-b34d-0f1f22bf89f0",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:37:51.838Z",
-      "endTime": "2026-01-20T19:37:54.422Z",
+      "startTime": "2026-01-20T21:09:14.890Z",
+      "endTime": "2026-01-20T21:09:17.873Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -35,7 +35,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -62,14 +62,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -77,7 +77,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -102,20 +102,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           },
           {
-            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is mostly round but slightly flattened at the poles and bulging at the equator.",
+            "content": "The claim that \"the earth is round\" is marked as UNVERIFIED, meaning I cannot confirm it based on the available data. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid. If you have any specific sources or contexts for this claim, I can help further investigate.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 56,
+                "completion_tokens": 66,
                 "prompt_tokens": 148,
-                "total_tokens": 204,
+                "total_tokens": 214,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -128,21 +128,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Bpxi5e8lAcmV4VOpUjbATzZsOWz",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGO15Nc7LXMo01zBNWXtd64Nl2W",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--6360f30e-7579-4959-a9e9-8970c60fda59-0",
+            "id": "run--3309254b-303a-4330-adb5-2a27243f6780-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 56,
-              "total_tokens": 204,
+              "output_tokens": 66,
+              "total_tokens": 214,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -158,13 +158,13 @@
       }
     },
     {
-      "uuid": "665870bc-32bd-4989-8612-5ee5f5ab213a",
+      "uuid": "2d6d3b73-ff8a-4733-85a8-ee6e4d87a58f",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "91670f7c-a862-4371-92f4-d526984305f3",
-      "startTime": "2026-01-20T19:37:52.900Z",
-      "endTime": "2026-01-20T19:37:54.422Z",
+      "parentUuid": "ffbab743-b026-4d0b-b34d-0f1f22bf89f0",
+      "startTime": "2026-01-20T21:09:15.747Z",
+      "endTime": "2026-01-20T21:09:17.872Z",
       "input": {
         "messages": [
           {
@@ -172,7 +172,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -180,7 +180,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -207,14 +207,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -222,7 +222,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -247,8 +247,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           }
         ],
@@ -257,15 +257,15 @@
       "output": {
         "messages": [
           {
-            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is mostly round but slightly flattened at the poles and bulging at the equator.",
+            "content": "The claim that \"the earth is round\" is marked as UNVERIFIED, meaning I cannot confirm it based on the available data. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid. If you have any specific sources or contexts for this claim, I can help further investigate.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 56,
+                "completion_tokens": 66,
                 "prompt_tokens": 148,
-                "total_tokens": 204,
+                "total_tokens": 214,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -278,21 +278,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Bpxi5e8lAcmV4VOpUjbATzZsOWz",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGO15Nc7LXMo01zBNWXtd64Nl2W",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--6360f30e-7579-4959-a9e9-8970c60fda59-0",
+            "id": "run--3309254b-303a-4330-adb5-2a27243f6780-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 56,
-              "total_tokens": 204,
+              "output_tokens": 66,
+              "total_tokens": 214,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -307,13 +307,13 @@
       }
     },
     {
-      "uuid": "05270937-0471-4607-b973-be2cc7306a06",
+      "uuid": "f4cd26fa-5297-466f-87b1-6f4d67bf547d",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "665870bc-32bd-4989-8612-5ee5f5ab213a",
-      "startTime": "2026-01-20T19:37:54.421Z",
-      "endTime": "2026-01-20T19:37:54.421Z",
+      "parentUuid": "2d6d3b73-ff8a-4733-85a8-ee6e4d87a58f",
+      "startTime": "2026-01-20T21:09:17.872Z",
+      "endTime": "2026-01-20T21:09:17.872Z",
       "input": {
         "messages": [
           {
@@ -321,7 +321,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -329,7 +329,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -356,14 +356,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -371,7 +371,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -396,20 +396,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           },
           {
-            "content": "The claim that \"The earth is round\" is marked as UNVERIFIED. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is mostly round but slightly flattened at the poles and bulging at the equator.",
+            "content": "The claim that \"the earth is round\" is marked as UNVERIFIED, meaning I cannot confirm it based on the available data. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid. If you have any specific sources or contexts for this claim, I can help further investigate.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 56,
+                "completion_tokens": 66,
                 "prompt_tokens": 148,
-                "total_tokens": 204,
+                "total_tokens": 214,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -422,21 +422,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Bpxi5e8lAcmV4VOpUjbATzZsOWz",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGO15Nc7LXMo01zBNWXtd64Nl2W",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--6360f30e-7579-4959-a9e9-8970c60fda59-0",
+            "id": "run--3309254b-303a-4330-adb5-2a27243f6780-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 148,
-              "output_tokens": 56,
-              "total_tokens": 204,
+              "output_tokens": 66,
+              "total_tokens": 214,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -453,13 +453,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "4bdc025f-74a0-472a-997c-2887a4e445a9",
+      "uuid": "9199fcb9-2f3b-4b99-b694-63cf7fdfa886",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "91670f7c-a862-4371-92f4-d526984305f3",
-      "startTime": "2026-01-20T19:37:52.890Z",
-      "endTime": "2026-01-20T19:37:52.898Z",
+      "parentUuid": "ffbab743-b026-4d0b-b34d-0f1f22bf89f0",
+      "startTime": "2026-01-20T21:09:15.745Z",
+      "endTime": "2026-01-20T21:09:15.747Z",
       "input": {
         "messages": [
           {
@@ -467,7 +467,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -475,7 +475,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -502,14 +502,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -517,7 +517,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -547,8 +547,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           }
         ]
@@ -562,8 +562,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           },
           "inputParameters": {
@@ -573,13 +573,13 @@
       ]
     },
     {
-      "uuid": "841ae282-66aa-48a2-8547-aef75b08aa1a",
+      "uuid": "4469f68f-bbf5-46c0-97a6-95b5e3c9ef93",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4bdc025f-74a0-472a-997c-2887a4e445a9",
-      "startTime": "2026-01-20T19:37:52.897Z",
-      "endTime": "2026-01-20T19:37:52.897Z",
+      "parentUuid": "9199fcb9-2f3b-4b99-b694-63cf7fdfa886",
+      "startTime": "2026-01-20T21:09:15.747Z",
+      "endTime": "2026-01-20T21:09:15.747Z",
       "input": {
         "messages": [
           {
@@ -587,7 +587,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -595,7 +595,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -622,14 +622,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -637,7 +637,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -662,8 +662,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-            "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+            "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "status": "success"
           }
         ],
@@ -672,13 +672,13 @@
       "output": "fact_check"
     },
     {
-      "uuid": "b54de44b-d9ba-4878-a633-73fc8dd2756d",
+      "uuid": "4fe617b1-ee3d-473d-b2b3-a596e1aeee72",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "91670f7c-a862-4371-92f4-d526984305f3",
-      "startTime": "2026-01-20T19:37:51.840Z",
-      "endTime": "2026-01-20T19:37:52.888Z",
+      "parentUuid": "ffbab743-b026-4d0b-b34d-0f1f22bf89f0",
+      "startTime": "2026-01-20T21:09:14.892Z",
+      "endTime": "2026-01-20T21:09:15.744Z",
       "input": {
         "messages": [
           {
@@ -686,7 +686,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           }
         ],
@@ -699,7 +699,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -726,14 +726,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -741,7 +741,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -764,13 +764,13 @@
       }
     },
     {
-      "uuid": "d38ae5f4-3988-4eec-8032-63ad360fca33",
+      "uuid": "85c8e11c-6fea-4e37-85dd-fa34725814f1",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b54de44b-d9ba-4878-a633-73fc8dd2756d",
-      "startTime": "2026-01-20T19:37:52.888Z",
-      "endTime": "2026-01-20T19:37:52.888Z",
+      "parentUuid": "4fe617b1-ee3d-473d-b2b3-a596e1aeee72",
+      "startTime": "2026-01-20T21:09:15.744Z",
+      "endTime": "2026-01-20T21:09:15.744Z",
       "input": {
         "messages": [
           {
@@ -778,7 +778,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           },
           {
@@ -786,7 +786,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                  "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                   "function": {
                     "arguments": "{\"claim\":\"The earth is round\"}",
                     "name": "fact_check"
@@ -813,14 +813,14 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+            "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
             "example": false,
             "tool_calls": [
               {
@@ -828,7 +828,7 @@
                 "args": {
                   "claim": "The earth is round"
                 },
-                "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+                "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
                 "type": "tool_call"
               }
             ],
@@ -853,13 +853,13 @@
       "output": "tools"
     },
     {
-      "uuid": "7eaa48c4-9bfa-4024-bab3-080046dc0504",
+      "uuid": "c3ef1d69-8646-4770-856e-68346672c792",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "91670f7c-a862-4371-92f4-d526984305f3",
-      "startTime": "2026-01-20T19:37:51.839Z",
-      "endTime": "2026-01-20T19:37:51.840Z",
+      "parentUuid": "ffbab743-b026-4d0b-b34d-0f1f22bf89f0",
+      "startTime": "2026-01-20T21:09:14.891Z",
+      "endTime": "2026-01-20T21:09:14.891Z",
       "input": {
         "messages": [
           {
@@ -867,7 +867,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           }
         ]
@@ -879,7 +879,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           }
         ],
@@ -887,13 +887,13 @@
       }
     },
     {
-      "uuid": "5e4976c4-d19b-4392-a1ef-0e21e50ef68a",
+      "uuid": "c7e8c0ac-8971-4fe2-bde7-0abbbe951275",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7eaa48c4-9bfa-4024-bab3-080046dc0504",
-      "startTime": "2026-01-20T19:37:51.839Z",
-      "endTime": "2026-01-20T19:37:51.840Z",
+      "parentUuid": "c3ef1d69-8646-4770-856e-68346672c792",
+      "startTime": "2026-01-20T21:09:14.891Z",
+      "endTime": "2026-01-20T21:09:14.891Z",
       "input": {
         "messages": [
           {
@@ -901,7 +901,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+            "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
             "example": false
           }
         ],
@@ -913,13 +913,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "6360f30e-7579-4959-a9e9-8970c60fda59",
+      "uuid": "3309254b-303a-4330-adb5-2a27243f6780",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "665870bc-32bd-4989-8612-5ee5f5ab213a",
-      "startTime": "2026-01-20T19:37:52.903Z",
-      "endTime": "2026-01-20T19:37:54.420Z",
+      "parentUuid": "2d6d3b73-ff8a-4733-85a8-ee6e4d87a58f",
+      "startTime": "2026-01-20T21:09:15.748Z",
+      "endTime": "2026-01-20T21:09:17.870Z",
       "input": [
         {
           "role": "human",
@@ -940,22 +940,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The claim that \"The earth is round\" is marked as UNVERIFIED. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is mostly round but slightly flattened at the poles and bulging at the equator.",
+        "content": "The claim that \"the earth is round\" is marked as UNVERIFIED, meaning I cannot confirm it based on the available data. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid. If you have any specific sources or contexts for this claim, I can help further investigate.",
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
       "prompt": {},
       "inputTokenCount": 148.0,
-      "outputTokenCount": 56.0
+      "outputTokenCount": 66.0
     },
     {
-      "uuid": "e786035b-458a-4a40-9470-1f03f3bd0a5e",
+      "uuid": "4bf19b38-53a7-46a7-8008-d388490845dd",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b54de44b-d9ba-4878-a633-73fc8dd2756d",
-      "startTime": "2026-01-20T19:37:51.841Z",
-      "endTime": "2026-01-20T19:37:52.886Z",
+      "parentUuid": "4fe617b1-ee3d-473d-b2b3-a596e1aeee72",
+      "startTime": "2026-01-20T21:09:14.892Z",
+      "endTime": "2026-01-20T21:09:15.743Z",
       "input": [
         {
           "role": "human",
@@ -975,7 +975,7 @@
             "args": {
               "claim": "The earth is round"
             },
-            "id": "call_O8ifQR7XuFbkGDnNScTMp8IU"
+            "id": "call_6mSCjmynuaV61ylkmY96Pqvu"
           }
         ]
       },
@@ -988,13 +988,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "cb022dce-86f4-46c0-b701-24a6ea36c775",
+      "uuid": "3a62109a-8f6e-4bd6-8398-f546434ba226",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "4bdc025f-74a0-472a-997c-2887a4e445a9",
-      "startTime": "2026-01-20T19:37:52.893Z",
-      "endTime": "2026-01-20T19:37:52.895Z",
+      "parentUuid": "9199fcb9-2f3b-4b99-b694-63cf7fdfa886",
+      "startTime": "2026-01-20T21:09:15.746Z",
+      "endTime": "2026-01-20T21:09:15.746Z",
       "input": {
         "claim": "The earth is round"
       },
@@ -1004,14 +1004,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-        "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+        "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+        "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-20T19:37:51.838Z",
-  "endTime": "2026-01-20T19:37:54.422Z",
+  "startTime": "2026-01-20T21:09:14.890Z",
+  "endTime": "2026-01-20T21:09:17.873Z",
   "name": "langgraph-conditional-factcheck",
   "tags": [
     "langgraph",
@@ -1026,7 +1026,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+        "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
         "example": false
       }
     ]
@@ -1038,7 +1038,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "d8fbb317-1cea-4470-b059-7d3252810532",
+        "id": "c07eb7ff-fdec-4426-8503-f960eb6319c8",
         "example": false
       },
       {
@@ -1046,7 +1046,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+              "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
               "function": {
                 "arguments": "{\"claim\":\"The earth is round\"}",
                 "name": "fact_check"
@@ -1073,14 +1073,14 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BpvfeABlWBAh28UwpxF2IqiFUG2",
+          "system_fingerprint": "fp_29330a9688",
+          "id": "chatcmpl-D0DGNMB4SY4NmePFShxNFKZiwaOyR",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--e786035b-458a-4a40-9470-1f03f3bd0a5e-0",
+        "id": "run--4bf19b38-53a7-46a7-8008-d388490845dd-0",
         "example": false,
         "tool_calls": [
           {
@@ -1088,7 +1088,7 @@
             "args": {
               "claim": "The earth is round"
             },
-            "id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+            "id": "call_6mSCjmynuaV61ylkmY96Pqvu",
             "type": "tool_call"
           }
         ],
@@ -1113,20 +1113,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-        "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+        "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+        "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
         "status": "success"
       },
       {
-        "content": "The claim that \"The earth is round\" is marked as UNVERIFIED. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid, meaning it is mostly round but slightly flattened at the poles and bulging at the equator.",
+        "content": "The claim that \"the earth is round\" is marked as UNVERIFIED, meaning I cannot confirm it based on the available data. However, it is widely accepted in the scientific community that the Earth is an oblate spheroid. If you have any specific sources or contexts for this claim, I can help further investigate.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 56,
+            "completion_tokens": 66,
             "prompt_tokens": 148,
-            "total_tokens": 204,
+            "total_tokens": 214,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1139,21 +1139,21 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0Bpxi5e8lAcmV4VOpUjbATzZsOWz",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-D0DGO15Nc7LXMo01zBNWXtd64Nl2W",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--6360f30e-7579-4959-a9e9-8970c60fda59-0",
+        "id": "run--3309254b-303a-4330-adb5-2a27243f6780-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 148,
-          "output_tokens": 56,
-          "total_tokens": 204,
+          "output_tokens": 66,
+          "total_tokens": 214,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1177,8 +1177,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "4dc32106-0e62-4c51-9971-0995abd47193",
-        "tool_call_id": "call_O8ifQR7XuFbkGDnNScTMp8IU",
+        "id": "d91f3c26-09fc-43d0-8765-76b89a13a7ca",
+        "tool_call_id": "call_6mSCjmynuaV61ylkmY96Pqvu",
         "status": "success"
       },
       "inputParameters": {

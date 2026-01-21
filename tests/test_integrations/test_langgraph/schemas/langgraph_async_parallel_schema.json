@@ -1,13 +1,13 @@
 {
-  "uuid": "d45cf23e-86ad-41db-9c68-9e31f47d190d",
+  "uuid": "bf79014c-b47c-4e25-826f-cd07868802e9",
   "baseSpans": [
     {
-      "uuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
+      "uuid": "931f2e5c-ee7d-4f49-b9ae-953819a58f6c",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:39:15.712Z",
-      "endTime": "2026-01-20T19:39:19.295Z",
+      "startTime": "2026-01-20T21:08:42.003Z",
+      "endTime": "2026-01-20T21:08:45.484Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           },
           {
@@ -35,7 +35,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -43,7 +43,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -51,7 +51,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -79,13 +79,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -93,7 +93,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -101,7 +101,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -109,7 +109,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -134,8 +134,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+            "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "status": "success"
           },
           {
@@ -144,8 +144,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+            "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "status": "success"
           },
           {
@@ -154,8 +154,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+            "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "status": "success"
           },
           {
@@ -181,13 +181,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "id": "chatcmpl-D0DFslSQjDh9Bhv98Mvuh7EMmTy46",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "id": "run--f2d7f3cd-80c5-4eb3-8beb-f97aad65bec0-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -209,13 +209,13 @@
       }
     },
     {
-      "uuid": "e054280b-1e3b-4c36-851e-36e309589ddd",
+      "uuid": "4bd7b7fd-b0b8-498f-bb8d-290a52d0613c",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
-      "startTime": "2026-01-20T19:39:18.013Z",
-      "endTime": "2026-01-20T19:39:19.294Z",
+      "parentUuid": "931f2e5c-ee7d-4f49-b9ae-953819a58f6c",
+      "startTime": "2026-01-20T21:08:43.876Z",
+      "endTime": "2026-01-20T21:08:45.481Z",
       "input": {
         "messages": [
           {
@@ -223,7 +223,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           },
           {
@@ -231,7 +231,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -239,7 +239,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -247,7 +247,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -275,13 +275,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -289,7 +289,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -297,7 +297,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -305,7 +305,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -330,8 +330,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+            "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "status": "success"
           },
           {
@@ -340,8 +340,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+            "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "status": "success"
           },
           {
@@ -350,8 +350,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+            "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "status": "success"
           }
         ]
@@ -381,13 +381,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "id": "chatcmpl-D0DFslSQjDh9Bhv98Mvuh7EMmTy46",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "id": "run--f2d7f3cd-80c5-4eb3-8beb-f97aad65bec0-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -409,13 +409,13 @@
       }
     },
     {
-      "uuid": "1a455ce7-cc9f-428c-9d67-126e01426540",
+      "uuid": "08416ae1-fa44-4eef-b2db-0d2ad84af29e",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e054280b-1e3b-4c36-851e-36e309589ddd",
-      "startTime": "2026-01-20T19:39:19.292Z",
-      "endTime": "2026-01-20T19:39:19.293Z",
+      "parentUuid": "4bd7b7fd-b0b8-498f-bb8d-290a52d0613c",
+      "startTime": "2026-01-20T21:08:45.477Z",
+      "endTime": "2026-01-20T21:08:45.480Z",
       "input": {
         "messages": [
           {
@@ -423,7 +423,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           },
           {
@@ -431,7 +431,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -439,7 +439,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -447,7 +447,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -475,13 +475,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -489,7 +489,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -497,7 +497,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -505,7 +505,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -530,8 +530,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+            "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "status": "success"
           },
           {
@@ -540,8 +540,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+            "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "status": "success"
           },
           {
@@ -550,8 +550,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+            "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "status": "success"
           },
           {
@@ -577,13 +577,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+              "id": "chatcmpl-D0DFslSQjDh9Bhv98Mvuh7EMmTy46",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+            "id": "run--f2d7f3cd-80c5-4eb3-8beb-f97aad65bec0-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -606,13 +606,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
+      "uuid": "40859e14-ebff-4648-9892-fcc52db2d37f",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
-      "startTime": "2026-01-20T19:39:18.008Z",
-      "endTime": "2026-01-20T19:39:18.012Z",
+      "parentUuid": "931f2e5c-ee7d-4f49-b9ae-953819a58f6c",
+      "startTime": "2026-01-20T21:08:43.863Z",
+      "endTime": "2026-01-20T21:08:43.875Z",
       "input": {
         "messages": [
           {
@@ -620,7 +620,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           },
           {
@@ -628,7 +628,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -636,7 +636,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -644,7 +644,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -672,13 +672,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -686,7 +686,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -694,7 +694,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -702,7 +702,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -731,8 +731,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+            "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "status": "success"
           },
           {
@@ -741,8 +741,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+            "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "status": "success"
           },
           {
@@ -751,8 +751,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+            "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "status": "success"
           }
         ]
@@ -766,8 +766,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-            "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+            "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "status": "success"
           },
           "inputParameters": {
@@ -782,8 +782,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-            "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+            "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "status": "success"
           },
           "inputParameters": {
@@ -798,8 +798,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-            "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+            "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "status": "success"
           },
           "inputParameters": {
@@ -809,13 +809,13 @@
       ]
     },
     {
-      "uuid": "fba0a051-d075-4f01-9966-56576d7aff17",
+      "uuid": "e141f5ba-1416-41c2-9297-5344d89cefdf",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ff829740-ed0f-4640-9670-8f21ceb4e3de",
-      "startTime": "2026-01-20T19:39:15.713Z",
-      "endTime": "2026-01-20T19:39:18.007Z",
+      "parentUuid": "931f2e5c-ee7d-4f49-b9ae-953819a58f6c",
+      "startTime": "2026-01-20T21:08:42.006Z",
+      "endTime": "2026-01-20T21:08:43.860Z",
       "input": {
         "messages": [
           {
@@ -823,7 +823,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           }
         ]
@@ -835,7 +835,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -843,7 +843,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -851,7 +851,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -879,13 +879,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -893,7 +893,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -901,7 +901,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -909,7 +909,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -932,13 +932,13 @@
       }
     },
     {
-      "uuid": "c4ea7831-d330-4aea-b506-79ad7b0f0812",
+      "uuid": "86f39d1c-9d8c-4d33-a2a5-391dfd5c9530",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "fba0a051-d075-4f01-9966-56576d7aff17",
-      "startTime": "2026-01-20T19:39:18.006Z",
-      "endTime": "2026-01-20T19:39:18.007Z",
+      "parentUuid": "e141f5ba-1416-41c2-9297-5344d89cefdf",
+      "startTime": "2026-01-20T21:08:43.856Z",
+      "endTime": "2026-01-20T21:08:43.858Z",
       "input": {
         "messages": [
           {
@@ -946,7 +946,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+            "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
             "example": false
           },
           {
@@ -954,7 +954,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                  "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -962,7 +962,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                  "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -970,7 +970,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                  "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                   "function": {
                     "arguments": "{\"topic\": \"tech\"}",
                     "name": "search_news"
@@ -998,13 +998,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+              "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+            "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
             "example": false,
             "tool_calls": [
               {
@@ -1012,7 +1012,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+                "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
                 "type": "tool_call"
               },
               {
@@ -1020,7 +1020,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+                "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
                 "type": "tool_call"
               },
               {
@@ -1028,7 +1028,7 @@
                 "args": {
                   "topic": "tech"
                 },
-                "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+                "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
                 "type": "tool_call"
               }
             ],
@@ -1057,13 +1057,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c0fa920f-0b8f-4faf-9301-ee518eb0df4d",
+      "uuid": "357f40ad-a81b-4b7e-a47b-b08f9ddc8f9c",
       "name": "search_news",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
-      "startTime": "2026-01-20T19:39:18.011Z",
-      "endTime": "2026-01-20T19:39:18.011Z",
+      "parentUuid": "40859e14-ebff-4648-9892-fcc52db2d37f",
+      "startTime": "2026-01-20T21:08:43.873Z",
+      "endTime": "2026-01-20T21:08:43.874Z",
       "input": {
         "topic": "tech"
       },
@@ -1073,19 +1073,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+        "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+        "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
         "status": "success"
       }
     },
     {
-      "uuid": "cc4ee014-95dd-4849-9862-70e46fb392c8",
+      "uuid": "98230e80-10b6-41e7-a6d5-035734262ba4",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
-      "startTime": "2026-01-20T19:39:18.010Z",
-      "endTime": "2026-01-20T19:39:18.010Z",
+      "parentUuid": "40859e14-ebff-4648-9892-fcc52db2d37f",
+      "startTime": "2026-01-20T21:08:43.870Z",
+      "endTime": "2026-01-20T21:08:43.872Z",
       "input": {
         "city": "Tokyo"
       },
@@ -1095,19 +1095,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+        "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+        "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
         "status": "success"
       }
     },
     {
-      "uuid": "dd816eda-8d21-4b51-9676-aed8207d846b",
+      "uuid": "14515339-951c-4c08-a60c-da92b70366d6",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "eb629afd-48c1-402b-b3ac-67e5535c0061",
-      "startTime": "2026-01-20T19:39:18.009Z",
-      "endTime": "2026-01-20T19:39:18.010Z",
+      "parentUuid": "40859e14-ebff-4648-9892-fcc52db2d37f",
+      "startTime": "2026-01-20T21:08:43.866Z",
+      "endTime": "2026-01-20T21:08:43.868Z",
       "input": {
         "city": "Sydney"
       },
@@ -1117,14 +1117,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+        "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+        "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-20T19:39:15.712Z",
-  "endTime": "2026-01-20T19:39:19.295Z",
+  "startTime": "2026-01-20T21:08:42.003Z",
+  "endTime": "2026-01-20T21:08:45.484Z",
   "name": "langgraph-parallel-async",
   "tags": [
     "langgraph",
@@ -1139,7 +1139,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+        "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
         "example": false
       }
     ]
@@ -1151,7 +1151,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "523d9975-ff06-4ce9-894a-21e3e69179e6",
+        "id": "023ed22d-67b0-4e15-9620-708369b2d1d4",
         "example": false
       },
       {
@@ -1159,7 +1159,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+              "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
               "function": {
                 "arguments": "{\"city\": \"Sydney\"}",
                 "name": "get_weather"
@@ -1167,7 +1167,7 @@
               "type": "function"
             },
             {
-              "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+              "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
               "function": {
                 "arguments": "{\"city\": \"Tokyo\"}",
                 "name": "get_weather"
@@ -1175,7 +1175,7 @@
               "type": "function"
             },
             {
-              "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+              "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
               "function": {
                 "arguments": "{\"topic\": \"tech\"}",
                 "name": "search_news"
@@ -1203,13 +1203,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BrIZZ6hvI7CRps3iWfzWKgHS7oN",
+          "id": "chatcmpl-D0DFqipg7AgrWoyDONLpNfTqWwrfR",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--15357572-4471-4ba4-a098-a70713d99c98-0",
+        "id": "run--a348074f-52ee-49d1-a038-14cab76f3a42-0",
         "example": false,
         "tool_calls": [
           {
@@ -1217,7 +1217,7 @@
             "args": {
               "city": "Sydney"
             },
-            "id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+            "id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
             "type": "tool_call"
           },
           {
@@ -1225,7 +1225,7 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_LGtMUztg9iChuMym2l8w69pQ",
+            "id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
             "type": "tool_call"
           },
           {
@@ -1233,7 +1233,7 @@
             "args": {
               "topic": "tech"
             },
-            "id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+            "id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
             "type": "tool_call"
           }
         ],
@@ -1258,8 +1258,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+        "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+        "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
         "status": "success"
       },
       {
@@ -1268,8 +1268,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+        "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+        "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
         "status": "success"
       },
       {
@@ -1278,8 +1278,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+        "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+        "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
         "status": "success"
       },
       {
@@ -1305,13 +1305,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BrKvdNbFDsHMvnGbDWBhoY2h65e",
+          "id": "chatcmpl-D0DFslSQjDh9Bhv98Mvuh7EMmTy46",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--78eab710-09d5-4251-934d-3ae039d66aba-0",
+        "id": "run--f2d7f3cd-80c5-4eb3-8beb-f97aad65bec0-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -1341,8 +1341,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "4dcc71d3-e1f0-4e8f-b413-e40b1312fee7",
-        "tool_call_id": "call_Rtad4XA0Pp2e6XHZcLbTDrdb",
+        "id": "72ff83bf-d63e-4d0c-80b3-7c410266b554",
+        "tool_call_id": "call_ZMoPTb3DhXIMYuh7cIckIV8Y",
         "status": "success"
       },
       "inputParameters": {
@@ -1357,8 +1357,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "b872c029-bc35-4406-bc6d-21d3cabf9752",
-        "tool_call_id": "call_LGtMUztg9iChuMym2l8w69pQ",
+        "id": "ad4c35f0-253d-45bd-8e1c-8b7f0aae6bce",
+        "tool_call_id": "call_FCJ4rag53kYwMQmMDtvbqc0D",
         "status": "success"
       },
       "inputParameters": {
@@ -1373,8 +1373,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "d6b0f539-7d06-4699-af03-672f18a78c96",
-        "tool_call_id": "call_EiZCBFW6skbqt3qOdJXDhxPS",
+        "id": "20cee481-9678-42ff-9f63-93406f9e9273",
+        "tool_call_id": "call_g5xoDO99uZgmmcHl1LTTpMw7",
         "status": "success"
       },
       "inputParameters": {

@@ -1,13 +1,13 @@
 {
-  "uuid": "caeff59a-b08b-4efa-b4a1-41d738f4ff10",
+  "uuid": "58ba85be-af51-49d7-8985-17d164e9aa0c",
   "baseSpans": [
     {
-      "uuid": "ac3612dc-bb4b-46e2-88b4-7fe5ccd37d4c",
+      "uuid": "5ee3442d-159d-47df-b59c-3d7fc591511f",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:39:19.308Z",
-      "endTime": "2026-01-20T19:39:28.404Z",
+      "startTime": "2026-01-20T21:08:45.499Z",
+      "endTime": "2026-01-20T21:08:54.537Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           },
           {
@@ -35,7 +35,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -43,7 +43,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -51,7 +51,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -59,7 +59,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -67,7 +67,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -75,7 +75,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -83,7 +83,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -91,7 +91,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -99,7 +99,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -107,7 +107,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -115,7 +115,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -143,13 +143,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -157,7 +157,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -165,7 +165,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -173,7 +173,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -181,7 +181,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -189,7 +189,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -197,7 +197,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -205,7 +205,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -213,7 +213,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -222,7 +222,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -231,7 +231,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -239,7 +239,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -264,8 +264,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-            "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "63546989-b138-4779-b77f-747701bfb11b",
+            "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "status": "success"
           },
           {
@@ -274,8 +274,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-            "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+            "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "status": "success"
           },
           {
@@ -284,8 +284,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-            "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+            "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "status": "success"
           },
           {
@@ -294,8 +294,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-            "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+            "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "status": "success"
           },
           {
@@ -304,8 +304,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-            "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+            "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "status": "success"
           },
           {
@@ -314,8 +314,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-            "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+            "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "status": "success"
           },
           {
@@ -324,8 +324,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-            "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+            "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "status": "success"
           },
           {
@@ -334,8 +334,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-            "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+            "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "status": "success"
           },
           {
@@ -344,8 +344,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-            "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+            "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
             "status": "success"
           },
           {
@@ -354,8 +354,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-            "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+            "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "status": "success"
           },
           {
@@ -364,8 +364,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-            "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+            "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "status": "success"
           },
           {
@@ -391,13 +391,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrQatCB8sYTZVSUJ2qQ1TUyzMzh",
+              "id": "chatcmpl-D0DFyi3Er1FpJBKI97dhML50DsCss",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--c293399b-f17d-4751-97e2-ba2900abeb37-0",
+            "id": "run--1c477082-929c-4a7b-bc77-b80e50748c4a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -419,13 +419,13 @@
       }
     },
     {
-      "uuid": "5300a902-849d-4b14-a28e-a092a97c056f",
+      "uuid": "ac13cf04-cc1a-4767-ae7e-20b9061eb68c",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ac3612dc-bb4b-46e2-88b4-7fe5ccd37d4c",
-      "startTime": "2026-01-20T19:39:24.041Z",
-      "endTime": "2026-01-20T19:39:28.403Z",
+      "parentUuid": "5ee3442d-159d-47df-b59c-3d7fc591511f",
+      "startTime": "2026-01-20T21:08:50.700Z",
+      "endTime": "2026-01-20T21:08:54.534Z",
       "input": {
         "messages": [
           {
@@ -433,7 +433,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           },
           {
@@ -441,7 +441,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -449,7 +449,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -457,7 +457,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -465,7 +465,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -473,7 +473,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -481,7 +481,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -489,7 +489,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -497,7 +497,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -505,7 +505,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -513,7 +513,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -521,7 +521,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -549,13 +549,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -563,7 +563,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -571,7 +571,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -579,7 +579,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -587,7 +587,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -595,7 +595,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -603,7 +603,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -611,7 +611,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -619,7 +619,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -628,7 +628,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -637,7 +637,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -645,7 +645,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -670,8 +670,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-            "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "63546989-b138-4779-b77f-747701bfb11b",
+            "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "status": "success"
           },
           {
@@ -680,8 +680,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-            "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+            "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "status": "success"
           },
           {
@@ -690,8 +690,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-            "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+            "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "status": "success"
           },
           {
@@ -700,8 +700,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-            "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+            "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "status": "success"
           },
           {
@@ -710,8 +710,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-            "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+            "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "status": "success"
           },
           {
@@ -720,8 +720,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-            "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+            "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "status": "success"
           },
           {
@@ -730,8 +730,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-            "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+            "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "status": "success"
           },
           {
@@ -740,8 +740,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-            "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+            "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "status": "success"
           },
           {
@@ -750,8 +750,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-            "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+            "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
             "status": "success"
           },
           {
@@ -760,8 +760,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-            "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+            "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "status": "success"
           },
           {
@@ -770,8 +770,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-            "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+            "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "status": "success"
           }
         ]
@@ -801,13 +801,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrQatCB8sYTZVSUJ2qQ1TUyzMzh",
+              "id": "chatcmpl-D0DFyi3Er1FpJBKI97dhML50DsCss",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--c293399b-f17d-4751-97e2-ba2900abeb37-0",
+            "id": "run--1c477082-929c-4a7b-bc77-b80e50748c4a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -829,13 +829,13 @@
       }
     },
     {
-      "uuid": "a1f514b1-b122-4385-ac4b-90a464a70ca7",
+      "uuid": "0683022c-36a3-4638-9cf5-241703e84ac3",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "5300a902-849d-4b14-a28e-a092a97c056f",
-      "startTime": "2026-01-20T19:39:28.400Z",
-      "endTime": "2026-01-20T19:39:28.402Z",
+      "parentUuid": "ac13cf04-cc1a-4767-ae7e-20b9061eb68c",
+      "startTime": "2026-01-20T21:08:54.530Z",
+      "endTime": "2026-01-20T21:08:54.533Z",
       "input": {
         "messages": [
           {
@@ -843,7 +843,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           },
           {
@@ -851,7 +851,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -859,7 +859,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -867,7 +867,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -875,7 +875,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -883,7 +883,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -891,7 +891,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -899,7 +899,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -907,7 +907,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -915,7 +915,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -923,7 +923,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -931,7 +931,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -959,13 +959,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -973,7 +973,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -981,7 +981,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -989,7 +989,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -997,7 +997,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -1005,7 +1005,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -1013,7 +1013,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -1021,7 +1021,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -1029,7 +1029,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -1038,7 +1038,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -1047,7 +1047,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -1055,7 +1055,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -1080,8 +1080,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-            "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "63546989-b138-4779-b77f-747701bfb11b",
+            "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "status": "success"
           },
           {
@@ -1090,8 +1090,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-            "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+            "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "status": "success"
           },
           {
@@ -1100,8 +1100,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-            "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+            "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "status": "success"
           },
           {
@@ -1110,8 +1110,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-            "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+            "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "status": "success"
           },
           {
@@ -1120,8 +1120,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-            "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+            "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "status": "success"
           },
           {
@@ -1130,8 +1130,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-            "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+            "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "status": "success"
           },
           {
@@ -1140,8 +1140,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-            "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+            "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "status": "success"
           },
           {
@@ -1150,8 +1150,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-            "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+            "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "status": "success"
           },
           {
@@ -1160,8 +1160,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-            "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+            "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
             "status": "success"
           },
           {
@@ -1170,8 +1170,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-            "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+            "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "status": "success"
           },
           {
@@ -1180,8 +1180,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-            "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+            "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "status": "success"
           },
           {
@@ -1207,13 +1207,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrQatCB8sYTZVSUJ2qQ1TUyzMzh",
+              "id": "chatcmpl-D0DFyi3Er1FpJBKI97dhML50DsCss",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--c293399b-f17d-4751-97e2-ba2900abeb37-0",
+            "id": "run--1c477082-929c-4a7b-bc77-b80e50748c4a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -1236,13 +1236,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
+      "uuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ac3612dc-bb4b-46e2-88b4-7fe5ccd37d4c",
-      "startTime": "2026-01-20T19:39:24.021Z",
-      "endTime": "2026-01-20T19:39:24.040Z",
+      "parentUuid": "5ee3442d-159d-47df-b59c-3d7fc591511f",
+      "startTime": "2026-01-20T21:08:50.685Z",
+      "endTime": "2026-01-20T21:08:50.698Z",
       "input": {
         "messages": [
           {
@@ -1250,7 +1250,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           },
           {
@@ -1258,7 +1258,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -1266,7 +1266,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -1274,7 +1274,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -1282,7 +1282,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -1290,7 +1290,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -1298,7 +1298,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -1306,7 +1306,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -1314,7 +1314,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -1322,7 +1322,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -1330,7 +1330,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -1338,7 +1338,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -1366,13 +1366,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -1380,7 +1380,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -1388,7 +1388,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -1396,7 +1396,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -1404,7 +1404,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -1412,7 +1412,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -1420,7 +1420,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -1428,7 +1428,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -1436,7 +1436,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -1445,7 +1445,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -1454,7 +1454,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -1462,7 +1462,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -1491,8 +1491,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-            "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "63546989-b138-4779-b77f-747701bfb11b",
+            "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "status": "success"
           },
           {
@@ -1501,8 +1501,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-            "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+            "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "status": "success"
           },
           {
@@ -1511,8 +1511,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-            "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+            "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "status": "success"
           },
           {
@@ -1521,8 +1521,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-            "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+            "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "status": "success"
           },
           {
@@ -1531,8 +1531,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-            "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+            "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "status": "success"
           },
           {
@@ -1541,8 +1541,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-            "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+            "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "status": "success"
           },
           {
@@ -1551,8 +1551,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-            "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+            "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "status": "success"
           },
           {
@@ -1561,8 +1561,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-            "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+            "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "status": "success"
           },
           {
@@ -1571,8 +1571,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-            "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+            "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
             "status": "success"
           },
           {
@@ -1581,8 +1581,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-            "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+            "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "status": "success"
           },
           {
@@ -1591,8 +1591,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-            "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+            "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "status": "success"
           }
         ]
@@ -1606,8 +1606,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-            "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "63546989-b138-4779-b77f-747701bfb11b",
+            "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "status": "success"
           },
           "inputParameters": {
@@ -1622,8 +1622,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-            "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+            "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "status": "success"
           },
           "inputParameters": {
@@ -1638,8 +1638,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-            "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+            "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "status": "success"
           },
           "inputParameters": {
@@ -1654,8 +1654,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-            "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+            "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "status": "success"
           },
           "inputParameters": {
@@ -1670,8 +1670,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-            "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+            "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "status": "success"
           },
           "inputParameters": {
@@ -1686,8 +1686,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-            "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+            "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "status": "success"
           },
           "inputParameters": {
@@ -1702,8 +1702,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-            "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+            "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "status": "success"
           },
           "inputParameters": {
@@ -1718,8 +1718,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-            "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+            "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "status": "success"
           },
           "inputParameters": {
@@ -1734,8 +1734,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-            "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+            "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
             "status": "success"
           },
           "inputParameters": {
@@ -1751,8 +1751,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-            "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+            "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "status": "success"
           },
           "inputParameters": {
@@ -1768,8 +1768,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-            "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+            "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "status": "success"
           },
           "inputParameters": {
@@ -1779,13 +1779,13 @@
       ]
     },
     {
-      "uuid": "c2df4126-bfc8-4f5a-85db-15a102b38197",
+      "uuid": "6bd420b4-b720-4b94-bc20-40ef6df079af",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ac3612dc-bb4b-46e2-88b4-7fe5ccd37d4c",
-      "startTime": "2026-01-20T19:39:19.310Z",
-      "endTime": "2026-01-20T19:39:24.019Z",
+      "parentUuid": "5ee3442d-159d-47df-b59c-3d7fc591511f",
+      "startTime": "2026-01-20T21:08:45.500Z",
+      "endTime": "2026-01-20T21:08:50.684Z",
       "input": {
         "messages": [
           {
@@ -1793,7 +1793,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           }
         ]
@@ -1805,7 +1805,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -1813,7 +1813,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -1821,7 +1821,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -1829,7 +1829,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -1837,7 +1837,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -1845,7 +1845,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -1853,7 +1853,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -1861,7 +1861,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -1869,7 +1869,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -1877,7 +1877,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -1885,7 +1885,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -1913,13 +1913,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -1927,7 +1927,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -1935,7 +1935,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -1943,7 +1943,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -1951,7 +1951,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -1959,7 +1959,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -1967,7 +1967,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -1975,7 +1975,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -1983,7 +1983,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -1992,7 +1992,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -2001,7 +2001,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -2009,7 +2009,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -2032,13 +2032,13 @@
       }
     },
     {
-      "uuid": "5fadc0f3-c5b8-436e-abf6-c256239db1a9",
+      "uuid": "62149f04-c0f2-4940-8723-b5559a3d8e07",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c2df4126-bfc8-4f5a-85db-15a102b38197",
-      "startTime": "2026-01-20T19:39:24.015Z",
-      "endTime": "2026-01-20T19:39:24.017Z",
+      "parentUuid": "6bd420b4-b720-4b94-bc20-40ef6df079af",
+      "startTime": "2026-01-20T21:08:50.683Z",
+      "endTime": "2026-01-20T21:08:50.684Z",
       "input": {
         "messages": [
           {
@@ -2046,7 +2046,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+            "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
             "example": false
           },
           {
@@ -2054,7 +2054,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                  "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                   "function": {
                     "arguments": "{\"city\": \"Tokyo\"}",
                     "name": "get_weather"
@@ -2062,7 +2062,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                  "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                   "function": {
                     "arguments": "{\"city\": \"New York\"}",
                     "name": "get_weather"
@@ -2070,7 +2070,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                  "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                   "function": {
                     "arguments": "{\"city\": \"London\"}",
                     "name": "get_weather"
@@ -2078,7 +2078,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                  "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                   "function": {
                     "arguments": "{\"city\": \"Paris\"}",
                     "name": "get_weather"
@@ -2086,7 +2086,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                  "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                   "function": {
                     "arguments": "{\"city\": \"Sydney\"}",
                     "name": "get_weather"
@@ -2094,7 +2094,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                  "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -2102,7 +2102,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                  "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -2110,7 +2110,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                  "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -2118,7 +2118,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                  "id": "call_TYXQNha0E46jRYw92gng737D",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                     "name": "get_exchange_rate"
@@ -2126,7 +2126,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                  "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                   "function": {
                     "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                     "name": "get_exchange_rate"
@@ -2134,7 +2134,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                  "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                   "function": {
                     "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                     "name": "calculate"
@@ -2162,13 +2162,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+              "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+            "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
             "example": false,
             "tool_calls": [
               {
@@ -2176,7 +2176,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+                "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
                 "type": "tool_call"
               },
               {
@@ -2184,7 +2184,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+                "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
                 "type": "tool_call"
               },
               {
@@ -2192,7 +2192,7 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+                "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
                 "type": "tool_call"
               },
               {
@@ -2200,7 +2200,7 @@
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+                "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
                 "type": "tool_call"
               },
               {
@@ -2208,7 +2208,7 @@
                 "args": {
                   "city": "Sydney"
                 },
-                "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+                "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
                 "type": "tool_call"
               },
               {
@@ -2216,7 +2216,7 @@
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_gaw7I3H7DoOAral1npySS2FO",
+                "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
                 "type": "tool_call"
               },
               {
@@ -2224,7 +2224,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+                "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
                 "type": "tool_call"
               },
               {
@@ -2232,7 +2232,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+                "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
                 "type": "tool_call"
               },
               {
@@ -2241,7 +2241,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+                "id": "call_TYXQNha0E46jRYw92gng737D",
                 "type": "tool_call"
               },
               {
@@ -2250,7 +2250,7 @@
                   "from_currency": "USD",
                   "to_currency": "GBP"
                 },
-                "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+                "id": "call_pipyIRCEQDte4hHMaINXE1lg",
                 "type": "tool_call"
               },
               {
@@ -2258,7 +2258,7 @@
                 "args": {
                   "expression": "0.15 * 378.90"
                 },
-                "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+                "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
                 "type": "tool_call"
               }
             ],
@@ -2287,13 +2287,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f872d075-b699-4f55-891d-cae5b279c324",
+      "uuid": "cb9faa23-e9da-4c86-9294-e706a8b36f53",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.039Z",
-      "endTime": "2026-01-20T19:39:24.040Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.697Z",
+      "endTime": "2026-01-20T21:08:50.698Z",
       "input": {
         "expression": "0.15 * 378.90"
       },
@@ -2303,19 +2303,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-        "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+        "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+        "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
         "status": "success"
       }
     },
     {
-      "uuid": "bc5e5a5c-8279-48b0-9493-bd73703f0e8b",
+      "uuid": "7af40f56-dfac-49ba-be5c-268f91409a25",
       "name": "get_exchange_rate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.039Z",
-      "endTime": "2026-01-20T19:39:24.039Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.695Z",
+      "endTime": "2026-01-20T21:08:50.696Z",
       "input": {
         "from_currency": "USD",
         "to_currency": "GBP"
@@ -2326,19 +2326,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-        "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+        "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+        "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
         "status": "success"
       }
     },
     {
-      "uuid": "6f3c1415-5499-4284-b3c2-c17ad0a9922c",
+      "uuid": "ec89ddb1-9e85-4cf1-9a96-76391b83a7e9",
       "name": "get_exchange_rate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.038Z",
-      "endTime": "2026-01-20T19:39:24.038Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.694Z",
+      "endTime": "2026-01-20T21:08:50.695Z",
       "input": {
         "from_currency": "USD",
         "to_currency": "EUR"
@@ -2349,19 +2349,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-        "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+        "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+        "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
         "status": "success"
       }
     },
     {
-      "uuid": "4f61a089-9542-47f9-ba5f-8897e3986e0b",
+      "uuid": "e7015787-b67d-4f16-9e32-7cf51c604119",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.037Z",
-      "endTime": "2026-01-20T19:39:24.037Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.693Z",
+      "endTime": "2026-01-20T21:08:50.694Z",
       "input": {
         "symbol": "MSFT"
       },
@@ -2371,19 +2371,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-        "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+        "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+        "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
         "status": "success"
       }
     },
     {
-      "uuid": "afd7555a-2682-407d-9734-4534168ce3c3",
+      "uuid": "449f2096-0abd-45aa-984e-d3c407b443ea",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.037Z",
-      "endTime": "2026-01-20T19:39:24.037Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.692Z",
+      "endTime": "2026-01-20T21:08:50.693Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -2393,19 +2393,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-        "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+        "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+        "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
         "status": "success"
       }
     },
     {
-      "uuid": "a425d2bb-d4bf-430c-b617-3a9e83d34b8e",
+      "uuid": "aeb3685d-7ff9-417a-aa10-e8f4c0338030",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.036Z",
-      "endTime": "2026-01-20T19:39:24.036Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.691Z",
+      "endTime": "2026-01-20T21:08:50.692Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -2415,19 +2415,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-        "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+        "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+        "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
         "status": "success"
       }
     },
     {
-      "uuid": "aa75e6bd-8483-4281-be52-7566d977afce",
+      "uuid": "514847ba-d517-4d38-b453-42c9cea5b7dd",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.035Z",
-      "endTime": "2026-01-20T19:39:24.035Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.690Z",
+      "endTime": "2026-01-20T21:08:50.691Z",
       "input": {
         "city": "Sydney"
       },
@@ -2437,19 +2437,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-        "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+        "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+        "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
         "status": "success"
       }
     },
     {
-      "uuid": "92b03429-175a-46f0-b5c8-c421cf2ee3f1",
+      "uuid": "36dddcea-8250-4085-8b16-125c5f5df26d",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.033Z",
-      "endTime": "2026-01-20T19:39:24.034Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.689Z",
+      "endTime": "2026-01-20T21:08:50.690Z",
       "input": {
         "city": "Paris"
       },
@@ -2459,19 +2459,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-        "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+        "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+        "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
         "status": "success"
       }
     },
     {
-      "uuid": "adb36e96-5e8f-485a-9f3f-226648311640",
+      "uuid": "3e3d5d72-02d3-472f-944c-4e38ca119538",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.030Z",
-      "endTime": "2026-01-20T19:39:24.032Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.688Z",
+      "endTime": "2026-01-20T21:08:50.689Z",
       "input": {
         "city": "London"
       },
@@ -2481,19 +2481,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-        "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+        "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+        "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
         "status": "success"
       }
     },
     {
-      "uuid": "85ab9bcf-bdb0-4502-80ab-8fb6ae3fb3d8",
+      "uuid": "2fee107a-12e0-45ab-94dd-f957ab5b844e",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.027Z",
-      "endTime": "2026-01-20T19:39:24.028Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.687Z",
+      "endTime": "2026-01-20T21:08:50.687Z",
       "input": {
         "city": "New York"
       },
@@ -2503,19 +2503,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-        "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+        "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+        "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
         "status": "success"
       }
     },
     {
-      "uuid": "05fa27a9-220d-426a-b715-e4c31ecdbdd9",
+      "uuid": "44e97007-f113-4f59-8655-e55a1081669f",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3b2af788-96d4-48a5-bf52-9c17a6e1a9b7",
-      "startTime": "2026-01-20T19:39:24.024Z",
-      "endTime": "2026-01-20T19:39:24.026Z",
+      "parentUuid": "175e22b2-3a81-4e7c-9af9-637537758cf7",
+      "startTime": "2026-01-20T21:08:50.686Z",
+      "endTime": "2026-01-20T21:08:50.687Z",
       "input": {
         "city": "Tokyo"
       },
@@ -2525,14 +2525,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-        "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+        "id": "63546989-b138-4779-b77f-747701bfb11b",
+        "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-20T19:39:19.308Z",
-  "endTime": "2026-01-20T19:39:28.404Z",
+  "startTime": "2026-01-20T21:08:45.499Z",
+  "endTime": "2026-01-20T21:08:54.537Z",
   "name": "langgraph-parallel-async-heavy",
   "tags": [
     "langgraph",
@@ -2548,7 +2548,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+        "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
         "example": false
       }
     ]
@@ -2560,7 +2560,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "5a2a8d0b-6864-4f5b-8c45-8fc66dabc296",
+        "id": "161a3f2a-141a-4683-9cc0-61e4ab2fb649",
         "example": false
       },
       {
@@ -2568,7 +2568,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+              "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
               "function": {
                 "arguments": "{\"city\": \"Tokyo\"}",
                 "name": "get_weather"
@@ -2576,7 +2576,7 @@
               "type": "function"
             },
             {
-              "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+              "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
               "function": {
                 "arguments": "{\"city\": \"New York\"}",
                 "name": "get_weather"
@@ -2584,7 +2584,7 @@
               "type": "function"
             },
             {
-              "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+              "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
               "function": {
                 "arguments": "{\"city\": \"London\"}",
                 "name": "get_weather"
@@ -2592,7 +2592,7 @@
               "type": "function"
             },
             {
-              "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+              "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
               "function": {
                 "arguments": "{\"city\": \"Paris\"}",
                 "name": "get_weather"
@@ -2600,7 +2600,7 @@
               "type": "function"
             },
             {
-              "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+              "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
               "function": {
                 "arguments": "{\"city\": \"Sydney\"}",
                 "name": "get_weather"
@@ -2608,7 +2608,7 @@
               "type": "function"
             },
             {
-              "id": "call_gaw7I3H7DoOAral1npySS2FO",
+              "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
               "function": {
                 "arguments": "{\"symbol\": \"AAPL\"}",
                 "name": "get_stock_price"
@@ -2616,7 +2616,7 @@
               "type": "function"
             },
             {
-              "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+              "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
               "function": {
                 "arguments": "{\"symbol\": \"GOOGL\"}",
                 "name": "get_stock_price"
@@ -2624,7 +2624,7 @@
               "type": "function"
             },
             {
-              "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+              "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
               "function": {
                 "arguments": "{\"symbol\": \"MSFT\"}",
                 "name": "get_stock_price"
@@ -2632,7 +2632,7 @@
               "type": "function"
             },
             {
-              "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+              "id": "call_TYXQNha0E46jRYw92gng737D",
               "function": {
                 "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"EUR\"}",
                 "name": "get_exchange_rate"
@@ -2640,7 +2640,7 @@
               "type": "function"
             },
             {
-              "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+              "id": "call_pipyIRCEQDte4hHMaINXE1lg",
               "function": {
                 "arguments": "{\"from_currency\": \"USD\", \"to_currency\": \"GBP\"}",
                 "name": "get_exchange_rate"
@@ -2648,7 +2648,7 @@
               "type": "function"
             },
             {
-              "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+              "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
               "function": {
                 "arguments": "{\"expression\": \"0.15 * 378.90\"}",
                 "name": "calculate"
@@ -2676,13 +2676,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BrLKKp9dJkdyzPI5KbqpwSvgeva",
+          "id": "chatcmpl-D0DFuvcBWvxPmLceVitF1sBwTHTLw",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--18b14196-e871-4ac4-b5b5-e1c8259bf9bc-0",
+        "id": "run--dfe6681c-8239-406b-8d6b-3d2aa5a97b43-0",
         "example": false,
         "tool_calls": [
           {
@@ -2690,7 +2690,7 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+            "id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
             "type": "tool_call"
           },
           {
@@ -2698,7 +2698,7 @@
             "args": {
               "city": "New York"
             },
-            "id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+            "id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
             "type": "tool_call"
           },
           {
@@ -2706,7 +2706,7 @@
             "args": {
               "city": "London"
             },
-            "id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+            "id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
             "type": "tool_call"
           },
           {
@@ -2714,7 +2714,7 @@
             "args": {
               "city": "Paris"
             },
-            "id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+            "id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
             "type": "tool_call"
           },
           {
@@ -2722,7 +2722,7 @@
             "args": {
               "city": "Sydney"
             },
-            "id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+            "id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
             "type": "tool_call"
           },
           {
@@ -2730,7 +2730,7 @@
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_gaw7I3H7DoOAral1npySS2FO",
+            "id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
             "type": "tool_call"
           },
           {
@@ -2738,7 +2738,7 @@
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+            "id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
             "type": "tool_call"
           },
           {
@@ -2746,7 +2746,7 @@
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+            "id": "call_B5kV0WckKhQOHiQmto9Wcy43",
             "type": "tool_call"
           },
           {
@@ -2755,7 +2755,7 @@
               "from_currency": "USD",
               "to_currency": "EUR"
             },
-            "id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+            "id": "call_TYXQNha0E46jRYw92gng737D",
             "type": "tool_call"
           },
           {
@@ -2764,7 +2764,7 @@
               "from_currency": "USD",
               "to_currency": "GBP"
             },
-            "id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+            "id": "call_pipyIRCEQDte4hHMaINXE1lg",
             "type": "tool_call"
           },
           {
@@ -2772,7 +2772,7 @@
             "args": {
               "expression": "0.15 * 378.90"
             },
-            "id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+            "id": "call_8ZOYiUFurExup6AXUz2jTv6G",
             "type": "tool_call"
           }
         ],
@@ -2797,8 +2797,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-        "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+        "id": "63546989-b138-4779-b77f-747701bfb11b",
+        "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
         "status": "success"
       },
       {
@@ -2807,8 +2807,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-        "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+        "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+        "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
         "status": "success"
       },
       {
@@ -2817,8 +2817,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-        "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+        "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+        "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
         "status": "success"
       },
       {
@@ -2827,8 +2827,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-        "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+        "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+        "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
         "status": "success"
       },
       {
@@ -2837,8 +2837,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-        "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+        "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+        "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
         "status": "success"
       },
       {
@@ -2847,8 +2847,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-        "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+        "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+        "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
         "status": "success"
       },
       {
@@ -2857,8 +2857,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-        "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+        "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+        "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
         "status": "success"
       },
       {
@@ -2867,8 +2867,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-        "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+        "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+        "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
         "status": "success"
       },
       {
@@ -2877,8 +2877,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-        "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+        "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+        "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
         "status": "success"
       },
       {
@@ -2887,8 +2887,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-        "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+        "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+        "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
         "status": "success"
       },
       {
@@ -2897,8 +2897,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-        "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+        "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+        "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
         "status": "success"
       },
       {
@@ -2924,13 +2924,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BrQatCB8sYTZVSUJ2qQ1TUyzMzh",
+          "id": "chatcmpl-D0DFyi3Er1FpJBKI97dhML50DsCss",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--c293399b-f17d-4751-97e2-ba2900abeb37-0",
+        "id": "run--1c477082-929c-4a7b-bc77-b80e50748c4a-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -2960,8 +2960,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "cd5deb5f-ae25-447f-a67f-3cb37f968131",
-        "tool_call_id": "call_DKMYETqsXQ3bZmgzlwQGiJhs",
+        "id": "63546989-b138-4779-b77f-747701bfb11b",
+        "tool_call_id": "call_zZG01aC7Gkn69ErvkFFpiXrv",
         "status": "success"
       },
       "inputParameters": {
@@ -2976,8 +2976,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "04aace12-e9f0-4b17-99a2-982864acb6bd",
-        "tool_call_id": "call_fUKPX9J8PHJaV8I4L1K9gwVj",
+        "id": "1e0c0059-c320-4264-a47a-b151e346e710",
+        "tool_call_id": "call_q4zlw0TZAIazOOVVTPfjlC3s",
         "status": "success"
       },
       "inputParameters": {
@@ -2992,8 +2992,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "5ba41dba-8707-41ac-85b7-2fadda53bc71",
-        "tool_call_id": "call_so4SaMwDuSfRHo9rGZQkpDsl",
+        "id": "9d34d844-d581-46b9-a8f8-1a4774fb8012",
+        "tool_call_id": "call_zcoLFkJqkcz81BkEzmpIKJs2",
         "status": "success"
       },
       "inputParameters": {
@@ -3008,8 +3008,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "d36fdd49-0cb0-48ea-921c-d31c136fcd8c",
-        "tool_call_id": "call_Xa69pCfOimZgV5YXpzaTemfu",
+        "id": "88eaac1c-c02b-4946-b8aa-362e923c9270",
+        "tool_call_id": "call_iDYfmPqvP3cdQTR6OqK4VWQ5",
         "status": "success"
       },
       "inputParameters": {
@@ -3024,8 +3024,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "29576adc-c540-4a09-b7cb-4a8f1465491c",
-        "tool_call_id": "call_vpMOP61Xfk4vr3ZQRLMfRUHY",
+        "id": "c904b03b-85ee-4880-b223-053b98fc1a0e",
+        "tool_call_id": "call_88pPKqjTRJah6J7hCrcwYC5Z",
         "status": "success"
       },
       "inputParameters": {
@@ -3040,8 +3040,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "2823c9a7-6fa5-4b06-9d93-98ffd2142c92",
-        "tool_call_id": "call_gaw7I3H7DoOAral1npySS2FO",
+        "id": "a44abf1d-9884-417c-8e41-48f45b3bcece",
+        "tool_call_id": "call_QdgC6AVtZ997yeqi1Oinoa0n",
         "status": "success"
       },
       "inputParameters": {
@@ -3056,8 +3056,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "da65fcea-f08f-4602-b49f-8827e87fe315",
-        "tool_call_id": "call_Dmy3d5FHLkbkbcf7ZeBdyD6U",
+        "id": "97be2f4f-bb36-45f0-b343-4452b07b7d8b",
+        "tool_call_id": "call_fHxhky4MTqjz4Tb61H2bSC6v",
         "status": "success"
       },
       "inputParameters": {
@@ -3072,8 +3072,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "b9c95799-b569-4963-aaa9-f54b880cc5d5",
-        "tool_call_id": "call_9xrLkaYAMbbMKJtHEJVqxpKL",
+        "id": "df9cafdb-ef75-43d0-9987-d8f9c565a493",
+        "tool_call_id": "call_B5kV0WckKhQOHiQmto9Wcy43",
         "status": "success"
       },
       "inputParameters": {
@@ -3088,8 +3088,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "c3fd17c1-4940-4147-a6d4-2892f5a84709",
-        "tool_call_id": "call_jcim6wgFTtW9Lv5qckilP1TL",
+        "id": "652c059a-be9d-4294-b96f-97aa05302d0d",
+        "tool_call_id": "call_TYXQNha0E46jRYw92gng737D",
         "status": "success"
       },
       "inputParameters": {
@@ -3105,8 +3105,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "6ee79485-1182-46b0-9f10-5afb9808f055",
-        "tool_call_id": "call_E2IohchO3lDXHWLT2J9EVsh1",
+        "id": "601fffd8-1df5-4b37-aaeb-2e5396eaa2ad",
+        "tool_call_id": "call_pipyIRCEQDte4hHMaINXE1lg",
         "status": "success"
       },
       "inputParameters": {
@@ -3122,8 +3122,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "cd7776af-c6fd-4e75-b671-08c41547f0c2",
-        "tool_call_id": "call_sBAaTiD6yMJY8P1GwXLXujlO",
+        "id": "bd2364e4-75cb-4a81-a488-c3d5a151bb6d",
+        "tool_call_id": "call_8ZOYiUFurExup6AXUz2jTv6G",
         "status": "success"
       },
       "inputParameters": {

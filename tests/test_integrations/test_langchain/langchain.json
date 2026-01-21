@@ -1,13 +1,13 @@
 {
-  "uuid": "5aad03b9-a6c7-45b3-b2ae-ece6ef4bac53",
+  "uuid": "a2954c98-3a28-4f1b-955a-fd8d517b0050",
   "baseSpans": [
     {
-      "uuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
+      "uuid": "d601213d-5e5e-4710-9a87-a28a3973a907",
       "name": "AgentExecutor",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:36:10.313Z",
-      "endTime": "2026-01-20T19:36:12.532Z",
+      "startTime": "2026-01-20T20:16:51.541Z",
+      "endTime": "2026-01-20T20:16:53.107Z",
       "input": {
         "input": "What is 8 multiplied by 6?"
       },
@@ -27,13 +27,13 @@
       "metricCollection": "task_completion"
     },
     {
-      "uuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
+      "uuid": "780d5a47-7022-4f9c-a39e-0a5f6ab32168",
       "name": "RunnableSequence",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
-      "startTime": "2026-01-20T19:36:11.976Z",
-      "endTime": "2026-01-20T19:36:12.532Z",
+      "parentUuid": "d601213d-5e5e-4710-9a87-a28a3973a907",
+      "startTime": "2026-01-20T20:16:52.558Z",
+      "endTime": "2026-01-20T20:16:53.106Z",
       "input": {
         "input": ""
       },
@@ -46,13 +46,13 @@
       }
     },
     {
-      "uuid": "225cb7f2-5bb1-48d8-85fb-9c736998f783",
+      "uuid": "8fc94177-c3e8-4251-b1f3-135eaffac5bd",
       "name": "ToolsAgentOutputParser",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
-      "startTime": "2026-01-20T19:36:12.531Z",
-      "endTime": "2026-01-20T19:36:12.532Z",
+      "parentUuid": "780d5a47-7022-4f9c-a39e-0a5f6ab32168",
+      "startTime": "2026-01-20T20:16:53.105Z",
+      "endTime": "2026-01-20T20:16:53.106Z",
       "input": {
         "content": "8 multiplied by 6 is 48.",
         "additional_kwargs": {},
@@ -63,7 +63,7 @@
           "service_tier": "default"
         },
         "type": "AIMessageChunk",
-        "id": "run--6ad185b2-2221-420b-b34d-c79b6541c354",
+        "id": "run--7bcdcb75-149f-4d7e-8fbf-6cb7f65ed52c",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -91,13 +91,13 @@
       }
     },
     {
-      "uuid": "ba7389ac-eb72-4a04-bcaa-3d39451335ac",
+      "uuid": "c468d4cb-ae3e-4315-a7da-fb992e051e59",
       "name": "ChatPromptTemplate",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
-      "startTime": "2026-01-20T19:36:11.987Z",
-      "endTime": "2026-01-20T19:36:11.989Z",
+      "parentUuid": "780d5a47-7022-4f9c-a39e-0a5f6ab32168",
+      "startTime": "2026-01-20T20:16:52.564Z",
+      "endTime": "2026-01-20T20:16:52.565Z",
       "input": {
         "input": "What is 8 multiplied by 6?",
         "intermediate_steps": [
@@ -117,7 +117,7 @@
                     "tool_calls": [
                       {
                         "index": 0,
-                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                         "function": {
                           "arguments": "{\"a\":8,\"b\":6}",
                           "name": "multiply"
@@ -133,10 +133,10 @@
                     "service_tier": "default"
                   },
                   "type": "AIMessageChunk",
-                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                  "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
                 }
               ],
-              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+              "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
             },
             48
           ]
@@ -148,7 +148,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                   "function": {
                     "arguments": "{\"a\":8,\"b\":6}",
                     "name": "multiply"
@@ -164,7 +164,7 @@
               "service_tier": "default"
             },
             "type": "AIMessageChunk",
-            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7",
             "example": false,
             "tool_calls": [
               {
@@ -173,7 +173,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "type": "tool_call"
               }
             ],
@@ -195,7 +195,7 @@
               {
                 "name": "multiply",
                 "args": "{\"a\":8,\"b\":6}",
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "index": 0,
                 "type": "tool_call_chunk"
               }
@@ -208,7 +208,7 @@
             },
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
             "status": "success"
           }
         ]
@@ -233,7 +233,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                   "function": {
                     "arguments": "{\"a\":8,\"b\":6}",
                     "name": "multiply"
@@ -249,7 +249,7 @@
               "service_tier": "default"
             },
             "type": "AIMessageChunk",
-            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+            "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
           },
           {
             "content": "48",
@@ -263,13 +263,13 @@
       }
     },
     {
-      "uuid": "d77cfeee-73dc-4d84-9ab2-6366867f2a57",
+      "uuid": "09ed5f1b-7154-4f00-ac62-2a50ff49ccb0",
       "name": "RunnableAssign<agent_scratchpad>",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
-      "startTime": "2026-01-20T19:36:11.978Z",
-      "endTime": "2026-01-20T19:36:11.987Z",
+      "parentUuid": "780d5a47-7022-4f9c-a39e-0a5f6ab32168",
+      "startTime": "2026-01-20T20:16:52.559Z",
+      "endTime": "2026-01-20T20:16:52.564Z",
       "input": {
         "input": ""
       },
@@ -292,7 +292,7 @@
                     "tool_calls": [
                       {
                         "index": 0,
-                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                         "function": {
                           "arguments": "{\"a\":8,\"b\":6}",
                           "name": "multiply"
@@ -308,10 +308,10 @@
                     "service_tier": "default"
                   },
                   "type": "AIMessageChunk",
-                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                  "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
                 }
               ],
-              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+              "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
             },
             48
           ]
@@ -323,7 +323,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                   "function": {
                     "arguments": "{\"a\":8,\"b\":6}",
                     "name": "multiply"
@@ -339,7 +339,7 @@
               "service_tier": "default"
             },
             "type": "AIMessageChunk",
-            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7",
             "example": false,
             "tool_calls": [
               {
@@ -348,7 +348,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "type": "tool_call"
               }
             ],
@@ -370,7 +370,7 @@
               {
                 "name": "multiply",
                 "args": "{\"a\":8,\"b\":6}",
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "index": 0,
                 "type": "tool_call_chunk"
               }
@@ -383,20 +383,20 @@
             },
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
             "status": "success"
           }
         ]
       }
     },
     {
-      "uuid": "13d1cd57-6cb2-4d83-b845-69732ef2514e",
+      "uuid": "389bed6f-b8fe-4d57-8c60-8f188384f6b6",
       "name": "RunnableParallel<agent_scratchpad>",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "d77cfeee-73dc-4d84-9ab2-6366867f2a57",
-      "startTime": "2026-01-20T19:36:11.981Z",
-      "endTime": "2026-01-20T19:36:11.986Z",
+      "parentUuid": "09ed5f1b-7154-4f00-ac62-2a50ff49ccb0",
+      "startTime": "2026-01-20T20:16:52.560Z",
+      "endTime": "2026-01-20T20:16:52.563Z",
       "input": {
         "input": ""
       },
@@ -408,7 +408,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                  "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                   "function": {
                     "arguments": "{\"a\":8,\"b\":6}",
                     "name": "multiply"
@@ -424,7 +424,7 @@
               "service_tier": "default"
             },
             "type": "AIMessageChunk",
-            "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+            "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7",
             "example": false,
             "tool_calls": [
               {
@@ -433,7 +433,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "type": "tool_call"
               }
             ],
@@ -455,7 +455,7 @@
               {
                 "name": "multiply",
                 "args": "{\"a\":8,\"b\":6}",
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "index": 0,
                 "type": "tool_call_chunk"
               }
@@ -468,20 +468,20 @@
             },
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
             "status": "success"
           }
         ]
       }
     },
     {
-      "uuid": "f8a24e08-dbb6-45b4-bac7-05a53dee2b44",
+      "uuid": "fc90cf65-9a71-47f5-8468-35aaf5848e94",
       "name": "RunnableLambda",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "13d1cd57-6cb2-4d83-b845-69732ef2514e",
-      "startTime": "2026-01-20T19:36:11.983Z",
-      "endTime": "2026-01-20T19:36:11.985Z",
+      "parentUuid": "389bed6f-b8fe-4d57-8c60-8f188384f6b6",
+      "startTime": "2026-01-20T20:16:52.562Z",
+      "endTime": "2026-01-20T20:16:52.563Z",
       "input": {
         "input": ""
       },
@@ -492,7 +492,7 @@
             "tool_calls": [
               {
                 "index": 0,
-                "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                 "function": {
                   "arguments": "{\"a\":8,\"b\":6}",
                   "name": "multiply"
@@ -508,7 +508,7 @@
             "service_tier": "default"
           },
           "type": "AIMessageChunk",
-          "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+          "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7",
           "example": false,
           "tool_calls": [
             {
@@ -517,7 +517,7 @@
                 "a": 8,
                 "b": 6
               },
-              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
               "type": "tool_call"
             }
           ],
@@ -539,7 +539,7 @@
             {
               "name": "multiply",
               "args": "{\"a\":8,\"b\":6}",
-              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
               "index": 0,
               "type": "tool_call_chunk"
             }
@@ -552,19 +552,19 @@
           },
           "response_metadata": {},
           "type": "tool",
-          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+          "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
           "status": "success"
         }
       ]
     },
     {
-      "uuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
+      "uuid": "e3314606-8ef3-4dc2-af76-b5b4c27129e8",
       "name": "RunnableSequence",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
-      "startTime": "2026-01-20T19:36:10.314Z",
-      "endTime": "2026-01-20T19:36:11.972Z",
+      "parentUuid": "d601213d-5e5e-4710-9a87-a28a3973a907",
+      "startTime": "2026-01-20T20:16:51.541Z",
+      "endTime": "2026-01-20T20:16:52.555Z",
       "input": {
         "input": ""
       },
@@ -584,7 +584,7 @@
                 "tool_calls": [
                   {
                     "index": 0,
-                    "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                    "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                     "function": {
                       "arguments": "{\"a\":8,\"b\":6}",
                       "name": "multiply"
@@ -600,28 +600,28 @@
                 "service_tier": "default"
               },
               "type": "AIMessageChunk",
-              "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+              "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
             }
           ],
-          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+          "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
         }
       ]
     },
     {
-      "uuid": "85716edb-f28b-4ef8-ace7-25086fcc9c03",
+      "uuid": "03c00529-181b-4628-a595-c2b55a58a1f4",
       "name": "ToolsAgentOutputParser",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
-      "startTime": "2026-01-20T19:36:11.971Z",
-      "endTime": "2026-01-20T19:36:11.972Z",
+      "parentUuid": "e3314606-8ef3-4dc2-af76-b5b4c27129e8",
+      "startTime": "2026-01-20T20:16:52.554Z",
+      "endTime": "2026-01-20T20:16:52.555Z",
       "input": {
         "content": "",
         "additional_kwargs": {
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+              "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
               "function": {
                 "arguments": "{\"a\":8,\"b\":6}",
                 "name": "multiply"
@@ -637,7 +637,7 @@
           "service_tier": "default"
         },
         "type": "AIMessageChunk",
-        "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+        "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7",
         "example": false,
         "tool_calls": [
           {
@@ -646,7 +646,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
             "type": "tool_call"
           }
         ],
@@ -668,7 +668,7 @@
           {
             "name": "multiply",
             "args": "{\"a\":8,\"b\":6}",
-            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+            "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
             "index": 0,
             "type": "tool_call_chunk"
           }
@@ -690,7 +690,7 @@
                 "tool_calls": [
                   {
                     "index": 0,
-                    "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                    "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                     "function": {
                       "arguments": "{\"a\":8,\"b\":6}",
                       "name": "multiply"
@@ -706,21 +706,21 @@
                 "service_tier": "default"
               },
               "type": "AIMessageChunk",
-              "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+              "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
             }
           ],
-          "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+          "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
         }
       ]
     },
     {
-      "uuid": "5a7067e8-abbf-4690-b29d-1f0d46d28947",
+      "uuid": "4385dc8e-8fee-4319-8743-b7681c347bd0",
       "name": "ChatPromptTemplate",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
-      "startTime": "2026-01-20T19:36:10.317Z",
-      "endTime": "2026-01-20T19:36:10.318Z",
+      "parentUuid": "e3314606-8ef3-4dc2-af76-b5b4c27129e8",
+      "startTime": "2026-01-20T20:16:51.545Z",
+      "endTime": "2026-01-20T20:16:51.545Z",
       "input": {
         "input": "What is 8 multiplied by 6?",
         "intermediate_steps": [
@@ -740,7 +740,7 @@
                     "tool_calls": [
                       {
                         "index": 0,
-                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                         "function": {
                           "arguments": "{\"a\":8,\"b\":6}",
                           "name": "multiply"
@@ -756,10 +756,10 @@
                     "service_tier": "default"
                   },
                   "type": "AIMessageChunk",
-                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                  "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
                 }
               ],
-              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+              "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
             },
             48
           ]
@@ -784,13 +784,13 @@
       }
     },
     {
-      "uuid": "55923bbc-18e1-4173-a9de-1e9f6d9019e4",
+      "uuid": "f8a4b336-1c90-4989-9cc0-47942794868c",
       "name": "RunnableAssign<agent_scratchpad>",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
-      "startTime": "2026-01-20T19:36:10.315Z",
-      "endTime": "2026-01-20T19:36:10.317Z",
+      "parentUuid": "e3314606-8ef3-4dc2-af76-b5b4c27129e8",
+      "startTime": "2026-01-20T20:16:51.542Z",
+      "endTime": "2026-01-20T20:16:51.544Z",
       "input": {
         "input": ""
       },
@@ -813,7 +813,7 @@
                     "tool_calls": [
                       {
                         "index": 0,
-                        "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK",
+                        "id": "call_AUpe1sm4RC7K7PWizKBAZDLh",
                         "function": {
                           "arguments": "{\"a\":8,\"b\":6}",
                           "name": "multiply"
@@ -829,10 +829,10 @@
                     "service_tier": "default"
                   },
                   "type": "AIMessageChunk",
-                  "id": "run--223ca3e6-0006-444e-bc9d-cbf2e2b09182"
+                  "id": "run--7a12c4c7-2a47-4416-b03b-50047d0367d7"
                 }
               ],
-              "tool_call_id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+              "tool_call_id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
             },
             48
           ]
@@ -841,13 +841,13 @@
       }
     },
     {
-      "uuid": "c6a8b124-d5b7-4a16-af15-d4ff0c69910f",
+      "uuid": "9f4f8853-8295-45f7-95a7-12b06e664867",
       "name": "RunnableParallel<agent_scratchpad>",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "55923bbc-18e1-4173-a9de-1e9f6d9019e4",
-      "startTime": "2026-01-20T19:36:10.315Z",
-      "endTime": "2026-01-20T19:36:10.317Z",
+      "parentUuid": "f8a4b336-1c90-4989-9cc0-47942794868c",
+      "startTime": "2026-01-20T20:16:51.543Z",
+      "endTime": "2026-01-20T20:16:51.544Z",
       "input": {
         "input": ""
       },
@@ -856,13 +856,13 @@
       }
     },
     {
-      "uuid": "54ac8289-f8ae-4826-9b53-e2f1440b5301",
+      "uuid": "146e14c0-542a-49e0-a37e-b71a3a635aeb",
       "name": "RunnableLambda",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c6a8b124-d5b7-4a16-af15-d4ff0c69910f",
-      "startTime": "2026-01-20T19:36:10.316Z",
-      "endTime": "2026-01-20T19:36:10.316Z",
+      "parentUuid": "9f4f8853-8295-45f7-95a7-12b06e664867",
+      "startTime": "2026-01-20T20:16:51.544Z",
+      "endTime": "2026-01-20T20:16:51.544Z",
       "input": {
         "input": ""
       },
@@ -872,13 +872,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "6ad185b2-2221-420b-b34d-c79b6541c354",
+      "uuid": "7bcdcb75-149f-4d7e-8fbf-6cb7f65ed52c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "10d4e50c-59a5-4c87-bdae-bf1e02e5b4a3",
-      "startTime": "2026-01-20T19:36:11.990Z",
-      "endTime": "2026-01-20T19:36:12.530Z",
+      "parentUuid": "780d5a47-7022-4f9c-a39e-0a5f6ab32168",
+      "startTime": "2026-01-20T20:16:52.566Z",
+      "endTime": "2026-01-20T20:16:53.104Z",
       "input": [
         {
           "role": "system",
@@ -903,34 +903,30 @@
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
+      "prompt": {},
       "tokenIntervals": {
-        "2026-01-20T19:36:12.339836Z": "",
-        "2026-01-20T19:36:12.378457Z": "8",
-        "2026-01-20T19:36:12.380335Z": " multiplied",
-        "2026-01-20T19:36:12.426922Z": " by",
-        "2026-01-20T19:36:12.428696Z": " ",
-        "2026-01-20T19:36:12.454785Z": "6",
-        "2026-01-20T19:36:12.456315Z": " is",
-        "2026-01-20T19:36:12.500952Z": " ",
-        "2026-01-20T19:36:12.502747Z": "48",
-        "2026-01-20T19:36:12.521833Z": ".",
-        "2026-01-20T19:36:12.523468Z": "",
-        "2026-01-20T19:36:12.524726Z": ""
-      },
-      "metricCollection": "test_collection_1"
+        "2026-01-20T20:16:52.950185Z": "",
+        "2026-01-20T20:16:52.978731Z": "8",
+        "2026-01-20T20:16:52.980297Z": " multiplied",
+        "2026-01-20T20:16:53.015262Z": " by",
+        "2026-01-20T20:16:53.017009Z": " ",
+        "2026-01-20T20:16:53.051322Z": "6",
+        "2026-01-20T20:16:53.052886Z": " is",
+        "2026-01-20T20:16:53.082423Z": " ",
+        "2026-01-20T20:16:53.083982Z": "48",
+        "2026-01-20T20:16:53.092453Z": ".",
+        "2026-01-20T20:16:53.093986Z": "",
+        "2026-01-20T20:16:53.095659Z": ""
+      }
     },
     {
-      "uuid": "223ca3e6-0006-444e-bc9d-cbf2e2b09182",
+      "uuid": "7a12c4c7-2a47-4416-b03b-50047d0367d7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8f44240f-4501-4c81-914d-f855e8761d1e",
-      "startTime": "2026-01-20T19:36:10.318Z",
-      "endTime": "2026-01-20T19:36:11.970Z",
+      "parentUuid": "e3314606-8ef3-4dc2-af76-b5b4c27129e8",
+      "startTime": "2026-01-20T20:16:51.546Z",
+      "endTime": "2026-01-20T20:16:52.553Z",
       "input": [
         {
           "role": "system",
@@ -951,42 +947,38 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_Y67HXHBpwFI9gSVKt6ERa9JK"
+            "id": "call_AUpe1sm4RC7K7PWizKBAZDLh"
           }
         ]
       },
       "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
+      "prompt": {},
       "tokenIntervals": {
-        "2026-01-20T19:36:11.724768Z": "",
-        "2026-01-20T19:36:11.744368Z": "",
-        "2026-01-20T19:36:11.745297Z": "",
-        "2026-01-20T19:36:11.813923Z": "",
-        "2026-01-20T19:36:11.816190Z": "",
-        "2026-01-20T19:36:11.898283Z": "",
-        "2026-01-20T19:36:11.900612Z": "",
-        "2026-01-20T19:36:11.945493Z": "",
-        "2026-01-20T19:36:11.947841Z": "",
-        "2026-01-20T19:36:11.952273Z": "",
-        "2026-01-20T19:36:11.955614Z": "",
-        "2026-01-20T19:36:11.963430Z": ""
-      },
-      "metricCollection": "test_collection_1"
+        "2026-01-20T20:16:52.393221Z": "",
+        "2026-01-20T20:16:52.393746Z": "",
+        "2026-01-20T20:16:52.394360Z": "",
+        "2026-01-20T20:16:52.524840Z": "",
+        "2026-01-20T20:16:52.527421Z": "",
+        "2026-01-20T20:16:52.530427Z": "",
+        "2026-01-20T20:16:52.533259Z": "",
+        "2026-01-20T20:16:52.535485Z": "",
+        "2026-01-20T20:16:52.537673Z": "",
+        "2026-01-20T20:16:52.539665Z": "",
+        "2026-01-20T20:16:52.542875Z": "",
+        "2026-01-20T20:16:52.550541Z": ""
+      }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "6107e498-bf0e-4da6-bdd5-14657f00f4db",
+      "uuid": "fa1165e3-ee6b-4888-9380-11df42781380",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3dcb7094-f5f1-4853-9de6-e3ba84b2ca9f",
-      "startTime": "2026-01-20T19:36:11.973Z",
-      "endTime": "2026-01-20T19:36:11.975Z",
+      "parentUuid": "d601213d-5e5e-4710-9a87-a28a3973a907",
+      "startTime": "2026-01-20T20:16:52.555Z",
+      "endTime": "2026-01-20T20:16:52.557Z",
       "input": {
         "a": 8,
         "b": 6
@@ -995,8 +987,8 @@
       "metricCollection": "task_completion"
     }
   ],
-  "startTime": "2026-01-20T19:36:10.313Z",
-  "endTime": "2026-01-20T19:36:12.532Z",
+  "startTime": "2026-01-20T20:16:51.541Z",
+  "endTime": "2026-01-20T20:16:53.107Z",
   "environment": "development",
   "input": {
     "input": "What is 8 multiplied by 6?"

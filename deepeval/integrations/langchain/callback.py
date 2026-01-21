@@ -1,4 +1,7 @@
-from typing import Any, Optional, List, Dict
+import logging
+import threading
+
+from typing import Any, Optional, List, Dict, Tuple
 from uuid import UUID
 from time import perf_counter
 from contextlib import contextmanager
@@ -40,6 +43,9 @@ try:
     langchain_installed = True
 except ImportError:
     langchain_installed = False
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_langchain_installed():
@@ -84,6 +90,15 @@ class CallbackHandler(BaseCallbackHandler):
 
             # Map LangChain run_id -> our span uuid for parent span restoration
             self._run_id_to_span_uuid: Dict[str, str] = {}
+
+            # In-flight counter: tracks active LangChain runs (chains, llms, tools, retrievers)
+            # This prevents trace finalization before all async operations complete
+            self._in_flight_count = 0
+            self._in_flight_lock = threading.Lock()
+
+            # Deferred root chain closure: when root chain ends but children are still running,
+            # we store (root_uuid, root_output) and close it when in_flight drops to 0
+            self._deferred_root: Optional[Tuple[str, Any]] = None
 
             # Only set trace metadata if values are provided
             self.metrics = metrics
@@ -191,6 +206,68 @@ class CallbackHandler(BaseCallbackHandler):
             if span_token is not None:
                 current_span_context.reset(span_token)
 
+    @contextmanager
+    def _restore_span_for_exit(self, span_uuid: str):
+        """
+        Context manager to temporarily restore a specific span into current_span_context
+        before calling exit_current_context. This is critical for async callbacks where
+        the span being closed may not be the current context span.
+
+        In async LangChain/LangGraph execution:
+        - _ctx() restores the PARENT span into context (for hierarchy)
+        - But exit_current_context needs the SPAN BEING CLOSED to be in context
+        - Without this, exit_current_context may fail to find or properly close the span
+          when callbacks run in different tasks and contextvars don't propagate.
+
+        This ensures deterministic span closure regardless of async task scheduling.
+        """
+        span_token = None
+        try:
+            span = trace_manager.get_span_by_uuid(span_uuid)
+            if span is not None:
+                span_token = current_span_context.set(span)
+            yield
+        finally:
+            if span_token is not None:
+                current_span_context.reset(span_token)
+
+    def _increment_in_flight(self) -> None:
+        """Increment the in-flight counter when a LangChain run starts."""
+        with self._in_flight_lock:
+            self._in_flight_count += 1
+
+    def _decrement_in_flight(self) -> None:
+        """
+        Decrement the in-flight counter when a LangChain run ends.
+        If counter reaches 0 and there's a deferred root closure, execute it now.
+        """
+        deferred = None
+        with self._in_flight_lock:
+            self._in_flight_count -= 1
+            # If all runs completed and root closure was deferred, process it now
+            if self._in_flight_count == 0 and self._deferred_root is not None:
+                deferred = self._deferred_root
+                self._deferred_root = None
+
+            if self._in_flight_count < 0:
+                logger.warning("in_flight_count went negative; forcing to 0")
+                self._in_flight_count = 0
+
+        if deferred is not None:
+            root_uuid, root_output = deferred
+            self._close_root_span(root_uuid, root_output)
+
+    def _close_root_span(self, uuid_str: str, output: Any) -> None:
+        """Close the root span and set trace output."""
+        base_span = trace_manager.get_span_by_uuid(uuid_str)
+        if base_span:
+            base_span.output = output
+            trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
+            if trace:
+                trace.output = output
+            with self._restore_span_for_exit(uuid_str):
+                exit_current_context(uuid_str=uuid_str)
+
     def on_chain_start(
         self,
         serialized: dict[str, Any],
@@ -202,27 +279,35 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        # Create spans for all chains to establish proper parent-child hierarchy
-        # This is important for LangGraph where there are nested chains
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
-            base_span = enter_current_context(
-                uuid_str=uuid_str,
-                span_type="custom",
-                func_name=extract_name(serialized, **kwargs),
-            )
-            # Register this run_id -> span mapping for child callbacks
-            self._run_id_to_span_uuid[str(run_id)] = uuid_str
+        self._increment_in_flight()
+        try:
+            # Create spans for all chains to establish proper parent-child hierarchy
+            # This is important for LangGraph where there are nested chains
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                uuid_str = str(run_id)
+                base_span = enter_current_context(
+                    uuid_str=uuid_str,
+                    span_type="custom",
+                    func_name=extract_name(serialized, **kwargs),
+                )
+                # Register this run_id -> span mapping for child callbacks
+                self._run_id_to_span_uuid[str(run_id)] = uuid_str
 
-            base_span.input = inputs
+                base_span.input = inputs
 
-            # Only set trace-level input/metrics for root chain
-            if parent_run_id is None:
-                trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
-                if trace:
-                    trace.input = inputs
-                base_span.metrics = self.metrics
-                base_span.metric_collection = self.metric_collection
+                # Only set trace-level input/metrics for root chain
+                if parent_run_id is None:
+                    trace = trace_manager.get_trace_by_uuid(
+                        base_span.trace_uuid
+                    )
+                    if trace:
+                        trace.input = inputs
+                    base_span.metrics = self.metrics
+                    base_span.metric_collection = self.metric_collection
+        except Exception:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
+            raise
 
     def on_chain_end(
         self,
@@ -232,19 +317,34 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
-        uuid_str = str(run_id)
-        base_span = trace_manager.get_span_by_uuid(uuid_str)
-        if base_span:
-            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-                base_span.output = output
-                # Only set trace-level output for root chain
-                if parent_run_id is None:
-                    trace = trace_manager.get_trace_by_uuid(
-                        base_span.trace_uuid
-                    )
-                    if trace:
-                        trace.output = output
-                exit_current_context(uuid_str=uuid_str)
+        try:
+            uuid_str = str(run_id)
+            base_span = trace_manager.get_span_by_uuid(uuid_str)
+            if base_span:
+                with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                    # For root chain (parent_run_id is None), defer closure if children are still running
+                    if parent_run_id is None:
+                        # Check if there are still in-flight operations (excluding this root)
+
+                        should_defer = False
+                        with self._in_flight_lock:
+                            # in_flight_count > 1 means children are still running
+                            should_defer = self._in_flight_count > 1
+                            if should_defer:
+                                # Defer root closure - will be handled when last child completes
+                                self._deferred_root = (uuid_str, output)
+
+                        if not should_defer:
+                            # No children running, close immediately
+                            self._close_root_span(uuid_str, output)
+                    else:
+                        # Non-root chain: close normally
+                        base_span.output = output
+                        with self._restore_span_for_exit(uuid_str):
+                            exit_current_context(uuid_str=uuid_str)
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_chat_model_start(
         self,
@@ -262,50 +362,46 @@ class CallbackHandler(BaseCallbackHandler):
         This is called instead of on_llm_start for chat models. The messages
         parameter contains a list of message lists (one per batch item).
         """
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
+        self._increment_in_flight()
+        try:
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                uuid_str = str(run_id)
 
-            # Capture parent span BEFORE creating the llm span
-            parent_span = current_span_context.get()
+                # Capture parent span before creating the llm span
+                parent_span = current_span_context.get()
 
-            # Convert BaseMessage objects to dict format
-            all_messages = []
-            for msg_list in messages:
-                for msg in msg_list:
-                    role = getattr(msg, "type", "unknown")
-                    content = getattr(msg, "content", str(msg))
-                    all_messages.append({"role": role, "content": content})
+                # Convert BaseMessage objects to dict format
+                all_messages = []
+                for msg_list in messages:
+                    for msg in msg_list:
+                        role = getattr(msg, "type", "unknown")
+                        content = getattr(msg, "content", str(msg))
+                        all_messages.append({"role": role, "content": content})
 
-            model = safe_extract_model_name(metadata, **kwargs)
+                model = safe_extract_model_name(metadata, **kwargs)
 
-            llm_span: LlmSpan = enter_current_context(
-                uuid_str=uuid_str,
-                span_type="llm",
-                func_name=extract_name(serialized, **kwargs),
-            )
-            self._run_id_to_span_uuid[str(run_id)] = uuid_str
-
-            llm_span.input = all_messages
-            llm_span.model = model
-
-            # Default: inherit from parent span
-            if parent_span is not None:
-                llm_span.metric_collection = getattr(
-                    parent_span, "metric_collection", None
+                llm_span: LlmSpan = enter_current_context(
+                    uuid_str=uuid_str,
+                    span_type="llm",
+                    func_name=extract_name(serialized, **kwargs),
                 )
-                llm_span.metrics = getattr(parent_span, "metrics", None)
+                self._run_id_to_span_uuid[str(run_id)] = uuid_str
 
-            # Override: user-provided metadata on the LLM instance
-            # This is userland config, not deepeval internal transport
-            if metadata:
-                if metadata.get("metric_collection") is not None:
-                    llm_span.metric_collection = metadata.get(
-                        "metric_collection"
+                llm_span.input = all_messages
+                llm_span.model = model
+
+                # Inherit metric_collection and metrics from parent span
+                # We do not read these from callback metadata - that would be using
+                # LangChain's callback metadata as transport for deepeval internals
+                if parent_span is not None:
+                    llm_span.metric_collection = getattr(
+                        parent_span, "metric_collection", None
                     )
-                if metadata.get("metrics") is not None:
-                    llm_span.metrics = metadata.get("metrics")
-                if metadata.get("prompt") is not None:
-                    llm_span.prompt = metadata.get("prompt")
+                    llm_span.metrics = getattr(parent_span, "metrics", None)
+        except Exception:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
+            raise
 
     def on_llm_start(
         self,
@@ -318,44 +414,40 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
+        self._increment_in_flight()
+        try:
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                uuid_str = str(run_id)
 
-            # Capture parent span BEFORE creating the llm span
-            parent_span = current_span_context.get()
+                # Capture parent span before creating the llm span
+                parent_span = current_span_context.get()
 
-            input_messages = parse_prompts_to_messages(prompts, **kwargs)
-            model = safe_extract_model_name(metadata, **kwargs)
+                input_messages = parse_prompts_to_messages(prompts, **kwargs)
+                model = safe_extract_model_name(metadata, **kwargs)
 
-            llm_span: LlmSpan = enter_current_context(
-                uuid_str=uuid_str,
-                span_type="llm",
-                func_name=extract_name(serialized, **kwargs),
-            )
-            # Register this run_id -> span mapping for child callbacks
-            self._run_id_to_span_uuid[str(run_id)] = uuid_str
-
-            llm_span.input = input_messages
-            llm_span.model = model
-
-            # Default: inherit from parent span
-            if parent_span is not None:
-                llm_span.metric_collection = getattr(
-                    parent_span, "metric_collection", None
+                llm_span: LlmSpan = enter_current_context(
+                    uuid_str=uuid_str,
+                    span_type="llm",
+                    func_name=extract_name(serialized, **kwargs),
                 )
-                llm_span.metrics = getattr(parent_span, "metrics", None)
+                # Register this run_id -> span mapping for child callbacks
+                self._run_id_to_span_uuid[str(run_id)] = uuid_str
 
-            # Override: user-provided metadata on the LLM instance
-            # This is userland config, not deepeval internal transport
-            if metadata:
-                if metadata.get("metric_collection") is not None:
-                    llm_span.metric_collection = metadata.get(
-                        "metric_collection"
+                llm_span.input = input_messages
+                llm_span.model = model
+
+                # Inherit metric_collection and metrics from parent span
+                # We do not read these from callback metadata - that would be using
+                # LangChain's callback metadata as transport for deepeval internals
+                if parent_span is not None:
+                    llm_span.metric_collection = getattr(
+                        parent_span, "metric_collection", None
                     )
-                if metadata.get("metrics") is not None:
-                    llm_span.metrics = metadata.get("metrics")
-                if metadata.get("prompt") is not None:
-                    llm_span.prompt = metadata.get("prompt")
+                    llm_span.metrics = getattr(parent_span, "metrics", None)
+        except Exception:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
+            raise
 
     def on_llm_end(
         self,
@@ -366,64 +458,68 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
         uuid_str = str(run_id)
-        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if llm_span is None:
-            return
+        try:
+            llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+            if llm_span is None:
+                return
 
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            output = ""
-            total_input_tokens = 0
-            total_output_tokens = 0
-            model = None
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                output = ""
+                total_input_tokens = 0
+                total_output_tokens = 0
+                model = None
 
-            for generation in response.generations:
-                for gen in generation:
-                    if isinstance(gen, ChatGeneration):
-                        if gen.message.response_metadata and isinstance(
-                            gen.message.response_metadata, dict
-                        ):
-                            # extract model name from response_metadata
-                            model = gen.message.response_metadata.get(
-                                "model_name"
-                            )
-
-                            # extract input and output token
-                            input_tokens, output_tokens = (
-                                safe_extract_token_usage(
-                                    gen.message.response_metadata
+                for generation in response.generations:
+                    for gen in generation:
+                        if isinstance(gen, ChatGeneration):
+                            if gen.message.response_metadata and isinstance(
+                                gen.message.response_metadata, dict
+                            ):
+                                # extract model name from response_metadata
+                                model = gen.message.response_metadata.get(
+                                    "model_name"
                                 )
-                            )
-                            total_input_tokens += input_tokens
-                            total_output_tokens += output_tokens
 
-                        if isinstance(gen.message, AIMessage):
-                            ai_message = gen.message
-                            tool_calls = []
-                            for tool_call in ai_message.tool_calls:
-                                tool_calls.append(
-                                    LlmToolCall(
-                                        name=tool_call["name"],
-                                        args=tool_call["args"],
-                                        id=tool_call["id"],
+                                # extract input and output token
+                                input_tokens, output_tokens = (
+                                    safe_extract_token_usage(
+                                        gen.message.response_metadata
                                     )
                                 )
-                            output = LlmOutput(
-                                role="AI",
-                                content=ai_message.content,
-                                tool_calls=tool_calls,
-                            )
+                                total_input_tokens += input_tokens
+                                total_output_tokens += output_tokens
 
-            llm_span.model = model if model else llm_span.model
-            llm_span.input = llm_span.input
-            llm_span.output = output
-            llm_span.input_token_count = (
-                total_input_tokens if total_input_tokens > 0 else None
-            )
-            llm_span.output_token_count = (
-                total_output_tokens if total_output_tokens > 0 else None
-            )
+                            if isinstance(gen.message, AIMessage):
+                                ai_message = gen.message
+                                tool_calls = []
+                                for tool_call in ai_message.tool_calls:
+                                    tool_calls.append(
+                                        LlmToolCall(
+                                            name=tool_call["name"],
+                                            args=tool_call["args"],
+                                            id=tool_call["id"],
+                                        )
+                                    )
+                                output = LlmOutput(
+                                    role="AI",
+                                    content=ai_message.content,
+                                    tool_calls=tool_calls,
+                                )
 
-            exit_current_context(uuid_str=uuid_str)
+                llm_span.model = model if model else llm_span.model
+                llm_span.output = output
+                llm_span.input_token_count = (
+                    total_input_tokens if total_input_tokens > 0 else None
+                )
+                llm_span.output_token_count = (
+                    total_output_tokens if total_output_tokens > 0 else None
+                )
+
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_llm_error(
         self,
@@ -433,14 +529,20 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
-        uuid_str = str(run_id)
-        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if llm_span is None:
-            return
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            llm_span.status = TraceSpanStatus.ERRORED
-            llm_span.error = str(error)
-            exit_current_context(uuid_str=uuid_str)
+        try:
+            uuid_str = str(run_id)
+            llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+            if llm_span is None:
+                return
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                llm_span.status = TraceSpanStatus.ERRORED
+                llm_span.error = str(error)
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_llm_new_token(
         self,
@@ -474,44 +576,53 @@ class CallbackHandler(BaseCallbackHandler):
         inputs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
+        self._increment_in_flight()
+        try:
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                uuid_str = str(run_id)
 
-            # Capture parent span BEFORE creating the tool span
-            # _ctx() restores the parent span context based on parent_run_id
-            parent_span = current_span_context.get()
+                # Capture parent span before creating the tool span
+                # _ctx() restores the parent span context based on parent_run_id
+                parent_span = current_span_context.get()
 
-            tool_span = enter_current_context(
-                uuid_str=uuid_str,
-                span_type="tool",
-                func_name=extract_name(
-                    serialized, **kwargs
-                ),  # ignored when setting the input
-            )
-            # Register this run_id -> span mapping for child callbacks
-            self._run_id_to_span_uuid[str(run_id)] = uuid_str
-            tool_span.input = inputs
-
-            # Default: inherit metric_collection and metrics from parent span
-            if parent_span is not None:
-                tool_span.metric_collection = getattr(
-                    parent_span, "metric_collection", None
+                tool_span = enter_current_context(
+                    uuid_str=uuid_str,
+                    span_type="tool",
+                    func_name=extract_name(
+                        serialized, **kwargs
+                    ),  # ignored when setting the input
                 )
-                tool_span.metrics = getattr(parent_span, "metrics", None)
+                # Register this run_id -> span mapping for child callbacks
+                self._run_id_to_span_uuid[str(run_id)] = uuid_str
+                tool_span.input = inputs if inputs is not None else input_str
 
-            # Override: check for deepeval overrides stored on the tool instance
-            # These are stored under tool_instance.metadata["deepeval"] by our @tool decorator
-            # LangChain passes this via serialized["kwargs"]["metadata"] or serialized["metadata"]
-            tool_meta = (
-                serialized.get("kwargs", {}).get("metadata")
-                or serialized.get("metadata")
-                or {}
-            )
-            deepeval_meta = tool_meta.get("deepeval") or {}
-            if deepeval_meta.get("metric_collection") is not None:
-                tool_span.metric_collection = deepeval_meta["metric_collection"]
-            if deepeval_meta.get("metrics") is not None:
-                tool_span.metrics = deepeval_meta["metrics"]
+                # Default: inherit metric_collection and metrics from parent span
+                if parent_span is not None:
+                    tool_span.metric_collection = getattr(
+                        parent_span, "metric_collection", None
+                    )
+                    tool_span.metrics = getattr(parent_span, "metrics", None)
+
+                # Override: check for deepeval overrides stored on the tool instance
+                # These are stored under tool_instance.metadata["deepeval"] by our @tool decorator
+                # LangChain passes this via serialized["kwargs"]["metadata"] or serialized["metadata"]
+                tool_meta = (
+                    serialized.get("kwargs", {}).get("metadata")
+                    or serialized.get("metadata")
+                    or {}
+                )
+                deepeval_meta = tool_meta.get("deepeval") or {}
+                if deepeval_meta.get("metric_collection") is not None:
+                    tool_span.metric_collection = deepeval_meta[
+                        "metric_collection"
+                    ]
+                if deepeval_meta.get("metrics") is not None:
+                    tool_span.metrics = deepeval_meta["metrics"]
+
+        except Exception:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
+            raise
 
     def on_tool_end(
         self,
@@ -521,42 +632,51 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        uuid_str = str(run_id)
-        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if tool_span is None:
-            return
+        try:
+            uuid_str = str(run_id)
+            tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
+            if tool_span is None:
+                return
 
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            tool_span.output = output
-            exit_current_context(uuid_str=uuid_str)
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                tool_span.output = output
 
-            # set the tools called in the parent span as well as on the trace level
-            tool_call = ToolCall(
-                name=tool_span.name,
-                description=tool_span.description,
-                output=output,
-                input_parameters=prepare_tool_call_input_parameters(
-                    tool_span.input
-                ),
-            )
-
-            # Use span's stored trace_uuid and parent_uuid for reliable lookup
-            # These are always available regardless of context state
-            if tool_span.parent_uuid:
-                parent_span = trace_manager.get_span_by_uuid(
-                    tool_span.parent_uuid
+                # set the tools called in the parent span as well as on the trace level
+                tool_call = ToolCall(
+                    name=tool_span.name,
+                    description=tool_span.description,
+                    output=output,
+                    input_parameters=prepare_tool_call_input_parameters(
+                        tool_span.input
+                    ),
                 )
-                if parent_span:
-                    if parent_span.tools_called is None:
-                        parent_span.tools_called = []
-                    parent_span.tools_called.append(tool_call)
 
-            if tool_span.trace_uuid:
-                trace = trace_manager.get_trace_by_uuid(tool_span.trace_uuid)
-                if trace:
-                    if trace.tools_called is None:
-                        trace.tools_called = []
-                    trace.tools_called.append(tool_call)
+                # Use span's stored trace_uuid and parent_uuid for reliable lookup
+                # These are always available regardless of context state
+                if tool_span.parent_uuid:
+                    parent_span = trace_manager.get_span_by_uuid(
+                        tool_span.parent_uuid
+                    )
+                    if parent_span:
+                        if parent_span.tools_called is None:
+                            parent_span.tools_called = []
+                        parent_span.tools_called.append(tool_call)
+
+                if tool_span.trace_uuid:
+                    trace = trace_manager.get_trace_by_uuid(
+                        tool_span.trace_uuid
+                    )
+                    if trace:
+                        if trace.tools_called is None:
+                            trace.tools_called = []
+                        trace.tools_called.append(tool_call)
+
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_tool_error(
         self,
@@ -566,14 +686,20 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        uuid_str = str(run_id)
-        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if tool_span is None:
-            return
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            tool_span.status = TraceSpanStatus.ERRORED
-            tool_span.error = str(error)
-            exit_current_context(uuid_str=uuid_str)
+        try:
+            uuid_str = str(run_id)
+            tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
+            if tool_span is None:
+                return
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                tool_span.status = TraceSpanStatus.ERRORED
+                tool_span.error = str(error)
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_retriever_start(
         self,
@@ -586,21 +712,28 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
-            retriever_span = enter_current_context(
-                uuid_str=uuid_str,
-                span_type="retriever",
-                func_name=extract_name(serialized, **kwargs),
-                observe_kwargs={
-                    "embedder": metadata.get(
-                        "ls_embedding_provider", "unknown"
-                    ),
-                },
-            )
-            # Register this run_id -> span mapping for child callbacks
-            self._run_id_to_span_uuid[str(run_id)] = uuid_str
-            retriever_span.input = query
+        self._increment_in_flight()
+        try:
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                uuid_str = str(run_id)
+                retriever_span = enter_current_context(
+                    uuid_str=uuid_str,
+                    span_type="retriever",
+                    func_name=extract_name(serialized, **kwargs),
+                    observe_kwargs={
+                        "embedder": (metadata or {}).get(
+                            "ls_embedding_provider", "unknown"
+                        ),
+                    },
+                )
+                # Register this run_id -> span mapping for child callbacks
+                self._run_id_to_span_uuid[str(run_id)] = uuid_str
+                retriever_span.input = query
+
+        except Exception:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
+            raise
 
     def on_retriever_end(
         self,
@@ -610,22 +743,29 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        uuid_str = str(run_id)
-        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if retriever_span is None:
-            return
+        try:
+            uuid_str = str(run_id)
+            retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(
+                uuid_str
+            )
+            if retriever_span is None:
+                return
 
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            # prepare output
-            output_list = []
-            if isinstance(output, list):
-                for item in output:
-                    output_list.append(str(item))
-            else:
-                output_list.append(str(output))
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                # prepare output
+                output_list = []
+                if isinstance(output, list):
+                    for item in output:
+                        output_list.append(str(item))
+                else:
+                    output_list.append(str(output))
 
-            retriever_span.output = output_list
-            exit_current_context(uuid_str=uuid_str)
+                retriever_span.output = output_list
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)
 
     def on_retriever_error(
         self,
@@ -635,11 +775,18 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        uuid_str = str(run_id)
-        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
-        if retriever_span is None:
-            return
-        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            retriever_span.status = TraceSpanStatus.ERRORED
-            retriever_span.error = str(error)
-            exit_current_context(uuid_str=uuid_str)
+        try:
+            uuid_str = str(run_id)
+            retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(
+                uuid_str
+            )
+            if retriever_span is None:
+                return
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                retriever_span.status = TraceSpanStatus.ERRORED
+                retriever_span.error = str(error)
+                with self._restore_span_for_exit(uuid_str):
+                    exit_current_context(uuid_str=uuid_str)
+        finally:
+            self._decrement_in_flight()
+            self._run_id_to_span_uuid.pop(str(run_id), None)

@@ -1,13 +1,13 @@
 {
-  "uuid": "80d1d9bd-b98b-440b-8393-e31cc53bfdfb",
+  "uuid": "c464a9b9-af57-43b8-a356-340f4d3ff520",
   "baseSpans": [
     {
-      "uuid": "818ed3ac-82fa-4e95-ae1e-d5cbb276288d",
+      "uuid": "1c8dcd68-9aac-456c-b1ac-c403779556f9",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:37:31.954Z",
-      "endTime": "2026-01-20T19:37:34.552Z",
+      "startTime": "2026-01-20T21:08:58.263Z",
+      "endTime": "2026-01-20T21:08:59.936Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           },
           {
@@ -35,7 +35,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -63,13 +63,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -77,7 +77,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -102,8 +102,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-            "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+            "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
             "status": "success"
           },
           {
@@ -129,13 +129,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0Bpd2COhNasjC7Wb2W5F0IyKceOy",
+              "id": "chatcmpl-D0DG7KeQtKz367vcD4qZEPVOpPUPU",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--52628246-2113-4a10-a00f-ed2d2ced5607-0",
+            "id": "run--3279c78e-8158-4b83-8be8-8699e309bde9-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -157,13 +157,13 @@
       }
     },
     {
-      "uuid": "c56754f6-85ec-44da-a32a-4c9fb2774cc5",
+      "uuid": "01957443-1ebc-4711-830d-64d72adeb771",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "818ed3ac-82fa-4e95-ae1e-d5cbb276288d",
-      "startTime": "2026-01-20T19:37:33.822Z",
-      "endTime": "2026-01-20T19:37:34.551Z",
+      "parentUuid": "1c8dcd68-9aac-456c-b1ac-c403779556f9",
+      "startTime": "2026-01-20T21:08:59.039Z",
+      "endTime": "2026-01-20T21:08:59.936Z",
       "input": {
         "messages": [
           {
@@ -171,7 +171,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           },
           {
@@ -179,7 +179,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -207,13 +207,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -221,7 +221,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -246,8 +246,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-            "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+            "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
             "status": "success"
           }
         ]
@@ -277,13 +277,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0Bpd2COhNasjC7Wb2W5F0IyKceOy",
+              "id": "chatcmpl-D0DG7KeQtKz367vcD4qZEPVOpPUPU",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--52628246-2113-4a10-a00f-ed2d2ced5607-0",
+            "id": "run--3279c78e-8158-4b83-8be8-8699e309bde9-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -305,13 +305,13 @@
       }
     },
     {
-      "uuid": "6a3f65fb-7cde-4b0b-84e7-560906670eaf",
+      "uuid": "04b6c773-f7e8-44de-aa1f-13195d648785",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c56754f6-85ec-44da-a32a-4c9fb2774cc5",
-      "startTime": "2026-01-20T19:37:34.550Z",
-      "endTime": "2026-01-20T19:37:34.550Z",
+      "parentUuid": "01957443-1ebc-4711-830d-64d72adeb771",
+      "startTime": "2026-01-20T21:08:59.936Z",
+      "endTime": "2026-01-20T21:08:59.936Z",
       "input": {
         "messages": [
           {
@@ -319,7 +319,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           },
           {
@@ -327,7 +327,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -355,13 +355,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -369,7 +369,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -394,8 +394,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-            "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+            "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
             "status": "success"
           },
           {
@@ -421,13 +421,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0Bpd2COhNasjC7Wb2W5F0IyKceOy",
+              "id": "chatcmpl-D0DG7KeQtKz367vcD4qZEPVOpPUPU",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--52628246-2113-4a10-a00f-ed2d2ced5607-0",
+            "id": "run--3279c78e-8158-4b83-8be8-8699e309bde9-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -450,13 +450,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "59145501-5e07-49d4-853e-6adb70bfdcbd",
+      "uuid": "7ac2e700-23de-4560-a8de-f9683d38a07f",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "818ed3ac-82fa-4e95-ae1e-d5cbb276288d",
-      "startTime": "2026-01-20T19:37:33.820Z",
-      "endTime": "2026-01-20T19:37:33.822Z",
+      "parentUuid": "1c8dcd68-9aac-456c-b1ac-c403779556f9",
+      "startTime": "2026-01-20T21:08:59.037Z",
+      "endTime": "2026-01-20T21:08:59.038Z",
       "input": {
         "messages": [
           {
@@ -464,7 +464,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           },
           {
@@ -472,7 +472,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -500,13 +500,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -514,7 +514,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -543,8 +543,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-            "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+            "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
             "status": "success"
           }
         ]
@@ -558,8 +558,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-            "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+            "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
             "status": "success"
           },
           "inputParameters": {
@@ -569,13 +569,13 @@
       ]
     },
     {
-      "uuid": "3ca1be5c-9bc5-4006-8c70-3b56b7401a8f",
+      "uuid": "a388ce1f-3861-4afe-9389-cc050981ffe0",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "818ed3ac-82fa-4e95-ae1e-d5cbb276288d",
-      "startTime": "2026-01-20T19:37:31.955Z",
-      "endTime": "2026-01-20T19:37:33.820Z",
+      "parentUuid": "1c8dcd68-9aac-456c-b1ac-c403779556f9",
+      "startTime": "2026-01-20T21:08:58.263Z",
+      "endTime": "2026-01-20T21:08:59.036Z",
       "input": {
         "messages": [
           {
@@ -583,7 +583,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           }
         ]
@@ -595,7 +595,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -623,13 +623,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -637,7 +637,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -660,13 +660,13 @@
       }
     },
     {
-      "uuid": "6c50d8a1-80df-4ea3-b1ab-62112aa603cd",
+      "uuid": "46ee657f-41d3-45d7-a372-05afa33f29c8",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "3ca1be5c-9bc5-4006-8c70-3b56b7401a8f",
-      "startTime": "2026-01-20T19:37:33.819Z",
-      "endTime": "2026-01-20T19:37:33.819Z",
+      "parentUuid": "a388ce1f-3861-4afe-9389-cc050981ffe0",
+      "startTime": "2026-01-20T21:08:59.036Z",
+      "endTime": "2026-01-20T21:08:59.036Z",
       "input": {
         "messages": [
           {
@@ -674,7 +674,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+            "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
             "example": false
           },
           {
@@ -682,7 +682,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                  "id": "call_gXP9veci37AOS0Oyby4TS10w",
                   "function": {
                     "arguments": "{\"city\":\"San Francisco\"}",
                     "name": "get_weather"
@@ -710,13 +710,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+              "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+            "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
             "example": false,
             "tool_calls": [
               {
@@ -724,7 +724,7 @@
                 "args": {
                   "city": "San Francisco"
                 },
-                "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+                "id": "call_gXP9veci37AOS0Oyby4TS10w",
                 "type": "tool_call"
               }
             ],
@@ -751,13 +751,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "52628246-2113-4a10-a00f-ed2d2ced5607",
+      "uuid": "3279c78e-8158-4b83-8be8-8699e309bde9",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c56754f6-85ec-44da-a32a-4c9fb2774cc5",
-      "startTime": "2026-01-20T19:37:33.823Z",
-      "endTime": "2026-01-20T19:37:34.549Z",
+      "parentUuid": "01957443-1ebc-4711-830d-64d72adeb771",
+      "startTime": "2026-01-20T21:08:59.039Z",
+      "endTime": "2026-01-20T21:08:59.935Z",
       "input": [
         {
           "role": "human",
@@ -783,13 +783,13 @@
       "outputTokenCount": 18.0
     },
     {
-      "uuid": "076346a2-c4ae-48b5-b10c-9f7d2abf92f6",
+      "uuid": "45903613-4bd1-439f-a08b-7b94826fc79c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "3ca1be5c-9bc5-4006-8c70-3b56b7401a8f",
-      "startTime": "2026-01-20T19:37:31.956Z",
-      "endTime": "2026-01-20T19:37:33.819Z",
+      "parentUuid": "a388ce1f-3861-4afe-9389-cc050981ffe0",
+      "startTime": "2026-01-20T21:08:58.264Z",
+      "endTime": "2026-01-20T21:08:59.035Z",
       "input": [
         {
           "role": "human",
@@ -805,7 +805,7 @@
             "args": {
               "city": "San Francisco"
             },
-            "id": "call_ajvbVEfKQYr9HwMAflLoGzzz"
+            "id": "call_gXP9veci37AOS0Oyby4TS10w"
           }
         ]
       },
@@ -818,13 +818,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "54650c12-3ede-4bfc-a991-fd8fb6e4b587",
+      "uuid": "1fb6367f-fd12-4cf8-8f6c-80dc3ae8575f",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "59145501-5e07-49d4-853e-6adb70bfdcbd",
-      "startTime": "2026-01-20T19:37:33.821Z",
-      "endTime": "2026-01-20T19:37:33.822Z",
+      "parentUuid": "7ac2e700-23de-4560-a8de-f9683d38a07f",
+      "startTime": "2026-01-20T21:08:59.037Z",
+      "endTime": "2026-01-20T21:08:59.038Z",
       "input": {
         "city": "San Francisco"
       },
@@ -834,14 +834,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-        "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+        "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+        "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-20T19:37:31.954Z",
-  "endTime": "2026-01-20T19:37:34.552Z",
+  "startTime": "2026-01-20T21:08:58.263Z",
+  "endTime": "2026-01-20T21:08:59.936Z",
   "name": "langgraph-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -860,7 +860,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+        "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
         "example": false
       }
     ]
@@ -872,7 +872,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "fdd65076-f894-445c-8385-a7e06b3d0dbc",
+        "id": "4c8e21a1-69a1-44b3-93d5-8e0020f56902",
         "example": false
       },
       {
@@ -880,7 +880,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+              "id": "call_gXP9veci37AOS0Oyby4TS10w",
               "function": {
                 "arguments": "{\"city\":\"San Francisco\"}",
                 "name": "get_weather"
@@ -908,13 +908,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BpdIA2oliaSa3F2BV5dWJoU5VTc",
+          "id": "chatcmpl-D0DG6JMlqxb05VKWdA5QENP58DI9i",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--076346a2-c4ae-48b5-b10c-9f7d2abf92f6-0",
+        "id": "run--45903613-4bd1-439f-a08b-7b94826fc79c-0",
         "example": false,
         "tool_calls": [
           {
@@ -922,7 +922,7 @@
             "args": {
               "city": "San Francisco"
             },
-            "id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+            "id": "call_gXP9veci37AOS0Oyby4TS10w",
             "type": "tool_call"
           }
         ],
@@ -947,8 +947,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-        "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+        "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+        "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
         "status": "success"
       },
       {
@@ -974,13 +974,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0Bpd2COhNasjC7Wb2W5F0IyKceOy",
+          "id": "chatcmpl-D0DG7KeQtKz367vcD4qZEPVOpPUPU",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--52628246-2113-4a10-a00f-ed2d2ced5607-0",
+        "id": "run--3279c78e-8158-4b83-8be8-8699e309bde9-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -1010,8 +1010,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "524f4b2e-6b6f-4dea-9bac-b6938a363638",
-        "tool_call_id": "call_ajvbVEfKQYr9HwMAflLoGzzz",
+        "id": "76c95e50-15f1-4294-9327-f473409e7c74",
+        "tool_call_id": "call_gXP9veci37AOS0Oyby4TS10w",
         "status": "success"
       },
       "inputParameters": {

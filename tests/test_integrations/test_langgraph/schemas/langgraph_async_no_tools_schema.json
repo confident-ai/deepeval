@@ -1,13 +1,13 @@
 {
-  "uuid": "faeb0b09-68b0-4b79-96da-dff72b0083bb",
+  "uuid": "aa492987-ad02-44e9-a78f-cefc47d5e747",
   "baseSpans": [
     {
-      "uuid": "e70b3d85-fb71-49e9-bf01-95ec087cf56a",
+      "uuid": "2fa93af2-cfd4-45b1-8daa-c9ddb06dd746",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:39:05.414Z",
-      "endTime": "2026-01-20T19:39:06.687Z",
+      "startTime": "2026-01-20T21:08:33.053Z",
+      "endTime": "2026-01-20T21:08:34.380Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+            "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+            "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
             "example": false
           },
           {
@@ -53,13 +53,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Br8wcMLMSU3yI4pbtMYQjmlVjnl",
+              "id": "chatcmpl-D0DFhXlKFVcKq7MvfzZAjMTp498o7",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--2065d13b-329f-4951-b04e-b288f8116924-0",
+            "id": "run--6fad9d1e-fbd4-4528-9cc0-5fb54ba9a2fd-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -81,13 +81,13 @@
       }
     },
     {
-      "uuid": "515fc313-4322-4aad-94b0-419b7e676fb3",
+      "uuid": "1617fd23-da58-4a6b-a7ed-a5d396930d55",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e70b3d85-fb71-49e9-bf01-95ec087cf56a",
-      "startTime": "2026-01-20T19:39:05.415Z",
-      "endTime": "2026-01-20T19:39:06.685Z",
+      "parentUuid": "2fa93af2-cfd4-45b1-8daa-c9ddb06dd746",
+      "startTime": "2026-01-20T21:08:33.054Z",
+      "endTime": "2026-01-20T21:08:34.379Z",
       "input": {
         "messages": [
           {
@@ -95,7 +95,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+            "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
             "example": false
           }
         ]
@@ -125,13 +125,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Br8wcMLMSU3yI4pbtMYQjmlVjnl",
+              "id": "chatcmpl-D0DFhXlKFVcKq7MvfzZAjMTp498o7",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--2065d13b-329f-4951-b04e-b288f8116924-0",
+            "id": "run--6fad9d1e-fbd4-4528-9cc0-5fb54ba9a2fd-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -153,13 +153,13 @@
       }
     },
     {
-      "uuid": "69bdb0c8-4c26-40de-8a04-90dcfe4c0c78",
+      "uuid": "79b015f7-a8f7-4553-bee9-7264dac59bbe",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "515fc313-4322-4aad-94b0-419b7e676fb3",
-      "startTime": "2026-01-20T19:39:06.681Z",
-      "endTime": "2026-01-20T19:39:06.684Z",
+      "parentUuid": "1617fd23-da58-4a6b-a7ed-a5d396930d55",
+      "startTime": "2026-01-20T21:08:34.378Z",
+      "endTime": "2026-01-20T21:08:34.379Z",
       "input": {
         "messages": [
           {
@@ -167,7 +167,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+            "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
             "example": false
           },
           {
@@ -193,13 +193,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0Br8wcMLMSU3yI4pbtMYQjmlVjnl",
+              "id": "chatcmpl-D0DFhXlKFVcKq7MvfzZAjMTp498o7",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--2065d13b-329f-4951-b04e-b288f8116924-0",
+            "id": "run--6fad9d1e-fbd4-4528-9cc0-5fb54ba9a2fd-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -226,8 +226,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-20T19:39:05.414Z",
-  "endTime": "2026-01-20T19:39:06.687Z",
+  "startTime": "2026-01-20T21:08:33.053Z",
+  "endTime": "2026-01-20T21:08:34.380Z",
   "name": "langgraph-async-no-tools",
   "tags": [
     "langgraph",
@@ -242,7 +242,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+        "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
         "example": false
       }
     ]
@@ -254,7 +254,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "55d04bb9-6e99-42b8-882c-4cc0259f3bdb",
+        "id": "e3d6e8aa-65e5-49b7-b062-9ce940920ce1",
         "example": false
       },
       {
@@ -280,13 +280,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0Br8wcMLMSU3yI4pbtMYQjmlVjnl",
+          "id": "chatcmpl-D0DFhXlKFVcKq7MvfzZAjMTp498o7",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--2065d13b-329f-4951-b04e-b288f8116924-0",
+        "id": "run--6fad9d1e-fbd4-4528-9cc0-5fb54ba9a2fd-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],

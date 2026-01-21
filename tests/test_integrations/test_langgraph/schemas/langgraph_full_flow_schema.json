@@ -1,13 +1,13 @@
 {
-  "uuid": "baa41664-59a5-4452-852a-65b6bfbf99dd",
+  "uuid": "b8d7b685-bb36-4f10-882e-712143a65c85",
   "baseSpans": [
     {
-      "uuid": "13bda000-a0fc-4a06-b4c8-9e231a60006a",
+      "uuid": "4e701e85-2b11-42e9-a56a-90185fe2be21",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-20T19:38:25.408Z",
-      "endTime": "2026-01-20T19:38:27.070Z",
+      "startTime": "2026-01-20T21:09:42.740Z",
+      "endTime": "2026-01-20T21:09:44.355Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           }
         ]
@@ -27,7 +27,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -35,7 +35,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -63,13 +63,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -78,7 +78,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -103,8 +103,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -130,13 +130,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -159,7 +159,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -167,7 +167,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -195,13 +195,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -209,7 +209,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -234,12 +234,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -261,13 +261,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -290,7 +290,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -298,7 +298,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -326,19 +326,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -363,20 +363,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -389,21 +389,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -419,7 +419,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           },
           {
@@ -427,7 +427,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -440,8 +440,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -455,27 +455,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -492,20 +492,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "confirm_order",
-            "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-            "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+            "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
             "status": "success"
           },
           {
-            "content": "Your order has been placed successfully! Order number **#12345**. The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "content": "Your order #12345 has been placed successfully! The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 39,
-                "prompt_tokens": 425,
-                "total_tokens": 464,
+                "completion_tokens": 34,
+                "prompt_tokens": 423,
+                "total_tokens": 457,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -519,20 +519,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqUDoXUuRzWdqOain66q6w49Zxi",
+              "id": "chatcmpl-D0DGpv3bfC5MAfk9AhlzqEsdES8Bu",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--9c1b8f38-f16a-4f0d-8392-75ecf0dcfd58-0",
+            "id": "run--08fc535f-aa5c-4091-a23b-ce10a729769c-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 425,
-              "output_tokens": 39,
-              "total_tokens": 464,
+              "input_tokens": 423,
+              "output_tokens": 34,
+              "total_tokens": 457,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -547,13 +547,13 @@
       }
     },
     {
-      "uuid": "28ee66b3-6984-4b2f-99a8-69e06f16106c",
+      "uuid": "12b26da7-4648-42aa-a24f-783c396a9a43",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "13bda000-a0fc-4a06-b4c8-9e231a60006a",
-      "startTime": "2026-01-20T19:38:25.989Z",
-      "endTime": "2026-01-20T19:38:27.069Z",
+      "parentUuid": "4e701e85-2b11-42e9-a56a-90185fe2be21",
+      "startTime": "2026-01-20T21:09:43.284Z",
+      "endTime": "2026-01-20T21:09:44.354Z",
       "input": {
         "messages": [
           {
@@ -561,7 +561,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -569,7 +569,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -597,13 +597,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -612,7 +612,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -637,8 +637,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -664,13 +664,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -693,7 +693,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -701,7 +701,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -729,13 +729,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -743,7 +743,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -768,12 +768,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -795,13 +795,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -824,7 +824,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -832,7 +832,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -860,19 +860,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -897,20 +897,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -923,21 +923,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -953,7 +953,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           },
           {
@@ -961,7 +961,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -974,8 +974,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -989,27 +989,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -1026,8 +1026,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "confirm_order",
-            "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-            "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+            "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
             "status": "success"
           }
         ]
@@ -1035,15 +1035,15 @@
       "output": {
         "messages": [
           {
-            "content": "Your order has been placed successfully! Order number **#12345**. The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "content": "Your order #12345 has been placed successfully! The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 39,
-                "prompt_tokens": 425,
-                "total_tokens": 464,
+                "completion_tokens": 34,
+                "prompt_tokens": 423,
+                "total_tokens": 457,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1057,20 +1057,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqUDoXUuRzWdqOain66q6w49Zxi",
+              "id": "chatcmpl-D0DGpv3bfC5MAfk9AhlzqEsdES8Bu",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--9c1b8f38-f16a-4f0d-8392-75ecf0dcfd58-0",
+            "id": "run--08fc535f-aa5c-4091-a23b-ce10a729769c-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 425,
-              "output_tokens": 39,
-              "total_tokens": 464,
+              "input_tokens": 423,
+              "output_tokens": 34,
+              "total_tokens": 457,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -1085,13 +1085,13 @@
       }
     },
     {
-      "uuid": "a4a24e99-d3f1-457d-a9f8-568cec9beb2a",
+      "uuid": "7e6f7457-184a-4fdf-990f-8bf3c418bccb",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "28ee66b3-6984-4b2f-99a8-69e06f16106c",
-      "startTime": "2026-01-20T19:38:27.069Z",
-      "endTime": "2026-01-20T19:38:27.069Z",
+      "parentUuid": "12b26da7-4648-42aa-a24f-783c396a9a43",
+      "startTime": "2026-01-20T21:09:44.353Z",
+      "endTime": "2026-01-20T21:09:44.353Z",
       "input": {
         "messages": [
           {
@@ -1099,7 +1099,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -1107,7 +1107,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -1135,13 +1135,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -1150,7 +1150,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -1175,8 +1175,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -1202,13 +1202,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -1231,7 +1231,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -1239,7 +1239,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -1267,13 +1267,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -1281,7 +1281,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -1306,12 +1306,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1333,13 +1333,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -1362,7 +1362,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -1370,7 +1370,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -1398,19 +1398,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -1435,20 +1435,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1461,21 +1461,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -1491,7 +1491,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           },
           {
@@ -1499,7 +1499,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -1512,8 +1512,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1527,27 +1527,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -1564,20 +1564,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "confirm_order",
-            "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-            "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+            "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
             "status": "success"
           },
           {
-            "content": "Your order has been placed successfully! Order number **#12345**. The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+            "content": "Your order #12345 has been placed successfully! The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 39,
-                "prompt_tokens": 425,
-                "total_tokens": 464,
+                "completion_tokens": 34,
+                "prompt_tokens": 423,
+                "total_tokens": 457,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1591,20 +1591,20 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqUDoXUuRzWdqOain66q6w49Zxi",
+              "id": "chatcmpl-D0DGpv3bfC5MAfk9AhlzqEsdES8Bu",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--9c1b8f38-f16a-4f0d-8392-75ecf0dcfd58-0",
+            "id": "run--08fc535f-aa5c-4091-a23b-ce10a729769c-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 425,
-              "output_tokens": 39,
-              "total_tokens": 464,
+              "input_tokens": 423,
+              "output_tokens": 34,
+              "total_tokens": 457,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -1620,13 +1620,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "f86a47af-09c1-4637-8a0a-80755757e823",
+      "uuid": "02e0b19c-57b3-4ae8-8362-aa3fed9ecdea",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "13bda000-a0fc-4a06-b4c8-9e231a60006a",
-      "startTime": "2026-01-20T19:38:25.982Z",
-      "endTime": "2026-01-20T19:38:25.988Z",
+      "parentUuid": "4e701e85-2b11-42e9-a56a-90185fe2be21",
+      "startTime": "2026-01-20T21:09:43.282Z",
+      "endTime": "2026-01-20T21:09:43.284Z",
       "input": {
         "messages": [
           {
@@ -1634,7 +1634,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -1642,7 +1642,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -1670,13 +1670,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -1685,7 +1685,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -1710,8 +1710,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -1737,13 +1737,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -1766,7 +1766,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -1774,7 +1774,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -1802,13 +1802,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -1816,7 +1816,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -1841,12 +1841,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -1868,13 +1868,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -1897,7 +1897,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -1905,7 +1905,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -1933,19 +1933,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -1970,20 +1970,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1996,21 +1996,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -2026,7 +2026,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           },
           {
@@ -2034,7 +2034,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -2047,8 +2047,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -2062,27 +2062,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -2103,8 +2103,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "confirm_order",
-            "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-            "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+            "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
             "status": "success"
           }
         ]
@@ -2118,8 +2118,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "confirm_order",
-            "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-            "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+            "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
             "status": "success"
           },
           "inputParameters": {}
@@ -2127,13 +2127,13 @@
       ]
     },
     {
-      "uuid": "da0d2479-fb36-4e77-abac-48086bb28e82",
+      "uuid": "4fea02f1-7f72-48a5-9e48-9c34ff6c54bb",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "13bda000-a0fc-4a06-b4c8-9e231a60006a",
-      "startTime": "2026-01-20T19:38:25.412Z",
-      "endTime": "2026-01-20T19:38:25.980Z",
+      "parentUuid": "4e701e85-2b11-42e9-a56a-90185fe2be21",
+      "startTime": "2026-01-20T21:09:42.745Z",
+      "endTime": "2026-01-20T21:09:43.281Z",
       "input": {
         "messages": [
           {
@@ -2141,7 +2141,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -2149,7 +2149,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -2177,13 +2177,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -2192,7 +2192,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -2217,8 +2217,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -2244,13 +2244,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -2273,7 +2273,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -2281,7 +2281,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -2309,13 +2309,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -2323,7 +2323,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -2348,12 +2348,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2375,13 +2375,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -2404,7 +2404,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -2412,7 +2412,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -2440,19 +2440,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -2477,20 +2477,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -2503,21 +2503,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -2533,7 +2533,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           }
         ]
@@ -2545,7 +2545,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -2558,8 +2558,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -2573,27 +2573,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -2608,13 +2608,13 @@
       }
     },
     {
-      "uuid": "e0d8410b-c306-465f-a9ec-3e1d2974e9ec",
+      "uuid": "9f8f9667-13ff-4255-ab6d-5cf12a148fc7",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "da0d2479-fb36-4e77-abac-48086bb28e82",
-      "startTime": "2026-01-20T19:38:25.979Z",
-      "endTime": "2026-01-20T19:38:25.980Z",
+      "parentUuid": "4fea02f1-7f72-48a5-9e48-9c34ff6c54bb",
+      "startTime": "2026-01-20T21:09:43.281Z",
+      "endTime": "2026-01-20T21:09:43.281Z",
       "input": {
         "messages": [
           {
@@ -2622,7 +2622,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+            "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
             "example": false
           },
           {
@@ -2630,7 +2630,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                  "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                   "function": {
                     "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                     "name": "add_to_cart"
@@ -2658,13 +2658,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+              "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+            "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
             "example": false,
             "tool_calls": [
               {
@@ -2673,7 +2673,7 @@
                   "item": "apples",
                   "quantity": 2
                 },
-                "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+                "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
                 "type": "tool_call"
               }
             ],
@@ -2698,8 +2698,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-            "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+            "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "status": "success"
           },
           {
@@ -2725,13 +2725,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+              "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+            "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -2754,7 +2754,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+            "id": "411f15be-a635-412c-b33c-d326bc542e36",
             "example": false
           },
           {
@@ -2762,7 +2762,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                  "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                   "function": {
                     "arguments": "{\"code\":\"SAVE20\"}",
                     "name": "apply_coupon"
@@ -2790,13 +2790,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+              "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+            "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
             "example": false,
             "tool_calls": [
               {
@@ -2804,7 +2804,7 @@
                 "args": {
                   "code": "SAVE20"
                 },
-                "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+                "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
                 "type": "tool_call"
               }
             ],
@@ -2829,12 +2829,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "apply_coupon",
-            "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-            "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+            "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "status": "success"
           },
           {
-            "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+            "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
             "additional_kwargs": {
               "refusal": null
             },
@@ -2856,13 +2856,13 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+              "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+            "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
@@ -2885,7 +2885,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+            "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
             "example": false
           },
           {
@@ -2893,7 +2893,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                  "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                   "function": {
                     "arguments": "{}",
                     "name": "checkout"
@@ -2921,19 +2921,19 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+              "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+            "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "checkout",
                 "args": {},
-                "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+                "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
                 "type": "tool_call"
               }
             ],
@@ -2958,20 +2958,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "checkout",
-            "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-            "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+            "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "status": "success"
           },
           {
-            "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+            "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 28,
+                "completion_tokens": 26,
                 "prompt_tokens": 353,
-                "total_tokens": 381,
+                "total_tokens": 379,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -2984,21 +2984,21 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+              "system_fingerprint": "fp_29330a9688",
+              "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+            "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
             "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 353,
-              "output_tokens": 28,
-              "total_tokens": 381,
+              "output_tokens": 26,
+              "total_tokens": 379,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -3014,7 +3014,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+            "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
             "example": false
           },
           {
@@ -3022,7 +3022,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                  "id": "call_busJMNCljHh8mws76GW1E4vW",
                   "function": {
                     "arguments": "{}",
                     "name": "confirm_order"
@@ -3035,8 +3035,8 @@
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 391,
-                "total_tokens": 401,
+                "prompt_tokens": 389,
+                "total_tokens": 399,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -3050,27 +3050,27 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+              "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+            "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
             "example": false,
             "tool_calls": [
               {
                 "name": "confirm_order",
                 "args": {},
-                "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+                "id": "call_busJMNCljHh8mws76GW1E4vW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 391,
+              "input_tokens": 389,
               "output_tokens": 10,
-              "total_tokens": 401,
+              "total_tokens": 399,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -3089,13 +3089,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "9c1b8f38-f16a-4f0d-8392-75ecf0dcfd58",
+      "uuid": "08fc535f-aa5c-4091-a23b-ce10a729769c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "28ee66b3-6984-4b2f-99a8-69e06f16106c",
-      "startTime": "2026-01-20T19:38:25.993Z",
-      "endTime": "2026-01-20T19:38:27.068Z",
+      "parentUuid": "12b26da7-4648-42aa-a24f-783c396a9a43",
+      "startTime": "2026-01-20T21:09:43.286Z",
+      "endTime": "2026-01-20T21:09:44.352Z",
       "input": [
         {
           "role": "human",
@@ -3131,7 +3131,7 @@
         },
         {
           "role": "ai",
-          "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?"
+          "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?"
         },
         {
           "role": "human",
@@ -3147,7 +3147,7 @@
         },
         {
           "role": "ai",
-          "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?"
+          "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?"
         },
         {
           "role": "human",
@@ -3164,22 +3164,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Your order has been placed successfully! Order number **#12345**. The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+        "content": "Your order #12345 has been placed successfully! The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
       "prompt": {},
-      "inputTokenCount": 425.0,
-      "outputTokenCount": 39.0
+      "inputTokenCount": 423.0,
+      "outputTokenCount": 34.0
     },
     {
-      "uuid": "e048861a-37ea-46a2-803e-52fdae42b1c6",
+      "uuid": "10835115-1897-4a07-9ff4-8503ecf10fcf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "da0d2479-fb36-4e77-abac-48086bb28e82",
-      "startTime": "2026-01-20T19:38:25.414Z",
-      "endTime": "2026-01-20T19:38:25.978Z",
+      "parentUuid": "4fea02f1-7f72-48a5-9e48-9c34ff6c54bb",
+      "startTime": "2026-01-20T21:09:42.746Z",
+      "endTime": "2026-01-20T21:09:43.280Z",
       "input": [
         {
           "role": "human",
@@ -3215,7 +3215,7 @@
         },
         {
           "role": "ai",
-          "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?"
+          "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?"
         },
         {
           "role": "human",
@@ -3231,7 +3231,7 @@
         },
         {
           "role": "ai",
-          "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?"
+          "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?"
         },
         {
           "role": "human",
@@ -3245,26 +3245,26 @@
           {
             "name": "confirm_order",
             "args": {},
-            "id": "call_YjW97XJtKKg68hNgXXQeXiSG"
+            "id": "call_busJMNCljHh8mws76GW1E4vW"
           }
         ]
       },
       "model": "gpt-4o-mini-2024-07-18",
       "prompt": {},
-      "inputTokenCount": 391.0,
+      "inputTokenCount": 389.0,
       "outputTokenCount": 10.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "2715da98-6662-419e-b458-2a719b1d6670",
+      "uuid": "be267b41-0074-45b8-bdc1-345881ed2d63",
       "name": "confirm_order",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "f86a47af-09c1-4637-8a0a-80755757e823",
-      "startTime": "2026-01-20T19:38:25.985Z",
-      "endTime": "2026-01-20T19:38:25.986Z",
+      "parentUuid": "02e0b19c-57b3-4ae8-8362-aa3fed9ecdea",
+      "startTime": "2026-01-20T21:09:43.283Z",
+      "endTime": "2026-01-20T21:09:43.284Z",
       "input": {},
       "output": {
         "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
@@ -3272,14 +3272,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "confirm_order",
-        "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-        "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+        "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+        "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-20T19:38:25.408Z",
-  "endTime": "2026-01-20T19:38:27.070Z",
+  "startTime": "2026-01-20T21:09:42.740Z",
+  "endTime": "2026-01-20T21:09:44.355Z",
   "name": "langgraph-full-flow-4",
   "environment": "development",
   "threadId": "full-flow-001",
@@ -3290,7 +3290,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+        "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
         "example": false
       }
     ]
@@ -3302,7 +3302,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "f6b71951-8cf6-434e-adcd-3b22471af68f",
+        "id": "9460f13c-2849-4774-91eb-79870fcc8a22",
         "example": false
       },
       {
@@ -3310,7 +3310,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+              "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
               "function": {
                 "arguments": "{\"item\":\"apples\",\"quantity\":2}",
                 "name": "add_to_cart"
@@ -3338,13 +3338,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqOSVfjbeJzX8dguazd5TwBBng3",
+          "id": "chatcmpl-D0DGkN8tBIM7cBBbmuKDiSkUjLrLo",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--69dcc743-e8b0-464f-ab80-7dbc2a469bf0-0",
+        "id": "run--507129c6-0b64-4e59-8ab5-a3f1199a1c7f-0",
         "example": false,
         "tool_calls": [
           {
@@ -3353,7 +3353,7 @@
               "item": "apples",
               "quantity": 2
             },
-            "id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+            "id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
             "type": "tool_call"
           }
         ],
@@ -3378,8 +3378,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "add_to_cart",
-        "id": "5c036d6d-5242-4a49-823c-07d9fc749557",
-        "tool_call_id": "call_EYUVb6fgpd8e5ktkB16hYSba",
+        "id": "750a58fe-f25c-4043-a2c8-ab05839a86ca",
+        "tool_call_id": "call_KRu6sI8oSpFT5ZhVAZYcFYmW",
         "status": "success"
       },
       {
@@ -3405,13 +3405,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqPzBzWnY1GHpMzMT0QB0U012LW",
+          "id": "chatcmpl-D0DGkECQ4QS9r7ggsTKSr9wTB3Dml",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--e7c6951e-d90a-4763-b3fc-e9a60cff095f-0",
+        "id": "run--800af40c-ebf6-4a61-8e08-6fdbf3e71b8a-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -3434,7 +3434,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "fe465b50-ff05-41a4-b82b-95542ab4c378",
+        "id": "411f15be-a635-412c-b33c-d326bc542e36",
         "example": false
       },
       {
@@ -3442,7 +3442,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+              "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
               "function": {
                 "arguments": "{\"code\":\"SAVE20\"}",
                 "name": "apply_coupon"
@@ -3470,13 +3470,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqQtq0iIEfOlx4mdvkRMeK81VRN",
+          "id": "chatcmpl-D0DGlqgN19ADS4M7ZjH60D1gwMCT1",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--22b9cc3f-7ab6-47e5-b73b-a1e2a40f1dc6-0",
+        "id": "run--97e1f2c4-42f6-48cc-ba8d-222435dddba5-0",
         "example": false,
         "tool_calls": [
           {
@@ -3484,7 +3484,7 @@
             "args": {
               "code": "SAVE20"
             },
-            "id": "call_xXTACKdTriWhTyjj6v1dfPul",
+            "id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
             "type": "tool_call"
           }
         ],
@@ -3509,12 +3509,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "apply_coupon",
-        "id": "2c3cb4bc-dc3e-4887-b890-8129519e21c1",
-        "tool_call_id": "call_xXTACKdTriWhTyjj6v1dfPul",
+        "id": "630dbc6d-247c-4b6b-ac1c-9cef54149600",
+        "tool_call_id": "call_rWOtRKot7wMTQJXRr7LyEmxg",
         "status": "success"
       },
       {
-        "content": "The coupon code **SAVE20** has been applied, giving you a 20% discount. Would you like to proceed to checkout or do something else?",
+        "content": "The coupon code \"SAVE20\" has been applied, giving you a 20% discount. Would you like to view your cart or proceed to checkout?",
         "additional_kwargs": {
           "refusal": null
         },
@@ -3536,13 +3536,13 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqQ0LDdHJaMlp2eCkqNdNPCC5Zx",
+          "id": "chatcmpl-D0DGmNjVCXECmEHu5G6aOngBMrgLX",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--7713f384-62fd-4c3f-8608-71ec8fae4d72-0",
+        "id": "run--de30093d-1d64-4a83-ba31-1226c63db801-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
@@ -3565,7 +3565,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "1b766d14-7abd-44ad-9503-37026de7c99c",
+        "id": "dbfa5c0f-f3aa-4895-ab02-4fd0d55441de",
         "example": false
       },
       {
@@ -3573,7 +3573,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+              "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
               "function": {
                 "arguments": "{}",
                 "name": "checkout"
@@ -3601,19 +3601,19 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqRNvEVJsueE2eL8kLgdekzlmM3",
+          "id": "chatcmpl-D0DGnpBStYUepCVevbIzROCRhHGob",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--5a88e4e9-11cb-4487-adaa-148ddec9e334-0",
+        "id": "run--0aa5aaf6-2796-4d59-9e92-623de191b60a-0",
         "example": false,
         "tool_calls": [
           {
             "name": "checkout",
             "args": {},
-            "id": "call_mwemaMNp1InIJrH0RcDytpjo",
+            "id": "call_ifL9EspdEa6MyPPhU18hvd7d",
             "type": "tool_call"
           }
         ],
@@ -3638,20 +3638,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "checkout",
-        "id": "53e6310a-432d-4b1c-8aa0-d64c1ab665ff",
-        "tool_call_id": "call_mwemaMNp1InIJrH0RcDytpjo",
+        "id": "b83d2229-4723-48b4-b320-a4694cec7b03",
+        "tool_call_id": "call_ifL9EspdEa6MyPPhU18hvd7d",
         "status": "success"
       },
       {
-        "content": "The checkout has been initiated, and your total is **$25.99**. Would you like to confirm and place the order?",
+        "content": "The checkout has been initiated, and your total is $25.99. Would you like to confirm and place the order?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 28,
+            "completion_tokens": 26,
             "prompt_tokens": 353,
-            "total_tokens": 381,
+            "total_tokens": 379,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -3664,21 +3664,21 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-D0BqSR2skL4f3JxMt0cLrI4Ud9x4f",
+          "system_fingerprint": "fp_29330a9688",
+          "id": "chatcmpl-D0DGo1WyfDz2nq6IRVwDe9k7350SF",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--f701f5ca-b608-47e2-a1e3-389f1e74df1d-0",
+        "id": "run--f30652ee-e8f8-4f87-b980-0e271a980bd1-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 353,
-          "output_tokens": 28,
-          "total_tokens": 381,
+          "output_tokens": 26,
+          "total_tokens": 379,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -3694,7 +3694,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "2dcb50bc-55c0-434e-add7-415a078f0ed0",
+        "id": "5ee83fb9-59aa-4fec-9984-1845de3ab755",
         "example": false
       },
       {
@@ -3702,7 +3702,7 @@
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+              "id": "call_busJMNCljHh8mws76GW1E4vW",
               "function": {
                 "arguments": "{}",
                 "name": "confirm_order"
@@ -3715,8 +3715,8 @@
         "response_metadata": {
           "token_usage": {
             "completion_tokens": 10,
-            "prompt_tokens": 391,
-            "total_tokens": 401,
+            "prompt_tokens": 389,
+            "total_tokens": 399,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -3730,27 +3730,27 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqTsAzWtEcDIPsWL8n8H4jh2D3q",
+          "id": "chatcmpl-D0DGoGBMFnuoQoGbvGNmUpyJ5hqAG",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--e048861a-37ea-46a2-803e-52fdae42b1c6-0",
+        "id": "run--10835115-1897-4a07-9ff4-8503ecf10fcf-0",
         "example": false,
         "tool_calls": [
           {
             "name": "confirm_order",
             "args": {},
-            "id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+            "id": "call_busJMNCljHh8mws76GW1E4vW",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 391,
+          "input_tokens": 389,
           "output_tokens": 10,
-          "total_tokens": 401,
+          "total_tokens": 399,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -3767,20 +3767,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "confirm_order",
-        "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-        "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+        "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+        "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
         "status": "success"
       },
       {
-        "content": "Your order has been placed successfully! Order number **#12345**. The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
+        "content": "Your order #12345 has been placed successfully! The estimated delivery time is 3-5 days. If you need any further assistance, feel free to ask!",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 39,
-            "prompt_tokens": 425,
-            "total_tokens": 464,
+            "completion_tokens": 34,
+            "prompt_tokens": 423,
+            "total_tokens": 457,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -3794,20 +3794,20 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-D0BqUDoXUuRzWdqOain66q6w49Zxi",
+          "id": "chatcmpl-D0DGpv3bfC5MAfk9AhlzqEsdES8Bu",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "run--9c1b8f38-f16a-4f0d-8392-75ecf0dcfd58-0",
+        "id": "run--08fc535f-aa5c-4091-a23b-ce10a729769c-0",
         "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 425,
-          "output_tokens": 39,
-          "total_tokens": 464,
+          "input_tokens": 423,
+          "output_tokens": 34,
+          "total_tokens": 457,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -3830,8 +3830,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "confirm_order",
-        "id": "19ee5179-f665-40b9-9554-840e35027f3e",
-        "tool_call_id": "call_YjW97XJtKKg68hNgXXQeXiSG",
+        "id": "e71f0a9d-73c1-4a01-9721-c20687835b0d",
+        "tool_call_id": "call_busJMNCljHh8mws76GW1E4vW",
         "status": "success"
       },
       "inputParameters": {}
