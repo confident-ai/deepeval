@@ -312,7 +312,7 @@ def check_llm_test_case_params(
                 if isinstance(ele, MLLMImage):
                     count += 1
             if count != actual_output_image_count:
-                error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                error_str = f"Can only evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
                 raise ValueError(error_str)
 
     if isinstance(test_case, LLMTestCase) is False:
