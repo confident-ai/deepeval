@@ -1,13 +1,13 @@
 {
-  "uuid": "8d5b6e24-ae2a-4184-a12b-86d0598006fb",
+  "uuid": "c6e7dd50-d8e5-4e99-a64f-1cf37edc5545",
   "baseSpans": [
     {
-      "uuid": "019bc088-9f03-7780-9d59-5a46bc36eafb",
+      "uuid": "1c562d8b-4c64-47a8-b45b-079c338b4d71",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:17.731Z",
-      "endTime": "2026-01-15T07:22:21.914Z",
+      "startTime": "2026-01-20T21:09:25.442Z",
+      "endTime": "2026-01-20T21:09:29.089Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           }
         ]
       },
@@ -26,14 +27,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -41,7 +43,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -49,7 +51,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -57,7 +59,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -65,7 +67,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -93,19 +95,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -113,7 +117,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -121,7 +125,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -129,7 +133,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -137,7 +141,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -162,8 +166,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-            "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+            "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "status": "success"
           },
           {
@@ -172,8 +176,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-            "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+            "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "status": "success"
           },
           {
@@ -182,8 +186,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-            "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+            "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "status": "success"
           },
           {
@@ -192,8 +196,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-            "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+            "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "status": "success"
           },
           {
@@ -202,8 +206,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-            "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+            "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "status": "success"
           },
           {
@@ -228,13 +232,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyByOYdlc6LSAiq6ItqxR7KCyTjmi",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGZRnVicRNaW5I74jwnCRpEpY4y",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-a94a-7fa3-b290-fb4b72ab4c8b-0",
+            "id": "run--bd437111-946d-444d-b1e2-aefa1c2e55e5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -255,13 +261,13 @@
       }
     },
     {
-      "uuid": "019bc088-a94a-7fa3-b290-fb327b928816",
+      "uuid": "73c362f6-f789-4cce-92ac-e5c66bc7aa10",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-9f03-7780-9d59-5a46bc36eafb",
-      "startTime": "2026-01-15T07:22:20.362Z",
-      "endTime": "2026-01-15T07:22:21.914Z",
+      "parentUuid": "1c562d8b-4c64-47a8-b45b-079c338b4d71",
+      "startTime": "2026-01-20T21:09:27.539Z",
+      "endTime": "2026-01-20T21:09:29.088Z",
       "input": {
         "messages": [
           {
@@ -269,14 +275,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -284,7 +291,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -292,7 +299,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -300,7 +307,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -308,7 +315,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -336,19 +343,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -356,7 +365,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -364,7 +373,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -372,7 +381,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -380,7 +389,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -405,8 +414,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-            "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+            "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "status": "success"
           },
           {
@@ -415,8 +424,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-            "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+            "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "status": "success"
           },
           {
@@ -425,8 +434,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-            "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+            "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "status": "success"
           },
           {
@@ -435,8 +444,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-            "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+            "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "status": "success"
           },
           {
@@ -445,8 +454,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-            "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+            "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "status": "success"
           }
         ]
@@ -475,13 +484,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyByOYdlc6LSAiq6ItqxR7KCyTjmi",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGZRnVicRNaW5I74jwnCRpEpY4y",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-a94a-7fa3-b290-fb4b72ab4c8b-0",
+            "id": "run--bd437111-946d-444d-b1e2-aefa1c2e55e5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -502,13 +513,13 @@
       }
     },
     {
-      "uuid": "019bc088-af5a-76b1-bdd5-cd52a604ea25",
+      "uuid": "43f713ec-2d74-4fb3-90ce-e0fc6ea5c03c",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-a94a-7fa3-b290-fb327b928816",
-      "startTime": "2026-01-15T07:22:21.914Z",
-      "endTime": "2026-01-15T07:22:21.914Z",
+      "parentUuid": "73c362f6-f789-4cce-92ac-e5c66bc7aa10",
+      "startTime": "2026-01-20T21:09:29.088Z",
+      "endTime": "2026-01-20T21:09:29.088Z",
       "input": {
         "messages": [
           {
@@ -516,14 +527,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -531,7 +543,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -539,7 +551,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -547,7 +559,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -555,7 +567,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -583,19 +595,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -603,7 +617,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -611,7 +625,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -619,7 +633,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -627,7 +641,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -652,8 +666,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-            "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+            "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "status": "success"
           },
           {
@@ -662,8 +676,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-            "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+            "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "status": "success"
           },
           {
@@ -672,8 +686,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-            "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+            "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "status": "success"
           },
           {
@@ -682,8 +696,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-            "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+            "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "status": "success"
           },
           {
@@ -692,8 +706,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-            "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+            "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "status": "success"
           },
           {
@@ -718,13 +732,15 @@
                 }
               },
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyByOYdlc6LSAiq6ItqxR7KCyTjmi",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D0DGZRnVicRNaW5I74jwnCRpEpY4y",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-a94a-7fa3-b290-fb4b72ab4c8b-0",
+            "id": "run--bd437111-946d-444d-b1e2-aefa1c2e55e5-0",
+            "example": false,
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -746,13 +762,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
+      "uuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-9f03-7780-9d59-5a46bc36eafb",
-      "startTime": "2026-01-15T07:22:20.356Z",
-      "endTime": "2026-01-15T07:22:20.361Z",
+      "parentUuid": "1c562d8b-4c64-47a8-b45b-079c338b4d71",
+      "startTime": "2026-01-20T21:09:27.520Z",
+      "endTime": "2026-01-20T21:09:27.538Z",
       "input": {
         "messages": [
           {
@@ -760,14 +776,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -775,7 +792,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -783,7 +800,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -791,7 +808,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -799,7 +816,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -827,19 +844,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -847,7 +866,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -855,7 +874,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -863,7 +882,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -871,7 +890,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -900,8 +919,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-            "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+            "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "status": "success"
           },
           {
@@ -910,8 +929,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-            "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+            "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "status": "success"
           },
           {
@@ -920,8 +939,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-            "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+            "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "status": "success"
           },
           {
@@ -930,8 +949,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-            "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+            "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "status": "success"
           },
           {
@@ -940,8 +959,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-            "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+            "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "status": "success"
           }
         ]
@@ -955,8 +974,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-            "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+            "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "status": "success"
           },
           "inputParameters": {
@@ -971,8 +990,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-            "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+            "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "status": "success"
           },
           "inputParameters": {
@@ -987,8 +1006,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-            "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+            "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "status": "success"
           },
           "inputParameters": {
@@ -1003,8 +1022,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-            "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+            "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "status": "success"
           },
           "inputParameters": {
@@ -1019,8 +1038,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-            "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+            "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "status": "success"
           },
           "inputParameters": {
@@ -1030,13 +1049,13 @@
       ]
     },
     {
-      "uuid": "019bc088-9f03-7780-9d59-5a5dd220a0a3",
+      "uuid": "54d35820-3a5d-4113-b99c-0545be04d9d7",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-9f03-7780-9d59-5a46bc36eafb",
-      "startTime": "2026-01-15T07:22:17.731Z",
-      "endTime": "2026-01-15T07:22:20.355Z",
+      "parentUuid": "1c562d8b-4c64-47a8-b45b-079c338b4d71",
+      "startTime": "2026-01-20T21:09:25.443Z",
+      "endTime": "2026-01-20T21:09:27.518Z",
       "input": {
         "messages": [
           {
@@ -1044,7 +1063,8 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           }
         ]
       },
@@ -1055,7 +1075,7 @@
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -1063,7 +1083,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -1071,7 +1091,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -1079,7 +1099,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -1087,7 +1107,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -1115,19 +1135,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -1135,7 +1157,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -1143,7 +1165,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -1151,7 +1173,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -1159,7 +1181,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -1182,13 +1204,13 @@
       }
     },
     {
-      "uuid": "019bc088-a942-7c63-8cb7-464e9837fb6b",
+      "uuid": "ad12e5bb-73ec-4087-9dd5-e9a8cc9a17d4",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-9f03-7780-9d59-5a5dd220a0a3",
-      "startTime": "2026-01-15T07:22:20.354Z",
-      "endTime": "2026-01-15T07:22:20.354Z",
+      "parentUuid": "54d35820-3a5d-4113-b99c-0545be04d9d7",
+      "startTime": "2026-01-20T21:09:27.518Z",
+      "endTime": "2026-01-20T21:09:27.518Z",
       "input": {
         "messages": [
           {
@@ -1196,14 +1218,15 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+            "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+            "example": false
           },
           {
             "content": "",
             "additional_kwargs": {
               "tool_calls": [
                 {
-                  "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                  "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                   "function": {
                     "arguments": "{\"symbol\": \"AAPL\"}",
                     "name": "get_stock_price"
@@ -1211,7 +1234,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                  "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                   "function": {
                     "arguments": "{\"symbol\": \"GOOGL\"}",
                     "name": "get_stock_price"
@@ -1219,7 +1242,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                  "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                   "function": {
                     "arguments": "{\"symbol\": \"MSFT\"}",
                     "name": "get_stock_price"
@@ -1227,7 +1250,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                  "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                   "function": {
                     "arguments": "{\"symbol\": \"TSLA\"}",
                     "name": "get_stock_price"
@@ -1235,7 +1258,7 @@
                   "type": "function"
                 },
                 {
-                  "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                  "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                   "function": {
                     "arguments": "{\"symbol\": \"AMZN\"}",
                     "name": "get_stock_price"
@@ -1263,19 +1286,21 @@
               },
               "model_name": "gpt-4o-mini-2024-07-18",
               "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+              "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+            "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+            "example": false,
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "AAPL"
                 },
-                "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+                "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
                 "type": "tool_call"
               },
               {
@@ -1283,7 +1308,7 @@
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+                "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
                 "type": "tool_call"
               },
               {
@@ -1291,7 +1316,7 @@
                 "args": {
                   "symbol": "MSFT"
                 },
-                "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+                "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
                 "type": "tool_call"
               },
               {
@@ -1299,7 +1324,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+                "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
                 "type": "tool_call"
               },
               {
@@ -1307,7 +1332,7 @@
                 "args": {
                   "symbol": "AMZN"
                 },
-                "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+                "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
                 "type": "tool_call"
               }
             ],
@@ -1334,17 +1359,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-a94a-7fa3-b290-fb4b72ab4c8b",
+      "uuid": "bd437111-946d-444d-b1e2-aefa1c2e55e5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-a94a-7fa3-b290-fb327b928816",
-      "startTime": "2026-01-15T07:22:20.362Z",
-      "endTime": "2026-01-15T07:22:21.914Z",
+      "parentUuid": "73c362f6-f789-4cce-92ac-e5c66bc7aa10",
+      "startTime": "2026-01-20T21:09:27.542Z",
+      "endTime": "2026-01-20T21:09:29.088Z",
       "input": [
         {
           "role": "human",
-          "content": "You are a helpful assistant with access to multiple tools.\nWhen asked for multiple pieces of information, call all relevant tools in parallel.\nFor example, if asked about weather in multiple cities, call get_weather for each city."
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
         },
         {
           "role": "human",
@@ -1352,7 +1377,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'AAPL'}, 'id': 'call_ViKJdsqHY7fVmxiBPjnpg46Q', 'type': 'tool_call'}, {'name': 'get_stock_price', 'args': {'symbol': 'GOOGL'}, 'id': 'call_kZ06PROjOHxRMbmrj4BNysZa', 'type': 'tool_call'}, {'name': 'get_stock_price', 'args': {'symbol': 'MSFT'}, 'id': 'call_63xDVTkHvVLChlxRp9nqzr2b', 'type': 'tool_call'}, {'name': 'get_stock_price', 'args': {'symbol': 'TSLA'}, 'id': 'call_975QRCVEbDfE7X2rLN6Tu6b0', 'type': 'tool_call'}, {'name': 'get_stock_price', 'args': {'symbol': 'AMZN'}, 'id': 'call_rNkV5aLA44ktWsbASVqaZrS5', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -1373,26 +1398,6 @@
         {
           "role": "tool",
           "content": "$185.20"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -1406,41 +1411,21 @@
       "outputTokenCount": 53.0
     },
     {
-      "uuid": "019bc088-9f04-7350-a31d-7e49601b282b",
+      "uuid": "597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-9f03-7780-9d59-5a5dd220a0a3",
-      "startTime": "2026-01-15T07:22:17.732Z",
-      "endTime": "2026-01-15T07:22:20.353Z",
+      "parentUuid": "54d35820-3a5d-4113-b99c-0545be04d9d7",
+      "startTime": "2026-01-20T21:09:25.443Z",
+      "endTime": "2026-01-20T21:09:27.517Z",
       "input": [
         {
           "role": "human",
-          "content": "You are a helpful assistant with access to multiple tools.\nWhen asked for multiple pieces of information, call all relevant tools in parallel.\nFor example, if asked about weather in multiple cities, call get_weather for each city."
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
         },
         {
           "role": "human",
           "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -1452,35 +1437,35 @@
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q"
+            "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_kZ06PROjOHxRMbmrj4BNysZa"
+            "id": "call_FNx6ana3HwqFtwHxCFIcfCwr"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_63xDVTkHvVLChlxRp9nqzr2b"
+            "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_975QRCVEbDfE7X2rLN6Tu6b0"
+            "id": "call_TjuwReTjsVZd7wCrCmpdRblz"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_rNkV5aLA44ktWsbASVqaZrS5"
+            "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc"
           }
         ]
       },
@@ -1493,13 +1478,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-a948-7230-9833-039f50f283d6",
+      "uuid": "d586a5af-efdd-41f9-bae9-929d1376ff42",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
-      "startTime": "2026-01-15T07:22:20.360Z",
-      "endTime": "2026-01-15T07:22:20.361Z",
+      "parentUuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
+      "startTime": "2026-01-20T21:09:27.535Z",
+      "endTime": "2026-01-20T21:09:27.536Z",
       "input": {
         "symbol": "AMZN"
       },
@@ -1509,19 +1494,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-        "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+        "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+        "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-a948-7230-9833-03879e899587",
+      "uuid": "927d62af-cf32-4d44-a80e-b42666d9e846",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
-      "startTime": "2026-01-15T07:22:20.360Z",
-      "endTime": "2026-01-15T07:22:20.360Z",
+      "parentUuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
+      "startTime": "2026-01-20T21:09:27.532Z",
+      "endTime": "2026-01-20T21:09:27.534Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -1531,19 +1516,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-        "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+        "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+        "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-a947-7322-99c2-b80693f7ca37",
+      "uuid": "01f58fae-efc0-4852-9d71-39a93fcfd9ff",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
-      "startTime": "2026-01-15T07:22:20.359Z",
-      "endTime": "2026-01-15T07:22:20.359Z",
+      "parentUuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
+      "startTime": "2026-01-20T21:09:27.529Z",
+      "endTime": "2026-01-20T21:09:27.531Z",
       "input": {
         "symbol": "MSFT"
       },
@@ -1553,19 +1538,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-        "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+        "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+        "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-a947-7322-99c2-b7f04b2057ce",
+      "uuid": "51b6725c-218c-404f-a0dc-89c60e79e28d",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
-      "startTime": "2026-01-15T07:22:20.359Z",
-      "endTime": "2026-01-15T07:22:20.359Z",
+      "parentUuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
+      "startTime": "2026-01-20T21:09:27.526Z",
+      "endTime": "2026-01-20T21:09:27.528Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -1575,19 +1560,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-        "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+        "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+        "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-a945-7672-82ae-a9e8bc5c5fa8",
+      "uuid": "ec13620f-3363-4859-b358-df086357ed22",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-a944-77d2-ba11-7e1ab20f6e37",
-      "startTime": "2026-01-15T07:22:20.357Z",
-      "endTime": "2026-01-15T07:22:20.358Z",
+      "parentUuid": "475bd149-9d6f-4dee-ba8e-22f849cb28d5",
+      "startTime": "2026-01-20T21:09:27.522Z",
+      "endTime": "2026-01-20T21:09:27.524Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -1597,14 +1582,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-        "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+        "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+        "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:22:17.731Z",
-  "endTime": "2026-01-15T07:22:21.914Z",
+  "startTime": "2026-01-20T21:09:25.442Z",
+  "endTime": "2026-01-20T21:09:29.089Z",
   "name": "langgraph-parallel-stocks",
   "tags": [
     "langgraph",
@@ -1619,7 +1604,8 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+        "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+        "example": false
       }
     ]
   },
@@ -1630,14 +1616,15 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "933f8384-69a6-4258-8a5a-6fe517278db3"
+        "id": "2f4b103a-32d9-4aa6-8d78-001998c780b3",
+        "example": false
       },
       {
         "content": "",
         "additional_kwargs": {
           "tool_calls": [
             {
-              "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+              "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
               "function": {
                 "arguments": "{\"symbol\": \"AAPL\"}",
                 "name": "get_stock_price"
@@ -1645,7 +1632,7 @@
               "type": "function"
             },
             {
-              "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+              "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
               "function": {
                 "arguments": "{\"symbol\": \"GOOGL\"}",
                 "name": "get_stock_price"
@@ -1653,7 +1640,7 @@
               "type": "function"
             },
             {
-              "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+              "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
               "function": {
                 "arguments": "{\"symbol\": \"MSFT\"}",
                 "name": "get_stock_price"
@@ -1661,7 +1648,7 @@
               "type": "function"
             },
             {
-              "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+              "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
               "function": {
                 "arguments": "{\"symbol\": \"TSLA\"}",
                 "name": "get_stock_price"
@@ -1669,7 +1656,7 @@
               "type": "function"
             },
             {
-              "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+              "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
               "function": {
                 "arguments": "{\"symbol\": \"AMZN\"}",
                 "name": "get_stock_price"
@@ -1697,19 +1684,21 @@
           },
           "model_name": "gpt-4o-mini-2024-07-18",
           "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyByMBktFnIhZ1rzj8p596r1V2cTf",
+          "id": "chatcmpl-D0DGX7uKOR4p7igijxIgu52u4CGcY",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-9f04-7350-a31d-7e49601b282b-0",
+        "id": "run--597ce5fe-4ad6-48f7-a2ce-ef879fc9ad6b-0",
+        "example": false,
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+            "id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
             "type": "tool_call"
           },
           {
@@ -1717,7 +1706,7 @@
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+            "id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
             "type": "tool_call"
           },
           {
@@ -1725,7 +1714,7 @@
             "args": {
               "symbol": "MSFT"
             },
-            "id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+            "id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
             "type": "tool_call"
           },
           {
@@ -1733,7 +1722,7 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+            "id": "call_TjuwReTjsVZd7wCrCmpdRblz",
             "type": "tool_call"
           },
           {
@@ -1741,7 +1730,7 @@
             "args": {
               "symbol": "AMZN"
             },
-            "id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+            "id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
             "type": "tool_call"
           }
         ],
@@ -1766,8 +1755,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-        "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+        "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+        "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
         "status": "success"
       },
       {
@@ -1776,8 +1765,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-        "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+        "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+        "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
         "status": "success"
       },
       {
@@ -1786,8 +1775,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-        "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+        "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+        "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
         "status": "success"
       },
       {
@@ -1796,8 +1785,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-        "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+        "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+        "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
         "status": "success"
       },
       {
@@ -1806,8 +1795,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-        "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+        "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+        "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
         "status": "success"
       },
       {
@@ -1832,13 +1821,15 @@
             }
           },
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyByOYdlc6LSAiq6ItqxR7KCyTjmi",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-D0DGZRnVicRNaW5I74jwnCRpEpY4y",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-a94a-7fa3-b290-fb4b72ab4c8b-0",
+        "id": "run--bd437111-946d-444d-b1e2-aefa1c2e55e5-0",
+        "example": false,
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -1867,8 +1858,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "5831a7b5-2a34-487d-81a8-0ce04a84bc3c",
-        "tool_call_id": "call_ViKJdsqHY7fVmxiBPjnpg46Q",
+        "id": "94a3bcce-abfb-477e-a1ec-ca902ebd6f80",
+        "tool_call_id": "call_UL6pSaZaFMs1NPbx6Jg7w9J6",
         "status": "success"
       },
       "inputParameters": {
@@ -1883,8 +1874,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "e814c6f0-5f95-4d5c-90cd-841e77897807",
-        "tool_call_id": "call_kZ06PROjOHxRMbmrj4BNysZa",
+        "id": "f59f80db-a9af-4861-a156-ab95db75c910",
+        "tool_call_id": "call_FNx6ana3HwqFtwHxCFIcfCwr",
         "status": "success"
       },
       "inputParameters": {
@@ -1899,8 +1890,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "86096fde-cd7a-4208-9c45-781115d4a0b2",
-        "tool_call_id": "call_63xDVTkHvVLChlxRp9nqzr2b",
+        "id": "88782e1f-4ff9-485e-be12-7f74b20b048c",
+        "tool_call_id": "call_NLWfzWPMpjBz9RRZ69aY0PS4",
         "status": "success"
       },
       "inputParameters": {
@@ -1915,8 +1906,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "39676a4d-27cc-4208-b72d-fd56ce41f42d",
-        "tool_call_id": "call_975QRCVEbDfE7X2rLN6Tu6b0",
+        "id": "4f9205fa-108d-4bc0-8461-9521c8971d30",
+        "tool_call_id": "call_TjuwReTjsVZd7wCrCmpdRblz",
         "status": "success"
       },
       "inputParameters": {
@@ -1931,8 +1922,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "d33c1567-c21d-4708-99d0-6e0705c41e84",
-        "tool_call_id": "call_rNkV5aLA44ktWsbASVqaZrS5",
+        "id": "44b9c5c1-57a4-44ac-af56-9ea4fea5a1c6",
+        "tool_call_id": "call_NCgKRdeVrvAOcPDaYzhVOrIc",
         "status": "success"
       },
       "inputParameters": {
