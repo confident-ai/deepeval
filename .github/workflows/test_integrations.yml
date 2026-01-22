@@ -5,30 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-  # Manual for forks (maintainer provides PR number)
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: "PR number (MUST REVIEW CODE FIRST)"
-        required: true
-      ref_kind:
-        description: "Which ref to test (merge|head)"
-        required: false
-        default: "merge"
-
-permissions:
-  contents: read
-  checks: write
-  pull-requests: read
-
-concurrency:
-  group: ${{ github.event_name == 'pull_request'
-    && format('full-tests-pr-{0}-merge', github.event.pull_request.number)
-    || github.event_name == 'workflow_dispatch'
-    && format('full-tests-pr-{0}-{1}', github.event.inputs.pr, github.event.inputs.ref_kind)
-    || format('full-tests-push-{0}', github.ref_name) }}
-  cancel-in-progress: true
-
 jobs:
   test:
     # Run if:
