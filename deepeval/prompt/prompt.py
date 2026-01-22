@@ -114,6 +114,7 @@ class Prompt:
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
+        confident_api_key: Optional[str] = None
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -129,6 +130,7 @@ class Prompt:
         self.interpolation_type: PromptInterpolationType = (
             interpolation_type or PromptInterpolationType.FSTRING
         )
+        self.confident_api_key = confident_api_key
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -244,7 +246,7 @@ class Prompt:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         data, _ = api.send_request(
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
@@ -496,7 +498,7 @@ class Prompt:
             except Exception:
                 pass
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             BarColumn(bar_width=60),
@@ -635,7 +637,7 @@ class Prompt:
             # Pydantic version below 2.0
             body = body.dict(by_alias=True, exclude_none=True)
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.PROMPTS_ENDPOINT,
@@ -692,7 +694,7 @@ class Prompt:
             )
         except AttributeError:
             body = body.dict(by_alias=True, exclude_none=True)
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         data, _ = api.send_request(
             method=HttpMethods.PUT,
             endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
@@ -765,7 +767,7 @@ class Prompt:
         while True:
             await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
 
-            api = Api()
+            api = Api(api_key=self.confident_api_key)
             try:
                 if label:
                     data, _ = api.send_request(
