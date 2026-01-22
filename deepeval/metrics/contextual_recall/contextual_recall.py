@@ -23,6 +23,7 @@ from deepeval.metrics.contextual_recall.schema import (
     ContextualRecallVerdict,
     Verdicts,
     ContextualRecallScoreReason,
+    VerdictWithExpectedOutput,
 )
 from deepeval.metrics.api import metric_data_manager
 
@@ -93,7 +94,7 @@ class ContextualRecallMetric(BaseMetric):
                 expected_output = test_case.expected_output
                 retrieval_context = test_case.retrieval_context
 
-                self.verdicts: List[ContextualRecallVerdict] = (
+                self.verdicts: List[VerdictWithExpectedOutput] = (
                     self._generate_verdicts(
                         expected_output, retrieval_context, multimodal
                     )
@@ -144,7 +145,7 @@ class ContextualRecallMetric(BaseMetric):
             expected_output = test_case.expected_output
             retrieval_context = test_case.retrieval_context
 
-            self.verdicts: List[ContextualRecallVerdict] = (
+            self.verdicts: List[VerdictWithExpectedOutput] = (
                 await self._a_generate_verdicts(
                     expected_output, retrieval_context, multimodal
                 )
@@ -241,13 +242,13 @@ class ContextualRecallMetric(BaseMetric):
         expected_output: str,
         retrieval_context: List[str],
         multimodal: bool,
-    ) -> List[ContextualRecallVerdict]:
+    ) -> List[VerdictWithExpectedOutput]:
         prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output,
             retrieval_context=retrieval_context,
             multimodal=multimodal,
         )
-        return await a_generate_with_schema_and_extract(
+        verdicts = await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
@@ -256,19 +257,28 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ],
         )
+        final_verdicts = []
+        for verdict in verdicts:
+            new_verdict = VerdictWithExpectedOutput(
+                verdict=verdict.verdict,
+                reason=verdict.reason,
+                expected_output=expected_output,
+            )
+            final_verdicts.append(new_verdict)
+        return final_verdicts
 
     def _generate_verdicts(
         self,
         expected_output: str,
         retrieval_context: List[str],
         multimodal: bool,
-    ) -> List[ContextualRecallVerdict]:
+    ) -> List[VerdictWithExpectedOutput]:
         prompt = self.evaluation_template.generate_verdicts(
             expected_output=expected_output,
             retrieval_context=retrieval_context,
             multimodal=multimodal,
         )
-        return generate_with_schema_and_extract(
+        verdicts = generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
@@ -277,6 +287,15 @@ class ContextualRecallMetric(BaseMetric):
                 ContextualRecallVerdict(**item) for item in data["verdicts"]
             ],
         )
+        final_verdicts = []
+        for verdict in verdicts:
+            new_verdict = VerdictWithExpectedOutput(
+                verdict=verdict.verdict,
+                reason=verdict.reason,
+                expected_output=expected_output,
+            )
+            final_verdicts.append(new_verdict)
+        return final_verdicts
 
     def is_successful(self) -> bool:
         if self.error is not None:
