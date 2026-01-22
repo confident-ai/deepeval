@@ -10,6 +10,7 @@ from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 @tool
@@ -76,7 +77,7 @@ def calculate(expression: str) -> str:
         if all(c in allowed for c in expression):
             return f"{expression} = {eval(expression)}"
         return "Invalid expression"
-    except:
+    except Exception:
         return "Calculation error"
 
 
@@ -92,7 +93,7 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=True)
 
 
-def agent_node(state: dict) -> dict:
+def agent_node(state: dict, config: RunnableConfig) -> dict:
     """Agent that can call multiple tools in parallel."""
     messages = state["messages"]
     system_prompt = HumanMessage(
@@ -100,18 +101,20 @@ def agent_node(state: dict) -> dict:
         When asked for multiple pieces of information, call all relevant tools in parallel.
         For example, if asked about weather in multiple cities, call get_weather for each city."""
     )
-    response = llm_with_tools.invoke([system_prompt] + messages)
+    response = llm_with_tools.invoke([system_prompt] + messages, config=config)
     return {"messages": [response]}
 
 
-async def async_agent_node(state: dict) -> dict:
+async def async_agent_node(state: dict, config: RunnableConfig) -> dict:
     """Async agent that can call multiple tools in parallel."""
     messages = state["messages"]
     system_prompt = HumanMessage(
         content="""You are a helpful assistant with access to multiple tools.
         When asked for multiple pieces of information, call all relevant tools in parallel."""
     )
-    response = await llm_with_tools.ainvoke([system_prompt] + messages)
+    response = await llm_with_tools.ainvoke(
+        [system_prompt] + messages, config=config
+    )
     return {"messages": [response]}
 
 

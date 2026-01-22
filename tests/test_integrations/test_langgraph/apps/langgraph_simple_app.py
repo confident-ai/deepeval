@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, END, START, MessagesState
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 @tool
@@ -32,10 +32,10 @@ llm_with_tools = llm.bind_tools([get_weather])
 tools = [get_weather]
 
 
-def agent_node(state: dict) -> dict:
+def agent_node(state: dict, config: RunnableConfig) -> dict:
     """Call the LLM with current messages."""
     messages = state["messages"]
-    response = llm_with_tools.invoke(messages)
+    response = llm_with_tools.invoke(messages, config=config)
     return {"messages": [response]}
 
 

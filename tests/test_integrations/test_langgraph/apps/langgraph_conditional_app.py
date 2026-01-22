@@ -10,7 +10,8 @@ from langgraph.graph import StateGraph, END, START, add_messages
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, BaseMessage
+from langchain_core.runnables import RunnableConfig
 
 
 class ConditionalState(TypedDict):
@@ -79,40 +80,40 @@ def classify_intent(state: dict) -> dict:
     return {"messages": messages, "intent": intent}
 
 
-def research_node(state: dict) -> dict:
+def research_node(state: dict, config: RunnableConfig) -> dict:
     """Handle research queries."""
     messages = state["messages"]
     system_prompt = HumanMessage(
         content="You are a research assistant. Use the research_topic tool to find information."
     )
-    response = llm_with_tools.invoke([system_prompt] + messages)
+    response = llm_with_tools.invoke([system_prompt] + messages, config=config)
     return {"messages": [response]}
 
 
-def summarize_node(state: dict) -> dict:
+def summarize_node(state: dict, config: RunnableConfig) -> dict:
     """Handle summarization queries."""
     messages = state["messages"]
     system_prompt = HumanMessage(
         content="You are a summarization assistant. Use the summarize_text tool."
     )
-    response = llm_with_tools.invoke([system_prompt] + messages)
+    response = llm_with_tools.invoke([system_prompt] + messages, config=config)
     return {"messages": [response]}
 
 
-def fact_check_node(state: dict) -> dict:
+def fact_check_node(state: dict, config: RunnableConfig) -> dict:
     """Handle fact checking queries."""
     messages = state["messages"]
     system_prompt = HumanMessage(
         content="You are a fact checker. Use the fact_check tool to verify claims."
     )
-    response = llm_with_tools.invoke([system_prompt] + messages)
+    response = llm_with_tools.invoke([system_prompt] + messages, config=config)
     return {"messages": [response]}
 
 
-def general_node(state: dict) -> dict:
+def general_node(state: dict, config: RunnableConfig) -> dict:
     """Handle general queries."""
     messages = state["messages"]
-    response = llm_with_tools.invoke(messages)
+    response = llm_with_tools.invoke(messages, config=config)
     return {"messages": [response]}
 
 

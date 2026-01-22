@@ -9,7 +9,7 @@ from langgraph.graph import StateGraph, END, START, MessagesState
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 @tool
@@ -48,10 +48,10 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 llm_with_tools = llm.bind_tools(tools)
 
 
-async def agent_node(state: dict) -> dict:
+async def agent_node(state: dict, config: RunnableConfig) -> dict:
     """Async agent node - calls the LLM."""
     messages = state["messages"]
-    response = await llm_with_tools.ainvoke(messages)
+    response = await llm_with_tools.ainvoke(messages, config=config)
     return {"messages": [response]}
 
 

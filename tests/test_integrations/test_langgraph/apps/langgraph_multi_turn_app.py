@@ -11,6 +11,7 @@ from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 @tool
@@ -67,7 +68,7 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 llm_with_tools = llm.bind_tools(tools)
 
 
-def agent_node(state: dict) -> dict:
+def agent_node(state: dict, config: RunnableConfig) -> dict:
     """Shopping assistant agent."""
     messages = state["messages"]
     system_prompt = HumanMessage(
@@ -78,17 +79,19 @@ def agent_node(state: dict) -> dict:
         - Complete checkout
         Remember the conversation context."""
     )
-    response = llm_with_tools.invoke([system_prompt] + messages)
+    response = llm_with_tools.invoke([system_prompt] + messages, config=config)
     return {"messages": [response]}
 
 
-async def async_agent_node(state: dict) -> dict:
+async def async_agent_node(state: dict, config: RunnableConfig) -> dict:
     """Async shopping assistant agent."""
     messages = state["messages"]
     system_prompt = HumanMessage(
         content="""You are a helpful shopping assistant. Help users manage their cart and checkout."""
     )
-    response = await llm_with_tools.ainvoke([system_prompt] + messages)
+    response = await llm_with_tools.ainvoke(
+        [system_prompt] + messages, config=config
+    )
     return {"messages": [response]}
 
 

@@ -2,6 +2,7 @@ from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
 from contextlib import contextmanager
+import os
 
 from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.test_case.llm_test_case import ToolCall
@@ -19,6 +20,17 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.telemetry import capture_tracing_integration
+
+# Debug logging for LangChain callbacks (enable with DEEPEVAL_DEBUG_LANGCHAIN_CALLBACKS=1)
+_DEBUG_CALLBACKS = os.environ.get(
+    "DEEPEVAL_DEBUG_LANGCHAIN_CALLBACKS", ""
+).lower() in ("1", "true", "yes")
+
+
+def _debug_log(msg: str):
+    if _DEBUG_CALLBACKS:
+        print(f"[DEEPEVAL_DEBUG] {msg}")
+
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -202,6 +214,9 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        _debug_log(
+            f"on_chain_start: run_id={run_id}, parent_run_id={parent_run_id}, name={extract_name(serialized, **kwargs)}"
+        )
         # Create spans for all chains to establish proper parent-child hierarchy
         # This is important for LangGraph where there are nested chains
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
@@ -232,6 +247,9 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
+        _debug_log(
+            f"on_chain_end: run_id={run_id}, parent_run_id={parent_run_id}"
+        )
         uuid_str = str(run_id)
         base_span = trace_manager.get_span_by_uuid(uuid_str)
         if base_span:
@@ -246,6 +264,80 @@ class CallbackHandler(BaseCallbackHandler):
                         trace.output = output
                 exit_current_context(uuid_str=uuid_str)
 
+    def on_chat_model_start(
+        self,
+        serialized: dict[str, Any],
+        messages: list[list[Any]],  # list[list[BaseMessage]]
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Handle chat model start callback. In LangChain v1, chat models emit
+        on_chat_model_start instead of on_llm_start. The on_llm_end callback
+        is still used for both.
+        """
+        _debug_log(
+            f"on_chat_model_start: run_id={run_id}, parent_run_id={parent_run_id}, messages_len={len(messages)}"
+        )
+
+        # Guard against double-counting if both on_llm_start and on_chat_model_start fire
+        uuid_str = str(run_id)
+        existing_span = trace_manager.get_span_by_uuid(uuid_str)
+        if existing_span is not None:
+            _debug_log(
+                f"on_chat_model_start: span already exists for run_id={run_id}, skipping"
+            )
+            return
+
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            # Convert messages to our internal format
+            input_messages = self._convert_chat_messages_to_input(messages)
+            model = safe_extract_model_name(metadata or {}, **kwargs)
+
+            llm_span: LlmSpan = enter_current_context(
+                uuid_str=uuid_str,
+                span_type="llm",
+                func_name=extract_name(serialized, **kwargs),
+            )
+            # Register this run_id -> span mapping for child callbacks
+            self._run_id_to_span_uuid[str(run_id)] = uuid_str
+
+            llm_span.input = input_messages
+            llm_span.model = model
+
+            # Extract metrics/prompt from metadata if provided (don't mutate original)
+            if metadata:
+                llm_span.metrics = metadata.get("metrics", None)
+                llm_span.metric_collection = metadata.get(
+                    "metric_collection", None
+                )
+                llm_span.prompt = metadata.get("prompt", None)
+
+    def _convert_chat_messages_to_input(
+        self, messages: list[list[Any]]
+    ) -> List[Dict[str, str]]:
+        """
+        Convert LangChain chat messages to our internal format.
+        messages is list[list[BaseMessage]] - outer list is batches, inner is messages.
+        """
+        result: List[Dict[str, str]] = []
+        for batch in messages:
+            for msg in batch:
+                # BaseMessage has .type (role) and .content
+                role = getattr(msg, "type", "unknown")
+                content = getattr(msg, "content", "")
+                # Normalize role names
+                if role == "human":
+                    role = "user"
+                elif role == "ai":
+                    role = "assistant"
+                result.append({"role": role, "content": str(content)})
+        return result
+
     def on_llm_start(
         self,
         serialized: dict[str, Any],
@@ -257,8 +349,20 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        _debug_log(
+            f"on_llm_start: run_id={run_id}, parent_run_id={parent_run_id}, prompts_len={len(prompts)}"
+        )
+
+        # Guard against double-counting if both on_llm_start and on_chat_model_start fire
+        uuid_str = str(run_id)
+        existing_span = trace_manager.get_span_by_uuid(uuid_str)
+        if existing_span is not None:
+            _debug_log(
+                f"on_llm_start: span already exists for run_id={run_id}, skipping"
+            )
+            return
+
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            uuid_str = str(run_id)
             input_messages = parse_prompts_to_messages(prompts, **kwargs)
             model = safe_extract_model_name(metadata, **kwargs)
 
@@ -287,9 +391,13 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
+        _debug_log(
+            f"on_llm_end: run_id={run_id}, parent_run_id={parent_run_id}, response_type={type(response).__name__}"
+        )
         uuid_str = str(run_id)
         llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
         if llm_span is None:
+            _debug_log(f"on_llm_end: NO SPAN FOUND for run_id={run_id}")
             return
 
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
@@ -396,6 +504,9 @@ class CallbackHandler(BaseCallbackHandler):
         inputs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        _debug_log(
+            f"on_tool_start: run_id={run_id}, parent_run_id={parent_run_id}, name={extract_name(serialized, **kwargs)}"
+        )
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             uuid_str = str(run_id)
 
@@ -418,6 +529,9 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
+        _debug_log(
+            f"on_tool_end: run_id={run_id}, parent_run_id={parent_run_id}"
+        )
         uuid_str = str(run_id)
         tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         if tool_span is None:
