@@ -3,6 +3,7 @@ from uuid import UUID
 from time import perf_counter
 from contextlib import contextmanager
 import os
+import logging
 
 from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.test_case.llm_test_case import ToolCall
@@ -26,10 +27,12 @@ _DEBUG_CALLBACKS = os.environ.get(
     "DEEPEVAL_DEBUG_LANGCHAIN_CALLBACKS", ""
 ).lower() in ("1", "true", "yes")
 
+_logger = logging.getLogger(__name__)
+
 
 def _debug_log(msg: str):
     if _DEBUG_CALLBACKS:
-        print(f"[DEEPEVAL_DEBUG] {msg}")
+        _logger.debug(f"[LangChain Callback] {msg}")
 
 
 try:
@@ -41,6 +44,7 @@ try:
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
         parse_prompts_to_messages,
+        convert_chat_messages_to_input,
         extract_name,
         safe_extract_model_name,
         safe_extract_token_usage,
@@ -294,9 +298,12 @@ class CallbackHandler(BaseCallbackHandler):
             return
 
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
-            # Convert messages to our internal format
-            input_messages = self._convert_chat_messages_to_input(messages)
-            model = safe_extract_model_name(metadata or {}, **kwargs)
+            # Convert messages to our internal format using the shared helper
+            input_messages = convert_chat_messages_to_input(messages, **kwargs)
+
+            # Safe extraction of model name (handle None metadata)
+            md = metadata or {}
+            model = safe_extract_model_name(md, **kwargs)
 
             llm_span: LlmSpan = enter_current_context(
                 uuid_str=uuid_str,
@@ -309,34 +316,10 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.input = input_messages
             llm_span.model = model
 
-            # Extract metrics/prompt from metadata if provided (don't mutate original)
-            if metadata:
-                llm_span.metrics = metadata.get("metrics", None)
-                llm_span.metric_collection = metadata.get(
-                    "metric_collection", None
-                )
-                llm_span.prompt = metadata.get("prompt", None)
-
-    def _convert_chat_messages_to_input(
-        self, messages: list[list[Any]]
-    ) -> List[Dict[str, str]]:
-        """
-        Convert LangChain chat messages to our internal format.
-        messages is list[list[BaseMessage]] - outer list is batches, inner is messages.
-        """
-        result: List[Dict[str, str]] = []
-        for batch in messages:
-            for msg in batch:
-                # BaseMessage has .type (role) and .content
-                role = getattr(msg, "type", "unknown")
-                content = getattr(msg, "content", "")
-                # Normalize role names
-                if role == "human":
-                    role = "user"
-                elif role == "ai":
-                    role = "assistant"
-                result.append({"role": role, "content": str(content)})
-        return result
+            # Extract metrics and prompt from metadata if provided, but don't mutate original
+            llm_span.metrics = md.get("metrics")
+            llm_span.metric_collection = md.get("metric_collection")
+            llm_span.prompt = md.get("prompt")
 
     def on_llm_start(
         self,
@@ -364,7 +347,10 @@ class CallbackHandler(BaseCallbackHandler):
 
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             input_messages = parse_prompts_to_messages(prompts, **kwargs)
-            model = safe_extract_model_name(metadata, **kwargs)
+
+            # Safe extraction of model name (handle None metadata)
+            md = metadata or {}
+            model = safe_extract_model_name(md, **kwargs)
 
             llm_span: LlmSpan = enter_current_context(
                 uuid_str=uuid_str,
@@ -376,12 +362,11 @@ class CallbackHandler(BaseCallbackHandler):
 
             llm_span.input = input_messages
             llm_span.model = model
-            metrics = metadata.pop("metrics", None)
-            metric_collection = metadata.pop("metric_collection", None)
-            prompt = metadata.pop("prompt", None)
-            llm_span.metrics = metrics
-            llm_span.metric_collection = metric_collection
-            llm_span.prompt = prompt
+
+            # Extract metrics and prompt from metadata if provided, but don't mutate original
+            llm_span.metrics = md.get("metrics")
+            llm_span.metric_collection = md.get("metric_collection")
+            llm_span.prompt = md.get("prompt")
 
     def on_llm_end(
         self,
@@ -398,6 +383,13 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
         if llm_span is None:
             _debug_log(f"on_llm_end: NO SPAN FOUND for run_id={run_id}")
+            return
+
+        # Guard against double-finalization (if both on_llm_end and on_chat_model_end fire)
+        if llm_span.end_time is not None:
+            _debug_log(
+                f"on_llm_end: span already finalized for run_id={run_id}, skipping"
+            )
             return
 
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
@@ -444,7 +436,6 @@ class CallbackHandler(BaseCallbackHandler):
                             )
 
             llm_span.model = model if model else llm_span.model
-            llm_span.input = llm_span.input
             llm_span.output = output
             llm_span.input_token_count = (
                 total_input_tokens if total_input_tokens > 0 else None
@@ -455,6 +446,121 @@ class CallbackHandler(BaseCallbackHandler):
 
             exit_current_context(uuid_str=uuid_str)
 
+    def on_chat_model_end(
+        self,
+        response: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Handle chat model end callback. This may be called instead of or
+        in addition to on_llm_end depending on the LangChain version.
+        """
+        _debug_log(
+            f"on_chat_model_end: run_id={run_id}, parent_run_id={parent_run_id}, response_type={type(response).__name__}"
+        )
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        if llm_span is None:
+            _debug_log(f"on_chat_model_end: NO SPAN FOUND for run_id={run_id}")
+            return
+
+        # Guard against double-finalization, which could happen if both on_llm_end and on_chat_model_end fire
+        if llm_span.end_time is not None:
+            _debug_log(
+                f"on_chat_model_end: span already finalized for run_id={run_id}, skipping"
+            )
+            return
+
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            output = ""
+            total_input_tokens = 0
+            total_output_tokens = 0
+            model = None
+
+            # Handle LLMResult (same as on_llm_end)
+            if isinstance(response, LLMResult):
+                for generation in response.generations:
+                    for gen in generation:
+                        if isinstance(gen, ChatGeneration):
+                            if gen.message.response_metadata and isinstance(
+                                gen.message.response_metadata, dict
+                            ):
+                                model = gen.message.response_metadata.get(
+                                    "model_name"
+                                )
+                                input_tokens, output_tokens = (
+                                    safe_extract_token_usage(
+                                        gen.message.response_metadata
+                                    )
+                                )
+                                total_input_tokens += input_tokens
+                                total_output_tokens += output_tokens
+
+                            if isinstance(gen.message, AIMessage):
+                                ai_message = gen.message
+                                tool_calls = []
+                                for tool_call in ai_message.tool_calls:
+                                    tool_calls.append(
+                                        LlmToolCall(
+                                            name=tool_call["name"],
+                                            args=tool_call["args"],
+                                            id=tool_call["id"],
+                                        )
+                                    )
+                                output = LlmOutput(
+                                    role="AI",
+                                    content=ai_message.content,
+                                    tool_calls=tool_calls,
+                                )
+
+            llm_span.model = model if model else llm_span.model
+            llm_span.output = output
+            llm_span.input_token_count = (
+                total_input_tokens if total_input_tokens > 0 else None
+            )
+            llm_span.output_token_count = (
+                total_output_tokens if total_output_tokens > 0 else None
+            )
+
+            exit_current_context(uuid_str=uuid_str)
+
+    def on_chat_model_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Handle chat model error callback.
+        """
+        _debug_log(
+            f"on_chat_model_error: run_id={run_id}, parent_run_id={parent_run_id}, error={error}"
+        )
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        if llm_span is None:
+            _debug_log(
+                f"on_chat_model_error: NO SPAN FOUND for run_id={run_id}"
+            )
+            return
+
+        # Guard against double-finalization
+        if llm_span.end_time is not None:
+            _debug_log(
+                f"on_chat_model_error: span already finalized for run_id={run_id}, skipping"
+            )
+            return
+
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            llm_span.status = TraceSpanStatus.ERRORED
+            llm_span.error = str(error)
+            exit_current_context(uuid_str=uuid_str)
+
     def on_llm_error(
         self,
         error: BaseException,
@@ -463,10 +569,22 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
+        _debug_log(
+            f"on_llm_error: run_id={run_id}, parent_run_id={parent_run_id}, error={error}"
+        )
         uuid_str = str(run_id)
         llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
         if llm_span is None:
+            _debug_log(f"on_llm_error: NO SPAN FOUND for run_id={run_id}")
             return
+
+        # Guard against double-finalization
+        if llm_span.end_time is not None:
+            _debug_log(
+                f"on_llm_error: span already finalized for run_id={run_id}, skipping"
+            )
+            return
+
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             llm_span.status = TraceSpanStatus.ERRORED
             llm_span.error = str(error)
@@ -599,14 +717,14 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
             uuid_str = str(run_id)
+            # Safe access to metadata (handle None)
+            md = metadata or {}
             retriever_span = enter_current_context(
                 uuid_str=uuid_str,
                 span_type="retriever",
                 func_name=extract_name(serialized, **kwargs),
                 observe_kwargs={
-                    "embedder": metadata.get(
-                        "ls_embedding_provider", "unknown"
-                    ),
+                    "embedder": md.get("ls_embedding_provider", "unknown"),
                 },
             )
             # Register this run_id -> span mapping for child callbacks
