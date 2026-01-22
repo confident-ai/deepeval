@@ -84,7 +84,7 @@ class EvaluationDataset:
     def __init__(
         self,
         goldens: Union[List[Golden], List[ConversationalGolden]] = [],
-        confident_api_key: Optional[str] = None
+        confident_api_key: Optional[str] = None,
     ):
         self._alias = None
         self._id = None

@@ -114,7 +114,7 @@ class Prompt:
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
-        confident_api_key: Optional[str] = None
+        confident_api_key: Optional[str] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
