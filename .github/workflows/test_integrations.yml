@@ -1,13 +1,9 @@
 name: Integration Tests
 
 on:
-  # Auto run for maintainer PRs
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-  # Auto run when code lands on main
   push:
-    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
   # Manual for forks (maintainer provides PR number)
   workflow_dispatch:
