@@ -57,6 +57,12 @@ def assert_json_object_structure(
             if re.search(r"\.messages\[\d+\]$", path):
                 allowed_extras = allowed_extras | {"usage_metadata"}
 
+            # In LangChain v1.x, tool_calls moved from additional_kwargs to top-level
+            # on AI messages. Allow tool_calls to be missing from additional_kwargs
+            # when we're inside a message's additional_kwargs dict.
+            if re.search(r"\.messages\[\d+\]\.additional_kwargs$", path):
+                allowed_missing = allowed_missing | {"tool_calls"}
+
             # Check for missing or extra keys (accounting for schema drift)
             missing_keys = b_keys - a_keys - allowed_missing
             extra_keys = a_keys - b_keys - allowed_extras
