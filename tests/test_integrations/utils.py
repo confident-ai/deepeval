@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+import os
 
 from typing import Dict, Any
 from functools import wraps
@@ -131,6 +132,31 @@ def load_trace_data(file_path: str):
         return json.load(file)
 
 
+# Global storage for trace dicts - shared across all imports
+_TRACE_STORAGE: Dict[str, Dict[str, Any]] = {}
+
+
+def _store_trace_for_upload(trace_dict: Dict[str, Any]):
+    """Store trace dict for upload by conftest.py hook."""
+    # Get current test nodeid from pytest environment
+    nodeid = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if nodeid:
+        # PYTEST_CURRENT_TEST format: "path/to/test.py::TestClass::test_method (call)"
+        # Strip the phase suffix
+        nodeid = nodeid.rsplit(" ", 1)[0]
+
+    if not nodeid:
+        return
+
+    # Store in module-level dict
+    _TRACE_STORAGE[nodeid] = trace_dict
+
+
+def get_stored_trace(nodeid: str) -> Dict[str, Any]:
+    """Retrieve and remove a stored trace dict."""
+    return _TRACE_STORAGE.pop(nodeid, None)
+
+
 def generate_trace_json(json_path: str):
     """
     Decorator that generates and saves trace data to a JSON file.
@@ -226,6 +252,9 @@ def assert_trace_json(json_path: str):
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
                 expected_dict = load_trace_data(json_path)
 
+                # Store trace for upload (does not mutate)
+                _store_trace_for_upload(actual_dict)
+
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
                 return result
@@ -249,6 +278,9 @@ def assert_trace_json(json_path: str):
                     trace_testing_manager.wait_for_test_dict()
                 )
                 expected_dict = load_trace_data(json_path)
+
+                # Store trace for upload (does not mutate)
+                _store_trace_for_upload(actual_dict)
 
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
