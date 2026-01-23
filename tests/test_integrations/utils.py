@@ -1,4 +1,7 @@
+import asyncio
 import json
+import re
+
 from typing import Dict, Any
 from functools import wraps
 import inspect
@@ -27,14 +30,36 @@ def assert_json_object_structure(
                 print(f"   Value: {a}")
                 return False
 
-            # Filter out keys to ignore
+            # Filter out keys to ignore globally
             keys_to_ignore = {"tokenIntervals"}
             b_keys = set(b.keys()) - keys_to_ignore
             a_keys = set(a.keys()) - keys_to_ignore
 
-            # Check for missing or extra keys
-            missing_keys = b_keys - a_keys
-            extra_keys = a_keys - b_keys
+            # Schema drift handling for LangChain v1.x (narrow allowlist)
+            schema_drift_config = {
+                # response_metadata gained new fields in v1.x
+                ".response_metadata": {
+                    "allowed_extra": {"model_provider", "service_tier"},
+                    "allowed_missing": set(),
+                },
+            }
+
+            allowed_extras = set()
+            allowed_missing = set()
+            for suffix, config in schema_drift_config.items():
+                if path.endswith(suffix):
+                    allowed_extras = config.get("allowed_extra", set())
+                    allowed_missing = config.get("allowed_missing", set())
+                    break
+
+            # Keys that are allowed to be extra on message objects (any .messages[N] path)
+            # usage_metadata was added in later LangChain versions
+            if re.search(r"\.messages\[\d+\]$", path):
+                allowed_extras = allowed_extras | {"usage_metadata"}
+
+            # Check for missing or extra keys (accounting for schema drift)
+            missing_keys = b_keys - a_keys - allowed_missing
+            extra_keys = a_keys - b_keys - allowed_extras
 
             if missing_keys:
                 print(f"❌ Missing keys at '{path}': {missing_keys}")
@@ -43,8 +68,11 @@ def assert_json_object_structure(
                 print(f"❌ Extra keys at '{path}': {extra_keys}")
                 return False
 
-            # Compare only non-ignored keys
+            # Compare only keys that exist in both (skip allowed_missing keys not in actual)
             for k in b_keys:
+                if k not in a_keys and k in allowed_missing:
+                    # This key is allowed to be missing, skip comparison
+                    continue
                 if not _compare(a[k], b[k], f"{path}.{k}"):
                     return False
             return True
@@ -57,11 +85,13 @@ def assert_json_object_structure(
                 print(f"   Got: {type(a).__name__}")
                 print(f"   Value: {a}")
                 return False
+
             if len(a) != len(b):
                 print(
                     f"❌ Length mismatch at '{path}': expected {len(b)}, got {len(a)}"
                 )
                 return False
+
             for idx, (ae, be) in enumerate(zip(a, b)):
                 if not _compare(ae, be, f"{path}[{idx}]"):
                     return False
@@ -133,7 +163,6 @@ def generate_trace_json(json_path: str):
             from deepeval.tracing.trace_test_manager import (
                 trace_testing_manager,
             )
-            import asyncio
 
             try:
                 trace_testing_manager.test_name = json_path
@@ -203,7 +232,6 @@ def assert_trace_json(json_path: str):
             from deepeval.tracing.trace_test_manager import (
                 trace_testing_manager,
             )
-            import asyncio
 
             try:
                 trace_testing_manager.test_name = json_path
