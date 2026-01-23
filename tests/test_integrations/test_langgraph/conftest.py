@@ -4,7 +4,24 @@ Pytest configuration for LangGraph integration tests.
 - Uploads traces directly to Confident AI Observatory (/v1/traces) after each test.
 - Also creates a TestRun with test cases for the Test Runs UI.
 - Each test case includes trace_uuid in additional_metadata for correlation.
-- Test case fields (input, actual_output, tools_called) are derived from trace_dict.
+- Test case fields are derived from trace_dict and test markers where available.
+
+Field population sources (LLMApiTestCase schema from deepeval/test_run/api.py):
+  - name: pytest nodeid
+  - input: trace_dict["input"]["messages"][0]["content"] (first human message)
+  - actual_output: trace_dict["output"]["messages"][-1]["content"] (last AI message)
+  - expected_output: None (tests do not define expected outputs)
+  - context: None (not a RAG application, no context provided)
+  - retrieval_context: None (not a RAG application, no retriever)
+  - tools_called: trace_dict["toolsCalled"] or trace_dict["toolSpans"]
+  - expected_tools: None (tests do not define expected tools)
+  - token_cost: sum of llmSpans[*].inputTokenCount + outputTokenCount (no cost rate)
+  - completion_time: (endTime - startTime) in seconds from trace_dict timestamps
+  - tags: trace_dict["tags"] (from CallbackHandler tags parameter)
+  - additional_metadata: trace correlation + environment info
+  - success: pytest test passed/failed
+  - metricsData: None (no metrics evaluation)
+  - trace: None (embedding causes 500 errors)
 """
 
 import os
@@ -12,6 +29,7 @@ import sys
 import pytest
 import datetime
 from typing import Dict, Any, List, Optional
+from dateutil import parser as dateutil_parser
 
 from deepeval.test_case import ToolCall
 
@@ -78,7 +96,7 @@ def pytest_runtest_makereport(item: pytest.Item, call):
     # 2) Add test case to TestRun with data extracted from trace_dict
     if trace_uuid:
         _add_test_case_to_run(
-            item.nodeid, report.passed, trace_uuid, trace_dict
+            item, item.nodeid, report.passed, trace_uuid, trace_dict
         )
 
 
@@ -105,6 +123,11 @@ def _upload_trace_to_observatory(trace_dict: dict) -> str:
         return None
 
 
+# =============================================================================
+# EXTRACTION HELPERS
+# =============================================================================
+
+
 def _truncate(s: str, max_len: int = MAX_FIELD_LENGTH) -> str:
     """Truncate string to max_len, adding ellipsis if truncated."""
     if s and len(s) > max_len:
@@ -115,6 +138,7 @@ def _truncate(s: str, max_len: int = MAX_FIELD_LENGTH) -> str:
 def _extract_input_from_trace(trace_dict: Dict[str, Any]) -> str:
     """Extract a readable input string from trace_dict.
 
+    Source: trace_dict["input"]["messages"][0]["content"]
     Prefers messages[0].content if present, otherwise stringifies trace_dict["input"].
     """
     trace_input = trace_dict.get("input")
@@ -136,7 +160,8 @@ def _extract_input_from_trace(trace_dict: Dict[str, Any]) -> str:
 def _extract_output_from_trace(trace_dict: Dict[str, Any]) -> str:
     """Extract a readable output string from trace_dict.
 
-    Prefers last message content if present, otherwise stringifies trace_dict["output"].
+    Source: trace_dict["output"]["messages"][-1]["content"] (last AI message)
+    Prefers last AI message content if present, otherwise stringifies trace_dict["output"].
     """
     trace_output = trace_dict.get("output")
     if trace_output is None:
@@ -164,18 +189,16 @@ def _extract_output_from_trace(trace_dict: Dict[str, Any]) -> str:
 
 
 def _extract_tools_called_from_trace(
-    trace_dict: Dict[str, Any]
+    trace_dict: Dict[str, Any],
 ) -> Optional[List[ToolCall]]:
     """Extract tools_called from trace_dict.
 
-    Uses toolsCalled if present, otherwise derives from toolSpans.
-    Returns list of ToolCall objects or None.
+    Source: trace_dict["toolsCalled"] (preferred) or trace_dict["toolSpans"]
+    Returns list of ToolCall objects or None if no tools were called.
     """
-    from deepeval.test_case import ToolCall
-
     result = []
 
-    # First try top-level toolsCalled
+    # First try top-level toolsCalled (most complete)
     tools_called = trace_dict.get("toolsCalled")
     if tools_called and isinstance(tools_called, list):
         for tc in tools_called:
@@ -225,6 +248,224 @@ def _extract_tools_called_from_trace(
     return result if result else None
 
 
+def _extract_expected_output(
+    nodeid: str, item: pytest.Item, trace_dict: Dict[str, Any]
+) -> Optional[str]:
+    """Extract expected_output if test defines it.
+
+    Source: pytest marker @pytest.mark.expected_output("...") or item attribute.
+
+    IMPORTANT: We do NOT guess or fabricate expected_output.
+    Current LangGraph tests do not define expected outputs (they only assert
+    len(result["messages"]) > 0), so this returns None.
+    """
+    # Check for pytest marker
+    marker = item.get_closest_marker("expected_output")
+    if marker and marker.args:
+        return _truncate(str(marker.args[0]))
+
+    # Check for item attribute (e.g., set by fixture)
+    if hasattr(item, "expected_output") and item.expected_output is not None:
+        return _truncate(str(item.expected_output))
+
+    # No expected output defined - return None (do not guess)
+    return None
+
+
+def _extract_expected_tools(
+    nodeid: str, item: pytest.Item, trace_dict: Dict[str, Any]
+) -> Optional[List[str]]:
+    """Extract expected_tools if test defines them.
+
+    Source: pytest marker @pytest.mark.expected_tools(["tool1", "tool2"]) or item attribute.
+
+    IMPORTANT: We do NOT guess or fabricate expected_tools.
+    Current LangGraph tests do not define expected tools, so this returns None.
+    """
+    # Check for pytest marker
+    marker = item.get_closest_marker("expected_tools")
+    if marker and marker.args:
+        tools = marker.args[0]
+        if isinstance(tools, list):
+            return tools
+
+    # Check for item attribute (e.g., set by fixture)
+    if hasattr(item, "expected_tools") and item.expected_tools is not None:
+        return item.expected_tools
+
+    # No expected tools defined - return None (do not guess)
+    return None
+
+
+def _extract_context(
+    nodeid: str, item: pytest.Item, trace_dict: Dict[str, Any]
+) -> Optional[List[str]]:
+    """Extract context if test defines it.
+
+    Source: pytest marker @pytest.mark.context(["..."]) or item attribute.
+
+    IMPORTANT: We do NOT guess or fabricate context.
+    Current LangGraph tests are agent tests, not RAG - no context is provided.
+    """
+    # Check for pytest marker
+    marker = item.get_closest_marker("context")
+    if marker and marker.args:
+        ctx = marker.args[0]
+        if isinstance(ctx, list):
+            return ctx
+
+    # Check for item attribute
+    if hasattr(item, "context") and item.context is not None:
+        return item.context
+
+    # No context defined - return None (do not guess)
+    return None
+
+
+def _extract_retrieval_context(
+    nodeid: str, item: pytest.Item, trace_dict: Dict[str, Any]
+) -> Optional[List[str]]:
+    """Extract retrieval_context from trace if retriever was used.
+
+    Source: trace_dict["retrieverSpans"] or pytest marker.
+
+    IMPORTANT: We only populate this if actual retrieval happened.
+    Current LangGraph tests do not use retrievers (retrieverSpans is empty).
+    """
+    # Check for pytest marker first
+    marker = item.get_closest_marker("retrieval_context")
+    if marker and marker.args:
+        ctx = marker.args[0]
+        if isinstance(ctx, list):
+            return ctx
+
+    # Check for item attribute
+    if (
+        hasattr(item, "retrieval_context")
+        and item.retrieval_context is not None
+    ):
+        return item.retrieval_context
+
+    # Check trace for retriever spans
+    retriever_spans = trace_dict.get("retrieverSpans", [])
+    if retriever_spans:
+        # Extract retrieved documents from retriever spans
+        contexts = []
+        for span in retriever_spans:
+            if isinstance(span, dict):
+                output = span.get("output")
+                if output:
+                    # Retriever output is typically a list of documents
+                    if isinstance(output, list):
+                        for doc in output:
+                            if isinstance(doc, dict):
+                                content = doc.get("page_content") or doc.get(
+                                    "content"
+                                )
+                                if content:
+                                    contexts.append(_truncate(str(content)))
+                            elif isinstance(doc, str):
+                                contexts.append(_truncate(doc))
+        if contexts:
+            return contexts
+
+    # No retrieval context - return None
+    return None
+
+
+def _extract_token_cost(trace_dict: Dict[str, Any]) -> Optional[float]:
+    """Extract total token count from trace.
+
+    Source: Sum of llmSpans[*].inputTokenCount + llmSpans[*].outputTokenCount
+
+    NOTE: This returns total token COUNT, not dollar cost (we don't have pricing info).
+    The field is named "token_cost" but we populate it with total tokens as a proxy.
+    Returns None if no token info is available.
+    """
+    llm_spans = trace_dict.get("llmSpans", [])
+    if not llm_spans:
+        return None
+
+    total_tokens = 0
+    has_token_data = False
+
+    for span in llm_spans:
+        if not isinstance(span, dict):
+            continue
+
+        input_tokens = span.get("inputTokenCount")
+        output_tokens = span.get("outputTokenCount")
+
+        if input_tokens is not None:
+            total_tokens += input_tokens
+            has_token_data = True
+        if output_tokens is not None:
+            total_tokens += output_tokens
+            has_token_data = True
+
+    return float(total_tokens) if has_token_data else None
+
+
+def _extract_completion_time(trace_dict: Dict[str, Any]) -> Optional[float]:
+    """Extract completion time (duration) from trace timestamps.
+
+    Source: (trace_dict["endTime"] - trace_dict["startTime"]) in seconds
+
+    Returns None if timestamps are missing or invalid.
+    """
+    start_time_str = trace_dict.get("startTime")
+    end_time_str = trace_dict.get("endTime")
+
+    if not start_time_str or not end_time_str:
+        return None
+
+    try:
+        # Parse ISO 8601 timestamps
+        start_time = dateutil_parser.isoparse(start_time_str)
+        end_time = dateutil_parser.isoparse(end_time_str)
+
+        # Calculate duration in seconds
+        duration = (end_time - start_time).total_seconds()
+        return duration if duration >= 0 else None
+    except (ValueError, TypeError):
+        return None
+
+
+def _extract_tags(
+    nodeid: str, item: pytest.Item, trace_dict: Dict[str, Any]
+) -> Optional[List[str]]:
+    """Extract tags from trace or test markers.
+
+    Source: trace_dict["tags"] (from CallbackHandler tags parameter)
+            or pytest marker @pytest.mark.tags(["tag1", "tag2"])
+
+    Returns None if no tags are defined.
+    """
+    tags = []
+
+    # First, get tags from trace (from CallbackHandler)
+    trace_tags = trace_dict.get("tags")
+    if trace_tags and isinstance(trace_tags, list):
+        tags.extend(trace_tags)
+
+    # Check for pytest marker to add additional tags
+    marker = item.get_closest_marker("tags")
+    if marker and marker.args:
+        marker_tags = marker.args[0]
+        if isinstance(marker_tags, list):
+            tags.extend(marker_tags)
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique_tags = []
+    for tag in tags:
+        if tag not in seen:
+            seen.add(tag)
+            unique_tags.append(tag)
+
+    return unique_tags if unique_tags else None
+
+
 def _get_environment_info() -> Dict[str, str]:
     """Collect environment info for debugging."""
     info = {
@@ -260,8 +501,17 @@ def _get_environment_info() -> Dict[str, str]:
     return info
 
 
+# =============================================================================
+# TEST CASE CREATION
+# =============================================================================
+
+
 def _add_test_case_to_run(
-    nodeid: str, passed: bool, trace_uuid: str, trace_dict: Dict[str, Any]
+    item: pytest.Item,
+    nodeid: str,
+    passed: bool,
+    trace_uuid: str,
+    trace_dict: Dict[str, Any],
 ):
     """Add a test case to the current TestRun with data extracted from trace_dict.
 
@@ -277,7 +527,7 @@ def _add_test_case_to_run(
             return  # <-- never adds the test case!
 
     For integration tests without metrics evaluation, we must bypass this guard.
-    We set metrics_data=None to signal "no metrics evaluated" (vs empty list
+    We set metricsData=None to signal "no metrics evaluated" (vs empty list
     meaning "metrics evaluated but found none"), and directly add the test case.
     """
     from deepeval.test_run import global_test_run_manager
@@ -293,10 +543,17 @@ def _add_test_case_to_run(
     test_file = parts[0] if parts else nodeid
     test_name = parts[-1] if parts else nodeid
 
-    # Extract fields from trace_dict
+    # Extract all fields from trace_dict and test item
     input_str = _extract_input_from_trace(trace_dict)
     output_str = _extract_output_from_trace(trace_dict)
     tools_called = _extract_tools_called_from_trace(trace_dict)
+    expected_output = _extract_expected_output(nodeid, item, trace_dict)
+    expected_tools = _extract_expected_tools(nodeid, item, trace_dict)
+    context = _extract_context(nodeid, item, trace_dict)
+    retrieval_context = _extract_retrieval_context(nodeid, item, trace_dict)
+    token_cost = _extract_token_cost(trace_dict)
+    completion_time = _extract_completion_time(trace_dict)
+    tags = _extract_tags(nodeid, item, trace_dict)
 
     # Build additional_metadata with correlation and environment info
     additional_metadata = {
@@ -318,34 +575,42 @@ def _add_test_case_to_run(
         name=nodeid,
         input=input_str or f"LangGraph test: {test_name}",
         actualOutput=output_str or ("PASSED" if passed else "FAILED"),
+        expectedOutput=expected_output,  # None unless test explicitly defines
+        context=context,  # None - not a RAG app
+        retrievalContext=retrieval_context,  # None - not a RAG app
         toolsCalled=tools_called,
+        expectedTools=expected_tools,  # None unless test explicitly defines
+        tokenCost=token_cost,  # Total token count from llmSpans
+        completionTime=completion_time,  # Duration in seconds from timestamps
+        tags=tags,  # From CallbackHandler tags
         additionalMetadata=additional_metadata,
         success=passed,
         metricsData=None,  # None = "no metrics evaluated" (bypasses guard)
         trace=None,  # Must be None - embedding traces causes 500s
         order=order,
-        runDuration=0,
-        evaluationCost=None,
+        runDuration=completion_time or 0,  # Use completion_time as run duration
+        evaluationCost=None,  # No evaluation performed
     )
 
-    # Debug: print serialized payload keys for verification
-    try:
-        payload = api_test_case.model_dump(by_alias=True, exclude_none=True)
-        print(f"[DEBUG] Test case payload keys: {list(payload.keys())}")
-        print(f"[DEBUG]   actualOutput present: {'actualOutput' in payload}")
-        print(f"[DEBUG]   toolsCalled present: {'toolsCalled' in payload}")
-        print(
-            f"[DEBUG]   additionalMetadata present: {'additionalMetadata' in payload}"
-        )
-        if "actualOutput" in payload:
-            print(
-                f"[DEBUG]   actualOutput value (truncated): {str(payload['actualOutput'])[:100]}..."
-            )
-        if "toolsCalled" in payload:
-            print(f"[DEBUG]   toolsCalled count: {len(payload['toolsCalled'])}")
+    # Concise debug log showing which optional fields are populated
+    print(
+        f"[DEBUG] added api_test_case fields: "
+        f"expectedOutput={expected_output is not None} "
+        f"expectedTools={expected_tools is not None} "
+        f"context={context is not None} "
+        f"retrievalContext={retrieval_context is not None} "
+        f"tokenCost={token_cost is not None} "
+        f"completionTime={completion_time is not None} "
+        f"tags={tags is not None}"
+    )
 
-    except Exception as e:
-        print(f"[DEBUG] Error dumping payload: {e}")
+    # Print values when present
+    if token_cost is not None:
+        print(f"[DEBUG]   tokenCost={token_cost:.1f} (total tokens)")
+    if completion_time is not None:
+        print(f"[DEBUG]   completionTime={completion_time:.3f}s")
+    if tags:
+        print(f"[DEBUG]   tags={tags}")
 
     # Directly add to test_run.test_cases, bypassing update_test_run guard
     test_run.add_test_case(api_test_case)
@@ -354,54 +619,31 @@ def _add_test_case_to_run(
     )
 
 
+# =============================================================================
+# SESSION FINISH
+# =============================================================================
+
+
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
     """Upload the TestRun at the end of the session."""
     from deepeval.confident.api import is_confident
     from deepeval.test_run import global_test_run_manager
 
+    print("Running teardown with pytest sessionfinish...")
+
     if not is_confident():
-        print("[DEBUG] sessionfinish is_confident:", is_confident())
         return
 
     test_run = global_test_run_manager.test_run
     if test_run is None:
-        print("[DEBUG] sessionfinish right after getting test_run")
-        print("[DEBUG] sessionfinish is_confident:", is_confident())
-        print("[DEBUG] sessionfinish test_run is None:", test_run is None)
-        print(
-            "[DEBUG] sessionfinish test_cases:",
-            len(test_run.test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish conversational:",
-            len(test_run.conversational_test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish identifier:",
-            getattr(test_run, "identifier", None),
-        )
-
+        print("[DEBUG] sessionfinish: test_run is None, skipping upload")
         return
 
     if (
         len(test_run.test_cases) == 0
         and len(test_run.conversational_test_cases) == 0
     ):
-        print("[DEBUG] sessionfinish checking test_cases length is not 0")
-        print("[DEBUG] sessionfinish is_confident:", is_confident())
-        print("[DEBUG] sessionfinish test_run is None:", test_run is None)
-        print(
-            "[DEBUG] sessionfinish test_cases:",
-            len(test_run.test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish conversational:",
-            len(test_run.conversational_test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish identifier:",
-            getattr(test_run, "identifier", None),
-        )
+        print("[DEBUG] sessionfinish: no test cases found, skipping upload")
         return
 
     # Set required fields for API
@@ -412,23 +654,8 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
 
     try:
         result = global_test_run_manager.post_test_run(test_run)
-        print("[DEBUG] post_test_run returned:", result)
         if result:
             link, run_id = result
             print(f"\nTEST RUN LINK: {link}\n")
     except Exception as e:
         print(f"\n[ERROR] Failed to upload test run: {e}\n")
-        print("[DEBUG] sessionfinish is_confident:", is_confident())
-        print("[DEBUG] sessionfinish test_run is None:", test_run is None)
-        print(
-            "[DEBUG] sessionfinish test_cases:",
-            len(test_run.test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish conversational:",
-            len(test_run.conversational_test_cases) if test_run else None,
-        )
-        print(
-            "[DEBUG] sessionfinish identifier:",
-            getattr(test_run, "identifier", None),
-        )
