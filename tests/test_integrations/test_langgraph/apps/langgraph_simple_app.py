@@ -26,7 +26,7 @@ def get_weather(city: str) -> str:
 
 
 # LLM with tool binding
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools([get_weather])
 
 tools = [get_weather]

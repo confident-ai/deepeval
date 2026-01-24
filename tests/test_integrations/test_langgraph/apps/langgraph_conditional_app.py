@@ -57,7 +57,7 @@ def fact_check(claim: str) -> str:
 
 tools = [research_topic, summarize_text, fact_check]
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools(tools)
 
 

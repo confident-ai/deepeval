@@ -72,7 +72,7 @@ def calculate(expression: str) -> str:
 
 tools = [get_weather, get_population, get_timezone, calculate]
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools(tools)
 
 

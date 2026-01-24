@@ -64,7 +64,7 @@ tools = [
     confirm_order,
 ]
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools(tools)
 
 
