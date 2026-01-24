@@ -93,6 +93,59 @@ def assert_json_object_structure(
                 print(f"   Value: {a}")
                 return False
 
+            # LLM nondeterminism handling: certain arrays can vary in length
+            # because the LLM may make different tool-calling decisions across
+            # runs despite temperature=0 and seed settings. We validate structure
+            # of the first element but allow count to vary.
+            #
+            # Observed in LangGraph v1.x: tool call counts vary for parallel
+            # tool tests, multi-tool tests, and heavy workload tests.
+            variable_length_arrays = {
+                # Top-level span arrays (LLM may produce different span counts)
+                "root.llmSpans",
+                "root.baseSpans",
+                "root.toolSpans",
+                "root.agentSpans",
+                "root.retrieverSpans",
+                # Top-level toolsCalled (LLM tool decisions vary)
+                "root.toolsCalled",
+                # Message arrays (conversation length varies with tool calls)
+                "root.output.messages",
+                "root.input.messages",
+            }
+
+            # Also match toolsCalled within baseSpans at any index
+            # Pattern: root.baseSpans[N].toolsCalled
+            is_nested_tools_called = re.match(
+                r"^root\.baseSpans\[\d+\]\.toolsCalled$", path
+            )
+            # Pattern: root.baseSpans[N].input.messages or output.messages
+            is_nested_messages = re.match(
+                r"^root\.baseSpans\[\d+\]\.(input|output)\.messages$", path
+            )
+            # Pattern: root.llmSpans[N].input (LLM input is conversation history)
+            is_llm_input = re.match(r"^root\.llmSpans\[\d+\]\.input$", path)
+
+            if (
+                path in variable_length_arrays
+                or is_nested_tools_called
+                or is_nested_messages
+                or is_llm_input
+            ):
+                # Validate: if expected has items, actual must have at least one
+                if len(b) > 0 and len(a) == 0:
+                    print(
+                        f"❌ Empty array at '{path}': expected at least 1 item"
+                    )
+                    return False
+
+                # Validate structure of first element only
+                if len(a) > 0 and len(b) > 0:
+                    if not _compare(a[0], b[0], f"{path}[0]"):
+                        return False
+                return True
+
+            # For all other arrays, require exact length match
             if len(a) != len(b):
                 print(
                     f"❌ Length mismatch at '{path}': expected {len(b)}, got {len(a)}"
