@@ -18,10 +18,6 @@ def _compute_tools_used(obj: Dict[str, Any]) -> bool:
     - any AI message with non-empty tool_calls
     - any baseSpan[*].toolsCalled non-empty
     """
-    # Check root.toolSpans
-    if obj.get("toolSpans") and len(obj["toolSpans"]) > 0:
-        return True
-
     # Check root.toolsCalled
     if obj.get("toolsCalled") and len(obj["toolsCalled"]) > 0:
         return True

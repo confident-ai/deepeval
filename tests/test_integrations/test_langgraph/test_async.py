@@ -81,12 +81,14 @@ class TestAsyncApp:
 
         result = await async_app.ainvoke(
             {
-                HumanMessage(
-                    content=(
-                        "Use the search_database tool to look up 'Rust (programming language)'. "
-                        "Do not ask clarification questions."
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Use the search_database tool to look up 'Rust (programming language)'. "
+                            "Do not ask clarification questions."
+                        )
                     )
-                )
+                ]
             },
             config={"callbacks": [callback]},
         )
@@ -216,7 +218,11 @@ class TestAsyncConditionalApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Research the latest on space exploration"
+                        content=(
+                            "Use the research tool to research: latest developments in space exploration. "
+                            "Do not ask clarification questions. "
+                            "Return a short summary of the findings."
+                        )
                     )
                 ]
             },
@@ -247,7 +253,13 @@ class TestAsyncParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Get weather in Sydney and Tokyo, and search for tech news"
+                        content=(
+                            "Do the following using tools (do not ask clarification questions):"
+                            "1) Call get_weather with location=Sydney, Australia. "
+                            "2) Call get_weather with location=Tokyo, Japan. "
+                            "3) Call search_news with topic=tech. "
+                            "Then return a short combined result."
+                        )
                     )
                 ]
             },
@@ -269,11 +281,29 @@ class TestAsyncParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="""I need a comprehensive report:
-                        1. Weather in Tokyo, New York, London, Paris, Sydney
-                        2. Stock prices for AAPL, GOOGL, MSFT
-                        3. Exchange rate USD to EUR and USD to GBP
-                        4. Calculate 15% of 378.90"""
+                        content="""
+                            Do the following using tools (do not ask clarification questions).
+                            Call each tool exactly once per bullet item, using the exact parameters shown.
+
+                            1) get_weather:
+                               - location="Tokyo, Japan"
+                               - location="New York, NY"
+                               - location="London, UK"
+                               - location="Paris, France"
+                               - location="Sydney, Australia"
+
+                            2) finance (stock prices):
+                               - ticker="AAPL", type="equity", market="USA"
+                               - ticker="GOOGL", type="equity", market="USA"
+                               - ticker="MSFT", type="equity", market="USA"
+
+                            3) calculator (exchange rates and percentage math):
+                               - expression="USD to EUR exchange rate"
+                               - expression="USD to GBP exchange rate"
+                               - expression="0.15*378.90"
+
+                            Then return a short report with the results.
+                        """
                     )
                 ]
             },

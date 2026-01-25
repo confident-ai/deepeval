@@ -1,32 +1,32 @@
 {
-  "uuid": "0596e0ac-836a-43b5-8da1-6a087ff750a6",
+  "uuid": "06ea5b44-b671-4331-b2f3-7dd76ea39638",
   "baseSpans": [
     {
-      "uuid": "019bf2a5-134e-79a2-a8ab-355b189aed85",
+      "uuid": "019bf626-2546-7df1-8e57-53d159a19e29",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-25T00:54:23.310Z",
-      "endTime": "2026-01-25T00:54:35.917Z",
+      "startTime": "2026-01-25T17:14:13.703Z",
+      "endTime": "2026-01-25T17:14:20.154Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           },
           {
             "content": "",
@@ -35,13 +35,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -52,72 +52,72 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           },
           {
-            "content": "Clear, 78\u00b0F",
+            "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-            "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+            "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "status": "success"
           },
           {
-            "content": "Sunny, 72\u00b0F",
+            "content": "No weather data for Tokyo, Japan",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-            "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+            "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+            "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
             "status": "success"
           },
           {
@@ -126,24 +126,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-            "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+            "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "status": "success"
           },
           {
-            "content": "- Sydney: Clear, 78\u00b0F (\u224825.6\u00b0C)\n- Tokyo: Sunny, 72\u00b0F (\u224822.2\u00b0C)\n\nTech news (top result): \"Tech stocks rally as AI boom continues.\"\n\nWould you like a summary of that story, more tech headlines, or a longer forecast for either city?",
+            "content": "Weather:\n- Sydney, Australia: No weather data available.\n- Tokyo, Japan: No weather data available.\n\nNews:\n- Tech: \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 395,
-                "prompt_tokens": 361,
-                "total_tokens": 756,
+                "completion_tokens": 301,
+                "prompt_tokens": 403,
+                "total_tokens": 704,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 320,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -154,26 +154,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igW2KQBeeTv547vldsTbcRpesut",
+              "id": "chatcmpl-D1xyiR6MvHCtRz7drN0oMZm3U9N9A",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-250d-7cc1-98d3-b8659d3428ca-0",
+            "id": "lc_run--019bf626-2f20-7990-bd71-c3db89fb0240-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 361,
-              "output_tokens": 395,
-              "total_tokens": 756,
+              "input_tokens": 403,
+              "output_tokens": 301,
+              "total_tokens": 704,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 320
+                "reasoning": 256
               }
             }
           }
@@ -181,21 +181,21 @@
       }
     },
     {
-      "uuid": "019bf2a5-250c-7881-87b4-7f7b013f3cac",
+      "uuid": "019bf626-2f1f-79a0-8fe5-971b2b145db8",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a5-134e-79a2-a8ab-355b189aed85",
-      "startTime": "2026-01-25T00:54:27.852Z",
-      "endTime": "2026-01-25T00:54:35.914Z",
+      "parentUuid": "019bf626-2546-7df1-8e57-53d159a19e29",
+      "startTime": "2026-01-25T17:14:16.224Z",
+      "endTime": "2026-01-25T17:14:20.151Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           },
           {
             "content": "",
@@ -204,13 +204,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -221,72 +221,72 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           },
           {
-            "content": "Clear, 78\u00b0F",
+            "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-            "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+            "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "status": "success"
           },
           {
-            "content": "Sunny, 72\u00b0F",
+            "content": "No weather data for Tokyo, Japan",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-            "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+            "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+            "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
             "status": "success"
           },
           {
@@ -295,8 +295,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-            "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+            "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "status": "success"
           }
         ]
@@ -304,19 +304,19 @@
       "output": {
         "messages": [
           {
-            "content": "- Sydney: Clear, 78\u00b0F (\u224825.6\u00b0C)\n- Tokyo: Sunny, 72\u00b0F (\u224822.2\u00b0C)\n\nTech news (top result): \"Tech stocks rally as AI boom continues.\"\n\nWould you like a summary of that story, more tech headlines, or a longer forecast for either city?",
+            "content": "Weather:\n- Sydney, Australia: No weather data available.\n- Tokyo, Japan: No weather data available.\n\nNews:\n- Tech: \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 395,
-                "prompt_tokens": 361,
-                "total_tokens": 756,
+                "completion_tokens": 301,
+                "prompt_tokens": 403,
+                "total_tokens": 704,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 320,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -327,26 +327,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igW2KQBeeTv547vldsTbcRpesut",
+              "id": "chatcmpl-D1xyiR6MvHCtRz7drN0oMZm3U9N9A",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-250d-7cc1-98d3-b8659d3428ca-0",
+            "id": "lc_run--019bf626-2f20-7990-bd71-c3db89fb0240-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 361,
-              "output_tokens": 395,
-              "total_tokens": 756,
+              "input_tokens": 403,
+              "output_tokens": 301,
+              "total_tokens": 704,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 320
+                "reasoning": 256
               }
             }
           }
@@ -354,21 +354,21 @@
       }
     },
     {
-      "uuid": "019bf2a5-4486-7353-837f-53601f47c4ee",
+      "uuid": "019bf626-3e74-7972-834e-4cab990a878f",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a5-250c-7881-87b4-7f7b013f3cac",
-      "startTime": "2026-01-25T00:54:35.910Z",
-      "endTime": "2026-01-25T00:54:35.913Z",
+      "parentUuid": "019bf626-2f1f-79a0-8fe5-971b2b145db8",
+      "startTime": "2026-01-25T17:14:20.148Z",
+      "endTime": "2026-01-25T17:14:20.150Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           },
           {
             "content": "",
@@ -377,13 +377,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -394,72 +394,72 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           },
           {
-            "content": "Clear, 78\u00b0F",
+            "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-            "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+            "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "status": "success"
           },
           {
-            "content": "Sunny, 72\u00b0F",
+            "content": "No weather data for Tokyo, Japan",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-            "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+            "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+            "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
             "status": "success"
           },
           {
@@ -468,24 +468,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-            "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+            "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "status": "success"
           },
           {
-            "content": "- Sydney: Clear, 78\u00b0F (\u224825.6\u00b0C)\n- Tokyo: Sunny, 72\u00b0F (\u224822.2\u00b0C)\n\nTech news (top result): \"Tech stocks rally as AI boom continues.\"\n\nWould you like a summary of that story, more tech headlines, or a longer forecast for either city?",
+            "content": "Weather:\n- Sydney, Australia: No weather data available.\n- Tokyo, Japan: No weather data available.\n\nNews:\n- Tech: \"Tech stocks rally as AI boom continues.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 395,
-                "prompt_tokens": 361,
-                "total_tokens": 756,
+                "completion_tokens": 301,
+                "prompt_tokens": 403,
+                "total_tokens": 704,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 320,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -496,26 +496,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igW2KQBeeTv547vldsTbcRpesut",
+              "id": "chatcmpl-D1xyiR6MvHCtRz7drN0oMZm3U9N9A",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-250d-7cc1-98d3-b8659d3428ca-0",
+            "id": "lc_run--019bf626-2f20-7990-bd71-c3db89fb0240-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 361,
-              "output_tokens": 395,
-              "total_tokens": 756,
+              "input_tokens": 403,
+              "output_tokens": 301,
+              "total_tokens": 704,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 320
+                "reasoning": 256
               }
             }
           }
@@ -524,21 +524,21 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bf2a5-24fc-71a2-9b95-c7ec14241d14",
+      "uuid": "019bf626-2f17-7002-9db5-ea65df24c4a0",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a5-134e-79a2-a8ab-355b189aed85",
-      "startTime": "2026-01-25T00:54:27.837Z",
-      "endTime": "2026-01-25T00:54:27.851Z",
+      "parentUuid": "019bf626-2546-7df1-8e57-53d159a19e29",
+      "startTime": "2026-01-25T17:14:16.216Z",
+      "endTime": "2026-01-25T17:14:16.223Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           },
           {
             "content": "",
@@ -547,13 +547,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -564,51 +564,51 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           }
@@ -617,23 +617,23 @@
       "output": {
         "messages": [
           {
-            "content": "Clear, 78\u00b0F",
+            "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-            "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+            "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "status": "success"
           },
           {
-            "content": "Sunny, 72\u00b0F",
+            "content": "No weather data for Tokyo, Japan",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-            "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+            "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+            "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
             "status": "success"
           },
           {
@@ -642,8 +642,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-            "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+            "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "status": "success"
           }
         ]
@@ -652,17 +652,33 @@
         {
           "name": "get_weather",
           "output": {
-            "content": "Clear, 78\u00b0F",
+            "content": "No weather data for Sydney, Australia",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-            "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+            "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "status": "success"
           },
           "inputParameters": {
-            "city": "Sydney"
+            "city": "Sydney, Australia"
+          }
+        },
+        {
+          "name": "get_weather",
+          "output": {
+            "content": "No weather data for Tokyo, Japan",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+            "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
+            "status": "success"
+          },
+          "inputParameters": {
+            "city": "Tokyo, Japan"
           }
         },
         {
@@ -673,48 +689,32 @@
             "response_metadata": {},
             "type": "tool",
             "name": "search_news",
-            "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-            "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+            "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "status": "success"
           },
           "inputParameters": {
-            "topic": "tech news"
-          }
-        },
-        {
-          "name": "get_weather",
-          "output": {
-            "content": "Sunny, 72\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-            "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
-            "status": "success"
-          },
-          "inputParameters": {
-            "city": "Tokyo"
+            "topic": "tech"
           }
         }
       ]
     },
     {
-      "uuid": "019bf2a5-1350-7962-9abf-a9f914d59f16",
+      "uuid": "019bf626-2549-7b02-8f91-d9fd9b874d48",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a5-134e-79a2-a8ab-355b189aed85",
-      "startTime": "2026-01-25T00:54:23.312Z",
-      "endTime": "2026-01-25T00:54:27.834Z",
+      "parentUuid": "019bf626-2546-7df1-8e57-53d159a19e29",
+      "startTime": "2026-01-25T17:14:13.706Z",
+      "endTime": "2026-01-25T17:14:16.214Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           }
         ]
       },
@@ -727,13 +727,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -744,51 +744,51 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           }
@@ -796,21 +796,21 @@
       }
     },
     {
-      "uuid": "019bf2a5-24f5-7a01-92b4-795e294caaba",
+      "uuid": "019bf626-2f15-7241-947d-35b320dfffdb",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bf2a5-1350-7962-9abf-a9f914d59f16",
-      "startTime": "2026-01-25T00:54:27.830Z",
-      "endTime": "2026-01-25T00:54:27.832Z",
+      "parentUuid": "019bf626-2549-7b02-8f91-d9fd9b874d48",
+      "startTime": "2026-01-25T17:14:16.213Z",
+      "endTime": "2026-01-25T17:14:16.214Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Sydney and Tokyo, and search for tech news",
+            "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+            "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
           },
           {
             "content": "",
@@ -819,13 +819,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
-                "prompt_tokens": 255,
-                "total_tokens": 451,
+                "completion_tokens": 135,
+                "prompt_tokens": 298,
+                "total_tokens": 433,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -836,51 +836,51 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+              "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+            "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Sydney"
+                  "city": "Sydney, Australia"
                 },
-                "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+                "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
                 "type": "tool_call"
               },
               {
                 "name": "get_weather",
                 "args": {
-                  "city": "Tokyo"
+                  "city": "Tokyo, Japan"
                 },
-                "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+                "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
                 "type": "tool_call"
               },
               {
                 "name": "search_news",
                 "args": {
-                  "topic": "tech news"
+                  "topic": "tech"
                 },
-                "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+                "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 255,
-              "output_tokens": 196,
-              "total_tokens": 451,
+              "input_tokens": 298,
+              "output_tokens": 135,
+              "total_tokens": 433,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           }
@@ -892,13 +892,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf2a5-250d-7cc1-98d3-b8659d3428ca",
+      "uuid": "019bf626-2f20-7990-bd71-c3db89fb0240",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf2a5-250c-7881-87b4-7f7b013f3cac",
-      "startTime": "2026-01-25T00:54:27.853Z",
-      "endTime": "2026-01-25T00:54:35.908Z",
+      "parentUuid": "019bf626-2f1f-79a0-8fe5-971b2b145db8",
+      "startTime": "2026-01-25T17:14:16.225Z",
+      "endTime": "2026-01-25T17:14:20.146Z",
       "input": [
         {
           "role": "human",
@@ -906,7 +906,7 @@
         },
         {
           "role": "human",
-          "content": "Get weather in Sydney and Tokyo, and search for tech news"
+          "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result."
         },
         {
           "role": "ai",
@@ -914,11 +914,11 @@
         },
         {
           "role": "tool",
-          "content": "Clear, 78\u00b0F"
+          "content": "No weather data for Sydney, Australia"
         },
         {
           "role": "tool",
-          "content": "Sunny, 72\u00b0F"
+          "content": "No weather data for Tokyo, Japan"
         },
         {
           "role": "tool",
@@ -947,22 +947,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "- Sydney: Clear, 78\u00b0F (\u224825.6\u00b0C)\n- Tokyo: Sunny, 72\u00b0F (\u224822.2\u00b0C)\n\nTech news (top result): \"Tech stocks rally as AI boom continues.\"\n\nWould you like a summary of that story, more tech headlines, or a longer forecast for either city?",
+        "content": "Weather:\n- Sydney, Australia: No weather data available.\n- Tokyo, Japan: No weather data available.\n\nNews:\n- Tech: \"Tech stocks rally as AI boom continues.\"",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 361.0,
-      "outputTokenCount": 395.0
+      "inputTokenCount": 403.0,
+      "outputTokenCount": 301.0
     },
     {
-      "uuid": "019bf2a5-1351-7033-9a4e-0b76c31ebaf9",
+      "uuid": "019bf626-254b-7cc3-bf4e-df1af7ceac76",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf2a5-1350-7962-9abf-a9f914d59f16",
-      "startTime": "2026-01-25T00:54:23.314Z",
-      "endTime": "2026-01-25T00:54:27.827Z",
+      "parentUuid": "019bf626-2549-7b02-8f91-d9fd9b874d48",
+      "startTime": "2026-01-25T17:14:13.707Z",
+      "endTime": "2026-01-25T17:14:16.212Z",
       "input": [
         {
           "role": "human",
@@ -970,7 +970,7 @@
         },
         {
           "role": "human",
-          "content": "Get weather in Sydney and Tokyo, and search for tech news"
+          "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result."
         },
         {
           "role": "Tool Input",
@@ -1000,44 +1000,44 @@
           {
             "name": "get_weather",
             "args": {
-              "city": "Sydney"
+              "city": "Sydney, Australia"
             },
-            "id": "call_6d1AZUXfetHwbcowFvuBSbWT"
+            "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k"
           },
           {
             "name": "get_weather",
             "args": {
-              "city": "Tokyo"
+              "city": "Tokyo, Japan"
             },
-            "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE"
+            "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw"
           },
           {
             "name": "search_news",
             "args": {
-              "topic": "tech news"
+              "topic": "tech"
             },
-            "id": "call_VE5aYRL4fcOhD9HhXAfuXK24"
+            "id": "call_iRup8qcVPu6tRdCum5Gd99bP"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 255.0,
-      "outputTokenCount": 196.0
+      "inputTokenCount": 298.0,
+      "outputTokenCount": 135.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf2a5-2507-7be1-9f97-c8d763928b60",
+      "uuid": "019bf626-2f1d-7110-801e-d9c983f41853",
       "name": "search_news",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a5-24fc-71a2-9b95-c7ec14241d14",
-      "startTime": "2026-01-25T00:54:27.847Z",
-      "endTime": "2026-01-25T00:54:27.849Z",
+      "parentUuid": "019bf626-2f17-7002-9db5-ea65df24c4a0",
+      "startTime": "2026-01-25T17:14:16.221Z",
+      "endTime": "2026-01-25T17:14:16.222Z",
       "input": {
-        "topic": "tech news"
+        "topic": "tech"
       },
       "output": {
         "content": "Tech stocks rally as AI boom continues",
@@ -1045,58 +1045,58 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-        "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+        "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+        "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf2a5-2503-7441-8cd1-10f6cec033ca",
+      "uuid": "019bf626-2f1a-7bb2-8d6c-a26da1391eb5",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a5-24fc-71a2-9b95-c7ec14241d14",
-      "startTime": "2026-01-25T00:54:27.843Z",
-      "endTime": "2026-01-25T00:54:27.849Z",
+      "parentUuid": "019bf626-2f17-7002-9db5-ea65df24c4a0",
+      "startTime": "2026-01-25T17:14:16.219Z",
+      "endTime": "2026-01-25T17:14:16.219Z",
       "input": {
-        "city": "Tokyo"
+        "city": "Tokyo, Japan"
       },
       "output": {
-        "content": "Sunny, 72\u00b0F",
+        "content": "No weather data for Tokyo, Japan",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-        "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+        "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+        "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf2a5-2500-7cf1-9454-159efbb70c5d",
+      "uuid": "019bf626-2f19-7f31-b4c7-0d81a70b99fa",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf2a5-24fc-71a2-9b95-c7ec14241d14",
-      "startTime": "2026-01-25T00:54:27.841Z",
-      "endTime": "2026-01-25T00:54:27.843Z",
+      "parentUuid": "019bf626-2f17-7002-9db5-ea65df24c4a0",
+      "startTime": "2026-01-25T17:14:16.217Z",
+      "endTime": "2026-01-25T17:14:16.218Z",
       "input": {
-        "city": "Sydney"
+        "city": "Sydney, Australia"
       },
       "output": {
-        "content": "Clear, 78\u00b0F",
+        "content": "No weather data for Sydney, Australia",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-        "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+        "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+        "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-25T00:54:23.310Z",
-  "endTime": "2026-01-25T00:54:35.917Z",
+  "startTime": "2026-01-25T17:14:13.703Z",
+  "endTime": "2026-01-25T17:14:20.154Z",
   "name": "langgraph-parallel-async",
   "tags": [
     "langgraph",
@@ -1107,22 +1107,22 @@
   "input": {
     "messages": [
       {
-        "content": "Get weather in Sydney and Tokyo, and search for tech news",
+        "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+        "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Get weather in Sydney and Tokyo, and search for tech news",
+        "content": "Do the following using tools (do not ask clarification questions):1) Call get_weather with location=Sydney, Australia. 2) Call get_weather with location=Tokyo, Japan. 3) Call search_news with topic=tech. Then return a short combined result.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "e52e79cf-f20d-43fe-a348-8fa6c655ce03"
+        "id": "0ead0f0d-89c0-4314-9570-3c8f3545de20"
       },
       {
         "content": "",
@@ -1131,13 +1131,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 196,
-            "prompt_tokens": 255,
-            "total_tokens": 451,
+            "completion_tokens": 135,
+            "prompt_tokens": 298,
+            "total_tokens": 433,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 128,
+              "reasoning_tokens": 64,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1148,72 +1148,72 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D1igRMGaveXRqEoUIVNjvBwbxBpXo",
+          "id": "chatcmpl-D1xyfih4dR1hDxnWbHkN5mbnwSJaO",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf2a5-1351-7033-9a4e-0b76c31ebaf9-0",
+        "id": "lc_run--019bf626-254b-7cc3-bf4e-df1af7ceac76-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
-              "city": "Sydney"
+              "city": "Sydney, Australia"
             },
-            "id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+            "id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
             "type": "tool_call"
           },
           {
             "name": "get_weather",
             "args": {
-              "city": "Tokyo"
+              "city": "Tokyo, Japan"
             },
-            "id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+            "id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
             "type": "tool_call"
           },
           {
             "name": "search_news",
             "args": {
-              "topic": "tech news"
+              "topic": "tech"
             },
-            "id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+            "id": "call_iRup8qcVPu6tRdCum5Gd99bP",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 255,
-          "output_tokens": 196,
-          "total_tokens": 451,
+          "input_tokens": 298,
+          "output_tokens": 135,
+          "total_tokens": 433,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 128
+            "reasoning": 64
           }
         }
       },
       {
-        "content": "Clear, 78\u00b0F",
+        "content": "No weather data for Sydney, Australia",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-        "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+        "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+        "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
         "status": "success"
       },
       {
-        "content": "Sunny, 72\u00b0F",
+        "content": "No weather data for Tokyo, Japan",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-        "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
+        "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+        "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
         "status": "success"
       },
       {
@@ -1222,24 +1222,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-        "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+        "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+        "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
         "status": "success"
       },
       {
-        "content": "- Sydney: Clear, 78\u00b0F (\u224825.6\u00b0C)\n- Tokyo: Sunny, 72\u00b0F (\u224822.2\u00b0C)\n\nTech news (top result): \"Tech stocks rally as AI boom continues.\"\n\nWould you like a summary of that story, more tech headlines, or a longer forecast for either city?",
+        "content": "Weather:\n- Sydney, Australia: No weather data available.\n- Tokyo, Japan: No weather data available.\n\nNews:\n- Tech: \"Tech stocks rally as AI boom continues.\"",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 395,
-            "prompt_tokens": 361,
-            "total_tokens": 756,
+            "completion_tokens": 301,
+            "prompt_tokens": 403,
+            "total_tokens": 704,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 320,
+              "reasoning_tokens": 256,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1250,26 +1250,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D1igW2KQBeeTv547vldsTbcRpesut",
+          "id": "chatcmpl-D1xyiR6MvHCtRz7drN0oMZm3U9N9A",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf2a5-250d-7cc1-98d3-b8659d3428ca-0",
+        "id": "lc_run--019bf626-2f20-7990-bd71-c3db89fb0240-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 361,
-          "output_tokens": 395,
-          "total_tokens": 756,
+          "input_tokens": 403,
+          "output_tokens": 301,
+          "total_tokens": 704,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 320
+            "reasoning": 256
           }
         }
       }
@@ -1280,17 +1280,33 @@
     {
       "name": "get_weather",
       "output": {
-        "content": "Clear, 78\u00b0F",
+        "content": "No weather data for Sydney, Australia",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "2a9d4a9f-ed97-4ca6-8d4f-572013533267",
-        "tool_call_id": "call_6d1AZUXfetHwbcowFvuBSbWT",
+        "id": "bda25cc8-cefa-48cd-a335-d107fc86d959",
+        "tool_call_id": "call_CUmnGt7GkKwhbx4CcOY11Q2k",
         "status": "success"
       },
       "inputParameters": {
-        "city": "Sydney"
+        "city": "Sydney, Australia"
+      }
+    },
+    {
+      "name": "get_weather",
+      "output": {
+        "content": "No weather data for Tokyo, Japan",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_weather",
+        "id": "f304619b-ac3d-4519-8b4a-5fc1d12749a8",
+        "tool_call_id": "call_Un4zIGjaEa3Fdrju2GxVeEKw",
+        "status": "success"
+      },
+      "inputParameters": {
+        "city": "Tokyo, Japan"
       }
     },
     {
@@ -1301,28 +1317,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "search_news",
-        "id": "ce5244ad-a285-4c00-9365-81a071bd5826",
-        "tool_call_id": "call_VE5aYRL4fcOhD9HhXAfuXK24",
+        "id": "ab0fa511-9e5f-43f4-a560-67b763cff22f",
+        "tool_call_id": "call_iRup8qcVPu6tRdCum5Gd99bP",
         "status": "success"
       },
       "inputParameters": {
-        "topic": "tech news"
-      }
-    },
-    {
-      "name": "get_weather",
-      "output": {
-        "content": "Sunny, 72\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "d726c3ca-10ae-49df-9cb5-738ef1aa43f7",
-        "tool_call_id": "call_I3rRQxo7g8NnOTMhVWl1RKtE",
-        "status": "success"
-      },
-      "inputParameters": {
-        "city": "Tokyo"
+        "topic": "tech"
       }
     }
   ]
