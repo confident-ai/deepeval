@@ -89,7 +89,7 @@ tools = [
     calculate,
 ]
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42)
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
 llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=True)
 
 

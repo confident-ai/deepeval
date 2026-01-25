@@ -1,13 +1,13 @@
 {
-  "uuid": "8f329427-a293-40ce-82b5-ace6ca3b5757",
+  "uuid": "12ed3122-94fb-4cfc-80b9-df6a31362a1c",
   "baseSpans": [
     {
-      "uuid": "019bc08a-dce6-71a3-bd19-c45cbe198a6b",
+      "uuid": "019bf2a4-548c-7330-8631-284dafdc278d",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:44.647Z",
-      "endTime": "2026-01-15T07:24:47.094Z",
+      "startTime": "2026-01-25T00:53:34.477Z",
+      "endTime": "2026-01-25T00:53:37.310Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
+            "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
           }
         ]
       },
@@ -26,32 +26,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
+            "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
           },
           {
-            "content": "",
+            "content": "Do you mean Rust the programming language or rust (iron corrosion)? Also tell me what kind of information you want \u2014 a brief overview, tutorials/examples, advanced topics, tools and ecosystem, comparisons with other languages/technologies, or something else \u2014 and I\u2019ll run a search and return results.",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
+                "completion_tokens": 196,
+                "prompt_tokens": 160,
+                "total_tokens": 356,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -59,91 +49,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "Rust is a systems programming language focused on safety.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "search_database",
-            "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-            "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "status": "success"
-          },
-          {
-            "content": "Rust is a systems programming language that emphasizes safety. It is designed to prevent common programming errors, such as null pointer dereferences and buffer overflows, making it a popular choice for systems-level programming.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 41,
-                "prompt_tokens": 111,
-                "total_tokens": 152,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0kh55F23F0wbIoO1X96iLeOkY7",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ifeTHAHiD2I7PUEjo5QC7Ywi45b",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e103-7160-ab8c-4f3f7d3fc03f-0",
+            "id": "lc_run--019bf2a4-548f-7760-a7d2-6aea2faf75be-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 111,
-              "output_tokens": 41,
-              "total_tokens": 152,
+              "input_tokens": 160,
+              "output_tokens": 196,
+              "total_tokens": 356,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 128
               }
             }
           }
@@ -151,13 +79,13 @@
       }
     },
     {
-      "uuid": "019bc08a-e102-70d2-955b-cbc95e457b7b",
+      "uuid": "019bf2a4-548e-7e42-83eb-2bb460a75ec2",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-dce6-71a3-bd19-c45cbe198a6b",
-      "startTime": "2026-01-15T07:24:45.698Z",
-      "endTime": "2026-01-15T07:24:47.093Z",
+      "parentUuid": "019bf2a4-548c-7330-8631-284dafdc278d",
+      "startTime": "2026-01-25T00:53:34.478Z",
+      "endTime": "2026-01-25T00:53:37.309Z",
       "input": {
         "messages": [
           {
@@ -165,100 +93,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "Rust is a systems programming language focused on safety.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "search_database",
-            "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-            "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "status": "success"
+            "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Rust is a systems programming language that emphasizes safety. It is designed to prevent common programming errors, such as null pointer dereferences and buffer overflows, making it a popular choice for systems-level programming.",
+            "content": "Do you mean Rust the programming language or rust (iron corrosion)? Also tell me what kind of information you want \u2014 a brief overview, tutorials/examples, advanced topics, tools and ecosystem, comparisons with other languages/technologies, or something else \u2014 and I\u2019ll run a search and return results.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 41,
-                "prompt_tokens": 111,
-                "total_tokens": 152,
+                "completion_tokens": 196,
+                "prompt_tokens": 160,
+                "total_tokens": 356,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -266,27 +120,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0kh55F23F0wbIoO1X96iLeOkY7",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ifeTHAHiD2I7PUEjo5QC7Ywi45b",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e103-7160-ab8c-4f3f7d3fc03f-0",
+            "id": "lc_run--019bf2a4-548f-7760-a7d2-6aea2faf75be-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 111,
-              "output_tokens": 41,
-              "total_tokens": 152,
+              "input_tokens": 160,
+              "output_tokens": 196,
+              "total_tokens": 356,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 128
               }
             }
           }
@@ -294,13 +150,13 @@
       }
     },
     {
-      "uuid": "019bc08a-e673-7b02-ab87-298d7060f1ec",
+      "uuid": "019bf2a4-5f9b-7551-807f-4fa07a35bc56",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-e102-70d2-955b-cbc95e457b7b",
-      "startTime": "2026-01-15T07:24:47.091Z",
-      "endTime": "2026-01-15T07:24:47.092Z",
+      "parentUuid": "019bf2a4-548e-7e42-83eb-2bb460a75ec2",
+      "startTime": "2026-01-25T00:53:37.307Z",
+      "endTime": "2026-01-25T00:53:37.308Z",
       "input": {
         "messages": [
           {
@@ -308,32 +164,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
+            "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
           },
           {
-            "content": "",
+            "content": "Do you mean Rust the programming language or rust (iron corrosion)? Also tell me what kind of information you want \u2014 a brief overview, tutorials/examples, advanced topics, tools and ecosystem, comparisons with other languages/technologies, or something else \u2014 and I\u2019ll run a search and return results.",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
+                "completion_tokens": 196,
+                "prompt_tokens": 160,
+                "total_tokens": 356,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -341,410 +187,51 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "Rust is a systems programming language focused on safety.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "search_database",
-            "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-            "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "status": "success"
-          },
-          {
-            "content": "Rust is a systems programming language that emphasizes safety. It is designed to prevent common programming errors, such as null pointer dereferences and buffer overflows, making it a popular choice for systems-level programming.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 41,
-                "prompt_tokens": 111,
-                "total_tokens": 152,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0kh55F23F0wbIoO1X96iLeOkY7",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ifeTHAHiD2I7PUEjo5QC7Ywi45b",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-e103-7160-ab8c-4f3f7d3fc03f-0",
+            "id": "lc_run--019bf2a4-548f-7760-a7d2-6aea2faf75be-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 111,
-              "output_tokens": 41,
-              "total_tokens": 152,
+              "input_tokens": 160,
+              "output_tokens": 196,
+              "total_tokens": 356,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 128
               }
             }
           }
         ]
       },
       "output": "__end__"
-    },
-    {
-      "uuid": "019bc08a-e0ff-7222-9898-ebe738bed164",
-      "name": "tools",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019bc08a-dce6-71a3-bd19-c45cbe198a6b",
-      "startTime": "2026-01-15T07:24:45.695Z",
-      "endTime": "2026-01-15T07:24:45.697Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Search for information about Rust",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Rust is a systems programming language focused on safety.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "search_database",
-            "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-            "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "status": "success"
-          }
-        ]
-      },
-      "toolsCalled": [
-        {
-          "name": "search_database",
-          "output": {
-            "content": "Rust is a systems programming language focused on safety.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "search_database",
-            "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-            "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "status": "success"
-          },
-          "inputParameters": {
-            "query": "Rust"
-          }
-        }
-      ]
-    },
-    {
-      "uuid": "019bc08a-dce7-7040-8b0e-741eff7b03fc",
-      "name": "agent",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019bc08a-dce6-71a3-bd19-c45cbe198a6b",
-      "startTime": "2026-01-15T07:24:44.647Z",
-      "endTime": "2026-01-15T07:24:45.693Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Search for information about Rust",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "uuid": "019bc08a-e0fb-7be1-9d03-eb0e5793a41f",
-      "name": "should_continue",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019bc08a-dce7-7040-8b0e-741eff7b03fc",
-      "startTime": "2026-01-15T07:24:45.691Z",
-      "endTime": "2026-01-15T07:24:45.693Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Search for information about Rust",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                  "function": {
-                    "arguments": "{\"query\":\"Rust\"}",
-                    "name": "search_database"
-                  },
-                  "type": "function"
-                }
-              ],
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 79,
-                "total_tokens": 93,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-            "tool_calls": [
-              {
-                "name": "search_database",
-                "args": {
-                  "query": "Rust"
-                },
-                "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 79,
-              "output_tokens": 14,
-              "total_tokens": 93,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "output": "tools"
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc08a-e103-7160-ab8c-4f3f7d3fc03f",
+      "uuid": "019bf2a4-548f-7760-a7d2-6aea2faf75be",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08a-e102-70d2-955b-cbc95e457b7b",
-      "startTime": "2026-01-15T07:24:45.699Z",
-      "endTime": "2026-01-15T07:24:47.090Z",
+      "parentUuid": "019bf2a4-548e-7e42-83eb-2bb460a75ec2",
+      "startTime": "2026-01-25T00:53:34.479Z",
+      "endTime": "2026-01-25T00:53:37.306Z",
       "input": [
         {
           "role": "human",
           "content": "Search for information about Rust"
-        },
-        {
-          "role": "ai",
-          "content": "[{'name': 'search_database', 'args': {'query': 'Rust'}, 'id': 'call_rF3E60uIRr23lt0gJ2ccEdhU', 'type': 'tool_call'}]"
-        },
-        {
-          "role": "tool",
-          "content": "Rust is a systems programming language focused on safety."
         },
         {
           "role": "Tool Input",
@@ -757,82 +244,19 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Rust is a systems programming language that emphasizes safety. It is designed to prevent common programming errors, such as null pointer dereferences and buffer overflows, making it a popular choice for systems-level programming.",
+        "content": "Do you mean Rust the programming language or rust (iron corrosion)? Also tell me what kind of information you want \u2014 a brief overview, tutorials/examples, advanced topics, tools and ecosystem, comparisons with other languages/technologies, or something else \u2014 and I\u2019ll run a search and return results.",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 111.0,
-      "outputTokenCount": 41.0
-    },
-    {
-      "uuid": "019bc08a-dce8-7d30-a96b-c6b02de73122",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bc08a-dce7-7040-8b0e-741eff7b03fc",
-      "startTime": "2026-01-15T07:24:44.648Z",
-      "endTime": "2026-01-15T07:24:45.690Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "Search for information about Rust"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_database', 'description': 'Searches the database for information matching the query.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'translate', 'description': 'Translates text to the target language (mock).', 'parameters': {'properties': {'text': {'type': 'string'}, 'target_language': {'type': 'string'}}, 'required': ['text', 'target_language'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "search_database",
-            "args": {
-              "query": "Rust"
-            },
-            "id": "call_rF3E60uIRr23lt0gJ2ccEdhU"
-          }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 79.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 160.0,
+      "outputTokenCount": 196.0
     }
   ],
   "retrieverSpans": [],
-  "toolSpans": [
-    {
-      "uuid": "019bc08a-e100-7f83-b1b1-62aac253b1f8",
-      "name": "search_database",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bc08a-e0ff-7222-9898-ebe738bed164",
-      "startTime": "2026-01-15T07:24:45.696Z",
-      "endTime": "2026-01-15T07:24:45.697Z",
-      "input": {
-        "query": "Rust"
-      },
-      "output": {
-        "content": "Rust is a systems programming language focused on safety.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "search_database",
-        "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-        "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-        "status": "success"
-      }
-    }
-  ],
-  "startTime": "2026-01-15T07:24:44.646Z",
-  "endTime": "2026-01-15T07:24:47.094Z",
+  "toolSpans": [],
+  "startTime": "2026-01-25T00:53:34.477Z",
+  "endTime": "2026-01-25T00:53:37.310Z",
   "name": "langgraph-async-single",
   "metadata": {
     "test_type": "async_single"
@@ -852,7 +276,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
+        "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
       }
     ]
   },
@@ -863,32 +287,22 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "5b62d581-79d6-48fd-bb31-d196554ff9c0"
+        "id": "9521b51a-3955-4ad8-adf5-940b2a663734"
       },
       {
-        "content": "",
+        "content": "Do you mean Rust the programming language or rust (iron corrosion)? Also tell me what kind of information you want \u2014 a brief overview, tutorials/examples, advanced topics, tools and ecosystem, comparisons with other languages/technologies, or something else \u2014 and I\u2019ll run a search and return results.",
         "additional_kwargs": {
-          "tool_calls": [
-            {
-              "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-              "function": {
-                "arguments": "{\"query\":\"Rust\"}",
-                "name": "search_database"
-              },
-              "type": "function"
-            }
-          ],
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 14,
-            "prompt_tokens": 79,
-            "total_tokens": 93,
+            "completion_tokens": 196,
+            "prompt_tokens": 160,
+            "total_tokens": 356,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 128,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -896,113 +310,33 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0jBCVAqTBvP4D1Tw4BIPmRRGR6",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019bc08a-dce8-7d30-a96b-c6b02de73122-0",
-        "tool_calls": [
-          {
-            "name": "search_database",
-            "args": {
-              "query": "Rust"
-            },
-            "id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 79,
-          "output_tokens": 14,
-          "total_tokens": 93,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
-        }
-      },
-      {
-        "content": "Rust is a systems programming language focused on safety.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "search_database",
-        "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-        "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-        "status": "success"
-      },
-      {
-        "content": "Rust is a systems programming language that emphasizes safety. It is designed to prevent common programming errors, such as null pointer dereferences and buffer overflows, making it a popular choice for systems-level programming.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 41,
-            "prompt_tokens": 111,
-            "total_tokens": 152,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyC0kh55F23F0wbIoO1X96iLeOkY7",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1ifeTHAHiD2I7PUEjo5QC7Ywi45b",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08a-e103-7160-ab8c-4f3f7d3fc03f-0",
+        "id": "lc_run--019bf2a4-548f-7760-a7d2-6aea2faf75be-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 111,
-          "output_tokens": 41,
-          "total_tokens": 152,
+          "input_tokens": 160,
+          "output_tokens": 196,
+          "total_tokens": 356,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 128
           }
         }
       }
     ]
   },
-  "status": "SUCCESS",
-  "toolsCalled": [
-    {
-      "name": "search_database",
-      "output": {
-        "content": "Rust is a systems programming language focused on safety.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "search_database",
-        "id": "8fb4b015-6e0a-4d57-ae13-dc7cc6b870a1",
-        "tool_call_id": "call_rF3E60uIRr23lt0gJ2ccEdhU",
-        "status": "success"
-      },
-      "inputParameters": {
-        "query": "Rust"
-      }
-    }
-  ]
+  "status": "SUCCESS"
 }

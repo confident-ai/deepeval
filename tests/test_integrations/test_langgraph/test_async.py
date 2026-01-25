@@ -81,9 +81,12 @@ class TestAsyncApp:
 
         result = await async_app.ainvoke(
             {
-                "messages": [
-                    HumanMessage(content="Search for information about Rust")
-                ]
+                HumanMessage(
+                    content=(
+                        "Use the search_database tool to look up 'Rust (programming language)'. "
+                        "Do not ask clarification questions."
+                    )
+                )
             },
             config={"callbacks": [callback]},
         )
@@ -106,7 +109,11 @@ class TestAsyncApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Search for information about Python and translate it to Spanish"
+                        content=(
+                            "Use the search_database tool to look up 'Python (programming language)'. "
+                            "Then translate the result to Spanish using the translate tool. "
+                            "Do not ask clarification questions."
+                        )
                     )
                 ]
             },

@@ -41,7 +41,7 @@ def get_company_info(symbol: str) -> str:
 tools = [get_stock_price, get_company_info]
 
 # Enable streaming
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, seed=42, streaming=True)
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42, streaming=True)
 llm_with_tools = llm.bind_tools(tools)
 
 
