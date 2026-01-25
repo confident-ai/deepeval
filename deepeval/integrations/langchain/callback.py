@@ -1,9 +1,11 @@
+import logging
+import os
+import threading
+
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
 from contextlib import contextmanager
-import os
-import logging
 
 from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.test_case.llm_test_case import ToolCall
@@ -66,6 +68,12 @@ def is_langchain_installed():
 
 
 class CallbackHandler(BaseCallbackHandler):
+    # When users create multiple CallbackHandler instances for the same logical
+    # conversation (same thread_id), we want spans to land on the same trace.
+    # Otherwise, each handler lazily creates its own trace, and multi-turn flows
+    # become multiple single-turn traces.
+    _thread_id_to_trace_uuid: Dict[str, str] = {}
+    _thread_id_lock = threading.Lock()
 
     def __init__(
         self,
@@ -112,6 +120,34 @@ class CallbackHandler(BaseCallbackHandler):
         This is done lazily during actual callback execution to avoid context
         corruption when the handler is constructed outside the async task/context.
         """
+        # If the user provided a thread_id, attempt to reuse an existing trace for it.
+        # This makes multi-turn tests that use multiple CallbackHandler instances behave
+        # as expected: one trace containing multiple turns/spans.
+        thread_id = None
+        fields = getattr(self, "_trace_init_fields", None) or {}
+        if fields.get("thread_id"):
+            thread_id = fields["thread_id"]
+        # In case _trace_init_fields has already been cleared, fall back to trace metadata.
+        if thread_id is None and self._trace is not None:
+            thread_id = getattr(self._trace, "thread_id", None)
+
+        if thread_id:
+            with self._thread_id_lock:
+                existing_uuid = self._thread_id_to_trace_uuid.get(thread_id)
+            if existing_uuid:
+                existing_trace = trace_manager.get_trace_by_uuid(existing_uuid)
+                if (
+                    existing_trace
+                    and existing_trace.uuid in trace_manager.active_traces
+                ):
+                    current_trace_context.set(existing_trace)
+                    self._trace = existing_trace
+                    self.trace_uuid = existing_trace.uuid
+                    # Lazily capture the observe parent span if present.
+                    if self._parent_span is None:
+                        self._parent_span = current_span_context.get()
+                    return existing_trace
+
         # Prefer current context trace if it is active.
         ctx_trace = current_trace_context.get()
         if ctx_trace and ctx_trace.uuid in trace_manager.active_traces:
@@ -129,6 +165,16 @@ class CallbackHandler(BaseCallbackHandler):
 
         # Keep a copy for quick access.
         self.trace_uuid = trace.uuid
+
+        # Register this trace as the canonical trace for this thread_id (if provided).
+        # This allows other CallbackHandler instances created for the same thread_id
+        # to reuse the same trace instead of creating parallel traces.
+        fields = getattr(self, "_trace_init_fields", None) or {}
+        tid = fields.get("thread_id") or getattr(trace, "thread_id", None)
+        if tid:
+            with self._thread_id_lock:
+                # Only set if absent to preserve the "first trace wins" behavior.
+                self._thread_id_to_trace_uuid.setdefault(tid, trace.uuid)
 
         # Apply stashed metadata once.
         fields = getattr(self, "_trace_init_fields", None) or {}

@@ -206,6 +206,16 @@ def assert_json_object_structure(
                 print(f"   Value: {actual}")
                 return False
 
+            # # toolSpans is tracer-aggregation dependent and may be omitted even when
+            # # tools are called. We enforce tools semantics via _compute_tools_used(),
+            # # so we should not assert exact length here.
+            # if path == "root.toolSpans":
+            #     # If schema had toolSpans but actual doesn't (or vice versa), that's fine.
+            #     # Validate structure only if both have at least one element.
+            #     if len(actual) > 0 and len(expected) > 0:
+            #         return _compare(actual[0], expected[0], f"{path}[0]")
+            #     return True
+
             # For non-variable-length arrays, require exact length match
             if len(actual) != len(expected):
                 print(

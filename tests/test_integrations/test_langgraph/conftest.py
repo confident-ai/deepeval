@@ -572,7 +572,7 @@ def _add_test_case_to_run(
     # We set metricsData=None (not []) to avoid the guard in update_test_run,
     # and trace=None to avoid server 500 errors when embedding traces.
     api_test_case = LLMApiTestCase(
-        name=nodeid,
+        name=f"{nodeid} [{trace_uuid}]",
         input=input_str or f"LangGraph test: {test_name}",
         actualOutput=output_str or ("PASSED" if passed else "FAILED"),
         expectedOutput=expected_output,  # None unless test explicitly defines

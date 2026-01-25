@@ -4,7 +4,6 @@ All synchronous tests using .invoke() and .stream()
 """
 
 import os
-import pytest
 from langchain_core.messages import HumanMessage
 from deepeval.integrations.langchain import CallbackHandler
 from tests.test_integrations.utils import (
@@ -226,7 +225,11 @@ class TestConditionalApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Research information about quantum computing"
+                        content=(
+                            "Use the research tool to research: information about quantum computing. "
+                            "Do not ask clarification questions. "
+                            "Return a short summary of the findings."
+                        )
                     )
                 ]
             },
