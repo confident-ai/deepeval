@@ -1,13 +1,13 @@
 {
-  "uuid": "9329a72c-c9c2-47f5-8b21-04c6d65decce",
+  "uuid": "8179dbdd-1cb3-48b6-81c2-a970f8202daf",
   "baseSpans": [
     {
-      "uuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
+      "uuid": "019bf977-d7f6-74f1-85c5-2f238e1374fc",
       "name": "rag_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:33.344Z",
-      "endTime": "2026-01-26T08:43:36.386Z",
+      "startTime": "2026-01-26T08:42:19.511Z",
+      "endTime": "2026-01-26T08:42:22.872Z",
       "input": {
         "messages": [
           {
@@ -50,13 +50,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU1BaYYzAgPhI6oD1Fix9vbRGtM",
+              "id": "chatcmpl-D2CSqm2pEhtrEUI3rY6hHazPUfPci",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-f863-7111-91d1-f8ad46be38b3-0",
+            "id": "lc_run--019bf977-d7fb-7ca0-baaa-26c4bebcb45e-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -97,13 +97,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-f863-7111-91d1-f8ad46be38b3",
+      "uuid": "019bf977-d7fb-7ca0-baaa-26c4bebcb45e",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
-      "startTime": "2026-01-26T08:43:33.347Z",
-      "endTime": "2026-01-26T08:43:36.386Z",
+      "parentUuid": "019bf977-d7f6-74f1-85c5-2f238e1374fc",
+      "startTime": "2026-01-26T08:42:19.515Z",
+      "endTime": "2026-01-26T08:42:22.869Z",
       "input": [
         {
           "role": "system",
@@ -131,13 +131,13 @@
   ],
   "retrieverSpans": [
     {
-      "uuid": "019bf978-f862-71d3-8b9c-303e1f5688c9",
+      "uuid": "019bf977-d7f8-7b60-a741-baff0adeb2f1",
       "name": "DeterministicRetriever",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
-      "startTime": "2026-01-26T08:43:33.346Z",
-      "endTime": "2026-01-26T08:43:33.346Z",
+      "parentUuid": "019bf977-d7f6-74f1-85c5-2f238e1374fc",
+      "startTime": "2026-01-26T08:42:19.513Z",
+      "endTime": "2026-01-26T08:42:19.514Z",
       "input": "Tell me about Python programming language.",
       "output": [
         "page_content='Python is a high-level programming language known for its simplicity.' metadata={'source': 'doc1'}",
@@ -147,14 +147,15 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:43:33.344Z",
-  "endTime": "2026-01-26T08:43:36.386Z",
-  "name": "langchain-retriever-python",
+  "startTime": "2026-01-26T08:42:19.511Z",
+  "endTime": "2026-01-26T08:42:22.872Z",
+  "name": "langchain-async-retriever-python",
   "metadata": {
-    "test_type": "retriever"
+    "test_type": "async_retriever"
   },
   "tags": [
     "langchain",
+    "async",
     "retriever",
     "python"
   ],
@@ -201,13 +202,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU1BaYYzAgPhI6oD1Fix9vbRGtM",
+          "id": "chatcmpl-D2CSqm2pEhtrEUI3rY6hHazPUfPci",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-f863-7111-91d1-f8ad46be38b3-0",
+        "id": "lc_run--019bf977-d7fb-7ca0-baaa-26c4bebcb45e-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {

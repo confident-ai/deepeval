@@ -9,6 +9,7 @@ from deepeval.integrations.langchain import CallbackHandler
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
+    is_generate_mode,
 )
 
 # App imports
@@ -36,27 +37,19 @@ from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import
 # CONFIGURATION
 # =============================================================================
 
-# Set to True to generate schemas, False to assert against existing schemas
-# Can be overridden via environment variable: GENERATE_SCHEMAS=true pytest ...
-GENERATE_MODE = os.environ.get("GENERATE_SCHEMAS", "").lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
 
 
 def trace_test(schema_name: str):
     """
-    Decorator that switches between generate and assert mode based on GENERATE_MODE.
+    Decorator that switches between generate and assert mode based on GENERATE_SCHEMAS env var.
 
     Args:
         schema_name: Name of the schema file (without path)
     """
     schema_path = os.path.join(_schemas_dir, schema_name)
-    if GENERATE_MODE:
+    if is_generate_mode():
         return generate_trace_json(schema_path)
     else:
         return assert_trace_json(schema_path)

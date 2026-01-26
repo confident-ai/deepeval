@@ -1,17 +1,17 @@
 {
-  "uuid": "a3c6e097-ac21-40d5-a04a-038fe03c7c32",
+  "uuid": "09556710-65b1-444e-a3cd-ba28321a599f",
   "baseSpans": [
     {
-      "uuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "name": "run_agent",
+      "uuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
+      "name": "complex_agent",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T06:24:05.807Z",
-      "endTime": "2026-01-26T06:24:05.811Z",
+      "startTime": "2026-01-26T08:43:44.906Z",
+      "endTime": "2026-01-26T08:43:50.114Z",
       "input": {
         "messages": [
           {
-            "content": "What time is it, USD to EUR rate, and convert 1000 USD",
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,117 +21,136 @@
       "output": {
         "messages": [
           {
-            "content": "What time is it, USD to EUR rate, and convert 1000 USD",
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
           },
           {
             "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 84,
+                "prompt_tokens": 180,
+                "total_tokens": 264,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CUDx3Konj1WyrkPUP5lg8kMMiEL",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4ab0-7603-baa6-2a8c883c72dc-0",
+            "id": "lc_run--019bf979-258c-7893-80ca-9b3d847d0893-0",
             "tool_calls": [
               {
                 "name": "get_current_time",
                 "args": {},
-                "id": "agent_call_001",
+                "id": "call_dlW3KgHVmtHhjPRspzljvAiH",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 180,
+              "output_tokens": 84,
+              "total_tokens": 264,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "Current time: 2024-01-15 10:30:00 UTC",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "agent_call_001",
+            "name": "get_current_time",
+            "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
             "status": "success"
           },
           {
-            "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "ai",
-            "id": "lc_run--019bf8f9-4ab1-7f61-94bd-23104bbe53ac-0",
-            "tool_calls": [
-              {
-                "name": "search_web",
-                "args": {
-                  "query": "exchange rate usd eur"
+            "content": "Current time: 2024-01-15 10:30:00 UTC.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 155,
+                "prompt_tokens": 223,
+                "total_tokens": 378,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
                 },
-                "id": "agent_call_002",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": []
-          },
-          {
-            "content": "USD to EUR: 1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "tool_call_id": "agent_call_002",
-            "status": "success"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CUF9T4zZwg4OBkUChcIPQudtYs9",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4ab2-72e0-bcb0-c20cf137c9f9-0",
-            "tool_calls": [
-              {
-                "name": "calculator",
-                "args": {
-                  "expression": "1000 * 0.92"
-                },
-                "id": "agent_call_003",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": []
-          },
-          {
-            "content": "Calculation: 1000 * 0.92 = 920.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "tool_call_id": "agent_call_003",
-            "status": "success"
-          },
-          {
-            "content": "As of 2024-01-15 10:30:00 UTC, the exchange rate is 1 USD = 0.92 EUR. Converting 1000 USD gives you 920 EUR.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "ai",
-            "id": "lc_run--019bf8f9-4ab3-7d33-be06-677a5edd3ae1-0",
+            "id": "lc_run--019bf979-2d3f-7f93-8df8-a59e66d78f40-0",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 223,
+              "output_tokens": 155,
+              "total_tokens": 378,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       },
       "toolsCalled": [
         {
           "name": "get_current_time",
-          "output": "Current time: 2024-01-15 10:30:00 UTC",
+          "output": {
+            "content": "Current time: 2024-01-15 10:30:00 UTC",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_current_time",
+            "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+            "status": "success"
+          },
           "inputParameters": {}
-        },
-        {
-          "name": "search_web",
-          "output": "USD to EUR: 1 USD = 0.92 EUR",
-          "inputParameters": {
-            "query": "exchange rate usd eur"
-          }
-        },
-        {
-          "name": "calculator",
-          "output": "Calculation: 1000 * 0.92 = 920.0",
-          "inputParameters": {
-            "expression": "1000 * 0.92"
-          }
         }
       ]
     }
@@ -139,17 +158,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf8f9-4ab3-7d33-be06-677a5edd3ae1",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf979-2d3f-7f93-8df8-a59e66d78f40",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.811Z",
-      "endTime": "2026-01-26T06:24:05.811Z",
+      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
+      "startTime": "2026-01-26T08:43:46.879Z",
+      "endTime": "2026-01-26T08:43:50.114Z",
       "input": [
         {
           "role": "human",
-          "content": "What time is it, USD to EUR rate, and convert 1000 USD"
+          "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -160,123 +179,52 @@
           "content": "Current time: 2024-01-15 10:30:00 UTC"
         },
         {
-          "role": "ai",
-          "content": ""
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
         },
         {
-          "role": "tool",
-          "content": "USD to EUR: 1 USD = 0.92 EUR"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         },
         {
-          "role": "ai",
-          "content": ""
-        },
-        {
-          "role": "tool",
-          "content": "Calculation: 1000 * 0.92 = 920.0"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_current_time', 'description': 'Get the current time (deterministic for testing).', 'parameters': {'properties': {}, 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "As of 2024-01-15 10:30:00 UTC, the exchange rate is 1 USD = 0.92 EUR. Converting 1000 USD gives you 920 EUR.",
+        "content": "Current time: 2024-01-15 10:30:00 UTC.",
         "tool_calls": []
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 223.0,
+      "outputTokenCount": 155.0
     },
     {
-      "uuid": "019bf8f9-4ab2-72e0-bcb0-c20cf137c9f9",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf979-258c-7893-80ca-9b3d847d0893",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.810Z",
-      "endTime": "2026-01-26T06:24:05.810Z",
+      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
+      "startTime": "2026-01-26T08:43:44.908Z",
+      "endTime": "2026-01-26T08:43:46.875Z",
       "input": [
         {
           "role": "human",
-          "content": "What time is it, USD to EUR rate, and convert 1000 USD"
+          "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
         },
         {
-          "role": "ai",
-          "content": ""
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
         },
         {
-          "role": "tool",
-          "content": "Current time: 2024-01-15 10:30:00 UTC"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         },
         {
-          "role": "ai",
-          "content": ""
-        },
-        {
-          "role": "tool",
-          "content": "USD to EUR: 1 USD = 0.92 EUR"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "calculator",
-            "args": {
-              "expression": "1000 * 0.92"
-            },
-            "id": "agent_call_003"
-          }
-        ]
-      },
-      "prompt": {}
-    },
-    {
-      "uuid": "019bf8f9-4ab1-7f61-94bd-23104bbe53ac",
-      "name": "FakeMessagesListChatModel",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.809Z",
-      "endTime": "2026-01-26T06:24:05.809Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "What time is it, USD to EUR rate, and convert 1000 USD"
-        },
-        {
-          "role": "ai",
-          "content": ""
-        },
-        {
-          "role": "tool",
-          "content": "Current time: 2024-01-15 10:30:00 UTC"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "search_web",
-            "args": {
-              "query": "exchange rate usd eur"
-            },
-            "id": "agent_call_002"
-          }
-        ]
-      },
-      "prompt": {}
-    },
-    {
-      "uuid": "019bf8f9-4ab0-7603-baa6-2a8c883c72dc",
-      "name": "FakeMessagesListChatModel",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.808Z",
-      "endTime": "2026-01-26T06:24:05.808Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "What time is it, USD to EUR rate, and convert 1000 USD"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_current_time', 'description': 'Get the current time (deterministic for testing).', 'parameters': {'properties': {}, 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -286,55 +234,40 @@
           {
             "name": "get_current_time",
             "args": {},
-            "id": "agent_call_001"
+            "id": "call_dlW3KgHVmtHhjPRspzljvAiH"
           }
         ]
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 180.0,
+      "outputTokenCount": 84.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf8f9-4ab2-72e0-bcb0-c21d43e10a36",
-      "name": "calculator",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.810Z",
-      "endTime": "2026-01-26T06:24:05.811Z",
-      "input": {
-        "expression": "1000 * 0.92"
-      },
-      "output": "Calculation: 1000 * 0.92 = 920.0"
-    },
-    {
-      "uuid": "019bf8f9-4ab1-7f61-94bd-2323b3e1bb32",
-      "name": "search_web",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.809Z",
-      "endTime": "2026-01-26T06:24:05.810Z",
-      "input": {
-        "query": "exchange rate usd eur"
-      },
-      "output": "USD to EUR: 1 USD = 0.92 EUR"
-    },
-    {
-      "uuid": "019bf8f9-4ab0-7603-baa6-2a94a7953bb5",
+      "uuid": "019bf979-2d3c-7712-8819-11dded391b11",
       "name": "get_current_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf8f9-4aaf-7123-b025-531bdcb06cdd",
-      "startTime": "2026-01-26T06:24:05.808Z",
-      "endTime": "2026-01-26T06:24:05.809Z",
+      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
+      "startTime": "2026-01-26T08:43:46.876Z",
+      "endTime": "2026-01-26T08:43:46.878Z",
       "input": {},
-      "output": "Current time: 2024-01-15 10:30:00 UTC"
+      "output": {
+        "content": "Current time: 2024-01-15 10:30:00 UTC",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_current_time",
+        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+        "status": "success"
+      }
     }
   ],
-  "startTime": "2026-01-26T06:24:05.807Z",
-  "endTime": "2026-01-26T06:24:05.811Z",
+  "startTime": "2026-01-26T08:43:44.906Z",
+  "endTime": "2026-01-26T08:43:50.114Z",
   "name": "langchain-agent-complex",
   "tags": [
     "langchain",
@@ -345,7 +278,7 @@
   "input": {
     "messages": [
       {
-        "content": "What time is it, USD to EUR rate, and convert 1000 USD",
+        "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -355,95 +288,120 @@
   "output": {
     "messages": [
       {
-        "content": "What time is it, USD to EUR rate, and convert 1000 USD",
+        "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
       },
       {
         "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 84,
+            "prompt_tokens": 180,
+            "total_tokens": 264,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CUDx3Konj1WyrkPUP5lg8kMMiEL",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4ab0-7603-baa6-2a8c883c72dc-0",
+        "id": "lc_run--019bf979-258c-7893-80ca-9b3d847d0893-0",
         "tool_calls": [
           {
             "name": "get_current_time",
             "args": {},
-            "id": "agent_call_001",
+            "id": "call_dlW3KgHVmtHhjPRspzljvAiH",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 180,
+          "output_tokens": 84,
+          "total_tokens": 264,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "Current time: 2024-01-15 10:30:00 UTC",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "tool_call_id": "agent_call_001",
+        "name": "get_current_time",
+        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
         "status": "success"
       },
       {
-        "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "ai",
-        "id": "lc_run--019bf8f9-4ab1-7f61-94bd-23104bbe53ac-0",
-        "tool_calls": [
-          {
-            "name": "search_web",
-            "args": {
-              "query": "exchange rate usd eur"
+        "content": "Current time: 2024-01-15 10:30:00 UTC.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 155,
+            "prompt_tokens": 223,
+            "total_tokens": 378,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 128,
+              "rejected_prediction_tokens": 0
             },
-            "id": "agent_call_002",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": []
-      },
-      {
-        "content": "USD to EUR: 1 USD = 0.92 EUR",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "tool_call_id": "agent_call_002",
-        "status": "success"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CUF9T4zZwg4OBkUChcIPQudtYs9",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4ab2-72e0-bcb0-c20cf137c9f9-0",
-        "tool_calls": [
-          {
-            "name": "calculator",
-            "args": {
-              "expression": "1000 * 0.92"
-            },
-            "id": "agent_call_003",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": []
-      },
-      {
-        "content": "Calculation: 1000 * 0.92 = 920.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "tool_call_id": "agent_call_003",
-        "status": "success"
-      },
-      {
-        "content": "As of 2024-01-15 10:30:00 UTC, the exchange rate is 1 USD = 0.92 EUR. Converting 1000 USD gives you 920 EUR.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "ai",
-        "id": "lc_run--019bf8f9-4ab3-7d33-be06-677a5edd3ae1-0",
+        "id": "lc_run--019bf979-2d3f-7f93-8df8-a59e66d78f40-0",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 223,
+          "output_tokens": 155,
+          "total_tokens": 378,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
       }
     ]
   },
@@ -451,22 +409,16 @@
   "toolsCalled": [
     {
       "name": "get_current_time",
-      "output": "Current time: 2024-01-15 10:30:00 UTC",
+      "output": {
+        "content": "Current time: 2024-01-15 10:30:00 UTC",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_current_time",
+        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+        "status": "success"
+      },
       "inputParameters": {}
-    },
-    {
-      "name": "search_web",
-      "output": "USD to EUR: 1 USD = 0.92 EUR",
-      "inputParameters": {
-        "query": "exchange rate usd eur"
-      }
-    },
-    {
-      "name": "calculator",
-      "output": "Calculation: 1000 * 0.92 = 920.0",
-      "inputParameters": {
-        "expression": "1000 * 0.92"
-      }
     }
   ]
 }

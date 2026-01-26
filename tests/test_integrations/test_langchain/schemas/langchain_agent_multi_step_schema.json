@@ -1,17 +1,17 @@
 {
-  "uuid": "3f7d44e6-4704-4724-9163-061871f0acce",
+  "uuid": "cb79157f-0bb1-4fe6-ad72-26a552cc7915",
   "baseSpans": [
     {
-      "uuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "name": "run_agent",
+      "uuid": "019bf979-196c-7ac2-a161-c7086560a36e",
+      "name": "multi_step_agent",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T06:24:05.800Z",
-      "endTime": "2026-01-26T06:24:05.803Z",
+      "startTime": "2026-01-26T08:43:41.805Z",
+      "endTime": "2026-01-26T08:43:44.892Z",
       "input": {
         "messages": [
           {
-            "content": "What's Apple stock price and value of 100 shares?",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,87 +21,139 @@
       "output": {
         "messages": [
           {
-            "content": "What's Apple stock price and value of 100 shares?",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
           },
           {
             "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 89,
+                "prompt_tokens": 161,
+                "total_tokens": 250,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CU9L6LAVHzgs5SwBE0tdk4ExMxp",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4aa8-76e0-8d21-747872e7635c-0",
+            "id": "lc_run--019bf979-1970-7f71-8dcf-50772e8b82ff-0",
             "tool_calls": [
               {
                 "name": "search_web",
                 "args": {
                   "query": "stock price apple"
                 },
-                "id": "agent_call_001",
+                "id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 89,
+              "total_tokens": 250,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "Apple (AAPL) stock: $178.50, up 1.2%",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "agent_call_001",
+            "name": "search_web",
+            "tool_call_id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
             "status": "success"
           },
           {
-            "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "ai",
-            "id": "lc_run--019bf8f9-4aa9-78c0-af01-83affa480900-0",
-            "tool_calls": [
-              {
-                "name": "calculator",
-                "args": {
-                  "expression": "178.50 * 100"
+            "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 36,
+                "prompt_tokens": 209,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
                 },
-                "id": "agent_call_002",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": []
-          },
-          {
-            "content": "Calculation: 178.50 * 100 = 17850.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "tool_call_id": "agent_call_002",
-            "status": "success"
-          },
-          {
-            "content": "Apple stock is at $178.50. If you bought 100 shares, they would be worth $17,850.",
-            "additional_kwargs": {},
-            "response_metadata": {},
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CUBz1rr53OF987a1TtVMCbOPKBq",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4aaa-7ea2-bcce-7b71bbb623b9-0",
+            "id": "lc_run--019bf979-2113-7b71-9a7a-9e543bd0db33-0",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 209,
+              "output_tokens": 36,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
       "toolsCalled": [
         {
           "name": "search_web",
-          "output": "Apple (AAPL) stock: $178.50, up 1.2%",
+          "output": {
+            "content": "Apple (AAPL) stock: $178.50, up 1.2%",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "search_web",
+            "tool_call_id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
+            "status": "success"
+          },
           "inputParameters": {
             "query": "stock price apple"
-          }
-        },
-        {
-          "name": "calculator",
-          "output": "Calculation: 178.50 * 100 = 17850.0",
-          "inputParameters": {
-            "expression": "178.50 * 100"
           }
         }
       ]
@@ -110,17 +162,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf8f9-4aaa-7ea2-bcce-7b71bbb623b9",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf979-2113-7b71-9a7a-9e543bd0db33",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "startTime": "2026-01-26T06:24:05.802Z",
-      "endTime": "2026-01-26T06:24:05.802Z",
+      "parentUuid": "019bf979-196c-7ac2-a161-c7086560a36e",
+      "startTime": "2026-01-26T08:43:43.763Z",
+      "endTime": "2026-01-26T08:43:44.892Z",
       "input": [
         {
           "role": "human",
-          "content": "What's Apple stock price and value of 100 shares?"
+          "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -131,70 +183,44 @@
           "content": "Apple (AAPL) stock: $178.50, up 1.2%"
         },
         {
-          "role": "ai",
-          "content": ""
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
         },
         {
-          "role": "tool",
-          "content": "Calculation: 178.50 * 100 = 17850.0"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "Apple stock is at $178.50. If you bought 100 shares, they would be worth $17,850.",
+        "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
         "tool_calls": []
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 209.0,
+      "outputTokenCount": 36.0
     },
     {
-      "uuid": "019bf8f9-4aa9-78c0-af01-83affa480900",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf979-1970-7f71-8dcf-50772e8b82ff",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "startTime": "2026-01-26T06:24:05.801Z",
-      "endTime": "2026-01-26T06:24:05.802Z",
+      "parentUuid": "019bf979-196c-7ac2-a161-c7086560a36e",
+      "startTime": "2026-01-26T08:43:41.808Z",
+      "endTime": "2026-01-26T08:43:43.759Z",
       "input": [
         {
           "role": "human",
-          "content": "What's Apple stock price and value of 100 shares?"
+          "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
         },
         {
-          "role": "ai",
-          "content": ""
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
         },
         {
-          "role": "tool",
-          "content": "Apple (AAPL) stock: $178.50, up 1.2%"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
-            "name": "calculator",
-            "args": {
-              "expression": "178.50 * 100"
-            },
-            "id": "agent_call_002"
-          }
-        ]
-      },
-      "prompt": {}
-    },
-    {
-      "uuid": "019bf8f9-4aa8-76e0-8d21-747872e7635c",
-      "name": "FakeMessagesListChatModel",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "startTime": "2026-01-26T06:24:05.800Z",
-      "endTime": "2026-01-26T06:24:05.801Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "What's Apple stock price and value of 100 shares?"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -206,44 +232,42 @@
             "args": {
               "query": "stock price apple"
             },
-            "id": "agent_call_001"
+            "id": "call_4ekBsYyPXHP9Yia3X0j2abnx"
           }
         ]
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 161.0,
+      "outputTokenCount": 89.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf8f9-4aaa-7ea2-bcce-7b6f1c6957a5",
-      "name": "calculator",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "startTime": "2026-01-26T06:24:05.802Z",
-      "endTime": "2026-01-26T06:24:05.802Z",
-      "input": {
-        "expression": "178.50 * 100"
-      },
-      "output": "Calculation: 178.50 * 100 = 17850.0"
-    },
-    {
-      "uuid": "019bf8f9-4aa9-78c0-af01-8394073162fd",
+      "uuid": "019bf979-2110-7fa2-9915-e2c054791f16",
       "name": "search_web",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf8f9-4aa7-73f3-83fd-b78a8c0ece60",
-      "startTime": "2026-01-26T06:24:05.801Z",
-      "endTime": "2026-01-26T06:24:05.801Z",
+      "parentUuid": "019bf979-196c-7ac2-a161-c7086560a36e",
+      "startTime": "2026-01-26T08:43:43.760Z",
+      "endTime": "2026-01-26T08:43:43.762Z",
       "input": {
         "query": "stock price apple"
       },
-      "output": "Apple (AAPL) stock: $178.50, up 1.2%"
+      "output": {
+        "content": "Apple (AAPL) stock: $178.50, up 1.2%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_web",
+        "tool_call_id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
+        "status": "success"
+      }
     }
   ],
-  "startTime": "2026-01-26T06:24:05.800Z",
-  "endTime": "2026-01-26T06:24:05.803Z",
+  "startTime": "2026-01-26T08:43:41.805Z",
+  "endTime": "2026-01-26T08:43:44.892Z",
   "name": "langchain-agent-multi-step",
   "tags": [
     "langchain",
@@ -254,7 +278,7 @@
   "input": {
     "messages": [
       {
-        "content": "What's Apple stock price and value of 100 shares?",
+        "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -264,71 +288,122 @@
   "output": {
     "messages": [
       {
-        "content": "What's Apple stock price and value of 100 shares?",
+        "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
       },
       {
         "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 89,
+            "prompt_tokens": 161,
+            "total_tokens": 250,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CU9L6LAVHzgs5SwBE0tdk4ExMxp",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4aa8-76e0-8d21-747872e7635c-0",
+        "id": "lc_run--019bf979-1970-7f71-8dcf-50772e8b82ff-0",
         "tool_calls": [
           {
             "name": "search_web",
             "args": {
               "query": "stock price apple"
             },
-            "id": "agent_call_001",
+            "id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 161,
+          "output_tokens": 89,
+          "total_tokens": 250,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "Apple (AAPL) stock: $178.50, up 1.2%",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "tool_call_id": "agent_call_001",
+        "name": "search_web",
+        "tool_call_id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
         "status": "success"
       },
       {
-        "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "ai",
-        "id": "lc_run--019bf8f9-4aa9-78c0-af01-83affa480900-0",
-        "tool_calls": [
-          {
-            "name": "calculator",
-            "args": {
-              "expression": "178.50 * 100"
+        "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 36,
+            "prompt_tokens": 209,
+            "total_tokens": 245,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
             },
-            "id": "agent_call_002",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": []
-      },
-      {
-        "content": "Calculation: 178.50 * 100 = 17850.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "tool_call_id": "agent_call_002",
-        "status": "success"
-      },
-      {
-        "content": "Apple stock is at $178.50. If you bought 100 shares, they would be worth $17,850.",
-        "additional_kwargs": {},
-        "response_metadata": {},
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CUBz1rr53OF987a1TtVMCbOPKBq",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4aaa-7ea2-bcce-7b71bbb623b9-0",
+        "id": "lc_run--019bf979-2113-7b71-9a7a-9e543bd0db33-0",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 209,
+          "output_tokens": 36,
+          "total_tokens": 245,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       }
     ]
   },
@@ -336,16 +411,17 @@
   "toolsCalled": [
     {
       "name": "search_web",
-      "output": "Apple (AAPL) stock: $178.50, up 1.2%",
+      "output": {
+        "content": "Apple (AAPL) stock: $178.50, up 1.2%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "search_web",
+        "tool_call_id": "call_4ekBsYyPXHP9Yia3X0j2abnx",
+        "status": "success"
+      },
       "inputParameters": {
         "query": "stock price apple"
-      }
-    },
-    {
-      "name": "calculator",
-      "output": "Calculation: 178.50 * 100 = 17850.0",
-      "inputParameters": {
-        "expression": "178.50 * 100"
       }
     }
   ]

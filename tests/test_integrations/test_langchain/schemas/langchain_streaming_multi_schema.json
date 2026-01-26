@@ -1,17 +1,17 @@
 {
-  "uuid": "38cef2e6-79aa-4df9-b9d3-7894f6b75eec",
+  "uuid": "13f3994d-cfcb-41d6-b949-051718303cc1",
   "baseSpans": [
     {
-      "uuid": "019bf8f9-4a5c-7fe2-ae89-a3e560088c11",
-      "name": "run_chain",
+      "uuid": "019bf978-7180-7331-b85e-73742462b15f",
+      "name": "streaming_multi_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T06:24:05.724Z",
-      "endTime": "2026-01-26T06:24:05.727Z",
+      "startTime": "2026-01-26T08:42:58.816Z",
+      "endTime": "2026-01-26T08:43:01.140Z",
       "input": {
         "messages": [
           {
-            "content": "Get stock price and company info for TSLA",
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,7 +21,7 @@
       "output": {
         "messages": [
           {
-            "content": "Get stock price and company info for TSLA",
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -29,67 +29,89 @@
           {
             "content": "",
             "additional_kwargs": {},
-            "response_metadata": {},
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4a5d-7542-aa2b-ec90d74eb5df-0",
+            "id": "lc_run--019bf978-7182-7102-8760-a782630b8a48",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_001",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_company_info",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_002",
+                "id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 174,
+              "output_tokens": 25,
+              "total_tokens": 199,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           },
           {
             "content": "$245.60 (+2.1%)",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "call_001",
+            "name": "get_stock_price",
+            "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
             "status": "success"
           },
           {
-            "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
+            "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
             "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "tool_call_id": "call_002",
-            "status": "success"
-          },
-          {
-            "content": "TSLA (Tesla) is at $245.60. Market cap: $780B.",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4a5f-72a2-afbc-ce377651f5f2-0",
+            "id": "lc_run--019bf978-775b-7ad3-ab13-99732bb83e25",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 214,
+              "output_tokens": 22,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
       "toolsCalled": [
         {
           "name": "get_stock_price",
-          "output": "$245.60 (+2.1%)",
-          "inputParameters": {
-            "symbol": "TSLA"
-          }
-        },
-        {
-          "name": "get_company_info",
-          "output": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
+          "output": {
+            "content": "$245.60 (+2.1%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+            "status": "success"
+          },
           "inputParameters": {
             "symbol": "TSLA"
           }
@@ -100,17 +122,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf8f9-4a5f-72a2-afbc-ce377651f5f2",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf978-775b-7ad3-ab13-99732bb83e25",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4a5c-7fe2-ae89-a3e560088c11",
-      "startTime": "2026-01-26T06:24:05.727Z",
-      "endTime": "2026-01-26T06:24:05.727Z",
+      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
+      "startTime": "2026-01-26T08:43:00.315Z",
+      "endTime": "2026-01-26T08:43:01.140Z",
       "input": [
         {
           "role": "human",
-          "content": "Get stock price and company info for TSLA"
+          "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -121,29 +143,67 @@
           "content": "$245.60 (+2.1%)"
         },
         {
-          "role": "tool",
-          "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "TSLA (Tesla) is at $245.60. Market cap: $780B.",
+        "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
         "tool_calls": []
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-26T08:43:00.772062Z": "",
+        "2026-01-26T08:43:00.797710Z": "The",
+        "2026-01-26T08:43:00.799053Z": " current",
+        "2026-01-26T08:43:00.824020Z": " stock",
+        "2026-01-26T08:43:00.825443Z": " price",
+        "2026-01-26T08:43:00.850248Z": " for",
+        "2026-01-26T08:43:00.851598Z": " TS",
+        "2026-01-26T08:43:00.876468Z": "LA",
+        "2026-01-26T08:43:00.877748Z": " is",
+        "2026-01-26T08:43:00.903008Z": " $",
+        "2026-01-26T08:43:00.904974Z": "245",
+        "2026-01-26T08:43:00.929501Z": ".",
+        "2026-01-26T08:43:00.931032Z": "60",
+        "2026-01-26T08:43:00.956466Z": " (",
+        "2026-01-26T08:43:00.958075Z": "up",
+        "2026-01-26T08:43:01.079546Z": " ",
+        "2026-01-26T08:43:01.079859Z": "2",
+        "2026-01-26T08:43:01.119642Z": ".",
+        "2026-01-26T08:43:01.120489Z": "1",
+        "2026-01-26T08:43:01.125459Z": "%).",
+        "2026-01-26T08:43:01.125768Z": "",
+        "2026-01-26T08:43:01.140043Z": "",
+        "2026-01-26T08:43:01.140323Z": ""
+      }
     },
     {
-      "uuid": "019bf8f9-4a5d-7542-aa2b-ec90d74eb5df",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf978-7182-7102-8760-a782630b8a48",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4a5c-7fe2-ae89-a3e560088c11",
-      "startTime": "2026-01-26T06:24:05.725Z",
-      "endTime": "2026-01-26T06:24:05.725Z",
+      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
+      "startTime": "2026-01-26T08:42:58.818Z",
+      "endTime": "2026-01-26T08:43:00.311Z",
       "input": [
         {
           "role": "human",
-          "content": "Get stock price and company info for TSLA"
+          "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -155,51 +215,52 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_001"
-          },
-          {
-            "name": "get_company_info",
-            "args": {
-              "symbol": "TSLA"
-            },
-            "id": "call_002"
+            "id": "call_2TPHBgLOhQUK2t74zYkaKIUK"
           }
         ]
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-26T08:43:00.222187Z": "",
+        "2026-01-26T08:43:00.243041Z": "",
+        "2026-01-26T08:43:00.244877Z": "",
+        "2026-01-26T08:43:00.264529Z": "",
+        "2026-01-26T08:43:00.266199Z": "",
+        "2026-01-26T08:43:00.290199Z": "",
+        "2026-01-26T08:43:00.292294Z": "",
+        "2026-01-26T08:43:00.297756Z": "",
+        "2026-01-26T08:43:00.298857Z": "",
+        "2026-01-26T08:43:00.310415Z": ""
+      }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf8f9-4a5e-7c72-bef6-5b31b684d663",
-      "name": "get_company_info",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf8f9-4a5c-7fe2-ae89-a3e560088c11",
-      "startTime": "2026-01-26T06:24:05.726Z",
-      "endTime": "2026-01-26T06:24:05.727Z",
-      "input": {
-        "symbol": "TSLA"
-      },
-      "output": "Tesla Inc. - Electric vehicles, Market Cap: $780B"
-    },
-    {
-      "uuid": "019bf8f9-4a5e-7c72-bef6-5b2209fd9624",
+      "uuid": "019bf978-7758-7be2-8702-9f34e77c462c",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf8f9-4a5c-7fe2-ae89-a3e560088c11",
-      "startTime": "2026-01-26T06:24:05.726Z",
-      "endTime": "2026-01-26T06:24:05.726Z",
+      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
+      "startTime": "2026-01-26T08:43:00.312Z",
+      "endTime": "2026-01-26T08:43:00.314Z",
       "input": {
         "symbol": "TSLA"
       },
-      "output": "$245.60 (+2.1%)"
+      "output": {
+        "content": "$245.60 (+2.1%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+        "status": "success"
+      }
     }
   ],
-  "startTime": "2026-01-26T06:24:05.724Z",
-  "endTime": "2026-01-26T06:24:05.727Z",
+  "startTime": "2026-01-26T08:42:58.816Z",
+  "endTime": "2026-01-26T08:43:01.140Z",
   "name": "langchain-streaming-multi",
   "tags": [
     "langchain",
@@ -210,7 +271,7 @@
   "input": {
     "messages": [
       {
-        "content": "Get stock price and company info for TSLA",
+        "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -220,7 +281,7 @@
   "output": {
     "messages": [
       {
-        "content": "Get stock price and company info for TSLA",
+        "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -228,53 +289,74 @@
       {
         "content": "",
         "additional_kwargs": {},
-        "response_metadata": {},
+        "response_metadata": {
+          "finish_reason": "tool_calls",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4a5d-7542-aa2b-ec90d74eb5df-0",
+        "id": "lc_run--019bf978-7182-7102-8760-a782630b8a48",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_001",
-            "type": "tool_call"
-          },
-          {
-            "name": "get_company_info",
-            "args": {
-              "symbol": "TSLA"
-            },
-            "id": "call_002",
+            "id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 174,
+          "output_tokens": 25,
+          "total_tokens": 199,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       },
       {
         "content": "$245.60 (+2.1%)",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "tool_call_id": "call_001",
+        "name": "get_stock_price",
+        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
         "status": "success"
       },
       {
-        "content": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
+        "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
         "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "tool_call_id": "call_002",
-        "status": "success"
-      },
-      {
-        "content": "TSLA (Tesla) is at $245.60. Market cap: $780B.",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "response_metadata": {
+          "finish_reason": "stop",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4a5f-72a2-afbc-ce377651f5f2-0",
+        "id": "lc_run--019bf978-775b-7ad3-ab13-99732bb83e25",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 214,
+          "output_tokens": 22,
+          "total_tokens": 236,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       }
     ]
   },
@@ -282,14 +364,15 @@
   "toolsCalled": [
     {
       "name": "get_stock_price",
-      "output": "$245.60 (+2.1%)",
-      "inputParameters": {
-        "symbol": "TSLA"
-      }
-    },
-    {
-      "name": "get_company_info",
-      "output": "Tesla Inc. - Electric vehicles, Market Cap: $780B",
+      "output": {
+        "content": "$245.60 (+2.1%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+        "status": "success"
+      },
       "inputParameters": {
         "symbol": "TSLA"
       }

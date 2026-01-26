@@ -1,17 +1,17 @@
 {
-  "uuid": "5600ae9e-1d6b-43c1-bd39-745d64e683f6",
+  "uuid": "03328963-805f-4ccc-95e1-c81857734e35",
   "baseSpans": [
     {
-      "uuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
-      "name": "run_chain",
+      "uuid": "019bf978-5307-7150-98aa-748dfd9a23a1",
+      "name": "mixed_tools_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T06:24:05.711Z",
-      "endTime": "2026-01-26T06:24:05.714Z",
+      "startTime": "2026-01-26T08:42:51.015Z",
+      "endTime": "2026-01-26T08:42:54.303Z",
       "input": {
         "messages": [
           {
-            "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+            "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,77 +21,139 @@
       "output": {
         "messages": [
           {
-            "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+            "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
           },
           {
             "content": "",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 87,
+                "prompt_tokens": 167,
+                "total_tokens": 254,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CTLrwfu9G7hYYKVqKrz6zbBw9uF",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4a50-7612-b643-726560578bbe-0",
+            "id": "lc_run--019bf978-5309-7c40-bf6d-02627b7b2c3b-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_001",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5 + 50"
-                },
-                "id": "call_002",
+                "id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 167,
+              "output_tokens": 87,
+              "total_tokens": 254,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "Partly cloudy, 62F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "tool_call_id": "call_001",
+            "name": "get_weather",
+            "tool_call_id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
             "status": "success"
           },
           {
-            "content": "100 * 1.5 + 50 = 200.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "tool_call_id": "call_002",
-            "status": "success"
-          },
-          {
-            "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "content": "Partly cloudy, 62\u00b0F.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 11,
+                "prompt_tokens": 202,
+                "total_tokens": 213,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CTNMzFBAEljYPfDDxYwZvFpIkzW",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715-0",
+            "id": "lc_run--019bf978-5c09-71c1-9be9-533dc55321a0-0",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 202,
+              "output_tokens": 11,
+              "total_tokens": 213,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
           }
         ]
       },
       "toolsCalled": [
         {
           "name": "get_weather",
-          "output": "Partly cloudy, 62F",
+          "output": {
+            "content": "Partly cloudy, 62F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "tool_call_id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
+            "status": "success"
+          },
           "inputParameters": {
             "city": "Paris"
-          }
-        },
-        {
-          "name": "calculate",
-          "output": "100 * 1.5 + 50 = 200.0",
-          "inputParameters": {
-            "expression": "100 * 1.5 + 50"
           }
         }
       ]
@@ -100,17 +162,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf978-5c09-71c1-9be9-533dc55321a0",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
-      "startTime": "2026-01-26T06:24:05.713Z",
-      "endTime": "2026-01-26T06:24:05.714Z",
+      "parentUuid": "019bf978-5307-7150-98aa-748dfd9a23a1",
+      "startTime": "2026-01-26T08:42:53.322Z",
+      "endTime": "2026-01-26T08:42:54.302Z",
       "input": [
         {
           "role": "human",
-          "content": "Weather in Paris and calculate 100 * 1.5 + 50"
+          "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -121,29 +183,44 @@
           "content": "Partly cloudy, 62F"
         },
         {
-          "role": "tool",
-          "content": "100 * 1.5 + 50 = 200.0"
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Evaluates a mathematical expression and returns the result.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
+        "content": "Partly cloudy, 62\u00b0F.",
         "tool_calls": []
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 202.0,
+      "outputTokenCount": 11.0
     },
     {
-      "uuid": "019bf8f9-4a50-7612-b643-726560578bbe",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf978-5309-7c40-bf6d-02627b7b2c3b",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
-      "startTime": "2026-01-26T06:24:05.712Z",
-      "endTime": "2026-01-26T06:24:05.712Z",
+      "parentUuid": "019bf978-5307-7150-98aa-748dfd9a23a1",
+      "startTime": "2026-01-26T08:42:51.017Z",
+      "endTime": "2026-01-26T08:42:53.317Z",
       "input": [
         {
           "role": "human",
-          "content": "Weather in Paris and calculate 100 * 1.5 + 50"
+          "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Evaluates a mathematical expression and returns the result.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -155,51 +232,42 @@
             "args": {
               "city": "Paris"
             },
-            "id": "call_001"
-          },
-          {
-            "name": "calculate",
-            "args": {
-              "expression": "100 * 1.5 + 50"
-            },
-            "id": "call_002"
+            "id": "call_KwrqE8yrzrRhfYbOw8CAPTHb"
           }
         ]
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 167.0,
+      "outputTokenCount": 87.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf8f9-4a51-7bd1-bf34-3eb681a11b5b",
-      "name": "calculate",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
-      "startTime": "2026-01-26T06:24:05.713Z",
-      "endTime": "2026-01-26T06:24:05.713Z",
-      "input": {
-        "expression": "100 * 1.5 + 50"
-      },
-      "output": "100 * 1.5 + 50 = 200.0"
-    },
-    {
-      "uuid": "019bf8f9-4a50-7612-b643-727e75320b1c",
+      "uuid": "019bf978-5c06-7db1-8679-5574cf41d9b8",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
-      "startTime": "2026-01-26T06:24:05.712Z",
-      "endTime": "2026-01-26T06:24:05.712Z",
+      "parentUuid": "019bf978-5307-7150-98aa-748dfd9a23a1",
+      "startTime": "2026-01-26T08:42:53.318Z",
+      "endTime": "2026-01-26T08:42:53.320Z",
       "input": {
         "city": "Paris"
       },
-      "output": "Partly cloudy, 62F"
+      "output": {
+        "content": "Partly cloudy, 62F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_weather",
+        "tool_call_id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
+        "status": "success"
+      }
     }
   ],
-  "startTime": "2026-01-26T06:24:05.711Z",
-  "endTime": "2026-01-26T06:24:05.714Z",
+  "startTime": "2026-01-26T08:42:51.015Z",
+  "endTime": "2026-01-26T08:42:54.303Z",
   "name": "langchain-mixed-tools-test",
   "metadata": {
     "test_type": "mixed_tools"
@@ -212,7 +280,7 @@
   "input": {
     "messages": [
       {
-        "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+        "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -222,61 +290,122 @@
   "output": {
     "messages": [
       {
-        "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+        "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
       },
       {
         "content": "",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 87,
+            "prompt_tokens": 167,
+            "total_tokens": 254,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CTLrwfu9G7hYYKVqKrz6zbBw9uF",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4a50-7612-b643-726560578bbe-0",
+        "id": "lc_run--019bf978-5309-7c40-bf6d-02627b7b2c3b-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Paris"
             },
-            "id": "call_001",
-            "type": "tool_call"
-          },
-          {
-            "name": "calculate",
-            "args": {
-              "expression": "100 * 1.5 + 50"
-            },
-            "id": "call_002",
+            "id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 167,
+          "output_tokens": 87,
+          "total_tokens": 254,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "Partly cloudy, 62F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "tool_call_id": "call_001",
+        "name": "get_weather",
+        "tool_call_id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
         "status": "success"
       },
       {
-        "content": "100 * 1.5 + 50 = 200.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "tool_call_id": "call_002",
-        "status": "success"
-      },
-      {
-        "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "content": "Partly cloudy, 62\u00b0F.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 11,
+            "prompt_tokens": 202,
+            "total_tokens": 213,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CTNMzFBAEljYPfDDxYwZvFpIkzW",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715-0",
+        "id": "lc_run--019bf978-5c09-71c1-9be9-533dc55321a0-0",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 202,
+          "output_tokens": 11,
+          "total_tokens": 213,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
       }
     ]
   },
@@ -284,16 +413,17 @@
   "toolsCalled": [
     {
       "name": "get_weather",
-      "output": "Partly cloudy, 62F",
+      "output": {
+        "content": "Partly cloudy, 62F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_weather",
+        "tool_call_id": "call_KwrqE8yrzrRhfYbOw8CAPTHb",
+        "status": "success"
+      },
       "inputParameters": {
         "city": "Paris"
-      }
-    },
-    {
-      "name": "calculate",
-      "output": "100 * 1.5 + 50 = 200.0",
-      "inputParameters": {
-        "expression": "100 * 1.5 + 50"
       }
     }
   ]

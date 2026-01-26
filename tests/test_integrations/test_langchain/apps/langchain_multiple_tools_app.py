@@ -2,13 +2,11 @@
 Multiple Tools LangChain App: LLM with multiple tools
 Complexity: MEDIUM - Tests calling different tools based on query
 
-Uses FakeMessagesListChatModel for deterministic tool calls.
+Uses RunnableLambda wrapper to ensure proper callback events for tracing.
 """
 
-from langchain_core.language_models.fake_chat_models import (
-    FakeMessagesListChatModel,
-)
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
@@ -71,104 +69,165 @@ def calculate(expression: str) -> str:
         return f"Error: {str(e)}"
 
 
-tools = [get_weather, get_population, get_timezone, calculate]
-tools_by_name = {t.name: t for t in tools}
+# City info tools
+city_info_tools = [get_weather, get_population, get_timezone]
+city_info_tools_by_name = {t.name: t for t in city_info_tools}
+
+# Mixed tools
+mixed_tools = [get_weather, calculate]
+mixed_tools_by_name = {t.name: t for t in mixed_tools}
+
+# LLMs with tool bindings
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm_city_info = llm.bind_tools(city_info_tools)
+llm_mixed = llm.bind_tools(mixed_tools)
 
 
-def create_multiple_tools_chain(tool_calls_config: list, final_message: str):
-    """Create a chain that executes multiple tool calls."""
+def _run_multi_tool_chain(
+    inputs: dict,
+    llm_with_tools,
+    tools_by_name: dict,
+    config: RunnableConfig = None,
+):
+    """Run a multi-tool chain."""
+    messages = inputs.get("messages", [])
 
-    def run_chain(inputs: dict, config: RunnableConfig = None):
-        messages = inputs.get("messages", [])
+    response = llm_with_tools.invoke(messages, config=config)
+    messages_with_response = list(messages) + [response]
 
-        # Create responses for this invocation (no bind_tools needed)
-        responses = [
-            AIMessage(content="", tool_calls=tool_calls_config),
-            AIMessage(content=final_message),
-        ]
-        llm = FakeMessagesListChatModel(responses=responses)
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
 
-        # First LLM call
-        response = llm.invoke(messages, config=config)
-        messages_with_response = list(messages) + [response]
-
-        # Execute tool calls
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            for tool_call in response.tool_calls:
-                tool_name = tool_call["name"]
-                tool_args = tool_call["args"]
-                tool_id = tool_call["id"]
-
-                if tool_name in tools_by_name:
-                    result = tools_by_name[tool_name].invoke(
-                        tool_args, config=config
-                    )
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
+                    "type": "tool_call",
+                }
+                result = tools_by_name[tool_name].invoke(
+                    tool_call_input, config=config
+                )
+                if isinstance(result, ToolMessage):
+                    messages_with_response.append(result)
+                else:
                     tool_msg = ToolMessage(
                         content=str(result), tool_call_id=tool_id
                     )
                     messages_with_response.append(tool_msg)
 
-            # Second LLM call
-            final_response = llm.invoke(messages_with_response, config=config)
-            return {"messages": messages_with_response + [final_response]}
+        final_response = llm_with_tools.invoke(
+            messages_with_response, config=config
+        )
+        return {"messages": messages_with_response + [final_response]}
 
-        return {"messages": messages_with_response}
-
-    return RunnableLambda(run_chain)
+    return {"messages": messages_with_response}
 
 
-# Pre-configured chains for different test scenarios
-city_info_tool_calls = [
-    {
-        "name": "get_weather",
-        "args": {"city": "Tokyo"},
-        "id": "call_001",
-        "type": "tool_call",
-    },
-    {
-        "name": "get_population",
-        "args": {"city": "Tokyo"},
-        "id": "call_002",
-        "type": "tool_call",
-    },
-    {
-        "name": "get_timezone",
-        "args": {"city": "Tokyo"},
-        "id": "call_003",
-        "type": "tool_call",
-    },
-]
+async def _arun_multi_tool_chain(
+    inputs: dict,
+    llm_with_tools,
+    tools_by_name: dict,
+    config: RunnableConfig = None,
+):
+    """Async run a multi-tool chain."""
+    messages = inputs.get("messages", [])
 
-mixed_tool_calls = [
-    {
-        "name": "get_weather",
-        "args": {"city": "Paris"},
-        "id": "call_001",
-        "type": "tool_call",
-    },
-    {
-        "name": "calculate",
-        "args": {"expression": "100 * 1.5 + 50"},
-        "id": "call_002",
-        "type": "tool_call",
-    },
-]
+    response = await llm_with_tools.ainvoke(messages, config=config)
+    messages_with_response = list(messages) + [response]
 
-city_info_chain = create_multiple_tools_chain(
-    city_info_tool_calls,
-    "Here is the information about Tokyo: Weather is Cloudy at 68F, Population is 13,960,000, and Timezone is JST (UTC+9).",
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
+
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
+                    "type": "tool_call",
+                }
+                result = await tools_by_name[tool_name].ainvoke(
+                    tool_call_input, config=config
+                )
+                if isinstance(result, ToolMessage):
+                    messages_with_response.append(result)
+                else:
+                    tool_msg = ToolMessage(
+                        content=str(result), tool_call_id=tool_id
+                    )
+                    messages_with_response.append(tool_msg)
+
+        final_response = await llm_with_tools.ainvoke(
+            messages_with_response, config=config
+        )
+        return {"messages": messages_with_response + [final_response]}
+
+    return {"messages": messages_with_response}
+
+
+# Create wrapper functions that will be wrapped in RunnableLambda
+def _city_info_sync(inputs: dict, config: RunnableConfig = None):
+    return _run_multi_tool_chain(
+        inputs, llm_city_info, city_info_tools_by_name, config=config
+    )
+
+
+async def _city_info_async(inputs: dict, config: RunnableConfig = None):
+    return await _arun_multi_tool_chain(
+        inputs, llm_city_info, city_info_tools_by_name, config=config
+    )
+
+
+def _mixed_tools_sync(inputs: dict, config: RunnableConfig = None):
+    return _run_multi_tool_chain(
+        inputs, llm_mixed, mixed_tools_by_name, config=config
+    )
+
+
+async def _mixed_tools_async(inputs: dict, config: RunnableConfig = None):
+    return await _arun_multi_tool_chain(
+        inputs, llm_mixed, mixed_tools_by_name, config=config
+    )
+
+
+# Wrap as RunnableLambda chains for proper callback event propagation
+_city_info_chain = RunnableLambda(_city_info_sync).with_config(
+    run_name="city_info_chain"
 )
-mixed_chain = create_multiple_tools_chain(
-    mixed_tool_calls,
-    "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
+_city_info_async_chain = RunnableLambda(_city_info_async).with_config(
+    run_name="city_info_chain"
+)
+_mixed_tools_chain = RunnableLambda(_mixed_tools_sync).with_config(
+    run_name="mixed_tools_chain"
+)
+_mixed_tools_async_chain = RunnableLambda(_mixed_tools_async).with_config(
+    run_name="mixed_tools_chain"
 )
 
 
 def invoke_city_info(inputs: dict, config: RunnableConfig = None):
     """Invoke chain that gets city info (weather, population, timezone)."""
-    return city_info_chain.invoke(inputs, config=config)
+    return _city_info_chain.invoke(inputs, config=config)
+
+
+async def ainvoke_city_info(inputs: dict, config: RunnableConfig = None):
+    """Async invoke chain that gets city info."""
+    return await _city_info_async_chain.ainvoke(inputs, config=config)
 
 
 def invoke_mixed_tools(inputs: dict, config: RunnableConfig = None):
     """Invoke chain that uses weather and calculate tools."""
-    return mixed_chain.invoke(inputs, config=config)
+    return _mixed_tools_chain.invoke(inputs, config=config)
+
+
+async def ainvoke_mixed_tools(inputs: dict, config: RunnableConfig = None):
+    """Async invoke chain that uses weather and calculate tools."""
+    return await _mixed_tools_async_chain.ainvoke(inputs, config=config)

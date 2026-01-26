@@ -355,6 +355,16 @@ def _add_test_case_to_run(
         evaluationCost=None,
     )
 
+    print("[DEBUG] trace keys:", trace_dict.keys())
+    print("[DEBUG] toolsCalled top-level:", bool(trace_dict.get("toolsCalled")))
+    print("[DEBUG] toolSpans:", len(trace_dict.get("toolSpans", [])))
+    print("[DEBUG] baseSpans:", len(trace_dict.get("baseSpans", [])))
+    print(
+        "[DEBUG] output:",
+        type(trace_dict.get("output")),
+        trace_dict.get("output"),
+    )
+
     print(
         f"[DEBUG] added api_test_case fields: "
         f"tokenCost={token_cost is not None} "

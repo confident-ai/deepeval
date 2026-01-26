@@ -8,6 +8,22 @@ from functools import wraps
 import inspect
 
 
+def is_generate_mode() -> bool:
+    """
+    Check if schema generation mode is enabled.
+
+    Can be enabled via environment variable: GENERATE_SCHEMAS=true pytest ...
+
+    Returns:
+        True if schemas should be generated, False if they should be asserted.
+    """
+    return os.environ.get("GENERATE_SCHEMAS", "").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
+
 def _compute_tools_used(obj: Dict[str, Any]) -> bool:
     """
     Compute whether tools were used in a trace object.

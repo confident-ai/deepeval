@@ -1,14 +1,12 @@
 """
 Single Tool LangChain App: LLM with one tool
-Complexity: LOW - Tests basic tool calling with deterministic responses
+Complexity: LOW - Tests basic tool calling with ChatOpenAI
 
-Uses FakeMessagesListChatModel for deterministic tool calls.
+Uses RunnableLambda wrapper to ensure proper callback events for tracing.
 """
 
-from langchain_core.language_models.fake_chat_models import (
-    FakeMessagesListChatModel,
-)
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
@@ -29,77 +27,118 @@ def get_weather(city: str) -> str:
 tools = [get_weather]
 tools_by_name = {t.name: t for t in tools}
 
+# LLM with tool binding
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm_with_tools = llm.bind_tools(tools)
 
-def create_single_tool_chain():
+
+def _run_tool_chain(inputs: dict, config: RunnableConfig = None):
     """
-    Create a chain that:
-    1. Calls LLM (which emits a tool call)
-    2. Executes the tool
-    3. Calls LLM again with the tool result
-    4. Returns the final response
+    Sync tool chain execution:
+    1. Call LLM to get tool calls
+    2. Execute tools (with proper tool_call structure for callbacks)
+    3. Call LLM with tool results
     """
-    # Define responses: first call returns tool call, second returns final answer
-    responses = [
-        AIMessage(
-            content="",
-            tool_calls=[
-                {
-                    "name": "get_weather",
-                    "args": {"city": "San Francisco"},
-                    "id": "call_weather_001",
+    messages = inputs.get("messages", [])
+
+    # First LLM call
+    response = llm_with_tools.invoke(messages, config=config)
+    messages_with_response = list(messages) + [response]
+
+    # Execute tool calls if present
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
+
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
                     "type": "tool_call",
                 }
-            ],
-        ),
-        AIMessage(
-            content="Based on the weather data, San Francisco is currently foggy with a temperature of 58F."
-        ),
-    ]
-
-    def run_chain(inputs: dict, config: RunnableConfig = None):
-        messages = inputs.get("messages", [])
-
-        # Create fresh LLM for each invocation (no bind_tools needed - tool_calls are in responses)
-        llm = FakeMessagesListChatModel(responses=list(responses))
-
-        # First LLM call - get tool calls
-        response = llm.invoke(messages, config=config)
-        messages_with_response = list(messages) + [response]
-
-        # Execute tool calls if present
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            for tool_call in response.tool_calls:
-                tool_name = tool_call["name"]
-                tool_args = tool_call["args"]
-                tool_id = tool_call["id"]
-
-                # Find and execute the tool
-                if tool_name in tools_by_name:
-                    result = tools_by_name[tool_name].invoke(
-                        tool_args, config=config
-                    )
+                result = tools_by_name[tool_name].invoke(
+                    tool_call_input, config=config
+                )
+                # Result is a ToolMessage when invoked with tool_call structure
+                if isinstance(result, ToolMessage):
+                    messages_with_response.append(result)
+                else:
                     tool_msg = ToolMessage(
                         content=str(result), tool_call_id=tool_id
                     )
                     messages_with_response.append(tool_msg)
 
-            # Second LLM call with tool results
-            final_response = llm.invoke(messages_with_response, config=config)
-            return {"messages": messages_with_response + [final_response]}
+        # Second LLM call with tool results
+        final_response = llm_with_tools.invoke(
+            messages_with_response, config=config
+        )
+        return {"messages": messages_with_response + [final_response]}
 
-        return {"messages": messages_with_response}
-
-    return RunnableLambda(run_chain)
+    return {"messages": messages_with_response}
 
 
-chain = create_single_tool_chain()
+async def _arun_tool_chain(inputs: dict, config: RunnableConfig = None):
+    """Async tool chain execution."""
+    messages = inputs.get("messages", [])
+
+    # First LLM call
+    response = await llm_with_tools.ainvoke(messages, config=config)
+    messages_with_response = list(messages) + [response]
+
+    # Execute tool calls if present
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
+
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
+                    "type": "tool_call",
+                }
+                result = await tools_by_name[tool_name].ainvoke(
+                    tool_call_input, config=config
+                )
+                # Result is a ToolMessage when invoked with tool_call structure
+                if isinstance(result, ToolMessage):
+                    messages_with_response.append(result)
+                else:
+                    tool_msg = ToolMessage(
+                        content=str(result), tool_call_id=tool_id
+                    )
+                    messages_with_response.append(tool_msg)
+
+        # Second LLM call with tool results
+        final_response = await llm_with_tools.ainvoke(
+            messages_with_response, config=config
+        )
+        return {"messages": messages_with_response + [final_response]}
+
+    return {"messages": messages_with_response}
+
+
+# Wrap as RunnableLambda chains for proper callback event propagation
+_sync_chain = RunnableLambda(_run_tool_chain).with_config(
+    run_name="single_tool_chain"
+)
+_async_chain = RunnableLambda(_arun_tool_chain).with_config(
+    run_name="single_tool_chain"
+)
 
 
 def invoke_single_tool_app(inputs: dict, config: RunnableConfig = None):
     """Invoke the single tool app."""
-    return chain.invoke(inputs, config=config)
+    return _sync_chain.invoke(inputs, config=config)
 
 
 async def ainvoke_single_tool_app(inputs: dict, config: RunnableConfig = None):
     """Async invoke the single tool app."""
-    return await chain.ainvoke(inputs, config=config)
+    return await _async_chain.ainvoke(inputs, config=config)

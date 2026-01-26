@@ -1,7 +1,7 @@
 from langchain.agents import create_agent
-from deepeval.integrations.langchain import tool
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-from deepeval.integrations.langchain import CallbackHandler
+from deepeval.integrations.langchain import tool, CallbackHandler
 from deepeval.prompt import Prompt
 import os
 from tests.test_integrations.utils import (
@@ -38,7 +38,7 @@ json_path = os.path.join(_current_dir, "langchain.json")
 @assert_trace_json(json_path)
 def test_execute_agent():
     agent_executor.invoke(
-        {"messages": [("human", "What is 8 multiplied by 6?")]},
+        {"messages": [HumanMessage(content="What is 8 multiplied by 6?")]},
         config={
             "callbacks": [CallbackHandler(metric_collection="task_completion")]
         },

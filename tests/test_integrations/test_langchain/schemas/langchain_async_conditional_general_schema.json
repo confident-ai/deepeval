@@ -1,21 +1,23 @@
 {
-  "uuid": "0a1ad1e5-9e7b-4586-a816-fac7edbc309a",
+  "uuid": "e030950d-af67-4d35-ba69-c1837bee50a0",
   "baseSpans": [
     {
-      "uuid": "019bf978-2f01-7630-a881-359e8004a7c6",
-      "name": "simple_chain",
+      "uuid": "019bf977-8808-7801-b8a5-863e84e9c571",
+      "name": "general_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:42:41.793Z",
-      "endTime": "2026-01-26T08:42:43.585Z",
-      "input": [
-        {
-          "content": "Say hello in one short sentence.",
-          "additional_kwargs": {},
-          "response_metadata": {},
-          "type": "human"
-        }
-      ],
+      "startTime": "2026-01-26T08:41:59.048Z",
+      "endTime": "2026-01-26T08:42:01.660Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Say hello in one short sentence.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
       "output": {
         "messages": [
           {
@@ -48,13 +50,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CTBkvl6mVJ76AWjGpAOJoie7hoO",
+              "id": "chatcmpl-D2CSVJWE0D8AExnNX4rLpnmiHT8to",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-2f03-79b1-a1eb-6e753c66a299-0",
+            "id": "lc_run--019bf977-880a-7e00-9822-6921db48b8e4-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -78,13 +80,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-2f03-79b1-a1eb-6e753c66a299",
+      "uuid": "019bf977-880a-7e00-9822-6921db48b8e4",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-2f01-7630-a881-359e8004a7c6",
-      "startTime": "2026-01-26T08:42:41.795Z",
-      "endTime": "2026-01-26T08:42:43.584Z",
+      "parentUuid": "019bf977-8808-7801-b8a5-863e84e9c571",
+      "startTime": "2026-01-26T08:41:59.051Z",
+      "endTime": "2026-01-26T08:42:01.658Z",
       "input": [
         {
           "role": "human",
@@ -104,27 +106,26 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:42:41.793Z",
-  "endTime": "2026-01-26T08:42:43.585Z",
-  "name": "langchain-simple-test",
-  "metadata": {
-    "test_type": "simple"
-  },
+  "startTime": "2026-01-26T08:41:59.048Z",
+  "endTime": "2026-01-26T08:42:01.660Z",
+  "name": "langchain-async-conditional-general",
   "tags": [
     "langchain",
-    "simple"
+    "async",
+    "conditional",
+    "general"
   ],
   "environment": "development",
-  "threadId": "simple-123",
-  "userId": "test-user",
-  "input": [
-    {
-      "content": "Say hello in one short sentence.",
-      "additional_kwargs": {},
-      "response_metadata": {},
-      "type": "human"
-    }
-  ],
+  "input": {
+    "messages": [
+      {
+        "content": "Say hello in one short sentence.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
   "output": {
     "messages": [
       {
@@ -157,13 +158,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CTBkvl6mVJ76AWjGpAOJoie7hoO",
+          "id": "chatcmpl-D2CSVJWE0D8AExnNX4rLpnmiHT8to",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-2f03-79b1-a1eb-6e753c66a299-0",
+        "id": "lc_run--019bf977-880a-7e00-9822-6921db48b8e4-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {

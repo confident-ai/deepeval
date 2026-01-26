@@ -1,17 +1,17 @@
 {
-  "uuid": "fc2e8d6f-39b8-404f-9e74-4932c1c31721",
+  "uuid": "01a6f1a3-4d01-4f83-ad92-749076786789",
   "baseSpans": [
     {
-      "uuid": "019bf8f9-4a77-7ff0-9e71-c32ccfbe973a",
-      "name": "run_chain",
+      "uuid": "019bf978-a77c-7d10-a117-465434370fc1",
+      "name": "general_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T06:24:05.751Z",
-      "endTime": "2026-01-26T06:24:05.752Z",
+      "startTime": "2026-01-26T08:43:12.636Z",
+      "endTime": "2026-01-26T08:43:14.844Z",
       "input": {
         "messages": [
           {
-            "content": "Hello, how are you today?",
+            "content": "Say hello in one short sentence.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,19 +21,57 @@
       "output": {
         "messages": [
           {
-            "content": "Hello, how are you today?",
+            "content": "Say hello in one short sentence.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
           },
           {
-            "content": "Hello! I'm here to help. How can I assist you today?",
-            "additional_kwargs": {},
-            "response_metadata": {},
+            "content": "Hello!",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 75,
+                "prompt_tokens": 13,
+                "total_tokens": 88,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2CTgvfhvxSbb0zhhSmbOTpG6TwAl",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
             "type": "ai",
-            "id": "lc_run--019bf8f9-4a78-77b3-a8c5-f229e8f6a646-0",
+            "id": "lc_run--019bf978-a77d-7762-bd30-07a94fe3fa26-0",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 13,
+              "output_tokens": 75,
+              "total_tokens": 88,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       }
@@ -42,31 +80,34 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf8f9-4a78-77b3-a8c5-f229e8f6a646",
-      "name": "FakeMessagesListChatModel",
+      "uuid": "019bf978-a77d-7762-bd30-07a94fe3fa26",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf8f9-4a77-7ff0-9e71-c32ccfbe973a",
-      "startTime": "2026-01-26T06:24:05.752Z",
-      "endTime": "2026-01-26T06:24:05.752Z",
+      "parentUuid": "019bf978-a77c-7d10-a117-465434370fc1",
+      "startTime": "2026-01-26T08:43:12.638Z",
+      "endTime": "2026-01-26T08:43:14.843Z",
       "input": [
         {
           "role": "human",
-          "content": "Hello, how are you today?"
+          "content": "Say hello in one short sentence."
         }
       ],
       "output": {
         "role": "AI",
-        "content": "Hello! I'm here to help. How can I assist you today?",
+        "content": "Hello!",
         "tool_calls": []
       },
-      "prompt": {}
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 13.0,
+      "outputTokenCount": 75.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-26T06:24:05.751Z",
-  "endTime": "2026-01-26T06:24:05.752Z",
+  "startTime": "2026-01-26T08:43:12.636Z",
+  "endTime": "2026-01-26T08:43:14.844Z",
   "name": "langchain-conditional-general",
   "tags": [
     "langchain",
@@ -77,7 +118,7 @@
   "input": {
     "messages": [
       {
-        "content": "Hello, how are you today?",
+        "content": "Say hello in one short sentence.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -87,19 +128,57 @@
   "output": {
     "messages": [
       {
-        "content": "Hello, how are you today?",
+        "content": "Say hello in one short sentence.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
       },
       {
-        "content": "Hello! I'm here to help. How can I assist you today?",
-        "additional_kwargs": {},
-        "response_metadata": {},
+        "content": "Hello!",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 75,
+            "prompt_tokens": 13,
+            "total_tokens": 88,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2CTgvfhvxSbb0zhhSmbOTpG6TwAl",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
         "type": "ai",
-        "id": "lc_run--019bf8f9-4a78-77b3-a8c5-f229e8f6a646-0",
+        "id": "lc_run--019bf978-a77d-7762-bd30-07a94fe3fa26-0",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 13,
+          "output_tokens": 75,
+          "total_tokens": 88,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       }
     ]
   },

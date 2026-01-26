@@ -1,17 +1,17 @@
 {
-  "uuid": "9329a72c-c9c2-47f5-8b21-04c6d65decce",
+  "uuid": "0368b1fd-dcd9-4bbd-a513-39591afdbd5f",
   "baseSpans": [
     {
-      "uuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
+      "uuid": "019bf977-e52e-7892-9937-966f12ed389c",
       "name": "rag_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:33.344Z",
-      "endTime": "2026-01-26T08:43:36.386Z",
+      "startTime": "2026-01-26T08:42:22.894Z",
+      "endTime": "2026-01-26T08:42:26.142Z",
       "input": {
         "messages": [
           {
-            "content": "Tell me about Python programming language.",
+            "content": "What is LangChain framework?",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,21 +21,21 @@
       "output": {
         "messages": [
           {
-            "content": "Tell me about Python programming language.",
+            "content": "What is LangChain framework?",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
           },
           {
-            "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+            "content": "LangChain is a framework for developing applications powered by language models. It provides tools to chain LLM calls together and to integrate those models with external data.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 167,
-                "prompt_tokens": 76,
-                "total_tokens": 243,
+                "completion_tokens": 168,
+                "prompt_tokens": 79,
+                "total_tokens": 247,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -50,19 +50,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU1BaYYzAgPhI6oD1Fix9vbRGtM",
+              "id": "chatcmpl-D2CStszHV3JadR0MGR9d0DkDomwWm",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-f863-7111-91d1-f8ad46be38b3-0",
+            "id": "lc_run--019bf977-e531-7353-9ed9-84f13bb15c76-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 76,
-              "output_tokens": 167,
-              "total_tokens": 243,
+              "input_tokens": 79,
+              "output_tokens": 168,
+              "total_tokens": 247,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -74,20 +74,20 @@
             }
           }
         ],
-        "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+        "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
         "source_documents": [
           {
             "metadata": {
-              "source": "doc1"
+              "source": "doc3"
             },
-            "page_content": "Python is a high-level programming language known for its simplicity.",
+            "page_content": "LangChain is a framework for developing applications powered by language models.",
             "type": "Document"
           },
           {
             "metadata": {
-              "source": "doc2"
+              "source": "doc4"
             },
-            "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+            "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
             "type": "Document"
           }
         ]
@@ -97,13 +97,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-f863-7111-91d1-f8ad46be38b3",
+      "uuid": "019bf977-e531-7353-9ed9-84f13bb15c76",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
-      "startTime": "2026-01-26T08:43:33.347Z",
-      "endTime": "2026-01-26T08:43:36.386Z",
+      "parentUuid": "019bf977-e52e-7892-9937-966f12ed389c",
+      "startTime": "2026-01-26T08:42:22.897Z",
+      "endTime": "2026-01-26T08:42:26.140Z",
       "input": [
         {
           "role": "system",
@@ -111,58 +111,56 @@
         },
         {
           "role": "human",
-          "content": "Tell me about Python programming language."
+          "content": "What is LangChain framework?"
         },
         {
           "role": "human",
-          "content": "Context:\nPython is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.\n\nAnswer based on the context above."
+          "content": "Context:\nLangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.\n\nAnswer based on the context above."
         }
       ],
       "output": {
         "role": "AI",
-        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools to chain LLM calls together and to integrate those models with external data.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 76.0,
-      "outputTokenCount": 167.0
+      "inputTokenCount": 79.0,
+      "outputTokenCount": 168.0
     }
   ],
   "retrieverSpans": [
     {
-      "uuid": "019bf978-f862-71d3-8b9c-303e1f5688c9",
+      "uuid": "019bf977-e52f-7db1-9b39-3a352d77305f",
       "name": "DeterministicRetriever",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "019bf978-f860-75d1-bebb-a0c18c7846c0",
-      "startTime": "2026-01-26T08:43:33.346Z",
-      "endTime": "2026-01-26T08:43:33.346Z",
-      "input": "Tell me about Python programming language.",
+      "parentUuid": "019bf977-e52e-7892-9937-966f12ed389c",
+      "startTime": "2026-01-26T08:42:22.896Z",
+      "endTime": "2026-01-26T08:42:22.897Z",
+      "input": "What is LangChain framework?",
       "output": [
-        "page_content='Python is a high-level programming language known for its simplicity.' metadata={'source': 'doc1'}",
-        "page_content='Python supports multiple programming paradigms including procedural and OOP.' metadata={'source': 'doc2'}"
+        "page_content='LangChain is a framework for developing applications powered by language models.' metadata={'source': 'doc3'}",
+        "page_content='LangChain provides tools for chaining LLM calls and integrating with external data.' metadata={'source': 'doc4'}"
       ],
       "embedder": "unknown"
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:43:33.344Z",
-  "endTime": "2026-01-26T08:43:36.386Z",
-  "name": "langchain-retriever-python",
-  "metadata": {
-    "test_type": "retriever"
-  },
+  "startTime": "2026-01-26T08:42:22.894Z",
+  "endTime": "2026-01-26T08:42:26.142Z",
+  "name": "langchain-async-retriever-langchain",
   "tags": [
     "langchain",
+    "async",
     "retriever",
-    "python"
+    "langchain-docs"
   ],
   "environment": "development",
   "input": {
     "messages": [
       {
-        "content": "Tell me about Python programming language.",
+        "content": "What is LangChain framework?",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -172,21 +170,21 @@
   "output": {
     "messages": [
       {
-        "content": "Tell me about Python programming language.",
+        "content": "What is LangChain framework?",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
       },
       {
-        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools to chain LLM calls together and to integrate those models with external data.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 167,
-            "prompt_tokens": 76,
-            "total_tokens": 243,
+            "completion_tokens": 168,
+            "prompt_tokens": 79,
+            "total_tokens": 247,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -201,19 +199,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU1BaYYzAgPhI6oD1Fix9vbRGtM",
+          "id": "chatcmpl-D2CStszHV3JadR0MGR9d0DkDomwWm",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-f863-7111-91d1-f8ad46be38b3-0",
+        "id": "lc_run--019bf977-e531-7353-9ed9-84f13bb15c76-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 76,
-          "output_tokens": 167,
-          "total_tokens": 243,
+          "input_tokens": 79,
+          "output_tokens": 168,
+          "total_tokens": 247,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -225,20 +223,20 @@
         }
       }
     ],
-    "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+    "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
     "source_documents": [
       {
         "metadata": {
-          "source": "doc1"
+          "source": "doc3"
         },
-        "page_content": "Python is a high-level programming language known for its simplicity.",
+        "page_content": "LangChain is a framework for developing applications powered by language models.",
         "type": "Document"
       },
       {
         "metadata": {
-          "source": "doc2"
+          "source": "doc4"
         },
-        "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+        "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
         "type": "Document"
       }
     ]

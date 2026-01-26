@@ -1,14 +1,14 @@
 """
 Retriever LangChain App: RAG with deterministic retriever
-Complexity: MEDIUM - Tests retriever spans with deterministic results
+Complexity: MEDIUM - Tests retriever spans with ChatOpenAI
 
-Uses a fake retriever that returns fixed documents.
+Uses a deterministic retriever that returns fixed documents,
+combined with ChatOpenAI for response generation.
+Uses RunnableLambda wrapper to ensure proper callback events for tracing.
 """
 
-from langchain_core.language_models.fake_chat_models import (
-    FakeMessagesListChatModel,
-)
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.runnables import RunnableConfig, RunnableLambda
@@ -66,68 +66,113 @@ class DeterministicRetriever(BaseRetriever):
             return self.documents["default"]
 
 
-def _create_rag_chain(response_text: str):
-    """Create a RAG chain with the specified response."""
-    retriever = DeterministicRetriever()
+# Shared retriever and LLM
+retriever = DeterministicRetriever()
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
 
-    def run_rag(inputs: dict, config: RunnableConfig = None):
-        messages = inputs.get("messages", [])
 
-        # Extract query from messages
-        query = ""
-        for msg in reversed(messages):
-            if isinstance(msg, HumanMessage):
-                query = msg.content
-                break
-            elif isinstance(msg, tuple) and msg[0] == "human":
-                query = msg[1]
-                break
+def _run_rag_chain(inputs: dict, config: RunnableConfig = None):
+    """Run the RAG chain synchronously."""
+    messages = inputs.get("messages", [])
 
-        # Retrieve documents
-        docs = retriever.invoke(query, config=config)
+    # Extract query from messages
+    query = ""
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            query = msg.content
+            break
+        elif isinstance(msg, tuple) and msg[0] == "human":
+            query = msg[1]
+            break
 
-        # Format context
-        context = "\n\n".join([doc.page_content for doc in docs])
+    # Retrieve documents
+    docs = retriever.invoke(query, config=config)
 
-        # Create LLM with appropriate response based on query
-        if "python" in query.lower():
-            final_response = "Based on the retrieved documents, Python is a high-level programming language known for its simplicity and support for multiple paradigms."
-        elif "langchain" in query.lower():
-            final_response = "According to the documents, LangChain is a framework for building LLM-powered applications with tools for chaining calls and data integration."
-        else:
-            final_response = "Based on the context, AI and machine learning enable computers to learn patterns from data."
+    # Format context
+    context = "\n\n".join([doc.page_content for doc in docs])
 
-        llm = FakeMessagesListChatModel(
-            responses=[AIMessage(content=final_response)]
-        )
-
-        # Create augmented prompt
-        augmented_messages = list(messages) + [
+    # Create augmented prompt with system message for RAG
+    augmented_messages = (
+        [
+            SystemMessage(
+                content="You are a helpful assistant. Answer the user's question based ONLY on the provided context. Be concise and factual."
+            )
+        ]
+        + list(messages)
+        + [
             HumanMessage(
                 content=f"Context:\n{context}\n\nAnswer based on the context above."
             )
         ]
+    )
 
-        # Generate response
-        response = llm.invoke(augmented_messages, config=config)
+    # Generate response
+    response = llm.invoke(augmented_messages, config=config)
 
-        return {
-            "messages": list(messages) + [response],
-            "context": context,
-            "source_documents": docs,
-        }
-
-    return RunnableLambda(run_rag)
+    return {
+        "messages": list(messages) + [response],
+        "context": context,
+        "source_documents": docs,
+    }
 
 
-chain = _create_rag_chain("default")
+async def _arun_rag_chain(inputs: dict, config: RunnableConfig = None):
+    """Run the RAG chain asynchronously."""
+    messages = inputs.get("messages", [])
+
+    # Extract query from messages
+    query = ""
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            query = msg.content
+            break
+        elif isinstance(msg, tuple) and msg[0] == "human":
+            query = msg[1]
+            break
+
+    # Retrieve documents
+    docs = await retriever.ainvoke(query, config=config)
+
+    # Format context
+    context = "\n\n".join([doc.page_content for doc in docs])
+
+    # Create augmented prompt with system message for RAG
+    augmented_messages = (
+        [
+            SystemMessage(
+                content="You are a helpful assistant. Answer the user's question based ONLY on the provided context. Be concise and factual."
+            )
+        ]
+        + list(messages)
+        + [
+            HumanMessage(
+                content=f"Context:\n{context}\n\nAnswer based on the context above."
+            )
+        ]
+    )
+
+    # Generate response
+    response = await llm.ainvoke(augmented_messages, config=config)
+
+    return {
+        "messages": list(messages) + [response],
+        "context": context,
+        "source_documents": docs,
+    }
+
+
+# Wrap as RunnableLambda chains for proper callback event propagation
+_rag_chain = RunnableLambda(_run_rag_chain).with_config(run_name="rag_chain")
+_rag_async_chain = RunnableLambda(_arun_rag_chain).with_config(
+    run_name="rag_chain"
+)
 
 
 def invoke_rag_app(inputs: dict, config: RunnableConfig = None):
     """Invoke the RAG app."""
-    return chain.invoke(inputs, config=config)
+    return _rag_chain.invoke(inputs, config=config)
 
 
 async def ainvoke_rag_app(inputs: dict, config: RunnableConfig = None):
     """Async invoke the RAG app."""
-    return await chain.ainvoke(inputs, config=config)
+    return await _rag_async_chain.ainvoke(inputs, config=config)

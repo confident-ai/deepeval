@@ -2,13 +2,12 @@
 Agent-style LangChain App: Agent that iteratively calls tools
 Complexity: HIGH - Tests agent loop with multiple tool calls
 
-Uses FakeMessagesListChatModel for deterministic agent behavior.
+Uses ChatOpenAI for live agent behavior with tool calling.
+Uses RunnableLambda wrapper to ensure proper callback events for tracing.
 """
 
-from langchain_core.language_models.fake_chat_models import (
-    FakeMessagesListChatModel,
-)
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
@@ -47,160 +46,207 @@ def get_current_time() -> str:
     return "Current time: 2024-01-15 10:30:00 UTC"
 
 
-tools = [search_web, calculator, get_current_time]
-tools_by_name = {t.name: t for t in tools}
+# Tool sets for different agent configurations
+simple_tools = [search_web]
+simple_tools_by_name = {t.name: t for t in simple_tools}
+
+multi_step_tools = [search_web, calculator]
+multi_step_tools_by_name = {t.name: t for t in multi_step_tools}
+
+complex_tools = [search_web, calculator, get_current_time]
+complex_tools_by_name = {t.name: t for t in complex_tools}
+
+# LLM with tool bindings
+llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
+llm_simple = llm.bind_tools(simple_tools)
+llm_multi_step = llm.bind_tools(multi_step_tools)
+llm_complex = llm.bind_tools(complex_tools)
 
 
-def create_agent_executor(planned_responses: list, max_iterations: int = 5):
-    """
-    Create an agent executor that follows planned responses.
+def _run_agent_loop(
+    inputs: dict,
+    llm_with_tools,
+    tools_by_name: dict,
+    config: RunnableConfig = None,
+    max_iterations: int = 5,
+):
+    """Run agent loop synchronously."""
+    messages = inputs.get("messages", [])
+    all_messages = list(messages)
 
-    Args:
-        planned_responses: List of AIMessage objects to return in sequence
-        max_iterations: Maximum number of iterations
-    """
+    for iteration in range(max_iterations):
+        # Get next action from LLM
+        response = llm_with_tools.invoke(all_messages, config=config)
+        all_messages.append(response)
 
-    def run_agent(inputs: dict, config: RunnableConfig = None):
-        messages = inputs.get("messages", [])
-        all_messages = list(messages)
+        # Check if we have tool calls
+        if not hasattr(response, "tool_calls") or not response.tool_calls:
+            # No more tool calls - agent is done
+            break
 
-        # Create LLM with planned responses (no bind_tools needed)
-        llm = FakeMessagesListChatModel(responses=list(planned_responses))
+        # Execute tool calls
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
 
-        for iteration in range(max_iterations):
-            # Get next action from LLM
-            response = llm.invoke(all_messages, config=config)
-            all_messages.append(response)
-
-            # Check if we have tool calls
-            if not hasattr(response, "tool_calls") or not response.tool_calls:
-                # No more tool calls - agent is done
-                break
-
-            # Execute tool calls
-            for tool_call in response.tool_calls:
-                tool_name = tool_call["name"]
-                tool_args = tool_call["args"]
-                tool_id = tool_call["id"]
-
-                if tool_name in tools_by_name:
-                    result = tools_by_name[tool_name].invoke(
-                        tool_args, config=config
-                    )
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
+                    "type": "tool_call",
+                }
+                result = tools_by_name[tool_name].invoke(
+                    tool_call_input, config=config
+                )
+                if isinstance(result, ToolMessage):
+                    all_messages.append(result)
+                else:
                     tool_msg = ToolMessage(
                         content=str(result), tool_call_id=tool_id
                     )
                     all_messages.append(tool_msg)
 
-        return {"messages": all_messages}
-
-    return RunnableLambda(run_agent)
+    return {"messages": all_messages}
 
 
-# Pre-configured agent scenarios
+async def _arun_agent_loop(
+    inputs: dict,
+    llm_with_tools,
+    tools_by_name: dict,
+    config: RunnableConfig = None,
+    max_iterations: int = 5,
+):
+    """Run agent loop asynchronously."""
+    messages = inputs.get("messages", [])
+    all_messages = list(messages)
 
-# Simple agent: search then respond
-simple_agent_responses = [
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "search_web",
-                "args": {"query": "weather san francisco"},
-                "id": "agent_call_001",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="Based on my search, San Francisco is currently foggy with a temperature of 58F and 75% humidity."
-    ),
-]
+    for iteration in range(max_iterations):
+        # Get next action from LLM
+        response = await llm_with_tools.ainvoke(all_messages, config=config)
+        all_messages.append(response)
 
-# Multi-step agent: search, calculate, respond
-multi_step_agent_responses = [
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "search_web",
-                "args": {"query": "stock price apple"},
-                "id": "agent_call_001",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "calculator",
-                "args": {"expression": "178.50 * 100"},
-                "id": "agent_call_002",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="Apple stock is at $178.50. If you bought 100 shares, they would be worth $17,850."
-    ),
-]
+        # Check if we have tool calls
+        if not hasattr(response, "tool_calls") or not response.tool_calls:
+            # No more tool calls - agent is done
+            break
 
-# Complex agent: multiple tools in sequence
-complex_agent_responses = [
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "get_current_time",
-                "args": {},
-                "id": "agent_call_001",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "search_web",
-                "args": {"query": "exchange rate usd eur"},
-                "id": "agent_call_002",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "calculator",
-                "args": {"expression": "1000 * 0.92"},
-                "id": "agent_call_003",
-                "type": "tool_call",
-            }
-        ],
-    ),
-    AIMessage(
-        content="As of 2024-01-15 10:30:00 UTC, the exchange rate is 1 USD = 0.92 EUR. Converting 1000 USD gives you 920 EUR."
-    ),
-]
+        # Execute tool calls
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+            tool_id = tool_call["id"]
 
-simple_agent = create_agent_executor(simple_agent_responses)
-multi_step_agent = create_agent_executor(multi_step_agent_responses)
-complex_agent = create_agent_executor(complex_agent_responses)
+            if tool_name in tools_by_name:
+                # Use full tool_call structure to trigger proper callbacks
+                tool_call_input = {
+                    "name": tool_name,
+                    "args": tool_args,
+                    "id": tool_id,
+                    "type": "tool_call",
+                }
+                result = await tools_by_name[tool_name].ainvoke(
+                    tool_call_input, config=config
+                )
+                if isinstance(result, ToolMessage):
+                    all_messages.append(result)
+                else:
+                    tool_msg = ToolMessage(
+                        content=str(result), tool_call_id=tool_id
+                    )
+                    all_messages.append(tool_msg)
+
+    return {"messages": all_messages}
 
 
+# Create wrapper functions for RunnableLambda
+def _simple_agent_sync(inputs: dict, config: RunnableConfig = None):
+    return _run_agent_loop(
+        inputs, llm_simple, simple_tools_by_name, config=config
+    )
+
+
+async def _simple_agent_async(inputs: dict, config: RunnableConfig = None):
+    return await _arun_agent_loop(
+        inputs, llm_simple, simple_tools_by_name, config=config
+    )
+
+
+def _multi_step_agent_sync(inputs: dict, config: RunnableConfig = None):
+    return _run_agent_loop(
+        inputs, llm_multi_step, multi_step_tools_by_name, config=config
+    )
+
+
+async def _multi_step_agent_async(inputs: dict, config: RunnableConfig = None):
+    return await _arun_agent_loop(
+        inputs, llm_multi_step, multi_step_tools_by_name, config=config
+    )
+
+
+def _complex_agent_sync(inputs: dict, config: RunnableConfig = None):
+    return _run_agent_loop(
+        inputs, llm_complex, complex_tools_by_name, config=config
+    )
+
+
+async def _complex_agent_async(inputs: dict, config: RunnableConfig = None):
+    return await _arun_agent_loop(
+        inputs, llm_complex, complex_tools_by_name, config=config
+    )
+
+
+# Wrap as RunnableLambda chains for proper callback event propagation
+_simple_agent_chain = RunnableLambda(_simple_agent_sync).with_config(
+    run_name="simple_agent"
+)
+_simple_agent_async_chain = RunnableLambda(_simple_agent_async).with_config(
+    run_name="simple_agent"
+)
+_multi_step_agent_chain = RunnableLambda(_multi_step_agent_sync).with_config(
+    run_name="multi_step_agent"
+)
+_multi_step_agent_async_chain = RunnableLambda(
+    _multi_step_agent_async
+).with_config(run_name="multi_step_agent")
+_complex_agent_chain = RunnableLambda(_complex_agent_sync).with_config(
+    run_name="complex_agent"
+)
+_complex_agent_async_chain = RunnableLambda(_complex_agent_async).with_config(
+    run_name="complex_agent"
+)
+
+
+# Simple agent functions (one tool: search_web)
 def invoke_simple_agent(inputs: dict, config: RunnableConfig = None):
-    """Invoke simple agent (one tool call)."""
-    return simple_agent.invoke(inputs, config=config)
+    """Invoke simple agent (one tool available)."""
+    return _simple_agent_chain.invoke(inputs, config=config)
 
 
+async def ainvoke_simple_agent(inputs: dict, config: RunnableConfig = None):
+    """Async invoke simple agent."""
+    return await _simple_agent_async_chain.ainvoke(inputs, config=config)
+
+
+# Multi-step agent functions (two tools: search_web, calculator)
 def invoke_multi_step_agent(inputs: dict, config: RunnableConfig = None):
-    """Invoke multi-step agent (two tool calls in sequence)."""
-    return multi_step_agent.invoke(inputs, config=config)
+    """Invoke multi-step agent (two tools available)."""
+    return _multi_step_agent_chain.invoke(inputs, config=config)
 
 
+async def ainvoke_multi_step_agent(inputs: dict, config: RunnableConfig = None):
+    """Async invoke multi-step agent."""
+    return await _multi_step_agent_async_chain.ainvoke(inputs, config=config)
+
+
+# Complex agent functions (three tools: search_web, calculator, get_current_time)
 def invoke_complex_agent(inputs: dict, config: RunnableConfig = None):
-    """Invoke complex agent (three tool calls in sequence)."""
-    return complex_agent.invoke(inputs, config=config)
+    """Invoke complex agent (three tools available)."""
+    return _complex_agent_chain.invoke(inputs, config=config)
+
+
+async def ainvoke_complex_agent(inputs: dict, config: RunnableConfig = None):
+    """Async invoke complex agent."""
+    return await _complex_agent_async_chain.ainvoke(inputs, config=config)

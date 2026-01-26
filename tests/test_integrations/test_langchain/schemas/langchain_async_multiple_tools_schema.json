@@ -1,17 +1,17 @@
 {
-  "uuid": "b835223f-41fe-436f-b8ee-e13ba8cfb4bc",
+  "uuid": "cc014db3-d007-496a-8b42-61374b5176e5",
   "baseSpans": [
     {
-      "uuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "name": "simple_agent",
+      "uuid": "019bf977-18cb-7433-aa93-13d296bbc42b",
+      "name": "city_info_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:39.059Z",
-      "endTime": "2026-01-26T08:43:41.786Z",
+      "startTime": "2026-01-26T08:41:30.572Z",
+      "endTime": "2026-01-26T08:41:33.925Z",
       "input": {
         "messages": [
           {
-            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,7 +21,7 @@
       "output": {
         "messages": [
           {
-            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -33,9 +33,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 26,
-                "prompt_tokens": 145,
-                "total_tokens": 171,
+                "completion_tokens": 23,
+                "prompt_tokens": 187,
+                "total_tokens": 210,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -50,28 +50,28 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU7dniEF6SOUplbeLW8ApoGZpCd",
+              "id": "chatcmpl-D2CS3TsV8OLSzcUZgLddvueam6qeD",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-0eb6-7ba1-a3c0-ce40ab7ed602-0",
+            "id": "lc_run--019bf977-18cf-7911-9854-3c2efd6c98fb-0",
             "tool_calls": [
               {
-                "name": "search_web",
+                "name": "get_weather",
                 "args": {
-                  "query": "weather san francisco"
+                  "city": "Tokyo"
                 },
-                "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+                "id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 145,
-              "output_tokens": 26,
-              "total_tokens": 171,
+              "input_tokens": 187,
+              "output_tokens": 23,
+              "total_tokens": 210,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -83,24 +83,24 @@
             }
           },
           {
-            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "content": "Cloudy, 68F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "name": "search_web",
-            "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "name": "get_weather",
+            "tool_call_id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
             "status": "success"
           },
           {
-            "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+            "content": "Weather in Tokyo: Cloudy, 68F",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 34,
-                "prompt_tokens": 191,
-                "total_tokens": 225,
+                "completion_tokens": 13,
+                "prompt_tokens": 221,
+                "total_tokens": 234,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -115,19 +115,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU8DaEX8rk9MmbRDkO9l1cUYIxE",
+              "id": "chatcmpl-D2CS5XXI3YQ97xBk3UNjwPj0pQ8oU",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-158b-7362-9e2a-bad7055aa61f-0",
+            "id": "lc_run--019bf977-21e6-79d3-98f2-e3728b21ed0d-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 191,
-              "output_tokens": 34,
-              "total_tokens": 225,
+              "input_tokens": 221,
+              "output_tokens": 13,
+              "total_tokens": 234,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -142,18 +142,18 @@
       },
       "toolsCalled": [
         {
-          "name": "search_web",
+          "name": "get_weather",
           "output": {
-            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "content": "Cloudy, 68F",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
-            "name": "search_web",
-            "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "name": "get_weather",
+            "tool_call_id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
             "status": "success"
           },
           "inputParameters": {
-            "query": "weather san francisco"
+            "city": "Tokyo"
           }
         }
       ]
@@ -162,17 +162,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf979-158b-7362-9e2a-bad7055aa61f",
+      "uuid": "019bf977-21e6-79d3-98f2-e3728b21ed0d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:40.812Z",
-      "endTime": "2026-01-26T08:43:41.786Z",
+      "parentUuid": "019bf977-18cb-7433-aa93-13d296bbc42b",
+      "startTime": "2026-01-26T08:41:32.903Z",
+      "endTime": "2026-01-26T08:41:33.923Z",
       "input": [
         {
           "role": "human",
-          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -180,39 +180,55 @@
         },
         {
           "role": "tool",
-          "content": "San Francisco weather: Foggy, 58F, humidity 75%"
+          "content": "Cloudy, 68F"
         },
         {
           "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "content": "Weather in Tokyo: Cloudy, 68F",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 191.0,
-      "outputTokenCount": 34.0
+      "inputTokenCount": 221.0,
+      "outputTokenCount": 13.0
     },
     {
-      "uuid": "019bf979-0eb6-7ba1-a3c0-ce40ab7ed602",
+      "uuid": "019bf977-18cf-7911-9854-3c2efd6c98fb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:39.062Z",
-      "endTime": "2026-01-26T08:43:40.808Z",
+      "parentUuid": "019bf977-18cb-7433-aa93-13d296bbc42b",
+      "startTime": "2026-01-26T08:41:30.576Z",
+      "endTime": "2026-01-26T08:41:32.900Z",
       "input": [
         {
           "role": "human",
-          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
         },
         {
           "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -220,60 +236,62 @@
         "content": "",
         "tool_calls": [
           {
-            "name": "search_web",
+            "name": "get_weather",
             "args": {
-              "query": "weather san francisco"
+              "city": "Tokyo"
             },
-            "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd"
+            "id": "call_Zs4ZNorNK1FstFgw0D97V2AN"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 145.0,
-      "outputTokenCount": 26.0
+      "inputTokenCount": 187.0,
+      "outputTokenCount": 23.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf979-1588-7883-b106-82c834c4e743",
-      "name": "search_web",
+      "uuid": "019bf977-21e5-7300-aca8-68054f6481ab",
+      "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:40.809Z",
-      "endTime": "2026-01-26T08:43:40.810Z",
+      "parentUuid": "019bf977-18cb-7433-aa93-13d296bbc42b",
+      "startTime": "2026-01-26T08:41:32.901Z",
+      "endTime": "2026-01-26T08:41:32.902Z",
       "input": {
-        "query": "weather san francisco"
+        "city": "Tokyo"
       },
       "output": {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Cloudy, 68F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "name": "get_weather",
+        "tool_call_id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:43:39.059Z",
-  "endTime": "2026-01-26T08:43:41.786Z",
-  "name": "langchain-agent-simple",
+  "startTime": "2026-01-26T08:41:30.572Z",
+  "endTime": "2026-01-26T08:41:33.925Z",
+  "name": "langchain-async-multi-tool",
   "metadata": {
-    "test_type": "agent"
+    "test_type": "async_multi_tool"
   },
   "tags": [
     "langchain",
-    "agent",
-    "simple"
+    "async",
+    "multi-tool"
   ],
   "environment": "development",
+  "threadId": "async-multi-tool-123",
+  "userId": "async-user",
   "input": {
     "messages": [
       {
-        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -283,7 +301,7 @@
   "output": {
     "messages": [
       {
-        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -295,9 +313,9 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 26,
-            "prompt_tokens": 145,
-            "total_tokens": 171,
+            "completion_tokens": 23,
+            "prompt_tokens": 187,
+            "total_tokens": 210,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -312,28 +330,28 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU7dniEF6SOUplbeLW8ApoGZpCd",
+          "id": "chatcmpl-D2CS3TsV8OLSzcUZgLddvueam6qeD",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-0eb6-7ba1-a3c0-ce40ab7ed602-0",
+        "id": "lc_run--019bf977-18cf-7911-9854-3c2efd6c98fb-0",
         "tool_calls": [
           {
-            "name": "search_web",
+            "name": "get_weather",
             "args": {
-              "query": "weather san francisco"
+              "city": "Tokyo"
             },
-            "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 145,
-          "output_tokens": 26,
-          "total_tokens": 171,
+          "input_tokens": 187,
+          "output_tokens": 23,
+          "total_tokens": 210,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -345,24 +363,24 @@
         }
       },
       {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Cloudy, 68F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "name": "get_weather",
+        "tool_call_id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
         "status": "success"
       },
       {
-        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "content": "Weather in Tokyo: Cloudy, 68F",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 34,
-            "prompt_tokens": 191,
-            "total_tokens": 225,
+            "completion_tokens": 13,
+            "prompt_tokens": 221,
+            "total_tokens": 234,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -377,19 +395,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU8DaEX8rk9MmbRDkO9l1cUYIxE",
+          "id": "chatcmpl-D2CS5XXI3YQ97xBk3UNjwPj0pQ8oU",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-158b-7362-9e2a-bad7055aa61f-0",
+        "id": "lc_run--019bf977-21e6-79d3-98f2-e3728b21ed0d-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 191,
-          "output_tokens": 34,
-          "total_tokens": 225,
+          "input_tokens": 221,
+          "output_tokens": 13,
+          "total_tokens": 234,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -405,18 +423,18 @@
   "status": "SUCCESS",
   "toolsCalled": [
     {
-      "name": "search_web",
+      "name": "get_weather",
       "output": {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Cloudy, 68F",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
-        "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "name": "get_weather",
+        "tool_call_id": "call_Zs4ZNorNK1FstFgw0D97V2AN",
         "status": "success"
       },
       "inputParameters": {
-        "query": "weather san francisco"
+        "city": "Tokyo"
       }
     }
   ]

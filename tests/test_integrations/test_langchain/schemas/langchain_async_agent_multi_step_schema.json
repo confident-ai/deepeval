@@ -1,17 +1,17 @@
 {
-  "uuid": "b835223f-41fe-436f-b8ee-e13ba8cfb4bc",
+  "uuid": "1ba95102-6faf-48cc-b987-b13d555b6aea",
   "baseSpans": [
     {
-      "uuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "name": "simple_agent",
+      "uuid": "019bf978-08f0-7d41-8637-f5b05dd0a284",
+      "name": "multi_step_agent",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:39.059Z",
-      "endTime": "2026-01-26T08:43:41.786Z",
+      "startTime": "2026-01-26T08:42:32.050Z",
+      "endTime": "2026-01-26T08:42:35.147Z",
       "input": {
         "messages": [
           {
-            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -21,7 +21,7 @@
       "output": {
         "messages": [
           {
-            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human"
@@ -33,13 +33,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 26,
-                "prompt_tokens": 145,
-                "total_tokens": 171,
+                "completion_tokens": 89,
+                "prompt_tokens": 161,
+                "total_tokens": 250,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -50,57 +50,57 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU7dniEF6SOUplbeLW8ApoGZpCd",
+              "id": "chatcmpl-D2CT2AHvp120B6oSORJsAgaD2BBvC",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-0eb6-7ba1-a3c0-ce40ab7ed602-0",
+            "id": "lc_run--019bf978-08f3-7d81-b591-ee441b5f6671-0",
             "tool_calls": [
               {
                 "name": "search_web",
                 "args": {
-                  "query": "weather san francisco"
+                  "query": "stock price apple"
                 },
-                "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+                "id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 145,
-              "output_tokens": 26,
-              "total_tokens": 171,
+              "input_tokens": 161,
+              "output_tokens": 89,
+              "total_tokens": 250,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
           {
-            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "content": "Apple (AAPL) stock: $178.50, up 1.2%",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "search_web",
-            "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "tool_call_id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
             "status": "success"
           },
           {
-            "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+            "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 34,
-                "prompt_tokens": 191,
-                "total_tokens": 225,
+                "completion_tokens": 36,
+                "prompt_tokens": 209,
+                "total_tokens": 245,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -115,19 +115,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU8DaEX8rk9MmbRDkO9l1cUYIxE",
+              "id": "chatcmpl-D2CT4MyP0tQV8SEu2qclGnvJftAlC",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-158b-7362-9e2a-bad7055aa61f-0",
+            "id": "lc_run--019bf978-115b-7c42-b69a-ef283a51cca8-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 191,
-              "output_tokens": 34,
-              "total_tokens": 225,
+              "input_tokens": 209,
+              "output_tokens": 36,
+              "total_tokens": 245,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -144,16 +144,16 @@
         {
           "name": "search_web",
           "output": {
-            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "content": "Apple (AAPL) stock: $178.50, up 1.2%",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "tool",
             "name": "search_web",
-            "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "tool_call_id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
             "status": "success"
           },
           "inputParameters": {
-            "query": "weather san francisco"
+            "query": "stock price apple"
           }
         }
       ]
@@ -162,17 +162,17 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf979-158b-7362-9e2a-bad7055aa61f",
+      "uuid": "019bf978-115b-7c42-b69a-ef283a51cca8",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:40.812Z",
-      "endTime": "2026-01-26T08:43:41.786Z",
+      "parentUuid": "019bf978-08f0-7d41-8637-f5b05dd0a284",
+      "startTime": "2026-01-26T08:42:34.204Z",
+      "endTime": "2026-01-26T08:42:35.145Z",
       "input": [
         {
           "role": "human",
-          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
         },
         {
           "role": "ai",
@@ -180,39 +180,47 @@
         },
         {
           "role": "tool",
-          "content": "San Francisco weather: Foggy, 58F, humidity 75%"
+          "content": "Apple (AAPL) stock: $178.50, up 1.2%"
         },
         {
           "role": "Tool Input",
           "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
         "role": "AI",
-        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 191.0,
-      "outputTokenCount": 34.0
+      "inputTokenCount": 209.0,
+      "outputTokenCount": 36.0
     },
     {
-      "uuid": "019bf979-0eb6-7ba1-a3c0-ce40ab7ed602",
+      "uuid": "019bf978-08f3-7d81-b591-ee441b5f6671",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:39.062Z",
-      "endTime": "2026-01-26T08:43:40.808Z",
+      "parentUuid": "019bf978-08f0-7d41-8637-f5b05dd0a284",
+      "startTime": "2026-01-26T08:42:32.052Z",
+      "endTime": "2026-01-26T08:42:34.198Z",
       "input": [
         {
           "role": "human",
-          "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
         },
         {
           "role": "Tool Input",
           "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
       "output": {
@@ -222,58 +230,56 @@
           {
             "name": "search_web",
             "args": {
-              "query": "weather san francisco"
+              "query": "stock price apple"
             },
-            "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd"
+            "id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 145.0,
-      "outputTokenCount": 26.0
+      "inputTokenCount": 161.0,
+      "outputTokenCount": 89.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf979-1588-7883-b106-82c834c4e743",
+      "uuid": "019bf978-1157-72f1-84cd-ecbd4c0dd036",
       "name": "search_web",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf979-0eb3-7b60-b6c6-cd58c2240cf1",
-      "startTime": "2026-01-26T08:43:40.809Z",
-      "endTime": "2026-01-26T08:43:40.810Z",
+      "parentUuid": "019bf978-08f0-7d41-8637-f5b05dd0a284",
+      "startTime": "2026-01-26T08:42:34.199Z",
+      "endTime": "2026-01-26T08:42:34.201Z",
       "input": {
-        "query": "weather san francisco"
+        "query": "stock price apple"
       },
       "output": {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Apple (AAPL) stock: $178.50, up 1.2%",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "tool_call_id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:43:39.059Z",
-  "endTime": "2026-01-26T08:43:41.786Z",
-  "name": "langchain-agent-simple",
-  "metadata": {
-    "test_type": "agent"
-  },
+  "startTime": "2026-01-26T08:42:32.050Z",
+  "endTime": "2026-01-26T08:42:35.147Z",
+  "name": "langchain-async-agent-multi-step",
   "tags": [
     "langchain",
+    "async",
     "agent",
-    "simple"
+    "multi-step"
   ],
   "environment": "development",
   "input": {
     "messages": [
       {
-        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -283,7 +289,7 @@
   "output": {
     "messages": [
       {
-        "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions.",
+        "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human"
@@ -295,13 +301,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 26,
-            "prompt_tokens": 145,
-            "total_tokens": 171,
+            "completion_tokens": 89,
+            "prompt_tokens": 161,
+            "total_tokens": 250,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 64,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -312,57 +318,57 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU7dniEF6SOUplbeLW8ApoGZpCd",
+          "id": "chatcmpl-D2CT2AHvp120B6oSORJsAgaD2BBvC",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-0eb6-7ba1-a3c0-ce40ab7ed602-0",
+        "id": "lc_run--019bf978-08f3-7d81-b591-ee441b5f6671-0",
         "tool_calls": [
           {
             "name": "search_web",
             "args": {
-              "query": "weather san francisco"
+              "query": "stock price apple"
             },
-            "id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+            "id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 145,
-          "output_tokens": 26,
-          "total_tokens": 171,
+          "input_tokens": 161,
+          "output_tokens": 89,
+          "total_tokens": 250,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 64
           }
         }
       },
       {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Apple (AAPL) stock: $178.50, up 1.2%",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "tool_call_id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
         "status": "success"
       },
       {
-        "content": "I searched the web for \"weather san francisco\" and found: \"San Francisco weather: Foggy, 58F, humidity 75%\".",
+        "content": "I searched the web for \"stock price apple\" and found a result showing Apple (AAPL) stock at $178.50, up 1.2%.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 34,
-            "prompt_tokens": 191,
-            "total_tokens": 225,
+            "completion_tokens": 36,
+            "prompt_tokens": 209,
+            "total_tokens": 245,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -377,19 +383,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU8DaEX8rk9MmbRDkO9l1cUYIxE",
+          "id": "chatcmpl-D2CT4MyP0tQV8SEu2qclGnvJftAlC",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-158b-7362-9e2a-bad7055aa61f-0",
+        "id": "lc_run--019bf978-115b-7c42-b69a-ef283a51cca8-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 191,
-          "output_tokens": 34,
-          "total_tokens": 225,
+          "input_tokens": 209,
+          "output_tokens": 36,
+          "total_tokens": 245,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -407,16 +413,16 @@
     {
       "name": "search_web",
       "output": {
-        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "content": "Apple (AAPL) stock: $178.50, up 1.2%",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "tool",
         "name": "search_web",
-        "tool_call_id": "call_jkvY9GyA8qwBgSHDMwDDmzYd",
+        "tool_call_id": "call_mKiqxBHk8ZVP6CwCqCVqfXRR",
         "status": "success"
       },
       "inputParameters": {
-        "query": "weather san francisco"
+        "query": "stock price apple"
       }
     }
   ]
