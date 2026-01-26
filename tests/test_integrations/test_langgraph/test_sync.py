@@ -226,9 +226,9 @@ class TestConditionalApp:
                 "messages": [
                     HumanMessage(
                         content=(
-                            "Use the research tool to research: information about quantum computing. "
+                            "Use the research tool exactly once to research: quantum computing. "
                             "Do not ask clarification questions. "
-                            "Return a short summary of the findings."
+                            "After the tool returns, respond with a short 3-bullet summary and stop."
                         )
                     )
                 ]

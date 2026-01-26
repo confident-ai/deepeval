@@ -1,0 +1,231 @@
+{
+  "uuid": "7e3cac51-625b-4546-aee5-19da58fb70ac",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4aa1-7650-841b-c409350a07a1",
+      "name": "run_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.793Z",
+      "endTime": "2026-01-26T06:24:05.795Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the weather in San Francisco?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What's the weather in San Francisco?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4aa2-7bc1-8146-7933523b0e13-0",
+            "tool_calls": [
+              {
+                "name": "search_web",
+                "args": {
+                  "query": "weather san francisco"
+                },
+                "id": "agent_call_001",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "agent_call_001",
+            "status": "success"
+          },
+          {
+            "content": "Based on my search, San Francisco is currently foggy with a temperature of 58F and 75% humidity.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4aa3-75d1-ab71-8dce406b6732-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "search_web",
+          "output": "San Francisco weather: Foggy, 58F, humidity 75%",
+          "inputParameters": {
+            "query": "weather san francisco"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4aa3-75d1-ab71-8dce406b6732",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4aa1-7650-841b-c409350a07a1",
+      "startTime": "2026-01-26T06:24:05.795Z",
+      "endTime": "2026-01-26T06:24:05.795Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the weather in San Francisco?"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "San Francisco weather: Foggy, 58F, humidity 75%"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Based on my search, San Francisco is currently foggy with a temperature of 58F and 75% humidity.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4aa2-7bc1-8146-7933523b0e13",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4aa1-7650-841b-c409350a07a1",
+      "startTime": "2026-01-26T06:24:05.794Z",
+      "endTime": "2026-01-26T06:24:05.794Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the weather in San Francisco?"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "search_web",
+            "args": {
+              "query": "weather san francisco"
+            },
+            "id": "agent_call_001"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4aa2-7bc1-8146-79448d070614",
+      "name": "search_web",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4aa1-7650-841b-c409350a07a1",
+      "startTime": "2026-01-26T06:24:05.794Z",
+      "endTime": "2026-01-26T06:24:05.795Z",
+      "input": {
+        "query": "weather san francisco"
+      },
+      "output": "San Francisco weather: Foggy, 58F, humidity 75%"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.793Z",
+  "endTime": "2026-01-26T06:24:05.795Z",
+  "name": "langchain-agent-simple",
+  "metadata": {
+    "test_type": "agent"
+  },
+  "tags": [
+    "langchain",
+    "agent",
+    "simple"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "What's the weather in San Francisco?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "What's the weather in San Francisco?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4aa2-7bc1-8146-7933523b0e13-0",
+        "tool_calls": [
+          {
+            "name": "search_web",
+            "args": {
+              "query": "weather san francisco"
+            },
+            "id": "agent_call_001",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "San Francisco weather: Foggy, 58F, humidity 75%",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "agent_call_001",
+        "status": "success"
+      },
+      {
+        "content": "Based on my search, San Francisco is currently foggy with a temperature of 58F and 75% humidity.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4aa3-75d1-ab71-8dce406b6732-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "search_web",
+      "output": "San Francisco weather: Foggy, 58F, humidity 75%",
+      "inputParameters": {
+        "query": "weather san francisco"
+      }
+    }
+  ]
+}

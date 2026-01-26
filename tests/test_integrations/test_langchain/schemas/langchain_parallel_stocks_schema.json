@@ -1,0 +1,508 @@
+{
+  "uuid": "35835b80-4fd3-4444-a2ad-95fe785ffff6",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.773Z",
+      "endTime": "2026-01-26T06:24:05.777Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a8e-7152-b62e-fec7f05b2c7b-0",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "AAPL"
+                },
+                "id": "call_s1",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_s2",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "MSFT"
+                },
+                "id": "call_s3",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "TSLA"
+                },
+                "id": "call_s4",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "AMZN"
+                },
+                "id": "call_s5",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "$178.50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_s1",
+            "status": "success"
+          },
+          {
+            "content": "$142.30",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_s2",
+            "status": "success"
+          },
+          {
+            "content": "$378.90",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_s3",
+            "status": "success"
+          },
+          {
+            "content": "$245.60",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_s4",
+            "status": "success"
+          },
+          {
+            "content": "$185.20",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_s5",
+            "status": "success"
+          },
+          {
+            "content": "Stock prices: AAPL $178.50, GOOGL $142.30, MSFT $378.90, TSLA $245.60, AMZN $185.20.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a91-7cd1-8fd9-71882ae86a08-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "output": "$178.50",
+          "inputParameters": {
+            "symbol": "AAPL"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": "$142.30",
+          "inputParameters": {
+            "symbol": "GOOGL"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": "$378.90",
+          "inputParameters": {
+            "symbol": "MSFT"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": "$245.60",
+          "inputParameters": {
+            "symbol": "TSLA"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": "$185.20",
+          "inputParameters": {
+            "symbol": "AMZN"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a91-7cd1-8fd9-71882ae86a08",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.777Z",
+      "endTime": "2026-01-26T06:24:05.777Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "$178.50"
+        },
+        {
+          "role": "tool",
+          "content": "$142.30"
+        },
+        {
+          "role": "tool",
+          "content": "$378.90"
+        },
+        {
+          "role": "tool",
+          "content": "$245.60"
+        },
+        {
+          "role": "tool",
+          "content": "$185.20"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Stock prices: AAPL $178.50, GOOGL $142.30, MSFT $378.90, TSLA $245.60, AMZN $185.20.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a8e-7152-b62e-fec7f05b2c7b",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.774Z",
+      "endTime": "2026-01-26T06:24:05.774Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AAPL"
+            },
+            "id": "call_s1"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "GOOGL"
+            },
+            "id": "call_s2"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "MSFT"
+            },
+            "id": "call_s3"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_s4"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AMZN"
+            },
+            "id": "call_s5"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a90-7812-80e8-c3adbd78eb88",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.776Z",
+      "endTime": "2026-01-26T06:24:05.777Z",
+      "input": {
+        "symbol": "AMZN"
+      },
+      "output": "$185.20"
+    },
+    {
+      "uuid": "019bf8f9-4a90-7812-80e8-c390eb9e95f5",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.776Z",
+      "endTime": "2026-01-26T06:24:05.776Z",
+      "input": {
+        "symbol": "TSLA"
+      },
+      "output": "$245.60"
+    },
+    {
+      "uuid": "019bf8f9-4a8f-7191-9f78-f2e1537f768c",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.775Z",
+      "endTime": "2026-01-26T06:24:05.776Z",
+      "input": {
+        "symbol": "MSFT"
+      },
+      "output": "$378.90"
+    },
+    {
+      "uuid": "019bf8f9-4a8f-7191-9f78-f2dd7f0beed4",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.775Z",
+      "endTime": "2026-01-26T06:24:05.775Z",
+      "input": {
+        "symbol": "GOOGL"
+      },
+      "output": "$142.30"
+    },
+    {
+      "uuid": "019bf8f9-4a8e-7152-b62e-fed3b0c8625a",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a8d-7302-bb80-ebec3b7fd463",
+      "startTime": "2026-01-26T06:24:05.774Z",
+      "endTime": "2026-01-26T06:24:05.775Z",
+      "input": {
+        "symbol": "AAPL"
+      },
+      "output": "$178.50"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.773Z",
+  "endTime": "2026-01-26T06:24:05.777Z",
+  "name": "langchain-parallel-stocks",
+  "tags": [
+    "langchain",
+    "parallel",
+    "stocks"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Stock prices for AAPL, GOOGL, MSFT, TSLA, AMZN",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a8e-7152-b62e-fec7f05b2c7b-0",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AAPL"
+            },
+            "id": "call_s1",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "GOOGL"
+            },
+            "id": "call_s2",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "MSFT"
+            },
+            "id": "call_s3",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_s4",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AMZN"
+            },
+            "id": "call_s5",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "$178.50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_s1",
+        "status": "success"
+      },
+      {
+        "content": "$142.30",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_s2",
+        "status": "success"
+      },
+      {
+        "content": "$378.90",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_s3",
+        "status": "success"
+      },
+      {
+        "content": "$245.60",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_s4",
+        "status": "success"
+      },
+      {
+        "content": "$185.20",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_s5",
+        "status": "success"
+      },
+      {
+        "content": "Stock prices: AAPL $178.50, GOOGL $142.30, MSFT $378.90, TSLA $245.60, AMZN $185.20.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a91-7cd1-8fd9-71882ae86a08-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_stock_price",
+      "output": "$178.50",
+      "inputParameters": {
+        "symbol": "AAPL"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": "$142.30",
+      "inputParameters": {
+        "symbol": "GOOGL"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": "$378.90",
+      "inputParameters": {
+        "symbol": "MSFT"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": "$245.60",
+      "inputParameters": {
+        "symbol": "TSLA"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": "$185.20",
+      "inputParameters": {
+        "symbol": "AMZN"
+      }
+    }
+  ]
+}

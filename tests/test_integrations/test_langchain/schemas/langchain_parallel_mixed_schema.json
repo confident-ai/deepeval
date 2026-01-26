@@ -1,0 +1,444 @@
+{
+  "uuid": "aa16c097-736a-427e-a034-f961227ce749",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.764Z",
+      "endTime": "2026-01-26T06:24:05.768Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a84-78f1-8ff0-3df62a546683-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Paris"
+                },
+                "id": "call_m1",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "TSLA"
+                },
+                "id": "call_m2",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_exchange_rate",
+                "args": {
+                  "from_currency": "USD",
+                  "to_currency": "EUR"
+                },
+                "id": "call_m3",
+                "type": "tool_call"
+              },
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "100 * 1.5"
+                },
+                "id": "call_m4",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "Partly cloudy, 65F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_m1",
+            "status": "success"
+          },
+          {
+            "content": "$245.60",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_m2",
+            "status": "success"
+          },
+          {
+            "content": "1 USD = 0.92 EUR",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_m3",
+            "status": "success"
+          },
+          {
+            "content": "100 * 1.5 = 150.0",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_m4",
+            "status": "success"
+          },
+          {
+            "content": "Here are all the results: Paris weather is partly cloudy at 65F, TSLA is $245.60, USD/EUR is 0.92, and 100*1.5 = 150.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a88-7ab0-bd9d-939d83d35cb6-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Partly cloudy, 65F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_stock_price",
+          "output": "$245.60",
+          "inputParameters": {
+            "symbol": "TSLA"
+          }
+        },
+        {
+          "name": "get_exchange_rate",
+          "output": "1 USD = 0.92 EUR",
+          "inputParameters": {
+            "from_currency": "USD",
+            "to_currency": "EUR"
+          }
+        },
+        {
+          "name": "calculate",
+          "output": "100 * 1.5 = 150.0",
+          "inputParameters": {
+            "expression": "100 * 1.5"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a88-7ab0-bd9d-939d83d35cb6",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.768Z",
+      "endTime": "2026-01-26T06:24:05.768Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "Partly cloudy, 65F"
+        },
+        {
+          "role": "tool",
+          "content": "$245.60"
+        },
+        {
+          "role": "tool",
+          "content": "1 USD = 0.92 EUR"
+        },
+        {
+          "role": "tool",
+          "content": "100 * 1.5 = 150.0"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Here are all the results: Paris weather is partly cloudy at 65F, TSLA is $245.60, USD/EUR is 0.92, and 100*1.5 = 150.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a84-78f1-8ff0-3df62a546683",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.764Z",
+      "endTime": "2026-01-26T06:24:05.765Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Paris"
+            },
+            "id": "call_m1"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_m2"
+          },
+          {
+            "name": "get_exchange_rate",
+            "args": {
+              "from_currency": "USD",
+              "to_currency": "EUR"
+            },
+            "id": "call_m3"
+          },
+          {
+            "name": "calculate",
+            "args": {
+              "expression": "100 * 1.5"
+            },
+            "id": "call_m4"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a87-79c1-bdf2-075a9ef55bcc",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.767Z",
+      "endTime": "2026-01-26T06:24:05.768Z",
+      "input": {
+        "expression": "100 * 1.5"
+      },
+      "output": "100 * 1.5 = 150.0"
+    },
+    {
+      "uuid": "019bf8f9-4a86-7043-bfe0-c1a024640427",
+      "name": "get_exchange_rate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.766Z",
+      "endTime": "2026-01-26T06:24:05.766Z",
+      "input": {
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      },
+      "output": "1 USD = 0.92 EUR"
+    },
+    {
+      "uuid": "019bf8f9-4a85-7053-b88c-7c4aa2664266",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.765Z",
+      "endTime": "2026-01-26T06:24:05.766Z",
+      "input": {
+        "symbol": "TSLA"
+      },
+      "output": "$245.60"
+    },
+    {
+      "uuid": "019bf8f9-4a85-7053-b88c-7c314860cb90",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a84-78f1-8ff0-3deda5886de5",
+      "startTime": "2026-01-26T06:24:05.765Z",
+      "endTime": "2026-01-26T06:24:05.765Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Partly cloudy, 65F"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.764Z",
+  "endTime": "2026-01-26T06:24:05.768Z",
+  "name": "langchain-parallel-mixed",
+  "tags": [
+    "langchain",
+    "parallel",
+    "mixed"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Weather Paris, TSLA stock, USD to EUR, calc 100*1.5",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a84-78f1-8ff0-3df62a546683-0",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Paris"
+            },
+            "id": "call_m1",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_m2",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_exchange_rate",
+            "args": {
+              "from_currency": "USD",
+              "to_currency": "EUR"
+            },
+            "id": "call_m3",
+            "type": "tool_call"
+          },
+          {
+            "name": "calculate",
+            "args": {
+              "expression": "100 * 1.5"
+            },
+            "id": "call_m4",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Partly cloudy, 65F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_m1",
+        "status": "success"
+      },
+      {
+        "content": "$245.60",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_m2",
+        "status": "success"
+      },
+      {
+        "content": "1 USD = 0.92 EUR",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_m3",
+        "status": "success"
+      },
+      {
+        "content": "100 * 1.5 = 150.0",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_m4",
+        "status": "success"
+      },
+      {
+        "content": "Here are all the results: Paris weather is partly cloudy at 65F, TSLA is $245.60, USD/EUR is 0.92, and 100*1.5 = 150.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a88-7ab0-bd9d-939d83d35cb6-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "output": "Partly cloudy, 65F",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "output": "$245.60",
+      "inputParameters": {
+        "symbol": "TSLA"
+      }
+    },
+    {
+      "name": "get_exchange_rate",
+      "output": "1 USD = 0.92 EUR",
+      "inputParameters": {
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      }
+    },
+    {
+      "name": "calculate",
+      "output": "100 * 1.5 = 150.0",
+      "inputParameters": {
+        "expression": "100 * 1.5"
+      }
+    }
+  ]
+}

@@ -219,9 +219,9 @@ class TestAsyncConditionalApp:
                 "messages": [
                     HumanMessage(
                         content=(
-                            "Use the research tool to research: latest developments in space exploration. "
+                            "Use the research tool exactly once to research: space exploration. "
                             "Do not ask clarification questions. "
-                            "Return a short summary of the findings."
+                            "After the tool returns, respond with a short 3-bullet summary and stop."
                         )
                     )
                 ]

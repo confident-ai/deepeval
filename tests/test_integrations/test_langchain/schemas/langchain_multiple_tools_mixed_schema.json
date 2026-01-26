@@ -1,0 +1,300 @@
+{
+  "uuid": "5600ae9e-1d6b-43c1-bd39-745d64e683f6",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.711Z",
+      "endTime": "2026-01-26T06:24:05.714Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a50-7612-b643-726560578bbe-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Paris"
+                },
+                "id": "call_001",
+                "type": "tool_call"
+              },
+              {
+                "name": "calculate",
+                "args": {
+                  "expression": "100 * 1.5 + 50"
+                },
+                "id": "call_002",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "Partly cloudy, 62F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_001",
+            "status": "success"
+          },
+          {
+            "content": "100 * 1.5 + 50 = 200.0",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_002",
+            "status": "success"
+          },
+          {
+            "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Partly cloudy, 62F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "calculate",
+          "output": "100 * 1.5 + 50 = 200.0",
+          "inputParameters": {
+            "expression": "100 * 1.5 + 50"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
+      "startTime": "2026-01-26T06:24:05.713Z",
+      "endTime": "2026-01-26T06:24:05.714Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather in Paris and calculate 100 * 1.5 + 50"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "Partly cloudy, 62F"
+        },
+        {
+          "role": "tool",
+          "content": "100 * 1.5 + 50 = 200.0"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a50-7612-b643-726560578bbe",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
+      "startTime": "2026-01-26T06:24:05.712Z",
+      "endTime": "2026-01-26T06:24:05.712Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather in Paris and calculate 100 * 1.5 + 50"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Paris"
+            },
+            "id": "call_001"
+          },
+          {
+            "name": "calculate",
+            "args": {
+              "expression": "100 * 1.5 + 50"
+            },
+            "id": "call_002"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a51-7bd1-bf34-3eb681a11b5b",
+      "name": "calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
+      "startTime": "2026-01-26T06:24:05.713Z",
+      "endTime": "2026-01-26T06:24:05.713Z",
+      "input": {
+        "expression": "100 * 1.5 + 50"
+      },
+      "output": "100 * 1.5 + 50 = 200.0"
+    },
+    {
+      "uuid": "019bf8f9-4a50-7612-b643-727e75320b1c",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a4f-7570-b599-d960a711bb02",
+      "startTime": "2026-01-26T06:24:05.712Z",
+      "endTime": "2026-01-26T06:24:05.712Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Partly cloudy, 62F"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.711Z",
+  "endTime": "2026-01-26T06:24:05.714Z",
+  "name": "langchain-mixed-tools-test",
+  "metadata": {
+    "test_type": "mixed_tools"
+  },
+  "tags": [
+    "langchain",
+    "mixed-tools"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Weather in Paris and calculate 100 * 1.5 + 50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a50-7612-b643-726560578bbe-0",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Paris"
+            },
+            "id": "call_001",
+            "type": "tool_call"
+          },
+          {
+            "name": "calculate",
+            "args": {
+              "expression": "100 * 1.5 + 50"
+            },
+            "id": "call_002",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Partly cloudy, 62F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_001",
+        "status": "success"
+      },
+      {
+        "content": "100 * 1.5 + 50 = 200.0",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_002",
+        "status": "success"
+      },
+      {
+        "content": "Paris weather is partly cloudy at 62F. The calculation 100 * 1.5 + 50 = 200.0.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a51-7bd1-bf34-3ec8fb1dd715-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "output": "Partly cloudy, 62F",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    },
+    {
+      "name": "calculate",
+      "output": "100 * 1.5 + 50 = 200.0",
+      "inputParameters": {
+        "expression": "100 * 1.5 + 50"
+      }
+    }
+  ]
+}

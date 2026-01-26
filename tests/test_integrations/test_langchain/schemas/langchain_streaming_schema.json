@@ -1,0 +1,231 @@
+{
+  "uuid": "a38c1c10-80a8-40d5-bf81-01085134acf9",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a56-7680-8cd7-f35fcef9f319",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.718Z",
+      "endTime": "2026-01-26T06:24:05.720Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of MSFT?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What's the stock price of MSFT?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a57-7180-aaa7-b89b67767fa0-0",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "MSFT"
+                },
+                "id": "call_001",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "$378.90 (+0.8%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_001",
+            "status": "success"
+          },
+          {
+            "content": "MSFT is currently trading at $378.90 (+0.8%).",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a58-7672-9725-a7e24294c9c3-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "output": "$378.90 (+0.8%)",
+          "inputParameters": {
+            "symbol": "MSFT"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a58-7672-9725-a7e24294c9c3",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a56-7680-8cd7-f35fcef9f319",
+      "startTime": "2026-01-26T06:24:05.720Z",
+      "endTime": "2026-01-26T06:24:05.720Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the stock price of MSFT?"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "$378.90 (+0.8%)"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "MSFT is currently trading at $378.90 (+0.8%).",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a57-7180-aaa7-b89b67767fa0",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a56-7680-8cd7-f35fcef9f319",
+      "startTime": "2026-01-26T06:24:05.719Z",
+      "endTime": "2026-01-26T06:24:05.719Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the stock price of MSFT?"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "MSFT"
+            },
+            "id": "call_001"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a57-7180-aaa7-b8ae2bc9d6ce",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a56-7680-8cd7-f35fcef9f319",
+      "startTime": "2026-01-26T06:24:05.719Z",
+      "endTime": "2026-01-26T06:24:05.720Z",
+      "input": {
+        "symbol": "MSFT"
+      },
+      "output": "$378.90 (+0.8%)"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.718Z",
+  "endTime": "2026-01-26T06:24:05.720Z",
+  "name": "langchain-streaming-sync",
+  "metadata": {
+    "test_type": "streaming_sync"
+  },
+  "tags": [
+    "langchain",
+    "streaming",
+    "sync"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "What's the stock price of MSFT?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "What's the stock price of MSFT?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a57-7180-aaa7-b89b67767fa0-0",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "MSFT"
+            },
+            "id": "call_001",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "$378.90 (+0.8%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_001",
+        "status": "success"
+      },
+      {
+        "content": "MSFT is currently trading at $378.90 (+0.8%).",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a58-7672-9725-a7e24294c9c3-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_stock_price",
+      "output": "$378.90 (+0.8%)",
+      "inputParameters": {
+        "symbol": "MSFT"
+      }
+    }
+  ]
+}

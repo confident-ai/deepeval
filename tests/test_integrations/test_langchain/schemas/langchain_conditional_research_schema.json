@@ -1,0 +1,231 @@
+{
+  "uuid": "9d6c1cc8-111f-46de-b779-1406a1e321b7",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a63-7950-aca8-d23e9594461f",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.731Z",
+      "endTime": "2026-01-26T06:24:05.734Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Research quantum computing",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Research quantum computing",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a64-7f73-bf38-a36388e5a7aa-0",
+            "tool_calls": [
+              {
+                "name": "research_topic",
+                "args": {
+                  "topic": "quantum computing"
+                },
+                "id": "call_research_001",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "Quantum computing achieves new milestone in error correction.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_research_001",
+            "status": "success"
+          },
+          {
+            "content": "Based on my research, quantum computing has achieved significant milestones in error correction.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a66-7a42-8db8-e7e088e50e57-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "research_topic",
+          "output": "Quantum computing achieves new milestone in error correction.",
+          "inputParameters": {
+            "topic": "quantum computing"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a66-7a42-8db8-e7e088e50e57",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a63-7950-aca8-d23e9594461f",
+      "startTime": "2026-01-26T06:24:05.734Z",
+      "endTime": "2026-01-26T06:24:05.734Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Research quantum computing"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "Quantum computing achieves new milestone in error correction."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Based on my research, quantum computing has achieved significant milestones in error correction.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a64-7f73-bf38-a36388e5a7aa",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a63-7950-aca8-d23e9594461f",
+      "startTime": "2026-01-26T06:24:05.732Z",
+      "endTime": "2026-01-26T06:24:05.733Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Research quantum computing"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "research_topic",
+            "args": {
+              "topic": "quantum computing"
+            },
+            "id": "call_research_001"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a65-7bf0-a63c-35ac202dadf3",
+      "name": "research_topic",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a63-7950-aca8-d23e9594461f",
+      "startTime": "2026-01-26T06:24:05.733Z",
+      "endTime": "2026-01-26T06:24:05.733Z",
+      "input": {
+        "topic": "quantum computing"
+      },
+      "output": "Quantum computing achieves new milestone in error correction."
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.731Z",
+  "endTime": "2026-01-26T06:24:05.734Z",
+  "name": "langchain-conditional-research",
+  "metadata": {
+    "test_type": "conditional_research"
+  },
+  "tags": [
+    "langchain",
+    "conditional",
+    "research"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Research quantum computing",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Research quantum computing",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a64-7f73-bf38-a36388e5a7aa-0",
+        "tool_calls": [
+          {
+            "name": "research_topic",
+            "args": {
+              "topic": "quantum computing"
+            },
+            "id": "call_research_001",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Quantum computing achieves new milestone in error correction.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_research_001",
+        "status": "success"
+      },
+      {
+        "content": "Based on my research, quantum computing has achieved significant milestones in error correction.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a66-7a42-8db8-e7e088e50e57-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "research_topic",
+      "output": "Quantum computing achieves new milestone in error correction.",
+      "inputParameters": {
+        "topic": "quantum computing"
+      }
+    }
+  ]
+}

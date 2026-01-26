@@ -1,0 +1,371 @@
+{
+  "uuid": "305d5655-9b62-4c57-aea4-40786c96ff0e",
+  "baseSpans": [
+    {
+      "uuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "name": "run_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T06:24:05.756Z",
+      "endTime": "2026-01-26T06:24:05.759Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Weather in Tokyo, New York, and London?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Weather in Tokyo, New York, and London?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a7d-7712-9404-a548cf15395f-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "Tokyo"
+                },
+                "id": "call_w1",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "New York"
+                },
+                "id": "call_w2",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "London"
+                },
+                "id": "call_w3",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "Sunny, 72F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_w1",
+            "status": "success"
+          },
+          {
+            "content": "Cloudy, 58F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_w2",
+            "status": "success"
+          },
+          {
+            "content": "Rainy, 52F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "tool_call_id": "call_w3",
+            "status": "success"
+          },
+          {
+            "content": "Weather report: Tokyo is Sunny at 72F, New York is Cloudy at 58F, London is Rainy at 52F.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "ai",
+            "id": "lc_run--019bf8f9-4a7f-70c3-8d31-25a224373159-0",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Sunny, 72F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_weather",
+          "output": "Cloudy, 58F",
+          "inputParameters": {
+            "city": "New York"
+          }
+        },
+        {
+          "name": "get_weather",
+          "output": "Rainy, 52F",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf8f9-4a7f-70c3-8d31-25a224373159",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "startTime": "2026-01-26T06:24:05.759Z",
+      "endTime": "2026-01-26T06:24:05.759Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather in Tokyo, New York, and London?"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "Sunny, 72F"
+        },
+        {
+          "role": "tool",
+          "content": "Cloudy, 58F"
+        },
+        {
+          "role": "tool",
+          "content": "Rainy, 52F"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Weather report: Tokyo is Sunny at 72F, New York is Cloudy at 58F, London is Rainy at 52F.",
+        "tool_calls": []
+      },
+      "prompt": {}
+    },
+    {
+      "uuid": "019bf8f9-4a7d-7712-9404-a548cf15395f",
+      "name": "FakeMessagesListChatModel",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "startTime": "2026-01-26T06:24:05.757Z",
+      "endTime": "2026-01-26T06:24:05.757Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Weather in Tokyo, New York, and London?"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Tokyo"
+            },
+            "id": "call_w1"
+          },
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "New York"
+            },
+            "id": "call_w2"
+          },
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "London"
+            },
+            "id": "call_w3"
+          }
+        ]
+      },
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf8f9-4a7e-7412-a828-2f931edcd9c6",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "startTime": "2026-01-26T06:24:05.758Z",
+      "endTime": "2026-01-26T06:24:05.759Z",
+      "input": {
+        "city": "London"
+      },
+      "output": "Rainy, 52F"
+    },
+    {
+      "uuid": "019bf8f9-4a7e-7412-a828-2f8bea44335c",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "startTime": "2026-01-26T06:24:05.758Z",
+      "endTime": "2026-01-26T06:24:05.758Z",
+      "input": {
+        "city": "New York"
+      },
+      "output": "Cloudy, 58F"
+    },
+    {
+      "uuid": "019bf8f9-4a7d-7712-9404-a55b8dc9fd78",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf8f9-4a7c-78e0-b8f8-060d07ced365",
+      "startTime": "2026-01-26T06:24:05.757Z",
+      "endTime": "2026-01-26T06:24:05.758Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "Sunny, 72F"
+    }
+  ],
+  "startTime": "2026-01-26T06:24:05.756Z",
+  "endTime": "2026-01-26T06:24:05.759Z",
+  "name": "langchain-parallel-weather",
+  "metadata": {
+    "test_type": "parallel_weather"
+  },
+  "tags": [
+    "langchain",
+    "parallel",
+    "weather"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Weather in Tokyo, New York, and London?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Weather in Tokyo, New York, and London?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a7d-7712-9404-a548cf15395f-0",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "Tokyo"
+            },
+            "id": "call_w1",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "New York"
+            },
+            "id": "call_w2",
+            "type": "tool_call"
+          },
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "London"
+            },
+            "id": "call_w3",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "Sunny, 72F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_w1",
+        "status": "success"
+      },
+      {
+        "content": "Cloudy, 58F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_w2",
+        "status": "success"
+      },
+      {
+        "content": "Rainy, 52F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "tool_call_id": "call_w3",
+        "status": "success"
+      },
+      {
+        "content": "Weather report: Tokyo is Sunny at 72F, New York is Cloudy at 58F, London is Rainy at 52F.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "ai",
+        "id": "lc_run--019bf8f9-4a7f-70c3-8d31-25a224373159-0",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "output": "Sunny, 72F",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    },
+    {
+      "name": "get_weather",
+      "output": "Cloudy, 58F",
+      "inputParameters": {
+        "city": "New York"
+      }
+    },
+    {
+      "name": "get_weather",
+      "output": "Rainy, 52F",
+      "inputParameters": {
+        "city": "London"
+      }
+    }
+  ]
+}
