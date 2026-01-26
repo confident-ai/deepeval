@@ -264,7 +264,13 @@ class TestConditionalApp:
         result = conditional_app.invoke(
             {
                 "messages": [
-                    HumanMessage(content="Fact check: The earth is round")
+                    HumanMessage(
+                        content=(
+                            "Use the fact_check tool exactly once to verify: The earth is round. "
+                            "Do not use any other tools. "
+                            "After the tool returns, respond with a brief verdict and stop."
+                        )
+                    )
                 ]
             },
             config={"callbacks": [callback]},

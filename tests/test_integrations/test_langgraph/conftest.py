@@ -43,6 +43,7 @@ MAX_FIELD_LENGTH = 2000
 def pytest_configure(config):
     """Set environment variables needed for upload."""
     os.environ["CONFIDENT_OPEN_BROWSER"] = "0"
+    os.environ["DEEPEVAL_RETRY_MAX_ATTEMPTS"] = "1"
 
 
 def pytest_sessionstart(session: pytest.Session):
