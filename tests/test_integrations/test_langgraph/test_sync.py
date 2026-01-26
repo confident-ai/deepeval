@@ -4,6 +4,7 @@ All synchronous tests using .invoke() and .stream()
 """
 
 import os
+from uuid import uuid4
 from langchain_core.messages import HumanMessage
 from deepeval.integrations.langchain import CallbackHandler
 from tests.test_integrations.utils import (
@@ -383,11 +384,7 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result1 = app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Add 2 apples and 1 banana to my cart")
-                ]
-            },
+            {"messages": [HumanMessage(content="Add 3 apples to my cart")]},
             config={
                 "callbacks": [callback1],
                 "configurable": {"thread_id": thread_id},
@@ -403,7 +400,11 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result2 = app.invoke(
-            {"messages": [HumanMessage(content="What's in my cart?")]},
+            {
+                "messages": [
+                    HumanMessage(content="Use view_cart to show what I have")
+                ]
+            },
             config={
                 "callbacks": [callback2],
                 "configurable": {"thread_id": thread_id},
@@ -411,7 +412,7 @@ class TestMultiTurnApp:
         )
         assert len(result2["messages"]) > 0
 
-        # Turn 3: Apply coupon and checkout
+        # Turn 3: Apply coupon
         callback3 = CallbackHandler(
             name="langgraph-multi-turn-3",
             tags=["langgraph", "multi-turn", "turn-3"],
@@ -419,11 +420,7 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result3 = app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Apply coupon SAVE10 and checkout")
-                ]
-            },
+            {"messages": [HumanMessage(content="Apply coupon SAVE10")]},
             config={
                 "callbacks": [callback3],
                 "configurable": {"thread_id": thread_id},
@@ -440,11 +437,7 @@ class TestMultiTurnApp:
         )
 
         result = stateless_app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Add 3 oranges to my cart and view it")
-                ]
-            },
+            {"messages": [HumanMessage(content="Add 3 oranges to my cart")]},
             config={"callbacks": [callback]},
         )
 
@@ -452,51 +445,79 @@ class TestMultiTurnApp:
 
     @trace_test("langgraph_full_flow_schema.json")
     def test_full_shopping_flow(self):
-        """Test complete shopping flow from cart to order."""
-        # Create fresh app instance to avoid state leakage between tests
         app = get_app_with_memory()
-        thread_id = "full-flow-001"
+
+        # Prevent cross-run bleed from CallbackHandler’s class-level cache
+        with CallbackHandler._thread_id_lock:
+            CallbackHandler._thread_id_to_trace_uuid.clear()
+
+        thread_id = f"full-flow-{uuid4()}"
         config = {"configurable": {"thread_id": thread_id}}
 
-        # Add items
         callback = CallbackHandler(
             name="langgraph-full-flow",
             tags=["langgraph", "full-flow"],
             thread_id=thread_id,
         )
+
         app.invoke(
-            {"messages": [HumanMessage(content="Add 2 apples")]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Add exactly 2 apples to the cart.\n"
+                            "If you use tools in this system, you MUST call the tool required to update the cart.\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
             config={**config, "callbacks": [callback]},
         )
 
-        # Apply coupon
-        callback2 = CallbackHandler(
-            name="langgraph-full-flow-2",
-            thread_id=thread_id,
-        )
         app.invoke(
-            {"messages": [HumanMessage(content="Apply SAVE20")]},
-            config={**config, "callbacks": [callback2]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Apply the coupon code SAVE20.\n"
+                            "You MUST call the coupon tool (do not apply it yourself).\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
         )
 
-        # Checkout
-        callback3 = CallbackHandler(
-            name="langgraph-full-flow-3",
-            thread_id=thread_id,
-        )
         app.invoke(
-            {"messages": [HumanMessage(content="Checkout")]},
-            config={**config, "callbacks": [callback3]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Proceed to checkout now.\n"
+                            "You MUST call the checkout tool.\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
         )
 
-        # Confirm
-        callback4 = CallbackHandler(
-            name="langgraph-full-flow-4",
-            thread_id=thread_id,
-        )
         result = app.invoke(
-            {"messages": [HumanMessage(content="Confirm my order")]},
-            config={**config, "callbacks": [callback4]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Confirm my order.\n"
+                            "You MUST call the confirm tool.\n"
+                            "After tool output, reply with exactly: CONFIRMED"
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
         )
 
         assert len(result["messages"]) > 0

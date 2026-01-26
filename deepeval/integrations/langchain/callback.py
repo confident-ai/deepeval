@@ -98,13 +98,20 @@ class CallbackHandler(BaseCallbackHandler):
             self._parent_span = None
 
             # Stash trace metadata to apply once we know which trace we are using.
-            self._trace_init_fields: Dict[str, Any] = {
+            # _trace_init_fields is cleared after first apply to prevent re-applying
+            # on every callback within the same trace. _original_init_fields is kept
+            # permanently so we can re-apply when a new trace is created (e.g., in
+            # multi-turn scenarios where the previous trace was ended).
+            self._original_init_fields: Dict[str, Any] = {
                 "name": name,
                 "tags": tags,
                 "metadata": metadata,
                 "thread_id": thread_id,
                 "user_id": user_id,
             }
+            self._trace_init_fields: Dict[str, Any] = dict(
+                self._original_init_fields
+            )
 
             # Map LangChain run_id -> our span uuid for parent span restoration
             self._run_id_to_span_uuid: Dict[str, str] = {}
@@ -159,6 +166,10 @@ class CallbackHandler(BaseCallbackHandler):
                 current_trace_context.set(trace)
             else:
                 # Otherwise, create a fresh trace now (in the right context).
+                # Restore _trace_init_fields from the original init fields so that
+                # the new trace gets the same name/tags/metadata as intended.
+                if not self._trace_init_fields and self._original_init_fields:
+                    self._trace_init_fields = dict(self._original_init_fields)
                 trace = trace_manager.start_new_trace()
                 current_trace_context.set(trace)
                 self._trace = trace
