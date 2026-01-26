@@ -1,13 +1,13 @@
 {
-  "uuid": "df409dad-58e7-4f42-a291-93f371ff8ef8",
+  "uuid": "f3763b81-bc5d-4a25-9ea6-e1860ea64217",
   "baseSpans": [
     {
-      "uuid": "019bf978-4945-78e1-9900-6cd250bda60e",
+      "uuid": "019bf9a2-743c-7790-b230-532fc73b38d4",
       "name": "city_info_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:42:48.517Z",
-      "endTime": "2026-01-26T08:42:50.997Z",
+      "startTime": "2026-01-26T09:28:52.029Z",
+      "endTime": "2026-01-26T09:28:54.750Z",
       "input": {
         "messages": [
           {
@@ -50,20 +50,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CTIyMHzNFiVJTXpmuQuJrZIvGe3",
+              "id": "chatcmpl-D2DBsvxpAn8hWIhkbbHqm9uxTTA9T",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-4947-7852-b98e-5f0ef07facc2-0",
+            "id": "lc_run--019bf9a2-743d-7b61-b0ad-eeca915f981f-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+                "id": "call_wwWChnSoGguZqRG6FQO6eQu8",
                 "type": "tool_call"
               }
             ],
@@ -88,19 +88,19 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+            "tool_call_id": "call_wwWChnSoGguZqRG6FQO6eQu8",
             "status": "success"
           },
           {
-            "content": "Weather in Tokyo: Cloudy, 68F",
+            "content": "Tokyo weather: Cloudy, 68F",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 13,
+                "completion_tokens": 12,
                 "prompt_tokens": 221,
-                "total_tokens": 234,
+                "total_tokens": 233,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -115,19 +115,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CTK5johJPUxEIdXfW2DMx9yE5Ur",
+              "id": "chatcmpl-D2DBuQt2L7rHwBXTLmVUxA9CVtBpJ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-4f79-7b32-80ec-e7dd3dbd3407-0",
+            "id": "lc_run--019bf9a2-7bfd-77e2-9043-90f8654d71d5-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 221,
-              "output_tokens": 13,
-              "total_tokens": 234,
+              "output_tokens": 12,
+              "total_tokens": 233,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+            "tool_call_id": "call_wwWChnSoGguZqRG6FQO6eQu8",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-4f79-7b32-80ec-e7dd3dbd3407",
+      "uuid": "019bf9a2-7bfd-77e2-9043-90f8654d71d5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-4945-78e1-9900-6cd250bda60e",
-      "startTime": "2026-01-26T08:42:50.105Z",
-      "endTime": "2026-01-26T08:42:50.997Z",
+      "parentUuid": "019bf9a2-743c-7790-b230-532fc73b38d4",
+      "startTime": "2026-01-26T09:28:54.013Z",
+      "endTime": "2026-01-26T09:28:54.750Z",
       "input": [
         {
           "role": "human",
@@ -197,22 +197,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Weather in Tokyo: Cloudy, 68F",
+        "content": "Tokyo weather: Cloudy, 68F",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 221.0,
-      "outputTokenCount": 13.0
+      "outputTokenCount": 12.0
     },
     {
-      "uuid": "019bf978-4947-7852-b98e-5f0ef07facc2",
+      "uuid": "019bf9a2-743d-7b61-b0ad-eeca915f981f",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-4945-78e1-9900-6cd250bda60e",
-      "startTime": "2026-01-26T08:42:48.520Z",
-      "endTime": "2026-01-26T08:42:50.104Z",
+      "parentUuid": "019bf9a2-743c-7790-b230-532fc73b38d4",
+      "startTime": "2026-01-26T09:28:52.029Z",
+      "endTime": "2026-01-26T09:28:54.011Z",
       "input": [
         {
           "role": "human",
@@ -240,7 +240,7 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_Ie1kVX2lrOv6miWmi51RfyTc"
+            "id": "call_wwWChnSoGguZqRG6FQO6eQu8"
           }
         ]
       },
@@ -253,13 +253,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf978-4f78-7d73-b933-0b97d2ca9f0e",
+      "uuid": "019bf9a2-7bfc-7b23-b6f2-6d9d2a338f35",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf978-4945-78e1-9900-6cd250bda60e",
-      "startTime": "2026-01-26T08:42:50.104Z",
-      "endTime": "2026-01-26T08:42:50.105Z",
+      "parentUuid": "019bf9a2-743c-7790-b230-532fc73b38d4",
+      "startTime": "2026-01-26T09:28:54.012Z",
+      "endTime": "2026-01-26T09:28:54.012Z",
       "input": {
         "city": "Tokyo"
       },
@@ -269,13 +269,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+        "tool_call_id": "call_wwWChnSoGguZqRG6FQO6eQu8",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:42:48.517Z",
-  "endTime": "2026-01-26T08:42:50.998Z",
+  "startTime": "2026-01-26T09:28:52.028Z",
+  "endTime": "2026-01-26T09:28:54.750Z",
   "name": "langchain-multi-tool-test",
   "metadata": {
     "test_type": "multiple_tools"
@@ -329,20 +329,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CTIyMHzNFiVJTXpmuQuJrZIvGe3",
+          "id": "chatcmpl-D2DBsvxpAn8hWIhkbbHqm9uxTTA9T",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-4947-7852-b98e-5f0ef07facc2-0",
+        "id": "lc_run--019bf9a2-743d-7b61-b0ad-eeca915f981f-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+            "id": "call_wwWChnSoGguZqRG6FQO6eQu8",
             "type": "tool_call"
           }
         ],
@@ -367,19 +367,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+        "tool_call_id": "call_wwWChnSoGguZqRG6FQO6eQu8",
         "status": "success"
       },
       {
-        "content": "Weather in Tokyo: Cloudy, 68F",
+        "content": "Tokyo weather: Cloudy, 68F",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 13,
+            "completion_tokens": 12,
             "prompt_tokens": 221,
-            "total_tokens": 234,
+            "total_tokens": 233,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -394,19 +394,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CTK5johJPUxEIdXfW2DMx9yE5Ur",
+          "id": "chatcmpl-D2DBuQt2L7rHwBXTLmVUxA9CVtBpJ",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-4f79-7b32-80ec-e7dd3dbd3407-0",
+        "id": "lc_run--019bf9a2-7bfd-77e2-9043-90f8654d71d5-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 221,
-          "output_tokens": 13,
-          "total_tokens": 234,
+          "output_tokens": 12,
+          "total_tokens": 233,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -429,7 +429,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_Ie1kVX2lrOv6miWmi51RfyTc",
+        "tool_call_id": "call_wwWChnSoGguZqRG6FQO6eQu8",
         "status": "success"
       },
       "inputParameters": {

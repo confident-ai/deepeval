@@ -1,13 +1,13 @@
 {
-  "uuid": "13f3994d-cfcb-41d6-b949-051718303cc1",
+  "uuid": "c4d4f6ea-91ab-44a8-b0ac-3e4c8aadacfc",
   "baseSpans": [
     {
-      "uuid": "019bf978-7180-7331-b85e-73742462b15f",
+      "uuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
       "name": "streaming_multi_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:42:58.816Z",
-      "endTime": "2026-01-26T08:43:01.140Z",
+      "startTime": "2026-01-26T09:28:59.712Z",
+      "endTime": "2026-01-26T09:29:01.548Z",
       "input": {
         "messages": [
           {
@@ -36,14 +36,14 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf978-7182-7102-8760-a782630b8a48",
+            "id": "lc_run--019bf9a2-9242-7021-8a28-d47a2802f35c",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+                "id": "call_a67kqf5edZVqw4n3iBbJBrVG",
                 "type": "tool_call"
               }
             ],
@@ -68,7 +68,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+            "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
             "status": "success"
           },
           {
@@ -81,7 +81,7 @@
               "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bf978-775b-7ad3-ab13-99732bb83e25",
+            "id": "lc_run--019bf9a2-9692-7313-9131-a979ca977159",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -109,7 +109,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+            "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
             "status": "success"
           },
           "inputParameters": {
@@ -122,13 +122,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-775b-7ad3-ab13-99732bb83e25",
+      "uuid": "019bf9a2-9692-7313-9131-a979ca977159",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
-      "startTime": "2026-01-26T08:43:00.315Z",
-      "endTime": "2026-01-26T08:43:01.140Z",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:29:00.818Z",
+      "endTime": "2026-01-26T09:29:01.548Z",
       "input": [
         {
           "role": "human",
@@ -159,39 +159,39 @@
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-26T08:43:00.772062Z": "",
-        "2026-01-26T08:43:00.797710Z": "The",
-        "2026-01-26T08:43:00.799053Z": " current",
-        "2026-01-26T08:43:00.824020Z": " stock",
-        "2026-01-26T08:43:00.825443Z": " price",
-        "2026-01-26T08:43:00.850248Z": " for",
-        "2026-01-26T08:43:00.851598Z": " TS",
-        "2026-01-26T08:43:00.876468Z": "LA",
-        "2026-01-26T08:43:00.877748Z": " is",
-        "2026-01-26T08:43:00.903008Z": " $",
-        "2026-01-26T08:43:00.904974Z": "245",
-        "2026-01-26T08:43:00.929501Z": ".",
-        "2026-01-26T08:43:00.931032Z": "60",
-        "2026-01-26T08:43:00.956466Z": " (",
-        "2026-01-26T08:43:00.958075Z": "up",
-        "2026-01-26T08:43:01.079546Z": " ",
-        "2026-01-26T08:43:01.079859Z": "2",
-        "2026-01-26T08:43:01.119642Z": ".",
-        "2026-01-26T08:43:01.120489Z": "1",
-        "2026-01-26T08:43:01.125459Z": "%).",
-        "2026-01-26T08:43:01.125768Z": "",
-        "2026-01-26T08:43:01.140043Z": "",
-        "2026-01-26T08:43:01.140323Z": ""
+        "2026-01-26T09:29:01.294592Z": "",
+        "2026-01-26T09:29:01.322412Z": "The",
+        "2026-01-26T09:29:01.322727Z": " current",
+        "2026-01-26T09:29:01.342124Z": " stock",
+        "2026-01-26T09:29:01.342427Z": " price",
+        "2026-01-26T09:29:01.365698Z": " for",
+        "2026-01-26T09:29:01.366246Z": " TS",
+        "2026-01-26T09:29:01.400184Z": "LA",
+        "2026-01-26T09:29:01.401592Z": " is",
+        "2026-01-26T09:29:01.418739Z": " $",
+        "2026-01-26T09:29:01.420154Z": "245",
+        "2026-01-26T09:29:01.443491Z": ".",
+        "2026-01-26T09:29:01.444021Z": "60",
+        "2026-01-26T09:29:01.465988Z": " (",
+        "2026-01-26T09:29:01.466402Z": "up",
+        "2026-01-26T09:29:01.489894Z": " ",
+        "2026-01-26T09:29:01.490360Z": "2",
+        "2026-01-26T09:29:01.521892Z": ".",
+        "2026-01-26T09:29:01.522353Z": "1",
+        "2026-01-26T09:29:01.536794Z": "%).",
+        "2026-01-26T09:29:01.537440Z": "",
+        "2026-01-26T09:29:01.547610Z": "",
+        "2026-01-26T09:29:01.548067Z": ""
       }
     },
     {
-      "uuid": "019bf978-7182-7102-8760-a782630b8a48",
+      "uuid": "019bf9a2-9242-7021-8a28-d47a2802f35c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
-      "startTime": "2026-01-26T08:42:58.818Z",
-      "endTime": "2026-01-26T08:43:00.311Z",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:28:59.715Z",
+      "endTime": "2026-01-26T09:29:00.813Z",
       "input": [
         {
           "role": "human",
@@ -215,36 +215,36 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_2TPHBgLOhQUK2t74zYkaKIUK"
+            "id": "call_a67kqf5edZVqw4n3iBbJBrVG"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-26T08:43:00.222187Z": "",
-        "2026-01-26T08:43:00.243041Z": "",
-        "2026-01-26T08:43:00.244877Z": "",
-        "2026-01-26T08:43:00.264529Z": "",
-        "2026-01-26T08:43:00.266199Z": "",
-        "2026-01-26T08:43:00.290199Z": "",
-        "2026-01-26T08:43:00.292294Z": "",
-        "2026-01-26T08:43:00.297756Z": "",
-        "2026-01-26T08:43:00.298857Z": "",
-        "2026-01-26T08:43:00.310415Z": ""
+        "2026-01-26T09:29:00.726473Z": "",
+        "2026-01-26T09:29:00.743532Z": "",
+        "2026-01-26T09:29:00.745653Z": "",
+        "2026-01-26T09:29:00.765099Z": "",
+        "2026-01-26T09:29:00.767203Z": "",
+        "2026-01-26T09:29:00.787390Z": "",
+        "2026-01-26T09:29:00.789179Z": "",
+        "2026-01-26T09:29:00.806468Z": "",
+        "2026-01-26T09:29:00.807707Z": "",
+        "2026-01-26T09:29:00.812023Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf978-7758-7be2-8702-9f34e77c462c",
+      "uuid": "019bf9a2-968e-7111-a4b3-e8a9e43b5bc4",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf978-7180-7331-b85e-73742462b15f",
-      "startTime": "2026-01-26T08:43:00.312Z",
-      "endTime": "2026-01-26T08:43:00.314Z",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:29:00.814Z",
+      "endTime": "2026-01-26T09:29:00.817Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -254,13 +254,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:42:58.816Z",
-  "endTime": "2026-01-26T08:43:01.140Z",
+  "startTime": "2026-01-26T09:28:59.712Z",
+  "endTime": "2026-01-26T09:29:01.548Z",
   "name": "langchain-streaming-multi",
   "tags": [
     "langchain",
@@ -296,14 +296,14 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf978-7182-7102-8760-a782630b8a48",
+        "id": "lc_run--019bf9a2-9242-7021-8a28-d47a2802f35c",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+            "id": "call_a67kqf5edZVqw4n3iBbJBrVG",
             "type": "tool_call"
           }
         ],
@@ -328,7 +328,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
         "status": "success"
       },
       {
@@ -341,7 +341,7 @@
           "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bf978-775b-7ad3-ab13-99732bb83e25",
+        "id": "lc_run--019bf9a2-9692-7313-9131-a979ca977159",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -370,7 +370,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_2TPHBgLOhQUK2t74zYkaKIUK",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
         "status": "success"
       },
       "inputParameters": {

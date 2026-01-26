@@ -1,13 +1,13 @@
 {
-  "uuid": "705fa1b2-f092-44d2-a09b-7f5f668d0b80",
+  "uuid": "b8f7cff1-ceda-489a-b91f-a51c3ba6527a",
   "baseSpans": [
     {
-      "uuid": "019bf977-bef7-75f2-8cac-53626066ce3c",
+      "uuid": "019bf9a1-d408-7922-9036-d22ec7577e33",
       "name": "parallel_stocks_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:42:13.112Z",
-      "endTime": "2026-01-26T08:42:19.484Z",
+      "startTime": "2026-01-26T09:28:11.017Z",
+      "endTime": "2026-01-26T09:28:14.440Z",
       "input": {
         "messages": [
           {
@@ -33,9 +33,74 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 89,
+                "completion_tokens": 25,
                 "prompt_tokens": 146,
-                "total_tokens": 235,
+                "total_tokens": 171,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DBDpBAa3ZWzONB1Wn7ZtJni4CKr",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a1-d40a-7820-b912-bf3def53d432-0",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "AAPL"
+                },
+                "id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 146,
+              "output_tokens": 25,
+              "total_tokens": 171,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "$178.50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
+            "status": "success"
+          },
+          {
+            "content": "AAPL current price: $178.50.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 83,
+                "prompt_tokens": 181,
+                "total_tokens": 264,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -50,28 +115,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CSjWlfD5FMlgSO22le6ASK2qAHt",
+              "id": "chatcmpl-D2DBFn7uY5OfvBsOuMpRhTCs5U0JX",
               "service_tier": "default",
-              "finish_reason": "tool_calls",
+              "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf977-bef9-7f53-9b98-a5cf74ca7bdf-0",
-            "tool_calls": [
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "AAPL"
-                },
-                "id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
-                "type": "tool_call"
-              }
-            ],
+            "id": "lc_run--019bf9a1-db86-75b3-b217-eee1758ce5a7-0",
+            "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 146,
-              "output_tokens": 89,
-              "total_tokens": 235,
+              "input_tokens": 181,
+              "output_tokens": 83,
+              "total_tokens": 264,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -79,62 +135,6 @@
               "output_token_details": {
                 "audio": 0,
                 "reasoning": 64
-              }
-            }
-          },
-          {
-            "content": "$178.50",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "tool_call_id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
-            "status": "success"
-          },
-          {
-            "content": "AAPL: $178.50 per share (price returned by the tool).",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 153,
-                "prompt_tokens": 181,
-                "total_tokens": 334,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-D2CSmZNcfr7FtOfqBaKY73FFsv8Ap",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bf977-c9bb-7e82-98e8-49b8ee14b318-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 181,
-              "output_tokens": 153,
-              "total_tokens": 334,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
               }
             }
           }
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "tool_call_id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
+            "tool_call_id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf977-c9bb-7e82-98e8-49b8ee14b318",
+      "uuid": "019bf9a1-db86-75b3-b217-eee1758ce5a7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-bef7-75f2-8cac-53626066ce3c",
-      "startTime": "2026-01-26T08:42:15.868Z",
-      "endTime": "2026-01-26T08:42:19.482Z",
+      "parentUuid": "019bf9a1-d408-7922-9036-d22ec7577e33",
+      "startTime": "2026-01-26T09:28:12.935Z",
+      "endTime": "2026-01-26T09:28:14.438Z",
       "input": [
         {
           "role": "human",
@@ -189,22 +189,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "AAPL: $178.50 per share (price returned by the tool).",
+        "content": "AAPL current price: $178.50.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 181.0,
-      "outputTokenCount": 153.0
+      "outputTokenCount": 83.0
     },
     {
-      "uuid": "019bf977-bef9-7f53-9b98-a5cf74ca7bdf",
+      "uuid": "019bf9a1-d40a-7820-b912-bf3def53d432",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-bef7-75f2-8cac-53626066ce3c",
-      "startTime": "2026-01-26T08:42:13.114Z",
-      "endTime": "2026-01-26T08:42:15.862Z",
+      "parentUuid": "019bf9a1-d408-7922-9036-d22ec7577e33",
+      "startTime": "2026-01-26T09:28:11.019Z",
+      "endTime": "2026-01-26T09:28:12.933Z",
       "input": [
         {
           "role": "human",
@@ -224,26 +224,26 @@
             "args": {
               "symbol": "AAPL"
             },
-            "id": "call_dpzzdO3kOBQiPAiAUi5VKJHE"
+            "id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 146.0,
-      "outputTokenCount": 89.0
+      "outputTokenCount": 25.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf977-c9b8-7663-a11c-259ed2468d12",
+      "uuid": "019bf9a1-db85-71c2-b286-8f87889c70c1",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf977-bef7-75f2-8cac-53626066ce3c",
-      "startTime": "2026-01-26T08:42:15.864Z",
-      "endTime": "2026-01-26T08:42:15.866Z",
+      "parentUuid": "019bf9a1-d408-7922-9036-d22ec7577e33",
+      "startTime": "2026-01-26T09:28:12.934Z",
+      "endTime": "2026-01-26T09:28:12.934Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -253,13 +253,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
+        "tool_call_id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:42:13.112Z",
-  "endTime": "2026-01-26T08:42:19.484Z",
+  "startTime": "2026-01-26T09:28:11.017Z",
+  "endTime": "2026-01-26T09:28:14.440Z",
   "name": "langchain-async-parallel-stocks",
   "tags": [
     "langchain",
@@ -293,9 +293,74 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 89,
+            "completion_tokens": 25,
             "prompt_tokens": 146,
-            "total_tokens": 235,
+            "total_tokens": 171,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DBDpBAa3ZWzONB1Wn7ZtJni4CKr",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a1-d40a-7820-b912-bf3def53d432-0",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AAPL"
+            },
+            "id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 146,
+          "output_tokens": 25,
+          "total_tokens": 171,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "$178.50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
+        "status": "success"
+      },
+      {
+        "content": "AAPL current price: $178.50.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 83,
+            "prompt_tokens": 181,
+            "total_tokens": 264,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -310,28 +375,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CSjWlfD5FMlgSO22le6ASK2qAHt",
+          "id": "chatcmpl-D2DBFn7uY5OfvBsOuMpRhTCs5U0JX",
           "service_tier": "default",
-          "finish_reason": "tool_calls",
+          "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf977-bef9-7f53-9b98-a5cf74ca7bdf-0",
-        "tool_calls": [
-          {
-            "name": "get_stock_price",
-            "args": {
-              "symbol": "AAPL"
-            },
-            "id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
-            "type": "tool_call"
-          }
-        ],
+        "id": "lc_run--019bf9a1-db86-75b3-b217-eee1758ce5a7-0",
+        "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 146,
-          "output_tokens": 89,
-          "total_tokens": 235,
+          "input_tokens": 181,
+          "output_tokens": 83,
+          "total_tokens": 264,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -339,62 +395,6 @@
           "output_token_details": {
             "audio": 0,
             "reasoning": 64
-          }
-        }
-      },
-      {
-        "content": "$178.50",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "tool_call_id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
-        "status": "success"
-      },
-      {
-        "content": "AAPL: $178.50 per share (price returned by the tool).",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 153,
-            "prompt_tokens": 181,
-            "total_tokens": 334,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-D2CSmZNcfr7FtOfqBaKY73FFsv8Ap",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019bf977-c9bb-7e82-98e8-49b8ee14b318-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 181,
-          "output_tokens": 153,
-          "total_tokens": 334,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
           }
         }
       }
@@ -410,7 +410,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "tool_call_id": "call_dpzzdO3kOBQiPAiAUi5VKJHE",
+        "tool_call_id": "call_Q3E4FsnSi6jNoq6c3vZbFQPC",
         "status": "success"
       },
       "inputParameters": {

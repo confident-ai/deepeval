@@ -1,13 +1,13 @@
 {
-  "uuid": "d0ebf479-97ae-4e0f-886d-552265c1b4d9",
+  "uuid": "230be62b-af3c-4654-a4af-e919bfcdff32",
   "baseSpans": [
     {
-      "uuid": "019bf979-0453-7730-8aaf-dd4a3394e5a1",
+      "uuid": "019bf9a3-1713-7360-8cd9-80f188c6fe47",
       "name": "rag_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:36.403Z",
-      "endTime": "2026-01-26T08:43:39.040Z",
+      "startTime": "2026-01-26T09:29:33.715Z",
+      "endTime": "2026-01-26T09:29:36.080Z",
       "input": {
         "messages": [
           {
@@ -27,15 +27,15 @@
             "type": "human"
           },
           {
-            "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and for integrating those models with external data.",
+            "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 103,
+                "completion_tokens": 102,
                 "prompt_tokens": 79,
-                "total_tokens": 182,
+                "total_tokens": 181,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -50,19 +50,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CU4FJwpu7LwoVxP6Qet6qrjEyzT",
+              "id": "chatcmpl-D2DCXarVpdKsDviO3v9ZIZCfKReXZ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-0457-7aa3-b32b-367feef54a37-0",
+            "id": "lc_run--019bf9a3-1714-7ee2-a83f-2a7bf9583be5-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 79,
-              "output_tokens": 103,
-              "total_tokens": 182,
+              "output_tokens": 102,
+              "total_tokens": 181,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -97,13 +97,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf979-0457-7aa3-b32b-367feef54a37",
+      "uuid": "019bf9a3-1714-7ee2-a83f-2a7bf9583be5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-0453-7730-8aaf-dd4a3394e5a1",
-      "startTime": "2026-01-26T08:43:36.407Z",
-      "endTime": "2026-01-26T08:43:39.040Z",
+      "parentUuid": "019bf9a3-1713-7360-8cd9-80f188c6fe47",
+      "startTime": "2026-01-26T09:29:33.716Z",
+      "endTime": "2026-01-26T09:29:36.080Z",
       "input": [
         {
           "role": "system",
@@ -120,24 +120,24 @@
       ],
       "output": {
         "role": "AI",
-        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and for integrating those models with external data.",
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 79.0,
-      "outputTokenCount": 103.0
+      "outputTokenCount": 102.0
     }
   ],
   "retrieverSpans": [
     {
-      "uuid": "019bf979-0455-7941-a442-77063ba5fcac",
+      "uuid": "019bf9a3-1714-7ee2-a83f-2a6585ab944f",
       "name": "DeterministicRetriever",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "019bf979-0453-7730-8aaf-dd4a3394e5a1",
-      "startTime": "2026-01-26T08:43:36.405Z",
-      "endTime": "2026-01-26T08:43:36.406Z",
+      "parentUuid": "019bf9a3-1713-7360-8cd9-80f188c6fe47",
+      "startTime": "2026-01-26T09:29:33.716Z",
+      "endTime": "2026-01-26T09:29:33.716Z",
       "input": "What is LangChain framework?",
       "output": [
         "page_content='LangChain is a framework for developing applications powered by language models.' metadata={'source': 'doc3'}",
@@ -147,8 +147,8 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:43:36.403Z",
-  "endTime": "2026-01-26T08:43:39.040Z",
+  "startTime": "2026-01-26T09:29:33.715Z",
+  "endTime": "2026-01-26T09:29:36.080Z",
   "name": "langchain-retriever-langchain",
   "tags": [
     "langchain",
@@ -175,15 +175,15 @@
         "type": "human"
       },
       {
-        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and for integrating those models with external data.",
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 103,
+            "completion_tokens": 102,
             "prompt_tokens": 79,
-            "total_tokens": 182,
+            "total_tokens": 181,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -198,19 +198,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CU4FJwpu7LwoVxP6Qet6qrjEyzT",
+          "id": "chatcmpl-D2DCXarVpdKsDviO3v9ZIZCfKReXZ",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-0457-7aa3-b32b-367feef54a37-0",
+        "id": "lc_run--019bf9a3-1714-7ee2-a83f-2a7bf9583be5-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 79,
-          "output_tokens": 103,
-          "total_tokens": 182,
+          "output_tokens": 102,
+          "total_tokens": 181,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0

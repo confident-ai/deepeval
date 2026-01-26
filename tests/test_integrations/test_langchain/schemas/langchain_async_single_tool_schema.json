@@ -1,13 +1,13 @@
 {
-  "uuid": "110dfbb7-1124-40f2-939e-f7d18cdf9dea",
+  "uuid": "2f62db49-84ce-42cb-9d66-99a65cf6bb97",
   "baseSpans": [
     {
-      "uuid": "019bf977-0161-79d1-b28d-4e5123705d19",
+      "uuid": "019bf9a1-32a3-7e60-bea8-9ba3bcdf0984",
       "name": "single_tool_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:41:24.577Z",
-      "endTime": "2026-01-26T08:41:30.546Z",
+      "startTime": "2026-01-26T09:27:29.700Z",
+      "endTime": "2026-01-26T09:27:32.299Z",
       "input": {
         "messages": [
           {
@@ -33,74 +33,9 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 280,
+                "completion_tokens": 24,
                 "prompt_tokens": 145,
-                "total_tokens": 425,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-D2CRxpEdjpYChCEwKIRI6UGKPixCj",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019bf977-0162-7ca0-a7cd-87942a2a8dd6-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 145,
-              "output_tokens": 280,
-              "total_tokens": 425,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
-            }
-          },
-          {
-            "content": "Foggy, 58F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "tool_call_id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
-            "status": "success"
-          },
-          {
-            "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 17,
-                "prompt_tokens": 180,
-                "total_tokens": 197,
+                "total_tokens": 169,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -115,19 +50,84 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CS1Tz3yEo8t8aSqVPeWDdbQMz2D",
+              "id": "chatcmpl-D2DAYtBhvYOwf3AqWCkHdg15M6KBJ",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a1-32a4-71d1-991f-9936d5a3cedc-0",
+            "tool_calls": [
+              {
+                "name": "get_weather",
+                "args": {
+                  "city": "San Francisco"
+                },
+                "id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 145,
+              "output_tokens": 24,
+              "total_tokens": 169,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "Foggy, 58F",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_weather",
+            "tool_call_id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
+            "status": "success"
+          },
+          {
+            "content": "Foggy, 58\u00b0F.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 180,
+                "total_tokens": 190,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DAZJ5RtQbMQBlVallrInQhkLSZU",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf977-154e-7c20-a350-46749760dc20-0",
+            "id": "lc_run--019bf9a1-3953-70a0-9fb4-d5863a21052e-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 180,
-              "output_tokens": 17,
-              "total_tokens": 197,
+              "output_tokens": 10,
+              "total_tokens": 190,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
+            "tool_call_id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf977-154e-7c20-a350-46749760dc20",
+      "uuid": "019bf9a1-3953-70a0-9fb4-d5863a21052e",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-0161-79d1-b28d-4e5123705d19",
-      "startTime": "2026-01-26T08:41:29.679Z",
-      "endTime": "2026-01-26T08:41:30.544Z",
+      "parentUuid": "019bf9a1-32a3-7e60-bea8-9ba3bcdf0984",
+      "startTime": "2026-01-26T09:27:31.411Z",
+      "endTime": "2026-01-26T09:27:32.298Z",
       "input": [
         {
           "role": "human",
@@ -189,22 +189,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
+        "content": "Foggy, 58\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 180.0,
-      "outputTokenCount": 17.0
+      "outputTokenCount": 10.0
     },
     {
-      "uuid": "019bf977-0162-7ca0-a7cd-87942a2a8dd6",
+      "uuid": "019bf9a1-32a4-71d1-991f-9936d5a3cedc",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-0161-79d1-b28d-4e5123705d19",
-      "startTime": "2026-01-26T08:41:24.578Z",
-      "endTime": "2026-01-26T08:41:29.670Z",
+      "parentUuid": "019bf9a1-32a3-7e60-bea8-9ba3bcdf0984",
+      "startTime": "2026-01-26T09:27:29.701Z",
+      "endTime": "2026-01-26T09:27:31.409Z",
       "input": [
         {
           "role": "human",
@@ -224,26 +224,26 @@
             "args": {
               "city": "San Francisco"
             },
-            "id": "call_V3xKf0M5bIMC9mLKx49WuL4k"
+            "id": "call_ghYfcrj1WIB2cM1hcSrjMsRT"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 145.0,
-      "outputTokenCount": 280.0
+      "outputTokenCount": 24.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf977-1549-7073-9078-e4c0ad305fcd",
+      "uuid": "019bf9a1-3952-74f3-863a-9cbe40a7c8f3",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf977-0161-79d1-b28d-4e5123705d19",
-      "startTime": "2026-01-26T08:41:29.673Z",
-      "endTime": "2026-01-26T08:41:29.676Z",
+      "parentUuid": "019bf9a1-32a3-7e60-bea8-9ba3bcdf0984",
+      "startTime": "2026-01-26T09:27:31.410Z",
+      "endTime": "2026-01-26T09:27:31.410Z",
       "input": {
         "city": "San Francisco"
       },
@@ -253,13 +253,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
+        "tool_call_id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:41:24.577Z",
-  "endTime": "2026-01-26T08:41:30.546Z",
+  "startTime": "2026-01-26T09:27:29.700Z",
+  "endTime": "2026-01-26T09:27:32.299Z",
   "name": "langchain-async-single-tool",
   "metadata": {
     "test_type": "async_single_tool"
@@ -297,74 +297,9 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 280,
+            "completion_tokens": 24,
             "prompt_tokens": 145,
-            "total_tokens": 425,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 256,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-D2CRxpEdjpYChCEwKIRI6UGKPixCj",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019bf977-0162-7ca0-a7cd-87942a2a8dd6-0",
-        "tool_calls": [
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "San Francisco"
-            },
-            "id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 145,
-          "output_tokens": 280,
-          "total_tokens": 425,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 256
-          }
-        }
-      },
-      {
-        "content": "Foggy, 58F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
-        "status": "success"
-      },
-      {
-        "content": "The current weather in San Francisco is foggy and 58\u00b0F.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 17,
-            "prompt_tokens": 180,
-            "total_tokens": 197,
+            "total_tokens": 169,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -379,19 +314,84 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CS1Tz3yEo8t8aSqVPeWDdbQMz2D",
+          "id": "chatcmpl-D2DAYtBhvYOwf3AqWCkHdg15M6KBJ",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a1-32a4-71d1-991f-9936d5a3cedc-0",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "city": "San Francisco"
+            },
+            "id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 145,
+          "output_tokens": 24,
+          "total_tokens": 169,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "Foggy, 58F",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_weather",
+        "tool_call_id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
+        "status": "success"
+      },
+      {
+        "content": "Foggy, 58\u00b0F.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 180,
+            "total_tokens": 190,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DAZJ5RtQbMQBlVallrInQhkLSZU",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf977-154e-7c20-a350-46749760dc20-0",
+        "id": "lc_run--019bf9a1-3953-70a0-9fb4-d5863a21052e-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 180,
-          "output_tokens": 17,
-          "total_tokens": 197,
+          "output_tokens": 10,
+          "total_tokens": 190,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -414,7 +414,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_V3xKf0M5bIMC9mLKx49WuL4k",
+        "tool_call_id": "call_ghYfcrj1WIB2cM1hcSrjMsRT",
         "status": "success"
       },
       "inputParameters": {

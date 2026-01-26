@@ -1,13 +1,13 @@
 {
-  "uuid": "09556710-65b1-444e-a3cd-ba28321a599f",
+  "uuid": "1fc905ae-51f3-44f0-b27f-9319753d3e05",
   "baseSpans": [
     {
-      "uuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
+      "uuid": "019bf9a3-3cf7-7130-8314-f3c169b28e5a",
       "name": "complex_agent",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:44.906Z",
-      "endTime": "2026-01-26T08:43:50.114Z",
+      "startTime": "2026-01-26T09:29:43.415Z",
+      "endTime": "2026-01-26T09:29:47.788Z",
       "input": {
         "messages": [
           {
@@ -50,18 +50,18 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CUDx3Konj1WyrkPUP5lg8kMMiEL",
+              "id": "chatcmpl-D2DChg6kQVbuDI4Y7ll258y5pJWWG",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-258c-7893-80ca-9b3d847d0893-0",
+            "id": "lc_run--019bf9a3-3cf8-7c31-87fc-42b0786bd34e-0",
             "tool_calls": [
               {
                 "name": "get_current_time",
                 "args": {},
-                "id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+                "id": "call_gH3COqjS42HIxkscDHAwNBCt",
                 "type": "tool_call"
               }
             ],
@@ -86,7 +86,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_current_time",
-            "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+            "tool_call_id": "call_gH3COqjS42HIxkscDHAwNBCt",
             "status": "success"
           },
           {
@@ -96,13 +96,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 155,
+                "completion_tokens": 91,
                 "prompt_tokens": 223,
-                "total_tokens": 378,
+                "total_tokens": 314,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -113,26 +113,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CUF9T4zZwg4OBkUChcIPQudtYs9",
+              "id": "chatcmpl-D2DCjhhnjtwnRbOwOhMwZDJ1LXrD4",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf979-2d3f-7f93-8df8-a59e66d78f40-0",
+            "id": "lc_run--019bf9a3-44df-7143-9aec-e7edd1791c19-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 223,
-              "output_tokens": 155,
-              "total_tokens": 378,
+              "output_tokens": 91,
+              "total_tokens": 314,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 64
               }
             }
           }
@@ -147,7 +147,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_current_time",
-            "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+            "tool_call_id": "call_gH3COqjS42HIxkscDHAwNBCt",
             "status": "success"
           },
           "inputParameters": {}
@@ -158,13 +158,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf979-2d3f-7f93-8df8-a59e66d78f40",
+      "uuid": "019bf9a3-44df-7143-9aec-e7edd1791c19",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
-      "startTime": "2026-01-26T08:43:46.879Z",
-      "endTime": "2026-01-26T08:43:50.114Z",
+      "parentUuid": "019bf9a3-3cf7-7130-8314-f3c169b28e5a",
+      "startTime": "2026-01-26T09:29:45.439Z",
+      "endTime": "2026-01-26T09:29:47.788Z",
       "input": [
         {
           "role": "human",
@@ -199,16 +199,16 @@
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 223.0,
-      "outputTokenCount": 155.0
+      "outputTokenCount": 91.0
     },
     {
-      "uuid": "019bf979-258c-7893-80ca-9b3d847d0893",
+      "uuid": "019bf9a3-3cf8-7c31-87fc-42b0786bd34e",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
-      "startTime": "2026-01-26T08:43:44.908Z",
-      "endTime": "2026-01-26T08:43:46.875Z",
+      "parentUuid": "019bf9a3-3cf7-7130-8314-f3c169b28e5a",
+      "startTime": "2026-01-26T09:29:43.416Z",
+      "endTime": "2026-01-26T09:29:45.438Z",
       "input": [
         {
           "role": "human",
@@ -234,7 +234,7 @@
           {
             "name": "get_current_time",
             "args": {},
-            "id": "call_dlW3KgHVmtHhjPRspzljvAiH"
+            "id": "call_gH3COqjS42HIxkscDHAwNBCt"
           }
         ]
       },
@@ -247,13 +247,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf979-2d3c-7712-8819-11dded391b11",
+      "uuid": "019bf9a3-44de-7df1-a1e8-af6c465dcf11",
       "name": "get_current_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf979-258a-74c0-bbe1-87bfbcc8c1e0",
-      "startTime": "2026-01-26T08:43:46.876Z",
-      "endTime": "2026-01-26T08:43:46.878Z",
+      "parentUuid": "019bf9a3-3cf7-7130-8314-f3c169b28e5a",
+      "startTime": "2026-01-26T09:29:45.438Z",
+      "endTime": "2026-01-26T09:29:45.439Z",
       "input": {},
       "output": {
         "content": "Current time: 2024-01-15 10:30:00 UTC",
@@ -261,13 +261,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_current_time",
-        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+        "tool_call_id": "call_gH3COqjS42HIxkscDHAwNBCt",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:43:44.906Z",
-  "endTime": "2026-01-26T08:43:50.114Z",
+  "startTime": "2026-01-26T09:29:43.415Z",
+  "endTime": "2026-01-26T09:29:47.788Z",
   "name": "langchain-agent-complex",
   "tags": [
     "langchain",
@@ -317,18 +317,18 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CUDx3Konj1WyrkPUP5lg8kMMiEL",
+          "id": "chatcmpl-D2DChg6kQVbuDI4Y7ll258y5pJWWG",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-258c-7893-80ca-9b3d847d0893-0",
+        "id": "lc_run--019bf9a3-3cf8-7c31-87fc-42b0786bd34e-0",
         "tool_calls": [
           {
             "name": "get_current_time",
             "args": {},
-            "id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+            "id": "call_gH3COqjS42HIxkscDHAwNBCt",
             "type": "tool_call"
           }
         ],
@@ -353,7 +353,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_current_time",
-        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+        "tool_call_id": "call_gH3COqjS42HIxkscDHAwNBCt",
         "status": "success"
       },
       {
@@ -363,13 +363,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 155,
+            "completion_tokens": 91,
             "prompt_tokens": 223,
-            "total_tokens": 378,
+            "total_tokens": 314,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 128,
+              "reasoning_tokens": 64,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -380,26 +380,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CUF9T4zZwg4OBkUChcIPQudtYs9",
+          "id": "chatcmpl-D2DCjhhnjtwnRbOwOhMwZDJ1LXrD4",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf979-2d3f-7f93-8df8-a59e66d78f40-0",
+        "id": "lc_run--019bf9a3-44df-7143-9aec-e7edd1791c19-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 223,
-          "output_tokens": 155,
-          "total_tokens": 378,
+          "output_tokens": 91,
+          "total_tokens": 314,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 128
+            "reasoning": 64
           }
         }
       }
@@ -415,7 +415,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_current_time",
-        "tool_call_id": "call_dlW3KgHVmtHhjPRspzljvAiH",
+        "tool_call_id": "call_gH3COqjS42HIxkscDHAwNBCt",
         "status": "success"
       },
       "inputParameters": {}

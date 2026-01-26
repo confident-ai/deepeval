@@ -1,13 +1,13 @@
 {
-  "uuid": "da869fcb-b555-4bb0-97ba-f2a3c06a6725",
+  "uuid": "3f9ec16a-df18-4925-a041-6d732a6097a7",
   "baseSpans": [
     {
-      "uuid": "019bf977-25fd-7ad2-8da7-8d76b1dad5a8",
+      "uuid": "019bf9a1-4906-74b2-acb3-036793a385c8",
       "name": "mixed_tools_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:41:33.950Z",
-      "endTime": "2026-01-26T08:41:37.125Z",
+      "startTime": "2026-01-26T09:27:35.431Z",
+      "endTime": "2026-01-26T09:27:38.202Z",
       "input": {
         "messages": [
           {
@@ -33,13 +33,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 87,
+                "completion_tokens": 23,
                 "prompt_tokens": 167,
-                "total_tokens": 254,
+                "total_tokens": 190,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -50,35 +50,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CS6ERoeAE2CZjmSztuoNNFfQkkv",
+              "id": "chatcmpl-D2DAeGa5JGTNhpnXl5xlCV1RjcgEP",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf977-2600-7823-9fb4-af0923f3e18a-0",
+            "id": "lc_run--019bf9a1-4907-7c10-8cd1-25f24e82d793-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_D56ouFguqqQhlygUz7vTvWWv",
+                "id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 167,
-              "output_tokens": 87,
-              "total_tokens": 254,
+              "output_tokens": 23,
+              "total_tokens": 190,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -88,7 +88,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_D56ouFguqqQhlygUz7vTvWWv",
+            "tool_call_id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
             "status": "success"
           },
           {
@@ -115,13 +115,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CS8neQ18p28wiyDSrEUSJ7e2GOh",
+              "id": "chatcmpl-D2DAfILBK94D33TXITfxwAa27ELKQ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf977-2faa-7a63-9e4d-3d4d29e2e311-0",
+            "id": "lc_run--019bf9a1-50d3-7e02-ac6f-133c03b16084-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_D56ouFguqqQhlygUz7vTvWWv",
+            "tool_call_id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf977-2faa-7a63-9e4d-3d4d29e2e311",
+      "uuid": "019bf9a1-50d3-7e02-ac6f-133c03b16084",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-25fd-7ad2-8da7-8d76b1dad5a8",
-      "startTime": "2026-01-26T08:41:36.427Z",
-      "endTime": "2026-01-26T08:41:37.125Z",
+      "parentUuid": "019bf9a1-4906-74b2-acb3-036793a385c8",
+      "startTime": "2026-01-26T09:27:37.427Z",
+      "endTime": "2026-01-26T09:27:38.202Z",
       "input": [
         {
           "role": "human",
@@ -202,13 +202,13 @@
       "outputTokenCount": 11.0
     },
     {
-      "uuid": "019bf977-2600-7823-9fb4-af0923f3e18a",
+      "uuid": "019bf9a1-4907-7c10-8cd1-25f24e82d793",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf977-25fd-7ad2-8da7-8d76b1dad5a8",
-      "startTime": "2026-01-26T08:41:33.953Z",
-      "endTime": "2026-01-26T08:41:36.420Z",
+      "parentUuid": "019bf9a1-4906-74b2-acb3-036793a385c8",
+      "startTime": "2026-01-26T09:27:35.432Z",
+      "endTime": "2026-01-26T09:27:37.426Z",
       "input": [
         {
           "role": "human",
@@ -232,26 +232,26 @@
             "args": {
               "city": "Paris"
             },
-            "id": "call_D56ouFguqqQhlygUz7vTvWWv"
+            "id": "call_CfNQEg8qyf4bi5WxszWVb0b9"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "inputTokenCount": 167.0,
-      "outputTokenCount": 87.0
+      "outputTokenCount": 23.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf977-2fa6-7440-990a-56a06b7657c9",
+      "uuid": "019bf9a1-50d2-7dd1-94f2-e4d644fa8924",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf977-25fd-7ad2-8da7-8d76b1dad5a8",
-      "startTime": "2026-01-26T08:41:36.422Z",
-      "endTime": "2026-01-26T08:41:36.425Z",
+      "parentUuid": "019bf9a1-4906-74b2-acb3-036793a385c8",
+      "startTime": "2026-01-26T09:27:37.426Z",
+      "endTime": "2026-01-26T09:27:37.427Z",
       "input": {
         "city": "Paris"
       },
@@ -261,13 +261,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_D56ouFguqqQhlygUz7vTvWWv",
+        "tool_call_id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T08:41:33.950Z",
-  "endTime": "2026-01-26T08:41:37.125Z",
+  "startTime": "2026-01-26T09:27:35.431Z",
+  "endTime": "2026-01-26T09:27:38.202Z",
   "name": "langchain-async-mixed-tools",
   "tags": [
     "langchain",
@@ -300,13 +300,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 87,
+            "completion_tokens": 23,
             "prompt_tokens": 167,
-            "total_tokens": 254,
+            "total_tokens": 190,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 64,
+              "reasoning_tokens": 0,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -317,35 +317,35 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CS6ERoeAE2CZjmSztuoNNFfQkkv",
+          "id": "chatcmpl-D2DAeGa5JGTNhpnXl5xlCV1RjcgEP",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf977-2600-7823-9fb4-af0923f3e18a-0",
+        "id": "lc_run--019bf9a1-4907-7c10-8cd1-25f24e82d793-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Paris"
             },
-            "id": "call_D56ouFguqqQhlygUz7vTvWWv",
+            "id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 167,
-          "output_tokens": 87,
-          "total_tokens": 254,
+          "output_tokens": 23,
+          "total_tokens": 190,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 64
+            "reasoning": 0
           }
         }
       },
@@ -355,7 +355,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_D56ouFguqqQhlygUz7vTvWWv",
+        "tool_call_id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
         "status": "success"
       },
       {
@@ -382,13 +382,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CS8neQ18p28wiyDSrEUSJ7e2GOh",
+          "id": "chatcmpl-D2DAfILBK94D33TXITfxwAa27ELKQ",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf977-2faa-7a63-9e4d-3d4d29e2e311-0",
+        "id": "lc_run--019bf9a1-50d3-7e02-ac6f-133c03b16084-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -417,7 +417,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_D56ouFguqqQhlygUz7vTvWWv",
+        "tool_call_id": "call_CfNQEg8qyf4bi5WxszWVb0b9",
         "status": "success"
       },
       "inputParameters": {

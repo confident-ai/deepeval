@@ -1,13 +1,13 @@
 {
-  "uuid": "0a1ad1e5-9e7b-4586-a816-fac7edbc309a",
+  "uuid": "93c5aa44-ee58-4884-9ca4-d7ac0533bea3",
   "baseSpans": [
     {
-      "uuid": "019bf978-2f01-7630-a881-359e8004a7c6",
+      "uuid": "019bf9a2-2c7d-7fb3-80a9-0d3bc842334c",
       "name": "simple_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:42:41.793Z",
-      "endTime": "2026-01-26T08:42:43.585Z",
+      "startTime": "2026-01-26T09:28:33.661Z",
+      "endTime": "2026-01-26T09:28:35.798Z",
       "input": [
         {
           "content": "Say hello in one short sentence.",
@@ -48,13 +48,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CTBkvl6mVJ76AWjGpAOJoie7hoO",
+              "id": "chatcmpl-D2DBaw8qyDZkZ4SmdNdl1447CAsDp",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-2f03-79b1-a1eb-6e753c66a299-0",
+            "id": "lc_run--019bf9a2-2c7e-7963-b15b-8aac9f3c27a6-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -78,13 +78,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-2f03-79b1-a1eb-6e753c66a299",
+      "uuid": "019bf9a2-2c7e-7963-b15b-8aac9f3c27a6",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-2f01-7630-a881-359e8004a7c6",
-      "startTime": "2026-01-26T08:42:41.795Z",
-      "endTime": "2026-01-26T08:42:43.584Z",
+      "parentUuid": "019bf9a2-2c7d-7fb3-80a9-0d3bc842334c",
+      "startTime": "2026-01-26T09:28:33.662Z",
+      "endTime": "2026-01-26T09:28:35.798Z",
       "input": [
         {
           "role": "human",
@@ -104,8 +104,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:42:41.793Z",
-  "endTime": "2026-01-26T08:42:43.585Z",
+  "startTime": "2026-01-26T09:28:33.661Z",
+  "endTime": "2026-01-26T09:28:35.798Z",
   "name": "langchain-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -157,13 +157,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CTBkvl6mVJ76AWjGpAOJoie7hoO",
+          "id": "chatcmpl-D2DBaw8qyDZkZ4SmdNdl1447CAsDp",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-2f03-79b1-a1eb-6e753c66a299-0",
+        "id": "lc_run--019bf9a2-2c7e-7963-b15b-8aac9f3c27a6-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {

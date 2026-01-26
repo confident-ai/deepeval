@@ -1,13 +1,13 @@
 {
-  "uuid": "01a6f1a3-4d01-4f83-ad92-749076786789",
+  "uuid": "27599da5-2207-4cf4-a78b-57d905dc18f0",
   "baseSpans": [
     {
-      "uuid": "019bf978-a77c-7d10-a117-465434370fc1",
+      "uuid": "019bf9a2-c29d-7a41-bcc0-ac4b94ab40c7",
       "name": "general_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T08:43:12.636Z",
-      "endTime": "2026-01-26T08:43:14.844Z",
+      "startTime": "2026-01-26T09:29:12.093Z",
+      "endTime": "2026-01-26T09:29:14.810Z",
       "input": {
         "messages": [
           {
@@ -50,13 +50,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2CTgvfhvxSbb0zhhSmbOTpG6TwAl",
+              "id": "chatcmpl-D2DCCmDlvzUdF6dRifXcJMs6lzWDR",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf978-a77d-7762-bd30-07a94fe3fa26-0",
+            "id": "lc_run--019bf9a2-c29d-7a41-bcc0-ac5708848e85-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -80,13 +80,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf978-a77d-7762-bd30-07a94fe3fa26",
+      "uuid": "019bf9a2-c29d-7a41-bcc0-ac5708848e85",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf978-a77c-7d10-a117-465434370fc1",
-      "startTime": "2026-01-26T08:43:12.638Z",
-      "endTime": "2026-01-26T08:43:14.843Z",
+      "parentUuid": "019bf9a2-c29d-7a41-bcc0-ac4b94ab40c7",
+      "startTime": "2026-01-26T09:29:12.093Z",
+      "endTime": "2026-01-26T09:29:14.810Z",
       "input": [
         {
           "role": "human",
@@ -106,8 +106,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-26T08:43:12.636Z",
-  "endTime": "2026-01-26T08:43:14.844Z",
+  "startTime": "2026-01-26T09:29:12.093Z",
+  "endTime": "2026-01-26T09:29:14.810Z",
   "name": "langchain-conditional-general",
   "tags": [
     "langchain",
@@ -157,13 +157,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2CTgvfhvxSbb0zhhSmbOTpG6TwAl",
+          "id": "chatcmpl-D2DCCmDlvzUdF6dRifXcJMs6lzWDR",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf978-a77d-7762-bd30-07a94fe3fa26-0",
+        "id": "lc_run--019bf9a2-c29d-7a41-bcc0-ac5708848e85-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
