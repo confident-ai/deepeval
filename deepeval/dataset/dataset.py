@@ -84,9 +84,11 @@ class EvaluationDataset:
     def __init__(
         self,
         goldens: Union[List[Golden], List[ConversationalGolden]] = [],
+        confident_api_key: Optional[str] = None,
     ):
         self._alias = None
         self._id = None
+        self.confident_api_key = confident_api_key
         if len(goldens) > 0:
             self._multi_turn = (
                 True if isinstance(goldens[0], ConversationalGolden) else False
@@ -722,7 +724,7 @@ class EvaluationDataset:
                 "Unable to push empty dataset to Confident AI, there must be at least one golden in dataset."
             )
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         api_dataset = APIDataset(
             goldens=self.goldens if not self._multi_turn else None,
             conversationalGoldens=(self.goldens if self._multi_turn else None),
@@ -755,7 +757,7 @@ class EvaluationDataset:
         auto_convert_goldens_to_test_cases: bool = False,
         public: bool = False,
     ):
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         with capture_pull_dataset():
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
@@ -839,7 +841,7 @@ class EvaluationDataset:
             raise ValueError(
                 f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
             )
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
 
         multi_turn = isinstance(goldens[0], ConversationalGolden)
 
@@ -871,7 +873,7 @@ class EvaluationDataset:
         self,
         alias: str,
     ):
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         api.send_request(
             method=HttpMethods.DELETE,
             endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
