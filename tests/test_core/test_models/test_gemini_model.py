@@ -123,3 +123,58 @@ def test_gemini_vertexai_allows_adc_when_no_service_account_key(
 
     # credentials should be absent/None so the SDK resolves via ADC.
     assert client.kwargs.get("credentials") is None
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_model_use_vertexai_param_overrides_settings(
+    mock_require_dep,
+    settings,
+):
+    """
+    Explicit ctor `use_vertexai` must override Settings.GOOGLE_GENAI_USE_VERTEXAI,
+    including when explicitly set to False.
+    """
+    fake_genai = _make_fake_genai_module()
+
+    def _fake_require_dependency(name, *args, **kwargs):
+        if name == "google.genai":
+            return fake_genai
+        raise AssertionError(f"Unexpected dependency requested: {name}")
+
+    mock_require_dep.side_effect = _fake_require_dependency
+
+    # Case 1: settings says True, ctor forces False -> API-key client
+    with settings.edit(persist=False):
+        settings.GOOGLE_GENAI_USE_VERTEXAI = True
+        settings.GOOGLE_API_KEY = "env-secret-key"
+        # even if these are set, we should NOT use Vertex due to ctor override
+        settings.GOOGLE_CLOUD_PROJECT = "test-project"
+        settings.GOOGLE_CLOUD_LOCATION = "us-central1"
+
+    model = GeminiModel(
+        model="gemini-1.5-pro",
+        use_vertexai=False,
+    )
+    client = model.model
+    assert client.kwargs.get("vertexai") is not True
+    assert client.kwargs.get("api_key") == "env-secret-key"
+
+    # Case 2: settings says False, ctor forces True -> Vertex client
+    with settings.edit(persist=False):
+        settings.GOOGLE_GENAI_USE_VERTEXAI = False
+        settings.GOOGLE_CLOUD_PROJECT = "test-project"
+        settings.GOOGLE_CLOUD_LOCATION = "us-central1"
+        settings.GOOGLE_SERVICE_ACCOUNT_KEY = None
+
+    model = GeminiModel(
+        model="gemini-1.5-pro",
+        use_vertexai=True,
+        project="test-project",
+        location="us-central1",
+        service_account_key=None,
+    )
+    client = model.model
+    assert client.kwargs.get("vertexai") is True
+    assert client.kwargs.get("project") == "test-project"
+    assert client.kwargs.get("location") == "us-central1"
+    assert client.kwargs.get("credentials") is None

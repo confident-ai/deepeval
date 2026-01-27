@@ -52,7 +52,7 @@ class LlmToolCall(BaseModel):
 
 class LlmOutput(BaseModel):
     role: str
-    content: str
+    content: Any
     tool_calls: Optional[List[LlmToolCall]] = None
 
 

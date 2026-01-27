@@ -1,0 +1,705 @@
+{
+  "uuid": "3e450f37-e116-4bb9-beb2-bf443fe29c66",
+  "baseSpans": [
+    {
+      "uuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-15T07:24:52.706Z",
+      "endTime": "2026-01-15T07:24:54.541Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "status": "success"
+          },
+          {
+            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_29330a9688"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc08b-0029-7201-98b9-310f83e21609",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
+      "startTime": "2026-01-15T07:24:53.674Z",
+      "endTime": "2026-01-15T07:24:54.540Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "status": "success"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_29330a9688"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc08b-038a-7ca1-ae87-586e33afb929",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc08b-0029-7201-98b9-310f83e21609",
+      "startTime": "2026-01-15T07:24:54.538Z",
+      "endTime": "2026-01-15T07:24:54.539Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          },
+          {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "status": "success"
+          },
+          {
+            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_29330a9688"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "tool_calls": [],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "output": "__end__"
+    },
+    {
+      "uuid": "019bc08b-0026-7d10-b56a-3b99d4544206",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
+      "startTime": "2026-01-15T07:24:53.670Z",
+      "endTime": "2026-01-15T07:24:53.673Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "status": "success"
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "output": {
+            "content": "$142.30 (-0.5%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "status": "success"
+          },
+          "inputParameters": {
+            "symbol": "GOOGL"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
+      "startTime": "2026-01-15T07:24:52.707Z",
+      "endTime": "2026-01-15T07:24:53.670Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bc08b-0025-7b73-9513-5d8bc27a57e2",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
+      "startTime": "2026-01-15T07:24:53.669Z",
+      "endTime": "2026-01-15T07:24:53.669Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What's the stock price of GOOGL?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "tool_calls": [
+                {
+                  "index": 0,
+                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                  "function": {
+                    "arguments": "{\"symbol\":\"GOOGL\"}",
+                    "name": "get_stock_price"
+                  },
+                  "type": "function"
+                }
+              ]
+            },
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_3683ee3deb"
+            },
+            "type": "ai",
+            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "GOOGL"
+                },
+                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": []
+          }
+        ]
+      },
+      "output": "tools"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bc08b-002a-7fe1-b781-a65e4011ea6a",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc08b-0029-7201-98b9-310f83e21609",
+      "startTime": "2026-01-15T07:24:53.674Z",
+      "endTime": "2026-01-15T07:24:54.537Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the stock price of GOOGL?"
+        },
+        {
+          "role": "ai",
+          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'GOOGL'}, 'id': 'call_ynHH9Ys0hdXfKcDblOFKPjQs', 'type': 'tool_call'}]"
+        },
+        {
+          "role": "tool",
+          "content": "$142.30 (-0.5%)"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+        "tool_calls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-15T07:24:54.245239Z": "",
+        "2026-01-15T07:24:54.266560Z": "The",
+        "2026-01-15T07:24:54.267616Z": " current",
+        "2026-01-15T07:24:54.289478Z": " stock",
+        "2026-01-15T07:24:54.290503Z": " price",
+        "2026-01-15T07:24:54.319276Z": " of",
+        "2026-01-15T07:24:54.320234Z": " G",
+        "2026-01-15T07:24:54.335229Z": "OO",
+        "2026-01-15T07:24:54.336010Z": "GL",
+        "2026-01-15T07:24:54.358355Z": " is",
+        "2026-01-15T07:24:54.359490Z": " $",
+        "2026-01-15T07:24:54.391423Z": "142",
+        "2026-01-15T07:24:54.391905Z": ".",
+        "2026-01-15T07:24:54.417712Z": "30",
+        "2026-01-15T07:24:54.418401Z": ",",
+        "2026-01-15T07:24:54.437697Z": " which",
+        "2026-01-15T07:24:54.438676Z": " is",
+        "2026-01-15T07:24:54.462545Z": " a",
+        "2026-01-15T07:24:54.463565Z": " decrease",
+        "2026-01-15T07:24:54.487816Z": " of",
+        "2026-01-15T07:24:54.488543Z": " ",
+        "2026-01-15T07:24:54.506539Z": "0",
+        "2026-01-15T07:24:54.507635Z": ".",
+        "2026-01-15T07:24:54.531299Z": "5",
+        "2026-01-15T07:24:54.532357Z": "%.",
+        "2026-01-15T07:24:54.535327Z": "",
+        "2026-01-15T07:24:54.536566Z": ""
+      }
+    },
+    {
+      "uuid": "019bc08a-fc63-7093-b82c-8130fb72cf08",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
+      "startTime": "2026-01-15T07:24:52.708Z",
+      "endTime": "2026-01-15T07:24:53.668Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "What's the stock price of GOOGL?"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "GOOGL"
+            },
+            "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs"
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-15T07:24:53.588806Z": "",
+        "2026-01-15T07:24:53.595207Z": "",
+        "2026-01-15T07:24:53.596266Z": "",
+        "2026-01-15T07:24:53.611336Z": "",
+        "2026-01-15T07:24:53.612262Z": "",
+        "2026-01-15T07:24:53.648411Z": "",
+        "2026-01-15T07:24:53.649970Z": "",
+        "2026-01-15T07:24:53.659030Z": "",
+        "2026-01-15T07:24:53.660208Z": "",
+        "2026-01-15T07:24:53.668023Z": ""
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bc08b-0027-7440-9fed-13b398e13f38",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bc08b-0026-7d10-b56a-3b99d4544206",
+      "startTime": "2026-01-15T07:24:53.672Z",
+      "endTime": "2026-01-15T07:24:53.673Z",
+      "input": {
+        "symbol": "GOOGL"
+      },
+      "output": {
+        "content": "$142.30 (-0.5%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-15T07:24:52.706Z",
+  "endTime": "2026-01-15T07:24:54.541Z",
+  "name": "langgraph-streaming-async",
+  "metadata": {
+    "test_type": "streaming_async"
+  },
+  "tags": [
+    "langgraph",
+    "streaming",
+    "async"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "What's the stock price of GOOGL?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "What's the stock price of GOOGL?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+              "function": {
+                "arguments": "{\"symbol\":\"GOOGL\"}",
+                "name": "get_stock_price"
+              },
+              "type": "function"
+            }
+          ]
+        },
+        "response_metadata": {
+          "finish_reason": "tool_calls",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_3683ee3deb"
+        },
+        "type": "ai",
+        "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "GOOGL"
+            },
+            "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": []
+      },
+      {
+        "content": "$142.30 (-0.5%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "status": "success"
+      },
+      {
+        "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+        "additional_kwargs": {},
+        "response_metadata": {
+          "finish_reason": "stop",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_29330a9688"
+        },
+        "type": "ai",
+        "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+        "tool_calls": [],
+        "invalid_tool_calls": []
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_stock_price",
+      "output": {
+        "content": "$142.30 (-0.5%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
+        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "status": "success"
+      },
+      "inputParameters": {
+        "symbol": "GOOGL"
+      }
+    }
+  ]
+}

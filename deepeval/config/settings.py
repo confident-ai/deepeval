@@ -447,6 +447,9 @@ class Settings(BaseSettings):
     AZURE_OPENAI_API_KEY: Optional[SecretStr] = Field(
         None, description="Azure OpenAI API key."
     )
+    AZURE_OPENAI_AD_TOKEN: Optional[SecretStr] = Field(
+        None, description="Azure OpenAI Ad Token."
+    )
     AZURE_OPENAI_ENDPOINT: Optional[AnyUrl] = Field(
         None, description="Azure OpenAI endpoint URL."
     )
@@ -627,6 +630,16 @@ class Settings(BaseSettings):
     PORTKEY_PROVIDER_NAME: Optional[str] = Field(
         None, description="Provider name/routing hint for Portkey."
     )
+    # OpenRouter
+    USE_OPENROUTER_MODEL: Optional[bool] = None
+    OPENROUTER_API_KEY: Optional[SecretStr] = None
+    OPENROUTER_MODEL_NAME: Optional[str] = None
+    OPENROUTER_COST_PER_INPUT_TOKEN: Optional[float] = None
+    OPENROUTER_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    OPENROUTER_BASE_URL: Optional[AnyUrl] = Field(
+        None, description="OpenRouter base URL (if using a custom endpoint)."
+    )
+
     # Vertex AI
     VERTEX_AI_MODEL_NAME: Optional[str] = Field(
         None,

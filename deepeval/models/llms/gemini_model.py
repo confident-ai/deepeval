@@ -65,6 +65,7 @@ class GeminiModel(DeepEvalBaseLLM):
         project: Optional[str] = None,
         location: Optional[str] = None,
         service_account_key: Optional[Union[str, Dict[str, str]]] = None,
+        use_vertexai: Optional[bool] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -93,7 +94,11 @@ class GeminiModel(DeepEvalBaseLLM):
             location if location is not None else settings.GOOGLE_CLOUD_LOCATION
         )
         self.location = str(location).strip() if location is not None else None
-        self.use_vertexai = settings.GOOGLE_GENAI_USE_VERTEXAI
+        self.use_vertexai = (
+            use_vertexai
+            if use_vertexai is not None
+            else settings.GOOGLE_GENAI_USE_VERTEXAI
+        )
 
         self.service_account_key: Optional[SecretStr] = None
         if service_account_key is None:

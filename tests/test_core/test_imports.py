@@ -284,6 +284,7 @@ def test_models_imports():
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        OpenRouterModel,
     )
 
     # Verify all model classes can be imported
@@ -306,6 +307,7 @@ def test_models_imports():
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        OpenRouterModel,
     ]
 
     for model_class in model_classes:

@@ -24,13 +24,12 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.constants import (
+    DEFAULT_GPT_MODEL,
     OPENAI_MODELS_DATA,
 )
 
 
 retry_openai = create_retry_decorator(PS.OPENAI)
-
-default_gpt_model = "gpt-4.1"
 
 
 def _request_timeout_seconds() -> float:
@@ -70,7 +69,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         model = model or settings.OPENAI_MODEL_NAME
         if model is None:
-            model = default_gpt_model
+            model = DEFAULT_GPT_MODEL
 
         cost_per_input_token = (
             cost_per_input_token
@@ -377,7 +376,9 @@ class GPTModel(DeepEvalBaseLLM):
     # Utilities #
     #############
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[float]:
         if self.model_data.input_price and self.model_data.output_price:
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price

@@ -312,13 +312,24 @@ def check_llm_test_case_params(
                 if isinstance(ele, MLLMImage):
                     count += 1
             if count != actual_output_image_count:
-                error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                error_str = f"Can only evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
                 raise ValueError(error_str)
 
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
         metric.error = error_str
         raise ValueError(error_str)
+
+    # Centralized: if a metric requires actual_output, reject empty/whitespace
+    # (including empty multimodal outputs) as "missing params".
+    if LLMTestCaseParams.ACTUAL_OUTPUT in test_case_params:
+        actual_output = getattr(test_case, LLMTestCaseParams.ACTUAL_OUTPUT.value)
+        if isinstance(actual_output, str) and actual_output == "":
+            error_str = (
+                f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
+            )
+            metric.error = error_str
+            raise MissingTestCaseParamsError(error_str)
 
     missing_params = []
     for param in test_case_params:

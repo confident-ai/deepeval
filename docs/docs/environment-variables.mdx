@@ -260,7 +260,7 @@ If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK defa
 | `MOONSHOT_API_KEY`               | `string` / unset | Moonshot API key.                                               |
 | `MOONSHOT_MODEL_NAME`            | `string` / unset | Optional default Moonshot model name.                           |
 | `MOONSHOT_COST_PER_INPUT_TOKEN`  | `float` / unset  | Optional input-token cost used for cost reporting.              |
-| `MOONSHOT_COST_PER_OUTPUT_TOKEN` | `float` / unset  | Optional input-token cost used for cost reporting.              |
+| `MOONSHOT_COST_PER_OUTPUT_TOKEN` | `float` / unset  | Optional output-token cost used for cost reporting.              |
 
 </details>
 
@@ -283,6 +283,20 @@ If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK defa
 | `PORTKEY_MODEL_NAME`    | `string` / unset | Optional default model name passed to Portkey.                 |
 | `PORTKEY_BASE_URL`      | `string` / unset | Optional Portkey base URL.                                     |
 | `PORTKEY_PROVIDER_NAME` | `string` / unset | Optional provider name (Portkey routing).                      |
+
+</details>
+
+<details>
+<summary>OpenRouter</summary>
+
+| Variable                | Values           | Effect                                                         |
+| ----------------------- | ---------------- | -------------------------------------------------------------- |
+| `USE_OPENROUTER_MODEL`     | `1` / `0` / `unset`      | Prefer OpenRouter as the default LLM provider (where applicable). |
+| `OPENROUTER_API_KEY`       | `string` / unset | OpenRouter API key.                                               |
+| `OPENROUTER_MODEL_NAME`    | `string` / unset | Optional default model name passed to OpenRouter.                 |
+| `OPENROUTER_BASE_URL`      | `string` / unset | Optional OpenRouter base URL.                                     |
+| `OPENROUTER_COST_PER_INPUT_TOKEN`  | `float` / unset  | Optional input-token cost used for cost reporting.              |
+| `OPENROUTER_COST_PER_OUTPUT_TOKEN` | `float` / unset  | Optional output-token cost used for cost reporting.              |
 
 </details>
 

@@ -222,7 +222,7 @@ class Index extends React.Component {
   render() {
     return (
       <div className={styles.mainRapper}>
-        <div className={styles.section} style={{ paddingBottom: '0' }}>
+        <div className={styles.section} style={{ paddingBottom: '1rem' }}>
           <div className={styles.heroContainer}>
             <h1 className={styles.mainTitle}>
               <Corners />
@@ -245,32 +245,55 @@ class Index extends React.Component {
             </div>
           </div>
         </div>
-        {/* <div className={styles.logoCloud}>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
+        <div className={styles.logoCloud}>
+          <span className={styles.logoLabel}>
+            Trusted by leading enterprises
+          </span>
+          <div className={styles.logoTrackWrapper}>
+            <div className={styles.logoTrack}>
+              <div className={styles.logoSlide}>
+                <img src="/icons/companies/openai.svg" alt="OpenAI" />
+                <img src="/icons/companies/axa.svg" alt="AXA" />
+                <img
+                  src="/icons/companies/fidelity-international.svg"
+                  alt="Fidelity International"
+                />
+                <img src="/icons/companies/stellantis.svg" alt="Stellantis" />
+                <img src="/icons/companies/panasonic.svg" alt="Panasonic" />
+                <img
+                  src="/icons/companies/china-unicom.svg"
+                  alt="China Unicom"
+                />
+                <img src="/icons/companies/adobe.svg" alt="Adobe" />
+                <img src="/icons/companies/bcg.svg" alt="BCG" />
+                <img src="/icons/companies/walmart.svg" alt="Walmart" />
+                <img src="/icons/companies/cvs-health.svg" alt="CVS Health" />
+                <img src="/icons/companies/google.svg" alt="Google" />
+                <img src="/icons/companies/benz.svg" alt="Mercedes-Benz" />
+              </div>
+              <div className={styles.logoSlide}>
+                <img src="/icons/companies/openai.svg" alt="OpenAI" />
+                <img src="/icons/companies/axa.svg" alt="AXA" />
+                <img
+                  src="/icons/companies/fidelity-international.svg"
+                  alt="Fidelity International"
+                />
+                <img src="/icons/companies/stellantis.svg" alt="Stellantis" />
+                <img src="/icons/companies/panasonic.svg" alt="Panasonic" />
+                <img
+                  src="/icons/companies/china-unicom.svg"
+                  alt="China Unicom"
+                />
+                <img src="/icons/companies/adobe.svg" alt="Adobe" />
+                <img src="/icons/companies/bcg.svg" alt="BCG" />
+                <img src="/icons/companies/walmart.svg" alt="Walmart" />
+                <img src="/icons/companies/cvs-health.svg" alt="CVS Health" />
+                <img src="/icons/companies/google.svg" alt="Google" />
+                <img src="/icons/companies/benz.svg" alt="Mercedes-Benz" />
+              </div>
+            </div>
           </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-          <div className={styles.logoItem}>
-            <span className={styles.logoPlaceholder}>Company</span>
-          </div>
-        </div> */}
+        </div>
         <div className={styles.section}>
           <div className={styles.container}>
             <div className={styles.title}>
