@@ -46,6 +46,9 @@ from tests.test_integrations.test_langchain.apps.langchain_agent_app import (
     invoke_multi_step_agent,
     invoke_complex_agent,
 )
+from tests.test_integrations.test_langchain.apps.langchain_metric_collection_app import (
+    invoke_metric_collection_app,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -532,6 +535,39 @@ class TestAgentApp:
                 "messages": [
                     HumanMessage(
                         content="Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# METRIC COLLECTION TESTS
+# =============================================================================
+
+
+class TestMetricCollectionApp:
+    """Tests for metric_collection on LLM and tool spans."""
+
+    @trace_test("langchain_metric_collection_schema.json")
+    def test_metric_collection(self):
+        """Test metric_collection on LLM and tool spans with prompt tracking."""
+        callback = CallbackHandler(
+            name="langchain-metric-collection",
+            tags=["langchain", "metric-collection"],
+            metadata={"test_type": "metric_collection"},
+            metric_collection="trace_quality",
+        )
+
+        result = invoke_metric_collection_app(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
                     )
                 ]
             },

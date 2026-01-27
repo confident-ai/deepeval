@@ -33,6 +33,12 @@ from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import
     get_app_with_memory,
     stateless_app,
 )
+from tests.test_integrations.test_langgraph.apps.langgraph_metric_collection_app import (
+    app as metric_collection_app,
+)
+from tests.test_integrations.test_langgraph.apps.langgraph_retriever_app import (
+    app as retriever_app,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -524,6 +530,88 @@ class TestMultiTurnApp:
                 ]
             },
             config={**config, "callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# RETRIEVER (RAG) TESTS
+# =============================================================================
+
+
+class TestRetrieverApp:
+    """Tests for RAG LangGraph app with retriever."""
+
+    @trace_test("langgraph_retriever_python_schema.json")
+    def test_retrieve_python_docs(self):
+        """Test retrieval of Python-related documents."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-python",
+            tags=["langgraph", "retriever", "python"],
+            metadata={"test_type": "retriever"},
+        )
+
+        result = retriever_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Tell me about Python programming language."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+    @trace_test("langgraph_retriever_langchain_schema.json")
+    def test_retrieve_langchain_docs(self):
+        """Test retrieval of LangChain-related documents."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-langchain",
+            tags=["langgraph", "retriever", "langchain-docs"],
+        )
+
+        result = retriever_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(content="What is LangChain framework?")
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# METRIC COLLECTION TESTS
+# =============================================================================
+
+
+class TestMetricCollectionApp:
+    """Tests for metric_collection on LLM and tool spans."""
+
+    @trace_test("langgraph_metric_collection_schema.json")
+    def test_metric_collection(self):
+        """Test metric_collection on LLM and tool spans with prompt tracking."""
+        callback = CallbackHandler(
+            name="langgraph-metric-collection",
+            tags=["langgraph", "metric-collection"],
+            metadata={"test_type": "metric_collection"},
+            metric_collection="trace_quality",
+        )
+
+        result = metric_collection_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
         )
 
         assert len(result["messages"]) > 0
