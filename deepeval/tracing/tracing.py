@@ -38,7 +38,10 @@ from deepeval.tracing.api import (
     TraceSpanApiStatus,
 )
 from deepeval.telemetry import capture_send_trace
-from deepeval.tracing.patchers import patch_openai_client
+from deepeval.tracing.patchers import (
+    patch_anthropic_client,
+    patch_openai_client,
+)
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -70,6 +73,7 @@ from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
+    from anthropic import Anthropic
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -111,6 +115,7 @@ class TraceManager:
 
         self.sampling_rate = settings.CONFIDENT_TRACE_SAMPLE_RATE
         validate_sampling_rate(self.sampling_rate)
+        self.anthropic_client = None
         self.openai_client = None
         self.tracing_enabled = True
 
@@ -139,7 +144,7 @@ class TraceManager:
 
     def mask(self, data: Any):
         if self.custom_mask_fn is not None:
-            self.custom_mask_fn(data)
+            return self.custom_mask_fn(data)
         else:
             return data
 
@@ -149,6 +154,7 @@ class TraceManager:
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
         confident_api_key: Optional[str] = None,
+        anthropic_client: Optional["Anthropic"] = None,
         openai_client: Optional[OpenAI] = None,
         tracing_enabled: Optional[bool] = None,
     ) -> None:
@@ -165,6 +171,9 @@ class TraceManager:
         if openai_client is not None:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
+        if anthropic_client is not None:
+            self.anthropic_client = anthropic_client
+            patch_anthropic_client(anthropic_client)
         if tracing_enabled is not None:
             self.tracing_enabled = tracing_enabled
 
@@ -432,11 +441,11 @@ class TraceManager:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        # buffer for payloads that need to be sent after main exits
-        remaining_trace_request_bodies: List[Dict[str, Any]] = []
+        # buffer for traces that need to be sent after main exits
+        remaining_traces: List[TraceApi] = []
 
         async def _a_send_trace(trace_obj):
-            nonlocal remaining_trace_request_bodies
+            nonlocal remaining_traces
             try:
                 # Build API object & payload
                 if isinstance(trace_obj, TraceApi):
@@ -477,7 +486,7 @@ class TraceManager:
                     )
                 elif self._flush_enabled:
                     # Main thread gone → to be flushed
-                    remaining_trace_request_bodies.append(body)
+                    remaining_traces.append(trace_api)
 
             except Exception as e:
                 queue_size = self._trace_queue.qsize()
@@ -535,24 +544,35 @@ class TraceManager:
                 loop.run_until_complete(
                     asyncio.gather(*pending, return_exceptions=True)
                 )
-            self.flush_traces(remaining_trace_request_bodies)
+            self.flush_traces(remaining_traces)
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
 
-    def flush_traces(
-        self, remaining_trace_request_bodies: List[Dict[str, Any]]
-    ):
+    def flush_traces(self, remaining_traces: List[TraceApi]):
         if not tracing_enabled() or not self.tracing_enabled:
             return
 
         self._print_trace_status(
             TraceWorkerStatus.WARNING,
-            message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)",
+            message=f"Flushing {len(remaining_traces)} remaining trace(s)",
         )
-        for body in remaining_trace_request_bodies:
+        for trace_api in remaining_traces:
             with capture_send_trace():
                 try:
-                    api = Api(api_key=self.confident_api_key)
+                    try:
+                        body = trace_api.model_dump(
+                            by_alias=True,
+                            exclude_none=True,
+                        )
+                    except AttributeError:
+                        # Pydantic version below 2.0
+                        body = trace_api.dict(by_alias=True, exclude_none=True)
+
+                    body = make_json_serializable(body)
+                    if trace_api.confident_api_key:
+                        api = Api(api_key=trace_api.confident_api_key)
+                    else:
+                        api = Api(api_key=self.confident_api_key)
 
                     _, link = api.send_request(
                         method=HttpMethods.POST,
@@ -827,7 +847,12 @@ class Observer:
             self.trace_uuid = parent_span.trace_uuid
         else:
             current_trace = current_trace_context.get()
-            if current_trace:
+            # IMPORTANT: Verify trace is still active, not just in context
+            # (a previous failed async operation might leave a dead trace in context)
+            if (
+                current_trace
+                and current_trace.uuid in trace_manager.active_traces
+            ):
                 self.trace_uuid = current_trace.uuid
             else:
                 trace = trace_manager.start_new_trace(

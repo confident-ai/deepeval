@@ -3,9 +3,10 @@ from types import SimpleNamespace
 from tenacity import Retrying, wait_fixed, retry_if_exception_type
 from tenacity.wait import wait_base
 from tenacity.stop import stop_after_attempt, stop_base
-from deepeval.utils import read_env_int, read_env_float, shorten
+from deepeval.utils import read_env_int, read_env_float, shorten, update_pbar
 from deepeval.evaluate.utils import _is_metric_successful
 from deepeval.models.retry_policy import dynamic_wait, dynamic_stop
+from tests.test_core.stubs import DummyProgress
 
 
 def test_read_env_int_valid(monkeypatch):
@@ -174,3 +175,48 @@ def test_is_metric_successful_numeric_and_string():
     assert _is_metric_successful(md(error=None, success="False")) is False
     assert _is_metric_successful(md(error=None, success="YES")) is True
     assert _is_metric_successful(md(error=None, success="no")) is False
+
+
+##################
+# Progress utils #
+##################
+
+
+def _task(*, task_id, finished, remaining=0):
+    return SimpleNamespace(id=task_id, finished=finished, remaining=remaining)
+
+
+def test_update_pbar_noops_when_task_id_missing():
+    """
+    Regression: update_pbar should not raise if the task ID is missing
+    (e.g. async callback races / task already removed).
+
+    This test FAILS today (StopIteration) and should PASS after the fix.
+    """
+    progress = DummyProgress(
+        tasks=[_task(task_id=1, finished=False, remaining=5)]
+    )
+    update_pbar(progress, pbar_id=999)  # should no-op after fix
+
+    assert progress.records == []
+
+
+def test_update_pbar_noops_when_task_removed_between_callbacks():
+    """
+    Reproduces the callback race:
+      - first callback updates + removes finished task
+      - second callback tries to update the same pbar_id
+
+    This test FAILS today (StopIteration on 2nd call) and should PASS after the fix.
+    """
+    progress = DummyProgress(
+        tasks=[_task(task_id=123, finished=True, remaining=0)]
+    )
+
+    update_pbar(progress, pbar_id=123, remove=True)
+    assert ("remove_task", 123, {}) in progress.records
+    assert all(t.id != 123 for t in progress.tasks)  # task removed
+
+    n = len(progress.records)
+    update_pbar(progress, pbar_id=123, remove=True)  # should no-op after fix
+    assert len(progress.records) == n

@@ -2,9 +2,28 @@ from typing import Any, Dict, Optional
 import inspect
 from time import perf_counter
 import uuid
+
+from llama_index.core.agent.workflow.workflow_events import (
+    AgentWorkflowStartEvent,
+)
+from deepeval.integrations.llama_index.utils import (
+    extract_output_from_llm_chat_end_event,
+)
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
+from deepeval.tracing.types import (
+    ToolSpan,
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    TraceSpanStatus,
+)
+from deepeval.tracing.trace_context import (
+    current_llm_context,
+    current_agent_context,
+)
+from deepeval.test_case import ToolCall
+from deepeval.tracing.utils import make_json_serializable
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -22,11 +41,6 @@ try:
         LLMChatEndEvent,
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
-    from deepeval.integrations.llama_index.agent.patched import (
-        FunctionAgent as PatchedFunctionAgent,
-        ReActAgent as PatchedReActAgent,
-        CodeActAgent as PatchedCodeActAgent,
-    )
     from deepeval.integrations.llama_index.utils import (
         parse_id,
         prepare_input_llm_test_case_params,
@@ -67,6 +81,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 ).strip()
                 input_messages.append({"role": role, "content": content})
 
+            llm_span_context = current_llm_context.get()
             # create the span
             llm_span = LlmSpan(
                 name="ConfidentLLMSpan",
@@ -83,6 +98,13 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 ),  # check the model name not coming in this option
                 input=input_messages,
                 output="",
+                metrics=llm_span_context.metrics if llm_span_context else None,
+                metric_collection=(
+                    llm_span_context.metric_collection
+                    if llm_span_context
+                    else None
+                ),
+                prompt=llm_span_context.prompt if llm_span_context else None,
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -100,7 +122,9 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
                     llm_span.input = llm_span.input
-                    llm_span.output = event.response.message.blocks[0].text
+                    llm_span.output = extract_output_from_llm_chat_end_event(
+                        event
+                    )
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
@@ -144,6 +168,15 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         # conditions to qualify as agent start run span
         if method_name == "run":
+            agent_span_context = current_agent_context.get()
+            start_event = bound_args.arguments.get("start_event")
+
+            if start_event and isinstance(start_event, AgentWorkflowStartEvent):
+                input = start_event.model_dump()
+
+            else:
+                input = bound_args.arguments
+
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -152,25 +185,27 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 parent_uuid=parent_span_id,
                 start_time=perf_counter(),
                 name="Agent",  # TODO: decide the name of the span
-                input=bound_args.arguments,
+                input=input,
+                metrics=(
+                    agent_span_context.metrics if agent_span_context else None
+                ),
+                metric_collection=(
+                    agent_span_context.metric_collection
+                    if agent_span_context
+                    else None
+                ),
             )
-
-            # check if the instance is a PatchedFunctionAgent
-            if isinstance(instance, PatchedFunctionAgent):
-                span.name = "FunctionAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
-            if isinstance(instance, PatchedReActAgent):
-                span.name = "ReActAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
-            if isinstance(instance, PatchedCodeActAgent):
-                span.name = "CodeActAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
+        elif method_name == "acall":
+            span = ToolSpan(
+                uuid=id_,
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_span_id,
+                start_time=perf_counter(),
+                input=bound_args.arguments,
+                name="Tool",
+            )
         # prepare input test case params for the span
         prepare_input_llm_test_case_params(
             class_name, method_name, span, bound_args.arguments
@@ -193,9 +228,27 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         if base_span is None:
             return None
 
+        class_name, method_name = parse_id(id_)
+        if method_name == "call_tool":
+            output_json = make_json_serializable(result)
+            if output_json and isinstance(output_json, dict):
+                if base_span.tools_called is None:
+                    base_span.tools_called = []
+                base_span.tools_called.append(
+                    ToolCall(
+                        name=output_json.get("tool_name", "Tool"),
+                        input_parameters=output_json.get("tool_kwargs", {}),
+                        output=output_json.get("tool_output", {}),
+                    )
+                )
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
+
+        if isinstance(base_span, ToolSpan):
+            result_json = make_json_serializable(result)
+            if result_json and isinstance(result_json, dict):
+                base_span.name = result_json.get("tool_name", "Tool")
 
         if base_span.llm_test_case:
             class_name, method_name = parse_id(id_)

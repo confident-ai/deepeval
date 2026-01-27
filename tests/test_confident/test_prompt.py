@@ -355,9 +355,7 @@ class TestPromptList:
         assert prompt.model_settings.verbosity == Verbosity.LOW
         assert prompt.output_type == OutputType.SCHEMA
         assert prompt.output_schema is not None
-        assert hasattr(prompt.output_schema, "__fields__") or hasattr(
-            prompt.output_schema, "model_fields"
-        )
+        assert hasattr(prompt.output_schema, "model_fields")
         expected_fields = {"verdict", "reason"}
         actual_fields = set(prompt.output_schema.model_fields.keys())
         assert actual_fields == expected_fields

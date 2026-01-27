@@ -29,7 +29,6 @@ jobs:
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_DEBUG_ASYNC: 1
       LOG_LEVEL: "info"
-      DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: 60
       PYTHONFAULTHANDLER: "1"
       PYTHONASYNCIODEBUG: "1"
       PYTHONUNBUFFERED: "1"
@@ -83,7 +82,9 @@ jobs:
 
       - name: Install project (main)
         run: poetry install --no-interaction --only main
-
+      # Install dev dependencies
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
@@ -96,10 +97,6 @@ jobs:
             tests/test_core/ \
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/
-
-      # Install dev dependencies and run dev tests
-      - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
 
       - name: Run dev tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' }}

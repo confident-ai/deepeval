@@ -1,13 +1,14 @@
 ---
 id: getting-started-llm-arena
-title: LLM Arena Evaluation
+title: LLM Arena Evaluation Quickstart
 sidebar_label: LLM Arena
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import NavigationCards from "@site/src/components/NavigationCards";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import NavigationCards from '@site/src/components/NavigationCards';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 Learn how to evaluate different versions of your LLM app using LLM Arena-as-a-Judge in `deepeval`, a comparison-based LLM eval.
 
@@ -23,6 +24,16 @@ Instead of comparing LLM outputs using a single-output LLM-as-a-Judge method as 
 ## Prerequisites
 
 - Install `deepeval`
+- A Confident AI API key (recommended). Sign up for one [here](https://app.confident-ai.com)
+
+:::info
+Confident AI allows you to view and share your testing reports. Set your API key in the CLI:
+
+```bash
+CONFIDENT_API_KEY="confident_us..."
+```
+
+:::
 
 ## Setup LLM Arena
 
@@ -86,7 +97,7 @@ task_completion_metric = ArenaGEval(model=model)
 from deepeval.metrics import ArenaGEval
 from deepeval.models import GrokModel
 
-model = GrokModel("grok-4-0709")
+model = GrokModel("grok-4.1")
 task_completion_metric = ArenaGEval(model=model)
 ```
 
@@ -99,11 +110,11 @@ from deepeval.metrics import ArenaGEval
 from deepeval.models import AzureOpenAIModel
 
 model = AzureOpenAIModel(
-    model_name="gpt-4.1",
+    model="gpt-4.1",
     deployment_name="Test Deployment",
-    azure_openai_api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
-    azure_endpoint="https://example-resource.azure.openai.com/",
+    api_key="Your Azure OpenAI API Key",
+    api_version="2025-01-01-preview",
+    base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
 task_completion_metric = ArenaGEval(model=model)
@@ -118,8 +129,9 @@ from deepeval.metrics import ArenaGEval
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
+    model="anthropic.claude-3-opus-20240229-v1:0",
+    region="us-east-1",
+    generation_kwargs={"temperature": 0},
 )
 task_completion_metric = ArenaGEval(model=model)
 ```
@@ -133,7 +145,7 @@ from deepeval.metrics import ArenaGEval
 from deepeval.models import GeminiModel
 
 model = GeminiModel(
-    model_name="gemini-1.5-pro",
+    model="gemini-1.5-pro",
     project="Your Project ID",
     location="us-central1",
     temperature=0
@@ -150,34 +162,42 @@ task_completion_metric = ArenaGEval(model=model)
 
 <TimelineItem title="Create an arena test case">
 
-Create an `ArenaTestCase` by passing a dictionary of contestants with version names as keys and their corresponding `LLMTestCase` as values.
+Create an `ArenaTestCase` by passing a list of contestants.
 
 ```python title="main.py"
-from deepeval.test_case import ArenaTestCase, LLMTestCase
+from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
 
-test_case = ArenaTestCase(
-    contestants={
-        "Version 1": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="George Orwell",
-        ),
-        "Version 2": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output='"1984" was written by George Orwell.',
-        ),
-        "Version 3": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="That dystopian masterpiece was penned by George Orwell 📚",
-        ),
-        "Version 4": LLMTestCase(
-            input='Who wrote the novel "1984"?',
-            actual_output="George Orwell is the brilliant mind behind the novel '1984'.",
-        ),
-    },
+contestant_1 = Contestant(
+    name="Version 1",
+    hyperparameters={"model": "gpt-3.5-turbo"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris",
+    ),
 )
+
+contestant_2 = Contestant(
+    name="Version 2",
+    hyperparameters={"model": "gpt-4o"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris is the capital of France.",
+    ),
+)
+
+contestant_3 = Contestant(
+    name="Version 3",
+    hyperparameters={"model": "gpt-4.1"},
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Absolutely! The capital of France is Paris 😊",
+    ),
+)
+
+test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
-You can learn more about `LLMTestCase` [here](https://deepeval.com/docs/evaluation-test-cases).
+You can learn more about an `ArenaTestCase` [here](https://deepeval.com/docs/evaluation-arena-test-cases).
 
 </TimelineItem>
 
@@ -205,7 +225,13 @@ arena_geval = ArenaGEval(
 
 ## Run Your First Arena Evals
 
-Now that you have created an arena with contestants and defined a metric, you can run evals by using the `compare()` method:
+Now that you have created an arena with contestants and defined a metric, you can begin running arena evals to determine the winning contestant.
+
+<Timeline>
+
+<TimelineItem title="Run an evaluation">
+
+You can run arena evals by using the `compare()` function.
 
 ```python {3,11} title="main.py"
 from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
@@ -213,13 +239,42 @@ from deepeval.metrics import ArenaGEval
 from deepeval import compare
 
 test_case = ArenaTestCase(
-    contestants={...}, # Use the same pairs you've created before
+    contestants=[...], # Use the same contestants you've created before
 )
 
 arena_geval = ArenaGEval(...) # Use the same metric you've created before
 
 compare(test_cases=[test_case], metric=arena_geval)
 ```
+
+<details>
+  <summary>Log prompts and models</summary>
+
+You can optionally log prompts and models for each contestant through `hyperparameters` dictionary in the `compare()` function. This will allow you to easily attribute winning contestants to their corresponding hyperparameters.
+
+```python
+from deepeval.prompt import Prompt
+
+prompt_1 = Prompt(
+    alias="First Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+prompt_2 = Prompt(
+    alias="Second Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+
+compare(
+    test_cases=[test_case],
+    metric=arena_geval,
+    hyperparameters={
+        "Version 1": {"prompt": prompt_1},
+        "Version 2": {"prompt": prompt_2},
+    },
+)
+```
+
+</details>
 
 You can now run this python file to get your results:
 
@@ -242,7 +297,79 @@ Counter({'Version 3': 1})
 
 Unlike single-output LLM-as-a-Judge (which is everything but LLM arena evals), the concept of a "passing" test case does not exist for arena evals.
 
+</TimelineItem>
+
+<TimelineItem title="View on Confident AI (recommended)">
+
+If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automatically appear as an experiment on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aexperiment.mp4"
+  label="Experiments on Confident AI"
+/>
+
+</TimelineItem>
+
+</Timeline>
+
 ## Next Steps
+
+`deepeval` lets you run Arena comparisons locally but isn’t optimized for iterative prompt or model improvements. If you’re looking for a more comprehensive and streamlined way to run Arena comparisons, [**Confident AI**](https://app.confident-ai.com) enables you to easily test different prompts, models, tools, and output configurations **side by side**, and evaluate them using any `deepeval` metric beyond `ArenaGEval`—all directly on the platform.
+
+<Tabs>
+<TabItem value="quick-run" label="Quick Comparisons">
+
+Compare model outputs directly using arena evaluations.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
+  label="Quick Comparisons"
+/>
+
+</TabItem>
+
+<TabItem value="experiment" label="Experiments">
+
+Create an experiment to run comprehensive comparisons on an evaluation dataset and set of metrics.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Arun-experiment.mp4"
+  label="Experiments on Confident AI"
+/>
+
+</TabItem>
+<TabItem value="traced-run" label="Traced Comparisons">
+
+View detailed traces of LLM and tool calls during model comparisons.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Atraced-comparisons.mp4"
+  label="Traced Comparisons"
+/>
+
+</TabItem>
+<TabItem value="metric-comparison" label="Metric Comparisons">
+
+Apply custom evaluation metrics to determine winning models in head-to-head comparisons.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Ametric-comparisons.mp4"
+  label="Metric Comparisons"
+/>
+</TabItem>
+
+<TabItem value="log-prompts" label="Log Prompts and Models">
+
+Track prompts and model configurations to understand which hyperparameters lead to better performance.
+
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Alog-prompts.mp4"
+  label="Log Prompts and Models"
+/>
+
+</TabItem>
+
+</Tabs>
 
 Now that you have run your first Arena evals, you should:
 
@@ -255,34 +382,34 @@ The arena metric is only used for picking winners among the contestants, it's no
   columns={3}
   items={[
     {
-      title: "AI Agents",
-      icon: "Bot",
+      title: 'AI Agents',
+      icon: 'Bot',
       listDescription: [
-        "Setup LLM tracing",
-        "Test end-to-end task completion",
-        "Evaluate individual components",
+        'Setup LLM tracing',
+        'Test end-to-end task completion',
+        'Evaluate individual components',
       ],
-      to: "/docs/getting-started-agents",
+      to: '/docs/getting-started-agents',
     },
     {
-      title: "RAG",
-      icon: "FileSearch",
+      title: 'RAG',
+      icon: 'FileSearch',
       listDescription: [
-        "Evaluate RAG end-to-end",
-        "Test retriever and generator separately",
-        "Multi-turn RAG evals",
+        'Evaluate RAG end-to-end',
+        'Test retriever and generator separately',
+        'Multi-turn RAG evals',
       ],
-      to: "/docs/getting-started-rag",
+      to: '/docs/getting-started-rag',
     },
     {
-      title: "Chatbots",
-      icon: "MessagesSquare",
+      title: 'Chatbots',
+      icon: 'MessagesSquare',
       listDescription: [
-        "Setup multi-turn test cases",
-        "Evaluate turns in a conversation",
-        "Simulate user interactions",
+        'Setup multi-turn test cases',
+        'Evaluate turns in a conversation',
+        'Simulate user interactions',
       ],
-      to: "/docs/getting-started-chatbots",
+      to: '/docs/getting-started-chatbots',
     },
   ]}
 />

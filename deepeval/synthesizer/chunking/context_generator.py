@@ -249,8 +249,16 @@ class ContextGenerator:
 
                 except Exception as exc:
                     # record and continue with other docs
+                    show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
+                    exc_info = (
+                        (type(exc), exc, getattr(exc, "__traceback__", None))
+                        if show_trace
+                        else None
+                    )
                     logger.exception(
-                        "Document pipeline failed for %s", path, exc_info=exc
+                        "Document pipeline failed for %s",
+                        path,
+                        exc_info=exc_info,
                     )
                 finally:
                     # drop the collection asap to avoid too many open collections

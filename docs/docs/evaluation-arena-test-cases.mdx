@@ -9,34 +9,40 @@ sidebar_label: Arena
 An **arena test case** is a blueprint provided by `deepeval` for you to compare which iteration of your LLM app performed better. It works by comparing each contestants's `LLMTestCase` to run comparisons, and currently only supports the `LLMTestCase` for single-turn, text-based comparisons.
 
 :::info
-Support for `ConversationalTestCase` and `MLLMTestCase` is coming soon.
+Support for `ConversationalTestCase` is coming soon.
 :::
 
-The `ArenaTestCase` currently only runs with the `ArenaGEval` metric, and all that is required is to provide a dictionary of contestant names to test cases:
+The `ArenaTestCase` currently only runs with the `ArenaGEval` metric, and all that is required is to provide a list of `Contestant`s:
 
 ```python title="main.py"
-from deepeval.test_case import ArenaTestCase, LLMTestCase
+from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant
 
-test_case = ArenaTestCase(
-    contestants={
-        "GPT-4": LLMTestCase(
+test_case = ArenaTestCase(contestants=[
+    Contestant(
+        name="GPT-4",
+        hyperparameters={"model": "gpt-4"},
+        test_case=LLMTestCase(
             input="What is the capital of France?",
             actual_output="Paris",
         ),
-        "Claude-4": LLMTestCase(
+    ),
+    Contestant(
+        name="Claude-4",
+        hyperparameters={"model": "claude-4"},
+        test_case=LLMTestCase(
             input="What is the capital of France?",
             actual_output="Paris is the capital of France.",
         ),
-        "Gemini 2.0": LLMTestCase(
+    ),
+    Contestant(
+        name="Gemini-2.5",
+        hyperparameters={"model": "gemini-2.5-flash"},
+        test_case=LLMTestCase(
             input="What is the capital of France?",
             actual_output="Absolutely! The capital of France is Paris 😊",
         ),
-        "Deepseek R1": LLMTestCase(
-            input="What is the capital of France?",
-            actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
-        ),
-    },
-)
+    ),
+])
 ```
 
 Note that all `input`s and `expected_output`s you provide across contestants **MUST** match.
@@ -49,32 +55,161 @@ You also shouldn't worry about unexpected errors because `deepeval` will throw a
 
 ## Arena Test Case
 
-The `ArenaTestCase` takes a simple `contestants` argument, which is a dictionary of contestant names to `LLMTestCase`s:
+The `ArenaTestCase` takes a simple `contestants` argument, which is a list of `Contestant`s.
 
 ```python
-contestants = {
-    "GPT-4": LLMTestCase(
+contestant_1 = Contestant(
+    name="GPT-4",
+    hyperparameters={"model": "gpt-4"},
+    test_case=LLMTestCase(
         input="What is the capital of France?",
         actual_output="Paris",
     ),
-    "Claude-4": LLMTestCase(
+)
+
+contestant_2 = Contestant(
+    name="Claude-4",
+    hyperparameters={"model": "claude-4"},
+    test_case=LLMTestCase(
         input="What is the capital of France?",
         actual_output="Paris is the capital of France.",
     ),
-    "Gemini 2.0": LLMTestCase(
+)
+
+contestant_3 = Contestant(
+    name="Gemini-2.5",
+    hyperparameters={"model": "gemini-2.5-flash"},
+    test_case=LLMTestCase(
         input="What is the capital of France?",
         actual_output="Absolutely! The capital of France is Paris 😊",
     ),
-    "Deepseek R1": LLMTestCase(
-        input="What is the capital of France?",
-        actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
-    ),
-}
+)
 
-test_case = ArenaTestCase(contestants=contestants)
+test_case = ArenaTestCase(contestants=[contestant_1, contestant_2, contestant_3])
 ```
 
-The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which pickes a "winner" out of the list of contestants:
+### Contestant
+
+A `Contestant` represents a single unit of [llm interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) from a specific version of your LLM app. It accepts a `test_case`, a `name` to identify the LLM app version that was used to generate the test case, and optionally any `hyperparameters` associated with the LLM version.
+
+```python
+from deepeval.test_case import Contestant, LLMTestCase
+from deepeval.prompt import Prompt
+
+contestant_1 = Contestant(
+    name="GPT-4",
+    test_case=LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris",
+    ),
+    hyperparameters={
+        "model": "gpt-4",
+        "prompt": Prompt(alias="test_prompt", text_template="You are a helpful assistant."),
+    },
+)
+```
+
+
+## Including Images
+
+By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
+
+```python
+from deepeval.test_case import ArenaTestCase, LLMTestCase, Contestant, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ArenaTestCase(contestants=[
+    Contestant(
+        name="GPT-4",
+        hyperparameters={"model": "gpt-4"},
+        test_case=LLMTestCase(
+            input=f"What's in this image? {shoes}",
+            actual_output="That's a red shoe",
+        ),
+    ),
+    Contestant(
+        name="Claude-4",
+        hyperparameters={"model": "claude-4"},
+        test_case=LLMTestCase(
+            input=f"What's in this image? {shoes}",
+            actual_output="The image shows a pair of red shoes",
+        ),
+    )
+])
+```
+
+:::info
+Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs of your `LLMTestCase`s. You can use the [`ArenaGEval`](/docs/metrics-arena-g-eval) metric to run evaluations for your multimodal test cases as usual.
+:::
+
+### `MLLMImage` Data Model
+
+Here's the data model of the `MLLMImage` in `deepeval`:
+
+```python
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+```
+
+You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when initializing an `MLLMImage`. The `local` attribute should be set to `True` for locally stored images and `False` for images hosted online (default is `False`).
+
+:::note
+
+All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = LLMTestCase(
+    input=f"Change the color of these shoes to blue: {shoes}",
+    expected_output=f"..."
+)
+
+print(test_case.input)
+```
+
+This outputs the following:
+
+```
+Change the color of these shoes to blue: [DEEPEVAL:IMAGE:awefv234fvbnhg456]
+```
+
+Users who'd like to access their images themselves for any ETL can use the `convert_to_multi_modal_array` method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
+
+```python
+from deepeval.test_case import LLMTestCase, MLLMImage
+from deepeval.utils import convert_to_multi_modal_array
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = LLMTestCase(
+    input=f"Change the color of these shoes to blue: {shoes}",
+    expected_output=f"..."
+)
+
+print(convert_to_multi_modal_array(test_case.input))
+```
+
+This will output the following:
+
+```
+["Change the color of these shoes to blue:",  [DEEPEVAL:IMAGE:awefv234fvbnhg456]]
+```
+
+The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMImage` you passed inside your test case.
+
+:::
+
+## Using Test Cases For Evals
+
+The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which picks a "winner" out of the list of contestants:
 
 ```python
 from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
@@ -89,8 +224,7 @@ arena_geval = ArenaGEval(
     ],
 )
 
-arena_geval.measure(test_case)
-print(arena_geval.winner, arena_geval.reason)
+compare(test_cases=[test_case], metric=arena_geval)
 ```
 
 The `ArenaTestCase` streamlines the evaluation by automatically masking contestant names (to ensure unbiased judging) and randomizing their order.

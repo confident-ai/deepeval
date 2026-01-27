@@ -2,9 +2,20 @@ from typing import List, Dict
 
 
 class TurnRelevancyTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def generate_verdicts(sliding_window: List[Dict]):
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to indicate whether the LAST `assistant` message is relevant to context in messages. The JSON will have 2 fields: 'verdict' and 'reason'.
+
+{TurnRelevancyTemplate.multimodal_rules}
+
 The 'verdict' key should STRICTLY be either 'yes' or 'no', which states whether the last `assistant` message is relevant according to the context in messages 
 Provide a 'reason' ONLY if the answer is 'no'. 
 You MUST USE the previous messages (if any) provided in the list of messages to make an informed judgement on relevancy.
@@ -33,8 +44,8 @@ Example Messages:
 
 Example JSON:
 {{
-    "verdict": "no",
-    "reason": "The LLM responded 'isn't it a nice day today' to a message that asked about how to treat a sore throat, which is completely irrelevant."
+    "reason": "The LLM responded 'isn't it a nice day today' to a message that asked about how to treat a sore throat, which is completely irrelevant.",
+    "verdict": "no"
 }}
 ===== END OF EXAMPLE ======
 You MUST ONLY provide a verdict for the LAST message on the list but MUST USE context from the previous messages.
@@ -52,6 +63,9 @@ JSON:
     @staticmethod
     def generate_reason(score, irrelevancies):
         return f"""Below is a list of irrelevancies drawn from some messages in a conversation, which you have minimal knowledge of. It is a list of strings explaining why the 'assistant' messages are irrelevant to the 'user' messages.
+
+{TurnRelevancyTemplate.multimodal_rules}
+
 Given the relevancy score, which is a 0-1 score indicating how irrelevant the OVERALL AI messages are in a conversation (higher the better), CONCISELY summarize the irrelevancies to justify the score. 
 
 ** 

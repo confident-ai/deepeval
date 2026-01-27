@@ -1,0 +1,85 @@
+---
+id: metrics-exact-match
+title: Exact Match
+sidebar_label: Exact Match
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/metrics-exact-match" />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={false} />
+
+The Exact Match metric measures whether your LLM application's `actual_output` matches the `expected_output` exactly.
+
+:::note
+The `ExactMatchMetric` does **not** rely on an LLM for evaluation. It purely performs a **string-level equality check** between the outputs.
+:::
+
+## Required Arguments
+
+To use the `ExactMatchMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `expected_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import ExactMatchMetric
+from deepeval.test_case import LLMTestCase
+
+metric = ExactMatchMetric(
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="Translate 'Hello, how are you?' in french",
+    actual_output="Bonjour, comment ça va ?",
+    expected_output="Bonjour, comment allez-vous ?"
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **TWO** optional parameters when creating an `ExactMatchMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `ExactMatchMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `ExactMatchMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Exact Match Score} =
+ \begin{cases}
+ 1 & \text{if actual\_output = expected\_output}, \\
+ 0 & \text{otherwise}
+ \end{cases}"
+/>
+
+The `ExactMatchMetric` performs a strict equality check to determine if the `actual_output` matches the `expected_output`.

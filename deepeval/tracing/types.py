@@ -1,8 +1,10 @@
 from enum import Enum
 from dataclasses import dataclass, field
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Dict, List, Optional, Union, Literal
 from rich.progress import Progress
+
+from deepeval.utils import make_model_config
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
@@ -50,11 +52,13 @@ class LlmToolCall(BaseModel):
 
 class LlmOutput(BaseModel):
     role: str
-    content: str
+    content: Any
     tool_calls: Optional[List[LlmToolCall]] = None
 
 
 class BaseSpan(BaseModel):
+    model_config = make_model_config(arbitrary_types_allowed=True)
+
     uuid: str
     status: TraceSpanStatus
     children: List["BaseSpan"] = Field(default_factory=list)
@@ -90,9 +94,6 @@ class BaseSpan(BaseModel):
         None, serialization_alias="expectedTools"
     )
 
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class AgentSpan(BaseSpan):
     name: str
@@ -125,7 +126,7 @@ class LlmSpan(BaseSpan):
     # output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
 
     # for serializing `prompt`
-    model_config = {"arbitrary_types_allowed": True}
+    model_config = make_model_config(arbitrary_types_allowed=True)
 
 
 class RetrieverSpan(BaseSpan):
@@ -140,6 +141,8 @@ class ToolSpan(BaseSpan):
 
 
 class Trace(BaseModel):
+    model_config = make_model_config(arbitrary_types_allowed=True)
+
     uuid: str = Field(serialization_alias="uuid")
     status: TraceSpanStatus
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
@@ -173,9 +176,6 @@ class Trace(BaseModel):
     expected_tools: Optional[List[ToolCall]] = Field(
         None, serialization_alias="expectedTools"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class TraceAttributes(BaseModel):

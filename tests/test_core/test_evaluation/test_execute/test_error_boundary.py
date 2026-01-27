@@ -260,7 +260,8 @@ def test_task_exception_logs_error_when_debug_enabled(
 ):
 
     with settings.edit(persist=False):
-        settings.DEEPEVAL_DEBUG_ASYNC = 1
+        settings.DEEPEVAL_DEBUG_ASYNC = True
+        settings.DEEPEVAL_LOG_STACK_TRACES = True
 
     # Capture logs from deepeval.evaluate.execute
     caplog.set_level(logging.INFO, logger="deepeval.evaluate.execute")

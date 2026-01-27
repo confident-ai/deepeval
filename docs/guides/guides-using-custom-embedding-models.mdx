@@ -27,21 +27,20 @@ You can use Azure's OpenAI embedding models by running the following commands in
 ```bash
 deepeval set-azure-openai \
     # e.g. https://example-resource.azure.openai.com/
-    --openai-endpoint=<endpoint> \
-    --openai-api-key=<api_key> \
+    --base-url=<endpoint> \
     # e.g. gpt-4.1
-    --openai-model-name=<model_name> \
+    --model=<model_name> \
     # e.g. Test Deployment
     --deployment-name=<deployment_name> \
     # e.g. 2025-01-01-preview
-    --openai-api-version=<openai_api_version> \
+    --api-version=<api_version> \
     --model-version=<model_version> # e.g. 2024-11-20
 ```
 
 Then, run this to set the Azure OpenAI embedder:
 
 ```bash
-deepeval set-azure-openai-embedding --embedding-deployment-name=<embedding_deployment_name>
+deepeval set-azure-openai-embedding --deployment-name=<embedding_deployment_name>
 ```
 
 :::tip Did You Know?
@@ -53,7 +52,7 @@ The first command configures `deepeval` to use Azure OpenAI LLM globally, while 
 To use a local model served by Ollama, use the following command:
 
 ```bash
-deepeval set-ollama <model_name>
+deepeval set-ollama --model=<model_name>
 ```
 
 Where model_name is one of the LLM that appears when executing `ollama list`. If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
@@ -65,7 +64,7 @@ deepeval unset-ollama
 Then, run this to set the local Embeddings model:
 
 ```bash
-deepeval set-ollama-embeddings <embedding_model_name>
+deepeval set-ollama-embeddings --model=<embedding_model_name>
 ```
 
 To revert back to the default OpenAI embeddings run:
@@ -84,17 +83,15 @@ There are several local LLM providers that offer OpenAI API compatible endpoints
 For example to use a local model from LM Studio, use the following command:
 
 ```bash
-deepeval set-local-model --model-name=<model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --api-key=<api-key>
+deepeval set-local-model --model=<model_name> \
+    --base-url="http://localhost:1234/v1/"
 ```
 
 Then, run this to set the local Embeddings model:
 
 ```bash
-deepeval set-local-embeddings --model-name=<embedding_model_name> \
-    --base-url="http://localhost:1234/v1/" \
-    --api-key=<api-key>
+deepeval set-local-embeddings --model=<embedding_model_name> \
+    --base-url="http://localhost:1234/v1/"
 ```
 
 To revert back to the default OpenAI embeddings run:
@@ -167,7 +164,7 @@ class CustomEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
 :::
 
-Lastly, provide the custom embedding model through the `embedder` parameter  in the [`ContextConstructionConfig`](/docs/synthesizer-generate-from-docs#customize-context-construction) when calling any of the synthesis function:
+Lastly, provide the custom embedding model through the `embedder` parameter in the [`ContextConstructionConfig`](/docs/synthesizer-generate-from-docs#customize-context-construction) when calling any of the synthesis function:
 
 ```python
 from deepeval.synthesizer import Synthesizer

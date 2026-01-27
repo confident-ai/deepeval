@@ -24,8 +24,8 @@ Run the following command in your terminal to configure your deepeval environmen
 
 ```bash
 deepeval set-gemini \
-    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
-    --project-id=<project_id> \
+    --model=<model> \ # e.g. "gemini-2.5-flash"
+    --project=<project_id> \
     --location=<location> # e.g. "us-central1"
 ```
 
@@ -45,14 +45,14 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 ### Python
 
-Alternatively, you can specify your model directly in code using `GeminiModel` from DeepEval's model collection. By default, `model_name` is set to `gemini-1.5-pro`.
+Alternatively, you can specify your model directly in code using `GeminiModel` from DeepEval's model collection. By default, `model` is set to `gemini-2.5-pro`.
 
 ```python
 from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GeminiModel(
-    model_name="gemini-1.5-pro",
+    model="gemini-2.5-pro",
     project="Your Project ID",
     location="us-central1",
     temperature=0
@@ -61,13 +61,19 @@ model = GeminiModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **THREE** mandatory and **ONE** optional parameters when creating an `GeminiModel` through Vertex AI:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `GeminiModel` through Vertex AI:
 
-- `model_name`: A string specifying the name of the Gemini model to use.
-- `project`: A string specifying your Google Cloud project ID.
-- `location`: A string specifying the Google Cloud location.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `project`: A string specifying the Google Cloud project ID for Vertex AI. Defaults to `GOOGLE_CLOUD_PROJECT` if not passed.
+- [Optional] `location`: A string specifying the Google Cloud location for Vertex AI. Defaults to `GOOGLE_CLOUD_LOCATION` if not passed.
+- [Optional] `service_account_key`: A **JSON string** containing the service account key for authentication when using Vertex AI. This string can be either the path to a service account key file or the raw JSON string. Defaults to `GOOGLE_SERVICE_ACCOUNT_KEY` if not passed.
+- [Optional] `use_vertexai`: A boolean to explicitly force Vertex AI (`True`) or Gemini API-key mode (`False`); if not passed, defaults to `GOOGLE_GENAI_USE_VERTEXAI` and otherwise falls back to auto-detection via `project` and `location`.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+
+:::note
+To use Vertex AI you must set project and location (via args or GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION). service_account_key is optional if you use Application Default Credentials.
+:::
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/content-generation-parameters).
@@ -81,20 +87,13 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Gemini models:
 
-`gemini-2.0-pro-exp-02-05`  
-`gemini-2.0-flash`  
-`gemini-2.0-flash-001`  
-`gemini-2.0-flash-002`  
-`gemini-2.0-flash-lite`  
-`gemini-2.0-flash-lite-001`  
-`gemini-1.5-pro`  
-`gemini-1.5-pro-001`  
-`gemini-1.5-pro-002`  
-`gemini-1.5-flash`  
-`gemini-1.5-flash-001`  
-`gemini-1.5-flash-002`  
-`gemini-1.0-pro`  
-`gemini-1.0-pro-001`  
-`gemini-1.0-pro-002`  
-`gemini-1.0-pro-vision`  
-`gemini-1.0-pro-vision-001`
+`gemini-3-pro-preview`
+`gemini-3-flash-preview`
+`gemini-2.5-pro`
+`gemini-2.5-flash`
+`gemini-2.5-flash-lite`
+`gemini-2.0-flash`
+`gemini-2.0-flash-lite`
+`gemini-pro-latest`
+`gemini-flash-latest`
+`gemini-flash-lite-latest`

@@ -11,7 +11,12 @@ sidebar_label: From Documents
   />
 </head>
 
-If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**. By simply providing these documents, the Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**.
+
+By simply providing these documents, `deepeval`'s Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
 
 <div
   style={{
@@ -35,11 +40,7 @@ If your application is a Retrieval-Augmented Generation (RAG) system, generating
 The only difference between the `generate_goldens_from_docs()` and `generate_goldens_from_contexts()` method is `generate_goldens_from_docs()` involves an additional [context construction step.](#how-does-context-construction-work)
 :::
 
-## Generate Your Goldens
-
-:::note
-If you do not have an `OPENAI_API_KEY` and wish to synthesize goldens, you'll need to use [**custom embedding models**](/guides/guides-using-custom-embedding-models) in addition to custom LLMs.
-:::
+## Prerequisites
 
 Before you begin, you must install additional dependencies when generating from documents:
 
@@ -50,13 +51,23 @@ Before you begin, you must install additional dependencies when generating from 
 pip install chromadb langchain-core langchain-community langchain-text-splitters
 ```
 
-Then, to generate synthetic `Golden`s from documents, simply provide a list of document paths:
+## Generate Your Goldens
+
+:::note
+If you do not have an `OPENAI_API_KEY` and wish to synthesize goldens, you'll need to use [custom embedding models](/guides/guides-using-custom-embedding-models) in addition to custom LLMs.
+:::
+
+To generate synthetic single or multi-turn goldens from documents, simply provide a list of document paths:
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
-synthesizer.generate_goldens_from_docs(
+goldens = synthesizer.generate_goldens_from_docs(
     document_paths=['example.txt', 'example.docx', 'example.pdf'],
 )
 ```
@@ -68,6 +79,32 @@ There is **ONE** mandatory and **THREE** optional parameters when using the `gen
 - [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
 - [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
 
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+
+synthesizer = Synthesizer()
+conversational_goldens = synthesizer.generate_conversational_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+)
+```
+
+There is **ONE** mandatory and **THREE** optional parameters when using the `generate_conversational_goldens_from_docs` method:
+
+- `document_paths`: a list of strings, representing the path to the documents from which contexts will be extracted from. Supported document types include: `.txt`, `.docx`, `.pdf`, `.md`, `.markdown`, and `.mdx`.
+- [Optional] `include_expected_outcome`: a boolean which when set to `True`, will additionally generate an `expected_outcome` for each synthetic `ConversationalGolden`. Defaulted to `True`.
+- [Optional] `max_goldens_per_context`: the maximum number of goldens to be generated per context. Defaulted to 2.
+- [Optional] `context_construction_config`: an instance of type `ContextConstructionConfig` that allows you to [customize the quality and attributes of contexts constructed](#customize-context-construction) from your documents. Defaulted to the default `ContextConstructionConfig` values.
+
+</TabItem>
+
+</Tabs>
+
+**Single-turn generations** produces single-turn `Golden`s, while **multi-turn generations** produces multi-turn `ConversationalGolden`s. To learn more about goldens, [click here.](/docs/evaluation-datasets#what-are-goldens)
+
 :::info
 The final maximum number of goldens to be generated is the `max_goldens_per_context` multiplied by the `max_contexts_per_document` as specified in the `context_construction_config`, and **NOT** simply `max_goldens_per_context`.
 :::
@@ -75,6 +112,8 @@ The final maximum number of goldens to be generated is the `max_goldens_per_cont
 ## Customize Context Construction
 
 You can customize the quality of contexts constructed from documents by providing a `ContextConstructionConfig` instance to the `generate_goldens_from_docs()` method at generation time.
+
+Below shows an example for single-turn generation (also applicable for multi-turn):
 
 ```python
 from deepeval.synthesizer.config import ContextConstructionConfig

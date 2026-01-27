@@ -24,6 +24,7 @@ def convert_test_cases_to_goldens(
             "retrieval_context": test_case.retrieval_context,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
+            "additional_metadata": test_case.additional_metadata,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -70,6 +71,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "expected_outcome": test_case.expected_outcome,
             "user_description": test_case.user_description,
             "context": test_case.context,
+            "additional_metadata": test_case.additional_metadata,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
@@ -111,11 +113,35 @@ def trimAndLoadJson(input_string: str) -> Any:
 def format_turns(turns: List[Turn]) -> str:
     res = []
     for turn in turns:
+        # Safely convert nested Pydantic models (ToolCall/MCP calls) to dicts
+        def _dump_list(models):
+            if not models:
+                return None
+            dumped = []
+            for m in models:
+                if hasattr(m, "model_dump"):
+                    dumped.append(
+                        m.model_dump(by_alias=True, exclude_none=True)
+                    )
+                elif hasattr(m, "dict"):
+                    dumped.append(m.dict(exclude_none=True))
+                else:
+                    dumped.append(m)
+            return dumped if len(dumped) > 0 else None
+
         cur_turn = {
             "role": turn.role,
             "content": turn.content,
+            "user_id": turn.user_id if turn.user_id is not None else None,
             "retrieval_context": (
                 turn.retrieval_context if turn.retrieval_context else None
+            ),
+            "tools_called": _dump_list(turn.tools_called),
+            "mcp_tools_called": _dump_list(turn.mcp_tools_called),
+            "mcp_resources_called": _dump_list(turn.mcp_resources_called),
+            "mcp_prompts_called": _dump_list(turn.mcp_prompts_called),
+            "additional_metadata": (
+                turn.additional_metadata if turn.additional_metadata else None
             ),
         }
         res.append(cur_turn)
@@ -125,11 +151,17 @@ def format_turns(turns: List[Turn]) -> str:
         raise ValueError(f"Error serializing turns: {e}")
 
 
-def parse_turns(turns_str: str) -> List[Turn]:
-    try:
-        parsed = json.loads(turns_str)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON: {e}")
+def parse_turns(turns_str: Any) -> List[Turn]:
+    # Accept either a JSON string or a Python list
+    if isinstance(turns_str, str):
+        try:
+            parsed = json.loads(turns_str)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON: {e}")
+    elif isinstance(turns_str, list):
+        parsed = turns_str
+    else:
+        raise TypeError("Expected a JSON string or a list of turns.")
 
     if not isinstance(parsed, list):
         raise TypeError("Expected a list of turns.")
@@ -145,15 +177,13 @@ def parse_turns(turns_str: str) -> List[Turn]:
         if "content" not in turn or not isinstance(turn["content"], str):
             raise ValueError(f"Turn at index {i} is missing a valid 'content'.")
 
-        retrieval_context = turn.get("retrieval_context")
+        try:
+            # Pydantic v2
+            res.append(Turn.model_validate(turn))
+        except AttributeError:
+            # Pydantic v1 fallback
+            res.append(Turn.parse_obj(turn))
 
-        res.append(
-            Turn(
-                role=turn["role"],
-                content=turn["content"],
-                retrieval_context=retrieval_context,
-            )
-        )
     return res
 
 

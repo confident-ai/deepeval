@@ -224,10 +224,12 @@ class MMLU(DeepEvalBaseBenchmark):
             responses: List[MultipleChoiceSchema] = model.batch_generate(
                 prompts=prompts, schemas=[MultipleChoiceSchema for i in prompts]
             )
-            if isinstance(responses, (tuple, list)):
-                predictions = [res[0].answer for res in responses]
-            else:
-                predictions = [res.answer for res in responses]
+            if not isinstance(responses, list):
+                raise TypeError(
+                    "batch_generate must return List[MultipleChoiceSchema]"
+                )
+
+            predictions = [res.answer for res in responses]
         except TypeError:
             prompts = [
                 prompt

@@ -39,6 +39,7 @@ import itertools
 import functools
 import threading
 import logging
+import time
 
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
@@ -52,7 +53,9 @@ from tenacity import (
 )
 from tenacity.stop import stop_base
 from tenacity.wait import wait_base
+from contextvars import ContextVar, copy_context
 
+from deepeval.utils import require_dependency
 from deepeval.constants import (
     ProviderSlug as PS,
     slugify,
@@ -65,6 +68,82 @@ Provider = Union[str, PS]
 _MAX_TIMEOUT_THREADS = get_settings().DEEPEVAL_TIMEOUT_THREAD_LIMIT
 _TIMEOUT_SEMA = threading.BoundedSemaphore(_MAX_TIMEOUT_THREADS)
 _WORKER_ID = itertools.count(1)
+_OUTER_DEADLINE = ContextVar("deepeval_outer_deadline", default=None)
+
+
+def set_outer_deadline(seconds: float | None):
+    """Set (or clear) the outer task time budget.
+
+    Stores a deadline in a local context variable so nested code
+    can cooperatively respect a shared budget. Always pair this with
+    `reset_outer_deadline(token)` in a `finally` block.
+
+    Args:
+        seconds: Number of seconds from now to set as the deadline. If `None`,
+            `0`, or a non-positive value is provided, the deadline is cleared.
+
+    Returns:
+        contextvars.Token: The token returned by the underlying ContextVar `.set()`
+        call, which must be passed to `reset_outer_deadline` to restore the
+        previous value.
+    """
+    if get_settings().DEEPEVAL_DISABLE_TIMEOUTS:
+        return _OUTER_DEADLINE.set(None)
+    if seconds and seconds > 0:
+        return _OUTER_DEADLINE.set(time.monotonic() + seconds)
+    return _OUTER_DEADLINE.set(None)
+
+
+def reset_outer_deadline(token):
+    """Restore the previous outer deadline set by `set_outer_deadline`.
+
+    This should be called in a `finally` block to ensure the deadline
+    is restored even if an exception occurs.
+
+    Args:
+        token: The `contextvars.Token` returned by `set_outer_deadline`.
+    """
+    if token is not None:
+        _OUTER_DEADLINE.reset(token)
+
+
+def _remaining_budget() -> float | None:
+    dl = _OUTER_DEADLINE.get()
+    if dl is None:
+        return None
+    return max(0.0, dl - time.monotonic())
+
+
+def _is_budget_spent() -> bool:
+    rem = _remaining_budget()
+    return rem is not None and rem <= 0.0
+
+
+def resolve_effective_attempt_timeout():
+    """Resolve the timeout to use for a single provider attempt.
+
+    Combines the configured per-attempt timeout with any remaining outer budget:
+    - If `DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS` is `0` or `None`, returns `0`
+      callers should skip `asyncio.wait_for` in this case and rely on the outer cap.
+    - If positive and an outer deadline is present, returns
+      `min(per_attempt, remaining_budget)`.
+    - If positive and no outer deadline is present, returns `per_attempt`.
+
+    Returns:
+        float: Seconds to use for the inner per-attempt timeout. `0` means
+        disable inner timeout and rely on the outer budget instead.
+    """
+    settings = get_settings()
+    per_attempt = float(settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
+    # 0 or None disable inner wait_for. That means rely on outer task cap for timeouts instead.
+    if settings.DEEPEVAL_DISABLE_TIMEOUTS or per_attempt <= 0:
+        return 0
+    # If we do have a positive per-attempt, use up to remaining outer budget.
+    rem = _remaining_budget()
+    if rem is not None:
+        return max(0.0, min(per_attempt, rem))
+    return per_attempt
+
 
 # --------------------------
 # Policy description
@@ -399,9 +478,10 @@ def make_after_log(slug: str):
         if not _logger.isEnabledFor(after_level):
             return
 
+        show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
         exc_info = (
             (type(exc), exc, getattr(exc, "__traceback__", None))
-            if after_level >= logging.ERROR
+            if show_trace
             else None
         )
 
@@ -416,7 +496,7 @@ def make_after_log(slug: str):
     return _after
 
 
-def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
+def _make_timeout_error(timeout_seconds: float) -> asyncio.TimeoutError:
     settings = get_settings()
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug(
@@ -427,12 +507,12 @@ def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
         )
     msg = (
         f"call timed out after {timeout_seconds:g}s (per attempt). "
-        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS (0 disables) or reduce work per attempt."
+        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE (None disables) or reduce work per attempt."
     )
-    return TimeoutError(msg)
+    return asyncio.TimeoutError(msg)
 
 
-def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
+def run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
     """
     Run a synchronous callable with a soft timeout enforced by a helper thread,
     with a global cap on concurrent timeout-workers.
@@ -478,7 +558,11 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
         BaseException: If `func` raises, the same exception is re-raised with its
                        original traceback.
     """
-    if not timeout_seconds or timeout_seconds <= 0:
+    if (
+        get_settings().DEEPEVAL_DISABLE_TIMEOUTS
+        or not timeout_seconds
+        or timeout_seconds <= 0
+    ):
         return func(*args, **kwargs)
 
     # try to respect the global cap on concurrent timeout workers
@@ -499,9 +583,11 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
     done = threading.Event()
     result = {"value": None, "exc": None}
 
+    context = copy_context()
+
     def target():
         try:
-            result["value"] = func(*args, **kwargs)
+            result["value"] = context.run(func, *args, **kwargs)
         except BaseException as e:
             result["exc"] = e
         finally:
@@ -562,37 +648,40 @@ def create_retry_decorator(provider: Provider):
 
             @functools.wraps(func)
             async def attempt(*args, **kwargs):
-                timeout_seconds = (
-                    get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
-                )
+                if _is_budget_spent():
+                    raise _make_timeout_error(0)
+
+                per_attempt_timeout = resolve_effective_attempt_timeout()
+
                 coro = func(*args, **kwargs)
-                if timeout_seconds > 0:
+                if per_attempt_timeout > 0:
                     try:
-                        return await asyncio.wait_for(coro, timeout_seconds)
-                    except asyncio.TimeoutError as e:
+                        return await asyncio.wait_for(coro, per_attempt_timeout)
+                    except (asyncio.TimeoutError, TimeoutError) as e:
                         if (
                             logger.isEnabledFor(logging.DEBUG)
                             and get_settings().DEEPEVAL_VERBOSE_MODE is True
                         ):
                             logger.debug(
                                 "async timeout after %.3fs (active_threads=%d, tasks=%d)",
-                                timeout_seconds,
+                                per_attempt_timeout,
                                 threading.active_count(),
                                 len(asyncio.all_tasks()),
                             )
-                        raise _make_timeout_error(timeout_seconds) from e
+                        raise _make_timeout_error(per_attempt_timeout) from e
                 return await coro
 
             return base_retry(attempt)
 
         @functools.wraps(func)
         def attempt(*args, **kwargs):
-            timeout_seconds = (
-                get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
-            )
-            if timeout_seconds > 0:
-                return _run_sync_with_timeout(
-                    func, timeout_seconds, *args, **kwargs
+            if _is_budget_spent():
+                raise _make_timeout_error(0)
+
+            per_attempt_timeout = resolve_effective_attempt_timeout()
+            if per_attempt_timeout > 0:
+                return run_sync_with_timeout(
+                    func, per_attempt_timeout, *args, **kwargs
                 )
             return func(*args, **kwargs)
 
@@ -683,6 +772,7 @@ AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
 DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
 KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
 LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
+OPENROUTER_ERROR_POLICY = OPENAI_ERROR_POLICY
 
 ######################
 # AWS Bedrock Policy #
@@ -746,25 +836,23 @@ try:
 except Exception:  # botocore not present (aiobotocore optional)
     BEDROCK_ERROR_POLICY = None
 
-
 ####################
 # Anthropic Policy #
 ####################
 
 try:
-    from anthropic import (
-        AuthenticationError,
-        RateLimitError,
-        APIConnectionError,
-        APITimeoutError,
-        APIStatusError,
+
+    module = require_dependency(
+        "anthropic",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install anthropic`.",
     )
 
     ANTHROPIC_ERROR_POLICY = ErrorPolicy(
-        auth_excs=(AuthenticationError,),
-        rate_limit_excs=(RateLimitError,),
-        network_excs=(APIConnectionError, APITimeoutError),
-        http_excs=(APIStatusError,),
+        auth_excs=(module.AuthenticationError,),
+        rate_limit_excs=(module.RateLimitError,),
+        network_excs=(module.APIConnectionError, module.APITimeoutError),
+        http_excs=(module.APIStatusError,),
         non_retryable_codes=frozenset(),  # update if we learn of hard quota codes
         message_markers={},
     )
@@ -785,7 +873,11 @@ except Exception:  # Anthropic optional
 # and gate retries using message markers (code sniffing).
 # See: https://github.com/googleapis/python-genai?tab=readme-ov-file#error-handling
 try:
-    from google.genai import errors as gerrors
+    module = require_dependency(
+        "google.genai",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install google-genai`.",
+    )
 
     _HTTPX_NET_EXCS = _httpx_net_excs()
     _REQUESTS_EXCS = _requests_net_excs()
@@ -804,9 +896,9 @@ try:
     GOOGLE_ERROR_POLICY = ErrorPolicy(
         auth_excs=(),  # we will classify 401/403 via markers below (see non-retryable codes)
         rate_limit_excs=(
-            gerrors.ClientError,
+            module.gerrors.ClientError,
         ),  # includes 429; markers decide retry vs not
-        network_excs=(gerrors.ServerError,)
+        network_excs=(module.gerrors.ServerError,)
         + _HTTPX_NET_EXCS
         + _REQUESTS_EXCS,  # treat 5xx as transient
         http_excs=(),  # no reliable .status_code on exceptions; handled above
@@ -907,6 +999,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.LITELLM.value: LITELLM_ERROR_POLICY,
     PS.LOCAL.value: LOCAL_ERROR_POLICY,
     PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
+    PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
 }
 
 
@@ -928,6 +1021,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.LITELLM.value: _opt_pred(LITELLM_ERROR_POLICY),
     PS.LOCAL.value: _opt_pred(LOCAL_ERROR_POLICY),
     PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
+    PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
 }
 
 

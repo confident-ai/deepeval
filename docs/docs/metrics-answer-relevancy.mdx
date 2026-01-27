@@ -13,6 +13,8 @@ sidebar_label: Answer Relevancy
 
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 <MetricTagsDisplayer singleTurn={true} referenceless={true} rag={true} />
 
@@ -33,7 +35,10 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 ## Usage
 
-The `AnswerRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+The `AnswerRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
+
+<Tabs>
+<TabItem value="text-based" label="Text Based">
 
 ```python
 from deepeval import evaluate
@@ -42,7 +47,7 @@ from deepeval.test_case import LLMTestCase
 
 metric = AnswerRelevancyMetric(
     threshold=0.7,
-    model="gpt-4",
+    model="gpt-4.1",
     include_reason=True
 )
 test_case = LLMTestCase(
@@ -57,6 +62,36 @@ test_case = LLMTestCase(
 
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
+
+</TabItem>
+
+<TabItem value="multimodal" label="Multimodal">
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+metric = AnswerRelevancyMetric(
+    threshold=0.7,
+    model="gpt-4.1",
+    include_reason=True
+)
+test_case = LLMTestCase(
+    input=f"Tell me about this landmark in France: {MLLMImage(...)}",
+    # Replace this with the output from your LLM app
+    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+</TabItem>
+</Tabs>
 
 There are **SEVEN** optional parameters when creating an `AnswerRelevancyMetric`:
 

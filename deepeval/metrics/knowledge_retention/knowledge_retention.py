@@ -5,9 +5,10 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
@@ -51,7 +52,12 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case,
+            self._required_test_case_params,
+            self,
+            False,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -101,7 +107,12 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
+            test_case,
+            self._required_test_case_params,
+            self,
+            False,
+            self.model,
+            test_case.multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -147,23 +158,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             attritions=attritions,
             score=format(self.score, ".2f"),
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
-        else:
-            try:
-                res: KnowledgeRetentionScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=KnowledgeRetentionScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=KnowledgeRetentionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _generate_reason(self) -> str:
         if self.include_reason is False:
@@ -178,21 +179,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             attritions=attritions,
             score=format(self.score, ".2f"),
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["reason"]
-        else:
-            try:
-                res: KnowledgeRetentionScoreReason = self.model.generate(
-                    prompt, schema=KnowledgeRetentionScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=KnowledgeRetentionScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(
         self, turns: List[Turn]
@@ -205,7 +198,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             accumulated_knowledge = [
                 knowledge.data
                 for knowledge in self.knowledges[:i]
-                if knowledge is not None
+                if knowledge is not None and knowledge.data
             ]
             if len(accumulated_knowledge) == 0:
                 continue
@@ -214,22 +207,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
             )
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                verdict = KnowledgeRetentionVerdict(**data)
-            else:
-                try:
-                    verdict: KnowledgeRetentionVerdict = (
-                        await self.model.a_generate(
-                            prompt, schema=KnowledgeRetentionVerdict
-                        )
-                    )
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    verdict = KnowledgeRetentionVerdict(**data)
+            verdict = await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=KnowledgeRetentionVerdict,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+            )
             verdicts.append(verdict)
         return verdicts
 
@@ -244,7 +228,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             accumulated_knowledge = [
                 knowledge.data
                 for knowledge in self.knowledges[:i]
-                if knowledge is not None
+                if knowledge is not None and knowledge.data
             ]
             if len(accumulated_knowledge) == 0:
                 continue
@@ -254,20 +238,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 accumulated_knowledge=accumulated_knowledge,
             )
 
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                verdict = KnowledgeRetentionVerdict(**data)
-            else:
-                try:
-                    verdict: KnowledgeRetentionVerdict = self.model.generate(
-                        prompt, schema=KnowledgeRetentionVerdict
-                    )
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    verdict = KnowledgeRetentionVerdict(**data)
+            verdict = generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=KnowledgeRetentionVerdict,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+            )
             verdicts.append(verdict)
         return verdicts
 
@@ -289,20 +266,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     convert_turn_to_dict(turn) for turn in previous_turns
                 ],
             )
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                knowledges[i] = Knowledge(data=data)
-            else:
-                try:
-                    knowledges[i] = await self.model.a_generate(
-                        prompt, schema=Knowledge
-                    )
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    knowledges[i] = Knowledge(data=data)
+            knowledges[i] = await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=Knowledge,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: Knowledge(data=data),
+            )
 
         return knowledges
 
@@ -325,20 +295,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 ],
             )
 
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                knowledges[i] = Knowledge(data=data)
-            else:
-                try:
-                    knowledges[i] = self.model.generate(
-                        prompt, schema=Knowledge
-                    )
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    knowledges[i] = Knowledge(data=data)
+            knowledges[i] = generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=Knowledge,
+                extract_schema=lambda s: s,
+                extract_json=lambda data: Knowledge(data=data),
+            )
 
         return knowledges
 
@@ -361,8 +324,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
-            except:
+                self.success = self.score >= self.threshold
+            except TypeError:
                 self.success = False
         return self.success
 

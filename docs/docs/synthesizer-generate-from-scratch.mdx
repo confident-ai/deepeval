@@ -11,6 +11,9 @@ sidebar_label: From Scratch
   />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 You can also generate **synthetic Goldens from scratch**, without needing any documents or contexts.
 
 <div
@@ -39,6 +42,10 @@ This approach is particularly useful if your LLM application **doesn't rely on R
 
 Since there is no grounded context involved, you'll need to provide a `StylingConfig` when instantiating a `Synthesizer` for `deepeval`'s `Synthesizer` to know what types of goldens it should generate:
 
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
+
 ```python
 from deepeval.synthesizer import Synthesizer
 from deepeval.synthesizer.config import StylingConfig
@@ -53,15 +60,56 @@ styling_config = StylingConfig(
 synthesizer = Synthesizer(styling_config=styling_config)
 ```
 
-Finally, to generate synthetic goldens without provided context, simply supply the number of goldens you want generated:
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
 
 ```python
 from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import ConversationalStylingConfig
 
-...
-synthesizer.generate_goldens_from_scratch(num_goldens=25)
-print(synthesizer.synthetic_goldens)
+conversational_styling_config = ConversationalStylingConfig(
+  conversational_task="Answering text-to-SQL-related queries by querying a database and returning the results to users",
+  scenario_context="Non-technical users trying to query a database using plain English.",
+  participant_roles="Non-technical users trying to query a database using plain English."
+)
+
+synthesizer = Synthesizer(conversational_styling_config=conversational_styling_config,)
 ```
+
+</TabItem>
+
+</Tabs>
+
+Finally, to generate synthetic goldens without provided context, simply supply the number of goldens you want generated:
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+...
+
+goldens = synthesizer.generate_goldens_from_scratch(num_goldens=25)
+print(goldens)
+```
+
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.synthesizer import Synthesizer
+...
+
+conversational_goldens = synthesizer.generate_conversational_goldens_from_scratch(num_goldens=25)
+print(conversational_goldens)
+```
+
+</TabItem>
+
+</Tabs>
 
 There is **ONE** mandatory parameter when using the `generate_goldens_from_scratch` method:
 

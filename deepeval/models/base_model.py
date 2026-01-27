@@ -1,6 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Union
 from deepeval.models.utils import parse_model_name
+from dataclasses import dataclass
+
+
+@dataclass
+class DeepEvalModelData:
+    supports_log_probs: Optional[bool] = None
+    supports_multimodal: Optional[bool] = None
+    supports_structured_outputs: Optional[bool] = None
+    supports_json: Optional[bool] = None
+    input_price: Optional[float] = None
+    output_price: Optional[float] = None
+    supports_temperature: Optional[bool] = True
 
 
 class DeepEvalBaseModel(ABC):
@@ -31,9 +43,9 @@ class DeepEvalBaseModel(ABC):
 
 
 class DeepEvalBaseLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
@@ -62,51 +74,57 @@ class DeepEvalBaseLLM(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
     def batch_generate(self, *args, **kwargs) -> List[str]:
         """Runs the model to output LLM responses.
 
         Returns:
             A list of strings.
         """
-        raise AttributeError
+        raise NotImplementedError(
+            "batch_generate is not implemented for this model"
+        )
 
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    # Capabilities
+    def supports_log_probs(self) -> Union[bool, None]:
+        return None
 
+    def supports_temperature(self) -> Union[bool, None]:
+        return None
 
-class DeepEvalBaseMLLM(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
+    def supports_multimodal(self) -> Union[bool, None]:
+        return None
 
-    @abstractmethod
-    def generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
+    def supports_structured_outputs(self) -> Union[bool, None]:
+        return None
 
-        Returns:
-            A string.
-        """
-        pass
+    def supports_json_mode(self) -> Union[bool, None]:
+        return None
 
-    @abstractmethod
-    async def a_generate(self, *args, **kwargs) -> str:
-        """Runs the model to output MLLM response.
+    def generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return self.generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass  # this means provider doesn't accept schema kwarg
+        return self.generate(*args, **kwargs)
 
-        Returns:
-            A string.
-        """
-        pass
-
-    @abstractmethod
-    def get_model_name(self, *args, **kwargs) -> str:
-        pass
+    async def a_generate_with_schema(self, *args, schema=None, **kwargs):
+        if schema is not None:
+            try:
+                return await self.a_generate(*args, schema=schema, **kwargs)
+            except TypeError:
+                pass
+        return await self.a_generate(*args, **kwargs)
 
 
 class DeepEvalBaseEmbeddingModel(ABC):
-    def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = parse_model_name(model_name)
-
-        self.model = self.load_model(*args, **kwargs)
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseEmbeddingModel":
@@ -155,4 +173,4 @@ class DeepEvalBaseEmbeddingModel(ABC):
 
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
-        pass
+        return self.name

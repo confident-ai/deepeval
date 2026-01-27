@@ -2,6 +2,7 @@
 
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict, Type
+from rich.console import Console
 import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
@@ -9,6 +10,10 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
+    validate_and_sort_rubrics,
+    validate_criteria_and_evaluation_steps,
+    CONVERSATIONAL_G_EVAL_API_PARAMS,
+    construct_geval_upload_payload,
 )
 from deepeval.test_case import (
     TurnParams,
@@ -24,11 +29,14 @@ from deepeval.metrics.utils import (
     trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.metrics.api import metric_data_manager
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
 class ConversationalGEval(BaseConversationalMetric):
@@ -63,27 +71,16 @@ class ConversationalGEval(BaseConversationalMetric):
 
         self.evaluation_params = evaluation_params
 
-        # Check if both criteria and evaluation_steps are not None at the same time
-        if criteria is None and evaluation_steps is None:
-            raise ValueError(
-                "Either 'criteria' or 'evaluation_steps' must be provided."
-            )
-
-        # Check if criteria is provided, it cannot be an empty string
-        if criteria is not None and not criteria.strip():
-            raise ValueError("Criteria provided cannot be an empty string.")
-
-        # Check if evaluation_steps is provided, it cannot be an empty list
-        if evaluation_steps is not None and len(evaluation_steps) == 0:
-            raise ValueError(
-                "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
-            )
-
+        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.criteria = criteria
-        self.rubric = rubric
+        self.rubric = validate_and_sort_rubrics(rubric)
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-        self.evaluation_steps = evaluation_steps
+        self.evaluation_steps = (
+            evaluation_steps
+            if evaluation_steps and len(evaluation_steps) > 0
+            else None
+        )
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
@@ -98,8 +95,14 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self.evaluation_params, self
+            test_case,
+            self.evaluation_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -152,8 +155,14 @@ class ConversationalGEval(BaseConversationalMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
+        multimodal = test_case.multimodal
         check_conversational_test_case_params(
-            test_case, self.evaluation_params, self
+            test_case,
+            self.evaluation_params,
+            self,
+            False,
+            self.model,
+            multimodal,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -201,22 +210,13 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=cgschema.Steps
-            )
-            self.evaluation_cost += cost
-            return res.steps
-        else:
-            try:
-                res: cgschema.Steps = await self.model.a_generate(
-                    prompt, schema=cgschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda data: data["steps"],
+        )
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -228,20 +228,13 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=cgschema.Steps)
-            self.evaluation_cost += cost
-            return res.steps
-        else:
-            try:
-                res: cgschema.Steps = self.model.generate(
-                    prompt, schema=cgschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.Steps,
+            extract_schema=lambda s: s.steps,
+            extract_json=lambda data: data["steps"],
+        )
 
     async def _a_evaluate(
         self, test_case: ConversationalTestCase
@@ -278,7 +271,8 @@ class ConversationalGEval(BaseConversationalMetric):
             res, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=20
             )
-            self.evaluation_cost += cost
+
+            self._accrue_cost(cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
@@ -296,22 +290,13 @@ class ConversationalGEval(BaseConversationalMetric):
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(
-                    prompt, schema=cgschema.ReasonScore
-                )
-                self.evaluation_cost += cost
-                return res.score, res.reason
-            else:
-                try:
-                    res: cgschema.ReasonScore = await self.model.a_generate(
-                        prompt, schema=cgschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+            return await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=cgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda data: (data["score"], data["reason"]),
+            )
 
     def evaluate(
         self, test_case: ConversationalTestCase
@@ -348,7 +333,7 @@ class ConversationalGEval(BaseConversationalMetric):
             res, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=20
             )
-            self.evaluation_cost += cost
+            self._accrue_cost(cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
@@ -365,22 +350,13 @@ class ConversationalGEval(BaseConversationalMetric):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = self.model.generate(
-                    prompt, schema=cgschema.ReasonScore
-                )
-                self.evaluation_cost += cost
-                return res.score, res.reason
-            else:
-                try:
-                    res: cgschema.ReasonScore = self.model.generate(
-                        prompt, schema=cgschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+            return generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=cgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda data: (data["score"], data["reason"]),
+            )
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion
@@ -439,6 +415,37 @@ class ConversationalGEval(BaseConversationalMetric):
             except TypeError:
                 self.success = False
         return self.success
+
+    def upload(self):
+        api = Api()
+
+        payload = construct_geval_upload_payload(
+            name=self.name,
+            evaluation_params=self.evaluation_params,
+            g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
+            criteria=self.criteria,
+            evaluation_steps=self.evaluation_steps,
+            multi_turn=True,
+            rubric=self.rubric,
+        )
+
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=payload,
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+
+        if metric_id:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
 
     @property
     def __name__(self):

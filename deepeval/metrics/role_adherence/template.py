@@ -2,11 +2,22 @@ from typing import List, Dict
 
 
 class RoleAdherenceTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def extract_out_of_character_response_verdicts(
         turns: List[Dict], role: str
     ):
         return f"""Based on the given list of message exchanges between a user and an LLM chatbot, generate a JSON object to specify which `ai_message` did not adhere to the specified chatbot role. 
+
+{RoleAdherenceTemplate.multimodal_rules}
+
 The JSON will have 1 field: "verdicts", which is a list of verdicts specifying the indices and reasons of the LLM ai_message/responses that did NOT adhere to the chatbot role.
 You MUST USE look at all messages provided in the list of messages to make an informed judgement on role adherence.
 
@@ -71,6 +82,9 @@ JSON:
     ):
         return f"""Below is a list of LLM chatbot responses (ai_message) that is out of character with respect to the specified chatbot role. It is drawn from a list of messages in a conversation, which you have minimal knowledge of.
 Given the role adherence score, which is a 0-1 score indicating how well the chatbot responses has adhered to the given role through a conversation, with 1 being the best and 0 being worst, provide a reason by quoting the out of character responses to justify the score. 
+
+
+{RoleAdherenceTemplate.multimodal_rules}
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.

@@ -20,6 +20,7 @@ from deepeval.simulator.template import (
     ConversationSimulatorTemplate,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
     SimulatedInput,
     ConversationCompletion,
@@ -35,7 +36,6 @@ class ConversationSimulator:
         self,
         model_callback: Callable[[str], str],
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
         language: str = "English",
@@ -45,7 +45,6 @@ class ConversationSimulator:
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
         )
-        self.opening_message = opening_message
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
         self.language = language
@@ -68,6 +67,9 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int = 10,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
@@ -87,11 +89,32 @@ class ConversationSimulator:
                     self._a_simulate(
                         conversational_goldens=conversational_goldens,
                         max_user_simulations=max_user_simulations,
+                        on_simulation_complete=on_simulation_complete,
                         progress=progress,
                         pbar_id=pbar_id,
                     )
                 )
             else:
+                multimodal = any(
+                    [golden.multimodal for golden in conversational_goldens]
+                )
+                if multimodal:
+                    if (
+                        not self.simulator_model
+                        or not self.simulator_model.supports_multimodal()
+                    ):
+                        if (
+                            self.simulator_model
+                            and type(self.simulator_model)
+                            in MULTIMODAL_SUPPORTED_MODELS
+                        ):
+                            raise ValueError(
+                                f"The evaluation model {self.simulator_model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {self.simulator_model.__class__.__name__} provider includes {', '.join(self.simulator_model.__class__.valid_multimodal_models)}."
+                            )
+                        else:
+                            raise ValueError(
+                                f"The evaluation model {self.simulator_model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+                            )
                 conversational_test_cases: List[ConversationalTestCase] = []
                 for conversation_index, golden in enumerate(
                     conversational_goldens
@@ -103,6 +126,7 @@ class ConversationSimulator:
                             index=conversation_index,
                             progress=progress,
                             pbar_id=pbar_id,
+                            on_simulation_complete=on_simulation_complete,
                         )
                     )
                     conversational_test_cases.append(conversational_test_case)
@@ -115,9 +139,34 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
+
+        multimodal = any(
+            [golden.multimodal for golden in conversational_goldens]
+        )
+        if multimodal:
+            if (
+                not self.simulator_model
+                or not self.simulator_model.supports_multimodal()
+            ):
+                if (
+                    self.simulator_model
+                    and type(self.simulator_model)
+                    in MULTIMODAL_SUPPORTED_MODELS
+                ):
+                    raise ValueError(
+                        f"The evaluation model {self.simulator_model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {self.simulator_model.__class__.__name__} provider includes {', '.join(self.simulator_model.__class__.valid_multimodal_models)}."
+                    )
+                else:
+                    raise ValueError(
+                        f"The evaluation model {self.simulator_model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
+                    )
+
         self.simulation_cost = 0 if self.using_native_model else None
 
         async def simulate_conversations(
@@ -131,6 +180,7 @@ class ConversationSimulator:
                     index=conversation_index,
                     progress=progress,
                     pbar_id=pbar_id,
+                    on_simulation_complete=on_simulation_complete,
                 )
 
         tasks = [
@@ -150,6 +200,9 @@ class ConversationSimulator:
         index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
@@ -166,8 +219,6 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
-        if self.opening_message and golden.turns is None:
-            turns.append(Turn(role="assistant", content=self.opening_message))
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -187,11 +238,7 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (
-                len(turns) == 1
-                and self.opening_message
-                and golden.turns is None
-            ):
+            if len(turns) == 0:
                 # Generate first user input
                 user_input = self.generate_first_user_input(golden)
                 turns.append(Turn(role="user", content=user_input))
@@ -225,7 +272,7 @@ class ConversationSimulator:
             turns.append(turn)
 
         update_pbar(progress, pbar_id)
-        return ConversationalTestCase(
+        conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
@@ -241,6 +288,9 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        if on_simulation_complete:
+            on_simulation_complete(conversational_test_case, index)
+        return conversational_test_case
 
     async def _a_simulate_single_conversation(
         self,
@@ -249,6 +299,9 @@ class ConversationSimulator:
         index: Optional[int] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
@@ -265,8 +318,6 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
-        if self.opening_message and golden.turns is None:
-            turns.append(Turn(role="assistant", content=self.opening_message))
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -286,11 +337,7 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (
-                len(turns) == 1
-                and self.opening_message
-                and golden.turns is None
-            ):
+            if len(turns) == 0:
                 # Generate first user input
                 user_input = await self.a_generate_first_user_input(golden)
                 turns.append(Turn(role="user", content=user_input))
@@ -324,7 +371,7 @@ class ConversationSimulator:
             turns.append(turn)
 
         update_pbar(progress, pbar_id)
-        return ConversationalTestCase(
+        conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
@@ -340,6 +387,9 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        if on_simulation_complete:
+            on_simulation_complete(conversational_test_case, index)
+        return conversational_test_case
 
     ############################################
     ### Generate User Inputs ###################
@@ -464,7 +514,9 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [t.model_dump() for t in turns], indent=4
+                [t.model_dump() for t in turns],
+                indent=4,
+                ensure_ascii=False,
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome
@@ -509,7 +561,9 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [t.model_dump() for t in turns], indent=4
+                [t.model_dump() for t in turns],
+                indent=4,
+                ensure_ascii=False,
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome

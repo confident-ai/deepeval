@@ -83,6 +83,3 @@ async def generate_all_json_dumps():
     # await test_async_openai_with_trace()
     # await test_async_response_create_without_trace()
     await test_async_response_create_with_trace()
-
-
-# asyncio.run(generate_all_json_dumps())

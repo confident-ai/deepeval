@@ -305,14 +305,7 @@ dataset = EvaluationDataset(goldens)
 dataset.push(alias="My dataset")
 ```
 
-This pushes all goldens in your evaluation dataset to Confident AI. If you don't already have a dataset, the `push` method will automatically create one. If you already have a dataset with the same alias, you can also choose to **optionally** overwrite it by setting `overwrite` to `True`:
-
-```python
-...
-dataset.push(alias="My dataset")
-```
-
-Lastly, if you're unsure whether your goldens are ready for evaluation, you should set `finalized` to `False` instead:
+This pushes all goldens in your evaluation dataset to Confident AI. If you're unsure whether your goldens are ready for evaluation, you should set `finalized` to `False` instead:
 
 ```python
 ...
@@ -320,10 +313,10 @@ Lastly, if you're unsure whether your goldens are ready for evaluation, you shou
 dataset.push(alias="My dataset", finalized=False)
 ```
 
-The `queue` method will similarly push goldens but will not mark it as "finalized" on Confident AI. This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 :::tip
-You can also push multi-turn datasets.
+You can also push multi-turn datasets exactly the same way.
 :::
 
 </TabItem>

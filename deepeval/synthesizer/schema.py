@@ -58,3 +58,26 @@ class PromptStyling(BaseModel):
     scenario: str
     task: str
     input_format: str
+
+
+class ConversationalScenario(BaseModel):
+    scenario: str
+
+
+class ConversationalScenarioList(BaseModel):
+    data: List[ConversationalScenario]
+
+
+class RewrittenScenario(BaseModel):
+    rewritten_scenario: str
+
+
+class ScenarioFeedback(BaseModel):
+    score: float
+    feedback: str
+
+
+class ConversationalPromptStyling(BaseModel):
+    scenario_context: str
+    conversational_task: str
+    participant_roles: str

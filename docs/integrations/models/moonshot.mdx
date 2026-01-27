@@ -12,8 +12,7 @@ To configure your Moonshot model through the CLI, run the following command:
 
 ```bash
 deepeval set-moonshot \
-    --model "kimi-k2-0711-preview" \
-    --api-key "your-api-key" \
+    --model="kimi-k2-0711-preview" \
     --temperature=0
 ```
 
@@ -40,7 +39,7 @@ from deepeval.models import KimiModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = KimiModel(
-    model_name="kimi-k2-0711-preview",
+    model="kimi-k2-0711-preview",
     api_key="your-api-key",
     temperature=0
 )
@@ -48,12 +47,14 @@ model = KimiModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **TWO** mandatory and **ONE** optional parameters when creating an `KimiModel`:
+There are **ZERO** mandatory and **SIX** optional parameters when creating an `KimiModel`:
 
-- `model`: A string specifying the name of the Kimi model to use.
-- `api_key`: A string specifying your Kimi API key for authentication.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- [Optional] `model`: A string specifying the name of the Kimi model to use. Defaults to `MOONSHOT_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Kimi API key for authentication. Defaults to `MOONSHOT_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset and raises if < 0.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `MOONSHOT_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `MOONSHOT_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` call.
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.together.ai/docs/inference-parameters).

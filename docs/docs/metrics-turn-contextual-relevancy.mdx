@@ -1,0 +1,97 @@
+---
+id: metrics-turn-contextual-relevancy
+title: Turn Contextual Relevancy
+sidebar_label: Turn Contextual Relevancy
+---
+
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  referenceFree={false}
+  rag={true}
+/>
+
+The turn contextual relevancy metric is a conversational metric that evaluates whether the retrieval context contains relevant information to address the user's input **throughout a conversation**.
+
+## Required Arguments
+
+To use the `TurnContextualRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+
+You must provide the `role`, `content`, and `retrieval_context` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
+## Usage
+
+The `TurnContextualRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TurnContextualRelevancyMetric
+
+content = "We offer a 30-day full refund at no extra cost."
+retrieval_context = [
+    "All customers are eligible for a 30 day full refund at no extra cost."
+]
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What if these shoes don't fit?"),
+        Turn(role="assistant", content=content, retrieval_context=retrieval_context)
+    ],
+    expected_outcome="The chatbot must explain the store policies like refunds, discounts, ..etc.",
+)
+
+metric = TurnContextualRelevancyMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `TurnContextualRelevancyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
+
+### As a standalone
+
+You can also run the `TurnContextualRelevancyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated?
+
+The `TurnContextualRelevancyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Turn Contextual Relevancy} = \frac{\sum \text{Turn Contextual Relevancy Scores}}{\text{Total Number of Assistant Turns}}" />
+
+The `TurnContextualRelevancyMetric` first constructs a sliding windows of turns. For each window, it:
+
+1. **Extracts statements** from each retrieval context node
+2. **Evaluates each statement** to determine if it is relevant to the user's input
+3. **Calculates the interaction score** as the ratio of relevant statements to total statements
+
+<Equation formula="\text{Contextual Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
+
+The final score is the average of all relevancy scores across the conversation. This measures whether your retrieval system is returning contextually relevant information for each turn.

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.6.7"
+version = "3.8.1"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ exclude = ["tests/*", "tracing_tests/*"]
 deepeval = 'deepeval.cli.main:app'
 
 [tool.poetry.plugins."pytest11"]
-plugins = "deepeval.plugins.plugin"
+deepeval = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <4.0"
@@ -22,7 +22,7 @@ tqdm = "^4.66.1"
 pytest = "*"
 pytest-xdist = "*"
 pytest-repeat = "*"
-pytest-rerunfailures = "^12.0"
+pytest-rerunfailures = "*"
 pytest-asyncio = "*"
 tabulate = "^0.9.0"
 sentry-sdk = "*"
@@ -31,8 +31,7 @@ portalocker = "*"
 openai = "*"
 aiohttp = "*"
 typer = ">=0.9,<1.0.0"
-click=">=8.0.0,<8.3.0"
-ollama="*"
+click = ">=8.0.0,<8.3.0"
 setuptools = "*"
 wheel = "*"
 nest_asyncio = "*"
@@ -41,9 +40,7 @@ opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
 opentelemetry-exporter-otlp-proto-grpc = "^1.24.0"
 grpcio = "^1.67.1"
-anthropic = "*"
-google-genai = "^1.9.0"
-posthog = "^6.3.0"
+posthog = "^5.4.0, <7.0.0"
 pyfiglet = "*"
 python-dotenv = "^1.1.1"
 pydantic = "^2.11.7"
@@ -52,7 +49,7 @@ jinja2 = "*"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
-black = {extras = ["jupyter"], version = "^25.1.0"}
+black = { extras = ["jupyter"], version = "^25.1.0" }
 chromadb = "*"
 langchain = "*"
 langchain_core = "*"
@@ -65,6 +62,9 @@ pandas = "*"
 pysqlite3-binary = "^0.5.4"
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
+ollama = "*"
+anthropic = "*"
+google-genai = "^1.9.0"
 
 [tool.black]
 line-length = 80
@@ -80,6 +80,7 @@ build-backend = "poetry.core.masonry.api"
 addopts = "-m 'not skip_test'"
 markers = [
     "skip_test: skip the test",
+    "enable_dotenv: allow this test to load .env files via autoload_dotenv()",
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
@@ -88,8 +89,8 @@ asyncio_default_fixture_loop_scope = "function"
 optional = true
 
 [tool.poetry.group.integrations.dependencies]
-crewai = {version = "*", python = ">=3.10,<3.11"}
-pydantic-ai = {version = "^1.0.18", python = ">=3.10,<3.11"}
+crewai = { version = "*", python = ">=3.10,<3.11" }
+pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.11" }
 langgraph = "^0.6.10"
 llama-index = "^0.14.4"
 langchain_openai = "^0.3.35"

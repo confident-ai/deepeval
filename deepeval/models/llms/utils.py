@@ -3,6 +3,11 @@ import re
 import json
 import asyncio
 
+from deepeval.errors import DeepEvalError
+
+
+MULTIMODAL_MODELS = ["GPTModel", "AzureModel", "GeminiModel", "OllamaModel"]
+
 
 def trim_and_load_json(
     input_string: str,
@@ -18,7 +23,7 @@ def trim_and_load_json(
         return json.loads(jsonStr)
     except json.JSONDecodeError:
         error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        raise ValueError(error_str)
+        raise DeepEvalError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
@@ -38,7 +43,7 @@ def safe_asyncio_run(coro):
                 return loop.run_until_complete(future)
             else:
                 return loop.run_until_complete(coro)
-        except Exception as inner_e:
+        except Exception:
             raise
-    except Exception as e:
+    except Exception:
         raise

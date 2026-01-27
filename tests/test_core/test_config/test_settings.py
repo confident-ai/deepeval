@@ -1,19 +1,22 @@
+import json
 import os
-from pathlib import Path
 import pytest
+from pathlib import Path
 
-from deepeval.config.settings import autoload_dotenv, get_settings
-
-pytestmark = pytest.mark.skip(
-    reason="Temporarily disabled while refactoring settings persistence"
+from deepeval.config.utils import parse_bool
+from deepeval.config.settings import (
+    autoload_dotenv,
+    get_settings,
+    reset_settings,
 )
 
 
-def test_autoload_dotenv_precedence(tmp_path: Path, monkeypatch):
+@pytest.mark.enable_dotenv
+def test_autoload_dotenv_precedence(monkeypatch, env_dir: Path):
     # .env sets base, .env.dev overrides, .env.local highest
-    (tmp_path / ".env").write_text("APP_ENV=dev\nFOO=base\n")
-    (tmp_path / ".env.dev").write_text("FOO=env\n")
-    (tmp_path / ".env.local").write_text("FOO=local\n")
+    (env_dir / ".env").write_text("APP_ENV=dev\nFOO=base\n")
+    (env_dir / ".env.dev").write_text("FOO=env\n")
+    (env_dir / ".env.local").write_text("FOO=local\n")
 
     autoload_dotenv()
     assert os.environ["APP_ENV"] == "dev"
@@ -21,39 +24,30 @@ def test_autoload_dotenv_precedence(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("FOO", raising=False)
 
 
-def test_autoload_respects_disable_flag(tmp_path: Path, monkeypatch):
-    (tmp_path / ".env").write_text("FOO=base\n")
+@pytest.mark.enable_dotenv
+def test_autoload_respects_disable_flag(monkeypatch, env_dir: Path):
+    (env_dir / ".env").write_text("FOO=base\n")
     monkeypatch.setenv("DEEPEVAL_DISABLE_DOTENV", "1")
-    monkeypatch.delenv(
-        "FOO", raising=False
-    )  # cleanup from past tests. will find a better way
     autoload_dotenv()
     assert "FOO" not in os.environ  # skipped
 
 
-def test_autoload_does_not_override_process_env(tmp_path, monkeypatch):
-    (tmp_path / ".env").write_text("FOO=base\n")
+@pytest.mark.enable_dotenv
+def test_autoload_does_not_override_process_env(monkeypatch, env_dir: Path):
+    (env_dir / ".env").write_text("FOO=base\n")
     monkeypatch.setenv("FOO", "proc")  # process env wins
     autoload_dotenv()
     assert os.environ["FOO"] == "proc"
 
 
-def test_autoload_respects_env_dir_path(tmp_path, monkeypatch):
+@pytest.mark.enable_dotenv
+def test_autoload_respects_env_dir_path(monkeypatch, tmp_path: Path):
     env_dir = tmp_path / "custom"
     env_dir.mkdir()
     (env_dir / ".env.local").write_text("FROM_CUSTOM_DIR=1\n")
     monkeypatch.setenv("ENV_DIR_PATH", str(env_dir))
     autoload_dotenv()
     assert os.environ.get("FROM_CUSTOM_DIR") == "1"
-
-
-def test_boolean_coercion_yes_no_and_10(monkeypatch):
-    monkeypatch.setenv("USE_OPENAI_MODEL", "YES")
-    monkeypatch.setenv("CUDA_LAUNCH_BLOCKING", "0")
-
-    s = get_settings()
-    assert s.USE_OPENAI_MODEL is True
-    assert s.CUDA_LAUNCH_BLOCKING is False
 
 
 def test_defaults():
@@ -65,6 +59,18 @@ def test_defaults():
     assert s.CONFIDENT_METRIC_LOGGING_VERBOSE is True
     assert s.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE == 1.0
     assert s.CONFIDENT_METRIC_LOGGING_ENABLED is True
+
+
+def test_env_mutation_after_init_triggers_auto_refresh(monkeypatch):
+    from deepeval.config.settings import get_settings
+
+    s1 = get_settings()
+    old = s1.USE_OPENAI_MODEL
+
+    monkeypatch.setenv("USE_OPENAI_MODEL", "NO" if old is True else "YES")
+    s2 = get_settings()
+    assert s2 is not s1  # should auto refresh when env updates
+    assert s2.USE_OPENAI_MODEL is (old is not True)
 
 
 def test_invalid_trace_sample_rate_raises(monkeypatch):
@@ -113,9 +119,10 @@ def test_edit_runtime_only_persist_false_updates_env_not_files(
     assert writes == []
 
 
-def test_edit_respects_default_save_writes_dotenv(tmp_path: Path, monkeypatch):
+@pytest.mark.enable_dotenv
+def test_edit_respects_default_save_writes_dotenv(monkeypatch, env_dir: Path):
     # configure default save to a specific file
-    dotenv_path = tmp_path / ".env"
+    dotenv_path = env_dir / ".env"
     monkeypatch.setenv("DEEPEVAL_DEFAULT_SAVE", f"dotenv:{dotenv_path}")
 
     s = get_settings()
@@ -127,11 +134,12 @@ def test_edit_respects_default_save_writes_dotenv(tmp_path: Path, monkeypatch):
     assert "GRPC_VERBOSITY=ERROR" in content
 
 
-def test_edit_explicit_save_overrides_default(tmp_path, monkeypatch):
+@pytest.mark.enable_dotenv
+def test_edit_explicit_save_overrides_default(monkeypatch, env_dir: Path):
     monkeypatch.setenv(
-        "DEEPEVAL_DEFAULT_SAVE", f"dotenv:{tmp_path / 'ignored.env'}"
+        "DEEPEVAL_DEFAULT_SAVE", f"dotenv:{env_dir / 'ignored.env'}"
     )
-    explicit = tmp_path / "chosen.env"
+    explicit = env_dir / "chosen.env"
 
     s = get_settings()
     with s.edit(save=f"dotenv:{explicit}"):
@@ -140,7 +148,7 @@ def test_edit_explicit_save_overrides_default(tmp_path, monkeypatch):
     assert explicit.exists()
     assert "TOKENIZERS_PARALLELISM=1" in explicit.read_text()
     # and the default file was not created
-    assert not (tmp_path / "ignored.env").exists()
+    assert not (env_dir / "ignored.env").exists()
 
 
 def test_switch_model_provider_flips_only_target():
@@ -155,8 +163,9 @@ def test_switch_model_provider_flips_only_target():
     assert s.USE_LOCAL_MODEL is False
 
 
-def test_edit_unset_removes_from_env_and_dotenv(tmp_path, monkeypatch):
-    dotenv_path = tmp_path / ".env"
+@pytest.mark.enable_dotenv
+def test_edit_unset_removes_from_env_and_dotenv(monkeypatch, env_dir: Path):
+    dotenv_path = env_dir / ".env"
     monkeypatch.setenv("DEEPEVAL_DEFAULT_SAVE", f"dotenv:{dotenv_path}")
 
     # seed a value via settings so it ends up in dotenv
@@ -200,14 +209,14 @@ def test_secret_not_persisted_to_json(monkeypatch):
     assert not calls
 
 
-def test_env_dir_path_expanduser(tmp_path, monkeypatch):
+def test_env_dir_path_expanduser(monkeypatch, tmp_path: Path):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("ENV_DIR_PATH", "~/envdir")
     s = get_settings()
     assert s.ENV_DIR_PATH == tmp_path / "envdir"
 
 
-def test_results_folder_expandvars(tmp_path, monkeypatch):
+def test_results_folder_expandvars(monkeypatch, tmp_path: Path):
     outdir = tmp_path / "outdir"
     monkeypatch.setenv("MYDIR", str(outdir))
     monkeypatch.setenv("DEEPEVAL_RESULTS_FOLDER", "$MYDIR")
@@ -235,7 +244,7 @@ def test_filesystem_invalid_raises(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "tok,expected",
+    "opt_out,expected",
     [
         ("YES", True),
         ("No", False),
@@ -247,11 +256,45 @@ def test_filesystem_invalid_raises(monkeypatch):
         ("disabled", False),
     ],
 )
-def test_boolean_coercion_tokens(monkeypatch, tok, expected):
-    # Use a representative boolean field
-    monkeypatch.setenv("TOKENIZERS_PARALLELISM", tok)
+@pytest.mark.enable_dotenv
+def test_boolean_coercion_opt_in_with_autoload_dotenv(
+    monkeypatch, env_path: Path, opt_out, expected
+):
+    monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
+    env_path.write_text(f"DEEPEVAL_TELEMETRY_OPT_OUT={opt_out}\n")
+    autoload_dotenv()
+    settings = get_settings()
+    assert parse_bool(os.environ["DEEPEVAL_TELEMETRY_OPT_OUT"]) is expected
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is expected
+
+
+@pytest.mark.parametrize(
+    "opt_out,expected",
+    [
+        ("YES", True),
+        ("No", False),
+        ("1", True),
+        ("0", False),
+        ("on", True),
+        ("off", False),
+        ("enable", True),
+        ("disabled", False),
+    ],
+)
+def test_boolean_coercion_opt_out_with_dotenv(monkeypatch, opt_out, expected):
     s = get_settings()
-    assert s.TOKENIZERS_PARALLELISM is expected
+    with s.edit(persist=False):
+        s.DEEPEVAL_TELEMETRY_OPT_OUT = opt_out
+    assert s.DEEPEVAL_TELEMETRY_OPT_OUT is expected
+
+
+def test_boolean_reset_settings_after_environ_update(monkeypatch):
+    monkeypatch.setenv("USE_OPENAI_MODEL", "YES")
+    monkeypatch.setenv("CUDA_LAUNCH_BLOCKING", "0")
+
+    settings = get_settings()
+    assert settings.USE_OPENAI_MODEL is True
+    assert settings.CUDA_LAUNCH_BLOCKING is False
 
 
 def test_sample_rate_empty_string_is_none(monkeypatch):
@@ -283,18 +326,209 @@ def test_sample_rate_invalid_raises(monkeypatch, val):
         get_settings()
 
 
-def test_switch_model_provider_flips_all_use_flags(monkeypatch):
-    s = get_settings()
-    with s.edit(persist=False) as ctx:
-        # Seed a mix of USE_* flags across models/embeddings
-        for field in type(s).model_fields:
-            if field.startswith("USE_"):
-                setattr(s, field, True)
-        ctx.switch_model_provider("USE_GEMINI_MODEL")
+def test_switch_model_provider_flips_use_flags_within_family_only(settings):
+    # Split USE_* flags into "llm family" vs "embedding family"
+    all_use = [
+        field
+        for field in type(settings).model_fields
+        if field.startswith("USE_")
+    ]
+    llm_flags = [field for field in all_use if "EMBEDDING" not in field]
+    emb_flags = [field for field in all_use if "EMBEDDING" in field]
 
-    for field in type(s).model_fields:
-        if field.startswith("USE_"):
-            if field == "USE_GEMINI_MODEL":
-                assert getattr(s, field) is True
-            else:
-                assert getattr(s, field) is False
+    # Assert both families exist
+    assert llm_flags, "No LLM USE_* flags found on Settings"
+    assert emb_flags, "No embedding USE_* flags found on Settings"
+
+    target_llm = llm_flags[0]
+    target_emb = emb_flags[0]
+
+    with settings.edit(persist=False) as ctx:
+        # Seed all flags to True so we can observe which ones get flipped
+        for field in all_use:
+            setattr(settings, field, True)
+
+        # Flip LLM family only
+        ctx.switch_model_provider(target_llm)
+
+        for field in llm_flags:
+            assert getattr(settings, field) is (field == target_llm)
+        for field in emb_flags:
+            # Embeddings should be untouched by LLM switch (remain True)
+            assert getattr(settings, field) is True
+
+        # Reset everything to True again
+        for field in all_use:
+            setattr(settings, field, True)
+
+        # Flip embedding family only
+        ctx.switch_model_provider(target_emb)
+
+        for field in emb_flags:
+            assert getattr(settings, field) is (field == target_emb)
+        for field in llm_flags:
+            # LLMs should be untouched by embedding switch (remain True)
+            assert getattr(settings, field) is True
+
+
+############################################################
+# DEEPEVAL_TELEMETRY_ENABLED -> alias for *_OPT_OUT (secure)
+############################################################
+
+
+def _clear_telemetry_env(monkeypatch):
+    monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
+    monkeypatch.delenv("DEEPEVAL_TELEMETRY_ENABLED", raising=False)
+
+
+def test_alias_only_enabled_yes_sets_opt_out_false(monkeypatch):
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")
+    reset_settings(reload_dotenv=False)
+
+    s = get_settings()
+    assert s.DEEPEVAL_TELEMETRY_OPT_OUT is False  # ON
+
+
+def test_alias_only_enabled_no_sets_opt_out_true(monkeypatch):
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "no")
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_alias_both_present_opt_out_wins(monkeypatch):
+    # Conflict: OPT_OUT says OFF, legacy says ON means OFF wins
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")  # OFF
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")  # ON
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_alias_both_present_enabled_false_forces_opt_out(monkeypatch):
+    # Conflict: OPT_OUT says ON, legacy says OFF means OFF wins
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "no")  # ON
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "0")  # OFF
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_neither_set_defaults_on(monkeypatch):
+    # neither var present means default OFF (for security)
+    _clear_telemetry_env(monkeypatch)
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is False  # ON by default
+
+
+##################################################
+# Do not persist DEEPEVAL_TELEMETRY_ENABLED
+##################################################
+
+
+@pytest.mark.enable_dotenv
+def test_legacy_enabled_alias_not_persisted_to_dotenv(
+    monkeypatch, env_dir: Path
+):
+    """
+    We persist DEEPEVAL_TELEMETRY_OPT_OUT, but never the legacy DEEPEVAL_TELEMETRY_ENABLED.
+    """
+    dotenv_path = env_dir / ".env"
+    monkeypatch.setenv("DEEPEVAL_DEFAULT_SAVE", f"dotenv:{dotenv_path}")
+
+    _clear_telemetry_env(monkeypatch)
+    # Seed legacy alias to YES so OPT_OUT starts as False.
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    # _ENABLED is ON -> OPT_OUT False
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is False
+
+    with settings.edit() as ctx:
+        # Now flip it so a diff is recorded and persisted
+        settings.DEEPEVAL_TELEMETRY_OPT_OUT = True  # OFF
+        settings.DEEPEVAL_VERBOSE_MODE = True
+
+    assert ctx.result is not None
+    updated = ctx.result.updated
+
+    # Legacy DEEPEVAL_TELEMETRY_ENABLED must not appear in the persisted updates
+    assert "DEEPEVAL_TELEMETRY_ENABLED" not in updated
+    # but other fields should
+    assert "DEEPEVAL_TELEMETRY_OPT_OUT" in updated
+    assert "DEEPEVAL_VERBOSE_MODE" in updated
+
+    # Dotenv should not contain DEEPEVAL_TELEMETRY_ENABLED
+    content = dotenv_path.read_text()
+    assert "DEEPEVAL_TELEMETRY_ENABLED" not in content
+    # Booleans are persisted as 1 or 0
+    assert "DEEPEVAL_TELEMETRY_OPT_OUT=1" in content
+    assert "DEEPEVAL_VERBOSE_MODE=1" in content
+
+
+##########################################
+# Legacy .deepeval JSON -> Settings shim #
+##########################################
+
+
+def test_legacy_keyfile_populates_openai_api_key_when_env_missing(
+    monkeypatch, hidden_store_dir: Path
+):
+    """
+    Backwards compatibility: if OPENAI_API_KEY only exists in the legacy
+    .deepeval/.deepeval JSON store (and not in the process env), Settings
+    should surface it as Settings.OPENAI_API_KEY.
+    """
+    from pydantic import SecretStr
+    from deepeval.constants import KEY_FILE
+    from deepeval.config.settings import get_settings, reset_settings
+
+    # Make sure the process env does NOT shadow the legacy value
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    # Simulate an older DeepEval that persisted the key into the hidden store
+    keyfile_path = hidden_store_dir / KEY_FILE
+    keyfile_path.write_text(json.dumps({"OPENAI_API_KEY": "legacy-json-key"}))
+
+    # Force a fresh Settings instance so any bootstrap logic runs
+    reset_settings(reload_dotenv=False)
+    s = get_settings()
+
+    # Desired behavior (will FAIL until you wire in the legacy loader):
+    assert isinstance(s.OPENAI_API_KEY, SecretStr)
+    assert s.OPENAI_API_KEY.get_secret_value() == "legacy-json-key"
+
+
+def test_env_openai_api_key_takes_precedence_over_legacy_keyfile(
+    monkeypatch, hidden_store_dir: Path
+):
+    """
+    Env vars must always win over the legacy .deepeval/.deepeval JSON store.
+    If both are present, Settings.OPENAI_API_KEY should use the env value.
+    """
+    from pydantic import SecretStr
+    from deepeval.constants import KEY_FILE
+    from deepeval.config.settings import get_settings, reset_settings
+
+    # Seed the legacy keyfile with one value
+    keyfile_path = hidden_store_dir / KEY_FILE
+    keyfile_path.write_text(json.dumps({"OPENAI_API_KEY": "legacy-json-key"}))
+
+    # And also set an env-level value that should take precedence
+    monkeypatch.setenv("OPENAI_API_KEY", "env-secret-key")
+
+    reset_settings(reload_dotenv=False)
+    s = get_settings()
+
+    assert isinstance(s.OPENAI_API_KEY, SecretStr)
+    assert s.OPENAI_API_KEY.get_secret_value() == "env-secret-key"

@@ -1,40 +1,69 @@
-from ollama import Client, AsyncClient
 from typing import List, Optional, Dict
 
-from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
+from deepeval.config.settings import get_settings
+from deepeval.utils import require_dependency
 from deepeval.models import DeepEvalBaseEmbeddingModel
+from deepeval.models.utils import (
+    normalize_kwargs_and_extract_aliases,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
 from deepeval.constants import ProviderSlug as PS
-
+from deepeval.utils import require_param
 
 retry_ollama = create_retry_decorator(PS.OLLAMA)
+
+_ALIAS_MAP = {"base_url": ["host"]}
 
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
         model: Optional[str] = None,
-        host: Optional[str] = None,
+        base_url: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
-        **client_kwargs,
+        **kwargs,
     ):
-        self.host = host or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
+        normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
+            "OllamaEmbeddingModel",
+            kwargs,
+            _ALIAS_MAP,
         )
-        self.model_name = model or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
+
+        # re-map depricated keywords to re-named positional args
+        if base_url is None and "base_url" in alias_values:
+            base_url = alias_values["base_url"]
+
+        settings = get_settings()
+
+        if base_url is not None:
+            self.base_url = str(base_url).rstrip("/")
+        elif settings.LOCAL_EMBEDDING_BASE_URL is not None:
+            self.base_url = str(settings.LOCAL_EMBEDDING_BASE_URL).rstrip("/")
+        else:
+            self.base_url = "http://localhost:11434"
+
+        model = model or settings.LOCAL_EMBEDDING_MODEL_NAME
+
+        # validation
+        model = require_param(
+            model,
+            provider_label="OllamaEmbeddingModel",
+            env_var_name="LOCAL_EMBEDDING_MODEL_NAME",
+            param_hint="model",
         )
-        self.client_kwargs = client_kwargs or {}
+
+        # Keep sanitized kwargs for client call to strip legacy keys
+        self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        super().__init__(self.model_name)
+        super().__init__(model)
 
     @retry_ollama
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         response = embedding_model.embed(
-            model=self.model_name, input=text, **self.generation_kwargs
+            model=self.name, input=text, **self.generation_kwargs
         )
         return response["embeddings"][0]
 
@@ -42,7 +71,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         response = embedding_model.embed(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return response["embeddings"]
 
@@ -50,7 +79,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embed(
-            model=self.model_name, input=text, **self.generation_kwargs
+            model=self.name, input=text, **self.generation_kwargs
         )
         return response["embeddings"][0]
 
@@ -58,7 +87,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embed(
-            model=self.model_name, input=texts, **self.generation_kwargs
+            model=self.name, input=texts, **self.generation_kwargs
         )
         return response["embeddings"]
 
@@ -67,12 +96,18 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
+        ollama = require_dependency(
+            "ollama",
+            provider_label="OllamaEmbeddingModel",
+            install_hint="Install it with `pip install ollama`.",
+        )
+
         if not async_mode:
-            return self._build_client(Client)
-        return self._build_client(AsyncClient)
+            return self._build_client(ollama.Client)
+        return self._build_client(ollama.AsyncClient)
 
     def _build_client(self, cls):
-        return cls(host=self.host, **self.client_kwargs)
+        return cls(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
-        return f"{self.model_name} (Ollama)"
+        return f"{self.name} (Ollama)"

@@ -21,28 +21,28 @@ To configure your LiteLLM model through the CLI, run the following command. You 
 
 ```bash
 # OpenAI
-deepeval set-litellm openai/gpt-3.5-turbo
+deepeval set-litellm --model=openai/gpt-3.5-turbo
 
 # Anthropic
-deepeval set-litellm anthropic/claude-3-opus
+deepeval set-litellm --model=anthropic/claude-3-opus
 
 # Google
-deepeval set-litellm google/gemini-pro
+deepeval set-litellm --model=google/gemini-pro
 ```
 
 You can also specify additional parameters:
 
 ```bash
 # With API key
-deepeval set-litellm openai/gpt-3.5-turbo --api-key="your-api-key"
+deepeval set-litellm --model=openai/gpt-3.5-turbo
 
 # With custom API base
-deepeval set-litellm openai/gpt-3.5-turbo --api-base="https://your-custom-endpoint.com"
+deepeval set-litellm --model=openai/gpt-3.5-turbo --base-url="https://your-custom-endpoint.com"
 
 # With both API key and custom base
-deepeval set-litellm openai/gpt-3.5-turbo \
-    --api-key="your-api-key" \
-    --api-base="https://your-custom-endpoint.com"
+deepeval set-litellm \
+    --model=openai/gpt-3.5-turbo \
+    --base-url="https://your-custom-endpoint.com"
 ```
 
 :::info
@@ -71,20 +71,20 @@ from deepeval.metrics import AnswerRelevancyMetric
 model = LiteLLMModel(
     model="openai/gpt-3.5-turbo",  # Provider must be specified
     api_key="your-api-key",  # optional, can be set via environment variable
-    api_base="your-api-base",  # optional, for custom endpoints
+    base_url="your-api-base",  # optional, for custom endpoints
     temperature=0
 )
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-The `LiteLLMModel` class accepts the following parameters:
+There are **ZERO** mandatory and **FIVE** optional parameters when creating a `LiteLLMModel`:
 
-- `model` (required): A string specifying the provider and model name (e.g., "openai/gpt-3.5-turbo", "anthropic/claude-3-opus")
-- `api_key` (optional): A string specifying the API key for the model
-- `api_base` (optional): A string specifying the base URL for the model API
-- `temperature` (optional): A float specifying the model temperature. Defaults to 0
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- [Optional] `model` (required): A string specifying the provider and model name (e.g., "openai/gpt-3.5-turbo", "anthropic/claude-3-opus"). Defaults to `LITELLM_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key` (optional): A string specifying the API key for the model. If not passed, DeepEval attempts (in order) `LITELLM_API_KEY`, `LITELLM_PROXY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, then `GOOGLE_API_KEY`. If none are set, the key is left unset and the underlying LiteLLM/provider behavior applies.
+- [Optional] `base_url` (optional): A string specifying the base URL for the model API. Defaults to `LITELLM_API_BASE`, then `LITELLM_PROXY_API_BASE` if not passed.
+- [Optional] `temperature` (optional): A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to LiteLLM’s `completion(...)` / `acompletion(...)` call
 
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.litellm.ai/docs/providers/custom_llm_server).
@@ -107,6 +107,7 @@ export GOOGLE_API_KEY="your-api-key"
 # Custom endpoint
 export LITELLM_API_BASE="https://your-custom-endpoint.com"
 ```
+
 ### Available Models
 
 :::note
@@ -114,30 +115,36 @@ This list only displays some of the available models. For a complete list of sup
 :::
 
 #### OpenAI Models
+
 - `openai/gpt-3.5-turbo`
 - `openai/gpt-4`
 - `openai/gpt-4-turbo-preview`
 
 #### Anthropic Models
+
 - `anthropic/claude-3-opus`
 - `anthropic/claude-3-sonnet`
 - `anthropic/claude-3-haiku`
 
 #### Google Models
+
 - `google/gemini-pro`
 - `google/gemini-ultra`
 
 #### Mistral Models
+
 - `mistral/mistral-small`
 - `mistral/mistral-medium`
 - `mistral/mistral-large`
 
 #### LM Studio Models
+
 - `lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF`
 - `lm-studio/Mistral-7B-Instruct-v0.2-GGUF`
 - `lm-studio/Phi-2-GGUF`
 
 #### Ollama Models
+
 - `ollama/llama2`
 - `ollama/mistral`
 - `ollama/codellama`
@@ -153,6 +160,7 @@ When using Ollama, you need to specify the API base URL. By default, Ollama runs
 ### Examples
 
 #### Basic Usage with Different Providers
+
 ```python
 from deepeval.models import LiteLLMModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -172,7 +180,7 @@ metric = AnswerRelevancyMetric(model=model)
 # LM Studio
 model = LiteLLMModel(
     model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
-    api_base="http://localhost:1234/v1",  # LM Studio default URL
+    base_url="http://localhost:1234/v1",  # LM Studio default URL
     api_key="lm-studio"  # LM Studio uses a fixed API key
 )
 metric = AnswerRelevancyMetric(model=model)
@@ -180,22 +188,24 @@ metric = AnswerRelevancyMetric(model=model)
 # Ollama
 model = LiteLLMModel(
     model="ollama/llama2",
-    api_base="http://localhost:11434/v1",  # Ollama default URL
+    base_url="http://localhost:11434/v1",  # Ollama default URL
     api_key="ollama"  # Ollama uses a fixed API key
 )
 metric = AnswerRelevancyMetric(model=model)
 ```
 
 #### Using Custom Endpoint
+
 ```python
 model = LiteLLMModel(
     model="custom/your-model-name",  # Provider must be specified
-    api_base="https://your-custom-endpoint.com",
+    base_url="https://your-custom-endpoint.com",
     api_key="your-api-key"
 )
 ```
 
 #### Using with Schema Validation
+
 ```python
 from pydantic import BaseModel
 
@@ -213,7 +223,7 @@ response, cost = model.generate(
 # LM Studio
 model = LiteLLMModel(
     model="lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF",
-    api_base="http://localhost:1234/v1",
+    base_url="http://localhost:1234/v1",
     api_key="lm-studio"
 )
 response, cost = model.generate(
@@ -224,7 +234,7 @@ response, cost = model.generate(
 # Ollama
 model = LiteLLMModel(
     model="ollama/llama2",
-    api_base="http://localhost:11434/v1",
+    base_url="http://localhost:11434/v1",
     api_key="ollama"
 )
 response, cost = model.generate(
@@ -243,7 +253,7 @@ response, cost = model.generate(
    - For simple tasks: Use smaller models like `openai/gpt-3.5-turbo`
    - For complex reasoning: Use larger models like `openai/gpt-4` or `anthropic/claude-3-opus`
    - For cost-sensitive applications: Use models like `mistral/mistral-small` or `anthropic/claude-3-haiku`
-   - For local development: 
+   - For local development:
      - Use LM Studio models like `lm-studio/Meta-Llama-3.1-8B-Instruct-GGUF`
      - Use Ollama models like `ollama/llama2` or `ollama/mistral`
 
@@ -257,7 +267,6 @@ response, cost = model.generate(
      - Use the correct API base URL (default: `http://localhost:1234/v1`)
      - Use the fixed API key "lm-studio"
      - Ensure the model is properly downloaded and loaded in LM Studio
-   
    - **Ollama**:
      - Make sure Ollama is running and the model is pulled
      - Use the correct API base URL (default: `http://localhost:11434/v1`)

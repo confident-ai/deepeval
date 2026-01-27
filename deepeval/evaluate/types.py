@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from deepeval.test_run.api import MetricData, TurnApi
 from deepeval.test_case import MLLMImage
+from deepeval.test_run import TestRun
 
 
 @dataclass
@@ -29,3 +30,8 @@ class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
     test_run_id: Optional[str]
+
+
+class PostExperimentRequest(BaseModel):
+    testRuns: List[TestRun]
+    name: Optional[str]

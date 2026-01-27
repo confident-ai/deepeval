@@ -4,7 +4,11 @@ title: Amazon Bedrock
 sidebar_label: Amazon Bedrock
 ---
 
-DeepEval supports using any Amazon Bedrock model for all evaluation metrics. To get started, you'll need to set up your AWS credentials.
+`deepeval` supports Amazon Bedrock models that are available through the Bedrock Runtime Converse API for all evaluation metrics. To get started, you'll need to set up your AWS credentials.
+
+:::note
+`AmazonBedrockModel` requires `aiobotocore` and `botocore`. `deepeval` will prompt you to install them if they are missing.
+:::
 
 ### Setting Up Your API Key
 
@@ -24,31 +28,36 @@ Alternatively, if you're working in a notebook environment (e.g., Jupyter or Col
 
 ### Python
 
-To use Amazon bedrock models for DeepEval metrics, define an `AmazonBedrockModel` and specify the model you want to use.
+To use Amazon bedrock models for `deepeval` metrics, define an `AmazonBedrockModel` and specify the model you want to use.
 
 ```python
 from deepeval.models import AmazonBedrockModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
+    model="anthropic.claude-3-opus-20240229-v1:0",
+    region="us-east-1",
+    generation_kwargs={"temperature": 0},
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **TWO** mandatory and **FIVE** optional parameters when creating an `AmazonBedrockModel`:
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`:
 
-- `model_id`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`).
-- `region_name`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`).
-- [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. If omitted, falls back to the default AWS credentials chain.
-- [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. If omitted, falls back to the default AWS credentials chain.
-- [Optional] `input_token_cost`: A float specifying the per-input-token cost in USD. Defaulted to 0.
-- [Optional] `output_token_cost`: A float specifying the per-output-token cost in USD. Defaulted to 0.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed; raises an error at runtime if unset.
+- [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `cost_per_input_token`: A float specifying the per-input-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the per-output-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `generation_kwargs`: A dictionary of generation parameters that will be sent to Bedrock as `inferenceConfig`. Available keys may vary by the Bedrock model you choose. See the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-aws-amazon-bedrock) for the Bedrock-related environment variables.
 
 :::tip
-All `**kwargs` like `temperature` and `topP` are defaulted to what amazon bedrock model offers and you must set them in `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+Pass generation parameters like `temperature`, `topP`, or `maxTokens` via `generation_kwargs` (they are sent as `inferenceConfig`).
+
+Extra `**kwargs` passed to `AmazonBedrockModel(...)` are forwarded to the underlying Bedrock client (aiobotocore/botocore) and are **not** treated as generation parameters.
 :::
 
 ### Available Amazon Bedrock Models
@@ -61,9 +70,25 @@ Below is a list of commonly used Amazon Bedrock foundation models:
 
 - `anthropic.claude-3-opus-20240229-v1:0`
 - `anthropic.claude-3-sonnet-20240229-v1:0`
+- `anthropic.claude-opus-4-20250514-v1:0`
+- `anthropic.claude-opus-4-1-20250805-v1:0`
+- `anthropic.claude-sonnet-4-20250514-v1:0`
+- `anthropic.claude-sonnet-4-5-20250929-v1:0`
+- `anthropic.claude-haiku-4-5-20251001-v1:0`
 - `amazon.titan-text-express-v1`
 - `amazon.titan-text-premier-v1:0`
 - `amazon.nova-micro-v1:0`
 - `amazon.nova-lite-v1:0`
 - `amazon.nova-pro-v1:0`
 - `amazon.nova-premier-v1:0`
+- `meta.llama4-maverick-17b-instruct-v1:0`
+- `meta.llama4-maverick-17b-instruct-128k-v1:0`
+- `meta.llama4-scout-17b-instruct-v1:0`
+- `meta.llama4-scout-17b-instruct-128k-v1:0`
+- `mistral.mistral-large-2407-v1:0`
+- `mistral.mistral-large-2411-v1:0`
+- `mistral.pixtral-large-2411-v1:0`
+- `mistral.pixtral-large-2502-v1:0`
+- `mistral.pixtral-large-2511-v1:0`
+- `openai.gpt-oss-20b-1:0`
+- `openai.gpt-oss-120b-1:0`

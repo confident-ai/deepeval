@@ -85,7 +85,7 @@ from deepeval.models import GeminiModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GeminiModel(
-    model_name="gemini-1.5-pro",
+    model="gemini-1.5-pro",
     api_key="Your Gemini API Key",
     temperature=0
 )
@@ -7915,7 +7915,7 @@ deepeval set-azure-openai \
     --openai-api-key=<api_key> \
     --openai-model-name=<model_name> \ # e.g. gpt-4o
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
 
 ```
 
@@ -7941,11 +7941,11 @@ from deepeval.models import AzureOpenAIModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AzureOpenAIModel(
-    model_name="gpt-4o",
+    model="gpt-4o",
     deployment_name="Test Deployment",
-    azure_openai_api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
-    azure_endpoint="https://example-resource.azure.openai.com/",
+    api_key="Your Azure OpenAI API Key",
+    api_version="2025-01-01-preview",
+    base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
 
@@ -7958,7 +7958,7 @@ There are **FIVE** mandatory and **ONE** optional parameters when creating an `A
 - `model_name`: A string specifying the name of the Azure OpenAI model to use.
 - `deployment_name`: A string specifying the name of your Azure OpenAI deployment.
 - `azure_openai_api_key`: A string specifying your Azure OpenAI API key.
-- `openai_api_version`: A string specifying the OpenAI API version used in your deployment.
+- `api_version`: A string specifying the OpenAI API version used in your deployment.
 - `azure_endpoint`: A string specifying your Azure OpenAI endpoint URL.
 - \[Optional\] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
@@ -14104,7 +14104,7 @@ deepeval set-azure-openai \
     --openai-api-key=<api_key> \
     --openai-model-name=<model_name> \ # e.g. gpt-4o
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --openai-api-version=<api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 
 ```
@@ -14209,7 +14209,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,
@@ -15690,7 +15690,6 @@ There are **ONE** mandatory and **SIX** optional parameters when creating a `Con
 - `user_intentions`: a dictionary of type `Dict[str, int]`, where string keys specify the possible user intentions of a fake user profile, and integer values specify the number of conversations to generate for each corresponding intention.
 - \[Optional\] `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile, which must be supplied if `user_profiles` isn't provided. Defaulted to `None`.
 - \[Optional\] `user_profiles`: a list of strings representing complete fake user profiles, which must be supplied if `user_profile_items` isn't provided. Defaulted to `None`.
-- \[Optional\] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
 - \[Optional\] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - \[Optional\] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
@@ -19163,7 +19162,7 @@ Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if 
 deepeval set-azure-openai --openai-endpoint=<endpoint> \
     --openai-api-key=<api_key> \
     --deployment-name=<deployment_name> \
-    --openai-api-version=<openai_api_version> \
+    --openai-api-version=<api_version> \
     --model-version=<model_version>
 
 ```
@@ -19278,7 +19277,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,

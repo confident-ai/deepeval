@@ -1,8 +1,19 @@
+multimodal_rules = """
+    --- MULTIMODAL INPUT RULES ---
+    - Treat image content as factual evidence.
+    - Only reference visual details that are explicitly and clearly visible.
+    - Do not infer or guess objects, text, or details not visibly present.
+    - If an image is unclear or ambiguous, mark uncertainty explicitly.
+"""
+
+
 class SummarizationTemplate:
     @staticmethod
     def generate_reason(contradictions, redundancies, questions, score):
         return f"""You will be given the following: 1) information in the summary contradicting the original text, 2) extra information in the summary not mentioned in the original text, 3) [Optional] questions cannot be answered by the summary. Your task is to explain the quality of this summarization task.
 Given the summarization score, which is a 0-1 score indicating how good the summary is to the original text (higher the better), CONCISELY summarize the provided information to justify the score.  
+
+{multimodal_rules}
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
@@ -28,6 +39,9 @@ Extra Information not mentioned in the original text:
     @staticmethod
     def generate_answers(questions, text):
         return f"""Based on the list of close-ended 'yes' or 'no' questions, generate a JSON with key 'answers', which is a list of strings that determines whether the provided text contains sufficient information to answer EACH question.
+
+{multimodal_rules}
+
 Answers should STRICTLY be either 'yes' or 'no'.
 Answer 'no' if the provided text does not contain enough information to answer the question.
 **
@@ -57,6 +71,8 @@ JSON:
     def generate_questions(text, n):
         return f"""Based on the given text, generate {n} closed-ended questions that can be answered with either a 'yes' or 'no'. 
 The questions generated should ALWAYS result in a 'yes' based on the given text. 
+
+{multimodal_rules}
         
 ** IMPORTANT
 Only return a JSON with a 'questions' key, which is a list of strings. 
@@ -72,6 +88,9 @@ JSON:
     @staticmethod
     def generate_alignment_verdicts(original_text, summary_claims):
         return f"""Based on the given summary claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH piece of info contradicts any facts in the original text. The JSON will have 2 fields: 'verdict' and 'reason'.
+
+{multimodal_rules}
+
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text. 
 Provide a 'reason' ONLY if the answer is 'no' OR 'idk'. 
 The provided summary claims is drawn from the summary. Try to provide a correction in the reason using the facts in the original text.

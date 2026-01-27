@@ -12,9 +12,9 @@ async_client = AsyncOpenAI()
 with trace(
     llm_span_context=LlmSpanContext(
         prompt=prompt,
-        thread_id="test_thread_id_1",
         metric_collection="test_collection_1",
     ),
+    thread_id="test_thread_id_1",
 ):
     response = client.chat.completions.create(
         model="gpt-4o",

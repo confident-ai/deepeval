@@ -1,0 +1,85 @@
+---
+id: metrics-pattern-match
+title: Pattern Match
+sidebar_label: Pattern Match
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-pattern-match"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The Pattern Match metric measures whether your LLM application's `actual_output` **matches a given regular expression pattern**. This is useful for testing your model's ability to produce outputs in a specific format, structure, or syntax.
+
+:::note
+The `PatternMatchMetric` does **not** rely on an LLM for evaluation. It uses **regular expression matching** to verify if the `actual_output` conforms to the provided pattern.
+:::
+
+## Required Arguments
+
+To use the `PatternMatchMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import PatternMatchMetric
+from deepeval.test_case import LLMTestCase
+
+# Pattern: expects a valid email format
+metric = PatternMatchMetric(
+    pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$",
+    ignore_case=False,
+    threshold=1.0,
+    verbose_mode=True
+)
+
+test_case = LLMTestCase(
+    input="Generate a valid email address.",
+    actual_output="example.user@domain.com"
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** mandatory and **THREE** optional parameters when creating a `PatternMatchMetric`:
+
+- `pattern`: a string representing the regular expression pattern that the `actual_output` must match.
+- [Optional] `ignore_case`: a boolean which when set to `True`, performs case-sensitive pattern matching. Defaulted to `False`.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `PatternMatchMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `PatternMatchMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Pattern Match Score} = \begin{cases} 1 & \text{if actual output fully matches the regex pattern}, \\ 0 & \text{otherwise} \end{cases}" />
+
+The match is determined using Python's built-in regular expression engine `re.fullmatch`, which ensures the `actual_output` matches the provided `pattern`.

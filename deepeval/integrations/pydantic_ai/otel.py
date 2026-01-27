@@ -1,6 +1,7 @@
 import warnings
 from typing import Optional
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.config.settings import get_settings
 
 try:
     from opentelemetry import trace
@@ -23,7 +24,10 @@ def is_opentelemetry_available():
     return True
 
 
-OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
+settings = get_settings()
+# OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
+
+OTLP_ENDPOINT = str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
 
 
 def instrument_pydantic_ai(api_key: Optional[str] = None):

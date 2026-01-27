@@ -8,6 +8,7 @@ from deepeval.test_case import (
     Turn,
     LLMTestCase,
     ConversationalTestCase,
+    ToolCall,
 )
 
 
@@ -128,9 +129,13 @@ class TestSaveAndLoad:
                 assert isinstance(data, list)
                 assert data[0]["scenario"] == "Book a flight to Tokyo"
                 assert "turns" in data[0]
-                assert isinstance(
-                    data[0]["turns"], str
-                )  # Turns are formatted into | seperated values
+                # Turns are now structured arrays, not lossy strings
+                assert isinstance(data[0]["turns"], list)
+                assert data[0]["turns"][0]["role"] == "user"
+                assert (
+                    data[0]["turns"][0]["content"]
+                    == "Find me a flight to Tokyo"
+                )
 
             csv_path = dataset.save_as(
                 "csv", directory=tmpdir, file_name="test_convo_csv"
@@ -140,6 +145,145 @@ class TestSaveAndLoad:
                 rows = list(csv.reader(f))
                 assert len(rows) >= 2
                 assert "Book a flight to Tokyo" in rows[1]
+
+    def test_save_as_includes_extra_single_turn_fields(self):
+        """Single-turn JSON/CSV/JSONL include tools/metadata/custom columns."""
+        goldens = [
+            Golden(
+                input="Ask",
+                expected_output="Ans",
+                actual_output="Ans",
+                retrieval_context=["rctx"],
+                context=["ctx"],
+                source_file="src.txt",
+                name="n",
+                comments="c",
+                tools_called=[
+                    ToolCall(
+                        name="search",
+                        input_parameters={"q": "foo"},
+                        output={"ok": True},
+                    )
+                ],
+                expected_tools=[ToolCall(name="finalize")],
+                additional_metadata={"k": "v"},
+                custom_column_key_values={"col": "val"},
+            )
+        ]
+        dataset = EvaluationDataset(goldens)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # JSON
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="single_json"
+            )
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                row = data[0]
+                assert (
+                    isinstance(row["tools_called"], list)
+                    and row["tools_called"][0]["name"] == "search"
+                )
+                assert (
+                    isinstance(row["expected_tools"], list)
+                    and row["expected_tools"][0]["name"] == "finalize"
+                )
+                assert row["additional_metadata"]["k"] == "v"
+                assert row["custom_column_key_values"]["col"] == "val"
+
+            # JSONL
+            jsonl_path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="single_jsonl"
+            )
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                line = f.readline().strip()
+                row = json.loads(line)
+                assert (
+                    isinstance(row["tools_called"], list)
+                    and row["tools_called"][0]["name"] == "search"
+                )
+                assert (
+                    isinstance(row["expected_tools"], list)
+                    and row["expected_tools"][0]["name"] == "finalize"
+                )
+                assert row["additional_metadata"]["k"] == "v"
+                assert row["custom_column_key_values"]["col"] == "val"
+
+            # CSV
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="single_csv"
+            )
+            with open(csv_path, "r", encoding="utf-8") as f:
+                rows = list(csv.reader(f))
+                header = rows[0]
+                vals = rows[1]
+                assert "tools_called" in header and "expected_tools" in header
+                # Find column indices
+                tools_idx = header.index("tools_called")
+                expected_idx = header.index("expected_tools")
+                meta_idx = header.index("additional_metadata")
+                custom_idx = header.index("custom_column_key_values")
+                # Validate JSON-encoded cells are present
+                assert vals[tools_idx]
+                assert vals[expected_idx]
+                # Parse back to ensure valid JSON
+                tools_arr = json.loads(vals[tools_idx])
+                assert tools_arr[0]["name"] == "search"
+                expected_arr = json.loads(vals[expected_idx])
+                assert expected_arr[0]["name"] == "finalize"
+                if vals[meta_idx]:
+                    meta_obj = json.loads(vals[meta_idx])
+                    assert meta_obj["k"] == "v"
+                if vals[custom_idx]:
+                    custom_obj = json.loads(vals[custom_idx])
+                    assert custom_obj["col"] == "val"
+
+    def test_save_as_includes_turn_fields_in_multi_turn_json_and_jsonl(self):
+        """Multi-turn JSON/JSONL include full turn fields (user_id, tools)."""
+        convo = [
+            ConversationalGolden(
+                scenario="s",
+                expected_outcome="eo",
+                user_description="ud",
+                context=["ctx"],
+                turns=[
+                    Turn(
+                        role="user",
+                        content="hi",
+                        user_id="u1",
+                        retrieval_context=["r"],
+                        tools_called=[ToolCall(name="t")],
+                        additional_metadata={"mk": "mv"},
+                    ),
+                ],
+                name="n",
+                comments="c",
+                additional_metadata={"gk": "gv"},
+                custom_column_key_values={"col": "val"},
+            )
+        ]
+        dataset = EvaluationDataset(convo)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            p_json = dataset.save_as(
+                "json", directory=tmpdir, file_name="convo_json"
+            )
+            with open(p_json, "r", encoding="utf-8") as f:
+                data = json.load(f)[0]
+                turns = data["turns"]
+                assert isinstance(turns, list) and turns[0]["user_id"] == "u1"
+                assert isinstance(turns[0]["tools_called"], list)
+                assert data["additional_metadata"]["gk"] == "gv"
+                assert data["custom_column_key_values"]["col"] == "val"
+
+            p_jsonl = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="convo_jsonl"
+            )
+            with open(p_jsonl, "r", encoding="utf-8") as f:
+                rec = json.loads(f.readline())
+                turns = rec["turns"]
+                assert isinstance(turns, list) and turns[0]["user_id"] == "u1"
+                assert isinstance(turns[0]["tools_called"], list)
 
     def test_save_as_empty_dataset_raises_error(self):
         """Test that calling save_as on an empty dataset raises a ValueError."""

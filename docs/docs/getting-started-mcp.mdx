@@ -1,6 +1,6 @@
 ---
 id: getting-started-mcp
-title: MCP Evaluation
+title: MCP Evaluation Quickstart
 sidebar_label: MCP
 ---
 
@@ -110,7 +110,7 @@ task_completion_metric = MCPUseMetric(model=model)
 from deepeval.metrics import MCPUseMetric
 from deepeval.models import GrokModel
 
-model = GrokModel("grok-4-0709")
+model = GrokModel("grok-4.1")
 task_completion_metric = MCPUseMetric(model=model)
 ```
 
@@ -123,11 +123,11 @@ from deepeval.metrics import MCPUseMetric
 from deepeval.models import AzureOpenAIModel
 
 model = AzureOpenAIModel(
-    model_name="gpt-4.1",
+    model="gpt-4.1",
     deployment_name="Test Deployment",
-    azure_openai_api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
-    azure_endpoint="https://example-resource.azure.openai.com/",
+    api_key="Your Azure OpenAI API Key",
+    api_version="2025-01-01-preview",
+    base_url="https://example-resource.azure.openai.com/",
     temperature=0
 )
 task_completion_metric = MCPUseMetric(model=model)
@@ -142,8 +142,9 @@ from deepeval.metrics import MCPUseMetric
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
+    model="anthropic.claude-3-opus-20240229-v1:0",
+    region="us-east-1",
+    generation_kwargs={"temperature": 0},
 )
 task_completion_metric = MCPUseMetric(model=model)
 ```
@@ -157,7 +158,7 @@ from deepeval.metrics import MCPUseMetric
 from deepeval.models import GeminiModel
 
 model = GeminiModel(
-    model_name="gemini-1.5-pro",
+    model="gemini-1.5-pro",
     project="Your Project ID",
     location="us-central1",
     temperature=0

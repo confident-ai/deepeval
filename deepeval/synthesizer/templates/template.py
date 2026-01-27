@@ -120,7 +120,7 @@ class SynthesizerTemplate:
         )
 
         scenario_section = (
-            f"`input`s MUST be relevant to this specific scenario: ```{scenario}``` (The scenario describes the circumstances under which the inputs are generated and the user’s intent in eliciting a response)."
+            f"`input`s MUST be relevant to this specific scenario: ```{scenario}``` (The scenario describes the circumstances under which the inputs are generated and the user's intent in eliciting a response)."
             if scenario
             else ""
         )
@@ -239,6 +239,212 @@ class SynthesizerTemplate:
 
         Query:
         {original_query}
+
+        Feedback:
+        {feedback}
+
+        JSON:
+        """
+
+    @staticmethod
+    def generate_synthetic_scenarios(
+        context: str,
+        max_goldens_per_context: int,
+        scenario_context: Optional[str],
+        conversational_task: Optional[str],
+        participant_roles: Optional[str],
+    ):
+        participant_section = (
+            f"Each scenario MUST involve these participant roles: {participant_roles}."
+            if participant_roles
+            else "Each scenario MUST clearly specify who the participants are (e.g., 'a teacher and a student', 'two colleagues')."
+        )
+
+        scenario_context_section = (
+            f"All scenarios MUST fit within this conversational context: {scenario_context}"
+            if scenario_context
+            else ""
+        )
+
+        task_section = (
+            f"The conversation in each scenario should work towards this goal: {conversational_task}"
+            if conversational_task
+            else ""
+        )
+
+        return f"""I want you to act as a conversation scenario designer. Based on the given context, generate a list of JSON objects with a `scenario` key.
+        Each `scenario` should describe a MULTI-TURN CONVERSATIONAL INTERACTION between specific participants discussing information from the context.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'data' key as a list of JSON objects.
+        You MUST TRY to generate {max_goldens_per_context} data points, unless scenarios become repetitive.
+
+        Example context: ["Einstein won the Nobel Prize for his discovery of the photoelectric effect.", "Einstein won the Nobel Prize in 1921."]
+        Example max goldens per context: 2
+        Example JSON:
+        {{
+            "data": [
+                {{
+                    "scenario": "A high school student asks their physics teacher when Einstein won the Nobel Prize and what discovery it was awarded for"
+                }},
+                {{
+                    "scenario": "Two university students are studying together and one tests the other's knowledge about Einstein's Nobel Prize year and the scientific work that earned it"
+                }}
+            ]  
+        }}
+
+        CRITICAL REQUIREMENTS FOR CONVERSATIONAL SCENARIOS:
+        - Each scenario MUST describe a conversation between specific participants (who is talking to whom)
+        - Each scenario MUST specify the conversational setting and context (where, why, what they're discussing)
+        - DO NOT write questions, prompts, or instructions - write descriptions of conversational SITUATIONS
+        - DO NOT use command phrases like "Explain...", "Compare...", "Describe..." - these are instructions, not conversations
+        - Scenarios should describe realistic multi-turn interactions where information from context would naturally be discussed
+        - Think: "Who is talking to whom, about what, and in what situation?"
+        
+        GOOD examples:
+        ✓ "A patient asks their doctor about the side effects of a new medication during a consultation"
+        ✓ "A manager provides feedback to an employee about their recent project performance in a 1-on-1 meeting"
+        ✓ "Two friends debate the pros and cons of electric vehicles while carpooling to work"
+        
+        BAD examples (these are prompts/questions, not conversational scenarios):
+        ✗ "Explain the side effects of medication"
+        ✗ "What happens when water freezes?"
+        ✗ "Compare electric vehicles to gas vehicles"
+        
+        You should NOT incorporate any prior knowledge you have and take each context at face value.
+        {participant_section}
+        {scenario_context_section}
+        {task_section}
+        You MUST TRY to generate {max_goldens_per_context} data points, unless scenarios become repetitive.
+        **
+
+        Max Goldens Per Context:
+        {max_goldens_per_context}
+
+        Context:
+        {context}
+
+        JSON:
+        """
+
+    @staticmethod
+    def generate_synthetic_expected_outcome_conversational(
+        scenario: str, context: str, expected_outcome_format: Optional[str]
+    ):
+        format_section = (
+            f"The expected outcome MUST adhere to this format: {expected_outcome_format}"
+            if expected_outcome_format
+            else "Keep the expected outcome CONCISE (1-3 sentences maximum)"
+        )
+
+        return f"""Given the conversational scenario, generate a CONCISE expected outcome describing what should happen in the conversation or what is achieved by the end.
+
+        **
+        IMPORTANT: {format_section}
+        
+        The expected outcome should briefly describe ONE of:
+        - What key information is shared/conveyed during the conversation
+        - What the participants learn or come to understand
+        - What decision, agreement, or resolution is reached
+        - How the conversational goal is accomplished
+        
+        DO NOT write long explanatory paragraphs. Be direct and concise.
+        Use information from the context to ground the expected outcome.
+        **
+
+        Context:
+        {context}
+
+        Conversational Scenario:
+        {scenario}
+
+        Expected Outcome:
+        """
+
+    @staticmethod
+    def rewrite_evolved_scenario(
+        evolved_scenario: str,
+        scenario_context: Optional[str] = None,
+        conversational_task: Optional[str] = None,
+        participant_roles: Optional[str] = None,
+    ):
+        context_section = (
+            f'Scenario Context: "{scenario_context}"'
+            if scenario_context
+            else ""
+        )
+        task_section = (
+            f'Conversational Task: "{conversational_task}"'
+            if conversational_task
+            else ""
+        )
+        roles_section = (
+            f'Participant Roles: "{participant_roles}"'
+            if participant_roles
+            else ""
+        )
+
+        return f"""Given the evolved scenario, which describes a conversational situation, generate a JSON object with a key 'scenario'. 
+        This key should contain a scenario description that fits the provided context, aligns with the conversational task, and involves the specified participant roles (if provided).
+
+        **
+        IMPORTANT: Try to change the evolved scenario as little as possible. However, if it does not align with the provided scenario context, conversational task, or participant roles, it must be adjusted to fit these requirements. 
+        
+        The output must be in JSON format with the 'scenario' key only.
+        The scenario MUST describe a conversational interaction, not a question or prompt.
+        **
+
+        Example Evolved Scenario: "Discuss the importance of meeting deadlines"
+        Example Scenario Context: "Workplace performance management"
+        Example Conversational Task: "Provide constructive feedback"
+        Example Participant Roles: "Manager and employee"
+        Example JSON: {{
+            "scenario": "A manager meets with an employee to discuss recent missed deadlines and collaboratively develop strategies for better time management"
+        }}
+
+        Evolved Scenario:
+        {evolved_scenario}
+        
+        {context_section}
+        {task_section}
+        {roles_section}
+
+        JSON:
+        """
+
+    @staticmethod
+    def rewrite_synthetic_scenarios(context, original_scenario, feedback):
+        return f"""I want you to act as a scenario rewriter. Based on the provided context, original scenario, and feedback, generate a rewritten scenario that improves its clarity and conversational nature based on the feedback provided.
+
+        **
+        IMPORTANT: Please make sure to only return in JSON format, with the 'rewritten_scenario' key.
+        The rewritten scenario MUST describe a conversational interaction between participants, not a question or instruction.
+
+        Example context: "The Golden Gate Bridge, located in San Francisco, was completed in 1937 and is known for its Art Deco design. It connects the city of San Francisco to Marin County and spans the Golden Gate Strait."
+        Example scenario: "Someone asks about a bridge"
+        Example feedback: "The scenario is too vague and doesn't describe a conversational situation with specific participants. It should clearly identify who is talking to whom and in what context."
+        Example JSON:
+        {{
+            "rewritten_scenario": "A tourist visiting San Francisco asks their tour guide about the history and design features of the Golden Gate Bridge"
+        }}
+
+        Example context: "The paper 'Advancements in Quantum Computing' by Dr. Alice Thompson discusses breakthroughs in quantum algorithms and was published in 2022. It explores the potential applications of quantum computing in cryptography and drug discovery."
+        Example scenario: "A discussion about quantum computing"
+        Example feedback: "The scenario lacks specificity about who is having the discussion, what the setting is, and what aspect they're focused on. Frame this as a concrete conversational situation with identified participants."
+        Example JSON:
+        {{
+            "rewritten_scenario": "A graduate student presents Dr. Alice Thompson's 2022 paper on quantum computing to their research group, leading to a discussion about applications in cryptography and drug discovery"
+        }}
+
+        You should NOT incorporate any prior knowledge and should base the rewritten scenario only on the context and feedback provided.
+        The `rewritten_scenario` MUST be a STRING describing a multi-turn conversational interaction between specific participants.
+        **
+
+        Context:
+        {context}
+
+        Original Scenario:
+        {original_scenario}
 
         Feedback:
         {feedback}
@@ -370,6 +576,69 @@ class FilterTemplate:
 
         context:
         {context}
+
+        JSON:
+        """
+
+    @staticmethod
+    def evaluate_synthetic_scenarios(scenario):
+        return f"""Evaluate the provided conversational scenario for clarity, conversational nature, and appropriateness. Use the following criteria:
+
+        1. **Conversational Structure**: Does the scenario describe an actual conversation between identified participants (not just a question or prompt)?
+        2. **Participant Clarity**: Are the participants clearly identified with specific roles (e.g., "teacher and student", "doctor and patient")?
+        3. **Contextual Setting**: Is there a clear setting or context for when/where/why this conversation occurs?
+        4. **Purposeful Interaction**: Does the scenario imply a multi-turn dialogue with a goal or purpose?
+        5. **Naturalness**: Could this conversation realistically occur in the described situation?
+
+        Assign a score between 0 and 1:
+        - "1" = Perfect conversational scenario with clear participants, setting, and purpose
+        - "0.7-0.9" = Good scenario with minor issues (slightly vague participants or context)
+        - "0.4-0.6" = Mediocre scenario (missing clear participants OR setting OR purpose)
+        - "0-0.3" = Poor scenario (just a question/prompt, or very vague)
+
+        **
+        IMPORTANT: Return JSON format only, with 'feedback' and 'score' keys.
+
+        Example scenario: "A student asks about homework"
+        Example JSON:
+        {{
+            "feedback": "This scenario is too vague. It doesn't specify what subject, what specific aspect of homework, who the student is asking (teacher? parent?), or provide conversational context. It reads more like a prompt fragment than a conversational scenario. Needs: specific participants, setting, and what aspect of homework is being discussed.",
+            "score": 0.2
+        }}
+
+        Example scenario: "A new employee meets with their supervisor for a quarterly performance review to discuss progress over the first three months, areas for improvement, and goals for the next quarter"
+        Example JSON:
+        {{
+            "feedback": "Excellent conversational scenario. Clear participants (new employee and supervisor), specific setting (quarterly performance review), clear purpose (discuss progress, improvements, and goals), and describes a realistic multi-turn conversation. This would naturally involve back-and-forth dialogue.",
+            "score": 1.0
+        }}
+
+        Example scenario: "A patient explains symptoms to a doctor during a check-up"
+        Example JSON:
+        {{
+            "feedback": "Good conversational scenario with clear participants (patient and doctor) and setting (check-up). It describes a realistic interaction. Could be slightly more specific about what symptoms or the purpose beyond just explaining, but overall solid.",
+            "score": 0.8
+        }}
+
+        Example scenario: "Explain how photosynthesis works"
+        Example JSON:
+        {{
+            "feedback": "This is an instruction/prompt, not a conversational scenario. It doesn't describe who is talking to whom, what the setting is, or frame it as an interaction. Needs complete rewrite to describe an actual conversation (e.g., 'A biology teacher explains photosynthesis to a student who asks about...').",
+            "score": 0.1
+        }}
+
+        Example scenario: "Two colleagues discuss the benefits and drawbacks of remote work versus office work during their lunch break"
+        Example JSON:
+        {{
+            "feedback": "Strong conversational scenario. Clear participants (two colleagues), setting (lunch break), specific topic (remote vs office work), and implies a natural back-and-forth discussion. Realistic and purposeful.",
+            "score": 0.95
+        }}
+                
+        The `feedback` MUST be a STRING and `score` must be a float from 0 to 1.
+        **
+                
+        Scenario:
+        {scenario}
 
         JSON:
         """
@@ -724,5 +993,289 @@ class EvolutionTemplate:
             Input:
             {input}
             Rewritten Input:
+            """
+        )
+
+
+class ConversationalEvolutionTemplate:
+
+    base_instruction = """I want you to act as a conversational scenario rewriter.
+    Your objective is to rewrite the given `Scenario` while preserving factual correctness according to the supporting information in `Context`.
+    You MUST complicate the given `Scenario` using the following method:"""
+
+    @staticmethod
+    def multi_context_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. `Scenario` must be rewritten so participants must naturally rely on **all elements of `Context`** during the conversation.
+            2. `Rewritten Scenario` MUST remain a realistic multi-turn conversation setup.
+            3. Keep the rewritten scenario under **60 words**.
+            4. Do NOT use phrases like “based on the context” or “according to the context”.
+
+            **
+            EXAMPLES
+
+            Example context:
+            ["A startup is developing an AI tool for diagnosing skin conditions.",
+             "Regulations require explainability for clinical AI systems.",
+             "The team is under a tight deadline before a regulatory audit."]
+            Example scenario:
+            Two engineers review their prototype.
+            Example rewritten scenario:
+            During a tense late-night meeting, two AI engineers debate whether their skin-diagnosis model meets upcoming explainability regulations, forcing them to discuss audit risks and integrate overlooked clinical requirements across multiple conversational turns.
+
+            --------------------------
+
+            Example context:
+            ["A research team is studying coral bleaching.",
+             "Rising ocean temperatures accelerate bleaching events.",
+             "Funding depends on publishing actionable mitigation strategies."]
+            Example scenario:
+            Two scientists talk about coral reefs.
+            Example rewritten scenario:
+            In a lab debrief, two marine biologists argue over how rising ocean temperatures, bleaching data, and funding-dependent mitigation strategies should shape their next field report.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def reasoning_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` so the resulting conversation requires multi-step reasoning between participants.
+            2. Add layered inferential or analytical demands grounded in `Context`.
+            3. Keep the rewritten scenario under **60 words**.
+            4. Do NOT use phrases like “based on the context”.
+            5. Must remain a realistic multi-turn dialogue setup.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "A school is transitioning to solar power, but initial costs are high and maintenance requires specialized knowledge."
+            Example scenario:
+            A teacher asks a technician about solar panels.
+            Example rewritten scenario:
+            A teacher and campus technician debate whether adopting solar panels makes financial sense, analyzing upfront costs, long-term energy savings, and specialized maintenance requirements across a multi-step reasoning exchange.
+
+            --------------------------
+
+            Example context:
+            "An economic model predicts inflation rises when supply chains weaken."
+            Example scenario:
+            Two analysts discuss inflation.
+            Example rewritten scenario:
+            On a strategy call, two analysts unpack how supply-chain disruptions, demand shifts, and model predictions interact, forcing a layered reasoning conversation.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def concretizing_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` by replacing general conversational settings with **highly specific**, concrete circumstances tied to `Context`.
+            2. Add situational cues, named events, or explicit constraints.
+            3. Keep the rewritten scenario under **60 words**.
+            4. Maintain realistic multi-turn dialogue structure.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "A hospital is piloting a new triage AI system."
+            Example scenario:
+            A doctor and nurse discuss patient triage.
+            Example rewritten scenario:
+            During a chaotic evening shift, a doctor and nurse debate whether the new triage AI's risk-scores should override manual judgment in handling a surge of incoming trauma cases.
+
+            --------------------------
+
+            Example context:
+            "A remote-work company is struggling with meeting overload."
+            Example scenario:
+            Two colleagues discuss productivity.
+            Example rewritten scenario:
+            In a Friday retrospective, two remote employees argue about whether asynchronous updates can replace their current schedule of back-to-back video meetings.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def constrained_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` by adding at least **one new constraint** that shapes how the conversation unfolds.
+            2. The constraint must logically follow from `Context`.
+            3. Keep the rewritten scenario under **60 words**.
+            4. Keep it a realistic multi-turn setup.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "A startup must deliver an AI model but cannot exceed strict GPU budgets."
+            Example scenario:
+            Two engineers discuss model performance.
+            Example rewritten scenario:
+            Two ML engineers debate model redesigns, but GPU usage is capped for the quarter, forcing them to reconsider heavier architectures while under deadline pressure.
+
+            --------------------------
+
+            Example context:
+            "A university's ethics board is reviewing data-collection policies."
+            Example scenario:
+            A professor talks with a student researcher.
+            Example rewritten scenario:
+            Before submitting their study, a professor and student must revise their protocol to satisfy strict new privacy constraints imposed by the ethics board.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def comparative_question_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` so the conversation naturally compares two or more concepts, tools, or approaches.
+            2. The comparison must be central to the multi-turn dialogue.
+            3. Keep the rewritten scenario under **60 words**.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "Two project management tools differ in cost, automation, and integration options."
+            Example scenario:
+            Two coworkers evaluate a new tool.
+            Example rewritten scenario:
+            In a planning meeting, two coworkers compare switching from their legacy management tool to a cheaper automated one, weighing integration gaps and workflow impact.
+
+            --------------------------
+
+            Example context:
+            "Electric and hydrogen vehicles have different refueling logistics."
+            Example scenario:
+            Two friends discuss cars.
+            Example rewritten scenario:
+            On a road trip, two friends debate electric vs hydrogen cars, comparing range limits, refueling times, and long-term reliability.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def hypothetical_scenario_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` by adding a hypothetical twist grounded in `Context`.
+            2. The speculative change MUST drive the conversation.
+            3. Must remain realistic and multi-turn.
+            4. Keep the rewritten scenario under **60 words**.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "A cybersecurity team is tracking frequent phishing attempts."
+            Example scenario:
+            Two analysts review security logs.
+            Example rewritten scenario:
+            During a nightly shift, two analysts discuss a hypothetical spike in coordinated phishing attacks and explore how it would strain their current detection pipeline.
+
+            --------------------------
+
+            Example context:
+            "A city is experimenting with autonomous buses."
+            Example scenario:
+            A resident talks to a planner.
+            Example rewritten scenario:
+            At a community forum, a resident and transit planner imagine a scenario where all local buses become autonomous overnight and debate safety tradeoffs.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
+            """
+        )
+
+    @staticmethod
+    def in_breadth_evolution(scenario, context):
+        return (
+            ConversationalEvolutionTemplate.base_instruction
+            + f"""
+            1. Rewrite `Scenario` into a brand-new conversational setup.
+            2. It must remain in the **same domain** but shift toward a **rarer or niche** topic.
+            3. Must remain a realistic multi-turn dialogue setup.
+            4. Keep under **60 words**.
+
+            **
+            EXAMPLES
+
+            Example context:
+            "Wearables monitor heart rate and sleep cycles."
+            Example scenario:
+            Two people discuss fitness trackers.
+            Example rewritten scenario:
+            In a clinical trial briefing, two researchers debate implantable cardiac micro-sensors and their potential to outperform traditional wearables in long-term monitoring.
+
+            --------------------------
+
+            Example context:
+            "Quantum computing is advancing rapidly."
+            Example scenario:
+            Two students study quantum algorithms.
+            Example rewritten scenario:
+            During a research seminar, two students examine the niche topic of quantum-secure error-correcting codes for next-generation cryptosystems.
+
+            **
+
+            Context:
+            {context}
+            Scenario:
+            {scenario}
+            Rewritten Scenario:
             """
         )

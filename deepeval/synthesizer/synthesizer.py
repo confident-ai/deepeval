@@ -24,8 +24,8 @@ from deepeval.metrics.utils import (
 )
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.dataset.golden import Golden
-from deepeval.synthesizer.types import *
+from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.synthesizer.types import Evolution, PromptEvolution
 from deepeval.synthesizer.templates import (
     EvolutionTemplate,
     SynthesizerTemplate,
@@ -33,20 +33,28 @@ from deepeval.synthesizer.templates import (
     PromptEvolutionTemplate,
     PromptSynthesizerTemplate,
     ExtractionTemplate,
+    ConversationalEvolutionTemplate,
+    ConversationalPromptEvolutionTemplate,
 )
 from deepeval.synthesizer.schema import (
     SyntheticData,
     SyntheticDataList,
+    ConversationalScenario,
+    ConversationalScenarioList,
+    ScenarioFeedback,
+    RewrittenScenario,
     SQLData,
     Response,
     InputFeedback,
     RewrittenInput,
     PromptStyling,
+    ConversationalPromptStyling,
 )
 from deepeval.synthesizer.config import (
     FiltrationConfig,
     EvolutionConfig,
     StylingConfig,
+    ConversationalStylingConfig,
     ContextConstructionConfig,
 )
 from deepeval.synthesizer.utils import (
@@ -67,6 +75,16 @@ evolution_map = {
     "In-Breadth": EvolutionTemplate.in_breadth_evolution,
 }
 
+conversational_evolution_map = {
+    "Reasoning": ConversationalEvolutionTemplate.reasoning_evolution,
+    "Multi-context": ConversationalEvolutionTemplate.multi_context_evolution,
+    "Concretizing": ConversationalEvolutionTemplate.concretizing_evolution,
+    "Constrained": ConversationalEvolutionTemplate.constrained_evolution,
+    "Comparative": ConversationalEvolutionTemplate.comparative_question_evolution,
+    "Hypothetical": ConversationalEvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": ConversationalEvolutionTemplate.in_breadth_evolution,
+}
+
 prompt_evolution_map = {
     "Reasoning": PromptEvolutionTemplate.reasoning_evolution,
     "Concretizing": PromptEvolutionTemplate.concretizing_evolution,
@@ -74,6 +92,15 @@ prompt_evolution_map = {
     "Comparative": PromptEvolutionTemplate.comparative_question_evolution,
     "Hypothetical": PromptEvolutionTemplate.hypothetical_scenario_evolution,
     "In-Breadth": PromptEvolutionTemplate.in_breadth_evolution,
+}
+
+conversational_prompt_evolution_map = {
+    "Reasoning": ConversationalPromptEvolutionTemplate.reasoning_evolution,
+    "Concretizing": ConversationalPromptEvolutionTemplate.concretizing_evolution,
+    "Constrained": ConversationalPromptEvolutionTemplate.constrained_evolution,
+    "Comparative": ConversationalPromptEvolutionTemplate.comparative_question_evolution,
+    "Hypothetical": ConversationalPromptEvolutionTemplate.hypothetical_scenario_evolution,
+    "In-Breadth": ConversationalPromptEvolutionTemplate.in_breadth_evolution,
 }
 
 my_theme = Theme({"progress.elapsed": "cyan"})
@@ -89,12 +116,16 @@ class Synthesizer:
         filtration_config: Optional[FiltrationConfig] = None,
         evolution_config: Optional[EvolutionConfig] = None,
         styling_config: Optional[StylingConfig] = None,
+        conversational_styling_config: Optional[
+            ConversationalStylingConfig
+        ] = None,
         cost_tracking: bool = False,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
         self.max_concurrent = max_concurrent
         self.synthetic_goldens: List[Golden] = []
+        self.synthetic_conversational_goldens: List[ConversationalGolden] = []
         self.filtration_config = (
             filtration_config
             if filtration_config is not None
@@ -108,7 +139,15 @@ class Synthesizer:
         self.styling_config = (
             styling_config if styling_config is not None else StylingConfig()
         )
+        self.conversational_styling_config = (
+            conversational_styling_config
+            if conversational_styling_config is not None
+            else ConversationalStylingConfig()
+        )
         self.set_styling_config = True if styling_config is not None else False
+        self.set_conversational_styling_config = (
+            True if conversational_styling_config is not None else False
+        )
         self.cost_tracking = cost_tracking
         self.synthesis_cost = 0 if self.using_native_model else None
 
@@ -123,7 +162,7 @@ class Synthesizer:
         max_goldens_per_context: int = 2,
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
-    ):
+    ) -> List[Golden]:
         self.synthetic_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
@@ -207,7 +246,7 @@ class Synthesizer:
                 )
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
-                if _send_data == True:
+                if _send_data:
                     pass
                 remove_pbars(
                     progress,
@@ -507,7 +546,7 @@ class Synthesizer:
                 # Remove pbar if not from docs
                 remove_pbars(progress, [pbar_id]) if _progress is None else None
 
-        if _send_data == True:
+        if _send_data:
             pass
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -528,7 +567,8 @@ class Synthesizer:
         if _reset_cost:
             self.synthetic_goldens = []
             self.synthesis_cost = 0 if self.using_native_model else None
-        semaphore = asyncio.Semaphore(self.max_concurrent)
+        context_semaphore = asyncio.Semaphore(self.max_concurrent)
+        worker_semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
 
         with synthesizer_progress_context(
@@ -547,9 +587,9 @@ class Synthesizer:
         ):
             tasks = [
                 self.task_wrapper(
-                    semaphore,
+                    context_semaphore,
                     self._a_generate_from_context,
-                    semaphore=semaphore,
+                    semaphore=worker_semaphore,
                     context=context,
                     goldens=goldens,
                     include_expected_output=include_expected_output,
@@ -926,7 +966,7 @@ class Synthesizer:
 
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
-        if _send_data == True:
+        if _send_data:
             pass
         return goldens
 
@@ -984,7 +1024,7 @@ class Synthesizer:
                 source_files.append(golden.source_file)
 
             # Extract styles from goldens if not already set
-            if self.set_styling_config == False:
+            if not self.set_styling_config:
                 example_inputs = random.sample(
                     [golden.input for golden in goldens], min(len(goldens), 10)
                 )
@@ -1030,7 +1070,7 @@ class Synthesizer:
             source_files.append(golden.source_file)
 
         # Extract styles from goldens if not already set
-        if self.set_styling_config == False:
+        if not self.set_styling_config:
             example_inputs = random.sample(
                 [golden.input for golden in goldens], min(len(goldens), 10)
             )
@@ -1343,53 +1383,99 @@ class Synthesizer:
         # Prepare data for the DataFrame
         data = []
 
-        for golden in self.synthetic_goldens:
-            # Extract basic fields
-            input_text = golden.input
-            expected_output = golden.expected_output
-            context = golden.context
-            actual_output = golden.actual_output
-            retrieval_context = golden.retrieval_context
-            metadata = golden.additional_metadata
-            source_file = golden.source_file
+        if (
+            self.synthetic_goldens is not None
+            and len(self.synthetic_goldens) > 0
+        ):
+            for golden in self.synthetic_goldens:
+                # Extract basic fields
+                input_text = golden.input
+                expected_output = golden.expected_output
+                context = golden.context
+                actual_output = golden.actual_output
+                retrieval_context = golden.retrieval_context
+                metadata = golden.additional_metadata
+                source_file = golden.source_file
 
-            # Calculate num_context and context_length
-            if context is not None:
-                num_context = len(context)
-                context_length = sum(len(c) for c in context)
-            else:
-                num_context = None
-                context_length = None
+                # Calculate num_context and context_length
+                if context is not None:
+                    num_context = len(context)
+                    context_length = sum(len(c) for c in context)
+                else:
+                    num_context = None
+                    context_length = None
 
-            # Handle metadata
-            if metadata is not None:
-                evolutions = metadata.get("evolutions", None)
-                synthetic_input_quality = metadata.get(
-                    "synthetic_input_quality", None
-                )
-                context_quality = metadata.get("context_quality", None)
-            else:
-                evolutions = None
-                synthetic_input_quality = None
-                context_quality = None
+                # Handle metadata
+                if metadata is not None:
+                    evolutions = metadata.get("evolutions", None)
+                    synthetic_input_quality = metadata.get(
+                        "synthetic_input_quality", None
+                    )
+                    context_quality = metadata.get("context_quality", None)
+                else:
+                    evolutions = None
+                    synthetic_input_quality = None
+                    context_quality = None
 
-            # Prepare a row for the DataFrame
-            row = {
-                "input": input_text,
-                "actual_output": actual_output,
-                "expected_output": expected_output,
-                "context": context,
-                "retrieval_context": retrieval_context,
-                "n_chunks_per_context": num_context,
-                "context_length": context_length,
-                "evolutions": evolutions,
-                "context_quality": context_quality,
-                "synthetic_input_quality": synthetic_input_quality,
-                "source_file": source_file,
-            }
+                # Prepare a row for the DataFrame
+                row = {
+                    "input": input_text,
+                    "actual_output": actual_output,
+                    "expected_output": expected_output,
+                    "context": context,
+                    "retrieval_context": retrieval_context,
+                    "n_chunks_per_context": num_context,
+                    "context_length": context_length,
+                    "evolutions": evolutions,
+                    "context_quality": context_quality,
+                    "synthetic_input_quality": synthetic_input_quality,
+                    "source_file": source_file,
+                }
 
-            # Append the row to the data list
-            data.append(row)
+                # Append the row to the data list
+                data.append(row)
+        else:
+            for golden in self.synthetic_conversational_goldens:
+                # Extract basic fields
+                scenario = golden.scenario
+                expected_outcome = golden.expected_outcome
+                context = golden.context
+                metadata = golden.additional_metadata
+
+                # Calculate num_context and context_length
+                if context is not None:
+                    num_context = len(context)
+                    context_length = sum(len(c) for c in context)
+                else:
+                    num_context = None
+                    context_length = None
+
+                # Handle metadata
+                if metadata is not None:
+                    evolutions = metadata.get("evolutions", None)
+                    synthetic_scenario_quality = metadata.get(
+                        "synthetic_scenario_quality", None
+                    )
+                    source_files = metadata.get("source_files", None)
+                else:
+                    evolutions = None
+                    synthetic_scenario_quality = None
+                    source_files = None
+
+                # Prepare a row for the DataFrame
+                row = {
+                    "scenario": scenario,
+                    "expected_outcome": expected_outcome,
+                    "context": context,
+                    "n_chunks_per_context": num_context,
+                    "context_length": context_length,
+                    "evolutions": evolutions,
+                    "synthetic_scenario_quality": synthetic_scenario_quality,
+                    "source_files": source_files,
+                }
+
+                # Append the row to the data list
+                data.append(row)
 
         # Create the pandas DataFrame
         df = pd.DataFrame(data)
@@ -1439,7 +1525,10 @@ class Synthesizer:
                 "parameter."
             )
 
-        if len(self.synthetic_goldens) == 0:
+        if (
+            len(self.synthetic_goldens) == 0
+            and len(self.synthetic_conversational_goldens) == 0
+        ):
             raise ValueError(
                 "No synthetic goldens found. Please generate goldens before saving goldens."
             )
@@ -1454,53 +1543,1209 @@ class Synthesizer:
         full_file_path = os.path.join(directory, new_filename)
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
-                json_data = [
-                    {
-                        "input": golden.input,
-                        "actual_output": golden.actual_output,
-                        "expected_output": golden.expected_output,
-                        "context": golden.context,
-                        "source_file": golden.source_file,
-                    }
-                    for golden in self.synthetic_goldens
-                ]
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
+                    json_data = [
+                        {
+                            "input": golden.input,
+                            "actual_output": golden.actual_output,
+                            "expected_output": golden.expected_output,
+                            "context": golden.context,
+                            "source_file": golden.source_file,
+                        }
+                        for golden in self.synthetic_goldens
+                    ]
+                else:
+                    json_data = [
+                        {
+                            "scenario": golden.scenario,
+                            "expected_outcome": golden.expected_outcome,
+                            "context": golden.context,
+                            "source_files": golden.additional_metadata.get(
+                                "source_files", None
+                            ),
+                        }
+                        for golden in self.synthetic_conversational_goldens
+                    ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
             with open(
                 full_file_path, "w", newline="", encoding="utf-8"
             ) as file:
                 writer = csv.writer(file)
-                writer.writerow(
-                    [
-                        "input",
-                        "actual_output",
-                        "expected_output",
-                        "context",
-                        "source_file",
-                    ]
-                )
-                for golden in self.synthetic_goldens:
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
                     writer.writerow(
                         [
-                            golden.input,
-                            golden.actual_output,
-                            golden.expected_output,
-                            "|".join(golden.context),
-                            golden.source_file,
+                            "input",
+                            "actual_output",
+                            "expected_output",
+                            "context",
+                            "source_file",
                         ]
                     )
+                    for golden in self.synthetic_goldens:
+                        writer.writerow(
+                            [
+                                golden.input,
+                                golden.actual_output,
+                                golden.expected_output,
+                                "|".join(golden.context),
+                                golden.source_file,
+                            ]
+                        )
+                else:
+                    writer.writerow(
+                        [
+                            "scenario",
+                            "expected_outcome",
+                            "context",
+                            "source_files",
+                        ]
+                    )
+                    for golden in self.synthetic_conversational_goldens:
+                        writer.writerow(
+                            [
+                                golden.scenario,
+                                golden.expected_outcome,
+                                "|".join(golden.context),
+                                golden.additional_metadata.get(
+                                    "source_files", None
+                                ),
+                            ]
+                        )
         elif file_type == "jsonl":
             with open(full_file_path, "w", encoding="utf-8") as file:
-                for golden in self.synthetic_goldens:
-                    record = {
-                        "input": golden.input,
-                        "actual_output": golden.actual_output,
-                        "expected_output": golden.expected_output,
-                        "context": golden.context,
-                        "source_file": golden.source_file,
-                    }
-                    file.write(json.dumps(record, ensure_ascii=False) + "\n")
+                if (
+                    self.synthetic_goldens is not None
+                    and len(self.synthetic_goldens) > 0
+                ):
+                    for golden in self.synthetic_goldens:
+                        record = {
+                            "input": golden.input,
+                            "actual_output": golden.actual_output,
+                            "expected_output": golden.expected_output,
+                            "context": golden.context,
+                            "source_file": golden.source_file,
+                        }
+                        file.write(
+                            json.dumps(record, ensure_ascii=False) + "\n"
+                        )
+                else:
+                    for golden in self.synthetic_conversational_goldens:
+                        record = {
+                            "scenario": golden.scenario,
+                            "expected_outcome": golden.expected_outcome,
+                            "context": golden.context,
+                            "source_files": golden.additional_metadata.get(
+                                "source_files", None
+                            ),
+                        }
+                        file.write(
+                            json.dumps(record, ensure_ascii=False) + "\n"
+                        )
         if not quiet:
             print(f"Synthetic goldens saved at {full_file_path}!")
 
         return full_file_path
+
+    #############################################################
+    # Generate Conversational Goldens from Docs
+    #############################################################
+
+    def generate_conversational_goldens_from_docs(
+        self,
+        document_paths: List[str],
+        include_expected_outcome: bool = True,
+        max_goldens_per_context: int = 2,
+        context_construction_config: Optional[ContextConstructionConfig] = None,
+        _send_data=True,
+    ) -> List[ConversationalGolden]:
+        self.synthetic_conversational_goldens = []
+        self.synthesis_cost = 0 if self.using_native_model else None
+        if context_construction_config is None:
+            context_construction_config = ContextConstructionConfig(
+                critic_model=self.model
+            )
+
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens = loop.run_until_complete(
+                self.a_generate_conversational_goldens_from_docs(
+                    document_paths=document_paths,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_context,
+                    context_construction_config=context_construction_config,
+                    _reset_cost=False,
+                )
+            )
+        else:
+            context_generator = ContextGenerator(
+                document_paths=document_paths,
+                encoding=context_construction_config.encoding,
+                embedder=context_construction_config.embedder,
+                chunk_size=context_construction_config.chunk_size,
+                chunk_overlap=context_construction_config.chunk_overlap,
+                model=context_construction_config.critic_model,
+                filter_threshold=context_construction_config.context_quality_threshold,
+                similarity_threshold=context_construction_config.context_similarity_threshold,
+                max_retries=context_construction_config.max_retries,
+            )
+            num_contexts = (
+                context_construction_config.max_contexts_per_document
+                * len(document_paths)
+            )
+            total_goldens = num_contexts * max_goldens_per_context
+
+            with synthesizer_progress_context(
+                method="docs",
+                evaluation_model=self.model.get_model_name(),
+                num_evolutions=self.evolution_config.num_evolutions,
+                evolutions=self.evolution_config.evolutions,
+                embedder=context_construction_config.embedder.get_model_name(),
+                max_generations=total_goldens,
+                pbar_total=3 + num_contexts,
+            ) as (progress, pbar_id), progress:
+
+                # Generate contexts
+                contexts, source_files, context_scores = (
+                    context_generator.generate_contexts(
+                        max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                        min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
+                        max_context_size=context_construction_config.max_context_length,
+                        min_context_size=context_construction_config.min_context_length,
+                        progress=progress,
+                        pbar_id=pbar_id,
+                    )
+                )
+                if self.synthesis_cost:
+                    self.synthesis_cost += context_generator.total_cost
+                print_synthesizer_status(
+                    SynthesizerStatus.SUCCESS,
+                    "Context Construction",
+                    f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks.",
+                )
+                advance = max(num_contexts - len(contexts), 0)
+                (update_pbar(progress, pbar_id, advance) if advance else None)
+
+                # Generate conversational goldens from contexts
+                goldens = self.generate_conversational_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    _context_scores=context_scores,
+                    _progress=progress,
+                    _pbar_id=pbar_id,
+                    _send_data=False,
+                    _reset_cost=False,
+                )
+                if self.cost_tracking and self.using_native_model:
+                    print(f"💰 API cost: {self.synthesis_cost:.6f}")
+                if _send_data:
+                    pass
+                remove_pbars(
+                    progress,
+                    [
+                        context_generator.pbar_generate_contexts_id,
+                        context_generator.pbar_chunk_docs_id,
+                        context_generator.pbar_load_docs_id,
+                        pbar_id,
+                    ],
+                )
+
+        return goldens
+
+    async def a_generate_conversational_goldens_from_docs(
+        self,
+        document_paths: List[str],
+        include_expected_outcome: bool = True,
+        max_goldens_per_context: int = 2,
+        context_construction_config: Optional[ContextConstructionConfig] = None,
+        _reset_cost=True,
+    ):
+        if context_construction_config is None:
+            context_construction_config = ContextConstructionConfig(
+                critic_model=self.model
+            )
+        if _reset_cost:
+            self.synthesis_cost = 0 if self.using_native_model else None
+            self.synthetic_conversational_goldens = []
+
+        context_generator = ContextGenerator(
+            document_paths=document_paths,
+            encoding=context_construction_config.encoding,
+            embedder=context_construction_config.embedder,
+            chunk_size=context_construction_config.chunk_size,
+            chunk_overlap=context_construction_config.chunk_overlap,
+            model=context_construction_config.critic_model,
+            filter_threshold=context_construction_config.context_quality_threshold,
+            similarity_threshold=context_construction_config.context_similarity_threshold,
+            max_retries=context_construction_config.max_retries,
+        )
+        num_contexts = (
+            context_construction_config.max_contexts_per_document
+            * len(document_paths)
+        )
+        total_goldens = num_contexts * max_goldens_per_context
+
+        with synthesizer_progress_context(
+            method="docs",
+            evaluation_model=self.model.get_model_name(),
+            num_evolutions=self.evolution_config.num_evolutions,
+            evolutions=self.evolution_config.evolutions,
+            embedder=context_construction_config.embedder.get_model_name(),
+            max_generations=total_goldens,
+            pbar_total=3 + num_contexts,
+        ) as (progress, pbar_id), progress:
+
+            # Generate contexts
+            contexts, source_files, context_scores = (
+                await context_generator.a_generate_contexts(
+                    max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+                    min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
+                    max_context_size=context_construction_config.max_context_length,
+                    min_context_size=context_construction_config.min_context_length,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                )
+            )
+            if self.synthesis_cost:
+                self.synthesis_cost += context_generator.total_cost
+            print_synthesizer_status(
+                SynthesizerStatus.SUCCESS,
+                "Context Construction",
+                f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks.",
+            )
+            advance = max(num_contexts - len(contexts), 0)
+            (update_pbar(progress, pbar_id, advance) if advance else None)
+
+            # Generate conversational goldens from contexts
+            goldens = (
+                await self.a_generate_conversational_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    _context_scores=context_scores,
+                    _progress=progress,
+                    _pbar_id=pbar_id,
+                    _reset_cost=False,
+                )
+            )
+            if _reset_cost and self.cost_tracking and self.using_native_model:
+                print(f"💰 API cost: {self.synthesis_cost:.6f}")
+            remove_pbars(
+                progress,
+                [
+                    context_generator.pbar_generate_contexts_id,
+                    context_generator.pbar_chunk_docs_id,
+                    context_generator.pbar_load_docs_id,
+                    pbar_id,
+                ],
+            )
+            self.synthetic_conversational_goldens.extend(goldens)
+            return goldens
+
+    #############################################################
+    # Generate Conversational Goldens from Contexts
+    #############################################################
+
+    def generate_conversational_goldens_from_contexts(
+        self,
+        contexts: List[List[str]],
+        include_expected_outcome: bool = True,
+        max_goldens_per_context: int = 2,
+        source_files: Optional[List[str]] = None,
+        _context_scores: Optional[List[float]] = None,
+        _progress: Optional[Progress] = None,
+        _pbar_id: Optional[int] = None,
+        _send_data: bool = True,
+        _reset_cost: bool = True,
+    ) -> List[ConversationalGolden]:
+        if _reset_cost:
+            self.synthetic_conversational_goldens = []
+            self.synthesis_cost = 0 if self.using_native_model else None
+        goldens: List[ConversationalGolden] = []
+
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens.extend(
+                loop.run_until_complete(
+                    self.a_generate_conversational_goldens_from_contexts(
+                        contexts=contexts,
+                        include_expected_outcome=include_expected_outcome,
+                        max_goldens_per_context=max_goldens_per_context,
+                        source_files=source_files,
+                        _context_scores=_context_scores,
+                    )
+                )
+            )
+        else:
+            with synthesizer_progress_context(
+                method="default",
+                num_evolutions=self.evolution_config.num_evolutions,
+                evolutions=self.evolution_config.evolutions,
+                evaluation_model=self.model.get_model_name(),
+                embedder=None,
+                max_generations=len(contexts) * max_goldens_per_context,
+                async_mode=False,
+                progress=_progress,
+                pbar_id=_pbar_id,
+                pbar_total=len(contexts),
+            ) as (progress, pbar_id), (
+                progress if _progress is None else nullcontext()
+            ):
+
+                for context_index, context in enumerate(contexts):
+                    # Calculate pbar lengths
+                    should_style = (
+                        self.conversational_styling_config.participant_roles
+                        or self.conversational_styling_config.scenario_context
+                        or self.conversational_styling_config.conversational_task
+                    )
+                    pbar_len_style = 1 if should_style else 0
+                    pbar_len_expected_outcome = (
+                        1 if include_expected_outcome else 0
+                    )
+                    pbar_len_evolve = (
+                        self.evolution_config.num_evolutions
+                        + pbar_len_style
+                        + pbar_len_expected_outcome
+                    )
+
+                    # Add pbars
+                    pbar_generate_goldens_id = add_pbar(
+                        progress,
+                        f"\t⚡ Generating conversational goldens from context #{context_index}",
+                        total=1 + max_goldens_per_context,
+                    )
+                    pbar_generate_scenarios_id = add_pbar(
+                        progress,
+                        f"\t\t💡 Generating {max_goldens_per_context} scenario(s)",
+                        total=2,
+                    )
+                    pbar_evolve_scenario_ids = []
+                    for i in range(max_goldens_per_context):
+                        pbar_evolve_scenario_ids.append(
+                            add_pbar(
+                                progress,
+                                f"\t\t🧬 Evolving scenario #{i}",
+                                total=pbar_len_evolve,
+                            )
+                        )
+
+                    # Generate scenarios
+                    prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+                        context=context,
+                        max_goldens_per_context=max_goldens_per_context,
+                        scenario_context=self.conversational_styling_config.scenario_context,
+                        conversational_task=self.conversational_styling_config.conversational_task,
+                        participant_roles=self.conversational_styling_config.participant_roles,
+                    )
+                    synthetic_scenarios = self._generate_scenarios(prompt)
+                    update_pbar(
+                        progress, pbar_generate_scenarios_id, remove=False
+                    )
+
+                    # Qualify scenarios
+                    qualified_synthetic_scenarios: List[ConversationalScenario]
+                    scores: List[float]
+                    qualified_synthetic_scenarios, scores = (
+                        self._rewrite_scenarios(context, synthetic_scenarios)
+                    )
+                    update_pbar(
+                        progress, pbar_generate_scenarios_id, remove=False
+                    )
+                    update_pbar(
+                        progress, pbar_generate_goldens_id, remove=False
+                    )
+
+                    for scenario_index, data in enumerate(
+                        qualified_synthetic_scenarios
+                    ):
+                        # Evolve scenario
+                        evolved_scenario, evolutions_used = (
+                            self._evolve_scenario(
+                                scenario=data.scenario,
+                                context=context,
+                                num_evolutions=self.evolution_config.num_evolutions,
+                                evolutions=self.evolution_config.evolutions,
+                                progress=progress,
+                                pbar_evolve_scenario_id=pbar_evolve_scenario_ids[
+                                    scenario_index
+                                ],
+                                remove_pbar=False,
+                            )
+                        )
+
+                        if should_style:
+                            prompt = SynthesizerTemplate.rewrite_evolved_scenario(
+                                participant_roles=self.conversational_styling_config.participant_roles,
+                                evolved_scenario=evolved_scenario,
+                                scenario_context=self.conversational_styling_config.scenario_context,
+                                conversational_task=self.conversational_styling_config.conversational_task,
+                            )
+                            update_pbar(
+                                progress,
+                                pbar_evolve_scenario_ids[scenario_index],
+                                remove=False,
+                            )
+                            res: ConversationalScenario = self._generate_schema(
+                                prompt,
+                                ConversationalScenario,
+                                self.model,
+                            )
+                            evolved_scenario = res.scenario
+
+                        # Synthesize ConversationalGolden
+                        golden = ConversationalGolden(
+                            scenario=evolved_scenario,
+                            context=context,
+                            additional_metadata={
+                                "evolutions": evolutions_used,
+                                "synthetic_scenario_quality": scores[
+                                    scenario_index
+                                ],
+                                "context_quality": (
+                                    _context_scores[context_index]
+                                    if _context_scores is not None
+                                    else None
+                                ),
+                                "source_files": (
+                                    source_files[context_index]
+                                    if source_files is not None
+                                    else None
+                                ),
+                            },
+                        )
+
+                        # Generate expected outcome
+                        if include_expected_outcome:
+                            prompt = SynthesizerTemplate.generate_synthetic_expected_outcome_conversational(
+                                scenario=golden.scenario,
+                                context="\n".join(golden.context),
+                                expected_outcome_format=self.conversational_styling_config.expected_outcome_format,
+                            )
+                            res = self._generate(prompt)
+                            golden.expected_outcome = res
+                            update_pbar(
+                                progress,
+                                pbar_evolve_scenario_ids[scenario_index],
+                                remove=False,
+                            )
+
+                        goldens.append(golden)
+                        update_pbar(
+                            progress, pbar_generate_goldens_id, remove=False
+                        )
+
+                    # Add remaining progress if not enough goldens generated
+                    update_pbar(progress, pbar_id, remove=False)
+                    remove_pbars(
+                        progress,
+                        pbar_evolve_scenario_ids
+                        + [
+                            pbar_generate_scenarios_id,
+                            pbar_generate_goldens_id,
+                        ],
+                    )
+
+                # Remove pbar if not from docs
+                remove_pbars(progress, [pbar_id]) if _progress is None else None
+
+        if _send_data:
+            pass
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
+        self.synthetic_conversational_goldens.extend(goldens)
+        return goldens
+
+    async def a_generate_conversational_goldens_from_contexts(
+        self,
+        contexts: List[List[str]],
+        include_expected_outcome: bool = True,
+        max_goldens_per_context: int = 2,
+        source_files: Optional[List[str]] = None,
+        _context_scores: Optional[List[float]] = None,
+        _progress: Optional[Progress] = None,
+        _pbar_id: Optional[int] = None,
+        _reset_cost: bool = True,
+    ) -> List[ConversationalGolden]:
+        if _reset_cost:
+            self.synthetic_conversational_goldens = []
+            self.synthesis_cost = 0 if self.using_native_model else None
+        context_semaphore = asyncio.Semaphore(self.max_concurrent)
+        worker_semaphore = asyncio.Semaphore(self.max_concurrent)
+        goldens: List[ConversationalGolden] = []
+
+        with synthesizer_progress_context(
+            method="default",
+            num_evolutions=self.evolution_config.num_evolutions,
+            evolutions=self.evolution_config.evolutions,
+            evaluation_model=self.model.get_model_name(),
+            embedder=None,
+            max_generations=len(contexts) * max_goldens_per_context,
+            async_mode=True,
+            pbar_id=_pbar_id,
+            pbar_total=len(contexts),
+            progress=_progress,
+        ) as (progress, pbar_id), (
+            progress if _progress is None else nullcontext()
+        ):
+            tasks = [
+                self.task_wrapper(
+                    context_semaphore,
+                    self._a_generate_conversational_from_context,
+                    semaphore=worker_semaphore,
+                    context=context,
+                    goldens=goldens,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    context_index=index,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    context_scores=_context_scores,
+                )
+                for index, context in enumerate(contexts)
+            ]
+            await asyncio.gather(*tasks)
+            remove_pbars(progress, [pbar_id]) if _progress is None else None
+
+        if _reset_cost and self.cost_tracking and self.using_native_model:
+            print(f"💰 API cost: {self.synthesis_cost:.6f}")
+        return goldens
+
+    async def _a_generate_conversational_from_context(
+        self,
+        semaphore: asyncio.Semaphore,
+        context: List[str],
+        goldens: List[ConversationalGolden],
+        include_expected_outcome: bool,
+        max_goldens_per_context: int,
+        source_files: Optional[List[str]],
+        context_index: int,
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
+        context_scores: Optional[List[float]] = None,
+    ):
+        # Calculate pbar lengths
+        should_style = (
+            self.conversational_styling_config.participant_roles
+            or self.conversational_styling_config.scenario_context
+            or self.conversational_styling_config.conversational_task
+        )
+        pbar_len_style = 1 if should_style else 0
+        pbar_len_expected_outcome = 1 if include_expected_outcome else 0
+        pbar_len_evolve = (
+            self.evolution_config.num_evolutions
+            + pbar_len_style
+            + pbar_len_expected_outcome
+        )
+
+        # Add pbars
+        pbar_generate_goldens_id = add_pbar(
+            progress,
+            f"\t⚡ Generating conversational goldens from context #{context_index}",
+            total=1 + max_goldens_per_context,
+        )
+        pbar_generate_scenarios_id = add_pbar(
+            progress,
+            f"\t\t💡 Generating {max_goldens_per_context} scenario(s)",
+            total=2,
+        )
+        pbar_evolve_scenario_ids = []
+        for i in range(max_goldens_per_context):
+            pbar_evolve_scenario_ids.append(
+                add_pbar(
+                    progress,
+                    f"\t\t🧬 Evolving scenario #{i}",
+                    total=pbar_len_evolve,
+                )
+            )
+
+        # Generate scenarios
+        prompt = SynthesizerTemplate.generate_synthetic_scenarios(
+            context=context,
+            max_goldens_per_context=max_goldens_per_context,
+            scenario_context=self.conversational_styling_config.scenario_context,
+            conversational_task=self.conversational_styling_config.conversational_task,
+            participant_roles=self.conversational_styling_config.participant_roles,
+        )
+        synthetic_scenarios: List[ConversationalScenario] = (
+            await self._a_generate_scenarios(prompt)
+        )
+        # Limit the length of the synthetic scenarios to the maximum allowed
+        synthetic_scenarios = synthetic_scenarios[:max_goldens_per_context]
+        update_pbar(progress, pbar_generate_scenarios_id, remove=False)
+
+        # Qualify scenarios
+        qualified_synthetic_scenarios: List[ConversationalScenario]
+        scores: List[float]
+        qualified_synthetic_scenarios, scores = await self._a_rewrite_scenarios(
+            context, synthetic_scenarios
+        )
+        update_pbar(progress, pbar_generate_scenarios_id, remove=False)
+        update_pbar(progress, pbar_generate_goldens_id, remove=False)
+
+        # Helper function to process each scenario in parallel
+        async def process_scenario(
+            scenario_index: int,
+            data: ConversationalScenario,
+            progress: Optional[Progress] = None,
+        ):
+            # Evolve scenario
+            evolved_scenario, evolutions_used = await self._a_evolve_scenario(
+                scenario=data.scenario,
+                context=context,
+                num_evolutions=self.evolution_config.num_evolutions,
+                evolutions=self.evolution_config.evolutions,
+                progress=progress,
+                pbar_evolve_scenario_id=pbar_evolve_scenario_ids[
+                    scenario_index
+                ],
+                remove_pbar=False,
+            )
+
+            if should_style:
+                prompt = SynthesizerTemplate.rewrite_evolved_scenario(
+                    participant_roles=self.conversational_styling_config.participant_roles,
+                    evolved_scenario=evolved_scenario,
+                    scenario_context=self.conversational_styling_config.scenario_context,
+                    conversational_task=self.conversational_styling_config.conversational_task,
+                )
+                res: ConversationalScenario = await self._a_generate_schema(
+                    prompt,
+                    ConversationalScenario,
+                    self.model,
+                )
+                evolved_scenario = res.scenario
+                update_pbar(
+                    progress,
+                    pbar_evolve_scenario_ids[scenario_index],
+                    remove=False,
+                )
+
+            # Generate expected outcome
+            expected_outcome = None
+            if include_expected_outcome:
+                expected_outcome_prompt = SynthesizerTemplate.generate_synthetic_expected_outcome_conversational(
+                    scenario=evolved_scenario,
+                    context="\n".join(context),
+                    expected_outcome_format=self.conversational_styling_config.expected_outcome_format,
+                )
+                expected_outcome = await self._a_generate(
+                    expected_outcome_prompt
+                )
+                update_pbar(
+                    progress,
+                    pbar_evolve_scenario_ids[scenario_index],
+                    remove=False,
+                )
+
+            # Create ConversationalGolden
+            golden = ConversationalGolden(
+                scenario=evolved_scenario,
+                context=context,
+                expected_outcome=expected_outcome,
+                additional_metadata={
+                    "evolutions": evolutions_used,
+                    "synthetic_scenario_quality": scores[scenario_index],
+                    "source_files": (
+                        source_files[context_index]
+                        if source_files is not None
+                        else None
+                    ),
+                },
+            )
+            update_pbar(progress, pbar_generate_goldens_id, remove=False)
+            return golden
+
+        # Process all scenarios in parallel using asyncio.gather
+        tasks = [
+            self.task_wrapper(
+                semaphore, process_scenario, index, data, progress
+            )
+            for index, data in enumerate(qualified_synthetic_scenarios)
+        ]
+        results = await asyncio.gather(*tasks)
+
+        # Add remaining progress if not enough goldens generated
+        update_pbar(progress, pbar_id, remove=False)
+        remove_pbars(
+            progress,
+            pbar_evolve_scenario_ids
+            + [pbar_generate_scenarios_id, pbar_generate_goldens_id],
+        )
+        goldens.extend(results)
+
+    #############################################################
+    # Generate Conversational Goldens from Scratch
+    #############################################################
+
+    async def a_generate_conversational_goldens_from_scratch(
+        self,
+        num_goldens: int,
+    ) -> List[ConversationalGolden]:
+        if (
+            self.conversational_styling_config.scenario_context is None
+            or self.conversational_styling_config.conversational_task is None
+            or self.conversational_styling_config.participant_roles is None
+        ):
+            raise TypeError(
+                "`scenario_context`, `conversational_task`, and `participant_roles` in `conversational_styling_config` must not be None when generating conversational goldens from scratch."
+            )
+        self.synthetic_conversational_goldens = []
+        self.synthesis_cost = 0 if self.using_native_model else None
+        semaphore = asyncio.Semaphore(self.max_concurrent)
+
+        transformed_evolutions = self.transform_distribution(
+            self.evolution_config.evolutions
+        )
+        goldens: List[ConversationalGolden] = []
+
+        with synthesizer_progress_context(
+            method="Scratch",
+            num_evolutions=self.evolution_config.num_evolutions,
+            evolutions=transformed_evolutions,
+            evaluation_model=self.model.get_model_name(),
+            embedder=None,
+            max_generations=num_goldens,
+            async_mode=True,
+            pbar_total=num_goldens + 1,
+        ) as (progress, pbar_id), progress:
+            # Generate scenarios
+            prompt = PromptSynthesizerTemplate.generate_synthetic_conversational_scenarios(
+                scenario=self.conversational_styling_config.scenario_context,
+                conversational_task=self.conversational_styling_config.conversational_task,
+                participant_roles=self.conversational_styling_config.participant_roles,
+                num_goldens=num_goldens,
+            )
+            synthetic_data = self._generate_scenarios(prompt)
+            update_pbar(progress, pbar_id)
+
+            # Evolve scenarios
+            async def evolve_scenario(i, data: ConversationalScenario):
+                pbar_evolve_scenario_id = add_pbar(
+                    progress,
+                    f"      🧬 Evolving scenarios (#{i})",
+                    total=self.evolution_config.num_evolutions,
+                )
+                evolved_scenarios = await self.task_wrapper(
+                    semaphore,
+                    self._a_evolve_scenario,
+                    scenario=data.scenario,
+                    num_evolutions=self.evolution_config.num_evolutions,
+                    evolutions=transformed_evolutions,
+                    progress=progress,
+                    pbar_evolve_scenario_id=pbar_evolve_scenario_id,
+                )
+                update_pbar(progress, pbar_id)
+                return evolved_scenarios
+
+            tasks = [
+                evolve_scenario(i, data)
+                for i, data in enumerate(synthetic_data)
+            ]
+            evolved_scenarios_list = await asyncio.gather(*tasks)
+
+            # Synthesize ConversationalGoldens
+            goldens = [
+                ConversationalGolden(
+                    scenario=evolved_scenario,
+                    additional_metadata={"evolutions": evolutions},
+                )
+                for evolved_scenario, evolutions in evolved_scenarios_list
+            ]
+
+        self.synthetic_conversational_goldens.extend(goldens)
+        return goldens
+
+    def generate_conversational_goldens_from_scratch(
+        self,
+        num_goldens: int,
+        _send_data: bool = True,
+    ) -> List[ConversationalGolden]:
+        if (
+            self.conversational_styling_config.scenario_context is None
+            or self.conversational_styling_config.conversational_task is None
+            or self.conversational_styling_config.participant_roles is None
+        ):
+            raise TypeError(
+                "`scenario_context`, `conversational_task`, and `participant_roles` in `conversational_styling_config` must not be None when generating conversational goldens from scratch."
+            )
+        self.synthetic_conversational_goldens = []
+        self.synthesis_cost = 0 if self.using_native_model else None
+
+        transformed_evolutions = self.transform_distribution(
+            self.evolution_config.evolutions
+        )
+        goldens: List[ConversationalGolden] = []
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            goldens.extend(
+                loop.run_until_complete(
+                    self.a_generate_conversational_goldens_from_scratch(
+                        num_goldens=num_goldens,
+                    )
+                )
+            )
+        else:
+            with synthesizer_progress_context(
+                method="Scratch",
+                num_evolutions=self.evolution_config.num_evolutions,
+                evolutions=transformed_evolutions,
+                evaluation_model=self.model.get_model_name(),
+                embedder=None,
+                max_generations=num_goldens,
+                async_mode=False,
+                pbar_total=num_goldens + 1,
+            ) as (progress, pbar_id), progress:
+
+                # Generate scenarios
+                prompt = PromptSynthesizerTemplate.generate_synthetic_conversational_scenarios(
+                    scenario=self.conversational_styling_config.scenario_context,
+                    conversational_task=self.conversational_styling_config.conversational_task,
+                    participant_roles=self.conversational_styling_config.participant_roles,
+                    num_goldens=num_goldens,
+                )
+                synthetic_data = self._generate_scenarios(prompt)
+                update_pbar(progress, pbar_id)
+
+                # Evolve scenarios
+                evolved_scenarios = []
+                for i, data in enumerate(synthetic_data):
+                    pbar_evolve_scenario_id = add_pbar(
+                        progress,
+                        f"      🧬 Evolving scenarios (#{i})",
+                        total=self.evolution_config.num_evolutions,
+                    )
+                    evolved_scenario, evolutions_used = self._evolve_scenario(
+                        scenario=data.scenario,
+                        num_evolutions=self.evolution_config.num_evolutions,
+                        evolutions=transformed_evolutions,
+                        progress=progress,
+                        pbar_evolve_scenario_id=pbar_evolve_scenario_id,
+                    )
+                    evolved_scenarios.append(evolved_scenario)
+                    update_pbar(progress, pbar_id)
+
+                # Synthesize ConversationalGoldens
+                for evolved_scenario in evolved_scenarios:
+                    golden = ConversationalGolden(
+                        scenario=evolved_scenario,
+                        additional_metadata={"evolutions": evolutions_used},
+                    )
+                    goldens.append(golden)
+
+        # Wrap up Synthesis
+        self.synthetic_conversational_goldens.extend(goldens)
+        if _send_data:
+            pass
+        return goldens
+
+    #############################################################
+    # Helper Methods for Scenario Generation
+    #############################################################
+
+    async def _a_generate_scenarios(
+        self, prompt: str
+    ) -> List[ConversationalScenario]:
+        res: ConversationalScenarioList = await self._a_generate_schema(
+            prompt, ConversationalScenarioList, self.model
+        )
+        synthetic_scenario_items = res.data
+        return synthetic_scenario_items
+
+    def _generate_scenarios(self, prompt: str) -> List[ConversationalScenario]:
+        res: ConversationalScenarioList = self._generate_schema(
+            prompt, ConversationalScenarioList, self.model
+        )
+        synthetic_scenario_items = res.data
+        return synthetic_scenario_items
+
+    async def _a_rewrite_scenarios(
+        self,
+        context: List[str],
+        scenarios: List[ConversationalScenario],
+    ) -> Tuple[List[ConversationalScenario], List[float]]:
+        # Evaluate scenario quality
+        scores = []
+        filtered_scenarios = []
+        for item in scenarios:
+            scenario = item.scenario
+            for _ in range(self.filtration_config.max_quality_retries):
+                # Evaluate synthetically generated scenarios
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_scenarios(
+                    scenario
+                )
+                feedback_res: ScenarioFeedback = await self._a_generate_schema(
+                    evaluation_prompt,
+                    ScenarioFeedback,
+                    self.filtration_config.critic_model,
+                )
+                feedback, score = feedback_res.feedback, feedback_res.score
+                if (
+                    score
+                    >= self.filtration_config.synthetic_input_quality_threshold
+                ):
+                    break
+
+                # Rewrite scenario if score below threshold
+                rewrite_prompt = (
+                    SynthesizerTemplate.rewrite_synthetic_scenarios(
+                        context, scenario, feedback
+                    )
+                )
+                rewritten_res: RewrittenScenario = (
+                    await self._a_generate_schema(
+                        rewrite_prompt,
+                        RewrittenScenario,
+                        self.model,
+                    )
+                )
+                scenario = rewritten_res.rewritten_scenario
+
+            scores.append(score)
+            filtered_scenarios.append(ConversationalScenario(scenario=scenario))
+
+        return filtered_scenarios, scores
+
+    def _rewrite_scenarios(
+        self,
+        context: List[str],
+        scenarios: List[ConversationalScenario],
+    ) -> Tuple[List[ConversationalScenario], List[float]]:
+        # Evaluate scenario quality
+        scores = []
+        filtered_scenarios = []
+        for item in scenarios:
+            scenario = item.scenario
+            for _ in range(self.filtration_config.max_quality_retries):
+                # Evaluate synthetically generated scenarios
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_scenarios(
+                    scenario
+                )
+                feedback_res: ScenarioFeedback = self._generate_schema(
+                    evaluation_prompt,
+                    ScenarioFeedback,
+                    self.filtration_config.critic_model,
+                )
+                feedback, score = feedback_res.feedback, feedback_res.score
+                if (
+                    score
+                    >= self.filtration_config.synthetic_input_quality_threshold
+                ):
+                    break
+
+                # Rewrite scenario if score below threshold
+                rewrite_prompt = (
+                    SynthesizerTemplate.rewrite_synthetic_scenarios(
+                        context, scenario, feedback
+                    )
+                )
+                rewritten_res: RewrittenScenario = self._generate_schema(
+                    rewrite_prompt,
+                    RewrittenScenario,
+                    self.model,
+                )
+                scenario = rewritten_res.rewritten_scenario
+
+            scores.append(score)
+            filtered_scenarios.append(ConversationalScenario(scenario=scenario))
+
+        return filtered_scenarios, scores
+
+    #############################################################
+    # Helper Methods for Scenario Evolution
+    #############################################################
+
+    def _evolve_scenario(
+        self,
+        scenario: str,
+        num_evolutions: int,
+        evolutions: Dict[Union[Evolution, PromptEvolution], float],
+        context: Optional[List[str]] = None,
+        progress: Optional[Progress] = None,
+        pbar_evolve_scenario_id: Optional[int] = None,
+        remove_pbar: bool = True,
+    ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
+        evolved_scenario = scenario
+        evolutions_used = []
+        for _ in range(num_evolutions):
+            # Randomize Evolution
+            evolution_type = random.choices(
+                list(evolutions.keys()), list(evolutions.values())
+            )[0]
+
+            # Create Evolution Prompt
+            if isinstance(evolution_type, Evolution):
+                evolution_method = conversational_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(
+                    scenario=evolved_scenario, context=context
+                )
+            elif isinstance(evolution_type, PromptEvolution):
+                evolution_method = conversational_prompt_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(scenario=evolved_scenario)
+
+            # Perform Evolution
+            evolved_scenario = self._generate(prompt)
+            evolutions_used.append(evolution_type.value)
+
+            # Update Progress
+            update_pbar(progress, pbar_evolve_scenario_id, remove=remove_pbar)
+        return evolved_scenario, evolutions_used
+
+    async def _a_evolve_scenario(
+        self,
+        scenario: str,
+        num_evolutions: int,
+        evolutions: Dict[Union[Evolution, PromptEvolution], float],
+        context: Optional[List[str]] = None,
+        progress: Optional[Progress] = None,
+        pbar_evolve_scenario_id: Optional[int] = None,
+        remove_pbar: bool = True,
+    ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
+        evolved_scenario = scenario
+        evolutions_used = []
+        for _ in range(num_evolutions):
+            # Randomize Evolution
+            evolution_type = random.choices(
+                list(evolutions.keys()), list(evolutions.values())
+            )[0]
+
+            # Create Evolution Prompt
+            if isinstance(evolution_type, Evolution):
+                evolution_method = conversational_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(
+                    scenario=evolved_scenario, context=context
+                )
+            elif isinstance(evolution_type, PromptEvolution):
+                evolution_method = conversational_prompt_evolution_map[
+                    evolution_type.value
+                ]
+                prompt = evolution_method(scenario=evolved_scenario)
+
+            # Perform Evolution
+            evolved_scenario = await self._a_generate(prompt)
+            evolutions_used.append(evolution_type.value)
+
+            # Update Progress
+            update_pbar(progress, pbar_evolve_scenario_id, remove=remove_pbar)
+
+        return evolved_scenario, evolutions_used
+
+    #############################################################
+    # Generate Conversational Goldens from Goldens
+    #############################################################
+
+    def generate_conversational_goldens_from_goldens(
+        self,
+        goldens: List[ConversationalGolden],
+        max_goldens_per_golden: int = 2,
+        include_expected_outcome: bool = True,
+    ) -> List[ConversationalGolden]:
+        self.synthetic_conversational_goldens = []
+        if self.async_mode:
+            loop = get_or_create_event_loop()
+            result = loop.run_until_complete(
+                self.a_generate_conversational_goldens_from_goldens(
+                    goldens=goldens,
+                    max_goldens_per_golden=max_goldens_per_golden,
+                    include_expected_outcome=include_expected_outcome,
+                )
+            )
+            self.synthetic_conversational_goldens.extend(result)
+            return result
+        else:
+            # Extract contexts and source files from conversational goldens
+            contexts = []
+            for golden in goldens:
+                if golden.context is None:
+                    continue
+                contexts.append(golden.context)
+
+            # Extract styles from conversational goldens if not already set
+            if not self.set_conversational_styling_config:
+                example_scenarios = random.sample(
+                    [golden.scenario for golden in goldens],
+                    min(len(goldens), 10),
+                )
+                styling_prompt = ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                    example_scenarios
+                )
+                styles = self._generate_schema(
+                    styling_prompt, ConversationalPromptStyling, self.model
+                )
+                styles_json = json.loads(styles.model_dump_json())
+                conversational_styling_config = ConversationalStylingConfig(
+                    **styles_json, expected_outcome_format=None
+                )
+                self.conversational_styling_config = (
+                    conversational_styling_config
+                )
+
+            # Generate conversational goldens from scratch or from contexts if available
+            if len(contexts) == 0:
+                return self.generate_conversational_goldens_from_scratch(
+                    num_goldens=len(goldens) * max_goldens_per_golden,
+                )
+            else:
+                return self.generate_conversational_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_outcome=include_expected_outcome,
+                    max_goldens_per_context=max_goldens_per_golden,
+                )
+
+    async def a_generate_conversational_goldens_from_goldens(
+        self,
+        goldens: List[ConversationalGolden],
+        max_goldens_per_golden: int = 2,
+        include_expected_outcome: bool = True,
+    ) -> List[ConversationalGolden]:
+        # Extract contexts and source files from conversational goldens
+        contexts = []
+        for golden in goldens:
+            if golden.context is None:
+                continue
+            contexts.append(golden.context)
+
+        # Extract styles from conversational goldens if not already set
+        if not self.set_conversational_styling_config:
+            example_scenarios = random.sample(
+                [golden.scenario for golden in goldens], min(len(goldens), 10)
+            )
+            styling_prompt = ExtractionTemplate.extract_conversational_structure_from_scenarios(
+                example_scenarios
+            )
+            styles = await self._a_generate_schema(
+                styling_prompt, ConversationalPromptStyling, self.model
+            )
+            styles_json = json.loads(styles.model_dump_json())
+            conversational_styling_config = ConversationalStylingConfig(
+                **styles_json, expected_outcome_format=None
+            )
+            self.conversational_styling_config = conversational_styling_config
+
+        # Generate conversational goldens from scratch or from contexts if available
+        if len(contexts) == 0:
+            return await self.a_generate_conversational_goldens_from_scratch(
+                num_goldens=len(goldens) * max_goldens_per_golden,
+            )
+        else:
+            return await self.a_generate_conversational_goldens_from_contexts(
+                contexts=contexts,
+                include_expected_outcome=include_expected_outcome,
+                max_goldens_per_context=max_goldens_per_golden,
+            )

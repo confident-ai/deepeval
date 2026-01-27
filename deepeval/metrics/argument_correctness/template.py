@@ -4,8 +4,18 @@ import textwrap
 
 
 class ArgumentCorrectnessTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
-    def generate_verdicts(input: str, tools_called: List[ToolCall]):
+    def generate_verdicts(
+        input: str, tools_called: List[ToolCall], multimodal: bool = False
+    ):
 
         stringified_tools_called = repr(tools_called)
 
@@ -18,6 +28,8 @@ class ArgumentCorrectnessTemplate:
             The 'reason' is the reason for the verdict.
             Provide a 'reason' ONLY if the answer is 'no'. 
             If there is no input parameter, answer 'no' for the verdict and provide the reason as "No input parameter provided".
+
+            {ArgumentCorrectnessTemplate.multimodal_rules if multimodal else ""}
 
             **
             IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
@@ -70,8 +82,8 @@ class ArgumentCorrectnessTemplate:
                         "verdict": "yes"
                     }},
                     {{
-                        "verdict": "no",
-                        "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023."
+                        "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023.",
+                        "verdict": "no"
                     }}
                 ]  
             }}
@@ -92,11 +104,16 @@ class ArgumentCorrectnessTemplate:
 
     @staticmethod
     def generate_reason(
-        incorrect_tool_calls_reasons: List[str], input: str, score: float
+        incorrect_tool_calls_reasons: List[str],
+        input: str,
+        score: float,
+        multimodal: bool = False,
     ):
         return textwrap.dedent(
             f"""Given the argument correctness score, the list of reasons of incorrect tool calls, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score. You can mention tool calls or input, but do not mention an output or a response.
             If there is nothing incorrect, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+
+            {ArgumentCorrectnessTemplate.multimodal_rules if multimodal else ""}
 
             **
             IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.

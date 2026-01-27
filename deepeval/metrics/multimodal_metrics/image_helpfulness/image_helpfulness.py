@@ -1,42 +1,46 @@
 import asyncio
 from typing import Optional, List, Tuple, Union
 
-from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_helpfulness.template import (
     ImageHelpfulnessTemplate,
 )
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
-    check_mllm_test_case_params,
-    initialize_multimodal_model,
+    check_llm_test_case_params,
+    initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
-from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_helpfulness.schema import (
     ReasonScore,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import (
+    get_or_create_event_loop,
+    convert_to_multi_modal_array,
+)
 
 
-class ImageHelpfulnessMetric(BaseMultimodalMetric):
+class ImageHelpfulnessMetric(BaseMetric):
 
-    _required_params: List[MLLMTestCaseParams] = [
-        MLLMTestCaseParams.INPUT,
-        MLLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
         self,
-        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_context_size: Optional[int] = None,
     ):
-        self.model, self.using_native_model = initialize_multimodal_model(model)
+        self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
@@ -46,13 +50,19 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     def measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -69,12 +79,19 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                actual_output = test_case.actual_output
+                actual_output = convert_to_multi_modal_array(
+                    test_case.actual_output
+                )
                 self.contexts_above = []
                 self.contexts_below = []
                 self.scores = []
                 self.reasons = []
-                for image_index in self.get_image_indices(actual_output):
+                image_indices = self.get_image_indices(actual_output)
+                if not image_indices:
+                    raise ValueError(
+                        f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                    )
+                for image_index in image_indices:
                     context_above, context_below = self.get_image_context(
                         image_index, actual_output
                     )
@@ -146,13 +163,19 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     async def a_measure(
         self,
-        test_case: MLLMTestCase,
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
         )
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -161,7 +184,9 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            actual_output = test_case.actual_output
+            actual_output = convert_to_multi_modal_array(
+                test_case.actual_output
+            )
             self.contexts_above = []
             self.contexts_below = []
             self.scores = []
@@ -169,6 +194,10 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
             tasks = []
             image_indices = self.get_image_indices(actual_output)
+            if not image_indices:
+                raise ValueError(
+                    f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                )
             for image_index in image_indices:
                 context_above, context_below = self.get_image_context(
                     image_index, actual_output
@@ -254,21 +283,14 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ReasonScore)
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = self.model.generate(
-                    prompt, schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        prompt = f"{instructions} \nImages: {image}"
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     async def a_evaluate_image_helpfulness(
         self,
@@ -279,21 +301,14 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         instructions = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
             context_above, context_below
         )
-        prompt = [instructions] + [image]
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ReasonScore)
-            self.evaluation_cost += cost
-            return res.score, res.reasoning
-        else:
-            try:
-                res: ReasonScore = await self.model.a_generate(
-                    prompt, schema=ReasonScore
-                )
-                return res.score, res.reasoning
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reasoning"]
+        prompt = f"{instructions} \nImages: {image}"
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ReasonScore,
+            extract_schema=lambda s: (s.score, s.reasoning),
+            extract_json=lambda data: (data["score"], data["reasoning"]),
+        )
 
     def get_image_context(
         self, image_index: int, actual_output: List[Union[str, MLLMImage]]
@@ -328,7 +343,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             if isinstance(element, MLLMImage)
         ]
 
-    def calculate_score(self, scores: List[float]):
+    def calculate_score(self, scores: List[float]) -> float:
         return sum(scores) / len(scores)
 
     def is_successful(self) -> bool:
@@ -337,7 +352,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

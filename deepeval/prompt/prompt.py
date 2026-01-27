@@ -1,14 +1,17 @@
+import logging
+import time
+import json
+import os
+
 from enum import Enum
 from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
-import time
-import json
-import os
 from pydantic import BaseModel, ValidationError
 import asyncio
-import portalocker
 import threading
+
+from deepeval.utils import make_model_config, is_read_only_env
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -22,9 +25,6 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
-    ReasoningEffort,
-    Verbosity,
-    ModelProvider,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -33,6 +33,17 @@ from deepeval.prompt.utils import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
+
+logger = logging.getLogger(__name__)
+
+portalocker = None
+if not is_read_only_env():
+    try:
+        import portalocker
+    except Exception as e:
+        logger.warning("failed to import portalocker: %s", e)
+else:
+    logger.warning("READ_ONLY filesystem: skipping disk cache for prompts.")
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 VERSION_CACHE_KEY = "version"
@@ -77,6 +88,8 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class CachedPrompt(BaseModel):
+    model_config = make_model_config(use_enum_values=True)
+
     alias: str
     version: str
     label: Optional[str] = None
@@ -89,9 +102,6 @@ class CachedPrompt(BaseModel):
     output_type: Optional[OutputType]
     output_schema: Optional[OutputSchema]
 
-    class Config:
-        use_enum_values = True
-
 
 class Prompt:
 
@@ -103,6 +113,8 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
+        confident_api_key: Optional[str] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -115,7 +127,10 @@ class Prompt:
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
         self.label: Optional[str] = None
-        self.interpolation_type: Optional[PromptInterpolationType] = None
+        self.interpolation_type: PromptInterpolationType = (
+            interpolation_type or PromptInterpolationType.FSTRING
+        )
+        self.confident_api_key = confident_api_key
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -164,7 +179,7 @@ class Prompt:
             content = f.read()
         try:
             data = json.loads(content)
-        except:
+        except (TypeError, json.JSONDecodeError):
             self.text_template = content
             return content
 
@@ -231,7 +246,7 @@ class Prompt:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         data, _ = api.send_request(
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
@@ -246,7 +261,7 @@ class Prompt:
         version: Optional[str] = None,
         label: Optional[str] = None,
     ) -> Optional[CachedPrompt]:
-        if not os.path.exists(CACHE_FILE_NAME):
+        if portalocker is None or not os.path.exists(CACHE_FILE_NAME):
             return None
 
         try:
@@ -294,13 +309,12 @@ class Prompt:
         output_type: Optional[OutputType] = None,
         output_schema: Optional[OutputSchema] = None,
     ):
-        if not self.alias:
+        if portalocker is None or not self.alias:
             return
 
-        # Ensure directory exists
-        os.makedirs(HIDDEN_DIR, exist_ok=True)
-
         try:
+            # Ensure directory exists
+            os.makedirs(HIDDEN_DIR, exist_ok=True)
             # Use r+ mode if file exists, w mode if it doesn't
             mode = "r+" if os.path.exists(CACHE_FILE_NAME) else "w"
 
@@ -351,6 +365,8 @@ class Prompt:
                 f.seek(0)
                 f.truncate()
                 json.dump(cache_data, f, cls=CustomEncoder)
+                f.flush()
+                os.fsync(f.fileno())
         except portalocker.exceptions.LockException:
             # If we can't acquire the lock, silently skip caching
             pass
@@ -479,10 +495,10 @@ class Prompt:
                             cached_prompt.output_schema
                         )
                     return
-            except:
+            except Exception:
                 pass
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             BarColumn(bar_width=60),
@@ -621,7 +637,7 @@ class Prompt:
             # Pydantic version below 2.0
             body = body.dict(by_alias=True, exclude_none=True)
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.PROMPTS_ENDPOINT,
@@ -678,7 +694,7 @@ class Prompt:
             )
         except AttributeError:
             body = body.dict(by_alias=True, exclude_none=True)
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         data, _ = api.send_request(
             method=HttpMethods.PUT,
             endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
@@ -751,7 +767,7 @@ class Prompt:
         while True:
             await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
 
-            api = Api()
+            api = Api(api_key=self.confident_api_key)
             try:
                 if label:
                     data, _ = api.send_request(

@@ -3,9 +3,10 @@ from typing import Optional, List, Type, Union
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -18,7 +19,11 @@ from deepeval.metrics.argument_correctness.template import (
     ArgumentCorrectnessTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.argument_correctness.schema import *
+from deepeval.metrics.argument_correctness.schema import (
+    ArgumentCorrectnessVerdict,
+    Verdicts,
+    ArgumentCorrectnessScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -57,7 +62,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -81,11 +94,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 else:
                     self.verdicts: List[ArgumentCorrectnessVerdict] = (
                         self._generate_verdicts(
-                            test_case.input, test_case.tools_called
+                            test_case.input,
+                            test_case.tools_called,
+                            test_case.multimodal,
                         )
                     )
                     self.score = self._calculate_score()
-                    self.reason = self._generate_reason(test_case.input)
+                    self.reason = self._generate_reason(
+                        test_case.input, test_case.multimodal
+                    )
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -108,7 +125,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -124,11 +149,15 @@ class ArgumentCorrectnessMetric(BaseMetric):
             else:
                 self.verdicts: List[ArgumentCorrectnessVerdict] = (
                     await self._a_generate_verdicts(
-                        test_case.input, test_case.tools_called
+                        test_case.input,
+                        test_case.tools_called,
+                        test_case.multimodal,
                     )
                 )
                 self.score = self._calculate_score()
-                self.reason = await self._a_generate_reason(test_case.input)
+                self.reason = await self._a_generate_reason(
+                    test_case.input, test_case.multimodal
+                )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -143,7 +172,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, input: str) -> str:
+    async def _a_generate_reason(self, input: str, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -156,27 +185,18 @@ class ArgumentCorrectnessMetric(BaseMetric):
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
+            multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = (
-                    await self.model.a_generate(
-                        prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
 
-    def _generate_reason(self, input: str) -> str:
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
+
+    def _generate_reason(self, input: str, multimodal: bool) -> str:
         if self.include_reason is False:
             return None
 
@@ -189,76 +209,50 @@ class ArgumentCorrectnessMetric(BaseMetric):
             incorrect_tool_calls_reasons=incorrect_tool_calls_reasons,
             input=input,
             score=format(self.score, ".2f"),
+            multimodal=multimodal,
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ArgumentCorrectnessScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ArgumentCorrectnessScoreReason = self.model.generate(
-                    prompt=prompt, schema=ArgumentCorrectnessScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ArgumentCorrectnessScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(
-        self,
-        input: str,
-        tools_called: List[ToolCall],
+        self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            tools_called=tools_called,
+            input=input, tools_called=tools_called, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                ArgumentCorrectnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(
-        self,
-        input: str,
-        tools_called: List[ToolCall],
+        self, input: str, tools_called: List[ToolCall], multimodal: bool
     ) -> List[ArgumentCorrectnessVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input,
-            tools_called=tools_called,
+            input=input, tools_called=tools_called, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            return [item for item in res.verdicts]
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                return [item for item in res.verdicts]
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return [
-                    ArgumentCorrectnessVerdict(**item)
-                    for item in data["verdicts"]
-                ]
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda r: list(r.verdicts),
+            extract_json=lambda data: [
+                ArgumentCorrectnessVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)
@@ -279,7 +273,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

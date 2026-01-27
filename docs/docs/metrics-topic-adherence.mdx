@@ -1,0 +1,93 @@
+---
+id: metrics-topic-adherence
+title: Topic Adherence
+sidebar_label: Topic Adherence
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-topic-adherence"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
+
+The Topic Adherence metric is a multi-turn agentic metric that evaluates whether your **agent has answered questions only if they adhere to relevant topics**. It is a self-explaining eval, which means it outputs a reason for its metric score.
+
+## Required Arguments
+
+To use the `TopicAdherenceMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+
+You can learn more about how it is calculated [here](#how-is-it-calculated).
+
+## Usage
+
+The `TopicAdherenceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import TopicAdherenceMetric
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="...", content="..."), 
+        Turn(role="...", content="...", tools_called=[...])
+    ],
+)
+metric = TopicAdherenceMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+There is **ONE** mandatory and **SIX** optional parameters when creating a `TopicAdherenceMetric`:
+
+- `relevant_topics`: a list of strings that define what topics your LLM agent can answer. Any answers that don't adhere to this topic will penalise the score this metric.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `TopicAdherenceMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated
+
+The `TopicAdherenceMetric` score is calculated through the following process:
+
+- Find question-answer pairs from the entire conversation, where question is taken from user and answered by the LLM agent.
+- Find the truth table values for all the question-answer pairs.
+    - **True Positives**: Question is relevant and the response correctly answers it.
+    - **True Negatives**: Question is NOT relevant, and the assistant correctly refused to answer.
+    - **False Positives**: Question is NOT relevant, but the assistant still gave an answer.
+    - **False Negatives**: Question is relevant, but the assistant refused or gave an irrelevant response.
+
+Now, the metric uses the following formula to find the final score:
+
+<Equation formula="\text{Topic Adherence Score} = \frac{\text{Number of True Positives and True Negatives}}{\text{Total Number of QA Pairs}}" />
+
+The `TopicAdherenceMetric` converts turns into individual unit interactions and iterates over each interaction to find the question-answer pairs separately, which are also evaluated individually for more accurate results.

@@ -26,12 +26,45 @@ API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
 
 
+def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
+    """
+    Infer region from Confident API key prefix.
+
+    Supported:
+      - confident_eu_... => "EU"
+      - confident_us_... => "US"
+
+    Returns None if prefix is not recognized or api_key is falsy.
+    """
+    if not api_key:
+        return None
+    key = api_key.strip().lower()
+    if key.startswith("confident_eu_"):
+        return "EU"
+    if key.startswith("confident_us_"):
+        return "US"
+    return None
+
+
 def get_base_api_url():
+    s = get_settings()
+    if s.CONFIDENT_BASE_URL:
+        base_url = s.CONFIDENT_BASE_URL.rstrip("/")
+        return base_url
+    # If the user has explicitly set a region, respect it.
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
-    if region == "EU":
+    if region:
+        return API_BASE_URL_EU if region == "EU" else API_BASE_URL
+
+    # Otherwise, infer region from the API key prefix.
+    api_key = get_confident_api_key()
+    inferred = _infer_region_from_api_key(api_key)
+    if inferred == "EU":
         return API_BASE_URL_EU
-    else:
-        return API_BASE_URL
+
+    # Default to US (backwards compatible)
+    return API_BASE_URL
+
 
 
 def get_confident_api_key() -> Optional[str]:
@@ -87,6 +120,7 @@ class Endpoints(Enum):
     DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    EXPERIMENT_ENDPOINT = "/v1/experiment"
     METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
@@ -100,6 +134,8 @@ class Endpoints(Enum):
     EVALUATE_THREAD_ENDPOINT = "/v1/evaluate/threads/:threadId"
     EVALUATE_TRACE_ENDPOINT = "/v1/evaluate/traces/:traceUuid"
     EVALUATE_SPAN_ENDPOINT = "/v1/evaluate/spans/:spanUuid"
+
+    METRICS_ENDPOINT = "/v1/metrics"
 
 
 class Api:
@@ -115,7 +151,7 @@ class Api:
         self.api_key = api_key
         self._headers = {
             "Content-Type": "application/json",
-            "CONFIDENT_API_KEY": api_key,
+            "CONFIDENT-API-KEY": api_key,
             "X-DeepEval-Version": deepeval.__version__,
         }
         self.base_api_url = get_base_api_url()

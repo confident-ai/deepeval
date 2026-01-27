@@ -10,12 +10,18 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.metrics.misuse.template import MisuseTemplate
-from deepeval.metrics.misuse.schema import *
+from deepeval.metrics.misuse.schema import (
+    Misuses,
+    MisuseVerdict,
+    Verdicts,
+    MisuseScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -57,7 +63,16 @@ class MisuseMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -104,7 +119,16 @@ class MisuseMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -136,7 +160,7 @@ class MisuseMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -150,24 +174,15 @@ class MisuseMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=MisuseScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: MisuseScoreReason = await self.model.a_generate(
-                    prompt, schema=MisuseScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MisuseScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
@@ -181,106 +196,71 @@ class MisuseMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
 
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=MisuseScoreReason)
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: MisuseScoreReason = self.model.generate(
-                    prompt, schema=MisuseScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=MisuseScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_verdicts(self) -> List[MisuseVerdict]:
         if len(self.misuses) == 0:
             return []
 
-        verdicts: List[MisuseVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             misuses=self.misuses, domain=self.domain
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
-                )
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [MisuseVerdict(**item) for item in data["verdicts"]]
-                return verdicts
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                MisuseVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     def _generate_verdicts(self) -> List[MisuseVerdict]:
         if len(self.misuses) == 0:
             return []
 
-        verdicts: List[MisuseVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             misuses=self.misuses, domain=self.domain
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
-            self.evaluation_cost += cost
-            verdicts = [item for item in res.verdicts]
-            return verdicts
-        else:
-            try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
-                verdicts = [item for item in res.verdicts]
-                return verdicts
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                verdicts = [MisuseVerdict(**item) for item in data["verdicts"]]
-                return verdicts
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Verdicts,
+            extract_schema=lambda s: list(s.verdicts),
+            extract_json=lambda data: [
+                MisuseVerdict(**item) for item in data["verdicts"]
+            ],
+        )
 
     async def _a_generate_misuses(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_misuses(
             actual_output=actual_output, domain=self.domain
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Misuses)
-            self.evaluation_cost += cost
-            return res.misuses
-        else:
-            try:
-                res: Misuses = await self.model.a_generate(
-                    prompt, schema=Misuses
-                )
-                return res.misuses
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["misuses"]
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Misuses,
+            extract_schema=lambda s: s.misuses,
+            extract_json=lambda data: data["misuses"],
+        )
 
     def _generate_misuses(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_misuses(
             actual_output=actual_output, domain=self.domain
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Misuses)
-            self.evaluation_cost += cost
-            return res.misuses
-        else:
-            try:
-                res: Misuses = self.model.generate(prompt, schema=Misuses)
-                return res.misuses
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["misuses"]
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=Misuses,
+            extract_schema=lambda s: s.misuses,
+            extract_json=lambda data: data["misuses"],
+        )
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -301,7 +281,7 @@ class MisuseMetric(BaseMetric):
         else:
             try:
                 self.success = self.score <= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

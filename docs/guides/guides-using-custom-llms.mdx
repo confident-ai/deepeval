@@ -151,7 +151,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,
@@ -315,7 +315,7 @@ safety_settings = {
 
 #TODO : Add values for project and location below
 custom_model_gemini = ChatVertexAI(
-    model_name="gemini-1.0-pro-002"
+    model_name="gemini-2.5-flash"
     , safety_settings=safety_settings
     , project= "<project-id>"
     , location= "<region>" #example : us-central1
@@ -635,7 +635,7 @@ This is because the `CustomMistral7B` model is implemented through HF `transform
 
 :::
 
-### `gemini-1.5-flash` through Vertex AI
+### `gemini-2.5-flash` through Vertex AI
 
 Begin by installing the `instructor` package via pip:
 
@@ -653,7 +653,7 @@ from deepeval.models import DeepEvalBaseLLM
 
 class CustomGeminiFlash(DeepEvalBaseLLM):
     def __init__(self):
-        self.model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+        self.model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
 
     def load_model(self):
         return self.model

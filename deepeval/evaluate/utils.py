@@ -8,14 +8,13 @@ from deepeval.utils import format_turn
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import (
+    ArenaGEval,
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
 )
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
@@ -84,6 +83,35 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
         )
 
 
+def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
+    if metric.error is not None:
+        return MetricData(
+            name=metric.__name__,
+            threshold=1,
+            score=None,
+            reason=None,
+            success=False,
+            strictMode=True,
+            evaluationModel=metric.evaluation_model,
+            error=metric.error,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )
+    else:
+        return MetricData(
+            name=metric.__name__,
+            score=1 if contestant == metric.winner else 0,
+            threshold=1,
+            reason=metric.reason,
+            success=metric.is_successful(),
+            strictMode=True,
+            evaluationModel=metric.evaluation_model,
+            error=None,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )
+
+
 def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
 ) -> TestResult:
@@ -99,17 +127,14 @@ def create_test_result(
             turns=api_test_case.turns,
         )
     else:
-        multimodal = (
-            api_test_case.multimodal_input is not None
-            and api_test_case.multimodal_input_actual_output is not None
-        )
+        multimodal = api_test_case.images_mapping
         if multimodal:
             return TestResult(
                 name=name,
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
-                input=api_test_case.multimodal_input,
-                actual_output=api_test_case.multimodal_input_actual_output,
+                input=api_test_case.input,
+                actual_output=api_test_case.actual_output,
                 conversational=False,
                 multimodal=True,
                 additional_metadata=api_test_case.additional_metadata,
@@ -192,7 +217,7 @@ def validate_assert_test_inputs(
         )
 
     if test_case and metrics:
-        if isinstance(test_case, LLMTestCase) and not all(
+        if (isinstance(test_case, LLMTestCase)) and not all(
             isinstance(metric, BaseMetric) for metric in metrics
         ):
             raise ValueError(
@@ -203,12 +228,6 @@ def validate_assert_test_inputs(
         ):
             raise ValueError(
                 "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
-            )
-        if isinstance(test_case, MLLMTestCase) and not all(
-            isinstance(metric, BaseMultimodalMetric) for metric in metrics
-        ):
-            raise ValueError(
-                "All 'metrics' for an 'MLLMTestCase' must be instances of 'BaseMultimodalMetric' only."
             )
 
     if not ((golden and observed_callback) or (test_case and metrics)):
@@ -221,15 +240,12 @@ def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     observed_callback: Optional[Callable] = None,
     test_cases: Optional[
-        Union[
-            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
-        ]
+        Union[List[LLMTestCase], List[ConversationalTestCase]]
     ] = None,
     metrics: Optional[
         Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
-            List[BaseMultimodalMetric],
         ]
     ] = None,
     metric_collection: Optional[str] = None,
@@ -262,7 +278,7 @@ def validate_evaluate_inputs(
     if test_cases and metrics:
         for test_case in test_cases:
             for metric in metrics:
-                if isinstance(test_case, LLMTestCase) and not isinstance(
+                if (isinstance(test_case, LLMTestCase)) and not isinstance(
                     metric, BaseMetric
                 ):
                     raise ValueError(
@@ -274,12 +290,6 @@ def validate_evaluate_inputs(
                     print(type(metric))
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
-                    )
-                if isinstance(test_case, MLLMTestCase) and not isinstance(
-                    metric, BaseMultimodalMetric
-                ):
-                    raise ValueError(
-                        f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
                     )
 
 

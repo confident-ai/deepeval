@@ -18,9 +18,9 @@ import NavigationCards from "@site/src/components/NavigationCards";
 and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
-- Plug-and-use 30+ LLM-evaluated metrics, most with research backing.
-- Supports both end-to-end and component level evaluation.
+- Plug-and-use 50+ LLM-evaluated metrics, most with research backing, and all are multi-modal.
 - Evaluation for RAG, agents, chatbots, and virtually any use case.
+- Supports both end-to-end and component level evaluation.
 - Synthetic dataset generation with state-of-the-art evolution techniques.
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
@@ -186,7 +186,7 @@ Most likely your evaluation LLM is failing and this might be due to rate limits 
   (for OpenAI, `insufficient_quota` is treated as non-retryable).
 - **Backoff:** exponential with jitter (initial **1s**, base **2**, jitter **2s**, cap **5s**).
 
-You can tune these via environment flags (no code changes). See [Environment Flags](./evaluation-flags-and-configs#environment-flags) for details.
+You can tune these via environment flags (no code changes). See [environment variables](/docs/environment-variables) for details.
 
 </details>
 
@@ -219,7 +219,7 @@ After you've pasted in your API key, Confident AI will **generate testing report
   label="Watch Full Guide on Confident AI"
 />
 
-**Once you've ran more than one test run**, you'll be able to use the [regression testing page](https://www.confident-ai.com/docs/llm-evaluation/dashboards/ab-regression-testing) shown near the end of the video. Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression.
+**Once you've run more than one test run**, you'll be able to use the [regression testing page](https://www.confident-ai.com/docs/llm-evaluation/dashboards/ab-regression-testing) shown near the end of the video. Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression.
 
 </TabItem>
 
@@ -426,7 +426,7 @@ These are things you should definitely learn about:
     {
       title: "Metrics",
       description:
-        "Learn about the 40+ metrics available, how to choose, and how to customize them.",
+        "Learn about the 50+ metrics available, how to choose, and how to customize them.",
       icon: "Gauge",
       to: "/docs/metrics-introduction",
     },
@@ -436,6 +436,36 @@ These are things you should definitely learn about:
         "Learn how they are used within DeepEval, the concept of goldens, and how to use them for evals.",
       icon: "FileText",
       to: "/docs/evaluation-datasets",
+    },
+    {
+      title: "Tracing",
+      description:
+        "Learn how to trace your LLM applications, evaluate on a component-level, and monitor in production.",
+      icon: "GitMerge",
+      to: "/docs/evaluation-llm-tracing",
+    },
+  ]}
+/>
+
+## Other Products
+
+Learn more offerings available in `deepeval`'s ecosystem:
+
+<NavigationCards
+  items={[
+    {
+      title: "Confident AI",
+      description:
+        "The cloud platform for DeepEval. Allow both technical and non-technical teams to collaborate on testing AI, from evaluation in /dev to /prod.",
+      icon: "Cloud",
+      to: "https://www.confident-ai.com/docs",
+    },
+    {
+      title: "DeepTeam",
+      description:
+        "DeepTeam is DeepEval for AI safety and security testing. Expose 50+ vulnerabilities, with 20+ attack methods such as tree jailbreaking all automated.",
+      icon: "ShieldCheck",
+      to: "https://trydeepteam.com",
     },
   ]}
 />

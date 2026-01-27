@@ -1,0 +1,249 @@
+---
+id: anthropic
+title: Anthropic
+sidebar_label: Anthropic
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval` integrates with Anthropic models, allowing you to evaluate and trace Claude LLM requests, whether standalone or within complex applications with multiple components, in both development and production environments.
+
+## Local Evaluations in Development
+
+To evaluate your Claude application during development, opt for local evals. This allows you to run evaluations directly on your machine.
+
+### Evaluating Claude as a Standalone
+
+Standalone evaluation treats the Claude API integration as a single component, assessing its input and actual output using chosen metrics (e.g: `AnswerRelevancyMetric`). To begin, simply replace your existing `Anthropic` client with the one provided by `deepeval`.
+
+<Tabs groupId="anthropic">
+<TabItem value="messages" label="Messages">
+
+```python title="main.py" showLineNumbers {4,12,13,14,15}
+from deepeval.anthropic import Anthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
+
+client = Anthropic()
+
+dataset = EvaluationDataset()
+datset.pull(alias="My Dataset")
+
+for golden in dataset.evals_iterator():
+    with trace(
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
+    ):
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": golden.input
+                }
+            ],
+        )
+        return response.content[0].text
+```
+
+</TabItem>
+<TabItem value="async-messages" label="Async Messages">
+
+```python title="main.py" showLineNumbers {6,11,12,13,14}
+import asyncio
+
+from deepeval.anthropic import AsyncAnthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, LlmSpanContext
+
+async_client = AsyncAnthropic()
+
+async def llm_app(input):
+    with trace(
+        llm_span_context=LlmSpanContext(
+            llm_metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
+    ):
+        response = await async_client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": golden.input
+                }
+            ],
+        )
+        return response.content[0].text
+
+dataset = EvaluationDataset()
+datset.pull(alias="My Dataset")
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(llm_app(input=golden.input))
+    dataset.evaluate(task)
+```
+
+</TabItem>
+</Tabs>
+
+The `trace` context supports **FIVE** optional parameters:
+
+- `metrics`: List of `BaseMetric` metrics to use when evaluating the model's output.
+- `expected_output`: An ideal output the model should produce for the given input.
+- `retrieval_context`: The specific set of information or documents retrieved for ground truth comparison.
+- `context`: Ideal context snippets the model should use when generating its answer.
+- `expected_tools`: List of tool names/functions you expect the model to call during its response.
+
+:::info
+With `deepeval`’s `Anthropic` client, input and actual output are auto-extracted for every generation, so you can run evaluations like **Answer Relevancy** without extra setup. For metrics that require parameters beyond the input and actual output (e.g. **Faithfulness**), just pass `retrieval_context` or `context` in the `trace` context.
+:::
+
+### Evaluating Claude within Components
+
+For component-level evaluation, use `deepeval`'s `Anthropic` client and add the `@observe` decorator to your component functions. Pass your chosen metrics via the `trace` context manager.
+
+<Tabs groupId="anthropic">
+<TabItem value="messages" label="Messages">
+
+```python title="main.py" showLineNumbers {4,6,13}
+from deepeval.anthropic import Anthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, observe, LlmSpanContext
+
+@observe()
+def retrieve_documents(query):
+    return [
+        "React is a popular Javascript library for building user interfaces.",
+        "It allows developers to create large web applications that can update and render efficiently in response to data changes."
+    ]
+
+@observe()
+def llm_app(input):
+    client = Anthropic()
+    with trace(
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
+    ):
+        response = client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": golden.input
+                }
+            ]
+        )
+    return response.content[0].text
+
+dataset = EvaluationDataset()
+datset.pull(alias="My Dataset")
+
+for golden in dataset.evals_iterator():
+    llm_app(input=golden.input)
+```
+
+</TabItem>
+<TabItem value="async-messages" label="Async Messages">
+
+```python title="main.py" showLineNumbers {6,8,15}
+import asyncio
+
+from deepeval.anthropic import AsyncAnthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace, observe, LlmSpanContext
+
+@observe()
+def retrieve_documents(query):
+    return [
+        "React is a popular Javascript library for building user interfaces.",
+        "It allows developers to create large web applications that can update and render efficiently in response to data changes."
+    ]
+
+@observe()
+async def llm_app(input):
+    async_client = AsyncAnthropic()
+    with trace(
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric(), BiasMetric()]
+        ),
+    ):
+        response = await async_client.responses.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": input
+                }
+            ],
+        )
+    return response.content[0].text
+
+dataset = EvaluationDataset()
+datset.pull(alias="My Dataset")
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(llm_app(input=golden.input))
+    dataset.evaluate(task)
+```
+
+</TabItem>
+</Tabs>
+
+When used inside `@observe` components, `deepeval`'s `Anthropic` client automatically:
+
+- Generates an LLM span for every Messages API call, including nested Tool spans for any tool invocations.
+- Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
+- Records span level llm attributes such as the input prompt, generated output and token usage.
+- Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
+
+## Online Evaluations in Production
+
+To evaluate your Claude application's traces in production, ensure the client is used within an observed function. This enables online evals, which automatically assess incoming traces on Confident AI's server.
+
+Set the `llm_metric_collection` parameter in the `trace` context manager to evaluate the trace against a collection of metrics.
+
+```python main.py
+from deepeval.anthropic import Anthropic
+from deepeval.tracing import trace, LlmSpanContext
+
+client = Anthropic()
+
+with trace(
+    llm_span_context=LlmSpanContext(
+        metric_collection="test_collection_1",
+    ),
+):
+    response = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=4096,
+        system="You are a helpful assistant.",
+        messages=[
+            {
+                "role": "user",
+                "content": "Hello, how are you?"
+            }
+        ],
+    )
+```
+
+:::note
+For a complete guide on setting up online evaluations with **Confident AI** (the `deepeval` cloud platform), please visit [Evaluating with Tracing](/docs/evaluation-component-level-llm-evals).
+:::

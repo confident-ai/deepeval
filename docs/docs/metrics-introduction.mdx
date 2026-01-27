@@ -1,6 +1,6 @@
 ---
 id: metrics-introduction
-title: Metrics Introduction
+title: Introduction to LLM Metrics
 sidebar_label: Introduction
 ---
 
@@ -8,16 +8,11 @@ sidebar_label: Introduction
   <link rel="canonical" href="https://deepeval.com/docs/metrics-introduction" />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
-`deepeval` offers 40+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while the metric acts as the ruler based on a specific criteria of interest, a test case represents the thing you're trying to measure.
-
-:::tip Persisting settings
-You can persist CLI settings with the optional `--save` flag.
-See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
-:::
+`deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
 
 ## Quick Summary
 
@@ -35,7 +30,6 @@ Custom metrics allow you to define your **custom criteria** using SOTA implement
 - DAG (Deep Acyclic Graph)
 - Conversational G-Eval
 - Conversational DAG
-- Multi-modal G-Eval
 - Arena G-Eval
 - Do it yourself, 100% self-coded metrics (e.g. if you want to use BLEU, ROUGE)
 
@@ -60,10 +54,14 @@ RAG (retrieval augmented generation) metrics focus on the **retriever and genera
 
 <TabItem value="agents" label="Agents">
 
-Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are two main agentic metrics:
+Agentic metrics evaluates the **overall execution flow** of your agent. In `deepeval`, there are six main agentic metrics:
 
 - Task Completion
+- Argument Correctness
 - Tool Correctness
+- Step Efficiency
+- Plan Adherence
+- Plan Quality
 
 The task completion metric does not require a test case and will take an LLM trace to evaluate task completion (i.e. you'll have to [setup LLM tracing](/docs/evaluation-llm-tracing)).
 
@@ -97,22 +95,17 @@ For those looking for a full-blown LLM red teaming orchestration frameowork, che
 
 </TabItem>
 
-<TabItem value="multi-modal" label="Multimodal">
+<TabItem value="image" label="Image">
 
-Multimodal metrics in `deepeval` currently supports images, and the RAG metrics but for a multimodal use case. They include:
+Metrics in `deepeval` are multi-modal by default, metrics targetting images are metrics that definitely expects an image in the test case. They include:
 
 - Image Coherence
 - Image Helpfulness
 - Image Reference
 - Text-to-Image
 - Image-Editing
-- Multimodal Answer Relevancy
-- Multimodal Faithfulness
-- Multimodal Contextual Relevancy
-- Multimodal Contextual Recall
-- Multimodal Contextual Precision
 
-Note that multimodal metrics requires `MLLMTestCase`s instead.
+Note that multi-modal metrics requires [`MLLMImage`s](/docs/evaluation-test-cases#mllmimage-data-model) in `LLMTestCase`s.
 
 </TabItem>
 
@@ -160,7 +153,8 @@ More information on everything can be found on the [Confident AI evaluation docs
 
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 
-- Research-backed LLM-as-as-Judge (`GEval`)
+- Are research-backed LLM-as-as-Judge (`GEval`)
+- One of the most used in the world (20 million+ daily evaluations)
 - Make deterministic metric scores possible (when using `DAGMetric`)
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
 - Provide a comprehensive reason for the scores computed
@@ -213,25 +207,6 @@ print(professionalism_metric.score, professionalism_metric.reason)
 
 </TabItem>
 
-<TabItem value="multimodal" label="Multimodal G-Eval">
-
-```python
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
-from deepeval.metrics import MultimodalGEval
-
-m_test_case = MLLMTestCase(input=[...], actual_output=[...])
-text_image_coherence = MultimodalGEval(
-    name="Text-Image Coherence",
-    criteria="Determine whether the images and text is coherence in the actual output.",
-    evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
-    strict_mode=True
-)
-
-text_image_coherence.measure(convo_test_case)
-print(text_image_coherence.score, text_image_coherence.reason)
-```
-
-</TabItem>
 </Tabs>
 
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
@@ -325,13 +300,13 @@ print(role_adherence.score, role_adherence.reason)
 
 </TabItem>
 
-<TabItem value="Multimodal" label="Multimodal">
+<TabItem value="Images" label="Images">
 
 ```python
-from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.test_case import LLMTestCase, MLLMImage
 from deepeval.metrics import ImageCoherenceMetric
 
-m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+test_case = LLMTestCase(input=f"What does thsi image say? {MLLMImage(...)}", actual_output="No idea!")
 image_coherence = ImageCoherenceMetric(threshold=0.5)
 
 image_coherence.measure(m_test_case)
@@ -443,11 +418,10 @@ Please **do not include** quotation marks when setting your `API_KEYS` as enviro
 
 ```bash
 deepeval set-azure-openai \
-    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
-    --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4.1
+    --base-url=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+    --model=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    --api-version=<api_version> \ # e.g. 2025-01-01-preview
     --model-version=<model_version> # e.g. 2024-11-20
 ```
 
@@ -474,16 +448,16 @@ ollama run deepseek-r1:1.5b
 
 :::
 
-To use **Ollama** models for your metrics, run `deepeval set-ollama <model>` in your CLI. For example:
+To use **Ollama** models for your metrics, run `deepeval set-ollama --model=<model>` in your CLI. For example:
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b
+deepeval set-ollama --model=deepseek-r1:1.5b
 ```
 
 Optionally, you can specify the **base URL** of your local Ollama model instance if you've defined a custom port. The default base URL is set to `http://localhost:11434`.
 
 ```bash
-deepeval set-ollama deepseek-r1:1.5b \
+deepeval set-ollama --model=deepseek-r1:1.5b \
     --base-url="http://localhost:11434"
 ```
 
@@ -505,8 +479,7 @@ To use Gemini models with `deepeval`, run the following command in your CLI.
 
 ```bash
 deepeval set-gemini \
-    --model-name=<model_name> \ # e.g. "gemini-2.0-flash-001"
-    --google-api-key=<api_key>
+    --model=<model_name> # e.g. "gemini-2.0-flash-001"
 ```
 
 </TabItem>
@@ -552,7 +525,7 @@ class AzureOpenAI(DeepEvalBaseLLM):
 
 # Replace these with real values
 custom_model = AzureChatOpenAI(
-    openai_api_version=openai_api_version,
+    openai_api_version=api_version,
     azure_deployment=azure_deployment,
     azure_endpoint=azure_endpoint,
     openai_api_key=openai_api_key,

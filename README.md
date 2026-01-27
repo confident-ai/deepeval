@@ -53,9 +53,9 @@
     <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=zh">中文</a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating and testing large-language model systems. It is similar to Pytest but specialized for unit testing LLM outputs. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as G-Eval, hallucination, answer relevancy, RAGAS, etc., which uses LLMs and various other NLP models that runs **locally on your machine** for evaluation.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating and testing large-language model systems. It is similar to Pytest but specialized for unit testing LLM outputs. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which uses LLM-as-a-judge and other NLP models that run **locally on your machine** for evaluation.
 
-Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemented via LangChain or LlamaIndex, DeepEval has you covered. With it, you can easily determine the optimal models, prompts, and architecture to improve your RAG pipeline, agentic workflows, prevent prompt drifting, or even transition from OpenAI to hosting your own Deepseek R1 with confidence.
+Whether your LLM applications are AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily determine the optimal models, prompts, and architecture to improve your RAG pipeline, agentic workflows, prevent prompt drifting, or even transition from OpenAI to hosting your own Deepseek R1 with confidence.
 
 > [!IMPORTANT]
 > Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
@@ -68,10 +68,10 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
 
 # 🔥 Metrics and Features
 
-> 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
+> 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)
 
 - Supports both end-to-end and component-level LLM evaluation.
-- Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
+- Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine**:
   - G-Eval
   - DAG ([deep acyclic graph](https://deepeval.com/docs/metrics-dag))
   - **RAG metrics:**
@@ -111,7 +111,7 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
   - TruthfulQA
   - HumanEval
   - GSM8K
-- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation lifecycle:
+- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation & observability lifecycle:
   - Curate/annotate evaluation datasets on the cloud
   - Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
   - Fine-tune metrics for custom results
@@ -120,7 +120,7 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
   - Repeat until perfection
 
 > [!NOTE]
-> Confident AI is the DeepEval platform. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
+> DeepEval is available on Confident AI, an LLM evals platform for AI observability and quality. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
 
@@ -347,7 +347,7 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-DeepEval's cloud platform, [Confident AI](https://confident-ai.com?utm_source=Github), allows you to:
+DeepEval is available on [Confident AI](https://confident-ai.com?utm_source=Github), an evals & observability platform that allows you to:
 
 1. Curate/annotate evaluation datasets on the cloud
 2. Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
@@ -389,6 +389,7 @@ Using `.env.local` or `.env` is optional. If they are missing, DeepEval uses you
 ```bash
 cp .env.example .env.local
 # then edit .env.local (ignored by git)
+```
 
 <br />
 

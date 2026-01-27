@@ -10,7 +10,6 @@ from deepeval.test_run.api import (
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
     Turn,
 )
 from deepeval.constants import PYTEST_RUN_TEST_NAME
@@ -29,10 +28,11 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
 
 
 def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
+
     if isinstance(test_case, ConversationalTestCase):
         order = (
             test_case._dataset_rank
@@ -59,8 +59,10 @@ def create_api_test_case(
             context=test_case.context,
             tags=test_case.tags,
             comments=test_case.comments,
+            imagesMapping=test_case._get_images_mapping(),
             additionalMetadata=test_case.additional_metadata,
         )
+
         api_test_case.turns = [
             create_api_turn(
                 turn=turn,
@@ -84,48 +86,27 @@ def create_api_test_case(
             name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
         metrics_data = []
 
-        if isinstance(test_case, LLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                tags=test_case.tags,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-                trace=trace,
-            )
-        elif isinstance(test_case, MLLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input="",
-                multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
-                multimodalExpectedOutput=test_case.expected_output,
-                multimodalRetrievalContext=test_case.retrieval_context,
-                multimodalContext=test_case.context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-            )
+        api_test_case = LLMApiTestCase(
+            name=name,
+            input=test_case.input,
+            actualOutput=test_case.actual_output,
+            expectedOutput=test_case.expected_output,
+            retrievalContext=test_case.retrieval_context,
+            context=test_case.context,
+            imagesMapping=test_case._get_images_mapping(),
+            toolsCalled=test_case.tools_called,
+            expectedTools=test_case.expected_tools,
+            tokenCost=test_case.token_cost,
+            completionTime=test_case.completion_time,
+            success=success,
+            metricsData=metrics_data,
+            runDuration=None,
+            evaluationCost=None,
+            order=order,
+            additionalMetadata=test_case.additional_metadata,
+            comments=test_case.comments,
+            tags=test_case.tags,
+            trace=trace,
+        )
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case

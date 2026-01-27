@@ -1,12 +1,16 @@
 from typing import Optional, List, Type, Union
 import asyncio
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
     initialize_model,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -18,7 +22,10 @@ from deepeval.metrics.contextual_relevancy.template import (
     ContextualRelevancyTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_relevancy.schema import *
+from deepeval.metrics.contextual_relevancy.schema import (
+    ContextualRelevancyVerdicts,
+    ContextualRelevancyScoreReason,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -57,7 +64,17 @@ class ContextualRelevancyMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -74,12 +91,16 @@ class ContextualRelevancyMetric(BaseMetric):
                     )
                 )
             else:
+
+                input = test_case.input
+                retrieval_context = test_case.retrieval_context
+
                 self.verdicts_list: List[ContextualRelevancyVerdicts] = [
-                    (self._generate_verdicts(test_case.input, context))
-                    for context in test_case.retrieval_context
+                    (self._generate_verdicts(input, context, multimodal))
+                    for context in retrieval_context
                 ]
                 self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.input)
+                self.reason = self._generate_reason(input, multimodal)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -103,7 +124,17 @@ class ContextualRelevancyMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        multimodal = test_case.multimodal
+
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -112,16 +143,19 @@ class ContextualRelevancyMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            input = test_case.input
+            retrieval_context = test_case.retrieval_context
+
             self.verdicts_list: List[ContextualRelevancyVerdicts] = (
                 await asyncio.gather(
                     *[
-                        self._a_generate_verdicts(test_case.input, context)
-                        for context in test_case.retrieval_context
+                        self._a_generate_verdicts(input, context, multimodal)
+                        for context in retrieval_context
                     ]
                 )
             )
             self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
+            self.reason = await self._a_generate_reason(input, multimodal)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -136,7 +170,7 @@ class ContextualRelevancyMetric(BaseMetric):
                 )
             return self.score
 
-    async def _a_generate_reason(self, input: str):
+    async def _a_generate_reason(self, input: str, multimodal: bool):
         if self.include_reason is False:
             return None
 
@@ -154,27 +188,18 @@ class ContextualRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
+            multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ContextualRelevancyScoreReason
-                    )
-                )
-                return res.reason
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
 
-    def _generate_reason(self, input: str):
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
+
+    def _generate_reason(self, input: str, multimodal: bool):
         if self.include_reason is False:
             return None
 
@@ -192,23 +217,16 @@ class ContextualRelevancyMetric(BaseMetric):
             irrelevant_statements=irrelevant_statements,
             relevant_statements=relevant_statements,
             score=format(self.score, ".2f"),
+            multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyScoreReason
-            )
-            self.evaluation_cost += cost
-            return res.reason
-        else:
-            try:
-                res: ContextualRelevancyScoreReason = self.model.generate(
-                    prompt, schema=ContextualRelevancyScoreReason
-                )
-                return res.reason
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["reason"]
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyScoreReason,
+            extract_schema=lambda score_reason: score_reason.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     def _calculate_score(self):
         total_verdicts = 0
@@ -226,50 +244,34 @@ class ContextualRelevancyMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
-        self, input: str, context: List[str]
+        self, input: str, context: List[str], multimodal: bool
     ) -> ContextualRelevancyVerdicts:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input, context=context
+            input=input, context=context, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyVerdicts
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = await self.model.a_generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                return res
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdicts(**data)
+
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyVerdicts,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        )
 
     def _generate_verdicts(
-        self, input: str, context: str
+        self, input: str, context: str, multimodal: bool
     ) -> ContextualRelevancyVerdicts:
         prompt = self.evaluation_template.generate_verdicts(
-            input=input, context=context
+            input=input, context=context, multimodal=multimodal
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyVerdicts
-            )
-            self.evaluation_cost += cost
-            return res
-        else:
-            try:
-                res = self.model.generate(
-                    prompt, schema=ContextualRelevancyVerdicts
-                )
-                return res
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return ContextualRelevancyVerdicts(**data)
+
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ContextualRelevancyVerdicts,
+            extract_schema=lambda r: r,
+            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        )
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -277,7 +279,7 @@ class ContextualRelevancyMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

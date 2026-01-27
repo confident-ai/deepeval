@@ -2,6 +2,14 @@ from typing import List
 
 
 class PromptAlignmentTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
+
     @staticmethod
     def generate_verdicts(
         prompt_instructions: List[str], input: str, actual_output: str
@@ -13,6 +21,8 @@ You should be EXTRA STRICT AND CAREFUL when giving a 'yes'.
 The 'reason' is the reason for the verdict.
 Provide a 'reason' ONLY if the answer is 'no'. 
 The provided prompt instructions are the instructions to be followed in the prompt, which you have no access to.
+
+{PromptAlignmentTemplate.multimodal_rules}
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
@@ -26,12 +36,12 @@ Example JSON:
             "verdict": "yes"
         }},
         {{
-            "verdict": "no",
-            "reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky."
+            "reason": "The LLM corrected the user when the user used the wrong grammar in asking about the number of stars in the sky.",
+            "verdict": "no"
         }},
         {{
-            "verdict": "no",
-            "reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely."
+            "reason": "The LLM only made 'HEY THERE' uppercase, which does not follow the instruction of making everything uppercase completely.",
+            "verdict": "no"
         }}
     ]  
 }}
@@ -62,6 +72,8 @@ JSON:
 The unalignments represent prompt instructions that are not followed by the LLM in the actual output.
 If there no unaligments, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 Don't have to talk about whether the actual output is a good fit for the input, access ENTIRELY based on the unalignment reasons.
+
+{PromptAlignmentTemplate.multimodal_rules}
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.

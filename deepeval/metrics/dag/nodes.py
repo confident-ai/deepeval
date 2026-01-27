@@ -20,7 +20,11 @@ from deepeval.metrics.dag.templates import (
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import GEval
 from deepeval.metrics.g_eval.utils import G_EVAL_PARAMS
-from deepeval.metrics.utils import copy_metrics, trimAndLoadJson
+from deepeval.metrics.utils import (
+    copy_metrics,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
+)
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
 from deepeval.utils import prettify_list
 
@@ -224,20 +228,13 @@ class VerdictNode(BaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=MetricScoreReason)
-            metric.evaluation_cost += cost
-        else:
-            try:
-                res: MetricScoreReason = metric.model.generate(
-                    prompt, schema=MetricScoreReason
-                )
-            except TypeError:
-                res = metric.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                res = MetricScoreReason(**data)
-
-        return res.reason
+        return generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=MetricScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
     async def _a_generate_reason(self, metric: BaseMetric):
         prompt = VerdictNodeTemplate.generate_reason(
@@ -245,22 +242,13 @@ class VerdictNode(BaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        if metric.using_native_model:
-            res, cost = await metric.model.a_generate(
-                prompt, schema=MetricScoreReason
-            )
-            metric.evaluation_cost += cost
-        else:
-            try:
-                res: MetricScoreReason = await metric.model.a_generate(
-                    prompt, schema=MetricScoreReason
-                )
-            except TypeError:
-                res = await metric.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                res = MetricScoreReason(**data)
-
-        return res.reason
+        return await a_generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=MetricScoreReason,
+            extract_schema=lambda s: s.reason,
+            extract_json=lambda data: data["reason"],
+        )
 
 
 @dataclass
@@ -323,20 +311,13 @@ class TaskNode(BaseNode):
             instructions=self.instructions,
             text=text,
         )
-        if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=TaskNodeOutput)
-            metric.evaluation_cost += cost
-            self._output = res.output
-        else:
-            try:
-                res: TaskNodeOutput = metric.model.generate(
-                    prompt, schema=TaskNodeOutput
-                )
-                self._output = res.output
-            except TypeError:
-                res = metric.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._output = TaskNodeOutput(**data).output
+        self._output = generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=TaskNodeOutput,
+            extract_schema=lambda s: s.output,
+            extract_json=lambda data: data["output"],
+        )
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -377,22 +358,13 @@ class TaskNode(BaseNode):
             text=text,
         )
 
-        if metric.using_native_model:
-            res, cost = await metric.model.a_generate(
-                prompt, schema=TaskNodeOutput
-            )
-            metric.evaluation_cost += cost
-            self._output = res.output
-        else:
-            try:
-                res: TaskNodeOutput = await metric.model.a_generate(
-                    prompt, schema=TaskNodeOutput
-                )
-                self._output = res.output
-            except TypeError:
-                res = await metric.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._output = TaskNodeOutput(**data).output
+        self._output = await a_generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=TaskNodeOutput,
+            extract_schema=lambda s: s.output,
+            extract_json=lambda data: data["output"],
+        )
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -635,23 +607,13 @@ class BinaryJudgementNode(BaseNode):
             criteria=self.criteria,
             text=text,
         )
-        if metric.using_native_model:
-            res, cost = metric.model.generate(
-                prompt, schema=BinaryJudgementVerdict
-            )
-            metric.evaluation_cost += cost
-            self._verdict = res
-        else:
-            try:
-                res: BinaryJudgementVerdict = metric.model.generate(
-                    prompt, schema=BinaryJudgementVerdict
-                )
-                self._verdict = res
-            except TypeError:
-                res = metric.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._verdict = BinaryJudgementVerdict(**data)
-
+        self._verdict = generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=BinaryJudgementVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: BinaryJudgementVerdict(**data),
+        )
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
         )
@@ -685,22 +647,13 @@ class BinaryJudgementNode(BaseNode):
             criteria=self.criteria,
             text=text,
         )
-        if metric.using_native_model:
-            res, cost = await metric.model.a_generate(
-                prompt, schema=BinaryJudgementVerdict
-            )
-            metric.evaluation_cost += cost
-            self._verdict = res
-        else:
-            try:
-                res: BinaryJudgementVerdict = await metric.model.a_generate(
-                    prompt, schema=BinaryJudgementVerdict
-                )
-                self._verdict = res
-            except TypeError:
-                res = await metric.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._verdict = BinaryJudgementVerdict(**data)
+        self._verdict = await a_generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=BinaryJudgementVerdict,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: BinaryJudgementVerdict(**data),
+        )
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -794,22 +747,14 @@ class NonBinaryJudgementNode(BaseNode):
         prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        if metric.using_native_model:
-            res, cost = metric.model.generate(
-                prompt, schema=self._verdict_schema
-            )
-            metric.evaluation_cost += cost
-            self._verdict = res
-        else:
-            try:
-                res: self._verdict_schema = metric.model.generate(
-                    prompt, schema=self._verdict_schema
-                )
-                self._verdict = res
-            except TypeError:
-                res = metric.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._verdict = self._verdict_schema(**data)
+
+        self._verdict = generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=self._verdict_schema,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: self._verdict_schema(**data),
+        )
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -843,22 +788,14 @@ class NonBinaryJudgementNode(BaseNode):
         prompt = NonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        if metric.using_native_model:
-            res, cost = await metric.model.a_generate(
-                prompt, schema=self._verdict_schema
-            )
-            metric.evaluation_cost += cost
-            self._verdict = res
-        else:
-            try:
-                res: self._verdict_schema = await metric.model.a_generate(
-                    prompt, schema=self._verdict_schema
-                )
-                self._verdict = res
-            except TypeError:
-                res = await metric.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                self._verdict = self._verdict_schema(**data)
+
+        self._verdict = await a_generate_with_schema_and_extract(
+            metric=metric,
+            prompt=prompt,
+            schema_cls=self._verdict_schema,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: self._verdict_schema(**data),
+        )
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)

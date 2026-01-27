@@ -1,10 +1,16 @@
-from typing import List, Dict
+from typing import List, Dict, Optional, Union, Tuple
 
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
+    initialize_model,
+    print_tools_called,
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -13,6 +19,8 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.api import metric_data_manager
+from deepeval.metrics.tool_correctness.template import ToolCorrectnessTemplate
+from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -25,15 +33,21 @@ class ToolCorrectnessMetric(BaseMetric):
 
     def __init__(
         self,
+        available_tools: List[ToolCall] = None,
         threshold: float = 0.5,
         evaluation_params: List[ToolCallParams] = [],
+        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
     ):
+        self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
+        self.model, self.using_native_model = initialize_model(model)
+        self.async_mode = async_mode
         self.include_reason = include_reason
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
@@ -49,16 +63,156 @@ class ToolCorrectnessMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
         self.test_case = test_case
+        self.evaluation_cost = 0 if self.using_native_model else None
+
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
+            if self.async_mode:
+                loop = get_or_create_event_loop()
+                loop.run_until_complete(
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
+                    )
+                )
+            else:
+                self.tools_called: List[ToolCall] = test_case.tools_called
+                self.expected_tools: List[ToolCall] = test_case.expected_tools
+                tool_calling_score = self._calculate_score()
+                if self.available_tools and not test_case.multimodal:
+                    tool_selection_score = self._get_tool_selection_score(
+                        test_case.input,
+                        test_case.tools_called,
+                        self.available_tools,
+                    )
+                else:
+                    tool_selection_score = ToolSelectionScore(
+                        score=1,
+                        reason="No available tools were provided to assess tool selection criteria",
+                    )
+                score = min(tool_calling_score, tool_selection_score.score)
+                self.score = (
+                    0 if self.strict_mode and score < self.threshold else score
+                )
+                tool_calling_reason = self._generate_reason()
+                self.reason = self._construct_final_reason(
+                    tool_calling_reason, tool_selection_score.reason
+                )
+                self.success = self.score >= self.threshold
+
+                expected_tools_formatted = (
+                    "Expected Tools:\n[\n"
+                    + ",\n".join(
+                        self.indent_multiline_string(
+                            repr(tool_call), indent_level=4
+                        )
+                        for tool_call in self.expected_tools
+                    )
+                    + "\n]"
+                )
+                tools_called_formatted = (
+                    "Tools Called:\n[\n"
+                    + ",\n".join(
+                        self.indent_multiline_string(
+                            repr(tool_call), indent_level=4
+                        )
+                        for tool_call in self.tools_called
+                    )
+                    + "\n]"
+                )
+                available_tools_formatted = (
+                    (
+                        "Available Tools:\n[\n"
+                        + ",\n".join(
+                            self.indent_multiline_string(
+                                repr(tool_call), indent_level=4
+                            )
+                            for tool_call in self.available_tools
+                        )
+                        + "\n]"
+                    )
+                    if self.available_tools
+                    else "Available Tools: []"
+                )
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"{expected_tools_formatted}",
+                        f"{tools_called_formatted}",
+                        f"{available_tools_formatted}",
+                        f"Tool Selection Score: {tool_selection_score.score}",
+                        f"Tool Selection Reason: {tool_selection_score.reason}",
+                        f"Final Score: {self.score}\nFinal Reason: {self.reason}",
+                    ],
+                )
+
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
+                return self.score
+
+    async def a_measure(
+        self,
+        test_case: LLMTestCase,
+        _show_indicator: bool = True,
+        _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
+    ) -> float:
+        check_llm_test_case_params(
+            test_case,
+            self._required_params,
+            None,
+            None,
+            self,
+            self.model,
+            test_case.multimodal,
+        )
+
+        self.evaluation_cost = 0 if self.using_native_model else None
+        with metric_progress_indicator(
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
+        ):
             self.tools_called: List[ToolCall] = test_case.tools_called
             self.expected_tools: List[ToolCall] = test_case.expected_tools
-            self.score = self._calculate_score()
-            self.reason = self._generate_reason()
+            tool_calling_score = self._calculate_score()
+            if self.available_tools and not test_case.multimodal:
+                tool_selection_score = await self._a_get_tool_selection_score(
+                    test_case.input,
+                    test_case.tools_called,
+                    self.available_tools,
+                )
+            else:
+                tool_selection_score = ToolSelectionScore(
+                    score=1,
+                    reason="No available tools were provided to assess tool selection criteria",
+                )
+            score = min(tool_calling_score, tool_selection_score.score)
+            self.score = (
+                0 if self.strict_mode and score < self.threshold else score
+            )
+            tool_calling_reason = self._generate_reason()
+            self.reason = self._construct_final_reason(
+                tool_calling_reason, tool_selection_score.reason
+            )
             self.success = self.score >= self.threshold
+
             expected_tools_formatted = (
                 "Expected Tools:\n[\n"
                 + ",\n".join(
@@ -79,31 +233,37 @@ class ToolCorrectnessMetric(BaseMetric):
                 )
                 + "\n]"
             )
-            steps = [
-                f"{expected_tools_formatted}",
-                f"{tools_called_formatted}",
-            ]
-            steps.append(f"Score: {self.score}\nReason: {self.reason}")
-            self.verbose_logs = construct_verbose_logs(self, steps=steps)
+            available_tools_formatted = (
+                (
+                    "Available Tools:\n[\n"
+                    + ",\n".join(
+                        self.indent_multiline_string(
+                            repr(tool_call), indent_level=4
+                        )
+                        for tool_call in self.available_tools
+                    )
+                    + "\n]"
+                )
+                if self.available_tools
+                else "Available Tools: []"
+            )
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"{expected_tools_formatted}",
+                    f"{tools_called_formatted}",
+                    f"{available_tools_formatted}",
+                    f"Tool Selection Score: {tool_selection_score.score}",
+                    f"Tool Selection Reason: {tool_selection_score.reason}",
+                    f"Final Score: {self.score}\nFinal Reason: {self.reason}",
+                ],
+            )
 
             if _log_metric_to_confident:
                 metric_data_manager.post_metric_if_enabled(
                     self, test_case=test_case
                 )
             return self.score
-
-    async def a_measure(
-        self,
-        test_case: LLMTestCase,
-        _show_indicator: bool = True,
-        _in_component: bool = False,
-        _log_metric_to_confident: bool = True,
-    ) -> float:
-        return self.measure(
-            test_case,
-            _show_indicator=_show_indicator,
-            _in_component=_in_component,
-        )
 
     ##################################################
     ### Tool Correctness (Tool) ######################
@@ -154,12 +314,57 @@ class ToolCorrectnessMetric(BaseMetric):
             else:
                 return f"Incomplete tool usage: missing tools {list(missing)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
+    def _construct_final_reason(
+        self,
+        tool_calling_reason,
+        tool_selection_reason,
+    ):
+        final_reason = "[\n"
+        final_reason += "\t Tool Calling Reason: " + tool_calling_reason + "\n"
+        final_reason += (
+            "\t Tool Selection Reason: " + tool_selection_reason + "\n"
+        )
+        final_reason += "]\n"
+        return final_reason
+
     ##################################################
     ### Score Helper Functions #######################
     ##################################################
 
+    def _get_tool_selection_score(
+        self, user_input, tools_called, available_tools
+    ):
+        tools_called_formatted = print_tools_called(tools_called)
+        available_tools_formatted = print_tools_called(available_tools)
+        prompt = ToolCorrectnessTemplate.get_tool_selection_score(
+            user_input, tools_called_formatted, available_tools_formatted
+        )
+        return generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ToolSelectionScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ToolSelectionScore(**data),
+        )
+
+    async def _a_get_tool_selection_score(
+        self, user_input, tools_called, available_tools
+    ):
+        tools_called_formatted = print_tools_called(tools_called)
+        available_tools_formatted = print_tools_called(available_tools)
+        prompt = ToolCorrectnessTemplate.get_tool_selection_score(
+            user_input, tools_called_formatted, available_tools_formatted
+        )
+        return await a_generate_with_schema_and_extract(
+            metric=self,
+            prompt=prompt,
+            schema_cls=ToolSelectionScore,
+            extract_schema=lambda s: s,
+            extract_json=lambda data: ToolSelectionScore(**data),
+        )
+
     # Calculate score
-    def _calculate_score(self):
+    def _calculate_score(self) -> float:
         if self.should_exact_match:
             score = self._calculate_exact_match_score()
         elif self.should_consider_ordering:
@@ -178,7 +383,7 @@ class ToolCorrectnessMetric(BaseMetric):
         return 0 if self.strict_mode and score < self.threshold else score
 
     # Exact matching score
-    def _calculate_exact_match_score(self):
+    def _calculate_exact_match_score(self) -> float:
         if len(self.tools_called) != len(self.expected_tools):
             return 0.0
         if (
@@ -201,7 +406,7 @@ class ToolCorrectnessMetric(BaseMetric):
         return 1.0
 
     # Non exact matching score
-    def _calculate_non_exact_match_score(self):
+    def _calculate_non_exact_match_score(self) -> float:
         total_score = 0.0
         matched_called_tools = set()
         for expected_tool in self.expected_tools:
@@ -241,7 +446,7 @@ class ToolCorrectnessMetric(BaseMetric):
         )
 
     # Consider ordering score
-    def _compute_weighted_lcs(self):
+    def _compute_weighted_lcs(self) -> Tuple[List[ToolCall], float]:
         m, n = len(self.expected_tools), len(self.tools_called)
         dp = [[0.0] * (n + 1) for _ in range(m + 1)]
         for i in range(1, m + 1):

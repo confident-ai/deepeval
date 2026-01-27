@@ -254,7 +254,7 @@ class ConfidentSpanExporter(SpanExporter):
 
         base_span = None
         try:
-            base_span = self.__prepare_boilerplate_base_span(span)
+            base_span = self.prepare_boilerplate_base_span(span)
         except Exception:
             pass
 
@@ -453,9 +453,8 @@ class ConfidentSpanExporter(SpanExporter):
         if span_output:
             base_span.output = span_output
 
-    def __prepare_boilerplate_base_span(
-        self, span: ReadableSpan
-    ) -> Optional[BaseSpan]:
+    @staticmethod
+    def prepare_boilerplate_base_span(span: ReadableSpan) -> Optional[BaseSpan]:
 
         ################ Get Span Type ################
         span_type = span.attributes.get("confident.span.type")
@@ -494,6 +493,17 @@ class ConfidentSpanExporter(SpanExporter):
             output_token_count = span.attributes.get(
                 "confident.llm.output_token_count"
             )
+
+            # fallback to gen ai attributes if not found in confident attributes
+            if not input_token_count:
+                input_token_count = span.attributes.get(
+                    "gen_ai.usage.input_tokens"
+                )
+            if not output_token_count:
+                output_token_count = span.attributes.get(
+                    "gen_ai.usage.output_tokens"
+                )
+
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )

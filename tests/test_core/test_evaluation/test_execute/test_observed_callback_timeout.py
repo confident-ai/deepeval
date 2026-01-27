@@ -16,6 +16,7 @@ def test_observed_callback_times_out_sync_path(monkeypatch, settings):
     with settings.edit(persist=False):
         # Make the timeout tiny so the test is fast
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
+        settings.DEEPEVAL_LOG_STACK_TRACES = True
 
     async def slow_callback(_):
         # Sleep well past the configured timeout
@@ -25,8 +26,7 @@ def test_observed_callback_times_out_sync_path(monkeypatch, settings):
 
     with pytest.raises(asyncio.TimeoutError):
         execute_agentic_test_cases(
-            goldens=goldens,
-            observed_callback=slow_callback,
+            goldens=goldens, observed_callback=slow_callback
         )
 
 

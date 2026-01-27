@@ -6,10 +6,10 @@ from typing import Any, Optional, List, Dict, Union, Tuple
 import shutil
 import sys
 import datetime
-import portalocker
 from rich.table import Table
 from rich.console import Console
 from rich import print
+
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
@@ -21,10 +21,11 @@ from deepeval.test_run.api import (
 )
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing.api import SpanApiType, span_api_type_literals
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
+    is_read_only_env,
     open_browser,
     shorten,
     format_turn,
@@ -40,6 +41,21 @@ from deepeval.prompt import (
 )
 from rich.panel import Panel
 from rich.columns import Columns
+
+
+portalocker = None
+if not is_read_only_env():
+    try:
+        import portalocker
+    except Exception as e:
+        print(
+            f"Warning: failed to import portalocker: {e}",
+            file=sys.stderr,
+        )
+else:
+    print(
+        "Warning: DeepEval is configured for read only environment. Test runs will not be written to disk."
+    )
 
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
@@ -166,7 +182,7 @@ class TestRun(BaseModel):
 
     def set_dataset_properties(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
         if self.dataset_alias is None:
             self.dataset_alias = test_case._dataset_alias
@@ -390,9 +406,10 @@ class TestRun(BaseModel):
         try:
             body = self.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
-            # Pydantic version below 2.0
             body = self.dict(by_alias=True, exclude_none=True)
         json.dump(body, f, cls=TestRunEncoder)
+        f.flush()
+        os.fsync(f.fileno())
         return self
 
     @classmethod
@@ -456,26 +473,36 @@ class TestRunManager:
         if self.test_run is None:
             self.create_test_run(identifier=identifier)
 
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
                     mode="r",
                     flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
-                    self.test_run = self.test_run.load(file)
+                    loaded = self.test_run.load(file)
+                    # only overwrite if loading actually worked
+                    self.test_run = loaded
             except (
                 FileNotFoundError,
+                json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(f"Error loading test run from disk: {e}", file=sys.stderr)
-                self.test_run = None
+                print(
+                    f"Warning: Could not load test run from disk: {e}",
+                    file=sys.stderr,
+                )
 
         return self.test_run
 
     def save_test_run(self, path: str, save_under_key: Optional[str] = None):
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
+                # ensure parent directory exists
+                parent = os.path.dirname(path)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+
                 with portalocker.Lock(path, mode="w") as file:
                     if save_under_key:
                         try:
@@ -489,22 +516,29 @@ class TestRunManager:
                             )
                         wrapper_data = {save_under_key: test_run_data}
                         json.dump(wrapper_data, file, cls=TestRunEncoder)
+                        file.flush()
+                        os.fsync(file.fileno())
                     else:
                         self.test_run.save(file)
             except portalocker.exceptions.LockException:
                 pass
 
     def save_final_test_run_link(self, link: str):
-        try:
-            with portalocker.Lock(LATEST_TEST_RUN_FILE_PATH, mode="w") as file:
-                json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
-        except portalocker.exceptions.LockException:
-            pass
+        if portalocker:
+            try:
+                with portalocker.Lock(
+                    LATEST_TEST_RUN_FILE_PATH, mode="w"
+                ) as file:
+                    json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
+                    file.flush()
+                    os.fsync(file.fileno())
+            except portalocker.exceptions.LockException:
+                pass
 
     def update_test_run(
         self,
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
-        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
         if (
             api_test_case.metrics_data is not None
@@ -513,7 +547,7 @@ class TestRunManager:
         ):
             return
 
-        if self.save_to_disk:
+        if portalocker and self.save_to_disk:
             try:
                 with portalocker.Lock(
                     self.temp_file_path,
@@ -533,10 +567,19 @@ class TestRunManager:
                     self.test_run.save(file)
             except (
                 FileNotFoundError,
+                json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(f"Error updating test run to disk: {e}", file=sys.stderr)
-                self.test_run = None
+                print(
+                    f"Warning: Could not update test run on disk: {e}",
+                    file=sys.stderr,
+                )
+                if self.test_run is None:
+                    # guarantee a valid in-memory run so the update can proceed.
+                    # never destroy in-memory state on I/O failure.
+                    self.create_test_run()
+                self.test_run.add_test_case(api_test_case)
+                self.test_run.set_dataset_properties(test_case)
         else:
             if self.test_run is None:
                 self.create_test_run()
@@ -985,8 +1028,13 @@ class TestRunManager:
                 LATEST_TEST_RUN_FILE_PATH,
                 save_under_key=LATEST_TEST_RUN_DATA_KEY,
             )
+            token_cost = (
+                f"{test_run.evaluation_cost} USD"
+                if test_run.evaluation_cost
+                else "None"
+            )
             console.print(
-                f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {test_run.evaluation_cost} USD)\n"
+                f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
                 f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,

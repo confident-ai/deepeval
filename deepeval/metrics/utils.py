@@ -2,16 +2,24 @@ import inspect
 import json
 import re
 import sys
-import itertools
-from typing import Any, Dict, Optional, List, Union, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
-    MismatchedTestCaseInputsError,
 )
+from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
     DeepEvalBaseLLM,
-    DeepEvalBaseMLLM,
     GPTModel,
     AnthropicModel,
     AzureOpenAIModel,
@@ -22,14 +30,20 @@ from deepeval.models import (
     OllamaEmbeddingModel,
     LocalEmbeddingModel,
     GeminiModel,
-    MultimodalOpenAIModel,
-    MultimodalGeminiModel,
-    MultimodalOllamaModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    PortkeyModel,
     KimiModel,
     GrokModel,
     DeepSeekModel,
+)
+from deepeval.models.llms.constants import (
+    OPENAI_MODELS_DATA,
+    GEMINI_MODELS_DATA,
+    OLLAMA_MODELS_DATA,
+    ANTHROPIC_MODELS_DATA,
+    GROK_MODELS_DATA,
+    KIMI_MODELS_DATA,
 )
 from deepeval.key_handler import (
     ModelKeyValues,
@@ -39,16 +53,12 @@ from deepeval.key_handler import (
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
-    BaseMultimodalMetric,
     BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
-    Turn,
     LLMTestCase,
     LLMTestCaseParams,
-    MLLMTestCase,
-    MLLMTestCaseParams,
     ConversationalTestCase,
     MLLMImage,
     Turn,
@@ -57,12 +67,20 @@ from deepeval.test_case import (
     TurnParams,
 )
 
+MULTIMODAL_SUPPORTED_MODELS = {
+    GPTModel: OPENAI_MODELS_DATA,
+    GeminiModel: GEMINI_MODELS_DATA,
+    OllamaModel: OLLAMA_MODELS_DATA,
+    AzureOpenAIModel: OPENAI_MODELS_DATA,
+    KimiModel: KIMI_MODELS_DATA,
+    AnthropicModel: ANTHROPIC_MODELS_DATA,
+    GrokModel: GROK_MODELS_DATA,
+}
+
 
 def copy_metrics(
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ],
-) -> List[Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]]:
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+) -> List[Union[BaseMetric, BaseConversationalMetric]]:
     copied_metrics = []
     for metric in metrics:
         metric_class = type(metric)
@@ -200,7 +218,28 @@ def check_conversational_test_case_params(
     test_case_params: List[TurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
+    if multimodal:
+        if not model or not model.supports_multimodal():
+            if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
+                valid_multimodal_models = []
+                for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
+                    type(model)
+                ).items():
+                    if callable(model_data):
+                        model_data = model_data()
+                    if model_data.supports_multimodal:
+                        valid_multimodal_models.append(model_name)
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(valid_multimodal_models)}."
+                )
+            else:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                )
+
     if isinstance(test_case, ConversationalTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
         metric.error = error_str
@@ -233,12 +272,64 @@ def check_conversational_test_case_params(
 def check_llm_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],
+    input_image_count: Optional[int],
+    actual_output_image_count: Optional[int],
     metric: Union[BaseMetric, BaseArenaMetric],
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
+    if multimodal:
+        if not model or not model.supports_multimodal():
+            if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
+                valid_multimodal_models = []
+                for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
+                    type(model)
+                ).items():
+                    if callable(model_data):
+                        model_data = model_data()
+                    if model_data.supports_multimodal:
+                        valid_multimodal_models.append(model_name)
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(valid_multimodal_models)}."
+                )
+            else:
+                raise ValueError(
+                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                )
+
+        if input_image_count:
+            count = 0
+            for ele in convert_to_multi_modal_array(test_case.input):
+                if isinstance(ele, MLLMImage):
+                    count += 1
+            if count != input_image_count:
+                error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
+                raise ValueError(error_str)
+
+        if actual_output_image_count:
+            count = 0
+            for ele in convert_to_multi_modal_array(test_case.actual_output):
+                if isinstance(ele, MLLMImage):
+                    count += 1
+            if count != actual_output_image_count:
+                error_str = f"Can only evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                raise ValueError(error_str)
+
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
         metric.error = error_str
         raise ValueError(error_str)
+
+    # Centralized: if a metric requires actual_output, reject empty/whitespace
+    # (including empty multimodal outputs) as "missing params".
+    if LLMTestCaseParams.ACTUAL_OUTPUT in test_case_params:
+        actual_output = getattr(test_case, LLMTestCaseParams.ACTUAL_OUTPUT.value)
+        if isinstance(actual_output, str) and actual_output == "":
+            error_str = (
+                f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
+            )
+            metric.error = error_str
+            raise MissingTestCaseParamsError(error_str)
 
     missing_params = []
     for param in test_case_params:
@@ -264,13 +355,15 @@ def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
     test_case_params: List[LLMTestCaseParams],
     metric: BaseArenaMetric,
+    model: Optional[DeepEvalBaseLLM] = None,
+    multimodal: Optional[bool] = False,
 ):
     if not isinstance(arena_test_case, ArenaTestCase):
         raise ValueError(
             f"Expected ArenaTestCase, got {type(arena_test_case).__name__}"
         )
 
-    cases = list(arena_test_case.contestants.values())
+    cases = [contestant.test_case for contestant in arena_test_case.contestants]
     ref_input = cases[0].input
     for case in cases[1:]:
         if case.input != ref_input:
@@ -284,73 +377,8 @@ def check_arena_test_case_params(
             )
 
     for test_case in cases:
-        check_llm_test_case_params(test_case, test_case_params, metric)
-
-
-def check_mllm_test_case_params(
-    test_case: MLLMTestCase,
-    test_case_params: List[MLLMTestCaseParams],
-    input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
-    metric: BaseMetric,
-):
-    if input_image_count:
-        count = 0
-        for ele in test_case.input:
-            if isinstance(ele, MLLMImage):
-                count += 1
-        if count != input_image_count:
-            error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
-            raise ValueError(error_str)
-
-    if actual_output_image_count:
-        count = 0
-        for ele in test_case.actual_output:
-            if isinstance(ele, MLLMImage):
-                count += 1
-        if count != actual_output_image_count:
-            error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
-            raise ValueError(error_str)
-
-    if isinstance(test_case, MLLMTestCase) is False:
-        error_str = f"Unable to evaluate test cases that are not of type 'MLLMTestCase' using the '{metric.__name__}' metric."
-        metric.error = error_str
-        raise ValueError(error_str)
-
-    missing_params = []
-    for param in test_case_params:
-        if getattr(test_case, param.value) is None:
-            missing_params.append(f"'{param.value}'")
-
-    if missing_params:
-        if len(missing_params) == 1:
-            missing_params_str = missing_params[0]
-        elif len(missing_params) == 2:
-            missing_params_str = " and ".join(missing_params)
-        else:
-            missing_params_str = (
-                ", ".join(missing_params[:-1]) + ", and " + missing_params[-1]
-            )
-
-        error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
-        metric.error = error_str
-        raise MissingTestCaseParamsError(error_str)
-
-
-def check_mllm_test_cases_params(
-    test_cases: List[MLLMTestCase],
-    test_case_params: List[MLLMTestCaseParams],
-    input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
-    metric: BaseMetric,
-):
-    for test_case in test_cases:
-        check_mllm_test_case_params(
-            test_case,
-            test_case_params,
-            input_image_count,
-            actual_output_image_count,
-            metric,
+        check_llm_test_case_params(
+            test_case, test_case_params, None, None, metric, model, multimodal
         )
 
 
@@ -380,9 +408,71 @@ def trimAndLoadJson(
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
+SchemaType = TypeVar("SchemaType")
+ReturnType = TypeVar("ReturnType")
+
+
+def generate_with_schema_and_extract(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Synchronous wrapper:
+    - calls model.generate_with_schema(...)
+    - accrues cost if applicable
+    - if schema instance -> extract_schema
+      else parse JSON -> extract_json
+    """
+    if metric.using_native_model:
+        result, cost = metric.model.generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = metric.model.generate_with_schema(prompt, schema=schema_cls)
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
+
+
+async def a_generate_with_schema_and_extract(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    if metric.using_native_model:
+        result, cost = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
+        metric._accrue_cost(cost)
+    else:
+        result = await metric.model.a_generate_with_schema(
+            prompt, schema=schema_cls
+        )
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+
+    data = trimAndLoadJson(result, metric)
+    return extract_json(data)
+
+
 ###############################################
 # Default Model Providers
 ###############################################
+
+
+def should_use_anthropic_model():
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ANTHROPIC_MODEL)
+    return value.lower() == "yes" if value is not None else False
 
 
 def should_use_azure_openai():
@@ -396,8 +486,8 @@ def should_use_local_model():
 
 
 def should_use_ollama_model():
-    base_url = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
-    return base_url == "ollama"
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
+    return value == "ollama"
 
 
 def should_use_gemini_model():
@@ -412,6 +502,11 @@ def should_use_openai_model():
 
 def should_use_litellm():
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_portkey():
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_PORTKEY_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
@@ -453,18 +548,22 @@ def initialize_model(
         return GeminiModel(), True
     if should_use_litellm():
         return LiteLLMModel(), True
+    if should_use_portkey():
+        return PortkeyModel(), True
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
         return LocalModel(), True
     elif should_use_azure_openai():
-        return AzureOpenAIModel(model_name=model), True
+        return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(model=model), True
+        return GrokModel(), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
+    elif should_use_anthropic_model():
+        return AnthropicModel(), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
@@ -498,40 +597,6 @@ def is_native_model(
 ###############################################
 # Multimodal Model
 ###############################################
-
-
-def initialize_multimodal_model(
-    model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
-    """
-    Returns a tuple of (initialized DeepEvalBaseMLLM, using_native_model boolean)
-    """
-    if is_native_mllm(model):
-        return model, True
-    if isinstance(model, DeepEvalBaseMLLM):
-        return model, False
-    if should_use_gemini_model():
-        return MultimodalGeminiModel(), True
-    if should_use_ollama_model():
-        return MultimodalOllamaModel(), True
-    elif isinstance(model, str) or model is None:
-        return MultimodalOpenAIModel(model=model), True
-    raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseMLLM, MultimodalOpenAIModel, MultimodalOllamaModel."
-    )
-
-
-def is_native_mllm(
-    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-) -> bool:
-    if (
-        isinstance(model, MultimodalOpenAIModel)
-        or isinstance(model, MultimodalOllamaModel)
-        or isinstance(model, MultimodalGeminiModel)
-    ):
-        return True
-    else:
-        return False
 
 
 ###############################################

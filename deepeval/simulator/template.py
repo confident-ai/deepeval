@@ -7,6 +7,13 @@ from deepeval.test_case import Turn
 
 
 class ConversationSimulatorTemplate:
+    multimodal_rules = """
+        --- MULTIMODAL INPUT RULES ---
+        - Treat image content as factual evidence.
+        - Only reference visual details that are explicitly and clearly visible.
+        - Do not infer or guess objects, text, or details not visibly present.
+        - If an image is unclear or ambiguous, mark uncertainty explicitly.
+    """
 
     @staticmethod
     def simulate_first_user_turn(
@@ -22,6 +29,8 @@ class ConversationSimulatorTemplate:
             2. Keep the tone warm, conversational, and natural, as if it’s from a real person seeking assistance.
             3. Avoid providing excessive details upfront; the goal is to initiate the conversation and build rapport, not to solve it in the first message.
             4. The message should be concise, ideally no more than 1-3 sentences.
+
+            {ConversationSimulatorTemplate.multimodal_rules}
 
             IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, where the value is the generated opening message in {language}.
 
@@ -48,7 +57,9 @@ class ConversationSimulatorTemplate:
         language: str,
     ) -> str:
         previous_conversation = json.dumps(
-            [t.model_dump() for t in turns], indent=4
+            [t.model_dump() for t in turns],
+            indent=4,
+            ensure_ascii=False,
         )
         prompt = textwrap.dedent(
             f"""
@@ -60,6 +71,8 @@ class ConversationSimulatorTemplate:
             2. Ensure the next input feels natural, conversational, and relevant to the last assistant reply in the conversation.
             3. Keep the tone consistent with the previous user inputs.
             4. The generated user input should be concise, ideally no more than 1-2 sentences.
+
+            {ConversationSimulatorTemplate.multimodal_rules}
 
             IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, 
             where the value is the generated user input in {language}.
@@ -101,6 +114,8 @@ class ConversationSimulatorTemplate:
             2. If the expected outcome has been met, mark the conversation as complete.
             3. If not, mark it as incomplete and briefly describe what remains to be done.
 
+            {ConversationSimulatorTemplate.multimodal_rules}
+
             IMPORTANT: The output must be formatted as a JSON object with two keys:
             `is_complete` (a boolean) and `reason` (a string).
 
@@ -112,7 +127,7 @@ class ConversationSimulatorTemplate:
             ]
             Example JSON Output:
             {{
-                "is_complete": False,
+                "is_complete": false,
                 "reason": "The assistant explained how to forget password but ahas not confirmed that the user successfully set a new password."
             }}
 

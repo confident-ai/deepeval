@@ -417,7 +417,7 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
 
-def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
+def normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
     try:
         raw = span.attributes.get("pydantic_ai.all_messages")
         if not raw:
@@ -442,7 +442,7 @@ def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
     except Exception:
         pass
 
-    return None
+    return []
 
 
 def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
@@ -465,7 +465,7 @@ def check_pydantic_ai_agent_input_output(
     output_val: Optional[Any] = None
 
     # Get normalized messages once
-    normalized = _normalize_pydantic_ai_messages(span)
+    normalized = normalize_pydantic_ai_messages(span)
 
     # Input (pydantic_ai.all_messages) - slice up to and including the first 'user' message
     if normalized:

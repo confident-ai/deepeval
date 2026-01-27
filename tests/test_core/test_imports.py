@@ -4,7 +4,6 @@ def test_metrics_imports():
         # Base classes
         BaseMetric,
         BaseConversationalMetric,
-        BaseMultimodalMetric,
         BaseArenaMetric,
         # Core metrics
         GEval,
@@ -22,10 +21,13 @@ def test_metrics_imports():
         MCPUseMetric,
         MCPTaskCompletionMetric,
         MultiTurnMCPUseMetric,
+        # Non-LLM metrics
+        JsonCorrectnessMetric,
+        ExactMatchMetric,
+        PatternMatchMetric,
         # Other metrics
         HallucinationMetric,
         SummarizationMetric,
-        JsonCorrectnessMetric,
         PromptAlignmentMetric,
         # Safety and compliance metrics
         BiasMetric,
@@ -38,31 +40,33 @@ def test_metrics_imports():
         ToolCorrectnessMetric,
         TaskCompletionMetric,
         ArgumentCorrectnessMetric,
+        GoalAccuracyMetric,
+        TopicAdherenceMetric,
+        PlanAdherenceMetric,
+        PlanQualityMetric,
+        ToolUseMetric,
+        StepEfficiencyMetric,
         # Conversational metrics
         TurnRelevancyMetric,
         ConversationCompletenessMetric,
         KnowledgeRetentionMetric,
         RoleAdherenceMetric,
+        TurnContextualPrecisionMetric,
+        TurnContextualRecallMetric,
+        TurnContextualRelevancyMetric,
+        TurnFaithfulnessMetric,
         # Multimodal metrics
         TextToImageMetric,
         ImageEditingMetric,
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
-        MultimodalGEval,
     )
 
     # Verify all imports are not None
     all_metrics = [
         BaseMetric,
         BaseConversationalMetric,
-        BaseMultimodalMetric,
         BaseArenaMetric,
         GEval,
         ArenaGEval,
@@ -79,6 +83,8 @@ def test_metrics_imports():
         MultiTurnMCPUseMetric,
         HallucinationMetric,
         BiasMetric,
+        ExactMatchMetric,
+        PatternMatchMetric,
         ToxicityMetric,
         SummarizationMetric,
         PIILeakageMetric,
@@ -91,21 +97,24 @@ def test_metrics_imports():
         PromptAlignmentMetric,
         TaskCompletionMetric,
         ArgumentCorrectnessMetric,
+        GoalAccuracyMetric,
+        TopicAdherenceMetric,
+        PlanAdherenceMetric,
+        PlanQualityMetric,
+        ToolUseMetric,
+        StepEfficiencyMetric,
         KnowledgeRetentionMetric,
         TurnRelevancyMetric,
+        TurnContextualPrecisionMetric,
+        TurnContextualRecallMetric,
+        TurnContextualRelevancyMetric,
+        TurnFaithfulnessMetric,
         ConversationCompletenessMetric,
         TextToImageMetric,
         ImageEditingMetric,
         ImageCoherenceMetric,
         ImageHelpfulnessMetric,
         ImageReferenceMetric,
-        MultimodalContextualRecallMetric,
-        MultimodalContextualRelevancyMetric,
-        MultimodalContextualPrecisionMetric,
-        MultimodalAnswerRelevancyMetric,
-        MultimodalFaithfulnessMetric,
-        MultimodalToolCorrectnessMetric,
-        MultimodalGEval,
     ]
 
     for metric in all_metrics:
@@ -193,9 +202,7 @@ def test_test_case_imports():
         LLMTestCase,
         ConversationalTestCase,
         ArenaTestCase,
-        MLLMTestCase,
         Turn,
-        MLLMTestCaseParams,
         MLLMImage,
         ToolCall,
         ToolCallParams,
@@ -210,9 +217,7 @@ def test_test_case_imports():
     assert LLMTestCase is not None
     assert ConversationalTestCase is not None
     assert ArenaTestCase is not None
-    assert MLLMTestCase is not None
     assert Turn is not None
-    assert MLLMTestCaseParams is not None
     assert MLLMImage is not None
     assert ToolCall is not None
     assert ToolCallParams is not None
@@ -263,7 +268,6 @@ def test_models_imports():
     from deepeval.models import (
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,
@@ -276,20 +280,17 @@ def test_models_imports():
         KimiModel,
         GrokModel,
         DeepSeekModel,
-        MultimodalOpenAIModel,
-        MultimodalOllamaModel,
-        MultimodalGeminiModel,
         OpenAIEmbeddingModel,
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        OpenRouterModel,
     )
 
     # Verify all model classes can be imported
     model_classes = [
         DeepEvalBaseModel,
         DeepEvalBaseLLM,
-        DeepEvalBaseMLLM,
         DeepEvalBaseEmbeddingModel,
         GPTModel,
         AzureOpenAIModel,
@@ -302,13 +303,11 @@ def test_models_imports():
         KimiModel,
         GrokModel,
         DeepSeekModel,
-        MultimodalOpenAIModel,
-        MultimodalOllamaModel,
-        MultimodalGeminiModel,
         OpenAIEmbeddingModel,
         AzureOpenAIEmbeddingModel,
         LocalEmbeddingModel,
         OllamaEmbeddingModel,
+        OpenRouterModel,
     ]
 
     for model_class in model_classes:

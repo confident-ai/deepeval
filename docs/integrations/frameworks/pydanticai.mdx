@@ -12,11 +12,6 @@ import ColabButton from "@site/src/components/ColabButton";
 
 # Pydantic AI
 
-<ColabButton 
-  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/notebooks/pydantic_ai.ipynb" 
-  className="header-colab-button"
-/>
-
 [Pydantic AI](https://ai.pydantic.dev/) is a Python framework for building reliable, production-grade applications with Generative AI, providing type safety and validation for agent outputs and LLM interactions.
 
 :::tip
@@ -26,48 +21,43 @@ We recommend logging in to [Confident AI](https://app.confident-ai.com) to view 
 deepeval login
 ```
 
+For users in the EU region, please set your OTEL endpoint in the env as following:
+
+```bash
+export CONFIDENT_OTEL_URL="https://eu.otel.confident-ai.com"
+```
+
 :::
 
 ## End-to-End Evals
 
-`deepeval` allows you to evaluate Pydantic AI applications end-to-end in **under a minute**.
+`deepeval` allows you to evaluate Pydantic AI agents **under a minute**.
 
 <Timeline>
 
 <TimelineItem title="Configure Pydantic AI">
 
-Create agent and pass `metrics` to the `deepeval`'s `Agent` wrapper.
+Pass `agent_metrics` to the `ConfidentInstrumentationSettings` constructor.
 
 ```python title="main.py" showLineNumbers
-import time
 from pydantic_ai import Agent
-
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
-instrument_pydantic_ai(api_key="<your-confident-api-key>")
+from deepeval.integrations.pydantic_ai.instrumentator import (
+    ConfidentInstrumentationSettings,
+)
+from deepeval.metrics import AnswerRelevancyMetric
 
 agent = Agent(
-    "openai:gpt-4o-mini",
-    system_prompt="Be concise, reply with one sentence.",
+    "openai:gpt-5",
+    instructions="You are a helpful assistant.",
+    instrument=ConfidentInstrumentationSettings(
+        is_test_mode=True,
+        agent_metrics=[AnswerRelevancyMetric()]
+    ),
 )
-
-result = agent.run_sync("What are the LLMs?")
-print(result)
-time.sleep(10) # wait for the trace to be posted
-
-# Running agent in async mode
-
-# import asyncio
-# async def main():
-#     result = await agent.run("What are the LLMs?")
-#     print(result)
-
-# if __name__ == "__main__":
-#     asyncio.run(main())
-#     time.sleep(10)
 ```
 
 :::info
-Evaluations are supported for Pydantic AI `Agent`. Only metrics with parameters `input` and `output` are eligible for evaluation.
+Evaluations are supported for Pydantic AI `Agent`. Only metrics with parameters `input`, `output` and `tools_called` are eligible for evaluation.
 :::
 
 </TimelineItem>
@@ -80,27 +70,16 @@ Create an `EvaluationDataset` and invoke your Pydantic AI application for each g
 
 ```python title="main.py" showLineNumbers
 import asyncio
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
-
-instrument_pydantic_ai(api_key="<your-confident-api-key>")
-agent = Agent("openai:gpt-4o-mini", system_prompt="Be concise, reply with one sentence.")
-answer_relavancy_metric = AnswerRelevancyMetric()
-
-from deepeval.dataset import EvaluationDataset, Golden
 
 dataset = EvaluationDataset(
     goldens=[
-        Golden(input="What's 7 * 8?"),
-        Golden(input="What's 7 * 6?"),
+        Golden(input="What's the weather in Paris?"),
+        Golden(input="What's the weather in London?"),
     ]
 )
 
 for golden in dataset.evals_iterator():
-    task = asyncio.create_task(agent.run(
-        golden.input,
-        metrics=[answer_relavancy_metric],
-    ))
+    task = asyncio.create_task(run_agent(golden.input))
     dataset.evaluate(task)
 ```
 
@@ -124,46 +103,24 @@ for golden in dataset.evals_iterator():
 If you need to evaluate individual components of your Pydantic AI application, [set up tracing](/docs/evaluation-llm-tracing) instead.
 :::
 
-## Component-level Evals
-
-DeepEval supports evaluating individual components of your Pydantic AI application.
-
-### Tool
-Pass `metrics` or `metric_collection` to the `tool` decorator from DeepEval's Pydantic AI `Agent`.
-
-```python title="main.py" showLineNumbers {8}
-from deepeval.integrations.pydantic_ai import Agent
-
-weather_agent = Agent(
-    "openai:gpt-4o-mini",
-    instructions='Be concise, reply with one sentence.'
-)
-
-@weather_agent.tool(metric_collection="test_collection_1")
-async def get_lat_lng(location_description: str) -> (float, float):
-    return 1.0, 2.0
-```
 
 ## Evals in Production
 
 To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your Pydantic AI agent to production.
 
 ```python filename="main.py" showLineNumbers
-import time
-
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
-instrument_pydantic_ai(api_key="<your-confident-api-key>")
+from pydantic_ai import Agent
+from deepeval.integrations.pydantic_ai import ConfidentInstrumentationSettings
 
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
+    instrument=ConfidentInstrumentationSettings(
+        agent_metric_collection="test_collection_1",
+    )
 )
 
 result = agent.run_sync(
-    "What are the LLMs?",
-    metric_collection="test_collection_1",
+    "What are the LLMs?"
 )
-
-print(result)
-time.sleep(10) # wait for the trace to be posted
 ```

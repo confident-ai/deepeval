@@ -9,8 +9,8 @@ from deepeval.test_case import (
     LLMTestCase,
     ToolCall,
 )
-from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from pydantic import BaseModel, field_validator
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
@@ -52,6 +52,71 @@ CONVERSATIONAL_G_EVAL_PARAMS = {
     TurnParams.SCENARIO: "Scenario",
 }
 
+G_EVAL_API_PARAMS = {
+    LLMTestCaseParams.INPUT: "input",
+    LLMTestCaseParams.ACTUAL_OUTPUT: "actualOutput",
+    LLMTestCaseParams.EXPECTED_OUTPUT: "expectedOutput",
+    LLMTestCaseParams.CONTEXT: "context",
+    LLMTestCaseParams.RETRIEVAL_CONTEXT: "retrievalContext",
+    LLMTestCaseParams.EXPECTED_TOOLS: "expectedTools",
+    LLMTestCaseParams.TOOLS_CALLED: "toolsCalled",
+}
+
+CONVERSATIONAL_G_EVAL_API_PARAMS = {
+    TurnParams.ROLE: "role",
+    TurnParams.CONTENT: "content",
+    TurnParams.SCENARIO: "scenario",
+    TurnParams.EXPECTED_OUTCOME: "expectedOutcome",
+    TurnParams.RETRIEVAL_CONTEXT: "retrievalContext",
+    TurnParams.TOOLS_CALLED: "toolsCalled",
+}
+
+
+def construct_geval_upload_payload(
+    name: str,
+    evaluation_params: List[LLMTestCaseParams],
+    g_eval_api_params: Dict,
+    criteria: Optional[str] = None,
+    evaluation_steps: Optional[List[str]] = None,
+    multi_turn: bool = False,
+    rubric: Optional[List[Rubric]] = None,
+) -> Dict:
+    if not evaluation_params:
+        raise ValueError("GEval requires at least one evaluation parameter.")
+
+    unsupported_params = [
+        param for param in evaluation_params if param not in g_eval_api_params
+    ]
+    if unsupported_params:
+        raise ValueError(
+            "Unsupported evaluation params for GEval upload: "
+            + ", ".join(param.name for param in unsupported_params)
+        )
+
+    payload = {
+        "name": name,
+        "evaluationParams": [
+            g_eval_api_params[param] for param in evaluation_params
+        ],
+        "multiTurn": multi_turn,
+    }
+
+    if criteria is not None:
+        payload["criteria"] = criteria
+    else:
+        payload["evaluationSteps"] = evaluation_steps
+
+    if rubric is not None:
+        payload["rubric"] = [
+            {
+                "scoreRange": list(r.score_range),
+                "expectedOutcome": r.expected_outcome,
+            }
+            for r in rubric
+        ]
+
+    return payload
+
 
 def validate_criteria_and_evaluation_steps(
     criteria: Optional[str] = None,
@@ -77,7 +142,7 @@ def validate_criteria_and_evaluation_steps(
 def validate_and_sort_rubrics(
     rubrics: Optional[List[Rubric]] = None,
 ) -> Optional[List[Rubric]]:
-    if rubrics is None:
+    if rubrics is None or len(rubrics) == 0:
         return None
 
     # Sort rubrics by start of range
@@ -114,16 +179,17 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
 
 def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
 
-    if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
-        return True
+    if isinstance(model, str):
+        model_data = OPENAI_MODELS_DATA.get(model)
+        if not model_data.supports_log_probs:
+            return True
     elif (
-        isinstance(model, GPTModel)
-        and model.model_name in unsupported_log_probs_gpt_models
+        isinstance(model, GPTModel) and not model.model_data.supports_log_probs
     ):
         return True
     elif (
         isinstance(model, AzureOpenAIModel)
-        and model.model_name in unsupported_log_probs_gpt_models
+        and not model.model_data.supports_log_probs
     ):
         return True
 
