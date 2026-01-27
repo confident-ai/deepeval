@@ -98,6 +98,6 @@ openai-agents = "^0.3.3"
 optional = true
 
 [tool.poetry.group.langchain.dependencies]
-langchain = "1.2.4"
-langchain-openai = "1.1.7"
-langgraph = "1.0.7"
+langchain = { version = "1.2.4", python = ">=3.10,<4.0" }
+langchain-openai = { version = "1.1.7", python = ">=3.10,<4.0" }
+langgraph = { version = "1.0.7", python = ">=3.10,<4.0" }
