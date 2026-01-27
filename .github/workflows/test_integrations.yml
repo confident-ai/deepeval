@@ -56,48 +56,85 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_LOG_STACK_TRACES: 1
-      LOG_LEVEL: "debug"
+      LOG_LEVEL: "info"
       PYTHONFAULTHANDLER: "1"
       PYTHONASYNCIODEBUG: "1"
       PYTHONUNBUFFERED: "1"
       PYTEST_ADDOPTS: >-
-        -vv -rA --maxfail=1 --capture=tee-sys
-        --durations=25
-        -o log_cli=true -o log_cli_level=DEBUG
+        -vv -rfE --maxfail=1 --capture=tee-sys
+        --durations=5
+        -o log_cli=true -o log_cli_level=INFO --log-disable=httpcore --log-disable=httpx --log-disable=openai
         --log-cli-format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
-
+        
     steps:
-      - name: Resolve ref
+      - name: Resolve target SHA (PR head/merge or push SHA)
         id: refsel
+        env:
+          GH_TOKEN: ${{ github.token }}        
         run: |
+          set -euo pipefail
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
-              echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
-            else
-              echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "ref=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+            # For maintainer PRs, GitHub provides the head SHA directly.
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            echo "pr=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "kind=head" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      - name: Checkout PR/main ref
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pr="${{ github.event.inputs.pr }}"
+            kind="${{ github.event.inputs.ref_kind }}"
+
+            # Resolve via API so we *always* test the intended PR code, regardless of which branch
+            # the workflow file was dispatched from.
+            if [ "$kind" = "head" ]; then
+              sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+              echo "sha=$sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            # merge kind: prefer merge_commit_sha, but it can be null if GitHub can’t create it.
+            merge_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.merge_commit_sha // empty')"
+            if [ -n "${merge_sha:-}" ]; then
+              echo "sha=$merge_sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=merge" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            # Fallback to head SHA if merge SHA isn’t available.
+            head_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+            echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
+            echo "pr=$pr" >> "$GITHUB_OUTPUT"
+            echo "kind=head-fallback" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # push (main): test exactly the pushed commit
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "pr=" >> "$GITHUB_OUTPUT"
+          echo "kind=push" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout resolved SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.refsel.outputs.ref }}
+          ref: ${{ steps.refsel.outputs.sha }}
           fetch-depth: 0
 
       - name: Log target
         run: |
           echo "Event: ${{ github.event_name }}"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR: #${{ github.event.pull_request.number }} (merge ref)"
+            echo "PR: #${{ github.event.pull_request.number }} (checked out head SHA)"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual PR: #${{ github.event.inputs.pr }} (ref_kind=${{ github.event.inputs.ref_kind }})"
+            echo "Manual PR: #${{ steps.refsel.outputs.pr }} (kind=${{ steps.refsel.outputs.kind }})"
           else
             echo "Push target: ${GITHUB_REF_NAME} @ ${GITHUB_SHA}"
           fi
+          echo "Checked out SHA: $(git rev-parse HEAD)"
 
       # Manual run: create a Check Run against the exact checked-out commit
       - name: Compute checked-out SHA (manual only)
@@ -219,48 +256,79 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_LOG_STACK_TRACES: 1
-      LOG_LEVEL: "debug"
+      LOG_LEVEL: "info"
       PYTHONFAULTHANDLER: "1"
       PYTHONASYNCIODEBUG: "1"
       PYTHONUNBUFFERED: "1"
       PYTEST_ADDOPTS: >-
-        -vv -rA --maxfail=1 --capture=tee-sys
-        --durations=25
-        -o log_cli=true -o log_cli_level=DEBUG
+        -vv -rfE --maxfail=1 --capture=tee-sys
+        --durations=5
+        -o log_cli=true -o log_cli_level=INFO --log-disable=httpcore --log-disable=httpx --log-disable=openai
         --log-cli-format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
 
     steps:
-      - name: Resolve ref
+      - name: Resolve target SHA (PR head/merge or push SHA)
         id: refsel
+        env:
+          GH_TOKEN: ${{ github.token }}        
         run: |
+          set -euo pipefail
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ github.event.inputs.ref_kind }}" = "head" ]; then
-              echo "ref=refs/pull/${{ github.event.inputs.pr }}/head" >> $GITHUB_OUTPUT
-            else
-              echo "ref=refs/pull/${{ github.event.inputs.pr }}/merge" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "ref=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            echo "pr=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "kind=head" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      - name: Checkout PR/main ref
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pr="${{ github.event.inputs.pr }}"
+            kind="${{ github.event.inputs.ref_kind }}"
+
+            if [ "$kind" = "head" ]; then
+              sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+              echo "sha=$sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            merge_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.merge_commit_sha // empty')"
+            if [ -n "${merge_sha:-}" ]; then
+              echo "sha=$merge_sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=merge" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            head_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+            echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
+            echo "pr=$pr" >> "$GITHUB_OUTPUT"
+            echo "kind=head-fallback" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "pr=" >> "$GITHUB_OUTPUT"
+          echo "kind=push" >> "$GITHUB_OUTPUT"          
+
+      - name: Checkout resolved SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.refsel.outputs.ref }}
+          ref: ${{ steps.refsel.outputs.sha }}
           fetch-depth: 0
 
       - name: Log target
         run: |
           echo "Event: ${{ github.event_name }}"
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR: #${{ github.event.pull_request.number }} (merge ref)"
+            echo "PR: #${{ github.event.pull_request.number }} (checked out head SHA)"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual PR: #${{ github.event.inputs.pr }} (ref_kind=${{ github.event.inputs.ref_kind }})"
+            echo "Manual PR: #${{ steps.refsel.outputs.pr }} (kind=${{ steps.refsel.outputs.kind }})"
           else
             echo "Push target: ${GITHUB_REF_NAME} @ ${GITHUB_SHA}"
           fi
+          echo "Checked out SHA: $(git rev-parse HEAD)"
 
       - name: Set up python
         id: setup-python

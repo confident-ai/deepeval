@@ -274,29 +274,22 @@ class TestAsyncParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="""
-                            Do the following using tools (do not ask clarification questions).
-                            Call each tool exactly once per bullet item, using the exact parameters shown.
-
-                            1) get_weather:
-                               - location="Tokyo, Japan"
-                               - location="New York, NY"
-                               - location="London, UK"
-                               - location="Paris, France"
-                               - location="Sydney, Australia"
-
-                            2) finance (stock prices):
-                               - ticker="AAPL", type="equity", market="USA"
-                               - ticker="GOOGL", type="equity", market="USA"
-                               - ticker="MSFT", type="equity", market="USA"
-
-                            3) calculator (exchange rates and percentage math):
-                               - expression="USD to EUR exchange rate"
-                               - expression="USD to GBP exchange rate"
-                               - expression="0.15*378.90"
-
-                            Then return a short report with the results.
-                        """
+                        content=(
+                            "Call exactly these tools with the exact parameters shown. "
+                            "Do NOT use any other tools.\n\n"
+                            "1. get_weather(city='Tokyo')\n"
+                            "2. get_weather(city='New York')\n"
+                            "3. get_weather(city='London')\n"
+                            "4. get_weather(city='Paris')\n"
+                            "5. get_weather(city='Sydney')\n"
+                            "6. get_stock_price(symbol='AAPL')\n"
+                            "7. get_stock_price(symbol='GOOGL')\n"
+                            "8. get_stock_price(symbol='MSFT')\n"
+                            "9. calculate(expression='1/0.92')\n"
+                            "10. calculate(expression='1/0.79')\n"
+                            "11. calculate(expression='0.15*378.90')\n\n"
+                            "After receiving all results, provide a brief summary."
+                        )
                     )
                 ]
             },

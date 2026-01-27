@@ -91,10 +91,133 @@ def assert_json_object_structure(
 
     Rules:
     - Dicts: keys must match (with allowed drift for LangChain v1.x fields).
-    - Lists: compared pairwise (same length required).
+    - Lists: compared pairwise (same length required), EXCEPT for unordered paths.
     - Primitives: types must match exactly. Int/float are interchangeable.
     - Preserves no-tools semantics: if expected implies no tools, actual must have no tools.
+
+    Unordered list paths (order-insensitive comparison):
+    - root.baseSpans, root.llmSpans, root.toolSpans
+    - Any path ending with .toolsCalled or .tool_calls
     """
+    # Paths where list ordering is not guaranteed (async/parallel execution)
+    UNORDERED_SPAN_PATHS = {"root.baseSpans", "root.llmSpans", "root.toolSpans"}
+
+    def _is_unordered_path(path: str) -> bool:
+        """Check if the path should use unordered comparison."""
+        if path in UNORDERED_SPAN_PATHS:
+            return True
+        # toolsCalled can appear at root or nested in baseSpans
+        if path.endswith(".toolsCalled"):
+            return True
+        # tool_calls appear inside AI messages at various nesting levels
+        if path.endswith(".tool_calls"):
+            return True
+        return False
+
+    def _normalize_tool_call(call_dict: Dict[str, Any]) -> tuple:
+        """
+        Normalize a tool call for matching purposes.
+        Returns (tool_name, frozenset(arg_keys)).
+        """
+        if not isinstance(call_dict, dict):
+            return (None, frozenset())
+
+        # toolsCalled format: {"name": ..., "inputParameters": {...}}
+        # tool_calls format: {"name": ..., "args": {...}}
+        name = call_dict.get("name", "")
+        args = call_dict.get("inputParameters") or call_dict.get("args") or {}
+        if isinstance(args, dict):
+            return (name, frozenset(args.keys()))
+        return (name, frozenset())
+
+    # def _normalize_tool_call(call_dict: Dict[str, Any]) -> tuple:
+    #     if not isinstance(call_dict, dict):
+    #         return (None, ())
+    #     name = call_dict.get("name", "")
+    #     args = call_dict.get("inputParameters") or call_dict.get("args") or {}
+    #     if not isinstance(args, dict):
+    #         return (name, ())
+    #     items = []
+    #     for k, v in args.items():
+    #         if isinstance(v, (str, int, float, bool)) or v is None:
+    #             items.append((k, v))
+    #         else:
+    #             items.append((k, "__nonprimitive__"))
+    #     return (name, tuple(sorted(items)))
+
+    def _normalize_span(span_dict: Dict[str, Any]) -> tuple:
+        if not isinstance(span_dict, dict):
+            return (None, None)
+        span_type = span_dict.get("type", span_dict.get("spanType", ""))
+        span_name = span_dict.get("name", "")
+        return (span_type, span_name)
+
+    def _match_unordered_lists(
+        expected_list: list,
+        actual_list: list,
+        path: str,
+        compare_fn,
+    ) -> bool:
+        """
+        Match elements from expected_list to actual_list without requiring order.
+        Each expected element must find exactly one unmatched actual element
+        with the same normalized key.
+        """
+        is_tool_call_list = path.endswith(".toolsCalled") or path.endswith(
+            ".tool_calls"
+        )
+
+        # Normalize elements
+        if is_tool_call_list:
+            expected_keys = [_normalize_tool_call(e) for e in expected_list]
+            actual_keys = [_normalize_tool_call(a) for a in actual_list]
+        else:
+            expected_keys = [_normalize_span(e) for e in expected_list]
+            actual_keys = [_normalize_span(a) for a in actual_list]
+
+        # Track which actual elements have been matched
+        matched_actual_indices = set()
+
+        for exp_idx, exp_key in enumerate(expected_keys):
+            found_match = False
+            for act_idx, act_key in enumerate(actual_keys):
+                if act_idx in matched_actual_indices:
+                    continue
+                if exp_key == act_key:
+                    # Found a match - now do deep structural comparison
+                    if compare_fn(
+                        actual_list[act_idx],
+                        expected_list[exp_idx],
+                        f"{path}[expected={exp_idx} matched actual={act_idx}]",
+                    ):
+                        matched_actual_indices.add(act_idx)
+                        found_match = True
+                        break
+                    # If structure doesn't match, try next candidate with same key
+                    # (there may be multiple elements with the same normalized key)
+
+            if not found_match:
+                # Try to find ANY element with matching key for error reporting
+                matching_keys = [
+                    i
+                    for i, k in enumerate(actual_keys)
+                    if k == exp_key and i not in matched_actual_indices
+                ]
+                if not matching_keys:
+                    print(
+                        f"❌ No matching element at '{path}' for expected[{exp_idx}]:"
+                    )
+                    print(f"   Expected key: {exp_key}")
+                    available = [
+                        actual_keys[i]
+                        for i in range(len(actual_keys))
+                        if i not in matched_actual_indices
+                    ]
+                    print(f"   Available keys: {available}")
+                return False
+
+        return True
+
     # Validate tools-used invariant at the top level before detailed comparison.
     # This ensures we never mask a regression where tools appear unexpectedly.
     expected_tools_used = _compute_tools_used(expected_json_obj)
@@ -222,17 +345,18 @@ def assert_json_object_structure(
                 print(f"   Value: {actual}")
                 return False
 
-            # # toolSpans is tracer-aggregation dependent and may be omitted even when
-            # # tools are called. We enforce tools semantics via _compute_tools_used(),
-            # # so we should not assert exact length here.
-            # if path == "root.toolSpans":
-            #     # If schema had toolSpans but actual doesn't (or vice versa), that's fine.
-            #     # Validate structure only if both have at least one element.
-            #     if len(actual) > 0 and len(expected) > 0:
-            #         return _compare(actual[0], expected[0], f"{path}[0]")
-            #     return True
+            # For unordered paths (parallel/async tool calls and spans),
+            # use order-insensitive matching instead of pairwise comparison.
+            if _is_unordered_path(path):
+                # Require exact cardinality for unordered lists (spans + tool calls)
+                if len(actual) != len(expected):
+                    print(
+                        f"❌ Length mismatch at '{path}': expected {len(expected)}, got {len(actual)}"
+                    )
+                    return False
+                return _match_unordered_lists(expected, actual, path, _compare)
 
-            # For non-variable-length arrays, require exact length match
+            # For ordered arrays, require exact length and pairwise match
             if len(actual) != len(expected):
                 print(
                     f"❌ Length mismatch at '{path}': expected {len(expected)}, got {len(actual)}"
