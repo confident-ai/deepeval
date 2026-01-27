@@ -8,16 +8,32 @@ import os
 import sys
 import pytest
 import datetime
+import logging
 from typing import Dict, Any, List, Optional
 from dateutil import parser as dateutil_parser
 
 from deepeval.test_case import ToolCall
+
+
+_logger = logging.getLogger(__name__)
 
 # Module-level state for TestRun
 _test_run_identifier = None
 
 # Max length for input/output strings to avoid large payloads
 MAX_FIELD_LENGTH = 2000
+
+
+def _upload_enabled() -> bool:
+    """Check if test run uploads are enabled via INTEGRATION_TESTS_UPLOAD_TEST_RUNS env var.
+
+    Returns True only if the env var is set to a truthy value ("1", "true", "yes").
+    Default is OFF (False) - no uploads, no network calls, no credentials needed.
+    """
+    val = (
+        os.environ.get("INTEGRATION_TESTS_UPLOAD_TEST_RUNS", "").lower().strip()
+    )
+    return val in ("1", "true", "yes")
 
 
 def pytest_configure(config):
@@ -28,6 +44,9 @@ def pytest_configure(config):
 
 def pytest_sessionstart(session: pytest.Session):
     """Create a TestRun at the start of the pytest session."""
+    if not _upload_enabled():
+        return
+
     from deepeval.confident.api import is_confident
 
     if not is_confident():
@@ -57,6 +76,9 @@ def pytest_runtest_makereport(item: pytest.Item, call):
 
     # Only process after the test call phase (not setup/teardown)
     if call.when != "call":
+        return
+
+    if not _upload_enabled():
         return
 
     from deepeval.confident.api import is_confident
@@ -94,10 +116,10 @@ def _upload_trace_to_observatory(trace_dict: dict) -> str:
             endpoint=Endpoints.TRACES_ENDPOINT,
             body=trace_dict,
         )
-        print(f"UPLOADED TRACE UUID: {trace_uuid}")
+        _logger.debug("UPLOADED TRACE UUID: %s", trace_uuid)
         return trace_uuid
-    except Exception as e:
-        print(f"[ERROR] Failed to upload trace {trace_uuid}: {e}")
+    except Exception:
+        _logger.exception("Failed to upload trace %s", trace_uuid)
         return None
 
 
@@ -356,31 +378,33 @@ def _add_test_case_to_run(
         evaluationCost=None,
     )
 
-    print("[DEBUG] trace keys:", trace_dict.keys())
-    print("[DEBUG] toolsCalled top-level:", bool(trace_dict.get("toolsCalled")))
-    print("[DEBUG] toolSpans:", len(trace_dict.get("toolSpans", [])))
-    print("[DEBUG] baseSpans:", len(trace_dict.get("baseSpans", [])))
-    print(
-        "[DEBUG] output:",
+    _logger.debug("[DEBUG] trace keys: %s", list(trace_dict.keys()))
+    _logger.debug(
+        "[DEBUG] toolsCalled top-level: %s", bool(trace_dict.get("toolsCalled"))
+    )
+    _logger.debug("[DEBUG] toolSpans: %d", len(trace_dict.get("toolSpans", [])))
+    _logger.debug("[DEBUG] baseSpans: %d", len(trace_dict.get("baseSpans", [])))
+    _logger.debug(
+        "[DEBUG] output: %s %s",
         type(trace_dict.get("output")),
         trace_dict.get("output"),
     )
 
-    print(
-        f"[DEBUG] added api_test_case fields: "
-        f"tokenCost={token_cost is not None} "
-        f"completionTime={completion_time is not None} "
-        f"tags={tags is not None}"
+    _logger.debug(
+        "[DEBUG] added api_test_case fields: tokenCost=%s completionTime=%s tags=%s",
+        token_cost is not None,
+        completion_time is not None,
+        tags is not None,
     )
 
     if completion_time is not None:
-        print(f"[DEBUG]   completionTime={completion_time:.3f}s")
+        _logger.debug("[DEBUG]   completionTime=%.3fs", completion_time)
     if tags:
-        print(f"[DEBUG]   tags={tags}")
+        _logger.debug("[DEBUG]   tags=%s", tags)
 
     test_run.add_test_case(api_test_case)
-    print(
-        f"[DEBUG] after add_test_case, test_cases: {len(test_run.test_cases)}"
+    _logger.debug(
+        "[DEBUG] after add_test_case, test_cases: %d", len(test_run.test_cases)
     )
 
 
@@ -391,24 +415,32 @@ def _add_test_case_to_run(
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
     """Upload the TestRun at the end of the session."""
+
+    if not _upload_enabled():
+        return
+
+    _logger.debug("Running teardown with pytest sessionfinish...")
+
     from deepeval.confident.api import is_confident
     from deepeval.test_run import global_test_run_manager
-
-    print("Running teardown with pytest sessionfinish...")
 
     if not is_confident():
         return
 
     test_run = global_test_run_manager.test_run
     if test_run is None:
-        print("[DEBUG] sessionfinish: test_run is None, skipping upload")
+        _logger.debug(
+            "[DEBUG] sessionfinish: test_run is None, skipping upload"
+        )
         return
 
     if (
         len(test_run.test_cases) == 0
         and len(test_run.conversational_test_cases) == 0
     ):
-        print("[DEBUG] sessionfinish: no test cases found, skipping upload")
+        _logger.debug(
+            "[DEBUG] sessionfinish: no test cases found, skipping upload"
+        )
         return
 
     test_run.test_passed = sum(1 for tc in test_run.test_cases if tc.success)
@@ -420,6 +452,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus):
         result = global_test_run_manager.post_test_run(test_run)
         if result:
             link, run_id = result
-            print(f"\nTEST RUN LINK: {link}\n")
-    except Exception as e:
-        print(f"\n[ERROR] Failed to upload test run: {e}\n")
+            _logger.debug("TEST RUN LINK: %s", link)
+    except Exception:
+        _logger.exception("Failed to upload test run")
