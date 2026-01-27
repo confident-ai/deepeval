@@ -77,6 +77,9 @@ class RAGState(TypedDict):
 
 # Shared retriever and LLM
 retriever = DeterministicRetriever()
+retriever_with_metric_collection = DeterministicRetriever(
+    metadata={"metric_collection": "retriever_quality"}
+)
 llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
 
 
@@ -122,6 +125,28 @@ def generate_node(state: RAGState, config: RunnableConfig) -> RAGState:
     return {"messages": [*messages, response]}
 
 
+def retrieve_node_with_metric_collection(
+    state: RAGState, config: RunnableConfig
+) -> RAGState:
+    """Retrieve documents using retriever with metric_collection metadata."""
+    messages = state.get("messages", [])
+
+    # Extract query from messages
+    query = ""
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            query = msg.content
+            break
+
+    # Retrieve documents using the metric_collection retriever
+    docs = retriever_with_metric_collection.invoke(query, config=config)
+
+    # Format context
+    context = "\n\n".join([doc.page_content for doc in docs])
+
+    return {"context": context, "source_documents": docs}
+
+
 def build_app():
     """Build and compile the RAG workflow graph."""
     graph = StateGraph(RAGState)
@@ -136,4 +161,19 @@ def build_app():
     return graph.compile()
 
 
+def build_app_with_metric_collection():
+    """Build RAG workflow graph with retriever that has metric_collection."""
+    graph = StateGraph(RAGState)
+
+    graph.add_node("retrieve", retrieve_node_with_metric_collection)
+    graph.add_node("generate", generate_node)
+
+    graph.add_edge(START, "retrieve")
+    graph.add_edge("retrieve", "generate")
+    graph.add_edge("generate", END)
+
+    return graph.compile()
+
+
 app = build_app()
+app_with_metric_collection = build_app_with_metric_collection()

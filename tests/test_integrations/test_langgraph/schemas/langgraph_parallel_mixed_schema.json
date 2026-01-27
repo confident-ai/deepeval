@@ -1,32 +1,32 @@
 {
-  "uuid": "298bdc30-14d5-4861-83b7-41ae8f34eacf",
+  "uuid": "248d6d66-c4a0-496f-a025-6a83b59e9e38",
   "baseSpans": [
     {
-      "uuid": "019bfcf3-c54f-77f1-8ec6-7f2d565e3d8b",
+      "uuid": "019bfde8-344e-7ea3-a1a7-34c26ff57b76",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-27T00:56:32.847Z",
-      "endTime": "2026-01-27T00:56:42.052Z",
+      "startTime": "2026-01-27T05:23:32.046Z",
+      "endTime": "2026-01-27T05:23:53.520Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           },
           {
             "content": "",
@@ -35,13 +35,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -52,20 +52,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -73,7 +73,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -82,7 +82,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -90,22 +90,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           },
@@ -115,8 +115,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-            "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+            "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "status": "success"
           },
           {
@@ -125,8 +125,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-            "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+            "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
             "status": "success"
           },
           {
@@ -135,8 +135,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-            "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+            "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "status": "success"
           },
           {
@@ -145,24 +145,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-            "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+            "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "status": "success"
           },
           {
-            "content": "Here are the results:\n\n- Weather \u2014 Paris: Partly cloudy, 65\u00b0F (\u2248 18.3\u00b0C)\n- Stock price \u2014 TSLA: $245.60\n- Exchange rate \u2014 USD \u2192 EUR: 1 USD = 0.92 EUR\n- Calculation \u2014 100 * 1.5 = 150\n\nAnything else you want to check or update?",
+            "content": "Summary of the results:\n- Weather (Paris): Partly cloudy, 65\u00b0F.\n- Stock (TSLA): $245.60.\n- Exchange rate: 1 USD = 0.92 EUR.\n- Calculation: 100 * 1.5 = 150.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 279,
-                "prompt_tokens": 430,
-                "total_tokens": 709,
+                "completion_tokens": 322,
+                "prompt_tokens": 491,
+                "total_tokens": 813,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -173,26 +173,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfhEvGnCXZbVOFO1yYKhyrh9I6A",
+              "id": "chatcmpl-D2VqF5S50xK4YxGJqWVH2JmQeHJ87",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-d6ab-7372-a184-86f6d6fff3f6-0",
+            "id": "lc_run--019bfde8-7121-7d43-83d6-78428dd737c4-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 430,
-              "output_tokens": 279,
-              "total_tokens": 709,
+              "input_tokens": 491,
+              "output_tokens": 322,
+              "total_tokens": 813,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 256
               }
             }
           }
@@ -200,21 +200,21 @@
       }
     },
     {
-      "uuid": "019bfcf3-d6aa-7610-903a-60630690dd22",
+      "uuid": "019bfde8-7121-7d43-83d6-783d75820e1f",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcf3-c54f-77f1-8ec6-7f2d565e3d8b",
-      "startTime": "2026-01-27T00:56:37.290Z",
-      "endTime": "2026-01-27T00:56:42.052Z",
+      "parentUuid": "019bfde8-344e-7ea3-a1a7-34c26ff57b76",
+      "startTime": "2026-01-27T05:23:47.617Z",
+      "endTime": "2026-01-27T05:23:53.519Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           },
           {
             "content": "",
@@ -223,13 +223,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -240,20 +240,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -261,7 +261,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -270,7 +270,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -278,22 +278,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           },
@@ -303,8 +303,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-            "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+            "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "status": "success"
           },
           {
@@ -313,8 +313,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-            "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+            "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
             "status": "success"
           },
           {
@@ -323,8 +323,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-            "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+            "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "status": "success"
           },
           {
@@ -333,8 +333,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-            "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+            "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "status": "success"
           }
         ]
@@ -342,19 +342,19 @@
       "output": {
         "messages": [
           {
-            "content": "Here are the results:\n\n- Weather \u2014 Paris: Partly cloudy, 65\u00b0F (\u2248 18.3\u00b0C)\n- Stock price \u2014 TSLA: $245.60\n- Exchange rate \u2014 USD \u2192 EUR: 1 USD = 0.92 EUR\n- Calculation \u2014 100 * 1.5 = 150\n\nAnything else you want to check or update?",
+            "content": "Summary of the results:\n- Weather (Paris): Partly cloudy, 65\u00b0F.\n- Stock (TSLA): $245.60.\n- Exchange rate: 1 USD = 0.92 EUR.\n- Calculation: 100 * 1.5 = 150.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 279,
-                "prompt_tokens": 430,
-                "total_tokens": 709,
+                "completion_tokens": 322,
+                "prompt_tokens": 491,
+                "total_tokens": 813,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -365,26 +365,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfhEvGnCXZbVOFO1yYKhyrh9I6A",
+              "id": "chatcmpl-D2VqF5S50xK4YxGJqWVH2JmQeHJ87",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-d6ab-7372-a184-86f6d6fff3f6-0",
+            "id": "lc_run--019bfde8-7121-7d43-83d6-78428dd737c4-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 430,
-              "output_tokens": 279,
-              "total_tokens": 709,
+              "input_tokens": 491,
+              "output_tokens": 322,
+              "total_tokens": 813,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 256
               }
             }
           }
@@ -392,21 +392,21 @@
       }
     },
     {
-      "uuid": "019bfcf3-e943-7ee3-b455-5b3161274eda",
+      "uuid": "019bfde8-882e-7640-a25f-a99b7e72074b",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcf3-d6aa-7610-903a-60630690dd22",
-      "startTime": "2026-01-27T00:56:42.051Z",
-      "endTime": "2026-01-27T00:56:42.051Z",
+      "parentUuid": "019bfde8-7121-7d43-83d6-783d75820e1f",
+      "startTime": "2026-01-27T05:23:53.518Z",
+      "endTime": "2026-01-27T05:23:53.518Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           },
           {
             "content": "",
@@ -415,13 +415,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -432,20 +432,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -453,7 +453,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -462,7 +462,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -470,22 +470,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           },
@@ -495,8 +495,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-            "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+            "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "status": "success"
           },
           {
@@ -505,8 +505,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-            "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+            "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
             "status": "success"
           },
           {
@@ -515,8 +515,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-            "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+            "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "status": "success"
           },
           {
@@ -525,24 +525,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-            "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+            "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "status": "success"
           },
           {
-            "content": "Here are the results:\n\n- Weather \u2014 Paris: Partly cloudy, 65\u00b0F (\u2248 18.3\u00b0C)\n- Stock price \u2014 TSLA: $245.60\n- Exchange rate \u2014 USD \u2192 EUR: 1 USD = 0.92 EUR\n- Calculation \u2014 100 * 1.5 = 150\n\nAnything else you want to check or update?",
+            "content": "Summary of the results:\n- Weather (Paris): Partly cloudy, 65\u00b0F.\n- Stock (TSLA): $245.60.\n- Exchange rate: 1 USD = 0.92 EUR.\n- Calculation: 100 * 1.5 = 150.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 279,
-                "prompt_tokens": 430,
-                "total_tokens": 709,
+                "completion_tokens": 322,
+                "prompt_tokens": 491,
+                "total_tokens": 813,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 192,
+                  "reasoning_tokens": 256,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -553,26 +553,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfhEvGnCXZbVOFO1yYKhyrh9I6A",
+              "id": "chatcmpl-D2VqF5S50xK4YxGJqWVH2JmQeHJ87",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-d6ab-7372-a184-86f6d6fff3f6-0",
+            "id": "lc_run--019bfde8-7121-7d43-83d6-78428dd737c4-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 430,
-              "output_tokens": 279,
-              "total_tokens": 709,
+              "input_tokens": 491,
+              "output_tokens": 322,
+              "total_tokens": 813,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 192
+                "reasoning": 256
               }
             }
           }
@@ -581,21 +581,21 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bfcf3-d6a4-7bd1-ad29-b70e6b544e7d",
+      "uuid": "019bfde8-711b-7043-984a-cdcac25d7435",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcf3-c54f-77f1-8ec6-7f2d565e3d8b",
-      "startTime": "2026-01-27T00:56:37.284Z",
-      "endTime": "2026-01-27T00:56:37.289Z",
+      "parentUuid": "019bfde8-344e-7ea3-a1a7-34c26ff57b76",
+      "startTime": "2026-01-27T05:23:47.611Z",
+      "endTime": "2026-01-27T05:23:47.616Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           },
           {
             "content": "",
@@ -604,13 +604,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -621,20 +621,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -642,7 +642,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -651,7 +651,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -659,22 +659,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           }
@@ -688,8 +688,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-            "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+            "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "status": "success"
           },
           {
@@ -698,8 +698,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-            "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+            "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
             "status": "success"
           },
           {
@@ -708,8 +708,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-            "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+            "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "status": "success"
           },
           {
@@ -718,8 +718,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-            "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+            "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "status": "success"
           }
         ]
@@ -733,8 +733,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-            "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+            "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "status": "success"
           },
           "inputParameters": {
@@ -749,8 +749,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-            "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+            "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
             "status": "success"
           },
           "inputParameters": {
@@ -765,8 +765,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_exchange_rate",
-            "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-            "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+            "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "status": "success"
           },
           "inputParameters": {
@@ -782,8 +782,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-            "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+            "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "status": "success"
           },
           "inputParameters": {
@@ -793,21 +793,21 @@
       ]
     },
     {
-      "uuid": "019bfcf3-c551-7d20-9944-5764f1ec3231",
+      "uuid": "019bfde8-344f-7a32-bf47-34bbdcdc8c3f",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcf3-c54f-77f1-8ec6-7f2d565e3d8b",
-      "startTime": "2026-01-27T00:56:32.849Z",
-      "endTime": "2026-01-27T00:56:37.283Z",
+      "parentUuid": "019bfde8-344e-7ea3-a1a7-34c26ff57b76",
+      "startTime": "2026-01-27T05:23:32.047Z",
+      "endTime": "2026-01-27T05:23:47.610Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           }
         ]
       },
@@ -820,13 +820,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -837,20 +837,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -858,7 +858,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -867,7 +867,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -875,22 +875,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           }
@@ -898,21 +898,21 @@
       }
     },
     {
-      "uuid": "019bfcf3-d6a3-7d51-ae81-8e946ce2b6b6",
+      "uuid": "019bfde8-711a-7e90-b264-8a735c87be9a",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcf3-c551-7d20-9944-5764f1ec3231",
-      "startTime": "2026-01-27T00:56:37.283Z",
-      "endTime": "2026-01-27T00:56:37.283Z",
+      "parentUuid": "019bfde8-344f-7a32-bf47-34bbdcdc8c3f",
+      "startTime": "2026-01-27T05:23:47.610Z",
+      "endTime": "2026-01-27T05:23:47.610Z",
       "input": {
         "messages": [
           {
-            "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+            "id": "f9194a75-4f60-4e78-b361-14122550f22a"
           },
           {
             "content": "",
@@ -921,13 +921,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 222,
-                "prompt_tokens": 288,
-                "total_tokens": 510,
+                "completion_tokens": 1054,
+                "prompt_tokens": 349,
+                "total_tokens": 1403,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 960,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -938,20 +938,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+              "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+            "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+                "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
                 "type": "tool_call"
               },
               {
@@ -959,7 +959,7 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+                "id": "call_NPdslNO7np4orjjltS43qmGE",
                 "type": "tool_call"
               },
               {
@@ -968,7 +968,7 @@
                   "from_currency": "USD",
                   "to_currency": "EUR"
                 },
-                "id": "call_OTLte1NghC7WwZwTemaJuMON",
+                "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
                 "type": "tool_call"
               },
               {
@@ -976,22 +976,22 @@
                 "args": {
                   "expression": "100 * 1.5"
                 },
-                "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+                "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 288,
-              "output_tokens": 222,
-              "total_tokens": 510,
+              "input_tokens": 349,
+              "output_tokens": 1054,
+              "total_tokens": 1403,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 960
               }
             }
           }
@@ -1003,13 +1003,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bfcf3-d6ab-7372-a184-86f6d6fff3f6",
+      "uuid": "019bfde8-7121-7d43-83d6-78428dd737c4",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcf3-d6aa-7610-903a-60630690dd22",
-      "startTime": "2026-01-27T00:56:37.291Z",
-      "endTime": "2026-01-27T00:56:42.051Z",
+      "parentUuid": "019bfde8-7121-7d43-83d6-783d75820e1f",
+      "startTime": "2026-01-27T05:23:47.617Z",
+      "endTime": "2026-01-27T05:23:53.517Z",
       "input": [
         {
           "role": "human",
@@ -1017,7 +1017,7 @@
         },
         {
           "role": "human",
-          "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5"
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
         },
         {
           "role": "ai",
@@ -1062,22 +1062,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the results:\n\n- Weather \u2014 Paris: Partly cloudy, 65\u00b0F (\u2248 18.3\u00b0C)\n- Stock price \u2014 TSLA: $245.60\n- Exchange rate \u2014 USD \u2192 EUR: 1 USD = 0.92 EUR\n- Calculation \u2014 100 * 1.5 = 150\n\nAnything else you want to check or update?",
+        "content": "Summary of the results:\n- Weather (Paris): Partly cloudy, 65\u00b0F.\n- Stock (TSLA): $245.60.\n- Exchange rate: 1 USD = 0.92 EUR.\n- Calculation: 100 * 1.5 = 150.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 430.0,
-      "outputTokenCount": 279.0
+      "inputTokenCount": 491.0,
+      "outputTokenCount": 322.0
     },
     {
-      "uuid": "019bfcf3-c551-7d20-9944-57714d426ad2",
+      "uuid": "019bfde8-3450-7263-ac8b-d4d570369fbb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcf3-c551-7d20-9944-5764f1ec3231",
-      "startTime": "2026-01-27T00:56:32.849Z",
-      "endTime": "2026-01-27T00:56:37.282Z",
+      "parentUuid": "019bfde8-344f-7a32-bf47-34bbdcdc8c3f",
+      "startTime": "2026-01-27T05:23:32.048Z",
+      "endTime": "2026-01-27T05:23:47.609Z",
       "input": [
         {
           "role": "human",
@@ -1085,7 +1085,7 @@
         },
         {
           "role": "human",
-          "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5"
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
         },
         {
           "role": "Tool Input",
@@ -1117,14 +1117,14 @@
             "args": {
               "city": "Paris"
             },
-            "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ"
+            "id": "call_LDgEMq8KKK83XxbD0eq6GEe6"
           },
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_3tUxeG4kLDVSv6G500tCskyF"
+            "id": "call_NPdslNO7np4orjjltS43qmGE"
           },
           {
             "name": "get_exchange_rate",
@@ -1132,33 +1132,33 @@
               "from_currency": "USD",
               "to_currency": "EUR"
             },
-            "id": "call_OTLte1NghC7WwZwTemaJuMON"
+            "id": "call_1jMtKqwadWQeJMRiYhxl48ub"
           },
           {
             "name": "calculate",
             "args": {
               "expression": "100 * 1.5"
             },
-            "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ"
+            "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 288.0,
-      "outputTokenCount": 222.0
+      "inputTokenCount": 349.0,
+      "outputTokenCount": 1054.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bfcf3-d6a8-7433-b4a6-33bad6533a4e",
+      "uuid": "019bfde8-711f-75b0-8eef-b766c1940738",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcf3-d6a4-7bd1-ad29-b70e6b544e7d",
-      "startTime": "2026-01-27T00:56:37.288Z",
-      "endTime": "2026-01-27T00:56:37.289Z",
+      "parentUuid": "019bfde8-711b-7043-984a-cdcac25d7435",
+      "startTime": "2026-01-27T05:23:47.615Z",
+      "endTime": "2026-01-27T05:23:47.616Z",
       "input": {
         "expression": "100 * 1.5"
       },
@@ -1168,19 +1168,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-        "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+        "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+        "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
         "status": "success"
       }
     },
     {
-      "uuid": "019bfcf3-d6a7-7502-9154-7d0aa359e2d9",
+      "uuid": "019bfde8-711e-7232-a71f-221ef9f12eac",
       "name": "get_exchange_rate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcf3-d6a4-7bd1-ad29-b70e6b544e7d",
-      "startTime": "2026-01-27T00:56:37.287Z",
-      "endTime": "2026-01-27T00:56:37.287Z",
+      "parentUuid": "019bfde8-711b-7043-984a-cdcac25d7435",
+      "startTime": "2026-01-27T05:23:47.614Z",
+      "endTime": "2026-01-27T05:23:47.614Z",
       "input": {
         "from_currency": "USD",
         "to_currency": "EUR"
@@ -1191,19 +1191,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-        "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+        "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+        "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
         "status": "success"
       }
     },
     {
-      "uuid": "019bfcf3-d6a6-79d2-ace8-403130082bdc",
+      "uuid": "019bfde8-711d-7880-9007-d6568051ac45",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcf3-d6a4-7bd1-ad29-b70e6b544e7d",
-      "startTime": "2026-01-27T00:56:37.286Z",
-      "endTime": "2026-01-27T00:56:37.287Z",
+      "parentUuid": "019bfde8-711b-7043-984a-cdcac25d7435",
+      "startTime": "2026-01-27T05:23:47.613Z",
+      "endTime": "2026-01-27T05:23:47.614Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -1213,19 +1213,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-        "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+        "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+        "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
         "status": "success"
       }
     },
     {
-      "uuid": "019bfcf3-d6a5-7b03-a7ce-2c753f9967d0",
+      "uuid": "019bfde8-711c-7212-8669-6ae8d54776c0",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcf3-d6a4-7bd1-ad29-b70e6b544e7d",
-      "startTime": "2026-01-27T00:56:37.285Z",
-      "endTime": "2026-01-27T00:56:37.285Z",
+      "parentUuid": "019bfde8-711b-7043-984a-cdcac25d7435",
+      "startTime": "2026-01-27T05:23:47.612Z",
+      "endTime": "2026-01-27T05:23:47.612Z",
       "input": {
         "city": "Paris"
       },
@@ -1235,14 +1235,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-        "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+        "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+        "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-27T00:56:32.847Z",
-  "endTime": "2026-01-27T00:56:42.052Z",
+  "startTime": "2026-01-27T05:23:32.046Z",
+  "endTime": "2026-01-27T05:23:53.520Z",
   "name": "langgraph-parallel-mixed",
   "tags": [
     "langgraph",
@@ -1253,22 +1253,22 @@
   "input": {
     "messages": [
       {
-        "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+        "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+        "id": "f9194a75-4f60-4e78-b361-14122550f22a"
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5",
+        "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "30687db3-d91b-4905-a311-327a6f3728f5"
+        "id": "f9194a75-4f60-4e78-b361-14122550f22a"
       },
       {
         "content": "",
@@ -1277,13 +1277,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 222,
-            "prompt_tokens": 288,
-            "total_tokens": 510,
+            "completion_tokens": 1054,
+            "prompt_tokens": 349,
+            "total_tokens": 1403,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 128,
+              "reasoning_tokens": 960,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1294,20 +1294,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2RfdQf7qPj4jihoisOCIFfYGO0Zk",
+          "id": "chatcmpl-D2Vq0AVOA2zmvrqDJlWHC5VjuTUic",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcf3-c551-7d20-9944-57714d426ad2-0",
+        "id": "lc_run--019bfde8-3450-7263-ac8b-d4d570369fbb-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Paris"
             },
-            "id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+            "id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
             "type": "tool_call"
           },
           {
@@ -1315,7 +1315,7 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_3tUxeG4kLDVSv6G500tCskyF",
+            "id": "call_NPdslNO7np4orjjltS43qmGE",
             "type": "tool_call"
           },
           {
@@ -1324,7 +1324,7 @@
               "from_currency": "USD",
               "to_currency": "EUR"
             },
-            "id": "call_OTLte1NghC7WwZwTemaJuMON",
+            "id": "call_1jMtKqwadWQeJMRiYhxl48ub",
             "type": "tool_call"
           },
           {
@@ -1332,22 +1332,22 @@
             "args": {
               "expression": "100 * 1.5"
             },
-            "id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+            "id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 288,
-          "output_tokens": 222,
-          "total_tokens": 510,
+          "input_tokens": 349,
+          "output_tokens": 1054,
+          "total_tokens": 1403,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 128
+            "reasoning": 960
           }
         }
       },
@@ -1357,8 +1357,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-        "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+        "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+        "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
         "status": "success"
       },
       {
@@ -1367,8 +1367,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-        "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+        "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+        "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
         "status": "success"
       },
       {
@@ -1377,8 +1377,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-        "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+        "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+        "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
         "status": "success"
       },
       {
@@ -1387,24 +1387,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-        "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+        "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+        "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
         "status": "success"
       },
       {
-        "content": "Here are the results:\n\n- Weather \u2014 Paris: Partly cloudy, 65\u00b0F (\u2248 18.3\u00b0C)\n- Stock price \u2014 TSLA: $245.60\n- Exchange rate \u2014 USD \u2192 EUR: 1 USD = 0.92 EUR\n- Calculation \u2014 100 * 1.5 = 150\n\nAnything else you want to check or update?",
+        "content": "Summary of the results:\n- Weather (Paris): Partly cloudy, 65\u00b0F.\n- Stock (TSLA): $245.60.\n- Exchange rate: 1 USD = 0.92 EUR.\n- Calculation: 100 * 1.5 = 150.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 279,
-            "prompt_tokens": 430,
-            "total_tokens": 709,
+            "completion_tokens": 322,
+            "prompt_tokens": 491,
+            "total_tokens": 813,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 192,
+              "reasoning_tokens": 256,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1415,26 +1415,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2RfhEvGnCXZbVOFO1yYKhyrh9I6A",
+          "id": "chatcmpl-D2VqF5S50xK4YxGJqWVH2JmQeHJ87",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcf3-d6ab-7372-a184-86f6d6fff3f6-0",
+        "id": "lc_run--019bfde8-7121-7d43-83d6-78428dd737c4-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 430,
-          "output_tokens": 279,
-          "total_tokens": 709,
+          "input_tokens": 491,
+          "output_tokens": 322,
+          "total_tokens": 813,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 192
+            "reasoning": 256
           }
         }
       }
@@ -1450,8 +1450,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "ba8390be-48a6-48d6-b796-4ccc66f348d2",
-        "tool_call_id": "call_QWpadsJEgvh0ARCGfXKcDmcJ",
+        "id": "eb22e64f-80e6-4522-a7be-e2c29d5863e6",
+        "tool_call_id": "call_LDgEMq8KKK83XxbD0eq6GEe6",
         "status": "success"
       },
       "inputParameters": {
@@ -1466,8 +1466,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "239a99a1-b1d3-4e68-9243-7b0a8ab14813",
-        "tool_call_id": "call_3tUxeG4kLDVSv6G500tCskyF",
+        "id": "e15c18d1-696b-4a62-b1a1-564034408147",
+        "tool_call_id": "call_NPdslNO7np4orjjltS43qmGE",
         "status": "success"
       },
       "inputParameters": {
@@ -1482,8 +1482,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_exchange_rate",
-        "id": "d07a44f4-8b5e-4754-b5a6-0ae7769aa2c0",
-        "tool_call_id": "call_OTLte1NghC7WwZwTemaJuMON",
+        "id": "b4a29864-5cba-4047-a947-e9de6bb63d9b",
+        "tool_call_id": "call_1jMtKqwadWQeJMRiYhxl48ub",
         "status": "success"
       },
       "inputParameters": {
@@ -1499,8 +1499,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "4173612f-68ba-4c8d-83c6-756f9e15c32a",
-        "tool_call_id": "call_ZVrGyJRxQbSqhJxbvI8VRBSQ",
+        "id": "2b8a30ad-4c8b-43a1-9fe3-eb40d9121674",
+        "tool_call_id": "call_UHKfdmCy5WG7JfjmBp4R1Xia",
         "status": "success"
       },
       "inputParameters": {

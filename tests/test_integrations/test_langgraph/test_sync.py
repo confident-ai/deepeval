@@ -38,6 +38,7 @@ from tests.test_integrations.test_langgraph.apps.langgraph_metric_collection_app
 )
 from tests.test_integrations.test_langgraph.apps.langgraph_retriever_app import (
     app as retriever_app,
+    app_with_metric_collection as retriever_app_with_metric_collection,
 )
 
 # =============================================================================
@@ -342,7 +343,15 @@ class TestParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5"
+                        content=(
+                            "Call exactly these 4 tools, each exactly once, in this order:\n"
+                            "1. get_weather with city='Paris'\n"
+                            "2. get_stock_price with symbol='TSLA'\n"
+                            "3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n"
+                            "4. calculate with expression='100 * 1.5'\n"
+                            "Do NOT call any other tools (such as search_news).\n"
+                            "After receiving all tool results, summarize them briefly."
+                        )
                     )
                 ]
             },
@@ -582,6 +591,29 @@ class TestRetrieverApp:
             config={"callbacks": [callback]},
         )
 
+        assert len(result["messages"]) > 0
+
+    @trace_test("langgraph_retriever_metric_collection_schema.json")
+    def test_retriever_metric_collection(self):
+        """Test metric_collection on retriever spans."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-metric-collection",
+            tags=["langgraph", "retriever", "metric-collection"],
+            metadata={"test_type": "retriever_metric_collection"},
+        )
+
+        result = retriever_app_with_metric_collection.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Tell me about Python programming language."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
         assert len(result["messages"]) > 0
 
 
