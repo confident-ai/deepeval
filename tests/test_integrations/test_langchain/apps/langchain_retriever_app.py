@@ -68,6 +68,9 @@ class DeterministicRetriever(BaseRetriever):
 
 # Shared retriever and LLM
 retriever = DeterministicRetriever()
+retriever_with_metric_collection = DeterministicRetriever(
+    metadata={"metric_collection": "retriever_quality"}
+)
 llm = ChatOpenAI(model="gpt-5-mini", temperature=0, seed=42)
 
 
@@ -176,3 +179,62 @@ def invoke_rag_app(inputs: dict, config: RunnableConfig = None):
 async def ainvoke_rag_app(inputs: dict, config: RunnableConfig = None):
     """Async invoke the RAG app."""
     return await _rag_async_chain.ainvoke(inputs, config=config)
+
+
+def _run_rag_chain_with_metric_collection(
+    inputs: dict, config: RunnableConfig = None
+):
+    """Run the RAG chain with metric_collection on retriever."""
+    messages = inputs.get("messages", [])
+
+    # Extract query from messages
+    query = ""
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            query = msg.content
+            break
+        elif isinstance(msg, tuple) and msg[0] == "human":
+            query = msg[1]
+            break
+
+    # Retrieve documents using retriever with metric_collection
+    docs = retriever_with_metric_collection.invoke(query, config=config)
+
+    # Format context
+    context = "\n\n".join([doc.page_content for doc in docs])
+
+    # Create augmented prompt with system message for RAG
+    augmented_messages = (
+        [
+            SystemMessage(
+                content="You are a helpful assistant. Answer the user's question based ONLY on the provided context. Be concise and factual."
+            )
+        ]
+        + list(messages)
+        + [
+            HumanMessage(
+                content=f"Context:\n{context}\n\nAnswer based on the context above."
+            )
+        ]
+    )
+
+    # Generate response
+    response = llm.invoke(augmented_messages, config=config)
+
+    return {
+        "messages": list(messages) + [response],
+        "context": context,
+        "source_documents": docs,
+    }
+
+
+_rag_chain_with_metric_collection = RunnableLambda(
+    _run_rag_chain_with_metric_collection
+).with_config(run_name="rag_chain")
+
+
+def invoke_rag_app_with_metric_collection(
+    inputs: dict, config: RunnableConfig = None
+):
+    """Invoke the RAG app with metric_collection on retriever span."""
+    return _rag_chain_with_metric_collection.invoke(inputs, config=config)

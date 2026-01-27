@@ -788,6 +788,9 @@ class CallbackHandler(BaseCallbackHandler):
             self._run_id_to_span_uuid[str(run_id)] = uuid_str
             retriever_span.input = query
 
+            # Extract metric_collection from metadata if provided
+            retriever_span.metric_collection = md.get("metric_collection")
+
     def on_retriever_end(
         self,
         output: Any,

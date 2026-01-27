@@ -40,6 +40,7 @@ from tests.test_integrations.test_langchain.apps.langchain_parallel_tools_app im
 )
 from tests.test_integrations.test_langchain.apps.langchain_retriever_app import (
     invoke_rag_app,
+    invoke_rag_app_with_metric_collection,
 )
 from tests.test_integrations.test_langchain.apps.langchain_agent_app import (
     invoke_simple_agent,
@@ -460,6 +461,29 @@ class TestRetrieverApp:
             {
                 "messages": [
                     HumanMessage(content="What is LangChain framework?")
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
+        assert len(result["messages"]) > 0
+
+    @trace_test("langchain_retriever_metric_collection_schema.json")
+    def test_retriever_metric_collection(self):
+        """Test metric_collection on retriever spans."""
+        callback = CallbackHandler(
+            name="langchain-retriever-metric-collection",
+            tags=["langchain", "retriever", "metric-collection"],
+            metadata={"test_type": "retriever_metric_collection"},
+        )
+
+        result = invoke_rag_app_with_metric_collection(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Tell me about Python programming language."
+                    )
                 ]
             },
             config={"callbacks": [callback]},
