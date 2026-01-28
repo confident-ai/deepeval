@@ -15,6 +15,18 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
     """
     crewai_kwargs = kwargs
 
+    def _attach_metadata(tool_instance):
+        try:
+            object.__setattr__(tool_instance, "metric_collection", metric_collection)
+            object.__setattr__(tool_instance, "metrics", metric)
+        except Exception:
+            try:
+                tool_instance._metric_collection = metric_collection
+                tool_instance._metrics = metric
+            except Exception:
+                pass
+        return tool_instance
+
     # Case 1: @tool (function passed directly)
     if len(args) == 1 and callable(args[0]):
         f = args[0]
@@ -29,7 +41,8 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
             result = f(*f_args, **f_kwargs)
             return result
 
-        return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+        tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+        return _attach_metadata(tool_instance)
 
     # Case 2: @tool("name")
     if len(args) == 1 and isinstance(args[0], str):
@@ -45,7 +58,8 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
                 result = f(*f_args, **f_kwargs)
                 return result
 
-            return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            return _attach_metadata(tool_instance)
 
         return _decorator
 
@@ -64,7 +78,8 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
                 result = f(*f_args, **f_kwargs)
                 return result
 
-            return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
+            return _attach_metadata(tool_instance)
 
         return _decorator
 
