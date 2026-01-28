@@ -131,12 +131,12 @@ class CallbackHandler(BaseCallbackHandler):
         # This makes multi-turn tests that use multiple CallbackHandler instances behave
         # as expected: one trace containing multiple turns/spans.
         thread_id = None
-        fields = getattr(self, "_trace_init_fields", None) or {}
+        fields = self._trace_init_fields or {}
         if fields.get("thread_id"):
             thread_id = fields["thread_id"]
         # In case _trace_init_fields has already been cleared, fall back to trace metadata.
         if thread_id is None and self._trace is not None:
-            thread_id = getattr(self._trace, "thread_id", None)
+            thread_id = self._trace.thread_id
 
         if thread_id:
             with self._thread_id_lock:
@@ -180,15 +180,15 @@ class CallbackHandler(BaseCallbackHandler):
         # Register this trace as the canonical trace for this thread_id (if provided).
         # This allows other CallbackHandler instances created for the same thread_id
         # to reuse the same trace instead of creating parallel traces.
-        fields = getattr(self, "_trace_init_fields", None) or {}
-        tid = fields.get("thread_id") or getattr(trace, "thread_id", None)
+        fields = self._trace_init_fields or {}
+        tid = fields.get("thread_id") or trace.thread_id
         if tid:
             with self._thread_id_lock:
                 # Only set if absent to preserve the "first trace wins" behavior.
                 self._thread_id_to_trace_uuid.setdefault(tid, trace.uuid)
 
         # Apply stashed metadata once.
-        fields = getattr(self, "_trace_init_fields", None) or {}
+        fields = self._trace_init_fields or {}
         if fields:
             if fields.get("name") is not None:
                 trace.name = fields["name"]

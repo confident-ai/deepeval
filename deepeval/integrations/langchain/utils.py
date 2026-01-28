@@ -290,8 +290,8 @@ def enter_current_context(
 
     if (
         parent_span
-        and getattr(parent_span, "progress", None) is not None
-        and getattr(parent_span, "pbar_callback_id", None) is not None
+        and parent_span.progress is not None
+        and parent_span.pbar_callback_id is not None
     ):
         progress = parent_span.progress
         pbar_callback_id = parent_span.pbar_callback_id
