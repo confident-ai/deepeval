@@ -66,6 +66,7 @@
     },
     "attributes": {
       "gen_ai.operation.name": "chat",
+      "gen_ai.provider.name": "openai",
       "gen_ai.system": "openai",
       "gen_ai.request.model": "gpt-5",
       "server.address": "api.openai.com",
