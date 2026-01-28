@@ -135,8 +135,7 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(LLMCallStartedEvent)
         def on_llm_started(source, event: LLMCallStartedEvent):
-            metric_collection = getattr(source, "_metric_collection", None)
-            metrics = getattr(source, "_metrics", None)
+            metric_collection, metrics = _get_metrics_data(source)
             observer = Observer(
                 span_type="llm",
                 func_name="call",
@@ -205,9 +204,9 @@ class CrewAIEventsListener(BaseEventListener):
             metrics = None
 
             if hasattr(source, "tools"):
-                for t in source.tools:
-                    if getattr(t, "name", None) == event.tool_name:
-                        metric_collection, metrics = _get_metrics_data(t)
+                for tools in source.tools:
+                    if getattr(tools, "name", None) == event.tool_name:
+                        metric_collection, metrics = _get_metrics_data(tools)
                         break
 
             if not metric_collection:
