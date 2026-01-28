@@ -183,8 +183,8 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except:
-        return f"<self>"
+    except Exception:
+        return "<self>"
 
 
 def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
@@ -200,3 +200,11 @@ def is_async_context() -> bool:
         return True
     except RuntimeError:
         return False
+
+
+def filter_model_kwargs(model_cls, kwargs: dict) -> dict:
+    # pydantic v2
+    fields = getattr(model_cls, "model_fields", None)
+    if fields is None:
+        return kwargs
+    return {k: v for k, v in kwargs.items() if k in fields}

@@ -1,7 +1,11 @@
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span
+from typing import List
 from openai import OpenAI
+
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric, ContextualRelevancyMetric
+from deepeval.tracing import observe, update_current_span
+from deepeval.dataset import EvaluationDataset, Golden
+
 
 client = OpenAI()
 
@@ -21,16 +25,6 @@ def complete(query: str):
 
 
 ################################
-
-from typing import List
-
-from deepeval.test_case import LLMTestCase
-from deepeval.tracing import (
-    observe,
-    update_current_span,
-)
-from deepeval.metrics import ContextualRelevancyMetric, AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
 
 
 def web_search(query: str) -> str:
@@ -82,9 +76,6 @@ def research_agent(query: str) -> str:
     )
     return final_response
 
-
-from deepeval.dataset import Golden
-from deepeval import evaluate
 
 # Create golden instead of test case
 golden = Golden(input="What's the weather like in SF?")

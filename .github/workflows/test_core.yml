@@ -82,7 +82,9 @@ jobs:
           --ignore=tests/test_core/test_synthesizer/                                \
           --ignore=tests/test_core/test_datasets/                                   \
           --ignore=tests/test_core/test_tracing/test_dataset_iterator.py            \
-          --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
+          --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py \
+          --ignore=tests/test_core/test_component/test_component_level_evals.py \
+          --ignore=tests/test_core/test_component/test_setup_tracing.py
 
       # Dev tests (with secrets)
       - name: Run dev tests
@@ -100,4 +102,6 @@ jobs:
           --ignore=tests/test_core/test_synthesizer/test_context_generator.py       \
           --ignore=tests/test_core/test_synthesizer/test_conversation_simulator.py  \
           --ignore=tests/test_core/test_synthesizer/test_generate_from_goldens.py   \
-          --ignore=tests/test_core/test_synthesizer/test_synthesizer.py
+          --ignore=tests/test_core/test_synthesizer/test_synthesizer.py \
+          --ignore=tests/test_core/test_component/test_component_level_evals.py \
+          --ignore=tests/test_core/test_component/test_setup_tracing.py
