@@ -1,6 +1,4 @@
 import weakref
-import contextvars
-import logging
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -77,8 +75,6 @@ if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
 
-
-_logger = logging.getLogger(__name__)
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
@@ -270,16 +266,6 @@ class TraceManager:
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
-            # if contextvars still reference this ended trace/span,
-            # clear them. This prevents leaks when some paths end/remove spans without
-            # properly unwinding contextvars.
-            cur_trace = current_trace_context.get()
-            if cur_trace is not None and cur_trace.uuid == trace_uuid:
-                current_trace_context.set(None)
-
-            cur_span = current_span_context.get()
-            if cur_span is not None and cur_span.trace_uuid == trace_uuid:
-                current_span_context.set(None)
 
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
@@ -293,15 +279,8 @@ class TraceManager:
 
     def remove_span(self, span_uuid: str):
         """Remove a span from the active spans dictionary."""
-        span = self.active_spans.get(span_uuid)
-        if span is None:
-            return
-
-        cur_span = current_span_context.get()
-        if cur_span is not None and cur_span.uuid == span_uuid:
-            current_span_context.set(None)
-
-        del self.active_spans[span_uuid]
+        if span_uuid in self.active_spans:
+            del self.active_spans[span_uuid]
 
     def add_span_to_trace(self, span: BaseSpan):
         """Add a span to its trace."""
@@ -854,14 +833,6 @@ class Observer:
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
         self.update_span_properties: Optional[Callable] = None
-        # ContextVar tokens for safe restoration (esp. async task boundaries)
-        self._span_token: Optional[contextvars.Token] = None
-        self._trace_token: Optional[contextvars.Token] = None
-        # If we intentionally clear an inherited/stale parent span in __enter__,
-        # ensure the task ends with no span context and do not restore the inherited value
-        # because that would undo the intentional break in inheritance with the parent span
-        # which we deemed invalid for a new or unbound task.
-        self._force_clear_span_on_exit: bool = False
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -869,71 +840,6 @@ class Observer:
 
         # Get the current span from the context
         parent_span = current_span_context.get()
-
-        try:
-            import asyncio
-
-            task = asyncio.current_task()
-        except Exception:
-            task = None
-
-        if task is not None and parent_span is not None:
-            binding = trace_manager.task_bindings.get(task)
-            bound_trace_uuid = None
-            if binding:
-                bound_trace_uuid = binding.get("trace_uuid")
-
-            # If this task has no binding yet OR it is bound to a different trace,
-            # then the parent_span was likely inherited via ContextVar copy
-            # (asyncio.create_task copies contextvars). Treat it as unrelated.
-            if (not binding) or (bound_trace_uuid != parent_span.trace_uuid):
-                _logger.debug(
-                    "Observer.__enter__: ignoring inherited parent span in task boundary "
-                    "(task=%r parent_span_uuid=%s parent_trace_uuid=%s bound_trace_uuid=%s has_binding=%s)",
-                    task,
-                    parent_span.uuid,
-                    parent_span.trace_uuid,
-                    bound_trace_uuid,
-                    bool(binding),
-                )
-                parent_span = None
-                # Break contextvar inheritance for this task so __exit__ doesn't "restore"
-                # an unrelated parent span (create_task copies ContextVars by default).
-                current_span_context.set(None)
-                self._force_clear_span_on_exit = True
-
-        # ---------------------------------------------------------------------
-        # Robustness: guard against stale ContextVar values
-        #
-        # In async/task-heavy environments (LangChain/LangGraph), create_task()
-        # copies ContextVars at task creation time. If a task inherits a parent
-        # span whose trace has already ended, we can end up trying to attach
-        # a new span to a non-existent (inactive) trace.
-        #
-        # If we detect a stale parent span (span no longer active or trace ended),
-        # clear it and proceed as if there were no parent span.
-        # ---------------------------------------------------------------------
-        if parent_span is not None:
-            parent_span_active = (
-                trace_manager.get_span_by_uuid(parent_span.uuid) is not None
-            )
-            parent_trace_active = bool(
-                parent_span.trace_uuid
-                and parent_span.trace_uuid in trace_manager.active_traces
-            )
-            if not parent_span_active or not parent_trace_active:
-                _logger.debug(
-                    "Observer.__enter__: ignoring stale parent span from context "
-                    "(parent_span_uuid=%s parent_trace_uuid=%s parent_span_active=%s parent_trace_active=%s)",
-                    parent_span.uuid,
-                    parent_span.trace_uuid,
-                    parent_span_active,
-                    parent_trace_active,
-                )
-                parent_span = None
-                # Clear stale inherited value so we don't restore it on reset.
-                current_span_context.set(None)
-                self._force_clear_span_on_exit = True
 
         # Determine trace_uuid and parent_uuid before creating the span instance
         if parent_span:
@@ -953,7 +859,7 @@ class Observer:
                     metric_collection=self.metric_collection
                 )
                 self.trace_uuid = trace.uuid
-                self._trace_token = current_trace_context.set(trace)
+                current_trace_context.set(trace)
 
         # Now create the span instance with the correct trace_uuid and parent_uuid
         span_instance = self.create_span_instance()
@@ -966,7 +872,7 @@ class Observer:
         trace_manager.add_span_to_trace(span_instance)
 
         # Set this span as the current span in the context
-        self._span_token = current_span_context.set(span_instance)
+        current_span_context.set(span_instance)
         if (
             parent_span
             and parent_span.progress is not None
@@ -1004,118 +910,85 @@ class Observer:
         """Exit the tracer context, updating the span status and handling trace completion."""
 
         end_time = perf_counter()
-        # Prefer the span we created (stable) rather than trusting the current ContextVar value.
-        span = trace_manager.get_span_by_uuid(self.uuid)
-        if span is None:
-            # Fall back to whatever is in context for debugging, but still ensure cleanup below.
-            span = current_span_context.get()
-            _logger.warning(
-                "Observer.__exit__: span not found in trace_manager (uuid=%s); "
-                "falling back to current_span_context (current_uuid=%s)",
-                self.uuid,
-                getattr(span, "uuid", None),
+        # Get the current span from the context instead of looking it up by UUID
+        current_span = current_span_context.get()
+
+        if not current_span or current_span.uuid != self.uuid:
+            print(
+                f"Error: Current span in context does not match the span being exited. Expected UUID: {self.uuid}, Got: {current_span.uuid if current_span else 'None'}"
             )
+            return
 
-        try:
-            if not span or getattr(span, "uuid", None) != self.uuid:
-                # IMPORTANT: do not early-return; we must reset ContextVars to avoid leaks.
-                _logger.warning(
-                    "Observer.__exit__: current span mismatch; expected=%s got=%s",
-                    self.uuid,
-                    getattr(span, "uuid", None),
-                )
-                trace_manager.remove_span(self.uuid)
-                # Symmetry: if __enter__ created a trace context, clear it on mismatch too
-                # mismatch means we can't safely rely on normal root-span finalization
-                if self._trace_token is not None:
-                    try:
-                        current_trace_context.reset(self._trace_token)
-                    except Exception:
-                        current_trace_context.set(None)
-                    self._trace_token = None
-                return
+        current_span.end_time = end_time
+        if exc_type is not None:
+            current_span.status = TraceSpanStatus.ERRORED
+            current_span.error = str(exc_val)
+        else:
+            current_span.status = TraceSpanStatus.SUCCESS
 
-            span.end_time = end_time
-            if exc_type is not None:
-                span.status = TraceSpanStatus.ERRORED
-                span.error = str(exc_val)
-            else:
-                span.status = TraceSpanStatus.SUCCESS
+        if self.update_span_properties is not None:
+            self.update_span_properties(current_span)
 
-            if self.update_span_properties is not None:
-                self.update_span_properties(span)
+        if current_span.input is None:
+            current_span.input = trace_manager.mask(self.function_kwargs)
+        if current_span.output is None:
+            current_span.output = trace_manager.mask(self.result)
 
-            if span.input is None:
-                span.input = trace_manager.mask(self.function_kwargs)
-            if span.output is None:
-                span.output = trace_manager.mask(self.result)
+        if (
+            isinstance(current_span, LlmSpan)
+            and self.prompt
+            and not current_span.prompt
+        ):
+            current_span.prompt = self.prompt
 
-            if isinstance(span, LlmSpan) and self.prompt and not span.prompt:
-                span.prompt = self.prompt
-
-            if not span.tools_called:
-                for child in span.children:
-                    if isinstance(child, ToolSpan):
-                        span.tools_called = span.tools_called or []
-                        span.tools_called.append(
-                            ToolCall(
-                                name=child.name,
-                                description=child.description,
-                                input_parameters=prepare_tool_call_input_parameters(
-                                    child.input
-                                ),
-                                output=child.output,
-                            )
+        if not current_span.tools_called:
+            # check any tool span children
+            for child in current_span.children:
+                if isinstance(child, ToolSpan):
+                    current_span.tools_called = current_span.tools_called or []
+                    current_span.tools_called.append(
+                        ToolCall(
+                            name=child.name,
+                            description=child.description,
+                            input_parameters=prepare_tool_call_input_parameters(
+                                child.input
+                            ),
+                            output=child.output,
                         )
+                    )
 
-            trace_manager.remove_span(self.uuid)
-
-            # Keep the existing trace-finalization logic, but don't use it to manage ContextVars.
-            if span.parent_uuid is None:
-                current_trace = current_trace_context.get()
-                if current_trace and current_trace.uuid == span.trace_uuid:
-                    if current_trace.input is None:
-                        current_trace.input = self.function_kwargs
-                    if current_trace.output is None:
-                        current_trace.output = self.result
-                    if span.status == TraceSpanStatus.ERRORED:
-                        current_trace.status = TraceSpanStatus.ERRORED
-
-                    other_active_spans = [
-                        s
-                        for s in trace_manager.active_spans.values()
-                        if s.trace_uuid == span.trace_uuid
-                    ]
-                    if not other_active_spans:
-                        trace_manager.end_trace(span.trace_uuid)
-                        # If we were the one who set the trace context, reset it safely.
-                        if self._trace_token is not None:
-                            try:
-                                current_trace_context.reset(self._trace_token)
-                            except Exception:
-                                current_trace_context.set(None)
-                            self._trace_token = None
-        finally:
-            # Always restore previous ContextVar value using tokens,
-            # unless we intentionally broke inherited/stale context in __enter__.
-            if self._force_clear_span_on_exit:
-                # We intentionally did NOT want to restore an inherited span (task ContextVar copy),
-                # so force the task to finish with no current span.
-                current_span_context.set(None)
+        trace_manager.remove_span(self.uuid)
+        if current_span.parent_uuid:
+            parent_span = trace_manager.get_span_by_uuid(
+                current_span.parent_uuid
+            )
+            if parent_span:
+                current_span_context.set(parent_span)
             else:
-                if self._span_token is not None:
-                    try:
-                        current_span_context.reset(self._span_token)
-                    except Exception:
-                        current_span_context.set(None)
-                else:
-                    current_span_context.set(None)
+                current_span_context.set(None)
+        else:
+            current_trace = current_trace_context.get()
+            if current_trace.input is None:
+                current_trace.input = self.function_kwargs
+            if current_trace.output is None:
+                current_trace.output = self.result
+            if current_span.status == TraceSpanStatus.ERRORED:
+                current_trace.status = TraceSpanStatus.ERRORED
+            if current_trace and current_trace.uuid == current_span.trace_uuid:
+                other_active_spans = [
+                    span
+                    for span in trace_manager.active_spans.values()
+                    if span.trace_uuid == current_span.trace_uuid
+                ]
 
-            if (
-                self._progress is not None
-                and self._pbar_callback_id is not None
-            ):
-                self._progress.update(self._pbar_callback_id, advance=1)
+                if not other_active_spans:
+                    trace_manager.end_trace(current_span.trace_uuid)
+                    current_trace_context.set(None)
+
+            current_span_context.set(None)
+
+        if self._progress is not None and self._pbar_callback_id is not None:
+            self._progress.update(self._pbar_callback_id, advance=1)
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""
