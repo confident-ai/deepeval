@@ -1,0 +1,55 @@
+{
+  "uuid": "af535fee31aeece346771af9aa91100f",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "9358bb12041125d1",
+      "name": "prompt_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:05.556Z",
+      "endTime": "2026-01-28T05:10:05.983Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly two words."
+        }
+      ],
+      "output": "Hello there!",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:05.556Z",
+  "endTime": "2026-01-28T05:10:05.983Z",
+  "name": "pydanticai-prompt-test",
+  "metadata": {
+    "test_type": "prompt"
+  },
+  "tags": [
+    "pydanticai",
+    "prompt"
+  ],
+  "environment": "development",
+  "threadId": "prompt-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "Be concise, reply with one short sentence only."
+    },
+    {
+      "role": "user",
+      "content": "Say hello in exactly two words."
+    }
+  ],
+  "output": "Hello there!",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,55 @@
+{
+  "uuid": "7c1e00d150fd5dd381c7f0d15b4fc4ba",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "10050a6712dbcc7c",
+      "name": "simple_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:09:59.476Z",
+      "endTime": "2026-01-28T05:10:00.556Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly three words."
+        }
+      ],
+      "output": "Hello, how are you?",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:09:59.476Z",
+  "endTime": "2026-01-28T05:10:00.556Z",
+  "name": "pydanticai-simple-test",
+  "metadata": {
+    "test_type": "simple"
+  },
+  "tags": [
+    "pydanticai",
+    "simple"
+  ],
+  "environment": "development",
+  "threadId": "simple-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "Be concise, reply with one short sentence only."
+    },
+    {
+      "role": "user",
+      "content": "Say hello in exactly three words."
+    }
+  ],
+  "output": "Hello, how are you?",
+  "status": "SUCCESS"
+}

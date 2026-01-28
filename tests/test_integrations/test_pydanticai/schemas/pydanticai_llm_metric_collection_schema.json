@@ -1,0 +1,55 @@
+{
+  "uuid": "898f57891ef7b3db94542474d6af7635",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "c3b0455bb14d4e46",
+      "name": "llm_metric_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:07.320Z",
+      "endTime": "2026-01-28T05:10:08.486Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly two words."
+        }
+      ],
+      "output": "Hello there!",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:07.320Z",
+  "endTime": "2026-01-28T05:10:08.486Z",
+  "name": "pydanticai-llm-metric-test",
+  "metadata": {
+    "test_type": "llm_metric_collection"
+  },
+  "tags": [
+    "pydanticai",
+    "llm-metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "llm-metric-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "Be concise, reply with one short sentence only."
+    },
+    {
+      "role": "user",
+      "content": "Say hello in exactly two words."
+    }
+  ],
+  "output": "Hello there!",
+  "status": "SUCCESS"
+}

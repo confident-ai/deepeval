@@ -36,7 +36,7 @@ try:
         SpanProcessor as _SpanProcessor,
         TracerProvider,
     )
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
@@ -167,7 +167,13 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         trace_provider.add_span_processor(span_interceptor)
 
         if is_test_mode:
-            trace_provider.add_span_processor(BatchSpanProcessor(test_exporter))
+            # Use ConfidentSpanExporter with SimpleSpanProcessor for synchronous
+            # trace building. This ensures trace_testing_manager.test_dict is
+            # populated before test assertions run, enabling the @trace_test
+            # decorator pattern used in LangChain/LangGraph tests.
+            trace_provider.add_span_processor(
+                SimpleSpanProcessor(ConfidentSpanExporter())
+            )
         else:
             trace_provider.add_span_processor(
                 BatchSpanProcessor(
@@ -329,14 +335,16 @@ class SpanInterceptor(SpanProcessor):
                 agent_span = create_agent_span_for_evaluation(span)
                 agent_span.metrics = self.settings.agent_metrics
 
-                # create a trace for evaluation
+                # Get or create a trace for evaluation metrics.
+                # NOTE: Don't add agent_span to trace.root_spans here because
+                # ConfidentSpanExporter.export() will do that via add_span_to_trace().
+                # We only need to set up the trace for metrics evaluation.
                 trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
                 if not trace:
                     trace = trace_manager.start_new_trace(
                         trace_uuid=agent_span.trace_uuid
                     )
 
-                trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
                 trace_manager.traces_to_evaluate.append(trace)

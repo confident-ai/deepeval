@@ -1,0 +1,56 @@
+{
+  "uuid": "e3ab3fbfe7c244977d146b832970c2ae",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "7851467fc6240d58",
+      "name": "agent_metric_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:06.437Z",
+      "endTime": "2026-01-28T05:10:07.276Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly two words."
+        }
+      ],
+      "output": "Hello there!",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "test-agent-metrics"
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:06.437Z",
+  "endTime": "2026-01-28T05:10:07.276Z",
+  "name": "pydanticai-agent-metric-test",
+  "metadata": {
+    "test_type": "agent_metric_collection"
+  },
+  "tags": [
+    "pydanticai",
+    "agent-metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "agent-metric-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "Be concise, reply with one short sentence only."
+    },
+    {
+      "role": "user",
+      "content": "Say hello in exactly two words."
+    }
+  ],
+  "output": "Hello there!",
+  "status": "SUCCESS"
+}

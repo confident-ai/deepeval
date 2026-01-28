@@ -1,0 +1,56 @@
+{
+  "uuid": "8519e157e9d9b26980fe6e1cb77af45d",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "cca3ed4938770649",
+      "name": "tool_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:02.953Z",
+      "endTime": "2026-01-28T05:10:05.516Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 15 plus 25?"
+        }
+      ],
+      "output": "15 plus 25 is 40.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:02.953Z",
+  "endTime": "2026-01-28T05:10:05.516Z",
+  "name": "pydanticai-tool-metric-test",
+  "metadata": {
+    "test_type": "tool_metric_collection"
+  },
+  "tags": [
+    "pydanticai",
+    "tool",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "tool-metric-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "What is 15 plus 25?"
+    }
+  ],
+  "output": "15 plus 25 is 40.",
+  "status": "SUCCESS"
+}

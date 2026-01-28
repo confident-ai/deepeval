@@ -1,0 +1,56 @@
+{
+  "uuid": "8e05abe20f2215246f992eb31d144e1b",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "72286ea3b1d4cd46",
+      "name": "tool_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:09.737Z",
+      "endTime": "2026-01-28T05:10:12.135Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 9 multiplied by 6?"
+        }
+      ],
+      "output": "9 multiplied by 6 is 54.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:09.737Z",
+  "endTime": "2026-01-28T05:10:12.135Z",
+  "name": "pydanticai-async-tool-test",
+  "metadata": {
+    "test_type": "async_tool"
+  },
+  "tags": [
+    "pydanticai",
+    "tool",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-tool-123",
+  "userId": "test-user-async",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "What is 9 multiplied by 6?"
+    }
+  ],
+  "output": "9 multiplied by 6 is 54.",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,55 @@
+{
+  "uuid": "50bf89de271229e158af857458017b5f",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "c76674477c89352b",
+      "name": "tool_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-28T05:10:00.576Z",
+      "endTime": "2026-01-28T05:10:02.935Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 7 multiplied by 8?"
+        }
+      ],
+      "output": "7 multiplied by 8 is 56.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T05:10:00.576Z",
+  "endTime": "2026-01-28T05:10:02.935Z",
+  "name": "pydanticai-tool-test",
+  "metadata": {
+    "test_type": "tool"
+  },
+  "tags": [
+    "pydanticai",
+    "tool"
+  ],
+  "environment": "development",
+  "threadId": "tool-123",
+  "userId": "test-user",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "What is 7 multiplied by 8?"
+    }
+  ],
+  "output": "7 multiplied by 8 is 56.",
+  "status": "SUCCESS"
+}
