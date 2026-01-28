@@ -999,6 +999,14 @@ class Observer:
                     getattr(span, "uuid", None),
                 )
                 trace_manager.remove_span(self.uuid)
+                # Symmetry: if __enter__ created a trace context, clear it on mismatch too
+                # mismatch means we can't safely rely on normal root-span finalization
+                if self._trace_token is not None:
+                    try:
+                        current_trace_context.reset(self._trace_token)
+                    except Exception:
+                        current_trace_context.set(None)
+                    self._trace_token = None
                 return
 
             span.end_time = end_time
@@ -1073,6 +1081,11 @@ class Observer:
             # If we intentionally broke inherited/stale context in __enter__, ensure
             # the task finishes with no span context (do not leave/restored inherited span).
             if self._force_clear_span_on_exit:
+                current_span_context.set(None)
+
+            # if this Observer span was a root span, never leave it in context.
+            # This prevents leaked spans in test/worker tasks when context was inherited/restored.
+            if self.parent_uuid is None:
                 current_span_context.set(None)
 
             if (
