@@ -1,7 +1,8 @@
 import logging
 import deepeval
+from collections import defaultdict
 
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, List, Union
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
@@ -78,16 +79,14 @@ class CrewAIEventsListener(BaseEventListener):
         is_crewai_installed()
         super().__init__()
         self.span_observers: dict[str, Observer] = {}
+        self.tool_observers_stack: dict[str, List[Union[Observer, None]]] = (
+            defaultdict(list)
+        )
 
     @staticmethod
-    def get_tool_execution_id(source, event) -> str:
+    def get_tool_stack_key(source, tool_name) -> str:
         source_id = id(source)
-        task_id = getattr(event, "task_id", "unknown")
-        agent_id = getattr(event, "agent_id", "unknown")
-        tool_name = getattr(event, "tool_name", "unknown")
-        execution_id = f"tool_{source_id}_{task_id}_{agent_id}_{tool_name}"
-
-        return execution_id
+        return f"{source_id}_{tool_name}"
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
@@ -156,27 +155,30 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(LLMCallCompletedEvent)
         def on_llm_completed(source, event: LLMCallCompletedEvent):
-            observer = self.span_observers.pop(
-                self.get_llm_execution_id(source, event)
-            )
-            if observer:
-                current_span = current_span_context.get()
-                token = None
-                span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
-
-                if span_to_close:
-                    output = getattr(
-                        event, "response", getattr(event, "output", "")
+            key = self.get_llm_execution_id(source, event)
+            if key in self.span_observers:
+                observer = self.span_observers.pop(key)
+                if observer:
+                    current_span = current_span_context.get()
+                    token = None
+                    span_to_close = trace_manager.get_span_by_uuid(
+                        observer.uuid
                     )
-                    span_to_close.output = output
 
-                    if not current_span or current_span.uuid != observer.uuid:
-                        token = current_span_context.set(span_to_close)
+                    if span_to_close:
+                        output = getattr(
+                            event, "response", getattr(event, "output", "")
+                        )
+                        span_to_close.output = output
+                        if (
+                            not current_span
+                            or current_span.uuid != observer.uuid
+                        ):
+                            token = current_span_context.set(span_to_close)
 
-                observer.__exit__(None, None, None)
-
-                if token:
-                    current_span_context.reset(token)
+                    observer.__exit__(None, None, None)
+                    if token:
+                        current_span_context.reset(token)
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
         def on_agent_started(source, event: AgentExecutionStartedEvent):
@@ -191,8 +193,7 @@ class CrewAIEventsListener(BaseEventListener):
         def on_agent_completed(source, event: AgentExecutionCompletedEvent):
             # Assuming that this event is called in the agent.execute_task method
             current_span = current_span_context.get()
-
-            # set the output
+            # set the ouput
             if current_span:
                 current_span.output = getattr(
                     event, "output", getattr(event, "result", "")
@@ -200,6 +201,12 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(ToolUsageStartedEvent)
         def on_tool_started(source, event: ToolUsageStartedEvent):
+            key = self.get_tool_stack_key(source, event.tool_name)
+
+            if self.tool_observers_stack[key]:
+                self.tool_observers_stack[key].append(None)
+                return
+
             metric_collection = None
             metrics = None
 
@@ -220,33 +227,45 @@ class CrewAIEventsListener(BaseEventListener):
                 metric_collection=metric_collection,
                 metrics=metrics,
             )
-            self.span_observers[self.get_tool_execution_id(source, event)] = (
-                observer
-            )
+
+            self.tool_observers_stack[key].append(observer)
             observer.__enter__()
 
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_completed(source, event: ToolUsageFinishedEvent):
-            observer = self.span_observers.pop(
-                self.get_tool_execution_id(source, event)
-            )
-            if observer:
-                current_span = current_span_context.get()
-                token = None
-                span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
+            key = self.get_tool_stack_key(source, event.tool_name)
 
-                if span_to_close:
-                    span_to_close.output = getattr(
-                        event, "output", getattr(event, "result", None)
+            if (
+                key in self.tool_observers_stack
+                and self.tool_observers_stack[key]
+            ):
+                item = self.tool_observers_stack[key].pop()
+
+                if item is None:
+                    return
+
+                observer = item
+                if observer:
+                    current_span = current_span_context.get()
+                    token = None
+                    span_to_close = trace_manager.get_span_by_uuid(
+                        observer.uuid
                     )
 
-                    if not current_span or current_span.uuid != observer.uuid:
-                        token = current_span_context.set(span_to_close)
+                    if span_to_close:
+                        span_to_close.output = getattr(
+                            event, "output", getattr(event, "result", None)
+                        )
+                        if (
+                            not current_span
+                            or current_span.uuid != observer.uuid
+                        ):
+                            token = current_span_context.set(span_to_close)
 
-                observer.__exit__(None, None, None)
+                    observer.__exit__(None, None, None)
 
-                if token:
-                    current_span_context.reset(token)
+                    if token:
+                        current_span_context.reset(token)
 
         @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
         def on_knowledge_started(source, event: KnowledgeRetrievalStartedEvent):
