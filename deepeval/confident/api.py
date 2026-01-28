@@ -26,16 +26,45 @@ API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
 
 
+def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
+    """
+    Infer region from Confident API key prefix.
+
+    Supported:
+      - confident_eu_... => "EU"
+      - confident_us_... => "US"
+
+    Returns None if prefix is not recognized or api_key is falsy.
+    """
+    if not api_key:
+        return None
+    key = api_key.strip().lower()
+    if key.startswith("confident_eu_"):
+        return "EU"
+    if key.startswith("confident_us_"):
+        return "US"
+    return None
+
+
 def get_base_api_url():
     s = get_settings()
     if s.CONFIDENT_BASE_URL:
         base_url = s.CONFIDENT_BASE_URL.rstrip("/")
         return base_url
+    # If the user has explicitly set a region, respect it.
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
-    if region == "EU":
+    if region:
+        return API_BASE_URL_EU if region == "EU" else API_BASE_URL
+
+    # Otherwise, infer region from the API key prefix.
+    api_key = get_confident_api_key()
+    inferred = _infer_region_from_api_key(api_key)
+    if inferred == "EU":
         return API_BASE_URL_EU
-    else:
-        return API_BASE_URL
+
+    # Default to US (backwards compatible)
+    return API_BASE_URL
+
 
 
 def get_confident_api_key() -> Optional[str]:
