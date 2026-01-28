@@ -840,6 +840,11 @@ class Observer:
         # ContextVar tokens for safe restoration (esp. async task boundaries)
         self._span_token: Optional[contextvars.Token] = None
         self._trace_token: Optional[contextvars.Token] = None
+        # If we intentionally clear an inherited/stale parent span in __enter__,
+        # ensure the task ends with no span context and do not restore the inherited value
+        # because that would undo the intentional break in inheritance with the parent span
+        # which we deemed invalid for a new or unbound task.
+        self._force_clear_span_on_exit: bool = False
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -847,6 +852,29 @@ class Observer:
 
         # Get the current span from the context
         parent_span = current_span_context.get()
+
+        try:
+            import asyncio
+
+            task = asyncio.current_task()
+        except Exception:
+            task = None
+
+        if task is not None and parent_span is not None:
+            binding = trace_manager.task_bindings.get(task)
+            if not binding:
+                _logger.debug(
+                    "Observer.__enter__: ignoring inherited parent span in new/unbound task "
+                    "(task=%r parent_span_uuid=%s parent_trace_uuid=%s)",
+                    task,
+                    parent_span.uuid,
+                    parent_span.trace_uuid,
+                )
+                parent_span = None
+                # Break contextvar inheritance for this task so __exit__ doesn't "restore"
+                # an unrelated parent span (create_task copies ContextVars by default).
+                current_span_context.set(None)
+                self._force_clear_span_on_exit = True
 
         # ---------------------------------------------------------------------
         # Robustness: guard against stale ContextVar values
@@ -877,8 +905,9 @@ class Observer:
                     parent_trace_active,
                 )
                 parent_span = None
-                # Ensure downstream code doesn't keep using the stale span.
+                # Clear stale inherited value so we don't restore it on reset.
                 current_span_context.set(None)
+                self._force_clear_span_on_exit = True
 
         # Determine trace_uuid and parent_uuid before creating the span instance
         if parent_span:
@@ -969,6 +998,7 @@ class Observer:
                     self.uuid,
                     getattr(span, "uuid", None),
                 )
+                trace_manager.remove_span(self.uuid)
                 return
 
             span.end_time = end_time
@@ -1038,6 +1068,11 @@ class Observer:
                 except Exception:
                     current_span_context.set(None)
             else:
+                current_span_context.set(None)
+
+            # If we intentionally broke inherited/stale context in __enter__, ensure
+            # the task finishes with no span context (do not leave/restored inherited span).
+            if self._force_clear_span_on_exit:
                 current_span_context.set(None)
 
             if (
