@@ -61,6 +61,9 @@ jobs:
       - name: Install dev dependencies
         run: poetry install --no-interaction --with dev
         
+      - name: Install other dependencies
+        run: poetry run pip install beautifulsoup4
+        
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------

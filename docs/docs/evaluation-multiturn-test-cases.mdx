@@ -133,17 +133,48 @@ test_case = ConversationalTestCase(
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
 
+A context accepts a list of:
+
+- strings and f-strings with `MLLMImage` objects, and
+- `Context` objects, which allow you to reference files or website URLs that `deepeval` will automatically fetch and process.
+
 ```python
-from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase, Context
+
+website_context = Context(
+    type="url",
+    source="https://www.trydeepteam.com/docs/getting-started",
+)
+
+file_context = Context(
+    type="file",
+    source="/path/to/your/file.pdf",
+)
 
 test_case = ConversationalTestCase(
-    context=["Customers must be over 50 to be eligible for a refund."],
-    turns=[Turn(...)]
+    context=[
+        "Customers must be over 50 to be eligible for a refund.",
+        website_context,
+        file_context,
+    ],
+    turns=[
+        Turn(...)
+    ]
 )
 ```
 
+The `Context` object allows you to pass large or external sources of truth (such as files or websites) directly into test cases. `deepeval` automatically handles **fetching**, **parsing**, and **chunking** this data before using it during evaluation.
+
+```python
+class Context:
+    type: Literal["file", "url"]
+    source: str
+    chunk_size: int = 2048
+    chunk_overlap: int = 128
+```
+
 :::info
-A single-turn `LLMTestCase` also contains `context`.
+Single-turn `LLMTestCase` also supports the `context` parameter and follows the same semantics.
 :::
 
 ## Including Images
