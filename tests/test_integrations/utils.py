@@ -216,7 +216,6 @@ def assert_trace_json(json_path: str):
                     trace_testing_manager.wait_for_test_dict()
                 )
                 expected_dict = load_trace_data(json_path)
-                print("actual dict ---", actual_dict)
 
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
