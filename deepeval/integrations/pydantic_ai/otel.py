@@ -2,6 +2,7 @@ import warnings
 from typing import Optional
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.config.settings import get_settings
+import logging
 
 try:
     from opentelemetry import trace
@@ -23,6 +24,8 @@ def is_opentelemetry_available():
         )
     return True
 
+logger = logging.getLogger(__name__)
+settings = get_settings()
 
 settings = get_settings()
 # OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
@@ -51,6 +54,11 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
                 )
             )
         )
+        try:
+            trace.set_tracer_provider(tracer_provider)
+        except Exception as e:
+            # Handle case where provider is already set (optional warning)
+            logger.warning(f"Could not set global tracer provider: {e}")
 
         # create an instrumented exporter
         from pydantic_ai.models.instrumented import InstrumentationSettings
