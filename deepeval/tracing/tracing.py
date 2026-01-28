@@ -270,6 +270,16 @@ class TraceManager:
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
+            # if contextvars still reference this ended trace/span,
+            # clear them. This prevents leaks when some paths end/remove spans without
+            # properly unwinding contextvars.
+            cur_trace = current_trace_context.get()
+            if cur_trace is not None and cur_trace.uuid == trace_uuid:
+                current_trace_context.set(None)
+
+            cur_span = current_span_context.get()
+            if cur_span is not None and cur_span.trace_uuid == trace_uuid:
+                current_span_context.set(None)
 
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
@@ -283,8 +293,21 @@ class TraceManager:
 
     def remove_span(self, span_uuid: str):
         """Remove a span from the active spans dictionary."""
-        if span_uuid in self.active_spans:
-            del self.active_spans[span_uuid]
+        span = self.active_spans.get(span_uuid)
+        if span is None:
+            return
+
+        # If the span being removed is still the current span in context,
+        # unwind to an active parent (preferred) or None.
+        cur_span = current_span_context.get()
+        if cur_span is not None and cur_span.uuid == span_uuid:
+            parent = None
+            parent_uuid = span.parent_uuid
+            if parent_uuid:
+                parent = self.active_spans.get(parent_uuid)
+            current_span_context.set(parent)
+
+        del self.active_spans[span_uuid]
 
     def add_span_to_trace(self, span: BaseSpan):
         """Add a span to its trace."""
@@ -873,7 +896,7 @@ class Observer:
                 parent_span = None
                 # Break contextvar inheritance for this task so __exit__ doesn't "restore"
                 # an unrelated parent span (create_task copies ContextVars by default).
-                current_span_context.set(None)
+                self._span_token = current_span_context.set(None)
                 self._force_clear_span_on_exit = True
 
         # ---------------------------------------------------------------------
@@ -1068,25 +1091,22 @@ class Observer:
                                 current_trace_context.reset(self._trace_token)
                             except Exception:
                                 current_trace_context.set(None)
+                            self._trace_token = None
         finally:
-            # Always restore previous ContextVar value using tokens.
-            if self._span_token is not None:
-                try:
-                    current_span_context.reset(self._span_token)
-                except Exception:
-                    current_span_context.set(None)
-            else:
-                current_span_context.set(None)
-
-            # If we intentionally broke inherited/stale context in __enter__, ensure
-            # the task finishes with no span context (do not leave/restored inherited span).
+            # Always restore previous ContextVar value using tokens,
+            # unless we intentionally broke inherited/stale context in __enter__.
             if self._force_clear_span_on_exit:
+                # We intentionally did NOT want to restore an inherited span (task ContextVar copy),
+                # so force the task to finish with no current span.
                 current_span_context.set(None)
-
-            # if this Observer span was a root span, never leave it in context.
-            # This prevents leaked spans in test/worker tasks when context was inherited/restored.
-            if self.parent_uuid is None:
-                current_span_context.set(None)
+            else:
+                if self._span_token is not None:
+                    try:
+                        current_span_context.reset(self._span_token)
+                    except Exception:
+                        current_span_context.set(None)
+                else:
+                    current_span_context.set(None)
 
             if (
                 self._progress is not None
