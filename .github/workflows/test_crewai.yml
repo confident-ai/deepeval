@@ -1,0 +1,175 @@
+name: CrewAI Integration Tests
+
+on:
+  # Auto run for maintainer PRs
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  # Auto run when code lands on main
+  push:
+    branches: [main]
+
+  # Manual for forks (maintainer provides PR number)
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR number (MUST REVIEW CODE FIRST)"
+        required: true
+      ref_kind:
+        description: "Which ref to test (merge|head)"
+        required: false
+        default: "merge"
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.event_name == 'pull_request'
+    && format('crewai-tests-pr-{0}-merge', github.event.pull_request.number)
+    || github.event_name == 'workflow_dispatch'
+    && format('crewai-tests-pr-{0}-{1}', github.event.inputs.pr, github.event.inputs.ref_kind)
+    || format('crewai-tests-push-{0}', github.ref_name) }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Run conditions matching your main integration tests
+    if: ${{ github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.repository, 'confident-ai/') &&
+      !github.event.pull_request.draft) ||
+      (github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      startsWith(github.repository, 'confident-ai/')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ci-secrets
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DEEPEVAL_TELEMETRY_OPT_OUT: "1"
+      DEEPEVAL_LOG_STACK_TRACES: "1"
+      DEEPEVAL_RETRY_MAX_ATTEMPTS: "1"
+      DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE: "120"
+      LOG_LEVEL: "info"
+      PYTHONFAULTHANDLER: "1"
+      PYTHONASYNCIODEBUG: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTEST_ADDOPTS: >-
+        -vv -rfE --maxfail=1 --capture=tee-sys
+        --durations=5
+        -o log_cli=true -o log_cli_level=INFO
+        --log-cli-format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
+
+    steps:
+      # ------------------------------------------------------------------
+      # REF SELECTION & CHECKOUT (Identical to test_integrations.yml)
+      # ------------------------------------------------------------------
+      - name: Resolve target SHA
+        id: refsel
+        env:
+          GH_TOKEN: ${{ github.token }}        
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+            echo "pr=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "kind=head" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pr="${{ github.event.inputs.pr }}"
+            kind="${{ github.event.inputs.ref_kind }}"
+            if [ "$kind" = "head" ]; then
+              sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+              echo "sha=$sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=head" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            merge_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.merge_commit_sha // empty')"
+            if [ -n "${merge_sha:-}" ]; then
+              echo "sha=$merge_sha" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "kind=merge" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            head_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
+            echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
+            echo "pr=$pr" >> "$GITHUB_OUTPUT"
+            echo "kind=head-fallback" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "pr=" >> "$GITHUB_OUTPUT"
+          echo "kind=push" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout resolved SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.refsel.outputs.sha }}
+          fetch-depth: 0
+
+      # ------------------------------------------------------------------
+      # PYTHON & DEPENDENCIES
+      # ------------------------------------------------------------------
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-integrations-${{ runner.os }}-3.11-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies (no cache)
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --only main
+
+      - name: Install project
+        run: poetry install --no-interaction --only main
+
+      - name: Install integration extras
+        run: poetry install --with integrations
+
+      # ------------------------------------------------------------------
+      # CREWAI TESTS (RUN SEQUENTIALLY)
+      # ------------------------------------------------------------------
+      
+      - name: Run CrewAI Sync Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_sync.py
+
+      - name: Run CrewAI Async Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_async.py
+
+      - name: Run CrewAI Knowledge Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_knowledge_retriever.py
+
+      - name: Run CrewAI Component Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_crewai_component.py
+      
+      - name: Run CrewAI Basic Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_crewai.py
+      
+      - name: Run CrewAI Stress Tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        run: poetry run pytest tests/test_integrations/test_crewai/test_stress.py
