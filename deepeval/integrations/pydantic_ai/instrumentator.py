@@ -242,9 +242,9 @@ class SpanInterceptor(SpanProcessor):
 
         # set agent name and metric collection
         agent_name = (
-            span.attributes.get("gen_ai.agent.name") or 
-            span.attributes.get("pydantic_ai.agent.name") or
-            span.attributes.get("agent_name") 
+            span.attributes.get("gen_ai.agent.name")
+            or span.attributes.get("pydantic_ai.agent.name")
+            or span.attributes.get("agent_name")
         )
 
         if agent_name:
@@ -276,12 +276,14 @@ class SpanInterceptor(SpanProcessor):
 
     def on_end(self, span):
 
-        already_processed = span.attributes.get("confident.span.type") == "agent"
+        already_processed = (
+            span.attributes.get("confident.span.type") == "agent"
+        )
         if not already_processed:
             agent_name = (
-                span.attributes.get("gen_ai.agent.name") or 
-                span.attributes.get("pydantic_ai.agent.name") or
-                span.attributes.get("agent_name") 
+                span.attributes.get("gen_ai.agent.name")
+                or span.attributes.get("pydantic_ai.agent.name")
+                or span.attributes.get("agent_name")
             )
             if agent_name:
                 self._add_agent_span(span, agent_name)

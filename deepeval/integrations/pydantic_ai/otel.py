@@ -24,6 +24,7 @@ def is_opentelemetry_available():
         )
     return True
 
+
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
