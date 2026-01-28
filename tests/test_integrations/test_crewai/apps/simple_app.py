@@ -2,10 +2,12 @@
 tests/test_integrations/test_crewai/apps/simple_app.py
 A basic single-agent crew for testing simple kickoff traces.
 """
+
 from crewai import Task
 from crewai.tools import tool
 
 from deepeval.integrations.crewai import Crew, Agent, LLM, tool
+
 
 def get_simple_app(id_suffix: str = ""):
     llm = LLM(
@@ -25,14 +27,14 @@ def get_simple_app(id_suffix: str = ""):
     task = Task(
         description="Reply to the user: {input}",
         expected_output="A short greeting.",
-        agent=agent
+        agent=agent,
     )
 
     crew = Crew(
         agents=[agent],
         tasks=[task],
         metric_collection="metric_collection_1",
-        verbose=True
+        verbose=True,
     )
-    
+
     return crew
