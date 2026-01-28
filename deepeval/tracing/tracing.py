@@ -1,4 +1,5 @@
 import weakref
+import logging
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -75,6 +76,8 @@ if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
 
+
+_logger = logging.getLogger(__name__)
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
@@ -840,6 +843,38 @@ class Observer:
 
         # Get the current span from the context
         parent_span = current_span_context.get()
+
+        # ---------------------------------------------------------------------
+        # Robustness: guard against stale ContextVar values
+        #
+        # In async/task-heavy environments (LangChain/LangGraph), create_task()
+        # copies ContextVars at task creation time. If a task inherits a parent
+        # span whose trace has already ended, we can end up trying to attach
+        # a new span to a non-existent (inactive) trace.
+        #
+        # If we detect a stale parent span (span no longer active or trace ended),
+        # clear it and proceed as if there were no parent span.
+        # ---------------------------------------------------------------------
+        if parent_span is not None:
+            parent_span_active = (
+                trace_manager.get_span_by_uuid(parent_span.uuid) is not None
+            )
+            parent_trace_active = bool(
+                parent_span.trace_uuid
+                and parent_span.trace_uuid in trace_manager.active_traces
+            )
+            if not parent_span_active or not parent_trace_active:
+                _logger.debug(
+                    "Observer.__enter__: ignoring stale parent span from context "
+                    "(parent_span_uuid=%s parent_trace_uuid=%s parent_span_active=%s parent_trace_active=%s)",
+                    parent_span.uuid,
+                    parent_span.trace_uuid,
+                    parent_span_active,
+                    parent_trace_active,
+                )
+                parent_span = None
+                # Ensure downstream code doesn't keep using the stale span.
+                current_span_context.set(None)
 
         # Determine trace_uuid and parent_uuid before creating the span instance
         if parent_span:
