@@ -297,15 +297,9 @@ class TraceManager:
         if span is None:
             return
 
-        # If the span being removed is still the current span in context,
-        # unwind to an active parent (preferred) or None.
         cur_span = current_span_context.get()
         if cur_span is not None and cur_span.uuid == span_uuid:
-            parent = None
-            parent_uuid = span.parent_uuid
-            if parent_uuid:
-                parent = self.active_spans.get(parent_uuid)
-            current_span_context.set(parent)
+            current_span_context.set(None)
 
         del self.active_spans[span_uuid]
 
@@ -885,18 +879,27 @@ class Observer:
 
         if task is not None and parent_span is not None:
             binding = trace_manager.task_bindings.get(task)
-            if not binding:
+            bound_trace_uuid = None
+            if binding:
+                bound_trace_uuid = binding.get("trace_uuid")
+
+            # If this task has no binding yet OR it is bound to a different trace,
+            # then the parent_span was likely inherited via ContextVar copy
+            # (asyncio.create_task copies contextvars). Treat it as unrelated.
+            if (not binding) or (bound_trace_uuid != parent_span.trace_uuid):
                 _logger.debug(
-                    "Observer.__enter__: ignoring inherited parent span in new/unbound task "
-                    "(task=%r parent_span_uuid=%s parent_trace_uuid=%s)",
+                    "Observer.__enter__: ignoring inherited parent span in task boundary "
+                    "(task=%r parent_span_uuid=%s parent_trace_uuid=%s bound_trace_uuid=%s has_binding=%s)",
                     task,
                     parent_span.uuid,
                     parent_span.trace_uuid,
+                    bound_trace_uuid,
+                    bool(binding),
                 )
                 parent_span = None
                 # Break contextvar inheritance for this task so __exit__ doesn't "restore"
                 # an unrelated parent span (create_task copies ContextVars by default).
-                self._span_token = current_span_context.set(None)
+                current_span_context.set(None)
                 self._force_clear_span_on_exit = True
 
         # ---------------------------------------------------------------------
