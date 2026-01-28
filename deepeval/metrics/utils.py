@@ -323,11 +323,11 @@ def check_llm_test_case_params(
     # Centralized: if a metric requires actual_output, reject empty/whitespace
     # (including empty multimodal outputs) as "missing params".
     if LLMTestCaseParams.ACTUAL_OUTPUT in test_case_params:
-        actual_output = getattr(test_case, LLMTestCaseParams.ACTUAL_OUTPUT.value)
+        actual_output = getattr(
+            test_case, LLMTestCaseParams.ACTUAL_OUTPUT.value
+        )
         if isinstance(actual_output, str) and actual_output == "":
-            error_str = (
-                f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
-            )
+            error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
             metric.error = error_str
             raise MissingTestCaseParamsError(error_str)
 

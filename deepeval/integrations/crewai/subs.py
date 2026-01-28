@@ -41,7 +41,7 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
     return DeepEvalClass
 
 
-def create_deepeval_factory(base_factory: Callable) -> Callable:
+def create_deepeval_llm(base_factory: Callable) -> Callable:
     """Wrapper for factory functions/classes (LLM)."""
 
     def factory_wrapper(*args, **kwargs):
@@ -61,4 +61,4 @@ def create_deepeval_factory(base_factory: Callable) -> Callable:
 
 DeepEvalCrew = create_deepeval_class(Crew, "DeepEvalCrew")
 DeepEvalAgent = create_deepeval_class(Agent, "DeepEvalAgent")
-DeepEvalLLM = create_deepeval_factory(LLM)
+DeepEvalLLM = create_deepeval_llm(LLM)

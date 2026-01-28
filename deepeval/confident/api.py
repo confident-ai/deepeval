@@ -66,7 +66,6 @@ def get_base_api_url():
     return API_BASE_URL
 
 
-
 def get_confident_api_key() -> Optional[str]:
     s = get_settings()
     key: Optional[SecretStr] = s.CONFIDENT_API_KEY or s.API_KEY
