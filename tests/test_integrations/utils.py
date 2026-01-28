@@ -2,6 +2,7 @@ import json
 from typing import Dict, Any
 from functools import wraps
 import inspect
+from deepeval.utils import get_or_create_event_loop
 
 
 def assert_json_object_structure(
@@ -140,7 +141,7 @@ def generate_trace_json(json_path: str):
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
-                loop = asyncio.get_event_loop()
+                loop = get_or_create_event_loop()
                 actual_dict = loop.run_until_complete(
                     trace_testing_manager.wait_for_test_dict()
                 )
@@ -210,11 +211,12 @@ def assert_trace_json(json_path: str):
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
-                loop = asyncio.get_event_loop()
+                loop = get_or_create_event_loop()
                 actual_dict = loop.run_until_complete(
                     trace_testing_manager.wait_for_test_dict()
                 )
                 expected_dict = load_trace_data(json_path)
+                print("actual dict ---", actual_dict)
 
                 assert assert_json_object_structure(expected_dict, actual_dict)
 
