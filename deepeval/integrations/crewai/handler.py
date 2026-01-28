@@ -52,15 +52,16 @@ def is_crewai_installed():
         raise ImportError(
             "CrewAI is not installed. Please install it with `pip install crewai`."
         )
-    
+
+
 def _get_metrics_data(obj: Any) -> Tuple[Optional[str], Optional[Any]]:
     """Helper to safely extract metrics attached to CrewAI objects."""
-    
+
     if not obj:
         return None, None
     metric_collection = getattr(obj, "_metric_collection", None)
     metrics = getattr(obj, "_metrics", None)
-    
+
     if metric_collection is not None or metrics is not None:
         return metric_collection, metrics
 
@@ -122,7 +123,9 @@ class CrewAIEventsListener(BaseEventListener):
             current_span = current_span_context.get()
 
             # set the output
-            output = getattr(event, "output", getattr(event, "result", str(event)))
+            output = getattr(
+                event, "output", getattr(event, "result", str(event))
+            )
             if current_span:
                 current_span.output = str(output)
             # set trace output
@@ -141,9 +144,9 @@ class CrewAIEventsListener(BaseEventListener):
                 metric_collection=metric_collection,
                 metrics=metrics,
             )
-            self.span_observers[
-                self.get_llm_execution_id(source, event)
-            ] = observer
+            self.span_observers[self.get_llm_execution_id(source, event)] = (
+                observer
+            )
             observer.__enter__()
 
             if observer.trace_uuid:
@@ -163,12 +166,14 @@ class CrewAIEventsListener(BaseEventListener):
                 span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
 
                 if span_to_close:
-                    output = getattr(event, "response", getattr(event, "output", ""))
+                    output = getattr(
+                        event, "response", getattr(event, "output", "")
+                    )
                     span_to_close.output = output
-                    
+
                     if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
-                
+
                 observer.__exit__(None, None, None)
 
                 if token:
@@ -190,7 +195,9 @@ class CrewAIEventsListener(BaseEventListener):
 
             # set the output
             if current_span:
-                current_span.output = getattr(event, "output", getattr(event, "result", ""))
+                current_span.output = getattr(
+                    event, "output", getattr(event, "result", "")
+                )
 
         @crewai_event_bus.on(ToolUsageStartedEvent)
         def on_tool_started(source, event: ToolUsageStartedEvent):
@@ -202,7 +209,7 @@ class CrewAIEventsListener(BaseEventListener):
                     if getattr(t, "name", None) == event.tool_name:
                         metric_collection, metrics = _get_metrics_data(t)
                         break
-            
+
             if not metric_collection:
                 agent = getattr(source, "agent", source)
                 metric_collection, metrics = _get_metrics_data(agent)
@@ -228,15 +235,17 @@ class CrewAIEventsListener(BaseEventListener):
                 current_span = current_span_context.get()
                 token = None
                 span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
-                
+
                 if span_to_close:
-                    span_to_close.output = getattr(event, "output", getattr(event, "result", None))
-                    
+                    span_to_close.output = getattr(
+                        event, "output", getattr(event, "result", None)
+                    )
+
                     if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
 
                 observer.__exit__(None, None, None)
-                
+
                 if token:
                     current_span_context.reset(token)
 
@@ -267,14 +276,15 @@ class CrewAIEventsListener(BaseEventListener):
                 if span_to_close:
                     span_to_close.input = event.query
                     span_to_close.output = event.retrieved_knowledge
-                    
+
                     if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
-                
+
                 observer.__exit__(None, None, None)
 
                 if token:
                     current_span_context.reset(token)
+
 
 def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
@@ -305,7 +315,7 @@ def wrap_all():
         wrap_crew_kickoff()
         wrap_crew_kickoff_for_each()
         wrap_crew_kickoff_async()
-        wrap_crew_kickoff_for_each_async()    
+        wrap_crew_kickoff_for_each_async()
         wrap_crew_akickoff()
         wrap_crew_akickoff_for_each()
         wrap_agent_execute_task()

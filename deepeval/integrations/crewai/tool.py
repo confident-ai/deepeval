@@ -17,7 +17,9 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
 
     def _attach_metadata(tool_instance):
         try:
-            object.__setattr__(tool_instance, "metric_collection", metric_collection)
+            object.__setattr__(
+                tool_instance, "metric_collection", metric_collection
+            )
             object.__setattr__(tool_instance, "metrics", metric)
         except Exception:
             try:

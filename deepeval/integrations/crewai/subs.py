@@ -42,7 +42,7 @@ def create_deepeval_class(base_class: Type[T], class_name: str) -> Type[T]:
 
 
 def create_deepeval_factory(base_factory: Callable) -> Callable:
-    """Wrapper for factory functions/classes (LLM). """
+    """Wrapper for factory functions/classes (LLM)."""
 
     def factory_wrapper(*args, **kwargs):
         is_crewai_installed()
@@ -55,9 +55,8 @@ def create_deepeval_factory(base_factory: Callable) -> Callable:
         except Exception:
             pass
         return instance
-    
-    return factory_wrapper
 
+    return factory_wrapper
 
 
 DeepEvalCrew = create_deepeval_class(Crew, "DeepEvalCrew")

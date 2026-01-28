@@ -87,6 +87,7 @@ def wrap_crew_kickoff_for_each_async():
 
     Crew.kickoff_for_each_async = wrapper
 
+
 def wrap_crew_akickoff():
     if not hasattr(Crew, "akickoff"):
         return
@@ -133,7 +134,6 @@ def wrap_crew_akickoff_for_each():
     Crew.akickoff_for_each = wrapper
 
 
-
 def wrap_agent_execute_task():
     original_execute_task = Agent.execute_task
 
@@ -151,6 +151,7 @@ def wrap_agent_execute_task():
         return result
 
     Agent.execute_task = wrapper
+
 
 def wrap_agent_aexecute_task():
     if not hasattr(Agent, "aexecute_task"):
