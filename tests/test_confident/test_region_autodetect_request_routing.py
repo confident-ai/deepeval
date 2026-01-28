@@ -42,7 +42,9 @@ def test_request_succeeds_by_auto_routing_eu_key_when_region_unset(monkeypatch):
     # Fake HTTP behavior:
     # - If it goes to US base URL => return 401 Invalid API key
     # - If it goes to EU base URL => return 200 success
-    def fake_http_request(method: str, url: str, headers=None, json=None, params=None):
+    def fake_http_request(
+        method: str, url: str, headers=None, json=None, params=None
+    ):
         if url.startswith(confident_api.API_BASE_URL_EU):
             return _FakeResponse(
                 200,
@@ -53,9 +55,13 @@ def test_request_succeeds_by_auto_routing_eu_key_when_region_unset(monkeypatch):
             {"success": False, "error": "Invalid API key", "deprecated": False},
         )
 
-    monkeypatch.setattr(confident_api.Api, "_http_request", staticmethod(fake_http_request))
+    monkeypatch.setattr(
+        confident_api.Api, "_http_request", staticmethod(fake_http_request)
+    )
 
-    api = confident_api.Api()  # uses get_confident_api_key() + get_base_api_url()
+    api = (
+        confident_api.Api()
+    )  # uses get_confident_api_key() + get_base_api_url()
 
     data, link = api.send_request(
         method=confident_api.HttpMethods.POST,
