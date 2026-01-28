@@ -1,0 +1,141 @@
+{
+  "uuid": "b3447990-ba98-4b25-a529-4b3a2e6ebead",
+  "baseSpans": [
+    {
+      "uuid": "31e91569-2971-4b60-81da-08d577567466",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-28T18:44:17.769Z",
+      "endTime": "2026-01-28T18:44:19.823Z",
+      "input": {},
+      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw its own conclusions!"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "f2a886ba-d203-440b-ac9d-ced26879e83e",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "31e91569-2971-4b60-81da-08d577567466",
+      "startTime": "2026-01-28T18:44:18.785Z",
+      "endTime": "2026-01-28T18:44:19.816Z",
+      "input": "Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal",
+      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw its own conclusions!",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "7353c206-7ca6-4ccc-9c75-e498d213a4d9",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "31e91569-2971-4b60-81da-08d577567466",
+      "startTime": "2026-01-28T18:44:17.774Z",
+      "endTime": "2026-01-28T18:44:18.778Z",
+      "input": "Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Narwhal",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "2e932ab0-8a07-4f6f-90e4-228f7c9ba605",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f2a886ba-d203-440b-ac9d-ced26879e83e",
+      "startTime": "2026-01-28T18:44:18.791Z",
+      "endTime": "2026-01-28T18:44:19.813Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw its own conclusions!",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "ed85447b-b989-46ee-b973-1e4c50a9391c",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "2e932ab0-8a07-4f6f-90e4-228f7c9ba605",
+      "startTime": "2026-01-28T18:44:18.791Z",
+      "endTime": "2026-01-28T18:44:19.813Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw its own conclusions!",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "418ed9a9-3e8b-438d-b0ef-a2afcbf9aeb0",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "7353c206-7ca6-4ccc-9c75-e498d213a4d9",
+      "startTime": "2026-01-28T18:44:17.777Z",
+      "endTime": "2026-01-28T18:44:18.776Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Narwhal",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "764db65c-4272-4fa0-8892-7d643b1f1472",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "418ed9a9-3e8b-438d-b0ef-a2afcbf9aeb0",
+      "startTime": "2026-01-28T18:44:17.777Z",
+      "endTime": "2026-01-28T18:44:18.776Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Narwhal",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T18:44:17.769Z",
+  "endTime": "2026-01-28T18:44:19.823Z",
+  "environment": "development",
+  "input": {},
+  "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw its own conclusions!",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,99 @@
+{
+  "uuid": "ac1c511b-0b94-4cee-935c-54d110acfe1d",
+  "baseSpans": [
+    {
+      "uuid": "4096c5f1-1c4f-4f15-86eb-dccdc3a2b7e1",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-28T18:06:53.718Z",
+      "endTime": "2026-01-28T18:06:55.968Z",
+      "input": {},
+      "output": "Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing."
+    },
+    {
+      "uuid": "c7e78b64-79ed-4f15-a4bb-237b18e0eed0",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4096c5f1-1c4f-4f15-86eb-dccdc3a2b7e1",
+      "startTime": "2026-01-28T18:06:53.718Z",
+      "endTime": "2026-01-28T18:06:55.968Z",
+      "input": {
+        "input": "Async Request 1"
+      },
+      "output": "Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing."
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "1c060b70-5676-4ae2-a0e0-82c19e101cf3",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "c7e78b64-79ed-4f15-a4bb-237b18e0eed0",
+      "startTime": "2026-01-28T18:06:53.723Z",
+      "endTime": "2026-01-28T18:06:55.961Z",
+      "input": "Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "74de80a8-cd30-4f77-b1b8-6bec3c6e6478",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1c060b70-5676-4ae2-a0e0-82c19e101cf3",
+      "startTime": "2026-01-28T18:06:53.725Z",
+      "endTime": "2026-01-28T18:06:55.959Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Async Worker. Digital worker\nYour personal goal is: Process requests fast\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "e2da5fd0-6bf4-4f75-8dcb-330c9b05faec",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "74de80a8-cd30-4f77-b1b8-6bec3c6e6478",
+      "startTime": "2026-01-28T18:06:53.725Z",
+      "endTime": "2026-01-28T18:06:55.959Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Async Worker. Digital worker\nYour personal goal is: Process requests fast\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer: Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-28T18:06:53.718Z",
+  "endTime": "2026-01-28T18:06:55.968Z",
+  "environment": "development",
+  "input": {
+    "input": "Async Request 1"
+  },
+  "output": "Processed output for Async Request 1: The request has been successfully received and processed. All relevant data has been analyzed, and the necessary actions have been taken to ensure optimal results. If there are any specific outcomes or further actions required, please provide additional details for further processing.",
+  "status": "SUCCESS"
+}

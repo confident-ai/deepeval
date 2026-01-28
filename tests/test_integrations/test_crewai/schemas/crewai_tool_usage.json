@@ -1,0 +1,243 @@
+{
+  "uuid": "e1530576-40bd-4d56-bcbe-f37ec84d31c1",
+  "baseSpans": [
+    {
+      "uuid": "3c306e24-dd56-489f-a654-f1314d1d1a97",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-28T18:44:19.852Z",
+      "endTime": "2026-01-28T18:44:21.823Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "3c306e24-dd56-489f-a654-f1314d1d1a97",
+      "startTime": "2026-01-28T18:44:19.856Z",
+      "endTime": "2026-01-28T18:44:21.817Z",
+      "input": "Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Weather in Paris: Cloudy, 65\u00b0F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "30ad24d2-2f6f-48de-b86f-484b2243b355",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
+      "startTime": "2026-01-28T18:44:20.923Z",
+      "endTime": "2026-01-28T18:44:21.815Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_9W6umwMg32BbrVKpToxu48c5",
+              "type": "function",
+              "function": {
+                "name": "'get_weather'",
+                "arguments": "'{\"city\":\"Paris\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "name": "get_weather",
+          "content": "Weather in Paris: Cloudy, 65\u00b0F"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "0505c792-43df-4b47-876a-44a8f8f855e3",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "30ad24d2-2f6f-48de-b86f-484b2243b355",
+      "startTime": "2026-01-28T18:44:20.923Z",
+      "endTime": "2026-01-28T18:44:21.815Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_9W6umwMg32BbrVKpToxu48c5",
+              "type": "function",
+              "function": {
+                "name": "'get_weather'",
+                "arguments": "'{\"city\":\"Paris\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "name": "get_weather",
+          "content": "Weather in Paris: Cloudy, 65\u00b0F"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "3aeaa861-5807-460e-833e-8f09704dbe9d",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
+      "startTime": "2026-01-28T18:44:19.859Z",
+      "endTime": "2026-01-28T18:44:20.918Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        }
+      ],
+      "output": [
+        {
+          "id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "function": {
+            "arguments": "{\"city\":\"Paris\"}",
+            "name": "get_weather"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "594f2602-2952-4e04-9d7d-6a3d4545be77",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "3aeaa861-5807-460e-833e-8f09704dbe9d",
+      "startTime": "2026-01-28T18:44:19.859Z",
+      "endTime": "2026-01-28T18:44:20.918Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        }
+      ],
+      "output": [
+        {
+          "id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "function": {
+            "arguments": "{\"city\":\"Paris\"}",
+            "name": "get_weather"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "3f8b3236-fc25-4c4d-a01e-3ae5b09e93ab",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
+      "startTime": "2026-01-28T18:44:20.916Z",
+      "endTime": "2026-01-28T18:44:20.924Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Weather in Paris: Cloudy, 65\u00b0F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "ef641741-0d44-4a3f-b317-63fb8ca182c5",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "3f8b3236-fc25-4c4d-a01e-3ae5b09e93ab",
+      "startTime": "2026-01-28T18:44:20.917Z",
+      "endTime": "2026-01-28T18:44:20.924Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+    }
+  ],
+  "startTime": "2026-01-28T18:44:19.852Z",
+  "endTime": "2026-01-28T18:44:21.823Z",
+  "environment": "development",
+  "input": {
+    "city": "Paris"
+  },
+  "output": "Weather in Paris: Cloudy, 65\u00b0F",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,304 @@
+{
+  "uuid": "c535faf9-3ec8-4904-8cf5-8027c19db0c7",
+  "baseSpans": [
+    {
+      "uuid": "143385ac-2a2b-41e2-bd45-ea81f1d27728",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-28T18:44:25.100Z",
+      "endTime": "2026-01-28T18:44:32.159Z",
+      "input": {},
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight."
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "d04c1f24-c6af-48d9-b8a8-6d10ca586d1f",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "143385ac-2a2b-41e2-bd45-ea81f1d27728",
+      "startTime": "2026-01-28T18:44:25.108Z",
+      "endTime": "2026-01-28T18:44:32.152Z",
+      "input": "Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: A poem about frogs.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+      "toolsCalled": [
+        {
+          "name": "delegate_work_to_coworker",
+          "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+          "inputParameters": {
+            "task": "Research frogs and write a short poem about them.",
+            "context": "The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.",
+            "coworker": "Writer"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "558862dd-3167-40ef-8360-78e265ac9087",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "d04c1f24-c6af-48d9-b8a8-6d10ca586d1f",
+      "startTime": "2026-01-28T18:44:27.955Z",
+      "endTime": "2026-01-28T18:44:29.942Z",
+      "input": "Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.",
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "6ea3870a-13e8-4a66-aee8-1bd86b238f97",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "d04c1f24-c6af-48d9-b8a8-6d10ca586d1f",
+      "startTime": "2026-01-28T18:44:29.949Z",
+      "endTime": "2026-01-28T18:44:32.148Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: A poem about frogs.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+              "type": "function",
+              "function": {
+                "name": "'delegate_work_to_coworker'",
+                "arguments": "'{\"task\":\"Research frogs and write a short poem about them.\",\"context\":\"The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\",\"coworker\":\"Writer\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+          "name": "delegate_work_to_coworker",
+          "content": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight."
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "dd8e3ee5-f88a-4ad3-b717-7ddc2af718c1",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "6ea3870a-13e8-4a66-aee8-1bd86b238f97",
+      "startTime": "2026-01-28T18:44:29.949Z",
+      "endTime": "2026-01-28T18:44:32.148Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: A poem about frogs.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+              "type": "function",
+              "function": {
+                "name": "'delegate_work_to_coworker'",
+                "arguments": "'{\"task\":\"Research frogs and write a short poem about them.\",\"context\":\"The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\",\"coworker\":\"Writer\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+          "name": "delegate_work_to_coworker",
+          "content": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight."
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "007b5bf3-4e96-473b-9029-28c0f1d2ab9b",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "558862dd-3167-40ef-8360-78e265ac9087",
+      "startTime": "2026-01-28T18:44:27.959Z",
+      "endTime": "2026-01-28T18:44:29.940Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Writer. Junior writer\nYour personal goal is: Write content\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer:  \n\nIn the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.  ",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "0f0c2b55-9b7b-4514-8d54-20c4968d5162",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "007b5bf3-4e96-473b-9029-28c0f1d2ab9b",
+      "startTime": "2026-01-28T18:44:27.959Z",
+      "endTime": "2026-01-28T18:44:29.940Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Writer. Junior writer\nYour personal goal is: Write content\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+        }
+      ],
+      "output": "I now can give a great answer  \nFinal Answer:  \n\nIn the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.  ",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "01638bc2-81fb-44c9-b3dc-cba195320fe4",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "d04c1f24-c6af-48d9-b8a8-6d10ca586d1f",
+      "startTime": "2026-01-28T18:44:25.112Z",
+      "endTime": "2026-01-28T18:44:27.952Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: A poem about frogs.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        }
+      ],
+      "output": [
+        {
+          "id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+          "function": {
+            "arguments": "{\"task\":\"Research frogs and write a short poem about them.\",\"context\":\"The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\",\"coworker\":\"Writer\"}",
+            "name": "delegate_work_to_coworker"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "329162f7-608f-478e-9b9f-ae76241ad3be",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "01638bc2-81fb-44c9-b3dc-cba195320fe4",
+      "startTime": "2026-01-28T18:44:25.112Z",
+      "endTime": "2026-01-28T18:44:27.952Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Research frogs and write a short poem about them.\n\nThis is the expected criteria for your final answer: A poem about frogs.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+        }
+      ],
+      "output": [
+        {
+          "id": "call_Q3TCHX0Ysm34aNtykqEzLDFy",
+          "function": {
+            "arguments": "{\"task\":\"Research frogs and write a short poem about them.\",\"context\":\"The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.\",\"coworker\":\"Writer\"}",
+            "name": "delegate_work_to_coworker"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "67499314-5fbd-40f4-b569-2fd8af414ac3",
+      "name": "delegate_work_to_coworker",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "d04c1f24-c6af-48d9-b8a8-6d10ca586d1f",
+      "startTime": "2026-01-28T18:44:27.952Z",
+      "endTime": "2026-01-28T18:44:29.944Z",
+      "input": {
+        "task": "Research frogs and write a short poem about them.",
+        "context": "The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.",
+        "coworker": "Writer"
+      },
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+      "toolsCalled": [
+        {
+          "name": "delegate_work_to_coworker",
+          "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+          "inputParameters": {
+            "task": "Research frogs and write a short poem about them.",
+            "context": "The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.",
+            "coworker": "Writer"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "0721714e-4048-4f14-be9d-fb2aa3d1af86",
+      "name": "delegate_work_to_coworker",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "67499314-5fbd-40f4-b569-2fd8af414ac3",
+      "startTime": "2026-01-28T18:44:27.952Z",
+      "endTime": "2026-01-28T18:44:29.944Z",
+      "input": {
+        "task": "Research frogs and write a short poem about them.",
+        "context": "The poem should capture the essence of frogs, including their habitat, characteristics, and behaviors. It should be creative and engaging, appealing to both children and adults. The poem should be concise, ideally consisting of four to six lines, and should evoke imagery related to frogs, such as their croaking sounds, jumping abilities, and the environments they thrive in, like ponds and wetlands.",
+        "coworker": "Writer"
+      },
+      "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight."
+    }
+  ],
+  "startTime": "2026-01-28T18:44:25.100Z",
+  "endTime": "2026-01-28T18:44:32.159Z",
+  "environment": "development",
+  "input": {},
+  "output": "In the moonlit pond where the lilies sway,  \nFrogs croak a tune at the end of the day.  \nWith leaps like a dancer, they spring through the air,  \nGreen cloaks of velvet, a sight rare and fair.  \nIn wetlands they thrive, a chorus so bright,  \nNature's small wonders, a pure delight.",
+  "status": "SUCCESS"
+}
