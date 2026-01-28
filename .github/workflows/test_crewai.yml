@@ -41,9 +41,7 @@ jobs:
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
           poetry run pip install -U crewai
-
-      - name: Run Sync Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_sync.py
+          poetry run pip install -U pydantic-ai sdk
 
       - name: Run Async Tests
         run: poetry run pytest tests/test_integrations/test_crewai/test_async.py
@@ -56,6 +54,9 @@ jobs:
 
       - name: Run Basic Tests
         run: poetry run pytest tests/test_integrations/test_crewai/test_crewai.py
+
+      - name: Run Sync Tests
+        run: poetry run pytest tests/test_integrations/test_crewai/test_sync.py
       
       - name: Run CrewAI Stress Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
