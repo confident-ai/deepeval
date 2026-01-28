@@ -40,6 +40,7 @@ try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
+    from opentelemetry.trace import set_tracer_provider
     from pydantic_ai.models.instrumented import (
         InstrumentationSettings as _BaseInstrumentationSettings,
     )
@@ -176,6 +177,12 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
                     )
                 )
             )
+        try:
+            set_tracer_provider(trace_provider)
+        except Exception as e:
+            # Handle case where provider is already set (optional warning)
+            logger.warning(f"Could not set global tracer provider: {e}")
+
         super().__init__(tracer_provider=trace_provider)
 
 
@@ -234,16 +241,14 @@ class SpanInterceptor(SpanProcessor):
             )
 
         # set agent name and metric collection
-        if span.attributes.get("agent_name"):
-            span.set_attribute("confident.span.type", "agent")
-            span.set_attribute(
-                "confident.span.name", span.attributes.get("agent_name")
-            )
-            if self.settings.agent_metric_collection:
-                span.set_attribute(
-                    "confident.span.metric_collection",
-                    self.settings.agent_metric_collection,
-                )
+        agent_name = (
+            span.attributes.get("gen_ai.agent.name")
+            or span.attributes.get("pydantic_ai.agent.name")
+            or span.attributes.get("agent_name")
+        )
+
+        if agent_name:
+            self._add_agent_span(span, agent_name)
 
         # set llm metric collection
         if span.attributes.get("gen_ai.operation.name") in [
@@ -270,6 +275,19 @@ class SpanInterceptor(SpanProcessor):
                 )
 
     def on_end(self, span):
+
+        already_processed = (
+            span.attributes.get("confident.span.type") == "agent"
+        )
+        if not already_processed:
+            agent_name = (
+                span.attributes.get("gen_ai.agent.name")
+                or span.attributes.get("pydantic_ai.agent.name")
+                or span.attributes.get("agent_name")
+            )
+            if agent_name:
+                self._add_agent_span(span, agent_name)
+
         if self.settings.is_test_mode:
             if span.attributes.get("confident.span.type") == "agent":
 
@@ -323,3 +341,12 @@ class SpanInterceptor(SpanProcessor):
                 trace.end_time = perf_counter()
                 trace_manager.traces_to_evaluate.append(trace)
                 test_exporter.clear_span_json_list()
+
+    def _add_agent_span(self, span, name):
+        span.set_attribute("confident.span.type", "agent")
+        span.set_attribute("confident.span.name", name)
+        if self.settings.agent_metric_collection:
+            span.set_attribute(
+                "confident.span.metric_collection",
+                self.settings.agent_metric_collection,
+            )
