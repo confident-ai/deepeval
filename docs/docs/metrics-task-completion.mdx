@@ -58,7 +58,7 @@ task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
 
 # Loop through dataset
 for goldens in dataset.evals_iterator(metrics=[task_completion]):
-    trip_planner_agent(golden.input)
+    trip_planner_agent(goldens.input)
 ```
 
 There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
