@@ -5,6 +5,7 @@ An agent designed for streaming execution tests.
 
 from deepeval.openai_agents import Agent
 
+
 def get_streaming_app():
     """
     Returns an agent prompt to generate a longer response for streaming tests.

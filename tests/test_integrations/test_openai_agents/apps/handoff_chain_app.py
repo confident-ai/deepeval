@@ -5,6 +5,7 @@ Tests multi-hop agent handoffs (Triage -> Support -> Billing).
 
 from deepeval.openai_agents import Agent
 
+
 def get_handoff_chain_app():
     # 3. Leaf Agent
     billing_agent = Agent(

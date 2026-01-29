@@ -5,6 +5,7 @@ Tests sequential tool dependencies (Tool A -> Output -> Tool B).
 
 from deepeval.openai_agents import Agent, function_tool
 
+
 @function_tool
 def get_lat_long(city: str) -> str:
     """Get the latitude and longitude for a specific city."""
@@ -15,6 +16,7 @@ def get_lat_long(city: str) -> str:
         return "48.8566,2.3522"
     return "0,0"
 
+
 @function_tool
 def get_weather_at_coords(lat_long: str) -> str:
     """Get the weather for specific coordinates (format: 'lat,long')."""
@@ -24,6 +26,7 @@ def get_weather_at_coords(lat_long: str) -> str:
     elif "48.8566,2.3522" in lat_long:
         return "Cloudy, 18°C"
     return "Unknown Weather"
+
 
 def get_tool_chain_app():
     """
@@ -40,5 +43,5 @@ def get_tool_chain_app():
         tools=[get_lat_long, get_weather_at_coords],
         tool_use_behavior="run_llm_again",
     )
-    
+
     return agent, "What is the weather in Tokyo?"
