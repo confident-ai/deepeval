@@ -86,6 +86,7 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry install --no-interaction --no-root --only main
+          poetry install --with integrations
           poetry run pip install -U crewai
           poetry run pip install -U pydantic-ai sdk
 
