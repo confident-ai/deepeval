@@ -1,13 +1,13 @@
 {
-  "uuid": "d9df7833-9903-4240-bb2b-ef3b1586184e",
+  "uuid": "26438634-712f-4fe6-b976-5e93e5ae9b59",
   "baseSpans": [
     {
-      "uuid": "e8dba308-1389-4e4f-b79b-886164934979",
+      "uuid": "518a8d96-f563-48da-bfef-627fac0fe32a",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-28T18:44:16.514Z",
-      "endTime": "2026-01-28T18:44:17.745Z",
+      "startTime": "2026-01-29T03:14:49.801Z",
+      "endTime": "2026-01-29T03:14:51.003Z",
       "input": {
         "input": "Hello World"
       },
@@ -17,13 +17,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "1711e32f-5e87-43b3-8c91-3497e76e6cfb",
+      "uuid": "c0b915da-e666-45a0-8016-63be804de6cf",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "e8dba308-1389-4e4f-b79b-886164934979",
-      "startTime": "2026-01-28T18:44:16.518Z",
-      "endTime": "2026-01-28T18:44:17.738Z",
+      "parentUuid": "518a8d96-f563-48da-bfef-627fac0fe32a",
+      "startTime": "2026-01-29T03:14:49.805Z",
+      "endTime": "2026-01-29T03:14:50.999Z",
       "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello World! It's great to see you! How can I assist you today?",
       "availableTools": [],
@@ -33,13 +33,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "5b64e4c3-88c8-4fa6-bc1b-a50b9bfbeffa",
+      "uuid": "11da35a1-99e0-41b8-a80c-49211627c7fc",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1711e32f-5e87-43b3-8c91-3497e76e6cfb",
-      "startTime": "2026-01-28T18:44:16.520Z",
-      "endTime": "2026-01-28T18:44:17.736Z",
+      "parentUuid": "c0b915da-e666-45a0-8016-63be804de6cf",
+      "startTime": "2026-01-29T03:14:49.806Z",
+      "endTime": "2026-01-29T03:14:50.997Z",
       "input": [
         {
           "role": "system",
@@ -56,13 +56,13 @@
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "8b6bfd6a-0837-468e-bb2e-cd5cf4862d08",
+      "uuid": "33d552f9-aad2-4a33-af54-1341ab70f065",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5b64e4c3-88c8-4fa6-bc1b-a50b9bfbeffa",
-      "startTime": "2026-01-28T18:44:16.520Z",
-      "endTime": "2026-01-28T18:44:17.736Z",
+      "parentUuid": "11da35a1-99e0-41b8-a80c-49211627c7fc",
+      "startTime": "2026-01-29T03:14:49.806Z",
+      "endTime": "2026-01-29T03:14:50.997Z",
       "input": [
         {
           "role": "system",
@@ -81,8 +81,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T18:44:16.514Z",
-  "endTime": "2026-01-28T18:44:17.745Z",
+  "startTime": "2026-01-29T03:14:49.801Z",
+  "endTime": "2026-01-29T03:14:51.003Z",
   "environment": "development",
   "input": {
     "input": "Hello World"

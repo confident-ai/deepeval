@@ -1,81 +1,81 @@
 {
-  "uuid": "72d38441-83f0-490f-9109-c92af844cb39",
+  "uuid": "b2f957f7-91e9-42f7-a13e-e4ea20429e6c",
   "baseSpans": [
     {
-      "uuid": "7477cb76-08d3-4e0b-ada3-3159b178135e",
+      "uuid": "b8bcd86c-482d-4a22-b911-65bf8eef666c",
       "name": "kickoff_for_each",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-28T18:44:32.188Z",
-      "endTime": "2026-01-28T18:44:34.831Z",
+      "startTime": "2026-01-29T03:15:03.043Z",
+      "endTime": "2026-01-29T03:15:05.236Z",
       "input": {},
-      "output": "[CrewOutput(raw=\"Hello, User A! It's great to see you! How can I assist you today?\", pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw=\"Hello, User A! It's great to see you! How can I assist you today?\", pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': \"I now can give a great answer  \\nFinal Answer: Hello, User A! It's great to see you! How can I assist you today?\"}])], token_usage=UsageMetrics(total_tokens=195, prompt_tokens=166, cached_prompt_tokens=0, completion_tokens=29, successful_requests=1)), CrewOutput(raw='Hello User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': 'I now can give a great answer  \\nFinal Answer: Hello User B! How are you today?'}])], token_usage=UsageMetrics(total_tokens=381, prompt_tokens=332, cached_prompt_tokens=0, completion_tokens=49, successful_requests=2))]",
+      "output": "[CrewOutput(raw=\"Hello User A! It's great to see you! How can I assist you today?\", pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw=\"Hello User A! It's great to see you! How can I assist you today?\", pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': \"I now can give a great answer  \\nFinal Answer: Hello User A! It's great to see you! How can I assist you today?\"}])], token_usage=UsageMetrics(total_tokens=194, prompt_tokens=166, cached_prompt_tokens=0, completion_tokens=28, successful_requests=1)), CrewOutput(raw='Hello User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': 'I now can give a great answer  \\nFinal Answer: Hello User B! How are you today?'}])], token_usage=UsageMetrics(total_tokens=380, prompt_tokens=332, cached_prompt_tokens=0, completion_tokens=48, successful_requests=2))]",
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "78f99d1a-a9b2-4724-9a3a-d0fe4617ed49",
+      "uuid": "226d012b-04de-4e02-ba8a-14618de9f786",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7477cb76-08d3-4e0b-ada3-3159b178135e",
-      "startTime": "2026-01-28T18:44:33.512Z",
-      "endTime": "2026-01-28T18:44:34.829Z",
+      "parentUuid": "b8bcd86c-482d-4a22-b911-65bf8eef666c",
+      "startTime": "2026-01-29T03:15:04.259Z",
+      "endTime": "2026-01-29T03:15:05.233Z",
       "input": {
         "input": "User B"
       },
       "output": "Hello User B! How are you today?"
     },
     {
-      "uuid": "9c70ce3f-79f3-48a8-b8b2-3a0323ec1a99",
+      "uuid": "f9764cfc-bbbf-48f0-a9b4-44b9cfefed11",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7477cb76-08d3-4e0b-ada3-3159b178135e",
-      "startTime": "2026-01-28T18:44:32.190Z",
-      "endTime": "2026-01-28T18:44:33.507Z",
+      "parentUuid": "b8bcd86c-482d-4a22-b911-65bf8eef666c",
+      "startTime": "2026-01-29T03:15:03.044Z",
+      "endTime": "2026-01-29T03:15:04.257Z",
       "input": {
         "input": "User A"
       },
-      "output": "Hello, User A! It's great to see you! How can I assist you today?"
+      "output": "Hello User A! It's great to see you! How can I assist you today?"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "57c4dcb7-5668-47bb-9cf3-ad675c798b91",
+      "uuid": "583ca212-438d-4213-91bc-3b857fd6f662",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "78f99d1a-a9b2-4724-9a3a-d0fe4617ed49",
-      "startTime": "2026-01-28T18:44:33.517Z",
-      "endTime": "2026-01-28T18:44:34.820Z",
+      "parentUuid": "226d012b-04de-4e02-ba8a-14618de9f786",
+      "startTime": "2026-01-29T03:15:04.263Z",
+      "endTime": "2026-01-29T03:15:05.225Z",
       "input": "Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello User B! How are you today?",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "28497556-c477-44ac-a09d-9e3d220c3964",
+      "uuid": "8d6c187d-089b-4464-b723-213270126627",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "9c70ce3f-79f3-48a8-b8b2-3a0323ec1a99",
-      "startTime": "2026-01-28T18:44:32.194Z",
-      "endTime": "2026-01-28T18:44:33.500Z",
+      "parentUuid": "f9764cfc-bbbf-48f0-a9b4-44b9cfefed11",
+      "startTime": "2026-01-29T03:15:03.050Z",
+      "endTime": "2026-01-29T03:15:04.253Z",
       "input": "Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello, User A! It's great to see you! How can I assist you today?",
+      "output": "Hello User A! It's great to see you! How can I assist you today?",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "4ca15509-8af3-4fcb-b478-70822fbf4a1d",
+      "uuid": "b7a39a99-49eb-4466-a2ae-1a1e99181536",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "57c4dcb7-5668-47bb-9cf3-ad675c798b91",
-      "startTime": "2026-01-28T18:44:33.521Z",
-      "endTime": "2026-01-28T18:44:34.818Z",
+      "parentUuid": "583ca212-438d-4213-91bc-3b857fd6f662",
+      "startTime": "2026-01-29T03:15:04.265Z",
+      "endTime": "2026-01-29T03:15:05.223Z",
       "input": [
         {
           "role": "system",
@@ -92,13 +92,13 @@
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "a009637d-4c16-4ef7-8d4e-4b5d55f3263b",
+      "uuid": "314525d5-0795-42ea-b506-bbb27eb42e4a",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "4ca15509-8af3-4fcb-b478-70822fbf4a1d",
-      "startTime": "2026-01-28T18:44:33.521Z",
-      "endTime": "2026-01-28T18:44:34.818Z",
+      "parentUuid": "b7a39a99-49eb-4466-a2ae-1a1e99181536",
+      "startTime": "2026-01-29T03:15:04.265Z",
+      "endTime": "2026-01-29T03:15:05.223Z",
       "input": [
         {
           "role": "system",
@@ -115,13 +115,13 @@
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "9a078689-4445-4f78-8661-c83048b8ce73",
+      "uuid": "9091a700-bc4d-437d-8761-27a2ba29a72a",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "28497556-c477-44ac-a09d-9e3d220c3964",
-      "startTime": "2026-01-28T18:44:32.197Z",
-      "endTime": "2026-01-28T18:44:33.499Z",
+      "parentUuid": "8d6c187d-089b-4464-b723-213270126627",
+      "startTime": "2026-01-29T03:15:03.052Z",
+      "endTime": "2026-01-29T03:15:04.251Z",
       "input": [
         {
           "role": "system",
@@ -132,19 +132,19 @@
           "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello, User A! It's great to see you! How can I assist you today?",
+      "output": "I now can give a great answer  \nFinal Answer: Hello User A! It's great to see you! How can I assist you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "940b412a-7792-4e86-8532-fad80705c89f",
+      "uuid": "b1b80e14-6a20-45ab-bcd7-b85ab2a314f6",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9a078689-4445-4f78-8661-c83048b8ce73",
-      "startTime": "2026-01-28T18:44:32.197Z",
-      "endTime": "2026-01-28T18:44:33.499Z",
+      "parentUuid": "9091a700-bc4d-437d-8761-27a2ba29a72a",
+      "startTime": "2026-01-29T03:15:03.052Z",
+      "endTime": "2026-01-29T03:15:04.251Z",
       "input": [
         {
           "role": "system",
@@ -155,7 +155,7 @@
           "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello, User A! It's great to see you! How can I assist you today?",
+      "output": "I now can give a great answer  \nFinal Answer: Hello User A! It's great to see you! How can I assist you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
@@ -163,8 +163,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T18:44:32.188Z",
-  "endTime": "2026-01-28T18:44:34.831Z",
+  "startTime": "2026-01-29T03:15:03.043Z",
+  "endTime": "2026-01-29T03:15:05.236Z",
   "environment": "development",
   "input": {
     "input": "User B"
