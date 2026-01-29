@@ -24,6 +24,10 @@ from tests.test_integrations.test_pydanticai.apps.pydanticai_streaming_app impor
     create_streaming_agent,
     stream_agent,
 )
+from tests.test_integrations.test_pydanticai.apps.pydanticai_multiple_tools_app import (
+    create_multiple_tools_agent,
+    ainvoke_multiple_tools_agent,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -74,6 +78,40 @@ class TestAsyncSimpleApp:
 
         assert result is not None
         assert len(result) > 0
+
+
+# =============================================================================
+# ASYNC MULTIPLE TOOLS TESTS
+# =============================================================================
+
+
+class TestAsyncMultipleToolsApp:
+    """Async tests for PydanticAI agent with multiple tools."""
+
+    @pytest.mark.asyncio
+    @trace_test("pydanticai_async_parallel_tools_schema.json")
+    async def test_async_parallel_tool_calls(self):
+        """Test async parallel tool calls with both get_weather and get_time."""
+        agent = create_multiple_tools_agent(
+            name="pydanticai-async-parallel-tools",
+            tags=["pydanticai", "parallel-tools", "async"],
+            metadata={"test_type": "async_parallel_tools"},
+            thread_id="async-parallel-tools-123",
+            user_id="test-user-async",
+        )
+
+        result = await ainvoke_multiple_tools_agent(
+            "Use both the get_weather tool AND the get_time tool for Tokyo. "
+            "Call both tools exactly once each.",
+            agent=agent,
+        )
+
+        assert result is not None
+        # Verify both weather and time data are in response
+        # Weather: Tokyo is "Sunny, 72F"
+        assert "72" in result or "sunny" in result.lower()
+        # Time: Tokyo is "3:00 PM JST"
+        assert "3:00" in result or "JST" in result
 
 
 # =============================================================================

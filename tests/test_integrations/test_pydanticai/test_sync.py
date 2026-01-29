@@ -29,6 +29,10 @@ from tests.test_integrations.test_pydanticai.apps.pydanticai_metric_collection_a
     create_llm_metric_collection_agent,
     invoke_metric_collection_agent,
 )
+from tests.test_integrations.test_pydanticai.apps.pydanticai_multiple_tools_app import (
+    create_multiple_tools_agent,
+    invoke_multiple_tools_agent,
+)
 
 # =============================================================================
 # CONFIGURATION
@@ -225,3 +229,80 @@ class TestMetricCollectionApp:
 
         assert result is not None
         assert len(result) > 0
+
+
+# =============================================================================
+# MULTIPLE TOOLS TESTS
+# =============================================================================
+
+
+class TestMultipleToolsApp:
+    """Tests for PydanticAI agent with multiple tools."""
+
+    @trace_test("pydanticai_multiple_tools_weather_schema.json")
+    def test_multiple_tools_weather_only(self):
+        """Test calling get_weather tool when agent has multiple tools available."""
+        agent = create_multiple_tools_agent(
+            name="pydanticai-multiple-tools-weather",
+            tags=["pydanticai", "multiple-tools", "weather"],
+            metadata={"test_type": "multiple_tools_weather"},
+            thread_id="multiple-tools-weather-123",
+            user_id="test-user",
+        )
+
+        result = invoke_multiple_tools_agent(
+            "Use the get_weather tool exactly once to get the weather in Tokyo.",
+            agent=agent,
+        )
+
+        assert result is not None
+        # Verify weather data is in response
+        assert "72" in result or "sunny" in result.lower()
+
+    @trace_test("pydanticai_multiple_tools_time_schema.json")
+    def test_multiple_tools_time_only(self):
+        """Test calling get_time tool when agent has multiple tools available."""
+        agent = create_multiple_tools_agent(
+            name="pydanticai-multiple-tools-time",
+            tags=["pydanticai", "multiple-tools", "time"],
+            metadata={"test_type": "multiple_tools_time"},
+            thread_id="multiple-tools-time-123",
+            user_id="test-user",
+        )
+
+        result = invoke_multiple_tools_agent(
+            "Use the get_time tool exactly once to get the current time in London.",
+            agent=agent,
+        )
+
+        assert result is not None
+        # Verify time data is in response
+        assert "7:00" in result or "GMT" in result
+
+    @trace_test("pydanticai_parallel_tools_schema.json")
+    def test_parallel_tool_calls(self):
+        """Test calling both get_weather and get_time tools in parallel.
+
+        PydanticAI supports parallel tool calls - when the LLM decides to call
+        multiple tools, they are executed and results returned together.
+        """
+        agent = create_multiple_tools_agent(
+            name="pydanticai-parallel-tools",
+            tags=["pydanticai", "parallel-tools"],
+            metadata={"test_type": "parallel_tools"},
+            thread_id="parallel-tools-123",
+            user_id="test-user",
+        )
+
+        result = invoke_multiple_tools_agent(
+            "Use both the get_weather tool AND the get_time tool for Paris. "
+            "Call both tools exactly once each.",
+            agent=agent,
+        )
+
+        assert result is not None
+        # Verify both weather and time data are in response
+        # Weather should mention 62 or cloudy
+        assert "62" in result or "cloudy" in result.lower()
+        # Time should mention 8:00 or CET
+        assert "8:00" in result or "CET" in result
