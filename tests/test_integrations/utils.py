@@ -221,8 +221,8 @@ def assert_json_object_structure(
 
     # Validate tools-used invariant at the top level before detailed comparison.
     # This ensures we never mask a regression where tools appear unexpectedly.
-    expected_tools_used = _compute_tools_used(expected_json_obj)
-    actual_tools_used = _compute_tools_used(actual_json_obj)
+    expected_tools_used = _compute_tools_used(expected_json_obj) if isinstance(expected_json_obj, dict) else _compute_tools_used(expected_json_obj[0])
+    actual_tools_used = _compute_tools_used(actual_json_obj) if isinstance(actual_json_obj, dict) else _compute_tools_used(actual_json_obj[0])
 
     if expected_tools_used != actual_tools_used:
         print("❌ Tools-used invariant violation:")
