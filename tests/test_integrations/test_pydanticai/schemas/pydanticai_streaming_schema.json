@@ -1,14 +1,14 @@
 {
-  "uuid": "f914071ef9019d0eb31edecfa04933c9",
+  "uuid": "128c5f1b020b2f33ad81a0664d2ee959",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "e81baf6a1864f9e4",
+      "uuid": "17e10b985e2a78f9",
       "name": "streaming_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-28T05:10:12.151Z",
-      "endTime": "2026-01-28T05:10:13.272Z",
+      "startTime": "2026-01-29T04:35:11.165Z",
+      "endTime": "2026-01-29T04:35:12.473Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T05:10:12.151Z",
-  "endTime": "2026-01-28T05:10:13.272Z",
+  "startTime": "2026-01-29T04:35:11.165Z",
+  "endTime": "2026-01-29T04:35:12.473Z",
   "name": "pydanticai-streaming-test",
   "metadata": {
     "test_type": "streaming"

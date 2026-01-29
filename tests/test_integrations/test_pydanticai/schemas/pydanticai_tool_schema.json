@@ -1,14 +1,14 @@
 {
-  "uuid": "50bf89de271229e158af857458017b5f",
+  "uuid": "90b5c7ed6c15d797e1bef9e20e66b191",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "c76674477c89352b",
+      "uuid": "a6ee2944a1fc8d3a",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-28T05:10:00.576Z",
-      "endTime": "2026-01-28T05:10:02.935Z",
+      "startTime": "2026-01-29T04:35:13.253Z",
+      "endTime": "2026-01-29T04:35:14.728Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T05:10:00.576Z",
-  "endTime": "2026-01-28T05:10:02.935Z",
+  "startTime": "2026-01-29T04:35:13.253Z",
+  "endTime": "2026-01-29T04:35:14.728Z",
   "name": "pydanticai-tool-test",
   "metadata": {
     "test_type": "tool"

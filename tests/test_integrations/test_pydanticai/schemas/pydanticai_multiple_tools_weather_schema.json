@@ -1,14 +1,14 @@
 {
-  "uuid": "9434f57829da7ff7fc0d7973e2150a84",
+  "uuid": "4c447b7af9c0787554b34ecc61a0a66f",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "d9c24dc78adbb0aa",
+      "uuid": "82defd093943838a",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T02:01:37.213Z",
-      "endTime": "2026-01-29T02:01:40.664Z",
+      "startTime": "2026-01-29T04:35:18.342Z",
+      "endTime": "2026-01-29T04:35:20.245Z",
       "input": [
         {
           "role": "system",
@@ -19,7 +19,7 @@
           "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
         }
       ],
-      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T02:01:37.213Z",
-  "endTime": "2026-01-29T02:01:40.664Z",
+  "startTime": "2026-01-29T04:35:18.342Z",
+  "endTime": "2026-01-29T04:35:20.245Z",
   "name": "pydanticai-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -51,6 +51,6 @@
       "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
     }
   ],
-  "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
   "status": "SUCCESS"
 }

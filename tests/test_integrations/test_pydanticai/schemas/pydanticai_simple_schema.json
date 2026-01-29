@@ -1,14 +1,14 @@
 {
-  "uuid": "7c1e00d150fd5dd381c7f0d15b4fc4ba",
+  "uuid": "2bdaac2d05637d2bf9c55a3bbbf8238e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "10050a6712dbcc7c",
+      "uuid": "ffff69efcbd5ebf7",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-28T05:09:59.476Z",
-      "endTime": "2026-01-28T05:10:00.556Z",
+      "startTime": "2026-01-29T04:35:12.486Z",
+      "endTime": "2026-01-29T04:35:13.228Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T05:09:59.476Z",
-  "endTime": "2026-01-28T05:10:00.556Z",
+  "startTime": "2026-01-29T04:35:12.486Z",
+  "endTime": "2026-01-29T04:35:13.228Z",
   "name": "pydanticai-simple-test",
   "metadata": {
     "test_type": "simple"

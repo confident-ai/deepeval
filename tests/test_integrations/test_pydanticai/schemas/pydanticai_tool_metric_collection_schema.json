@@ -1,14 +1,14 @@
 {
-  "uuid": "8519e157e9d9b26980fe6e1cb77af45d",
+  "uuid": "01ae79d727477709bc21d29e852bc399",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "cca3ed4938770649",
+      "uuid": "138583e1684c5584",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-28T05:10:02.953Z",
-      "endTime": "2026-01-28T05:10:05.516Z",
+      "startTime": "2026-01-29T04:35:14.753Z",
+      "endTime": "2026-01-29T04:35:16.662Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T05:10:02.953Z",
-  "endTime": "2026-01-28T05:10:05.516Z",
+  "startTime": "2026-01-29T04:35:14.753Z",
+  "endTime": "2026-01-29T04:35:16.662Z",
   "name": "pydanticai-tool-metric-test",
   "metadata": {
     "test_type": "tool_metric_collection"

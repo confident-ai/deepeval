@@ -1,14 +1,14 @@
 {
-  "uuid": "e32e585c0ec701a26bf88a8599e1457f",
+  "uuid": "ecfb7bb35f2f075edf216ce1e8d54c3f",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "ca1d539621ff9bc5",
+      "uuid": "2864630af54addd7",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T02:01:40.691Z",
-      "endTime": "2026-01-29T02:01:42.432Z",
+      "startTime": "2026-01-29T04:35:20.257Z",
+      "endTime": "2026-01-29T04:35:21.482Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T02:01:40.691Z",
-  "endTime": "2026-01-29T02:01:42.432Z",
+  "startTime": "2026-01-29T04:35:20.257Z",
+  "endTime": "2026-01-29T04:35:21.482Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"

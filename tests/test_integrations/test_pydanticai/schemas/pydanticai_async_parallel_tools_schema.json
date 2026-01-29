@@ -1,14 +1,14 @@
 {
-  "uuid": "10af393232830eca9482e686db0df677",
+  "uuid": "e44559b14bb90738cd6a31eac54220d2",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "596a16ed0b42bad8",
+      "uuid": "8690a33687d3a17f",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T02:02:10.113Z",
-      "endTime": "2026-01-29T02:02:13.049Z",
+      "startTime": "2026-01-29T04:35:03.758Z",
+      "endTime": "2026-01-29T04:35:08.639Z",
       "input": [
         {
           "role": "system",
@@ -19,7 +19,7 @@
           "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The current time is 3:00 PM JST.",
+      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T02:02:10.113Z",
-  "endTime": "2026-01-29T02:02:13.049Z",
+  "startTime": "2026-01-29T04:35:03.758Z",
+  "endTime": "2026-01-29T04:35:08.639Z",
   "name": "pydanticai-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -51,6 +51,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The current time is 3:00 PM JST.",
+  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
   "status": "SUCCESS"
 }

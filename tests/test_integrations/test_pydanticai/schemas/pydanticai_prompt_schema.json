@@ -1,14 +1,14 @@
 {
-  "uuid": "af535fee31aeece346771af9aa91100f",
+  "uuid": "59dd76de3ce70671b8f4d32cc796d404",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "9358bb12041125d1",
+      "uuid": "80135b781355d1ec",
       "name": "prompt_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-28T05:10:05.556Z",
-      "endTime": "2026-01-28T05:10:05.983Z",
+      "startTime": "2026-01-29T04:35:16.684Z",
+      "endTime": "2026-01-29T04:35:17.113Z",
       "input": [
         {
           "role": "system",
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-28T05:10:05.556Z",
-  "endTime": "2026-01-28T05:10:05.983Z",
+  "startTime": "2026-01-29T04:35:16.684Z",
+  "endTime": "2026-01-29T04:35:17.113Z",
   "name": "pydanticai-prompt-test",
   "metadata": {
     "test_type": "prompt"

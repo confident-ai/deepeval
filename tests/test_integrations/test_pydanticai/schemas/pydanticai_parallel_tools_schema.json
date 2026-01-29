@@ -1,14 +1,14 @@
 {
-  "uuid": "419f38d4cd4a2398cc9231f9acbbec3b",
+  "uuid": "e7d5b8606a95edf5f076359e9e296437",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "2b7b32426e90b660",
+      "uuid": "a6fb5fad37f4350a",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T02:01:42.458Z",
-      "endTime": "2026-01-29T02:01:45.467Z",
+      "startTime": "2026-01-29T04:35:21.503Z",
+      "endTime": "2026-01-29T04:35:23.305Z",
       "input": [
         {
           "role": "system",
@@ -19,7 +19,7 @@
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy at 62\u00b0F, and the time is 8:00 AM CET.",
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -27,8 +27,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T02:01:42.458Z",
-  "endTime": "2026-01-29T02:01:45.467Z",
+  "startTime": "2026-01-29T04:35:21.503Z",
+  "endTime": "2026-01-29T04:35:23.305Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -50,6 +50,6 @@
       "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+  "output": "The current weather in Paris is cloudy at 62\u00b0F, and the time is 8:00 AM CET.",
   "status": "SUCCESS"
 }
