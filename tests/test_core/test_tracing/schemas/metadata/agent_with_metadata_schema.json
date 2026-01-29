@@ -1,0 +1,36 @@
+{
+  "uuid": "b0f33d26-fa56-42fd-8e25-a3315c9c2f87",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "0a9d26b9-343f-4f3f-8c5d-9c9cf19eeeb6",
+      "name": "agent_with_metadata",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:12.966Z",
+      "endTime": "2026-01-29T09:53:12.966Z",
+      "metadata": {
+        "execution_mode": "sequential",
+        "retry_count": 0,
+        "timeout_ms": 30000
+      },
+      "input": {
+        "query": "query"
+      },
+      "output": "Agent: query",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:12.966Z",
+  "endTime": "2026-01-29T09:53:12.966Z",
+  "environment": "testing",
+  "input": {
+    "query": "query"
+  },
+  "output": "Agent: query",
+  "status": "SUCCESS"
+}

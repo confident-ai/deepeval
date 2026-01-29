@@ -1,0 +1,34 @@
+{
+  "uuid": "1842cbcf-db08-4176-9111-2765528fa0ea",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "6029db3e-14dd-402e-a04b-00af1e6a5f4d",
+      "name": "simple_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.159Z",
+      "endTime": "2026-01-29T09:53:13.159Z",
+      "input": {
+        "query": "What is 2+2?"
+      },
+      "output": "Agent processed: What is 2+2?",
+      "availableTools": [
+        "search",
+        "calculator"
+      ],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.159Z",
+  "endTime": "2026-01-29T09:53:13.159Z",
+  "environment": "testing",
+  "input": {
+    "query": "What is 2+2?"
+  },
+  "output": "Agent processed: What is 2+2?",
+  "status": "SUCCESS"
+}

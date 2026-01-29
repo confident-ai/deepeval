@@ -1,0 +1,43 @@
+{
+  "uuid": "f62cb363-2869-4e30-a467-f414b5066ada",
+  "baseSpans": [
+    {
+      "uuid": "a99febb3-8280-4f1f-8157-565350118f63",
+      "name": "trace_update_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:14.033Z",
+      "endTime": "2026-01-29T09:53:14.033Z",
+      "input": {
+        "query": "query"
+      },
+      "output": "Trace tools: query"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:14.033Z",
+  "endTime": "2026-01-29T09:53:14.033Z",
+  "environment": "testing",
+  "input": {
+    "query": "query"
+  },
+  "output": "Trace tools: query",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "search",
+      "output": "Search results"
+    }
+  ],
+  "expectedTools": [
+    {
+      "name": "search"
+    },
+    {
+      "name": "summarize"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "uuid": "8bd7e475-3329-48c1-b110-ae2e1909b3aa",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "c1ec031b-89c3-4d96-80ed-173a7ece664b",
+      "name": "custom_llm_name",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.408Z",
+      "endTime": "2026-01-29T09:53:13.408Z",
+      "input": {
+        "prompt": "Test"
+      },
+      "output": "Named LLM: Test",
+      "model": "gpt-4",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.408Z",
+  "endTime": "2026-01-29T09:53:13.408Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Test"
+  },
+  "output": "Named LLM: Test",
+  "status": "SUCCESS"
+}

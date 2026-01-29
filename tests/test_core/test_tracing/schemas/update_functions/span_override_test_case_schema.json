@@ -1,0 +1,28 @@
+{
+  "uuid": "682b3b09-98b0-4c9f-a881-0b640037efa5",
+  "baseSpans": [
+    {
+      "uuid": "f04bf649-007d-4f0c-ac9a-230c7968e45a",
+      "name": "span_override_test_case",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.948Z",
+      "endTime": "2026-01-29T09:53:13.949Z",
+      "input": "Original input",
+      "output": "Original output",
+      "expectedOutput": "Overridden expected output"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.948Z",
+  "endTime": "2026-01-29T09:53:13.949Z",
+  "environment": "testing",
+  "input": {
+    "data": "data"
+  },
+  "output": "data",
+  "status": "SUCCESS"
+}

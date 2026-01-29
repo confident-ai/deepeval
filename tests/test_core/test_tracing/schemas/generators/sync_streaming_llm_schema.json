@@ -1,0 +1,31 @@
+{
+  "uuid": "0ae6f513-21e0-4e7b-9a14-4e0a51183bd2",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "4122a08b-9074-4c76-bbf2-259b95300afe",
+      "name": "streaming_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:50:14.750Z",
+      "endTime": "2026-01-29T09:50:14.750Z",
+      "input": {
+        "prompt": "Test prompt"
+      },
+      "model": "gpt-4",
+      "prompt": {},
+      "inputTokenCount": 2.0,
+      "outputTokenCount": 4.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:50:14.750Z",
+  "endTime": "2026-01-29T09:50:14.750Z",
+  "environment": "development",
+  "input": {
+    "prompt": "Test prompt"
+  },
+  "status": "SUCCESS"
+}

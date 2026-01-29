@@ -1,0 +1,42 @@
+{
+  "uuid": "9915c420-2758-4ad4-93ca-cdeb94874085",
+  "baseSpans": [
+    {
+      "uuid": "717cf2d2-a981-4ce6-8546-724e3b4752f2",
+      "name": "parent_function",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.050Z",
+      "endTime": "2026-01-29T09:53:13.050Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Parent: Child: test"
+    },
+    {
+      "uuid": "b547f617-97fa-4ab9-a039-056b6e4396a3",
+      "name": "child_function",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "717cf2d2-a981-4ce6-8546-724e3b4752f2",
+      "startTime": "2026-01-29T09:53:13.050Z",
+      "endTime": "2026-01-29T09:53:13.050Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Child: test"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.050Z",
+  "endTime": "2026-01-29T09:53:13.050Z",
+  "environment": "testing",
+  "input": {
+    "data": "test"
+  },
+  "output": "Parent: Child: test",
+  "status": "SUCCESS"
+}

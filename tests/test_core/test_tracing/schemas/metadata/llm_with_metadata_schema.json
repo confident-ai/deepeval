@@ -1,0 +1,35 @@
+{
+  "uuid": "3558e5b7-eb0a-465e-a8dc-3909a50fac12",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "46ad591e-f636-4dc1-99f6-d2e0fd1a9c3b",
+      "name": "llm_with_metadata",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:12.949Z",
+      "endTime": "2026-01-29T09:53:12.949Z",
+      "metadata": {
+        "model_version": "gpt-4-0125-preview",
+        "system_prompt_hash": "abc123"
+      },
+      "input": {
+        "prompt": "Hello"
+      },
+      "output": "Response: Hello",
+      "model": "gpt-4",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:12.949Z",
+  "endTime": "2026-01-29T09:53:12.949Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Hello"
+  },
+  "output": "Response: Hello",
+  "status": "SUCCESS"
+}

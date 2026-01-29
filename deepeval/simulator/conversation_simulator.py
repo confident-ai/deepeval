@@ -610,7 +610,8 @@ class ConversationSimulator:
     ) -> BaseModel:
         if self.using_native_model:
             res, cost = self.simulator_model.generate(prompt, schema=schema)
-            self.simulation_cost += cost
+            if cost is not None:
+                self.simulation_cost += cost
             return res
         else:
             try:
@@ -630,7 +631,8 @@ class ConversationSimulator:
             res, cost = await self.simulator_model.a_generate(
                 prompt, schema=schema
             )
-            self.simulation_cost += cost
+            if cost is not None:
+                self.simulation_cost += cost
             return res
         else:
             try:
