@@ -41,7 +41,9 @@ try:
         LLMChatEndEvent,
     )
     from llama_index.core.instrumentation import Dispatcher
-    from llama_index.core.instrumentation.events.retrieval import RetrievalEndEvent
+    from llama_index.core.instrumentation.events.retrieval import (
+        RetrievalEndEvent,
+    )
     from deepeval.integrations.llama_index.utils import (
         parse_id,
         prepare_input_llm_test_case_params,
@@ -128,11 +130,13 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     )
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
-        
+
         if isinstance(event, RetrievalEndEvent):
             span = trace_manager.get_span_by_uuid(event.span_id)
             if span:
-                span.retrieval_context = [node.node.get_content() for node in event.nodes]
+                span.retrieval_context = [
+                    node.node.get_content() for node in event.nodes
+                ]
 
     def new_span(
         self,
