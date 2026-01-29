@@ -84,12 +84,12 @@ jobs:
             exit 0
           fi
 
-          # Resolve via API so we *always* test the intended PR code, regardless of which branch
-          # the workflow file was dispatched from.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             pr="${{ github.event.inputs.pr }}"
             kind="${{ github.event.inputs.ref_kind }}"
 
+            # Resolve via API so we *always* test the intended PR code, regardless of which branch
+            # the workflow file was dispatched from.
             if [ "$kind" = "head" ]; then
               sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
               echo "sha=$sha" >> "$GITHUB_OUTPUT"
@@ -106,7 +106,7 @@ jobs:
               echo "kind=merge" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            
+
             # Fallback to head SHA if merge SHA isn't available.
             head_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
             echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
