@@ -40,13 +40,8 @@ jobs:
     # - OR IF pull_request where PR head repo == this repo and owner is confident-ai
     # - OR IF push to main on confident-ai/*
     if: ${{ github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      startsWith(github.repository, 'confident-ai/') &&
-      !github.event.pull_request.draft) ||
-      (github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      startsWith(github.repository, 'confident-ai/')) }}
+      (github.event_name == 'pull_request' && !github.event.pull_request.draft) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: ci-secrets
@@ -77,12 +72,15 @@ jobs:
           set -euo pipefail
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For maintainer PRs, GitHub provides the head SHA directly.
             echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
             echo "pr=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
             echo "kind=head" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
+          # Resolve via API so we *always* test the intended PR code, regardless of which branch
+          # the workflow file was dispatched from.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             pr="${{ github.event.inputs.pr }}"
             kind="${{ github.event.inputs.ref_kind }}"
@@ -95,6 +93,7 @@ jobs:
               exit 0
             fi
 
+            # merge kind: prefer merge_commit_sha, but it can be null if GitHub can't create it.
             merge_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.merge_commit_sha // empty')"
             if [ -n "${merge_sha:-}" ]; then
               echo "sha=$merge_sha" >> "$GITHUB_OUTPUT"
@@ -102,7 +101,8 @@ jobs:
               echo "kind=merge" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-
+            
+            # Fallback to head SHA if merge SHA isn't available.
             head_sha="$(gh api repos/${{ github.repository }}/pulls/"$pr" --jq '.head.sha')"
             echo "sha=$head_sha" >> "$GITHUB_OUTPUT"
             echo "pr=$pr" >> "$GITHUB_OUTPUT"
@@ -110,6 +110,7 @@ jobs:
             exit 0
           fi
 
+          # push (main): test exactly the pushed commit
           echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "pr=" >> "$GITHUB_OUTPUT"
           echo "kind=push" >> "$GITHUB_OUTPUT"
@@ -132,6 +133,7 @@ jobs:
           fi
           echo "Checked out SHA: $(git rev-parse HEAD)"
 
+      # Manual run: create a Check Run against the exact checked-out commit
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v5
