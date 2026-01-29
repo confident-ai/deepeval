@@ -6,6 +6,7 @@ from typing import Optional, Tuple, Any, List, Union
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
+from deepeval.tracing.types import ToolSpan, SpanType
 from deepeval.config.settings import get_settings
 
 
@@ -45,6 +46,7 @@ except ImportError as e:
 
     crewai_installed = False
 
+# GLOBAL STATE to prevent duplicate listeners
 IS_WRAPPED_ALL = False
 _listener_instance = None
 
@@ -84,10 +86,16 @@ class CrewAIEventsListener(BaseEventListener):
             defaultdict(list)
         )
 
+    # === NEW: Reset Method to clear state between tests ===
+    def reset_state(self):
+        """Clears all internal state to prevent pollution between tests."""
+        self.span_observers.clear()
+        self.tool_observers_stack.clear()
+
     @staticmethod
     def get_tool_stack_key(source, tool_name) -> str:
-        source_id = id(source)
-        return f"{source_id}_{tool_name}"
+        # Changed: Use only tool_name as source ID is unstable across async/proxied calls
+        return tool_name
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
@@ -101,6 +109,39 @@ class CrewAIEventsListener(BaseEventListener):
     def get_llm_execution_id(source, event) -> str:
         source_id = id(source)
         return f"llm_{source_id}"
+
+    # === NEW: Flattening Logic (Required for schema compliance) ===
+    def _flatten_tool_span(self, span):
+        """
+        Callback to move any child ToolSpans up to the parent.
+        """
+        if not span.parent_uuid or not span.children:
+            return
+
+        parent_span = trace_manager.get_span_by_uuid(span.parent_uuid)
+        if not parent_span:
+            return
+
+        # Identify child tool spans (ghost nesting)
+        tools_to_move = [
+            child for child in span.children if isinstance(child, ToolSpan)
+        ]
+
+        if tools_to_move:
+            # Add them to parent
+            if parent_span.children is None:
+                parent_span.children = []
+
+            for child in tools_to_move:
+                child.parent_uuid = parent_span.uuid
+                parent_span.children.append(child)
+
+            # Remove them from current span
+            span.children = [
+                child
+                for child in span.children
+                if not isinstance(child, ToolSpan)
+            ]
 
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
@@ -204,7 +245,16 @@ class CrewAIEventsListener(BaseEventListener):
         def on_tool_started(source, event: ToolUsageStartedEvent):
             key = self.get_tool_stack_key(source, event.tool_name)
 
+            # 1. Internal Stack Check (Recursive calls)
             if self.tool_observers_stack[key]:
+                self.tool_observers_stack[key].append(None)
+                return
+
+            # 2. SMART DEDUPING (Decorator Check)
+            current_span = current_span_context.get()
+            span_type = getattr(current_span, "type", None)
+            is_tool_span = span_type == "tool" or span_type == SpanType.TOOL
+            if is_tool_span:
                 self.tool_observers_stack[key].append(None)
                 return
 
@@ -263,6 +313,8 @@ class CrewAIEventsListener(BaseEventListener):
                         ):
                             token = current_span_context.set(span_to_close)
 
+                    observer.update_span_properties = self._flatten_tool_span
+
                     observer.__exit__(None, None, None)
 
                     if token:
@@ -284,30 +336,35 @@ class CrewAIEventsListener(BaseEventListener):
         def on_knowledge_completed(
             source, event: KnowledgeRetrievalCompletedEvent
         ):
-            observer = self.span_observers.pop(
-                self.get_knowledge_execution_id(source, event)
-            )
-            if observer:
-                current_span = current_span_context.get()
-                token = None
-                span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
+            key = self.get_knowledge_execution_id(source, event)
+            if key in self.span_observers:
+                observer = self.span_observers.pop(key)
+                if observer:
+                    current_span = current_span_context.get()
+                    token = None
+                    span_to_close = trace_manager.get_span_by_uuid(
+                        observer.uuid
+                    )
 
-                if span_to_close:
-                    span_to_close.input = event.query
-                    span_to_close.output = event.retrieved_knowledge
+                    if span_to_close:
+                        span_to_close.input = event.query
+                        span_to_close.output = event.retrieved_knowledge
 
-                    if not current_span or current_span.uuid != observer.uuid:
-                        token = current_span_context.set(span_to_close)
+                        if (
+                            not current_span
+                            or current_span.uuid != observer.uuid
+                        ):
+                            token = current_span_context.set(span_to_close)
 
-                observer.__exit__(None, None, None)
+                    observer.__exit__(None, None, None)
 
-                if token:
-                    current_span_context.reset(token)
+                    if token:
+                        current_span_context.reset(token)
 
 
 def instrument_crewai(api_key: Optional[str] = None):
     global _listener_instance
-    
+
     is_crewai_installed()
     with capture_tracing_integration("crewai"):
         if api_key:
@@ -317,6 +374,12 @@ def instrument_crewai(api_key: Optional[str] = None):
 
         if _listener_instance is None:
             _listener_instance = CrewAIEventsListener()
+
+
+def reset_crewai_instrumentation():
+    global _listener_instance
+    if _listener_instance:
+        _listener_instance.reset_state()
 
 
 def wrap_all():
