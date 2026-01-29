@@ -1,0 +1,97 @@
+{
+  "uuid": "trace_19d25ff2f1ee4a0bad20ad533f4bf8f9",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "a2d865f6-8fa7-4ecf-a73e-47874938aa14",
+      "name": "EvalAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:38:38.421Z",
+      "endTime": "2026-01-29T14:38:39.293Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Say hi",
+      "output": "Hello! How can I assist you today?",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "test_agent_metrics"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "b17d2feb-b84d-4dfe-b473-847555084cd1",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a2d865f6-8fa7-4ecf-a73e-47874938aa14",
+      "startTime": "2026-01-29T14:38:38.422Z",
+      "endTime": "2026-01-29T14:38:39.293Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Say hi"
+        }
+      ],
+      "output": "Hello! How can I assist you today?",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 19.0,
+      "outputTokenCount": 10.0,
+      "metricCollection": "test_llm_metrics"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T14:38:38.420Z",
+  "endTime": "2026-01-29T14:38:39.294Z",
+  "name": "openai_agents_eval",
+  "metadata": {
+    "tags": [
+      "openai_agents",
+      "eval"
+    ]
+  },
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Say hi"
+    }
+  ],
+  "output": "Hello! How can I assist you today?",
+  "status": "SUCCESS"
+}
