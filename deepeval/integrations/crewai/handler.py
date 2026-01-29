@@ -46,6 +46,7 @@ except ImportError as e:
     crewai_installed = False
 
 IS_WRAPPED_ALL = False
+_listener_instance = None
 
 
 def is_crewai_installed():
@@ -305,6 +306,8 @@ class CrewAIEventsListener(BaseEventListener):
 
 
 def instrument_crewai(api_key: Optional[str] = None):
+    global _listener_instance
+    
     is_crewai_installed()
     with capture_tracing_integration("crewai"):
         if api_key:
@@ -312,7 +315,8 @@ def instrument_crewai(api_key: Optional[str] = None):
 
         wrap_all()
 
-        CrewAIEventsListener()
+        if _listener_instance is None:
+            _listener_instance = CrewAIEventsListener()
 
 
 def wrap_all():
