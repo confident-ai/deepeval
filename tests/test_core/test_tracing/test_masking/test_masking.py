@@ -1,6 +1,7 @@
 import re
 import pytest
 from deepeval.tracing import observe, trace_manager
+from tests.test_core.test_tracing.conftest import trace_test
 
 
 def mask_credit_cards(data):
@@ -46,8 +47,14 @@ def process_sensitive_data(data: dict) -> dict:
     return {"result": "processed", "original": data}
 
 
+@observe()
+def process_unmasked(data: str) -> str:
+    return f"Unmasked: {data}"
+
+
 class TestMasking:
 
+    @trace_test("masking/credit_card_masked_schema.json")
     def test_credit_card_masking(self):
         trace_manager.configure(mask=mask_credit_cards)
         try:
@@ -56,6 +63,7 @@ class TestMasking:
         finally:
             trace_manager.configure(mask=None)
 
+    @trace_test("masking/email_masked_schema.json")
     def test_email_masking(self):
         trace_manager.configure(mask=mask_emails)
         try:
@@ -64,6 +72,7 @@ class TestMasking:
         finally:
             trace_manager.configure(mask=None)
 
+    @trace_test("masking/comprehensive_masked_schema.json")
     def test_comprehensive_masking(self):
         trace_manager.configure(mask=comprehensive_mask)
         try:
@@ -77,12 +86,13 @@ class TestMasking:
         finally:
             trace_manager.configure(mask=None)
 
+    @trace_test("masking/no_masking_schema.json")
     def test_no_masking_by_default(self):
         trace_manager.configure(mask=None)
-        result = process_with_credit_card("Card: 1234-5678-9012-3456")
+        result = process_unmasked("Card: 1234-5678-9012-3456")
         assert "1234-5678-9012-3456" in result
 
-    def test_masking_function_helper(self):
+    def test_masking_function_helpers(self):
         assert mask_credit_cards("4111-1111-1111-1111") == "****-****-****-****"
         assert mask_credit_cards("4111111111111111") == "****-****-****-****"
         assert mask_emails("test@example.com") == "***@***.***"

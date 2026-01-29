@@ -969,9 +969,9 @@ class Observer:
         else:
             current_trace = current_trace_context.get()
             if current_trace.input is None:
-                current_trace.input = self.function_kwargs
+                current_trace.input = trace_manager.mask(self.function_kwargs)
             if current_trace.output is None:
-                current_trace.output = self.result
+                current_trace.output = trace_manager.mask(self.result)
             if current_span.status == TraceSpanStatus.ERRORED:
                 current_trace.status = TraceSpanStatus.ERRORED
             if current_trace and current_trace.uuid == current_span.trace_uuid:
