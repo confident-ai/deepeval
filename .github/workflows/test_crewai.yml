@@ -43,21 +43,6 @@ jobs:
           poetry run pip install -U crewai
           poetry run pip install -U pydantic-ai sdk
 
-      - name: Run Async Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_async.py
-
-      - name: Run Knowledge Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_knowledge_retriever.py
-
-      - name: Run Component Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_crewai_component.py
-
-      - name: Run Basic Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_crewai.py
-
-      - name: Run Sync Tests
-        run: poetry run pytest tests/test_integrations/test_crewai/test_sync.py
+      - name: Run Crew AI Tests
+        run: poetry run pytest tests/test_integrations/test_crewai/
       
-      - name: Run CrewAI Stress Tests
-        if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_crewai/test_stress.py
