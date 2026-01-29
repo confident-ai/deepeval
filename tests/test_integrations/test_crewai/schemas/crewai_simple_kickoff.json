@@ -1,31 +1,31 @@
 {
-  "uuid": "7976a946-4516-4aac-ade4-3bb6b1ad63ba",
+  "uuid": "e7943c38-4efb-49f0-807c-f8c95ac2d339",
   "baseSpans": [
     {
-      "uuid": "c85c371e-ddd4-4454-95e4-8483bed66a00",
+      "uuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T04:11:07.468Z",
-      "endTime": "2026-01-29T04:11:08.971Z",
+      "startTime": "2026-01-29T06:11:39.488Z",
+      "endTime": "2026-01-29T06:11:40.704Z",
       "input": {
         "input": "Hello World"
       },
-      "output": "Hello World! It's great to see you here! How can I assist you today?",
+      "output": "Hello World! \ud83d\ude0a",
       "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "81f85a11-a859-418b-94e4-4ce1ff25fc1d",
+      "uuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "c85c371e-ddd4-4454-95e4-8483bed66a00",
-      "startTime": "2026-01-29T04:11:07.473Z",
-      "endTime": "2026-01-29T04:11:08.967Z",
+      "parentUuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
+      "startTime": "2026-01-29T06:11:39.493Z",
+      "endTime": "2026-01-29T06:11:40.698Z",
       "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello World! It's great to see you here! How can I assist you today?",
+      "output": "Hello World! \ud83d\ude0a",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "metric_collection_1"
@@ -33,47 +33,24 @@
   ],
   "llmSpans": [
     {
-      "uuid": "4df0670d-34c3-4784-b1b0-830155f815b8",
+      "uuid": "5a8a26c9-d66a-4559-99b9-886ef575d4d1",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "81f85a11-a859-418b-94e4-4ce1ff25fc1d",
-      "startTime": "2026-01-29T04:11:07.475Z",
-      "endTime": "2026-01-29T04:11:08.965Z",
+      "parentUuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
+      "startTime": "2026-01-29T06:11:39.495Z",
+      "endTime": "2026-01-29T06:11:40.695Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you here! How can I assist you today?",
-      "model": "gpt-4o-mini",
-      "prompt": {},
-      "metricCollection": "metric_collection_1"
-    },
-    {
-      "uuid": "5e6133e7-9dcf-4a0a-9dfe-524f27bb4edd",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "4df0670d-34c3-4784-b1b0-830155f815b8",
-      "startTime": "2026-01-29T04:11:07.475Z",
-      "endTime": "2026-01-29T04:11:08.965Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
-        },
-        {
-          "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
-        }
-      ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you here! How can I assist you today?",
+      "output": "Hello World! \ud83d\ude0a",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
@@ -81,13 +58,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T04:11:07.468Z",
-  "endTime": "2026-01-29T04:11:08.971Z",
+  "startTime": "2026-01-29T06:11:39.488Z",
+  "endTime": "2026-01-29T06:11:40.704Z",
   "environment": "development",
   "input": {
     "input": "Hello World"
   },
-  "output": "Hello World! It's great to see you here! How can I assist you today?",
+  "output": "Hello World! \ud83d\ude0a",
   "status": "SUCCESS",
   "metricCollection": "metric_collection_1"
 }

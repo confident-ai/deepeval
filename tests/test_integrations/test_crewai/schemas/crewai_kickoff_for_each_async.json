@@ -1,60 +1,60 @@
 {
-  "uuid": "6ff36d56-0007-4151-9160-b1bed37f44b6",
+  "uuid": "6d18fa19-1946-4ce7-8750-aac904715d3f",
   "baseSpans": [
     {
-      "uuid": "957f2082-5ae0-43f3-aa30-6b62dc147c3c",
+      "uuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
       "name": "kickoff_for_each_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T04:13:24.323Z",
-      "endTime": "2026-01-29T04:13:25.447Z",
+      "startTime": "2026-01-29T05:58:47.182Z",
+      "endTime": "2026-01-29T05:58:48.362Z",
       "input": {},
-      "output": "[CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 1', name='Reply to the user: Batch 1', expected_output='A short greeting.', summary='Reply to the user: Batch 1...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 1\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': 'I now can give a great answer  \\nFinal Answer: Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=186, prompt_tokens=168, cached_prompt_tokens=0, completion_tokens=18, successful_requests=1)), CrewOutput(raw='Hello there! How are you doing today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 2', name='Reply to the user: Batch 2', expected_output='A short greeting.', summary='Reply to the user: Batch 2...', raw='Hello there! How are you doing today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings\\nTo give my best complete final answer to the task respond using the exact following format:\\n\\nThought: I now can give a great answer\\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\\n\\nI MUST use these formats, my job depends on it!'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 2\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\\n\\nThought:'}, {'role': 'assistant', 'content': 'I now can give a great answer  \\nFinal Answer: Hello there! How are you doing today?'}])], token_usage=UsageMetrics(total_tokens=374, prompt_tokens=336, cached_prompt_tokens=0, completion_tokens=38, successful_requests=2))]",
+      "output": "[CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 1', name='Reply to the user: Batch 1', expected_output='A short greeting.', summary='Reply to the user: Batch 1...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 1\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=178, prompt_tokens=164, cached_prompt_tokens=0, completion_tokens=14, successful_requests=2)), CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 2', name='Reply to the user: Batch 2', expected_output='A short greeting.', summary='Reply to the user: Batch 2...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 2\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=89, prompt_tokens=82, cached_prompt_tokens=0, completion_tokens=7, successful_requests=1))]",
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "eee0a28a-62d8-4491-a7e7-b0f1e5f2986e",
+      "uuid": "f0aebfaf-088d-4387-8a65-98e2d03262eb",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "957f2082-5ae0-43f3-aa30-6b62dc147c3c",
-      "startTime": "2026-01-29T04:13:24.327Z",
-      "endTime": "2026-01-29T04:13:25.443Z",
-      "input": {},
-      "output": "Hello there! How are you doing today?"
-    },
-    {
-      "uuid": "53ed50fb-a2a9-447a-a6ee-137239909474",
-      "name": "kickoff",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "eee0a28a-62d8-4491-a7e7-b0f1e5f2986e",
-      "startTime": "2026-01-29T04:13:24.327Z",
-      "endTime": "2026-01-29T04:13:25.443Z",
-      "input": {
-        "input": "Batch 2"
-      },
-      "output": "Hello there! How are you doing today?"
-    },
-    {
-      "uuid": "2b21b170-8fdd-4dd0-bf4e-c078e571365c",
-      "name": "kickoff_async",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "957f2082-5ae0-43f3-aa30-6b62dc147c3c",
-      "startTime": "2026-01-29T04:13:24.327Z",
-      "endTime": "2026-01-29T04:13:25.319Z",
+      "parentUuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.274Z",
       "input": {},
       "output": "Hello! How are you today?"
     },
     {
-      "uuid": "4125fe45-5ea5-44ca-b08a-bfac72c1e6b3",
+      "uuid": "36688f1b-6e1e-46b1-ad43-88be56859280",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2b21b170-8fdd-4dd0-bf4e-c078e571365c",
-      "startTime": "2026-01-29T04:13:24.327Z",
-      "endTime": "2026-01-29T04:13:25.318Z",
+      "parentUuid": "f0aebfaf-088d-4387-8a65-98e2d03262eb",
+      "startTime": "2026-01-29T05:58:47.185Z",
+      "endTime": "2026-01-29T05:58:48.273Z",
+      "input": {
+        "input": "Batch 2"
+      },
+      "output": "Hello! How are you today?"
+    },
+    {
+      "uuid": "a5e858f3-ae88-4d24-9f5f-87a0082772a2",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.361Z",
+      "input": {},
+      "output": "Hello! How are you today?"
+    },
+    {
+      "uuid": "031ca876-3da8-482a-aa07-7595b420a7f2",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "a5e858f3-ae88-4d24-9f5f-87a0082772a2",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.361Z",
       "input": {
         "input": "Batch 1"
       },
@@ -63,26 +63,26 @@
   ],
   "agentSpans": [
     {
-      "uuid": "2087f644-22bb-4737-a2fd-82eaf757f065",
+      "uuid": "b770b52f-7d93-4158-9bb3-36e3fcd77be1",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "53ed50fb-a2a9-447a-a6ee-137239909474",
-      "startTime": "2026-01-29T04:13:24.332Z",
-      "endTime": "2026-01-29T04:13:25.412Z",
+      "parentUuid": "36688f1b-6e1e-46b1-ad43-88be56859280",
+      "startTime": "2026-01-29T05:58:47.190Z",
+      "endTime": "2026-01-29T05:58:48.267Z",
       "input": "Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello there! How are you doing today?",
+      "output": "Hello! How are you today?",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "0d0f2eb5-b15f-45f8-b2b0-035f39a027b5",
+      "uuid": "c5a4be54-26be-45aa-834b-db7c22aee494",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "4125fe45-5ea5-44ca-b08a-bfac72c1e6b3",
-      "startTime": "2026-01-29T04:13:24.335Z",
-      "endTime": "2026-01-29T04:13:25.312Z",
+      "parentUuid": "031ca876-3da8-482a-aa07-7595b420a7f2",
+      "startTime": "2026-01-29T05:58:47.188Z",
+      "endTime": "2026-01-29T05:58:48.358Z",
       "input": "Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello! How are you today?",
       "availableTools": [],
@@ -91,93 +91,47 @@
   ],
   "llmSpans": [
     {
-      "uuid": "f7c08723-4230-4b44-a7a2-38de46add237",
+      "uuid": "356d1830-f3a1-4e2a-b43e-0a12c84ae6fc",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "2087f644-22bb-4737-a2fd-82eaf757f065",
-      "startTime": "2026-01-29T04:13:24.335Z",
-      "endTime": "2026-01-29T04:13:25.409Z",
+      "parentUuid": "b770b52f-7d93-4158-9bb3-36e3fcd77be1",
+      "startTime": "2026-01-29T05:58:47.192Z",
+      "endTime": "2026-01-29T05:58:48.266Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello there! How are you doing today?",
+      "output": "Hello! How are you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "cf1da8ab-f917-4c79-96cc-1d2df261dc3e",
+      "uuid": "152b2c95-308d-4338-9491-6b9b9dd3f992",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f7c08723-4230-4b44-a7a2-38de46add237",
-      "startTime": "2026-01-29T04:13:24.335Z",
-      "endTime": "2026-01-29T04:13:25.409Z",
+      "parentUuid": "c5a4be54-26be-45aa-834b-db7c22aee494",
+      "startTime": "2026-01-29T05:58:47.190Z",
+      "endTime": "2026-01-29T05:58:48.356Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello there! How are you doing today?",
-      "model": "gpt-4o-mini",
-      "prompt": {},
-      "metricCollection": "metric_collection_1"
-    },
-    {
-      "uuid": "70a7be75-7f7b-4e11-8567-cb3c0ee44f02",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "0d0f2eb5-b15f-45f8-b2b0-035f39a027b5",
-      "startTime": "2026-01-29T04:13:24.338Z",
-      "endTime": "2026-01-29T04:13:25.308Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
-        },
-        {
-          "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
-        }
-      ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello! How are you today?",
-      "model": "gpt-4o-mini",
-      "prompt": {},
-      "metricCollection": "metric_collection_1"
-    },
-    {
-      "uuid": "eff8f763-590b-4e12-986e-11b4d788e030",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "70a7be75-7f7b-4e11-8567-cb3c0ee44f02",
-      "startTime": "2026-01-29T04:13:24.338Z",
-      "endTime": "2026-01-29T04:13:25.308Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
-        },
-        {
-          "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
-        }
-      ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello! How are you today?",
+      "output": "Hello! How are you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
@@ -185,13 +139,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T04:13:24.323Z",
-  "endTime": "2026-01-29T04:13:25.447Z",
+  "startTime": "2026-01-29T05:58:47.182Z",
+  "endTime": "2026-01-29T05:58:48.362Z",
   "environment": "development",
   "input": {
     "input": "Batch 2"
   },
-  "output": "Hello there! How are you doing today?",
+  "output": "Hello! How are you today?",
   "status": "SUCCESS",
   "metricCollection": "metric_collection_1"
 }

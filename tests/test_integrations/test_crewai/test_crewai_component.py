@@ -50,34 +50,6 @@ def get_weather(city: str) -> str:
         return f"Weather in {city}: 70°F, Clear, Humidity: 60% (default data)"
 
 
-llm = LLM(
-    model="gpt-4o-mini",
-    temperature=0,
-    metric_collection="test_collection_1",
-)
-
-agent = Agent(
-    role="Weather Reporter",
-    goal="Provide accurate and helpful weather information to users.",
-    backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
-    tools=[get_weather],
-    verbose=True,
-    llm=llm,
-    metric_collection="test_collection_1",
-)
-
-task = Task(
-    description="Get the current weather for {city} and provide a helpful summary.",
-    expected_output="A clear weather report including temperature, conditions, and humidity.",
-    agent=agent,
-)
-
-crew = Crew(
-    agents=[agent],
-    tasks=[task],
-    metric_collection="test_collection_1",
-)
-
 ################################ TESTING CODE #################################
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -87,6 +59,34 @@ json_path = os.path.join(_current_dir, "crewai_component.json")
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 def test_crewai_component():
+    # Initialize inside test to ensure fresh state
+    llm = LLM(
+        model="gpt-4o-mini",
+        temperature=0,
+        metric_collection="test_collection_1",
+    )
+
+    agent = Agent(
+        role="Weather Reporter",
+        goal="Provide accurate and helpful weather information to users.",
+        backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
+        tools=[get_weather],
+        verbose=True,
+        llm=llm,
+        metric_collection="test_collection_1",
+    )
+
+    task = Task(
+        description="Get the current weather for {city} and provide a helpful summary.",
+        expected_output="A clear weather report including temperature, conditions, and humidity.",
+        agent=agent,
+    )
+
+    crew = Crew(
+        agents=[agent],
+        tasks=[task],
+        metric_collection="test_collection_1",
+    )
 
     with trace(
         name="crewai",

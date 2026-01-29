@@ -1,31 +1,31 @@
 {
-  "uuid": "99277b47-374c-40e9-ac74-93115e554874",
+  "uuid": "cf15b2c1-6b30-4aee-a259-1887059998f3",
   "baseSpans": [
     {
-      "uuid": "2b28d735-17b0-49e9-a990-727d62f81a77",
+      "uuid": "b8fd1a69-75ed-461e-88a4-8e6f1e787b0b",
       "name": "akickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T04:13:25.688Z",
-      "endTime": "2026-01-29T04:13:26.738Z",
+      "startTime": "2026-01-29T05:58:48.403Z",
+      "endTime": "2026-01-29T05:58:49.629Z",
       "input": {
         "input": "Testing Alias"
       },
-      "output": "Hello, Testing Alias! How can I assist you today?",
+      "output": "Hello, Testing Alias! How are you today?",
       "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "b96b5e97-c4ea-4343-a4a8-3c9afdd5a22a",
+      "uuid": "1ca93b12-abb9-4567-9330-3e0f803c4de6",
       "name": "aexecute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "2b28d735-17b0-49e9-a990-727d62f81a77",
-      "startTime": "2026-01-29T04:13:25.701Z",
-      "endTime": "2026-01-29T04:13:26.735Z",
+      "parentUuid": "b8fd1a69-75ed-461e-88a4-8e6f1e787b0b",
+      "startTime": "2026-01-29T05:58:48.406Z",
+      "endTime": "2026-01-29T05:58:49.625Z",
       "input": "Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello, Testing Alias! How can I assist you today?",
+      "output": "Hello, Testing Alias! How are you today?",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "metric_collection_1"
@@ -33,47 +33,24 @@
   ],
   "llmSpans": [
     {
-      "uuid": "db2288db-efd1-4be8-bb55-a4009139c313",
+      "uuid": "6de10cab-0e6c-4b5d-bebb-3280fae08f69",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b96b5e97-c4ea-4343-a4a8-3c9afdd5a22a",
-      "startTime": "2026-01-29T04:13:25.707Z",
-      "endTime": "2026-01-29T04:13:26.734Z",
+      "parentUuid": "1ca93b12-abb9-4567-9330-3e0f803c4de6",
+      "startTime": "2026-01-29T05:58:48.408Z",
+      "endTime": "2026-01-29T05:58:49.625Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _akickoff. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+          "content": "You are Simple Greeter _akickoff. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello, Testing Alias! How can I assist you today?",
-      "model": "gpt-4o-mini",
-      "prompt": {},
-      "metricCollection": "metric_collection_1"
-    },
-    {
-      "uuid": "5fee6487-76df-44e7-b7ce-83ab1916de25",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "db2288db-efd1-4be8-bb55-a4009139c313",
-      "startTime": "2026-01-29T04:13:25.707Z",
-      "endTime": "2026-01-29T04:13:26.734Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are Simple Greeter _akickoff. You are a friendly bot.\nYour personal goal is: Reply to greetings\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
-        },
-        {
-          "role": "user",
-          "content": "\nCurrent Task: Reply to the user: Testing Alias\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
-        }
-      ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello, Testing Alias! How can I assist you today?",
+      "output": "Hello, Testing Alias! How are you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
@@ -81,13 +58,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T04:13:25.688Z",
-  "endTime": "2026-01-29T04:13:26.738Z",
+  "startTime": "2026-01-29T05:58:48.403Z",
+  "endTime": "2026-01-29T05:58:49.629Z",
   "environment": "development",
   "input": {
     "input": "Testing Alias"
   },
-  "output": "Hello, Testing Alias! How can I assist you today?",
+  "output": "Hello, Testing Alias! How are you today?",
   "status": "SUCCESS",
   "metricCollection": "metric_collection_1"
 }

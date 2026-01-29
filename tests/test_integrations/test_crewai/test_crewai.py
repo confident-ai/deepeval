@@ -50,25 +50,6 @@ def get_weather(city: str) -> str:
         return f"Weather in {city}: 70°F, Clear, Humidity: 60% (default data)"
 
 
-agent = Agent(
-    role="Weather Reporter",
-    goal="Provide accurate and helpful weather information to users.",
-    backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
-    tools=[get_weather],
-    verbose=True,
-)
-
-task = Task(
-    description="Get the current weather for {city} and provide a helpful summary.",
-    expected_output="A clear weather report including temperature, conditions, and humidity.",
-    agent=agent,
-)
-
-crew = Crew(
-    agents=[agent],
-    tasks=[task],
-)
-
 ################################ TESTING CODE #################################
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -78,6 +59,26 @@ json_path = os.path.join(_current_dir, "crewai.json")
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 def test_crewai():
+    # Initialize inside test to ensure fresh state
+    agent = Agent(
+        role="Weather Reporter",
+        goal="Provide accurate and helpful weather information to users.",
+        backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
+        tools=[get_weather],
+        verbose=True,
+    )
+
+    task = Task(
+        description="Get the current weather for {city} and provide a helpful summary.",
+        expected_output="A clear weather report including temperature, conditions, and humidity.",
+        agent=agent,
+    )
+
+    crew = Crew(
+        agents=[agent],
+        tasks=[task],
+    )
+
     crew.kickoff({"city": "London"})
 
 
