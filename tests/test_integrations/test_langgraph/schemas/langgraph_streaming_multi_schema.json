@@ -1,13 +1,13 @@
 {
-  "uuid": "3e2b3162-0c91-4eef-a55b-d4b57695ab16",
+  "uuid": "29202d9c-ae71-42e9-b7f0-e4f8475330c6",
   "baseSpans": [
     {
-      "uuid": "019bc088-4c9a-7d83-8370-ddbfadfc8f00",
+      "uuid": "019bf2a5-f2a3-77e3-ad2c-58967a3c2ce4",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:21:56.634Z",
-      "endTime": "2026-01-15T07:21:59.004Z",
+      "startTime": "2026-01-25T00:55:20.483Z",
+      "endTime": "2026-01-25T00:55:26.227Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           }
         ]
       },
@@ -26,46 +26,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -73,11 +53,24 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$245.60 (+2.1%)",
@@ -85,8 +78,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-            "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+            "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "status": "success"
           },
           {
@@ -95,34 +88,48 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-            "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+            "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "status": "success"
           },
           {
-            "content": "- **Stock Price for TSLA**: $245.60 (+2.1%)\n- **Company Info**: Tesla Inc. - Electric vehicles, Market Cap: $780B",
+            "content": "Here\u2019s what I fetched for TSLA:\n\n- Current price: $245.60 (+2.1%)  \n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Market data can change quickly and may be delayed. Would you like recent news, historical prices, key financials (revenue, EPS), or a chart?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-5154-7c50-b08a-6006b3c746ca",
+            "id": "lc_run--019bf2a5-fc69-77e1-a10a-31992bcc2a14",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 252,
+              "output_tokens": 213,
+              "total_tokens": 465,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-5154-7c50-b08a-5ff8be2cebd4",
+      "uuid": "019bf2a5-fc68-7d33-ae16-f50d2f3a70c7",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4c9a-7d83-8370-ddbfadfc8f00",
-      "startTime": "2026-01-15T07:21:57.844Z",
-      "endTime": "2026-01-15T07:21:59.003Z",
+      "parentUuid": "019bf2a5-f2a3-77e3-ad2c-58967a3c2ce4",
+      "startTime": "2026-01-25T00:55:22.984Z",
+      "endTime": "2026-01-25T00:55:26.227Z",
       "input": {
         "messages": [
           {
@@ -130,46 +137,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -177,11 +164,24 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$245.60 (+2.1%)",
@@ -189,8 +189,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-            "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+            "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "status": "success"
           },
           {
@@ -199,8 +199,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-            "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+            "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "status": "success"
           }
         ]
@@ -208,29 +208,43 @@
       "output": {
         "messages": [
           {
-            "content": "- **Stock Price for TSLA**: $245.60 (+2.1%)\n- **Company Info**: Tesla Inc. - Electric vehicles, Market Cap: $780B",
+            "content": "Here\u2019s what I fetched for TSLA:\n\n- Current price: $245.60 (+2.1%)  \n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Market data can change quickly and may be delayed. Would you like recent news, historical prices, key financials (revenue, EPS), or a chart?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-5154-7c50-b08a-6006b3c746ca",
+            "id": "lc_run--019bf2a5-fc69-77e1-a10a-31992bcc2a14",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 252,
+              "output_tokens": 213,
+              "total_tokens": 465,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-55db-77d2-a1c9-17f86388aa01",
+      "uuid": "019bf2a6-0913-71d0-b056-4c97c2441a42",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-5154-7c50-b08a-5ff8be2cebd4",
-      "startTime": "2026-01-15T07:21:59.003Z",
-      "endTime": "2026-01-15T07:21:59.003Z",
+      "parentUuid": "019bf2a5-fc68-7d33-ae16-f50d2f3a70c7",
+      "startTime": "2026-01-25T00:55:26.227Z",
+      "endTime": "2026-01-25T00:55:26.227Z",
       "input": {
         "messages": [
           {
@@ -238,46 +252,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -285,11 +279,24 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$245.60 (+2.1%)",
@@ -297,8 +304,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-            "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+            "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "status": "success"
           },
           {
@@ -307,35 +314,49 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-            "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+            "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "status": "success"
           },
           {
-            "content": "- **Stock Price for TSLA**: $245.60 (+2.1%)\n- **Company Info**: Tesla Inc. - Electric vehicles, Market Cap: $780B",
+            "content": "Here\u2019s what I fetched for TSLA:\n\n- Current price: $245.60 (+2.1%)  \n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Market data can change quickly and may be delayed. Would you like recent news, historical prices, key financials (revenue, EPS), or a chart?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-5154-7c50-b08a-6006b3c746ca",
+            "id": "lc_run--019bf2a5-fc69-77e1-a10a-31992bcc2a14",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 252,
+              "output_tokens": 213,
+              "total_tokens": 465,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       },
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-5151-7a41-a918-0f8a4c954f63",
+      "uuid": "019bf2a5-fc63-7392-8e58-f98dd5c7afab",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4c9a-7d83-8370-ddbfadfc8f00",
-      "startTime": "2026-01-15T07:21:57.841Z",
-      "endTime": "2026-01-15T07:21:57.843Z",
+      "parentUuid": "019bf2a5-f2a3-77e3-ad2c-58967a3c2ce4",
+      "startTime": "2026-01-25T00:55:22.979Z",
+      "endTime": "2026-01-25T00:55:22.984Z",
       "input": {
         "messages": [
           {
@@ -343,46 +364,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -390,11 +391,24 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -406,8 +420,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-            "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+            "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "status": "success"
           },
           {
@@ -416,8 +430,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-            "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+            "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "status": "success"
           }
         ]
@@ -431,8 +445,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-            "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+            "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "status": "success"
           },
           "inputParameters": {
@@ -447,8 +461,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_company_info",
-            "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-            "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+            "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "status": "success"
           },
           "inputParameters": {
@@ -458,13 +472,13 @@
       ]
     },
     {
-      "uuid": "019bc088-4c9b-7b61-8d7c-3349ad7dd418",
+      "uuid": "019bf2a5-f2a4-75d2-a73b-065667675fe6",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4c9a-7d83-8370-ddbfadfc8f00",
-      "startTime": "2026-01-15T07:21:56.635Z",
-      "endTime": "2026-01-15T07:21:57.841Z",
+      "parentUuid": "019bf2a5-f2a3-77e3-ad2c-58967a3c2ce4",
+      "startTime": "2026-01-25T00:55:20.484Z",
+      "endTime": "2026-01-25T00:55:22.978Z",
       "input": {
         "messages": [
           {
@@ -472,7 +486,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           }
         ]
       },
@@ -480,42 +494,22 @@
         "messages": [
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -523,23 +517,36 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc088-5151-7a41-a918-0f7db0f03d13",
+      "uuid": "019bf2a5-fc62-7a63-a7a7-58d0bd728b90",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-4c9b-7b61-8d7c-3349ad7dd418",
-      "startTime": "2026-01-15T07:21:57.841Z",
-      "endTime": "2026-01-15T07:21:57.841Z",
+      "parentUuid": "019bf2a5-f2a4-75d2-a73b-065667675fe6",
+      "startTime": "2026-01-25T00:55:22.978Z",
+      "endTime": "2026-01-25T00:55:22.978Z",
       "input": {
         "messages": [
           {
@@ -547,46 +554,26 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+            "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                },
-                {
-                  "index": 1,
-                  "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-                  "function": {
-                    "arguments": "{\"symbol\": \"TSLA\"}",
-                    "name": "get_company_info"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+            "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+                "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
                 "type": "tool_call"
               },
               {
@@ -594,11 +581,24 @@
                 "args": {
                   "symbol": "TSLA"
                 },
-                "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+                "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 162,
+              "output_tokens": 121,
+              "total_tokens": 283,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -608,13 +608,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-5154-7c50-b08a-6006b3c746ca",
+      "uuid": "019bf2a5-fc69-77e1-a10a-31992bcc2a14",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-5154-7c50-b08a-5ff8be2cebd4",
-      "startTime": "2026-01-15T07:21:57.844Z",
-      "endTime": "2026-01-15T07:21:59.003Z",
+      "parentUuid": "019bf2a5-fc68-7d33-ae16-f50d2f3a70c7",
+      "startTime": "2026-01-25T00:55:22.985Z",
+      "endTime": "2026-01-25T00:55:26.226Z",
       "input": [
         {
           "role": "human",
@@ -622,7 +622,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'TSLA'}, 'id': 'call_2x7iVbpdRDQMHAOJUqcZujU9', 'type': 'tool_call'}, {'name': 'get_company_info', 'args': {'symbol': 'TSLA'}, 'id': 'call_7elWxoxDg9wWt6voGN8NYTqS', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -643,62 +643,102 @@
       ],
       "output": {
         "role": "AI",
-        "content": "- **Stock Price for TSLA**: $245.60 (+2.1%)\n- **Company Info**: Tesla Inc. - Electric vehicles, Market Cap: $780B",
+        "content": "Here\u2019s what I fetched for TSLA:\n\n- Current price: $245.60 (+2.1%)  \n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Market data can change quickly and may be delayed. Would you like recent news, historical prices, key financials (revenue, EPS), or a chart?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-15T07:21:58.419155Z": "",
-        "2026-01-15T07:21:58.480976Z": "-",
-        "2026-01-15T07:21:58.481337Z": " **",
-        "2026-01-15T07:21:58.540987Z": "Stock",
-        "2026-01-15T07:21:58.541629Z": " Price",
-        "2026-01-15T07:21:58.567299Z": " for",
-        "2026-01-15T07:21:58.567562Z": " TS",
-        "2026-01-15T07:21:58.590103Z": "LA",
-        "2026-01-15T07:21:58.590354Z": "**",
-        "2026-01-15T07:21:58.634044Z": ":",
-        "2026-01-15T07:21:58.634478Z": " $",
-        "2026-01-15T07:21:58.667639Z": "245",
-        "2026-01-15T07:21:58.667958Z": ".",
-        "2026-01-15T07:21:58.690547Z": "60",
-        "2026-01-15T07:21:58.691103Z": " (+",
-        "2026-01-15T07:21:58.722385Z": "2",
-        "2026-01-15T07:21:58.722678Z": ".",
-        "2026-01-15T07:21:58.745326Z": "1",
-        "2026-01-15T07:21:58.745846Z": "%)\n",
-        "2026-01-15T07:21:58.777431Z": "-",
-        "2026-01-15T07:21:58.778354Z": " **",
-        "2026-01-15T07:21:58.792505Z": "Company",
-        "2026-01-15T07:21:58.792919Z": " Info",
-        "2026-01-15T07:21:58.820012Z": "**",
-        "2026-01-15T07:21:58.820312Z": ":",
-        "2026-01-15T07:21:58.847015Z": " Tesla",
-        "2026-01-15T07:21:58.847303Z": " Inc",
-        "2026-01-15T07:21:58.876325Z": ".",
-        "2026-01-15T07:21:58.876780Z": " -",
-        "2026-01-15T07:21:58.902467Z": " Electric",
-        "2026-01-15T07:21:58.903180Z": " vehicles",
-        "2026-01-15T07:21:58.928682Z": ",",
-        "2026-01-15T07:21:58.929280Z": " Market",
-        "2026-01-15T07:21:58.953830Z": " Cap",
-        "2026-01-15T07:21:58.956591Z": ":",
-        "2026-01-15T07:21:58.987353Z": " $",
-        "2026-01-15T07:21:58.988044Z": "780",
-        "2026-01-15T07:21:58.996849Z": "B",
-        "2026-01-15T07:21:58.997418Z": "",
-        "2026-01-15T07:21:59.002296Z": ""
+        "2026-01-25T00:55:25.312367Z": "",
+        "2026-01-25T00:55:25.346305Z": "Here",
+        "2026-01-25T00:55:25.347920Z": "\u2019s",
+        "2026-01-25T00:55:25.369633Z": " what",
+        "2026-01-25T00:55:25.371662Z": " I",
+        "2026-01-25T00:55:25.392123Z": " fetched",
+        "2026-01-25T00:55:25.393422Z": " for",
+        "2026-01-25T00:55:25.415073Z": " TS",
+        "2026-01-25T00:55:25.417730Z": "LA",
+        "2026-01-25T00:55:25.443583Z": ":\n\n",
+        "2026-01-25T00:55:25.445049Z": "-",
+        "2026-01-25T00:55:25.460613Z": " Current",
+        "2026-01-25T00:55:25.461853Z": " price",
+        "2026-01-25T00:55:25.484247Z": ":",
+        "2026-01-25T00:55:25.486172Z": " $",
+        "2026-01-25T00:55:25.505592Z": "245",
+        "2026-01-25T00:55:25.506901Z": ".",
+        "2026-01-25T00:55:25.527837Z": "60",
+        "2026-01-25T00:55:25.529116Z": " (+",
+        "2026-01-25T00:55:25.550971Z": "2",
+        "2026-01-25T00:55:25.552409Z": ".",
+        "2026-01-25T00:55:25.582560Z": "1",
+        "2026-01-25T00:55:25.583970Z": "%)",
+        "2026-01-25T00:55:25.598626Z": "  \n",
+        "2026-01-25T00:55:25.599966Z": "-",
+        "2026-01-25T00:55:25.621625Z": " Company",
+        "2026-01-25T00:55:25.622200Z": " info",
+        "2026-01-25T00:55:25.647179Z": ":",
+        "2026-01-25T00:55:25.648673Z": " Tesla",
+        "2026-01-25T00:55:25.677606Z": ",",
+        "2026-01-25T00:55:25.678878Z": " Inc",
+        "2026-01-25T00:55:25.691537Z": ".",
+        "2026-01-25T00:55:25.692816Z": " \u2014",
+        "2026-01-25T00:55:25.713489Z": " Electric",
+        "2026-01-25T00:55:25.715029Z": " vehicles",
+        "2026-01-25T00:55:25.738370Z": ";",
+        "2026-01-25T00:55:25.739875Z": " Market",
+        "2026-01-25T00:55:25.758136Z": " cap",
+        "2026-01-25T00:55:25.759745Z": ":",
+        "2026-01-25T00:55:25.780263Z": " $",
+        "2026-01-25T00:55:25.781535Z": "780",
+        "2026-01-25T00:55:25.803325Z": "B",
+        "2026-01-25T00:55:25.804657Z": "\n\n",
+        "2026-01-25T00:55:25.831336Z": "Note",
+        "2026-01-25T00:55:25.832849Z": ":",
+        "2026-01-25T00:55:25.853848Z": " Market",
+        "2026-01-25T00:55:25.855363Z": " data",
+        "2026-01-25T00:55:25.875083Z": " can",
+        "2026-01-25T00:55:25.876290Z": " change",
+        "2026-01-25T00:55:25.895606Z": " quickly",
+        "2026-01-25T00:55:25.896862Z": " and",
+        "2026-01-25T00:55:25.918398Z": " may",
+        "2026-01-25T00:55:25.919908Z": " be",
+        "2026-01-25T00:55:25.945206Z": " delayed",
+        "2026-01-25T00:55:25.946690Z": ".",
+        "2026-01-25T00:55:25.969933Z": " Would",
+        "2026-01-25T00:55:25.971450Z": " you",
+        "2026-01-25T00:55:25.994838Z": " like",
+        "2026-01-25T00:55:25.996202Z": " recent",
+        "2026-01-25T00:55:26.016045Z": " news",
+        "2026-01-25T00:55:26.017533Z": ",",
+        "2026-01-25T00:55:26.042629Z": " historical",
+        "2026-01-25T00:55:26.044048Z": " prices",
+        "2026-01-25T00:55:26.062191Z": ",",
+        "2026-01-25T00:55:26.063067Z": " key",
+        "2026-01-25T00:55:26.082546Z": " financial",
+        "2026-01-25T00:55:26.082950Z": "s",
+        "2026-01-25T00:55:26.104123Z": " (",
+        "2026-01-25T00:55:26.104417Z": "re",
+        "2026-01-25T00:55:26.127327Z": "venue",
+        "2026-01-25T00:55:26.127691Z": ",",
+        "2026-01-25T00:55:26.153025Z": " EPS",
+        "2026-01-25T00:55:26.153337Z": "),",
+        "2026-01-25T00:55:26.171678Z": " or",
+        "2026-01-25T00:55:26.172021Z": " a",
+        "2026-01-25T00:55:26.196431Z": " chart",
+        "2026-01-25T00:55:26.196818Z": "?",
+        "2026-01-25T00:55:26.209334Z": "",
+        "2026-01-25T00:55:26.209816Z": "",
+        "2026-01-25T00:55:26.225659Z": ""
       }
     },
     {
-      "uuid": "019bc088-4c9b-7b61-8d7c-335e386708b5",
+      "uuid": "019bf2a5-f2a5-7090-a937-b3f4d3068d81",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-4c9b-7b61-8d7c-3349ad7dd418",
-      "startTime": "2026-01-15T07:21:56.635Z",
-      "endTime": "2026-01-15T07:21:57.841Z",
+      "parentUuid": "019bf2a5-f2a4-75d2-a73b-065667675fe6",
+      "startTime": "2026-01-25T00:55:20.485Z",
+      "endTime": "2026-01-25T00:55:22.977Z",
       "input": [
         {
           "role": "human",
@@ -722,46 +762,47 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_2x7iVbpdRDQMHAOJUqcZujU9"
+            "id": "call_HFjtfcBN7VNuUIF78GbewQ38"
           },
           {
             "name": "get_company_info",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_7elWxoxDg9wWt6voGN8NYTqS"
+            "id": "call_8X5gnDw47sLXAUjd7c0WOS3B"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
       "tokenIntervals": {
-        "2026-01-15T07:21:57.828431Z": "",
-        "2026-01-15T07:21:57.829097Z": "",
-        "2026-01-15T07:21:57.829542Z": "",
-        "2026-01-15T07:21:57.829932Z": "",
-        "2026-01-15T07:21:57.830246Z": "",
-        "2026-01-15T07:21:57.833793Z": "",
-        "2026-01-15T07:21:57.834134Z": "",
-        "2026-01-15T07:21:57.834583Z": "",
-        "2026-01-15T07:21:57.835020Z": "",
-        "2026-01-15T07:21:57.837273Z": "",
-        "2026-01-15T07:21:57.837692Z": "",
-        "2026-01-15T07:21:57.840385Z": "",
-        "2026-01-15T07:21:57.840657Z": ""
+        "2026-01-25T00:55:22.951078Z": "",
+        "2026-01-25T00:55:22.952758Z": "",
+        "2026-01-25T00:55:22.954867Z": "",
+        "2026-01-25T00:55:22.957398Z": "",
+        "2026-01-25T00:55:22.959632Z": "",
+        "2026-01-25T00:55:22.961347Z": "",
+        "2026-01-25T00:55:22.962760Z": "",
+        "2026-01-25T00:55:22.964874Z": "",
+        "2026-01-25T00:55:22.966628Z": "",
+        "2026-01-25T00:55:22.968477Z": "",
+        "2026-01-25T00:55:22.970363Z": "",
+        "2026-01-25T00:55:22.973273Z": "",
+        "2026-01-25T00:55:22.974699Z": "",
+        "2026-01-25T00:55:22.976303Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-5153-7f90-a896-937903b88f64",
+      "uuid": "019bf2a5-fc66-70a1-8590-43421c04811f",
       "name": "get_company_info",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-5151-7a41-a918-0f8a4c954f63",
-      "startTime": "2026-01-15T07:21:57.843Z",
-      "endTime": "2026-01-15T07:21:57.843Z",
+      "parentUuid": "019bf2a5-fc63-7392-8e58-f98dd5c7afab",
+      "startTime": "2026-01-25T00:55:22.982Z",
+      "endTime": "2026-01-25T00:55:22.983Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -771,19 +812,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_company_info",
-        "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-        "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+        "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+        "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-5152-75d2-aef8-e3916b79e67f",
+      "uuid": "019bf2a5-fc64-7f80-992e-c4351b3d0745",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-5151-7a41-a918-0f8a4c954f63",
-      "startTime": "2026-01-15T07:21:57.842Z",
-      "endTime": "2026-01-15T07:21:57.843Z",
+      "parentUuid": "019bf2a5-fc63-7392-8e58-f98dd5c7afab",
+      "startTime": "2026-01-25T00:55:22.980Z",
+      "endTime": "2026-01-25T00:55:22.982Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -793,14 +834,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-        "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+        "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+        "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:21:56.634Z",
-  "endTime": "2026-01-15T07:21:59.004Z",
+  "startTime": "2026-01-25T00:55:20.483Z",
+  "endTime": "2026-01-25T00:55:26.228Z",
   "name": "langgraph-streaming-multi",
   "tags": [
     "langgraph",
@@ -815,7 +856,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+        "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
       }
     ]
   },
@@ -826,46 +867,26 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "a0d8ba72-5f47-4d1c-981e-6b73331e1875"
+        "id": "95c4f26d-84fd-4527-8e46-cd300e5144f7"
       },
       {
         "content": "",
-        "additional_kwargs": {
-          "tool_calls": [
-            {
-              "index": 0,
-              "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
-              "function": {
-                "arguments": "{\"symbol\": \"TSLA\"}",
-                "name": "get_stock_price"
-              },
-              "type": "function"
-            },
-            {
-              "index": 1,
-              "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
-              "function": {
-                "arguments": "{\"symbol\": \"TSLA\"}",
-                "name": "get_company_info"
-              },
-              "type": "function"
-            }
-          ]
-        },
+        "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "tool_calls",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc088-4c9b-7b61-8d7c-335e386708b5",
+        "id": "lc_run--019bf2a5-f2a5-7090-a937-b3f4d3068d81",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+            "id": "call_HFjtfcBN7VNuUIF78GbewQ38",
             "type": "tool_call"
           },
           {
@@ -873,11 +894,24 @@
             "args": {
               "symbol": "TSLA"
             },
-            "id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+            "id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 162,
+          "output_tokens": 121,
+          "total_tokens": 283,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "$245.60 (+2.1%)",
@@ -885,8 +919,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-        "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+        "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+        "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
         "status": "success"
       },
       {
@@ -895,22 +929,36 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_company_info",
-        "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-        "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+        "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+        "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
         "status": "success"
       },
       {
-        "content": "- **Stock Price for TSLA**: $245.60 (+2.1%)\n- **Company Info**: Tesla Inc. - Electric vehicles, Market Cap: $780B",
+        "content": "Here\u2019s what I fetched for TSLA:\n\n- Current price: $245.60 (+2.1%)  \n- Company info: Tesla, Inc. \u2014 Electric vehicles; Market cap: $780B\n\nNote: Market data can change quickly and may be delayed. Would you like recent news, historical prices, key financials (revenue, EPS), or a chart?",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc088-5154-7c50-b08a-6006b3c746ca",
+        "id": "lc_run--019bf2a5-fc69-77e1-a10a-31992bcc2a14",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 252,
+          "output_tokens": 213,
+          "total_tokens": 465,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
       }
     ]
   },
@@ -924,8 +972,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "a54f7266-4a98-4c65-a789-c3d1af704d49",
-        "tool_call_id": "call_2x7iVbpdRDQMHAOJUqcZujU9",
+        "id": "81936481-3506-4443-abf4-35e0bbdfbeb2",
+        "tool_call_id": "call_HFjtfcBN7VNuUIF78GbewQ38",
         "status": "success"
       },
       "inputParameters": {
@@ -940,8 +988,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_company_info",
-        "id": "3e08d7dd-ca5c-4ede-8db6-8387ceca48e2",
-        "tool_call_id": "call_7elWxoxDg9wWt6voGN8NYTqS",
+        "id": "ed83c15e-2f47-41ea-864e-e3b6fb98d4ac",
+        "tool_call_id": "call_8X5gnDw47sLXAUjd7c0WOS3B",
         "status": "success"
       },
       "inputParameters": {

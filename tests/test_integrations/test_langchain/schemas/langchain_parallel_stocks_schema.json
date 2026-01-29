@@ -1,0 +1,420 @@
+{
+  "uuid": "ab1384f2-e4c5-4d80-ad2f-ff4efc88830a",
+  "baseSpans": [
+    {
+      "uuid": "019bf9a2-fed8-7742-9610-960878af0bec",
+      "name": "parallel_stocks_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T09:29:27.512Z",
+      "endTime": "2026-01-26T09:29:30.860Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 89,
+                "prompt_tokens": 147,
+                "total_tokens": 236,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DCRVZnY2ofJKX6Q0LjYye3Q7SLO",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a2-fed9-74f1-99fd-64926a8c8056-0",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "AAPL"
+                },
+                "id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 147,
+              "output_tokens": 89,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "$178.50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+            "status": "success"
+          },
+          {
+            "content": "AAPL price: $178.50 (USD)",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 84,
+                "prompt_tokens": 182,
+                "total_tokens": 266,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DCTzzHAIYtBIdZNShDUGBSP2gnI",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a3-0540-7273-9ef8-0baff5a8a148-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 182,
+              "output_tokens": 84,
+              "total_tokens": 266,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "output": {
+            "content": "$178.50",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+            "status": "success"
+          },
+          "inputParameters": {
+            "symbol": "AAPL"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf9a3-0540-7273-9ef8-0baff5a8a148",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-fed8-7742-9610-960878af0bec",
+      "startTime": "2026-01-26T09:29:29.152Z",
+      "endTime": "2026-01-26T09:29:30.859Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions."
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "$178.50"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "AAPL price: $178.50 (USD)",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 182.0,
+      "outputTokenCount": 84.0
+    },
+    {
+      "uuid": "019bf9a2-fed9-74f1-99fd-64926a8c8056",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-fed8-7742-9610-960878af0bec",
+      "startTime": "2026-01-26T09:29:27.513Z",
+      "endTime": "2026-01-26T09:29:29.151Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AAPL"
+            },
+            "id": "call_ewH22N5Wj03pmEikGWL0mUvh"
+          }
+        ]
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 147.0,
+      "outputTokenCount": 89.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf9a3-053f-74d2-ac0a-fdc747a707ab",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf9a2-fed8-7742-9610-960878af0bec",
+      "startTime": "2026-01-26T09:29:29.151Z",
+      "endTime": "2026-01-26T09:29:29.152Z",
+      "input": {
+        "symbol": "AAPL"
+      },
+      "output": {
+        "content": "$178.50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-26T09:29:27.512Z",
+  "endTime": "2026-01-26T09:29:30.860Z",
+  "name": "langchain-parallel-stocks",
+  "tags": [
+    "langchain",
+    "parallel",
+    "stocks"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Use the get_stock_price tool to get the price for AAPL. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 89,
+            "prompt_tokens": 147,
+            "total_tokens": 236,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DCRVZnY2ofJKX6Q0LjYye3Q7SLO",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a2-fed9-74f1-99fd-64926a8c8056-0",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "AAPL"
+            },
+            "id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 147,
+          "output_tokens": 89,
+          "total_tokens": 236,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      },
+      {
+        "content": "$178.50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+        "status": "success"
+      },
+      {
+        "content": "AAPL price: $178.50 (USD)",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 84,
+            "prompt_tokens": 182,
+            "total_tokens": 266,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DCTzzHAIYtBIdZNShDUGBSP2gnI",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a3-0540-7273-9ef8-0baff5a8a148-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 182,
+          "output_tokens": 84,
+          "total_tokens": 266,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_stock_price",
+      "output": {
+        "content": "$178.50",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_ewH22N5Wj03pmEikGWL0mUvh",
+        "status": "success"
+      },
+      "inputParameters": {
+        "symbol": "AAPL"
+      }
+    }
+  ]
+}

@@ -368,7 +368,6 @@ jobs:
         if: ${{ env.OPENAI_API_KEY != '' && env.CONFIDENT_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
         run: >
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys
-          --deselect tests/test_integrations/test_langgraph/test_create_task.py::test_observe_wrapped_async_langgraph_callback_no_span_stack_mismatch
           tests/test_integrations/test_langchain/
           tests/test_integrations/test_langgraph/
           
@@ -376,4 +375,3 @@ jobs:
       - name: Run langchain/langgraph tests (no secrets)
         if: ${{ env.OPENAI_API_KEY == '' || env.CONFIDENT_API_KEY == '' || env.ANTHROPIC_API_KEY == '' }}
         run: echo "Skipping langchain/langgraph integration tests - API keys required."
-            

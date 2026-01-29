@@ -212,11 +212,12 @@ version = "0.7.0"
 description = "Reusable constraint types to use with typing.Annotated"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53"},
     {file = "annotated_types-0.7.0.tar.gz", hash = "sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "anthropic"
@@ -252,11 +253,12 @@ version = "4.12.0"
 description = "High-level concurrency and networking framework on top of asyncio or Trio"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "anyio-4.12.0-py3-none-any.whl", hash = "sha256:dad2376a628f98eeca4881fc56cd06affd18f659b17a747d3ff0307ced94b1bb"},
     {file = "anyio-4.12.0.tar.gz", hash = "sha256:73c693b567b0c55130c104d0b43a9baf3aa6a31fc6110116509f27bf75e21ec0"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 exceptiongroup = {version = ">=1.0.2", markers = "python_version < \"3.11\""}
@@ -679,11 +681,12 @@ version = "2025.11.12"
 description = "Python package for providing Mozilla's CA Bundle."
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "certifi-2025.11.12-py3-none-any.whl", hash = "sha256:97de8790030bbd5c2d96b7ec782fc2f7820ef8dba6db909ccf95449f2d062d4b"},
     {file = "certifi-2025.11.12.tar.gz", hash = "sha256:d8ab5478f2ecd78af242878415affce761ca6bc54a22a27e026d7c25357c3316"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "cffi"
@@ -778,7 +781,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\"", integrations = "python_version >= \"3.10\" and platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -815,7 +818,7 @@ version = "3.4.4"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "charset_normalizer-3.4.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e824f1492727fa856dd6eda4f7cee25f8518a12f3c4a56a74e8095695089cf6d"},
     {file = "charset_normalizer-3.4.4-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4bd5d4137d500351a30687c2d3971758aac9a19208fc110ccb9d7188fbe709e8"},
@@ -931,6 +934,7 @@ files = [
     {file = "charset_normalizer-3.4.4-py3-none-any.whl", hash = "sha256:7a32c560861a02ff789ad905a2fe94e3f840803362c84fecf1851cb4cf3dc37f"},
     {file = "charset_normalizer-3.4.4.tar.gz", hash = "sha256:94537985111c35f28720e43603b8e7b43a6ecfb2ce1d3058bbe955b73404e21a"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "chromadb"
@@ -1092,12 +1096,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\" or sys_platform == \"win32\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\" or os_name == \"nt\""}
+markers = {main = "platform_system == \"Windows\" or sys_platform == \"win32\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\" or os_name == \"nt\"", langchain = "python_version >= \"3.10\" and platform_system == \"Windows\""}
 
 [[package]]
 name = "coloredlogs"
@@ -1290,7 +1294,7 @@ files = [
     {file = "cryptography-46.0.3-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:6b5063083824e5509fdba180721d55909ffacccc8adbec85268b48439423d78c"},
     {file = "cryptography-46.0.3.tar.gz", hash = "sha256:a8b17438104fed022ce745b362294d9ce35b4c2e45c1d958ad4a4b019285f4a1"},
 ]
-markers = {dev = "sys_platform == \"linux\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
+markers = {dev = "python_version >= \"3.10\" and sys_platform == \"linux\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "python_full_version >= \"3.9.0\" and platform_python_implementation != \"PyPy\""}
@@ -1437,11 +1441,12 @@ version = "1.9.0"
 description = "Distro - an OS platform information API"
 optional = false
 python-versions = ">=3.6"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
     {file = "distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "dnspython"
@@ -1589,12 +1594,12 @@ version = "1.3.1"
 description = "Backport of PEP 654 (exception groups)"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "integrations"]
-markers = "python_version < \"3.11\""
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598"},
     {file = "exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219"},
 ]
+markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", integrations = "python_version < \"3.11\"", langchain = "python_version == \"3.10\""}
 
 [package.dependencies]
 typing-extensions = {version = ">=4.6.0", markers = "python_version < \"3.13\""}
@@ -2128,7 +2133,7 @@ version = "3.2.4"
 description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["integrations"]
 markers = "python_version == \"3.9\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.2.4-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:8c68325b0d0acf8d91dde4e6f930967dd52a5302cd4062932a6b2e7c2969f47c"},
@@ -2198,7 +2203,7 @@ description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.10"
 groups = ["integrations"]
-markers = "(platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.3.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:6f8496d434d5cb2dce025773ba5597f71f5410ae499d5dd9533e0653258cdb3d"},
     {file = "greenlet-3.3.0-cp310-cp310-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b96dc7eef78fd404e022e165ec55327f935b9b52ff355b067eb4a0267fc1cffb"},
@@ -2397,11 +2402,12 @@ version = "0.16.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"},
     {file = "h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "hf-xet"
@@ -2434,7 +2440,7 @@ files = [
     {file = "hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69"},
     {file = "hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f"},
 ]
-markers = {dev = "python_version == \"3.9\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") or (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version == \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
+markers = {dev = "(platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or platform_machine == \"AMD64\") and python_version >= \"3.11\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\" or platform_machine == \"AMD64\") and python_version == \"3.9\"", integrations = "python_version == \"3.10\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\")"}
 
 [package.extras]
 tests = ["pytest"]
@@ -2445,11 +2451,12 @@ version = "1.0.9"
 description = "A minimal low-level HTTP client."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "httpcore-1.0.9-py3-none-any.whl", hash = "sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"},
     {file = "httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 certifi = "*"
@@ -2521,11 +2528,12 @@ version = "0.28.1"
 description = "The next generation HTTP client."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"},
     {file = "httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 anyio = "*"
@@ -2682,11 +2690,12 @@ version = "3.11"
 description = "Internationalized Domain Names in Applications (IDNA)"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "idna-3.11-py3-none-any.whl", hash = "sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea"},
     {file = "idna-3.11.tar.gz", hash = "sha256:795dafcc9c04ed0c1fb032c2aa73654d8e8c5023a7df64a53f39190ada629902"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.extras]
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
@@ -3082,7 +3091,7 @@ version = "0.10.0"
 description = "Fast iterable JSON parser."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 markers = "python_version == \"3.10\""
 files = [
     {file = "jiter-0.10.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:cd2fb72b02478f06a900a5782de2ef47e0396b3e1f7d5aba30daeb1fce66f303"},
@@ -3170,8 +3179,7 @@ version = "0.12.0"
 description = "Fast iterable JSON parser."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
-markers = "python_version >= \"3.11\" or python_version == \"3.9\""
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "jiter-0.12.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:e7acbaba9703d5de82a2c98ae6a0f59ab9770ab5af5fa35e43a303aee962cf65"},
     {file = "jiter-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:364f1a7294c91281260364222f535bc427f56d4de1d8ffd718162d21fbbd602e"},
@@ -3276,6 +3284,7 @@ files = [
     {file = "jiter-0.12.0-graalpy312-graalpy250_312_native-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c24e864cb30ab82311c6425655b0cdab0a98c5d973b065c66a3f020740c2324c"},
     {file = "jiter-0.12.0.tar.gz", hash = "sha256:64dfcd7d5c168b38d3f9f8bba7fc639edb3418abcc74f22fdbe6b8938293f30b"},
 ]
+markers = {main = "python_version >= \"3.11\" or python_version == \"3.9\"", dev = "python_version >= \"3.11\" or python_version == \"3.9\"", integrations = "python_version >= \"3.11\" or python_version == \"3.9\"", langchain = "python_version >= \"3.11\""}
 
 [[package]]
 name = "jmespath"
@@ -3337,11 +3346,12 @@ version = "1.33"
 description = "Apply JSON-Patches (RFC 6902)"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 files = [
     {file = "jsonpatch-1.33-py2.py3-none-any.whl", hash = "sha256:0ae28c0cd062bbd8b8ecc26d7d164fbbea9652a1a3693f3b956c1eae5145dade"},
     {file = "jsonpatch-1.33.tar.gz", hash = "sha256:9fcd4009c41e6d12348b4a0ff2563ba56a2923a7dfee731d004e212e1ee5030c"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 jsonpointer = ">=1.9"
@@ -3352,11 +3362,12 @@ version = "3.0.0"
 description = "Identify specific nodes in a JSON document (RFC 6901)"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 files = [
     {file = "jsonpointer-3.0.0-py2.py3-none-any.whl", hash = "sha256:13e088adc14fca8b6aa8177c044e12701e6ad4b28ff10e65f2267a90109c9942"},
     {file = "jsonpointer-3.0.0.tar.gz", hash = "sha256:2b2d729f2091522d61c3b31f82e11870f60b68f43fbc705cb76bf4b832af59ef"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "jsonref"
@@ -3493,7 +3504,8 @@ version = "0.3.27"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev"]
+markers = "python_version == \"3.9\""
 files = [
     {file = "langchain-0.3.27-py3-none-any.whl", hash = "sha256:7b20c4f338826acb148d885b20a73a16e410ede9ee4f19bb02011852d5f98798"},
     {file = "langchain-0.3.27.tar.gz", hash = "sha256:aa6f1e6274ff055d0fd36254176770f356ed0a8994297d1df47df341953cec62"},
@@ -3514,6 +3526,42 @@ anthropic = ["langchain-anthropic"]
 aws = ["langchain-aws"]
 azure-ai = ["langchain-azure-ai"]
 cohere = ["langchain-cohere"]
+community = ["langchain-community"]
+deepseek = ["langchain-deepseek"]
+fireworks = ["langchain-fireworks"]
+google-genai = ["langchain-google-genai"]
+google-vertexai = ["langchain-google-vertexai"]
+groq = ["langchain-groq"]
+huggingface = ["langchain-huggingface"]
+mistralai = ["langchain-mistralai"]
+ollama = ["langchain-ollama"]
+openai = ["langchain-openai"]
+perplexity = ["langchain-perplexity"]
+together = ["langchain-together"]
+xai = ["langchain-xai"]
+
+[[package]]
+name = "langchain"
+version = "1.2.4"
+description = "Building applications with LLMs through composability"
+optional = false
+python-versions = "<4.0.0,>=3.10.0"
+groups = ["dev", "langchain"]
+markers = "python_version >= \"3.10\""
+files = [
+    {file = "langchain-1.2.4-py3-none-any.whl", hash = "sha256:182ac9f3c4559c5a6477e00d60ff8a56212ec4db6f101a4957492818dc3ce3e9"},
+    {file = "langchain-1.2.4.tar.gz", hash = "sha256:65119ff1c2ac8cc2410739b0fb2773f8fbfbe83357df9bab8a5fceafb9e04aa1"},
+]
+
+[package.dependencies]
+langchain-core = ">=1.2.1,<2.0.0"
+langgraph = ">=1.0.2,<1.1.0"
+pydantic = ">=2.7.4,<3.0.0"
+
+[package.extras]
+anthropic = ["langchain-anthropic"]
+aws = ["langchain-aws"]
+azure-ai = ["langchain-azure-ai"]
 community = ["langchain-community"]
 deepseek = ["langchain-deepseek"]
 fireworks = ["langchain-fireworks"]
@@ -3563,7 +3611,8 @@ version = "0.3.80"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
-groups = ["dev", "integrations"]
+groups = ["dev"]
+markers = "python_version == \"3.9\""
 files = [
     {file = "langchain_core-0.3.80-py3-none-any.whl", hash = "sha256:2141e3838d100d17dce2359f561ec0df52c526bae0de6d4f469f8026c5747456"},
     {file = "langchain_core-0.3.80.tar.gz", hash = "sha256:29636b82513ab49e834764d023c4d18554d3d719a185d37b019d0a8ae948c6bb"},
@@ -3579,20 +3628,44 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10.0.0"
 typing-extensions = ">=4.7.0,<5.0.0"
 
 [[package]]
-name = "langchain-openai"
-version = "0.3.35"
-description = "An integration package connecting OpenAI and LangChain"
+name = "langchain-core"
+version = "1.2.7"
+description = "Building applications with LLMs through composability"
 optional = false
-python-versions = "<4.0.0,>=3.9.0"
-groups = ["integrations"]
+python-versions = "<4.0.0,>=3.10.0"
+groups = ["dev", "langchain"]
+markers = "python_version >= \"3.10\""
 files = [
-    {file = "langchain_openai-0.3.35-py3-none-any.whl", hash = "sha256:76d5707e6e81fd461d33964ad618bd326cb661a1975cef7c1cb0703576bdada5"},
-    {file = "langchain_openai-0.3.35.tar.gz", hash = "sha256:fa985fd041c3809da256a040c98e8a43e91c6d165b96dcfeb770d8bd457bf76f"},
+    {file = "langchain_core-1.2.7-py3-none-any.whl", hash = "sha256:452f4fef7a3d883357b22600788d37e3d8854ef29da345b7ac7099f33c31828b"},
+    {file = "langchain_core-1.2.7.tar.gz", hash = "sha256:e1460639f96c352b4a41c375f25aeb8d16ffc1769499fb1c20503aad59305ced"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.3.78,<1.0.0"
-openai = ">=1.104.2,<3.0.0"
+jsonpatch = ">=1.33.0,<2.0.0"
+langsmith = ">=0.3.45,<1.0.0"
+packaging = ">=23.2.0,<26.0.0"
+pydantic = ">=2.7.4,<3.0.0"
+pyyaml = ">=5.3.0,<7.0.0"
+tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<10.0.0"
+typing-extensions = ">=4.7.0,<5.0.0"
+uuid-utils = ">=0.12.0,<1.0"
+
+[[package]]
+name = "langchain-openai"
+version = "1.1.7"
+description = "An integration package connecting OpenAI and LangChain"
+optional = false
+python-versions = "<4.0.0,>=3.10.0"
+groups = ["langchain"]
+markers = "python_version >= \"3.10\""
+files = [
+    {file = "langchain_openai-1.1.7-py3-none-any.whl", hash = "sha256:34e9cd686aac1a120d6472804422792bf8080a2103b5d21ee450c9e42d053815"},
+    {file = "langchain_openai-1.1.7.tar.gz", hash = "sha256:f5ec31961ed24777548b63a5fe313548bc6e0eb9730d6552b8c6418765254c81"},
+]
+
+[package.dependencies]
+langchain-core = ">=1.2.6,<2.0.0"
+openai = ">=1.109.1,<3.0.0"
 tiktoken = ">=0.7.0,<1.0.0"
 
 [[package]]
@@ -3601,7 +3674,7 @@ version = "0.3.11"
 description = "LangChain text splitting utilities"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev"]
 files = [
     {file = "langchain_text_splitters-0.3.11-py3-none-any.whl", hash = "sha256:cf079131166a487f1372c8ab5d0bfaa6c0a4291733d9c43a34a16ac9bcd6a393"},
     {file = "langchain_text_splitters-0.3.11.tar.gz", hash = "sha256:7a50a04ada9a133bbabb80731df7f6ddac51bc9f1b9cab7fa09304d71d38a6cc"},
@@ -3612,40 +3685,24 @@ langchain-core = ">=0.3.75,<2.0.0"
 
 [[package]]
 name = "langgraph"
-version = "0.6.11"
+version = "1.0.7"
 description = "Building stateful, multi-actor applications with LLMs"
 optional = false
-python-versions = ">=3.9"
-groups = ["integrations"]
+python-versions = ">=3.10"
+groups = ["dev", "langchain"]
+markers = "python_version >= \"3.10\""
 files = [
-    {file = "langgraph-0.6.11-py3-none-any.whl", hash = "sha256:49268de69d85b7db3da9e2ca582a474516421c1c44be5cff390416cfa6967faa"},
-    {file = "langgraph-0.6.11.tar.gz", hash = "sha256:cd5373d0a59701ab39c9f8af33a33c5704553de815318387fa7f240511e0efd7"},
+    {file = "langgraph-1.0.7-py3-none-any.whl", hash = "sha256:9d68e8f8dd8f3de2fec45f9a06de05766d9b075b78fb03171779893b7a52c4d2"},
+    {file = "langgraph-1.0.7.tar.gz", hash = "sha256:0cfdfee51e6e8cfe503ecc7367c73933437c505b03fa10a85c710975c8182d9a"},
 ]
 
 [package.dependencies]
 langchain-core = ">=0.1"
-langgraph-checkpoint = ">=2.1.0,<4.0.0"
-langgraph-prebuilt = ">=0.6.0,<0.7.0"
-langgraph-sdk = ">=0.2.2,<0.3.0"
+langgraph-checkpoint = ">=2.1.0,<5.0.0"
+langgraph-prebuilt = ">=1.0.7,<1.1.0"
+langgraph-sdk = ">=0.3.0,<0.4.0"
 pydantic = ">=2.7.4"
 xxhash = ">=3.5.0"
-
-[[package]]
-name = "langgraph-checkpoint"
-version = "2.1.2"
-description = "Library with base interfaces for LangGraph checkpoint savers."
-optional = false
-python-versions = ">=3.9"
-groups = ["integrations"]
-markers = "python_version == \"3.9\""
-files = [
-    {file = "langgraph_checkpoint-2.1.2-py3-none-any.whl", hash = "sha256:911ebffb069fd01775d4b5184c04aaafc2962fcdf50cf49d524cd4367c4d0c60"},
-    {file = "langgraph_checkpoint-2.1.2.tar.gz", hash = "sha256:112e9d067a6eff8937caf198421b1ffba8d9207193f14ac6f89930c1260c06f9"},
-]
-
-[package.dependencies]
-langchain-core = ">=0.2.38"
-ormsgpack = ">=1.10.0"
 
 [[package]]
 name = "langgraph-checkpoint"
@@ -3653,7 +3710,7 @@ version = "3.0.1"
 description = "Library with base interfaces for LangGraph checkpoint savers."
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["dev", "langchain"]
 markers = "python_version >= \"3.10\""
 files = [
     {file = "langgraph_checkpoint-3.0.1-py3-none-any.whl", hash = "sha256:9b04a8d0edc0474ce4eaf30c5d731cee38f11ddff50a6177eead95b5c4e4220b"},
@@ -3666,48 +3723,32 @@ ormsgpack = ">=1.12.0"
 
 [[package]]
 name = "langgraph-prebuilt"
-version = "0.6.5"
+version = "1.0.7"
 description = "Library with high-level APIs for creating and executing LangGraph agents and tools."
 optional = false
-python-versions = ">=3.9"
-groups = ["integrations"]
+python-versions = ">=3.10"
+groups = ["dev", "langchain"]
+markers = "python_version >= \"3.10\""
 files = [
-    {file = "langgraph_prebuilt-0.6.5-py3-none-any.whl", hash = "sha256:b6ceb5db31c16a30a3ee3c0b923667f02e7c9e27852621abf9d5bd5603534141"},
-    {file = "langgraph_prebuilt-0.6.5.tar.gz", hash = "sha256:9c63e9e867e62b345805fd1e8ea5c2df5cc112e939d714f277af84f2afe5950d"},
+    {file = "langgraph_prebuilt-1.0.7-py3-none-any.whl", hash = "sha256:e14923516504405bb5edc3977085bc9622c35476b50c1808544490e13871fe7c"},
+    {file = "langgraph_prebuilt-1.0.7.tar.gz", hash = "sha256:38e097e06de810de4d0e028ffc0e432bb56d1fb417620fb1dfdc76c5e03e4bf9"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.3.67"
-langgraph-checkpoint = ">=2.1.0,<4.0.0"
+langchain-core = ">=1.0.0"
+langgraph-checkpoint = ">=2.1.0,<5.0.0"
 
 [[package]]
 name = "langgraph-sdk"
-version = "0.2.9"
-description = "SDK for interacting with LangGraph API"
-optional = false
-python-versions = ">=3.9"
-groups = ["integrations"]
-markers = "python_version == \"3.9\""
-files = [
-    {file = "langgraph_sdk-0.2.9-py3-none-any.whl", hash = "sha256:fbf302edadbf0fb343596f91c597794e936ef68eebc0d3e1d358b6f9f72a1429"},
-    {file = "langgraph_sdk-0.2.9.tar.gz", hash = "sha256:b3bd04c6be4fa382996cd2be8fbc1e7cc94857d2bc6b6f4599a7f2a245975303"},
-]
-
-[package.dependencies]
-httpx = ">=0.25.2"
-orjson = ">=3.10.1"
-
-[[package]]
-name = "langgraph-sdk"
-version = "0.2.12"
+version = "0.3.3"
 description = "SDK for interacting with LangGraph API"
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["dev", "langchain"]
 markers = "python_version >= \"3.10\""
 files = [
-    {file = "langgraph_sdk-0.2.12-py3-none-any.whl", hash = "sha256:d3866a59dec225fdbfad4813399fcd9d2985ecb53a6acb9fe61fe0d8e9b5db7d"},
-    {file = "langgraph_sdk-0.2.12.tar.gz", hash = "sha256:7776a95af1e2b084806ad815655fe6f287ead082cae629c106aed72d6e9dce29"},
+    {file = "langgraph_sdk-0.3.3-py3-none-any.whl", hash = "sha256:a52ebaf09d91143e55378bb2d0b033ed98f57f48c9ad35c8f81493b88705fc7b"},
+    {file = "langgraph_sdk-0.3.3.tar.gz", hash = "sha256:c34c3dce3b6848755eb61f0c94369d1ba04aceeb1b76015db1ea7362c544fb26"},
 ]
 
 [package.dependencies]
@@ -3720,7 +3761,7 @@ version = "0.4.37"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev"]
 markers = "python_version == \"3.9\""
 files = [
     {file = "langsmith-0.4.37-py3-none-any.whl", hash = "sha256:e34a94ce7277646299e4703a0f6e2d2c43647a28e8b800bb7ef82fd87a0ec766"},
@@ -3750,7 +3791,7 @@ version = "0.4.55"
 description = "Client library to connect to the LangSmith Observability and Evaluation Platform."
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 markers = "python_version >= \"3.10\""
 files = [
     {file = "langsmith-0.4.55-py3-none-any.whl", hash = "sha256:d15d8425056117ae1adb245ca68c22f128e1b1b3fa95b2ff5caf65e2ce255a02"},
@@ -5233,11 +5274,12 @@ version = "1.109.1"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "integrations"]
+groups = ["main", "integrations", "langchain"]
 files = [
     {file = "openai-1.109.1-py3-none-any.whl", hash = "sha256:6bcaf57086cf59159b8e27447e4e7dd019db5d29a438072fbd49c290c7e65315"},
     {file = "openai-1.109.1.tar.gz", hash = "sha256:d173ed8dbca665892a6db099b4a2dfac624f94d20a93f46eb0b56aae940ed869"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 anyio = ">=3.5.0,<5"
@@ -5515,7 +5557,7 @@ version = "3.11.4"
 description = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev", "integrations", "langchain"]
 files = [
     {file = "orjson-3.11.4-cp310-cp310-macosx_10_15_x86_64.macosx_11_0_arm64.macosx_10_15_universal2.whl", hash = "sha256:e3aa2118a3ece0d25489cbe48498de8a5d580e42e8d9979f65bf47900a15aba1"},
     {file = "orjson-3.11.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a69ab657a4e6733133a3dca82768f2f8b884043714e8d2b9ba9f52b6efef5c44"},
@@ -5605,73 +5647,7 @@ files = [
     {file = "orjson-3.11.4-cp39-cp39-win_amd64.whl", hash = "sha256:e2985ce8b8c42d00492d0ed79f2bd2b6460d00f2fa671dfde4bf2e02f49bf5c6"},
     {file = "orjson-3.11.4.tar.gz", hash = "sha256:39485f4ab4c9b30a3943cfe99e1a213c4776fb69e8abd68f66b83d5a0b0fdc6d"},
 ]
-
-[[package]]
-name = "ormsgpack"
-version = "1.11.0"
-description = ""
-optional = false
-python-versions = ">=3.9"
-groups = ["integrations"]
-markers = "python_version == \"3.9\""
-files = [
-    {file = "ormsgpack-1.11.0-cp310-cp310-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:03d4e658dd6e1882a552ce1d13cc7b49157414e7d56a4091fbe7823225b08cba"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1bb67eb913c2b703f0ed39607fc56e50724dd41f92ce080a586b4d6149eb3fe4"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:1e54175b92411f73a238e5653a998627f6660de3def37d9dd7213e0fd264ca56"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ca2b197f4556e1823d1319869d4c5dc278be335286d2308b0ed88b59a5afcc25"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:bc62388262f58c792fe1e450e1d9dbcc174ed2fb0b43db1675dd7c5ff2319d6a"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-musllinux_1_2_armv7l.whl", hash = "sha256:c48bc10af74adfbc9113f3fb160dc07c61ad9239ef264c17e449eba3de343dc2"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:a608d3a1d4fa4acdc5082168a54513cff91f47764cef435e81a483452f5f7647"},
-    {file = "ormsgpack-1.11.0-cp310-cp310-win_amd64.whl", hash = "sha256:97217b4f7f599ba45916b9c4c4b1d5656e8e2a4d91e2e191d72a7569d3c30923"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:c7be823f47d8e36648d4bc90634b93f02b7d7cc7480081195f34767e86f181fb"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:68accf15d1b013812755c0eb7a30e1fc2f81eb603a1a143bf0cda1b301cfa797"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:805d06fb277d9a4e503c0c707545b49cde66cbb2f84e5cf7c58d81dfc20d8658"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a1e57cdf003e77acc43643bda151dc01f97147a64b11cdee1380bb9698a7601c"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:37fc05bdaabd994097c62e2f3e08f66b03f856a640ede6dc5ea340bd15b77f4d"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:a6e9db6c73eb46b2e4d97bdffd1368a66f54e6806b563a997b19c004ef165e1d"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:e9c44eae5ac0196ffc8b5ed497c75511056508f2303fa4d36b208eb820cf209e"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-win_amd64.whl", hash = "sha256:11d0dfaf40ae7c6de4f7dbd1e4892e2e6a55d911ab1774357c481158d17371e4"},
-    {file = "ormsgpack-1.11.0-cp311-cp311-win_arm64.whl", hash = "sha256:0c63a3f7199a3099c90398a1bdf0cb577b06651a442dc5efe67f2882665e5b02"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:3434d0c8d67de27d9010222de07fb6810fb9af3bb7372354ffa19257ac0eb83b"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d2da5bd097e8dbfa4eb0d4ccfe79acd6f538dee4493579e2debfe4fc8f4ca89b"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:fdbaa0a5a8606a486960b60c24f2d5235d30ac7a8b98eeaea9854bffef14dc3d"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3682f24f800c1837017ee90ce321086b2cbaef88db7d4cdbbda1582aa6508159"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:fcca21202bb05ccbf3e0e92f560ee59b9331182e4c09c965a28155efbb134993"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:c30e5c4655ba46152d722ec7468e8302195e6db362ec1ae2c206bc64f6030e43"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:7138a341f9e2c08c59368f03d3be25e8b87b3baaf10d30fb1f6f6b52f3d47944"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-win_amd64.whl", hash = "sha256:d4bd8589b78a11026d47f4edf13c1ceab9088bb12451f34396afe6497db28a27"},
-    {file = "ormsgpack-1.11.0-cp312-cp312-win_arm64.whl", hash = "sha256:e5e746a1223e70f111d4001dab9585ac8639eee8979ca0c8db37f646bf2961da"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:0e7b36ab7b45cb95217ae1f05f1318b14a3e5ef73cb00804c0f06233f81a14e8"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:43402d67e03a9a35cc147c8c03f0c377cad016624479e1ee5b879b8425551484"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:64fd992f932764d6306b70ddc755c1bc3405c4c6a69f77a36acf7af1c8f5ada4"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0362fb7fe4a29c046c8ea799303079a09372653a1ce5a5a588f3bbb8088368d0"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:de2f7a65a9d178ed57be49eba3d0fc9b833c32beaa19dbd4ba56014d3c20b152"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:f38cfae95461466055af966fc922d06db4e1654966385cda2828653096db34da"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:c88396189d238f183cea7831b07a305ab5c90d6d29b53288ae11200bd956357b"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-win_amd64.whl", hash = "sha256:5403d1a945dd7c81044cebeca3f00a28a0f4248b33242a5d2d82111628043725"},
-    {file = "ormsgpack-1.11.0-cp313-cp313-win_arm64.whl", hash = "sha256:c57357b8d43b49722b876edf317bdad9e6d52071b523fdd7394c30cd1c67d5a0"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:d390907d90fd0c908211592c485054d7a80990697ef4dff4e436ac18e1aab98a"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6153c2e92e789509098e04c9aa116b16673bd88ec78fbe0031deeb34ab642d10"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:c2b2c2a065a94d742212b2018e1fecd8f8d72f3c50b53a97d1f407418093446d"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:110e65b5340f3d7ef8b0009deae3c6b169437e6b43ad5a57fd1748085d29d2ac"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:c27e186fca96ab34662723e65b420919910acbbc50fc8e1a44e08f26268cb0e0"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-musllinux_1_2_armv7l.whl", hash = "sha256:d56b1f877c13d499052d37a3db2378a97d5e1588d264f5040b3412aee23d742c"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:c88e28cd567c0a3269f624b4ade28142d5e502c8e826115093c572007af5be0a"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-win_amd64.whl", hash = "sha256:8811160573dc0a65f62f7e0792c4ca6b7108dfa50771edb93f9b84e2d45a08ae"},
-    {file = "ormsgpack-1.11.0-cp314-cp314-win_arm64.whl", hash = "sha256:23e30a8d3c17484cf74e75e6134322255bd08bc2b5b295cc9c442f4bae5f3c2d"},
-    {file = "ormsgpack-1.11.0-cp314-cp314t-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:2905816502adfaf8386a01dd85f936cd378d243f4f5ee2ff46f67f6298dc90d5"},
-    {file = "ormsgpack-1.11.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c04402fb9a0a9b9f18fbafd6d5f8398ee99b3ec619fb63952d3a954bc9d47daa"},
-    {file = "ormsgpack-1.11.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a025ec07ac52056ecfd9e57b5cbc6fff163f62cb9805012b56cda599157f8ef2"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:354c6a5039faf63b63d8f42ec7915583a4a56e10b319284370a5a89c4382d985"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7058c85cc13dd329bc7b528e38626c6babcd0066d6e9163330a1509fe0aa4707"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:4e15b634be324fb18dab7aa82ab929a0d57d42c12650ae3dedd07d8d31b17733"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6329e6eae9dfe600962739a6e060ea82885ec58b8338875c5ac35080da970f94"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:b27546c28f92b9eb757620f7f1ed89fb7b07be3b9f4ba1b7de75761ec1c4bcc8"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-musllinux_1_2_armv7l.whl", hash = "sha256:26a17919d9144b4ac7112dbbadef07927abbe436be2cf99a703a19afe7dd5c8b"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:5352868ee4cdc00656bf216b56bc654f72ac3008eb36e12561f6337bb7104b45"},
-    {file = "ormsgpack-1.11.0-cp39-cp39-win_amd64.whl", hash = "sha256:2ffe36f1f441a40949e8587f5aa3d3fc9f100576925aab667117403eab494338"},
-    {file = "ormsgpack-1.11.0.tar.gz", hash = "sha256:7c9988e78fedba3292541eb3bb274fa63044ef4da2ddb47259ea70c05dee4206"},
-]
+markers = {integrations = "python_version == \"3.10\"", langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "ormsgpack"
@@ -5679,7 +5655,7 @@ version = "1.12.0"
 description = ""
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["dev", "langchain"]
 markers = "python_version >= \"3.10\""
 files = [
     {file = "ormsgpack-1.12.0-cp310-cp310-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:e08904c232358b94a682ccfbb680bc47d3fd5c424bb7dccb65974dd20c95e8e1"},
@@ -5751,11 +5727,12 @@ version = "25.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
     {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "pandas"
@@ -6880,7 +6857,7 @@ files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
 ]
-markers = {dev = "sys_platform == \"linux\" and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\" and python_version >= \"3.10\""}
+markers = {dev = "platform_python_implementation != \"PyPy\" and sys_platform == \"linux\" and implementation_name != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\" and python_version >= \"3.10\""}
 
 [[package]]
 name = "pydantic"
@@ -6888,11 +6865,12 @@ version = "2.12.5"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "pydantic-2.12.5-py3-none-any.whl", hash = "sha256:e561593fccf61e8a20fc46dfc2dfe075b8be7d0188df33f221ad1f0139180f9d"},
     {file = "pydantic-2.12.5.tar.gz", hash = "sha256:4d351024c75c0f085a9febbb665ce8c0c6ec5d30e903bdb6394b7ede26aebb49"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 annotated-types = ">=0.6.0"
@@ -7014,7 +6992,7 @@ version = "2.41.5"
 description = "Core functionality for Pydantic validation and serialization"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "pydantic_core-2.41.5-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:77b63866ca88d804225eaa4af3e664c5faf3568cea95360d21f4725ab6e07146"},
     {file = "pydantic_core-2.41.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:dfa8a0c812ac681395907e71e1274819dec685fec28273a28905df579ef137e2"},
@@ -7138,6 +7116,7 @@ files = [
     {file = "pydantic_core-2.41.5-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:56121965f7a4dc965bff783d70b907ddf3d57f6eba29b6d2e5dabfaf07799c51"},
     {file = "pydantic_core-2.41.5.tar.gz", hash = "sha256:08daa51ea16ad373ffd5e7606252cc32f07bc72b28284b6bc9c6df804816476e"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 typing-extensions = ">=4.14.1"
@@ -7687,7 +7666,7 @@ version = "6.0.3"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "integrations"]
+groups = ["dev", "integrations", "langchain"]
 files = [
     {file = "PyYAML-6.0.3-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:c2514fceb77bc5e7a2f7adfaa1feb2fb311607c9cb518dbc378688ec73d8292f"},
     {file = "PyYAML-6.0.3-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c57bb8c96f6d1808c030b1687b9b5fb476abaa47f0db9c0101f5e9f394e97f4"},
@@ -7763,6 +7742,7 @@ files = [
     {file = "pyyaml-6.0.3-cp39-cp39-win_amd64.whl", hash = "sha256:2e71d11abed7344e42a8849600193d15b6def118602c4c176f748e4583246007"},
     {file = "pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "readme-renderer"
@@ -7826,7 +7806,7 @@ version = "2025.11.3"
 description = "Alternative regular expression module, to replace re."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev", "integrations", "langchain"]
 files = [
     {file = "regex-2025.11.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2b441a4ae2c8049106e8b39973bfbddfb25a179dda2bdb99b0eeb60c40a6a3af"},
     {file = "regex-2025.11.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2fa2eed3f76677777345d2f81ee89f5de2f5745910e805f7af7386a920fa7313"},
@@ -7944,6 +7924,7 @@ files = [
     {file = "regex-2025.11.3-cp39-cp39-win_arm64.whl", hash = "sha256:43b4fb020e779ca81c1b5255015fe2b82816c76ec982354534ad9ec09ad7c9e3"},
     {file = "regex-2025.11.3.tar.gz", hash = "sha256:1fedc720f9bb2494ce31a58a1631f9c82df6a09b49c19517ea5cc280b4541e01"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "requests"
@@ -7951,11 +7932,12 @@ version = "2.32.5"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"},
     {file = "requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 certifi = ">=2017.4.17"
@@ -7993,11 +7975,12 @@ version = "1.0.0"
 description = "A utility belt for advanced users of python-requests"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 files = [
     {file = "requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6"},
     {file = "requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 requests = ">=2.0.1,<3.0.0"
@@ -8437,7 +8420,7 @@ description = "Python bindings to FreeDesktop.org Secret Service API"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
-markers = "sys_platform == \"linux\" and python_version >= \"3.10\""
+markers = "python_version >= \"3.10\" and sys_platform == \"linux\""
 files = [
     {file = "secretstorage-3.5.0-py3-none-any.whl", hash = "sha256:0ce65888c0725fcb2c5bc0fdb8e5438eece02c523557ea40ce0703c266248137"},
     {file = "secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be"},
@@ -8562,11 +8545,12 @@ version = "1.3.1"
 description = "Sniff out which async library your code is running under"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"},
     {file = "sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "soupsieve"
@@ -8819,11 +8803,12 @@ version = "9.1.2"
 description = "Retry code until it succeeds"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138"},
     {file = "tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.extras]
 doc = ["reno", "sphinx"]
@@ -8835,7 +8820,7 @@ version = "0.12.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev", "integrations", "langchain"]
 files = [
     {file = "tiktoken-0.12.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:3de02f5a491cfd179aec916eddb70331814bd6bf764075d39e21d5862e533970"},
     {file = "tiktoken-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b6cfb6d9b7b54d20af21a912bfe63a2727d9cfa8fbda642fd8322c70340aad16"},
@@ -8895,6 +8880,7 @@ files = [
     {file = "tiktoken-0.12.0-cp39-cp39-win_amd64.whl", hash = "sha256:2cff3688ba3c639ebe816f8d58ffbbb0aa7433e23e08ab1cade5d175fc973fb3"},
     {file = "tiktoken-0.12.0.tar.gz", hash = "sha256:b18ba7ee2b093863978fcb14f74b3707cdc8d4d4d3836853ce7ec60772139931"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 regex = ">=2022.1.18"
@@ -9021,11 +9007,12 @@ version = "4.67.1"
 description = "Fast, Extensible Progress Meter"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2"},
     {file = "tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
@@ -9149,11 +9136,12 @@ version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
     {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "typing-inspect"
@@ -9177,11 +9165,12 @@ version = "0.4.2"
 description = "Runtime typing introspection tools"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "typing_inspection-0.4.2-py3-none-any.whl", hash = "sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7"},
     {file = "typing_inspection-0.4.2.tar.gz", hash = "sha256:ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 typing-extensions = ">=4.12.0"
@@ -9204,11 +9193,12 @@ version = "2.3.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df"},
     {file = "urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.extras]
 brotli = ["brotli (>=1.0.9) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=0.8.0) ; platform_python_implementation != \"CPython\""]
@@ -9222,7 +9212,7 @@ version = "0.12.0"
 description = "Drop-in replacement for Python UUID with bindings in Rust"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 markers = "python_version >= \"3.10\""
 files = [
     {file = "uuid_utils-0.12.0-cp39-abi3-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:3b9b30707659292f207b98f294b0e081f6d77e1fbc760ba5b41331a39045f514"},
@@ -9290,7 +9280,7 @@ files = [
     {file = "uvicorn-0.38.0-py3-none-any.whl", hash = "sha256:48c0afd214ceb59340075b4a052ea1ee91c16fbc2a9b1469cca0e54566977b02"},
     {file = "uvicorn-0.38.0.tar.gz", hash = "sha256:fd97093bdd120a2609fc0d3afe931d4d4ad688b6e75f0f929fde1bc36fe0e91d"},
 ]
-markers = {integrations = "sys_platform != \"emscripten\" and python_version >= \"3.10\" or python_version == \"3.10\""}
+markers = {integrations = "python_version >= \"3.10\" and sys_platform != \"emscripten\" or python_version == \"3.10\""}
 
 [package.dependencies]
 click = ">=7.0"
@@ -9365,7 +9355,7 @@ files = [
     {file = "uvloop-0.22.1-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:286322a90bea1f9422a470d5d2ad82d38080be0a29c4dd9b3e6384320a4d11e7"},
     {file = "uvloop-0.22.1.tar.gz", hash = "sha256:6c84bae345b9147082b17371e3dd5d42775bddce91f885499017f4607fdaf39f"},
 ]
-markers = {dev = "sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", integrations = "python_version == \"3.10\" and sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""}
+markers = {dev = "platform_python_implementation != \"PyPy\" and sys_platform != \"win32\" and sys_platform != \"cygwin\"", integrations = "python_version == \"3.10\" and sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\""}
 
 [package.extras]
 dev = ["Cython (>=3.0,<4.0)", "setuptools (>=60)"]
@@ -9741,7 +9731,8 @@ version = "3.6.0"
 description = "Python binding for xxHash"
 optional = false
 python-versions = ">=3.7"
-groups = ["integrations"]
+groups = ["dev", "langchain"]
+markers = "python_version >= \"3.10\""
 files = [
     {file = "xxhash-3.6.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:87ff03d7e35c61435976554477a7f4cd1704c3596a89a8300d5ce7fc83874a71"},
     {file = "xxhash-3.6.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f572dfd3d0e2eb1a57511831cf6341242f5a9f8298a45862d085f5b93394a27d"},
@@ -10057,7 +10048,7 @@ version = "0.25.0"
 description = "Zstandard bindings for Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["dev", "langchain"]
 files = [
     {file = "zstandard-0.25.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e59fdc271772f6686e01e1b3b74537259800f57e24280be3f29c8a0deb1904dd"},
     {file = "zstandard-0.25.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4d441506e9b372386a5271c64125f72d5df6d2a8e8a2a45a0ae09b03cb781ef7"},
@@ -10159,6 +10150,7 @@ files = [
     {file = "zstandard-0.25.0-cp39-cp39-win_amd64.whl", hash = "sha256:37daddd452c0ffb65da00620afb8e17abd4adaae6ce6310702841760c2c26860"},
     {file = "zstandard-0.25.0.tar.gz", hash = "sha256:7713e1179d162cf5c7906da876ec2ccb9c3a9dcbdffef0cc7f70c3667a205f0b"},
 ]
+markers = {langchain = "python_version >= \"3.10\""}
 
 [package.extras]
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
@@ -10166,4 +10158,4 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "c9613bfda630eb6fbfc0313068c164e79a15f123e356de90ca87ef4d8411f63b"
+content-hash = "87a7e88c7c7658d1100f7b59a424618964c5ac80021e6f1c788a487e0b4d3596"
