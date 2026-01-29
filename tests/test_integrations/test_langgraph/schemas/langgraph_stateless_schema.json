@@ -1,61 +1,43 @@
 {
-  "uuid": "399febe4-3198-44e4-9b02-20eb73931efd",
+  "uuid": "8700b7cb-f00c-4e38-bea1-96b9c3839bb7",
   "baseSpans": [
     {
-      "uuid": "019bc088-d3b3-7510-9a2d-245a7f738288",
+      "uuid": "019bf9bc-a82d-7a93-98f2-18cac40891be",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:31.219Z",
-      "endTime": "2026-01-15T07:22:34.384Z",
+      "startTime": "2026-01-26T09:57:29.261Z",
+      "endTime": "2026-01-26T09:57:31.855Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -67,14 +49,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -82,21 +66,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -113,30 +91,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-            "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+            "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+            "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "status": "success"
           },
           {
-            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "view_cart",
-            "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-            "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-            "status": "success"
-          },
-          {
-            "content": "I added 3 oranges to your cart. Here's your current cart contents:\n\n- 2x Apples\n- 1x Banana\n- 3x Oranges\n\nIs there anything else you would like to do?",
+            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 45,
-                "prompt_tokens": 282,
-                "total_tokens": 327,
+                "completion_tokens": 19,
+                "prompt_tokens": 317,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -148,20 +116,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBybi8KgS5Me0lqEBwMpZxscBW5X",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdbEbnZkepnQyEe36Ni1mn0ds71",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-da82-7f53-b372-4f1abc301807-0",
+            "id": "lc_run--019bf9bc-ae5b-72f1-9c75-78b105d01e69-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 282,
-              "output_tokens": 45,
-              "total_tokens": 327,
+              "input_tokens": 317,
+              "output_tokens": 19,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -176,50 +146,32 @@
       }
     },
     {
-      "uuid": "019bc088-da82-7f53-b372-4f08cf58630d",
+      "uuid": "019bf9bc-ae5a-7751-946f-c68f5503cd96",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-d3b3-7510-9a2d-245a7f738288",
-      "startTime": "2026-01-15T07:22:32.962Z",
-      "endTime": "2026-01-15T07:22:34.384Z",
+      "parentUuid": "019bf9bc-a82d-7a93-98f2-18cac40891be",
+      "startTime": "2026-01-26T09:57:30.842Z",
+      "endTime": "2026-01-26T09:57:31.854Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -231,14 +183,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -246,21 +200,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -277,18 +225,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-            "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-            "status": "success"
-          },
-          {
-            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "view_cart",
-            "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-            "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+            "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+            "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "status": "success"
           }
         ]
@@ -296,15 +234,15 @@
       "output": {
         "messages": [
           {
-            "content": "I added 3 oranges to your cart. Here's your current cart contents:\n\n- 2x Apples\n- 1x Banana\n- 3x Oranges\n\nIs there anything else you would like to do?",
+            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 45,
-                "prompt_tokens": 282,
-                "total_tokens": 327,
+                "completion_tokens": 19,
+                "prompt_tokens": 317,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -316,20 +254,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBybi8KgS5Me0lqEBwMpZxscBW5X",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdbEbnZkepnQyEe36Ni1mn0ds71",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-da82-7f53-b372-4f1abc301807-0",
+            "id": "lc_run--019bf9bc-ae5b-72f1-9c75-78b105d01e69-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 282,
-              "output_tokens": 45,
-              "total_tokens": 327,
+              "input_tokens": 317,
+              "output_tokens": 19,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -344,50 +284,32 @@
       }
     },
     {
-      "uuid": "019bc088-e010-7643-ae83-f3c5fa082004",
+      "uuid": "019bf9bc-b24e-7dd3-b639-fb4f09b6fae7",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-da82-7f53-b372-4f08cf58630d",
-      "startTime": "2026-01-15T07:22:34.384Z",
-      "endTime": "2026-01-15T07:22:34.384Z",
+      "parentUuid": "019bf9bc-ae5a-7751-946f-c68f5503cd96",
+      "startTime": "2026-01-26T09:57:31.854Z",
+      "endTime": "2026-01-26T09:57:31.854Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -399,14 +321,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -414,21 +338,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -445,30 +363,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-            "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+            "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+            "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "status": "success"
           },
           {
-            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "view_cart",
-            "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-            "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-            "status": "success"
-          },
-          {
-            "content": "I added 3 oranges to your cart. Here's your current cart contents:\n\n- 2x Apples\n- 1x Banana\n- 3x Oranges\n\nIs there anything else you would like to do?",
+            "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 45,
-                "prompt_tokens": 282,
-                "total_tokens": 327,
+                "completion_tokens": 19,
+                "prompt_tokens": 317,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -480,20 +388,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBybi8KgS5Me0lqEBwMpZxscBW5X",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdbEbnZkepnQyEe36Ni1mn0ds71",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-da82-7f53-b372-4f1abc301807-0",
+            "id": "lc_run--019bf9bc-ae5b-72f1-9c75-78b105d01e69-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 282,
-              "output_tokens": 45,
-              "total_tokens": 327,
+              "input_tokens": 317,
+              "output_tokens": 19,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -509,50 +419,32 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-da81-7b40-8bd0-ea1950b28880",
+      "uuid": "019bf9bc-ae53-74f0-b6f2-5274b3b4b604",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-d3b3-7510-9a2d-245a7f738288",
-      "startTime": "2026-01-15T07:22:32.961Z",
-      "endTime": "2026-01-15T07:22:32.962Z",
+      "parentUuid": "019bf9bc-a82d-7a93-98f2-18cac40891be",
+      "startTime": "2026-01-26T09:57:30.835Z",
+      "endTime": "2026-01-26T09:57:30.841Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -564,14 +456,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -579,21 +473,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -614,18 +502,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-            "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-            "status": "success"
-          },
-          {
-            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "view_cart",
-            "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-            "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+            "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+            "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "status": "success"
           }
         ]
@@ -639,47 +517,33 @@
             "response_metadata": {},
             "type": "tool",
             "name": "add_to_cart",
-            "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-            "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+            "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+            "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "status": "success"
           },
           "inputParameters": {
             "item": "oranges",
             "quantity": 3
           }
-        },
-        {
-          "name": "view_cart",
-          "output": {
-            "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "view_cart",
-            "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-            "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-            "status": "success"
-          },
-          "inputParameters": {}
         }
       ]
     },
     {
-      "uuid": "019bc088-d3b4-7120-b944-30f3215bee31",
+      "uuid": "019bf9bc-a82e-70b2-823c-6cddcc020d44",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-d3b3-7510-9a2d-245a7f738288",
-      "startTime": "2026-01-15T07:22:31.220Z",
-      "endTime": "2026-01-15T07:22:32.960Z",
+      "parentUuid": "019bf9bc-a82d-7a93-98f2-18cac40891be",
+      "startTime": "2026-01-26T09:57:29.262Z",
+      "endTime": "2026-01-26T09:57:30.833Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           }
         ]
       },
@@ -688,31 +552,13 @@
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -724,14 +570,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -739,21 +587,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -768,50 +610,32 @@
       }
     },
     {
-      "uuid": "019bc088-da80-7501-b160-8864c6603a2f",
+      "uuid": "019bf9bc-ae50-7f40-ade6-1ec1c43c2549",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-d3b4-7120-b944-30f3215bee31",
-      "startTime": "2026-01-15T07:22:32.960Z",
-      "endTime": "2026-01-15T07:22:32.960Z",
+      "parentUuid": "019bf9bc-a82e-70b2-823c-6cddcc020d44",
+      "startTime": "2026-01-26T09:57:30.833Z",
+      "endTime": "2026-01-26T09:57:30.833Z",
       "input": {
         "messages": [
           {
-            "content": "Add 3 oranges to my cart and view it",
+            "content": "Add 3 oranges to my cart",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+            "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                  "function": {
-                    "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                    "name": "add_to_cart"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-                  "function": {
-                    "arguments": "{}",
-                    "name": "view_cart"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 197,
-                "total_tokens": 245,
+                "completion_tokens": 29,
+                "prompt_tokens": 275,
+                "total_tokens": 304,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -823,14 +647,16 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+            "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
             "tool_calls": [
               {
                 "name": "add_to_cart",
@@ -838,21 +664,15 @@
                   "item": "oranges",
                   "quantity": 3
                 },
-                "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-                "type": "tool_call"
-              },
-              {
-                "name": "view_cart",
-                "args": {},
-                "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+                "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 197,
-              "output_tokens": 48,
-              "total_tokens": 245,
+              "input_tokens": 275,
+              "output_tokens": 29,
+              "total_tokens": 304,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -871,33 +691,29 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-da82-7f53-b372-4f1abc301807",
+      "uuid": "019bf9bc-ae5b-72f1-9c75-78b105d01e69",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-da82-7f53-b372-4f08cf58630d",
-      "startTime": "2026-01-15T07:22:32.962Z",
-      "endTime": "2026-01-15T07:22:34.384Z",
+      "parentUuid": "019bf9bc-ae5a-7751-946f-c68f5503cd96",
+      "startTime": "2026-01-26T09:57:30.844Z",
+      "endTime": "2026-01-26T09:57:31.854Z",
       "input": [
         {
           "role": "human",
-          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+          "content": "You are a helpful shopping assistant. Help users:\n        - Add/remove items from their cart\n        - View their cart\n        - Apply coupons\n        - Complete checkout\n        Remember the conversation context."
         },
         {
           "role": "human",
-          "content": "Add 3 oranges to my cart and view it"
+          "content": "Add 3 oranges to my cart"
         },
         {
           "role": "ai",
-          "content": "[{'name': 'add_to_cart', 'args': {'item': 'oranges', 'quantity': 3}, 'id': 'call_XyT6f4Cx7rZTQijoM1qRRC52', 'type': 'tool_call'}, {'name': 'view_cart', 'args': {}, 'id': 'call_kAamB6VY3VQODqmwuWIjPS8P', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
           "content": "Added 3x oranges to cart"
-        },
-        {
-          "role": "tool",
-          "content": "Cart: 2x Apple, 1x Banana, 3x Orange"
         },
         {
           "role": "Tool Input",
@@ -926,30 +742,30 @@
       ],
       "output": {
         "role": "AI",
-        "content": "I added 3 oranges to your cart. Here's your current cart contents:\n\n- 2x Apples\n- 1x Banana\n- 3x Oranges\n\nIs there anything else you would like to do?",
+        "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 282.0,
-      "outputTokenCount": 45.0
+      "inputTokenCount": 317.0,
+      "outputTokenCount": 19.0
     },
     {
-      "uuid": "019bc088-d3b4-7120-b944-310db0efea6b",
+      "uuid": "019bf9bc-a82e-70b2-823c-6ce6671e2bcf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-d3b4-7120-b944-30f3215bee31",
-      "startTime": "2026-01-15T07:22:31.220Z",
-      "endTime": "2026-01-15T07:22:32.960Z",
+      "parentUuid": "019bf9bc-a82e-70b2-823c-6cddcc020d44",
+      "startTime": "2026-01-26T09:57:29.262Z",
+      "endTime": "2026-01-26T09:57:30.832Z",
       "input": [
         {
           "role": "human",
-          "content": "You are a helpful shopping assistant. Help users:\n- Add/remove items from their cart\n- View their cart\n- Apply coupons\n- Complete checkout\nRemember the conversation context."
+          "content": "You are a helpful shopping assistant. Help users:\n        - Add/remove items from their cart\n        - View their cart\n        - Apply coupons\n        - Complete checkout\n        Remember the conversation context."
         },
         {
           "role": "human",
-          "content": "Add 3 oranges to my cart and view it"
+          "content": "Add 3 oranges to my cart"
         },
         {
           "role": "Tool Input",
@@ -986,51 +802,26 @@
               "item": "oranges",
               "quantity": 3
             },
-            "id": "call_XyT6f4Cx7rZTQijoM1qRRC52"
-          },
-          {
-            "name": "view_cart",
-            "args": {},
-            "id": "call_kAamB6VY3VQODqmwuWIjPS8P"
+            "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 197.0,
-      "outputTokenCount": 48.0
+      "inputTokenCount": 275.0,
+      "outputTokenCount": 29.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-da82-7f53-b372-4ef1fe9841cf",
-      "name": "view_cart",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019bc088-da81-7b40-8bd0-ea1950b28880",
-      "startTime": "2026-01-15T07:22:32.962Z",
-      "endTime": "2026-01-15T07:22:32.962Z",
-      "input": {},
-      "output": {
-        "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "view_cart",
-        "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-        "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-        "status": "success"
-      }
-    },
-    {
-      "uuid": "019bc088-da81-7b40-8bd0-ea269908de33",
+      "uuid": "019bf9bc-ae55-72c0-8746-2b837842fd5f",
       "name": "add_to_cart",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-da81-7b40-8bd0-ea1950b28880",
-      "startTime": "2026-01-15T07:22:32.961Z",
-      "endTime": "2026-01-15T07:22:32.961Z",
+      "parentUuid": "019bf9bc-ae53-74f0-b6f2-5274b3b4b604",
+      "startTime": "2026-01-26T09:57:30.837Z",
+      "endTime": "2026-01-26T09:57:30.839Z",
       "input": {
         "item": "oranges",
         "quantity": 3
@@ -1041,14 +832,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "add_to_cart",
-        "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-        "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+        "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+        "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:22:31.219Z",
-  "endTime": "2026-01-15T07:22:34.384Z",
+  "startTime": "2026-01-26T09:57:29.261Z",
+  "endTime": "2026-01-26T09:57:31.855Z",
   "name": "langgraph-stateless",
   "tags": [
     "langgraph",
@@ -1058,51 +849,33 @@
   "input": {
     "messages": [
       {
-        "content": "Add 3 oranges to my cart and view it",
+        "content": "Add 3 oranges to my cart",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+        "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Add 3 oranges to my cart and view it",
+        "content": "Add 3 oranges to my cart",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "beb132df-440f-4465-a21a-541d9ad37f00"
+        "id": "a13605ce-5ce0-47a3-bb30-74ae15ebed8a"
       },
       {
         "content": "",
         "additional_kwargs": {
-          "tool_calls": [
-            {
-              "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-              "function": {
-                "arguments": "{\"item\": \"oranges\", \"quantity\": 3}",
-                "name": "add_to_cart"
-              },
-              "type": "function"
-            },
-            {
-              "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-              "function": {
-                "arguments": "{}",
-                "name": "view_cart"
-              },
-              "type": "function"
-            }
-          ],
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 48,
-            "prompt_tokens": 197,
-            "total_tokens": 245,
+            "completion_tokens": 29,
+            "prompt_tokens": 275,
+            "total_tokens": 304,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1114,14 +887,16 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyByZBLBTFkvhA34JPxRfkHnN8qkT",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DdZmdP2iMkXcKhYKcAjMgXkdrwt",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-d3b4-7120-b944-310db0efea6b-0",
+        "id": "lc_run--019bf9bc-a82e-70b2-823c-6ce6671e2bcf-0",
         "tool_calls": [
           {
             "name": "add_to_cart",
@@ -1129,21 +904,15 @@
               "item": "oranges",
               "quantity": 3
             },
-            "id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
-            "type": "tool_call"
-          },
-          {
-            "name": "view_cart",
-            "args": {},
-            "id": "call_kAamB6VY3VQODqmwuWIjPS8P",
+            "id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 197,
-          "output_tokens": 48,
-          "total_tokens": 245,
+          "input_tokens": 275,
+          "output_tokens": 29,
+          "total_tokens": 304,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1160,30 +929,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "add_to_cart",
-        "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-        "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+        "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+        "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
         "status": "success"
       },
       {
-        "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "view_cart",
-        "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-        "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-        "status": "success"
-      },
-      {
-        "content": "I added 3 oranges to your cart. Here's your current cart contents:\n\n- 2x Apples\n- 1x Banana\n- 3x Oranges\n\nIs there anything else you would like to do?",
+        "content": "Done \u2014 3 oranges added to your cart. What else would you like?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 45,
-            "prompt_tokens": 282,
-            "total_tokens": 327,
+            "completion_tokens": 19,
+            "prompt_tokens": 317,
+            "total_tokens": 336,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1195,20 +954,22 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyBybi8KgS5Me0lqEBwMpZxscBW5X",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DdbEbnZkepnQyEe36Ni1mn0ds71",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-da82-7f53-b372-4f1abc301807-0",
+        "id": "lc_run--019bf9bc-ae5b-72f1-9c75-78b105d01e69-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 282,
-          "output_tokens": 45,
-          "total_tokens": 327,
+          "input_tokens": 317,
+          "output_tokens": 19,
+          "total_tokens": 336,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1231,28 +992,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "add_to_cart",
-        "id": "21dba39b-8283-4d0f-b305-d379376f48fb",
-        "tool_call_id": "call_XyT6f4Cx7rZTQijoM1qRRC52",
+        "id": "029e9667-e41f-4222-a479-8a93e9f53edd",
+        "tool_call_id": "call_GFeRMmsaU2ADq7PNLyhAxLLZ",
         "status": "success"
       },
       "inputParameters": {
         "item": "oranges",
         "quantity": 3
       }
-    },
-    {
-      "name": "view_cart",
-      "output": {
-        "content": "Cart: 2x Apple, 1x Banana, 3x Orange",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "view_cart",
-        "id": "9b3222b4-601a-4815-9ba8-fcd376708487",
-        "tool_call_id": "call_kAamB6VY3VQODqmwuWIjPS8P",
-        "status": "success"
-      },
-      "inputParameters": {}
     }
   ]
 }

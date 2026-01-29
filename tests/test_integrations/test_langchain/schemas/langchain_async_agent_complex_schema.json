@@ -1,0 +1,425 @@
+{
+  "uuid": "e9032530-d20f-4ea8-aeeb-43a396c0bf7c",
+  "baseSpans": [
+    {
+      "uuid": "019bf9a2-168d-74e3-91e6-f65ebf0a1643",
+      "name": "complex_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T09:28:28.045Z",
+      "endTime": "2026-01-26T09:28:33.650Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 84,
+                "prompt_tokens": 180,
+                "total_tokens": 264,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 64,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DBUhy8NBCVElmbUEcGzinOAPxoa",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a2-168e-7480-9803-95731d84dff7-0",
+            "tool_calls": [
+              {
+                "name": "get_current_time",
+                "args": {},
+                "id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 180,
+              "output_tokens": 84,
+              "total_tokens": 264,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
+          },
+          {
+            "content": "Current time: 2024-01-15 10:30:00 UTC",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_current_time",
+            "tool_call_id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+            "status": "success"
+          },
+          {
+            "content": "Current time (UTC): 2024-01-15 10:30:00 (ISO 8601: 2024-01-15T10:30:00Z)",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 176,
+                "prompt_tokens": 223,
+                "total_tokens": 399,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DBWUlcZPihW5y0XXSfniqlBCm6W",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a2-2047-73c0-b73b-c45ff656bf5f-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 223,
+              "output_tokens": 176,
+              "total_tokens": 399,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_current_time",
+          "output": {
+            "content": "Current time: 2024-01-15 10:30:00 UTC",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_current_time",
+            "tool_call_id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+            "status": "success"
+          },
+          "inputParameters": {}
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf9a2-2047-73c0-b73b-c45ff656bf5f",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-168d-74e3-91e6-f65ebf0a1643",
+      "startTime": "2026-01-26T09:28:30.536Z",
+      "endTime": "2026-01-26T09:28:33.650Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "Current time: 2024-01-15 10:30:00 UTC"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_current_time', 'description': 'Get the current time (deterministic for testing).', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Current time (UTC): 2024-01-15 10:30:00 (ISO 8601: 2024-01-15T10:30:00Z)",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 223.0,
+      "outputTokenCount": 176.0
+    },
+    {
+      "uuid": "019bf9a2-168e-7480-9803-95731d84dff7",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-168d-74e3-91e6-f65ebf0a1643",
+      "startTime": "2026-01-26T09:28:28.046Z",
+      "endTime": "2026-01-26T09:28:30.533Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'search_web', 'description': 'Search the web for information.', 'parameters': {'properties': {'query': {'type': 'string'}}, 'required': ['query'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'calculator', 'description': 'Perform mathematical calculations.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_current_time', 'description': 'Get the current time (deterministic for testing).', 'parameters': {'properties': {}, 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_current_time",
+            "args": {},
+            "id": "call_bUXEEDTp9F76LLrtJIx4M2P9"
+          }
+        ]
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "inputTokenCount": 180.0,
+      "outputTokenCount": 84.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf9a2-2046-7562-9098-b6c3fa5f208b",
+      "name": "get_current_time",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf9a2-168d-74e3-91e6-f65ebf0a1643",
+      "startTime": "2026-01-26T09:28:30.534Z",
+      "endTime": "2026-01-26T09:28:30.535Z",
+      "input": {},
+      "output": {
+        "content": "Current time: 2024-01-15 10:30:00 UTC",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_current_time",
+        "tool_call_id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-26T09:28:28.045Z",
+  "endTime": "2026-01-26T09:28:33.650Z",
+  "name": "langchain-async-agent-complex",
+  "tags": [
+    "langchain",
+    "async",
+    "agent",
+    "complex"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 84,
+            "prompt_tokens": 180,
+            "total_tokens": 264,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 64,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DBUhy8NBCVElmbUEcGzinOAPxoa",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a2-168e-7480-9803-95731d84dff7-0",
+        "tool_calls": [
+          {
+            "name": "get_current_time",
+            "args": {},
+            "id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 180,
+          "output_tokens": 84,
+          "total_tokens": 264,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
+      },
+      {
+        "content": "Current time: 2024-01-15 10:30:00 UTC",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_current_time",
+        "tool_call_id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+        "status": "success"
+      },
+      {
+        "content": "Current time (UTC): 2024-01-15 10:30:00 (ISO 8601: 2024-01-15T10:30:00Z)",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 176,
+            "prompt_tokens": 223,
+            "total_tokens": 399,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 128,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DBWUlcZPihW5y0XXSfniqlBCm6W",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a2-2047-73c0-b73b-c45ff656bf5f-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 223,
+          "output_tokens": 176,
+          "total_tokens": 399,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_current_time",
+      "output": {
+        "content": "Current time: 2024-01-15 10:30:00 UTC",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_current_time",
+        "tool_call_id": "call_bUXEEDTp9F76LLrtJIx4M2P9",
+        "status": "success"
+      },
+      "inputParameters": {}
+    }
+  ]
+}

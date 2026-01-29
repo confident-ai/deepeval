@@ -1,13 +1,13 @@
 {
-  "uuid": "e1530576-40bd-4d56-bcbe-f37ec84d31c1",
+  "uuid": "d1af3494-9f52-47c1-b7fd-5249a25d758a",
   "baseSpans": [
     {
-      "uuid": "3c306e24-dd56-489f-a654-f1314d1d1a97",
+      "uuid": "826359bd-13a4-4cc2-b5f1-ac865ca9a5d0",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-28T18:44:19.852Z",
-      "endTime": "2026-01-28T18:44:21.823Z",
+      "startTime": "2026-01-29T03:14:53.217Z",
+      "endTime": "2026-01-29T03:14:55.237Z",
       "input": {
         "city": "Paris"
       },
@@ -16,13 +16,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
+      "uuid": "25c8ab28-d716-4982-880c-77340a045b02",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "3c306e24-dd56-489f-a654-f1314d1d1a97",
-      "startTime": "2026-01-28T18:44:19.856Z",
-      "endTime": "2026-01-28T18:44:21.817Z",
+      "parentUuid": "826359bd-13a4-4cc2-b5f1-ac865ca9a5d0",
+      "startTime": "2026-01-29T03:14:53.220Z",
+      "endTime": "2026-01-29T03:14:55.228Z",
       "input": "Check the weather in Paris.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
       "toolsCalled": [
@@ -40,13 +40,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "30ad24d2-2f6f-48de-b86f-484b2243b355",
+      "uuid": "2a38c77e-89ba-4b23-b24a-88d2bbb3c1e5",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
-      "startTime": "2026-01-28T18:44:20.923Z",
-      "endTime": "2026-01-28T18:44:21.815Z",
+      "parentUuid": "25c8ab28-d716-4982-880c-77340a045b02",
+      "startTime": "2026-01-29T03:14:54.473Z",
+      "endTime": "2026-01-29T03:14:55.223Z",
       "input": [
         {
           "role": "system",
@@ -61,7 +61,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_9W6umwMg32BbrVKpToxu48c5",
+              "id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
               "type": "function",
               "function": {
                 "name": "'get_weather'",
@@ -72,7 +72,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "tool_call_id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
           "name": "get_weather",
           "content": "Weather in Paris: Cloudy, 65\u00b0F"
         },
@@ -86,13 +86,13 @@
       "prompt": {}
     },
     {
-      "uuid": "0505c792-43df-4b47-876a-44a8f8f855e3",
+      "uuid": "cf152153-1d93-44b3-9796-15faf4820fd9",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "30ad24d2-2f6f-48de-b86f-484b2243b355",
-      "startTime": "2026-01-28T18:44:20.923Z",
-      "endTime": "2026-01-28T18:44:21.815Z",
+      "parentUuid": "2a38c77e-89ba-4b23-b24a-88d2bbb3c1e5",
+      "startTime": "2026-01-29T03:14:54.473Z",
+      "endTime": "2026-01-29T03:14:55.223Z",
       "input": [
         {
           "role": "system",
@@ -107,7 +107,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_9W6umwMg32BbrVKpToxu48c5",
+              "id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
               "type": "function",
               "function": {
                 "name": "'get_weather'",
@@ -118,7 +118,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "tool_call_id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
           "name": "get_weather",
           "content": "Weather in Paris: Cloudy, 65\u00b0F"
         },
@@ -132,13 +132,13 @@
       "prompt": {}
     },
     {
-      "uuid": "3aeaa861-5807-460e-833e-8f09704dbe9d",
+      "uuid": "f0699785-eb10-4e16-adb8-2dacc0cdcc1c",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
-      "startTime": "2026-01-28T18:44:19.859Z",
-      "endTime": "2026-01-28T18:44:20.918Z",
+      "parentUuid": "25c8ab28-d716-4982-880c-77340a045b02",
+      "startTime": "2026-01-29T03:14:53.223Z",
+      "endTime": "2026-01-29T03:14:54.471Z",
       "input": [
         {
           "role": "system",
@@ -151,7 +151,7 @@
       ],
       "output": [
         {
-          "id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
           "function": {
             "arguments": "{\"city\":\"Paris\"}",
             "name": "get_weather"
@@ -163,13 +163,13 @@
       "prompt": {}
     },
     {
-      "uuid": "594f2602-2952-4e04-9d7d-6a3d4545be77",
+      "uuid": "c80cf63b-e1a7-44aa-9700-4e31304d6ef7",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "3aeaa861-5807-460e-833e-8f09704dbe9d",
-      "startTime": "2026-01-28T18:44:19.859Z",
-      "endTime": "2026-01-28T18:44:20.918Z",
+      "parentUuid": "f0699785-eb10-4e16-adb8-2dacc0cdcc1c",
+      "startTime": "2026-01-29T03:14:53.223Z",
+      "endTime": "2026-01-29T03:14:54.471Z",
       "input": [
         {
           "role": "system",
@@ -182,7 +182,7 @@
       ],
       "output": [
         {
-          "id": "call_9W6umwMg32BbrVKpToxu48c5",
+          "id": "call_Lp9ldV6CFaJLU1WZSaShfI8c",
           "function": {
             "arguments": "{\"city\":\"Paris\"}",
             "name": "get_weather"
@@ -197,43 +197,39 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "3f8b3236-fc25-4c4d-a01e-3ae5b09e93ab",
+      "uuid": "81665c13-9dc0-4f20-a3b0-540b74e06add",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "dc97b41d-2dd9-4770-80c3-6b28974acb69",
-      "startTime": "2026-01-28T18:44:20.916Z",
-      "endTime": "2026-01-28T18:44:20.924Z",
+      "parentUuid": "25c8ab28-d716-4982-880c-77340a045b02",
+      "startTime": "2026-01-29T03:14:54.472Z",
+      "endTime": "2026-01-29T03:14:54.474Z",
       "input": {
         "city": "Paris"
       },
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
       "toolsCalled": [
         {
-          "name": "get_weather",
-          "output": "Weather in Paris: Cloudy, 65\u00b0F",
-          "inputParameters": {
-            "city": "Paris"
-          }
+          "name": "get_weather"
         }
       ]
     },
     {
-      "uuid": "ef641741-0d44-4a3f-b317-63fb8ca182c5",
+      "uuid": "8b79b473-b7a4-4fdd-9503-0d3a0b70aa26",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3f8b3236-fc25-4c4d-a01e-3ae5b09e93ab",
-      "startTime": "2026-01-28T18:44:20.917Z",
-      "endTime": "2026-01-28T18:44:20.924Z",
+      "parentUuid": "81665c13-9dc0-4f20-a3b0-540b74e06add",
+      "startTime": "2026-01-29T03:14:54.472Z",
+      "endTime": "2026-01-29T03:14:54.474Z",
       "input": {
         "city": "Paris"
       },
       "output": "Weather in Paris: Cloudy, 65\u00b0F"
     }
   ],
-  "startTime": "2026-01-28T18:44:19.852Z",
-  "endTime": "2026-01-28T18:44:21.823Z",
+  "startTime": "2026-01-29T03:14:53.217Z",
+  "endTime": "2026-01-29T03:14:55.237Z",
   "environment": "development",
   "input": {
     "city": "Paris"

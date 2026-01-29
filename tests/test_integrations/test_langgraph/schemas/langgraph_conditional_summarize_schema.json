@@ -1,13 +1,13 @@
 {
-  "uuid": "baec039c-6f9b-457b-b0a5-672e29a73185",
+  "uuid": "9d9fe914-2e4f-4408-8cc7-fda79e0741f8",
   "baseSpans": [
     {
-      "uuid": "019bc088-6446-7f83-baf2-1ae164ea9be6",
+      "uuid": "019bf2a6-82b6-7d91-970b-bcad3511b836",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:02.694Z",
-      "endTime": "2026-01-15T07:22:04.509Z",
+      "startTime": "2026-01-25T00:55:57.366Z",
+      "endTime": "2026-01-25T00:55:59.761Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           }
         ]
       },
@@ -26,28 +26,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -59,29 +49,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -98,20 +90,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           },
           {
-            "content": "Summary: Artificial intelligence is transforming industries globally.",
+            "content": "Artificial intelligence is transforming industries worldwide.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 154,
-                "total_tokens": 164,
+                "prompt_tokens": 241,
+                "total_tokens": 251,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -123,20 +115,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy8PaMfOmieHEl6cy2v06ABKivI",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihztJfobJPgH67GUVAuc9UXBOax",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6869-7970-a6aa-676ded6b5e27-0",
+            "id": "lc_run--019bf2a6-888e-75d3-afd7-85f81e89a443-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 154,
+              "input_tokens": 241,
               "output_tokens": 10,
-              "total_tokens": 164,
+              "total_tokens": 251,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -152,13 +146,13 @@
       }
     },
     {
-      "uuid": "019bc088-6868-7813-9718-899a1fe5310c",
+      "uuid": "019bf2a6-888e-75d3-afd7-85ee62b5e9ab",
       "name": "summarize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6446-7f83-baf2-1ae164ea9be6",
-      "startTime": "2026-01-15T07:22:03.752Z",
-      "endTime": "2026-01-15T07:22:04.509Z",
+      "parentUuid": "019bf2a6-82b6-7d91-970b-bcad3511b836",
+      "startTime": "2026-01-25T00:55:58.862Z",
+      "endTime": "2026-01-25T00:55:59.760Z",
       "input": {
         "messages": [
           {
@@ -166,28 +160,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -199,29 +183,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -238,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           }
         ],
@@ -248,15 +234,15 @@
       "output": {
         "messages": [
           {
-            "content": "Summary: Artificial intelligence is transforming industries globally.",
+            "content": "Artificial intelligence is transforming industries worldwide.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 154,
-                "total_tokens": 164,
+                "prompt_tokens": 241,
+                "total_tokens": 251,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -268,20 +254,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy8PaMfOmieHEl6cy2v06ABKivI",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihztJfobJPgH67GUVAuc9UXBOax",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6869-7970-a6aa-676ded6b5e27-0",
+            "id": "lc_run--019bf2a6-888e-75d3-afd7-85f81e89a443-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 154,
+              "input_tokens": 241,
               "output_tokens": 10,
-              "total_tokens": 164,
+              "total_tokens": 251,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -296,13 +284,13 @@
       }
     },
     {
-      "uuid": "019bc088-6b5c-7063-91ff-e1f24c444481",
+      "uuid": "019bf2a6-8c10-7380-a770-90bf7776b2e2",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6868-7813-9718-899a1fe5310c",
-      "startTime": "2026-01-15T07:22:04.509Z",
-      "endTime": "2026-01-15T07:22:04.509Z",
+      "parentUuid": "019bf2a6-888e-75d3-afd7-85ee62b5e9ab",
+      "startTime": "2026-01-25T00:55:59.760Z",
+      "endTime": "2026-01-25T00:55:59.760Z",
       "input": {
         "messages": [
           {
@@ -310,28 +298,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -343,29 +321,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -382,20 +362,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           },
           {
-            "content": "Summary: Artificial intelligence is transforming industries globally.",
+            "content": "Artificial intelligence is transforming industries worldwide.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
                 "completion_tokens": 10,
-                "prompt_tokens": 154,
-                "total_tokens": 164,
+                "prompt_tokens": 241,
+                "total_tokens": 251,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -407,20 +387,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy8PaMfOmieHEl6cy2v06ABKivI",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihztJfobJPgH67GUVAuc9UXBOax",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6869-7970-a6aa-676ded6b5e27-0",
+            "id": "lc_run--019bf2a6-888e-75d3-afd7-85f81e89a443-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 154,
+              "input_tokens": 241,
               "output_tokens": 10,
-              "total_tokens": 164,
+              "total_tokens": 251,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -437,13 +419,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-6864-7d31-93ba-6a1d751af466",
+      "uuid": "019bf2a6-888a-7043-a0f3-2fc8639873ef",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6446-7f83-baf2-1ae164ea9be6",
-      "startTime": "2026-01-15T07:22:03.748Z",
-      "endTime": "2026-01-15T07:22:03.752Z",
+      "parentUuid": "019bf2a6-82b6-7d91-970b-bcad3511b836",
+      "startTime": "2026-01-25T00:55:58.859Z",
+      "endTime": "2026-01-25T00:55:58.861Z",
       "input": {
         "messages": [
           {
@@ -451,28 +433,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -484,29 +456,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -528,8 +502,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           }
         ]
@@ -543,8 +517,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           },
           "inputParameters": {
@@ -554,13 +528,13 @@
       ]
     },
     {
-      "uuid": "019bc088-6867-78e1-bdcf-1bf5143a84e4",
+      "uuid": "019bf2a6-888d-7413-8773-bb5483031fc4",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6864-7d31-93ba-6a1d751af466",
-      "startTime": "2026-01-15T07:22:03.751Z",
-      "endTime": "2026-01-15T07:22:03.752Z",
+      "parentUuid": "019bf2a6-888a-7043-a0f3-2fc8639873ef",
+      "startTime": "2026-01-25T00:55:58.861Z",
+      "endTime": "2026-01-25T00:55:58.861Z",
       "input": {
         "messages": [
           {
@@ -568,28 +542,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -601,29 +565,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -640,8 +606,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "summarize_text",
-            "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-            "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+            "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "status": "success"
           }
         ],
@@ -650,13 +616,13 @@
       "output": "summarize"
     },
     {
-      "uuid": "019bc088-6448-7151-80d5-5691ba9c0669",
+      "uuid": "019bf2a6-82b8-7f70-b7d4-cb7972dbfc7d",
       "name": "summarize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6446-7f83-baf2-1ae164ea9be6",
-      "startTime": "2026-01-15T07:22:02.696Z",
-      "endTime": "2026-01-15T07:22:03.748Z",
+      "parentUuid": "019bf2a6-82b6-7d91-970b-bcad3511b836",
+      "startTime": "2026-01-25T00:55:57.368Z",
+      "endTime": "2026-01-25T00:55:58.858Z",
       "input": {
         "messages": [
           {
@@ -664,7 +630,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           }
         ],
         "intent": "summarize"
@@ -674,23 +640,13 @@
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -702,29 +658,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -739,13 +697,13 @@
       }
     },
     {
-      "uuid": "019bc088-6863-7d40-b86e-fb7829c2cfa6",
+      "uuid": "019bf2a6-888a-7043-a0f3-2fb57d2288fd",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6448-7151-80d5-5691ba9c0669",
-      "startTime": "2026-01-15T07:22:03.747Z",
-      "endTime": "2026-01-15T07:22:03.748Z",
+      "parentUuid": "019bf2a6-82b8-7f70-b7d4-cb7972dbfc7d",
+      "startTime": "2026-01-25T00:55:58.858Z",
+      "endTime": "2026-01-25T00:55:58.858Z",
       "input": {
         "messages": [
           {
@@ -753,28 +711,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-                  "function": {
-                    "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                    "name": "summarize_text"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 22,
-                "prompt_tokens": 113,
-                "total_tokens": 135,
+                "completion_tokens": 31,
+                "prompt_tokens": 194,
+                "total_tokens": 225,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -786,29 +734,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+            "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
             "tool_calls": [
               {
                 "name": "summarize_text",
                 "args": {
                   "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+                "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 113,
-              "output_tokens": 22,
-              "total_tokens": 135,
+              "input_tokens": 194,
+              "output_tokens": 31,
+              "total_tokens": 225,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -825,13 +775,13 @@
       "output": "tools"
     },
     {
-      "uuid": "019bc088-6447-7771-8e16-67b0405098f1",
+      "uuid": "019bf2a6-82b7-7cf1-8b6c-7f609c44ed45",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6446-7f83-baf2-1ae164ea9be6",
-      "startTime": "2026-01-15T07:22:02.695Z",
-      "endTime": "2026-01-15T07:22:02.695Z",
+      "parentUuid": "019bf2a6-82b6-7d91-970b-bcad3511b836",
+      "startTime": "2026-01-25T00:55:57.367Z",
+      "endTime": "2026-01-25T00:55:57.368Z",
       "input": {
         "messages": [
           {
@@ -839,7 +789,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           }
         ]
       },
@@ -850,20 +800,20 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           }
         ],
         "intent": "summarize"
       }
     },
     {
-      "uuid": "019bc088-6447-7771-8e16-67ce2149ff41",
+      "uuid": "019bf2a6-82b7-7cf1-8b6c-7f789909bf11",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-6447-7771-8e16-67b0405098f1",
-      "startTime": "2026-01-15T07:22:02.695Z",
-      "endTime": "2026-01-15T07:22:02.695Z",
+      "parentUuid": "019bf2a6-82b7-7cf1-8b6c-7f609c44ed45",
+      "startTime": "2026-01-25T00:55:57.368Z",
+      "endTime": "2026-01-25T00:55:57.368Z",
       "input": {
         "messages": [
           {
@@ -871,7 +821,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+            "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
           }
         ],
         "intent": "summarize"
@@ -882,13 +832,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-6869-7970-a6aa-676ded6b5e27",
+      "uuid": "019bf2a6-888e-75d3-afd7-85f81e89a443",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-6868-7813-9718-899a1fe5310c",
-      "startTime": "2026-01-15T07:22:03.753Z",
-      "endTime": "2026-01-15T07:22:04.508Z",
+      "parentUuid": "019bf2a6-888e-75d3-afd7-85ee62b5e9ab",
+      "startTime": "2026-01-25T00:55:58.863Z",
+      "endTime": "2026-01-25T00:55:59.759Z",
       "input": [
         {
           "role": "human",
@@ -900,7 +850,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'summarize_text', 'args': {'text': 'Artificial intelligence is transforming industries worldwide.'}, 'id': 'call_Kg3LbBCpA8hlYOKCAuuhbopm', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -921,22 +871,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Summary: Artificial intelligence is transforming industries globally.",
+        "content": "Artificial intelligence is transforming industries worldwide.",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 154.0,
+      "inputTokenCount": 241.0,
       "outputTokenCount": 10.0
     },
     {
-      "uuid": "019bc088-6448-7151-80d5-56aafca3b3d1",
+      "uuid": "019bf2a6-82b8-7f70-b7d4-cb861edacdbe",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-6448-7151-80d5-5691ba9c0669",
-      "startTime": "2026-01-15T07:22:02.696Z",
-      "endTime": "2026-01-15T07:22:03.747Z",
+      "parentUuid": "019bf2a6-82b8-7f70-b7d4-cb7972dbfc7d",
+      "startTime": "2026-01-25T00:55:57.369Z",
+      "endTime": "2026-01-25T00:55:58.857Z",
       "input": [
         {
           "role": "human",
@@ -968,26 +918,26 @@
             "args": {
               "text": "Artificial intelligence is transforming industries worldwide."
             },
-            "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm"
+            "id": "call_I9umu4uDgyDhGuT3jKjSKByg"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 113.0,
-      "outputTokenCount": 22.0
+      "inputTokenCount": 194.0,
+      "outputTokenCount": 31.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-6866-7dd2-aad2-d2beb55f8f77",
+      "uuid": "019bf2a6-888b-7760-a975-8698b887915a",
       "name": "summarize_text",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-6864-7d31-93ba-6a1d751af466",
-      "startTime": "2026-01-15T07:22:03.750Z",
-      "endTime": "2026-01-15T07:22:03.751Z",
+      "parentUuid": "019bf2a6-888a-7043-a0f3-2fc8639873ef",
+      "startTime": "2026-01-25T00:55:58.859Z",
+      "endTime": "2026-01-25T00:55:58.860Z",
       "input": {
         "text": "Artificial intelligence is transforming industries worldwide."
       },
@@ -997,14 +947,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "summarize_text",
-        "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-        "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+        "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+        "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:22:02.694Z",
-  "endTime": "2026-01-15T07:22:04.509Z",
+  "startTime": "2026-01-25T00:55:57.366Z",
+  "endTime": "2026-01-25T00:55:59.761Z",
   "name": "langgraph-conditional-summarize",
   "tags": [
     "langgraph",
@@ -1019,7 +969,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+        "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
       }
     ]
   },
@@ -1030,28 +980,18 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "22b3cdb6-8381-4294-89f3-52134d22c680"
+        "id": "92cef26e-120c-4752-8bba-486fe721bbb0"
       },
       {
         "content": "",
         "additional_kwargs": {
-          "tool_calls": [
-            {
-              "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
-              "function": {
-                "arguments": "{\"text\":\"Artificial intelligence is transforming industries worldwide.\"}",
-                "name": "summarize_text"
-              },
-              "type": "function"
-            }
-          ],
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 22,
-            "prompt_tokens": 113,
-            "total_tokens": 135,
+            "completion_tokens": 31,
+            "prompt_tokens": 194,
+            "total_tokens": 225,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1063,29 +1003,31 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyBy79Tv5KW1hCT8E2BV5Y7pykOpp",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1ihxSGsJlNMD03doYGKDFOnGcXbm",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-6448-7151-80d5-56aafca3b3d1-0",
+        "id": "lc_run--019bf2a6-82b8-7f70-b7d4-cb861edacdbe-0",
         "tool_calls": [
           {
             "name": "summarize_text",
             "args": {
               "text": "Artificial intelligence is transforming industries worldwide."
             },
-            "id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+            "id": "call_I9umu4uDgyDhGuT3jKjSKByg",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 113,
-          "output_tokens": 22,
-          "total_tokens": 135,
+          "input_tokens": 194,
+          "output_tokens": 31,
+          "total_tokens": 225,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1102,20 +1044,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "summarize_text",
-        "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-        "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+        "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+        "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
         "status": "success"
       },
       {
-        "content": "Summary: Artificial intelligence is transforming industries globally.",
+        "content": "Artificial intelligence is transforming industries worldwide.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
             "completion_tokens": 10,
-            "prompt_tokens": 154,
-            "total_tokens": 164,
+            "prompt_tokens": 241,
+            "total_tokens": 251,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1127,20 +1069,22 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyBy8PaMfOmieHEl6cy2v06ABKivI",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1ihztJfobJPgH67GUVAuc9UXBOax",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-6869-7970-a6aa-676ded6b5e27-0",
+        "id": "lc_run--019bf2a6-888e-75d3-afd7-85f81e89a443-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 154,
+          "input_tokens": 241,
           "output_tokens": 10,
-          "total_tokens": 164,
+          "total_tokens": 251,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1164,8 +1108,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "summarize_text",
-        "id": "fac69d4f-59ba-4e4d-aebf-ea7aca14d929",
-        "tool_call_id": "call_Kg3LbBCpA8hlYOKCAuuhbopm",
+        "id": "65fb0ba4-fe71-45cc-97b8-0a7808c10217",
+        "tool_call_id": "call_I9umu4uDgyDhGuT3jKjSKByg",
         "status": "success"
       },
       "inputParameters": {

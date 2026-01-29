@@ -1,13 +1,13 @@
 {
-  "uuid": "807e6130-6183-4d51-9b57-56eab8a93c12",
+  "uuid": "22422b18-a7f6-4108-8bd8-bf26b633dfed",
   "baseSpans": [
     {
-      "uuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
+      "uuid": "019bf2a6-b942-7823-acd5-aa36e1f2f934",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:22:07.383Z",
-      "endTime": "2026-01-15T07:22:08.604Z",
+      "startTime": "2026-01-25T00:56:11.330Z",
+      "endTime": "2026-01-25T00:56:12.588Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           }
         ]
       },
@@ -26,18 +26,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           },
           {
-            "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 30,
-                "prompt_tokens": 91,
-                "total_tokens": 121,
+                "completion_tokens": 27,
+                "prompt_tokens": 172,
+                "total_tokens": 199,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -49,20 +49,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1iiBtCqR7B2gp5bvpaMs7czEEPk9",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "lc_run--019bf2a6-b944-7141-a232-c9e06c427e90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 91,
-              "output_tokens": 30,
-              "total_tokens": 121,
+              "input_tokens": 172,
+              "output_tokens": 27,
+              "total_tokens": 199,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -78,13 +80,13 @@
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-795816c223f6",
+      "uuid": "019bf2a6-b943-70f3-a380-f4c5a1e9cf8b",
       "name": "general",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "019bf2a6-b942-7823-acd5-aa36e1f2f934",
+      "startTime": "2026-01-25T00:56:11.331Z",
+      "endTime": "2026-01-25T00:56:12.587Z",
       "input": {
         "messages": [
           {
@@ -92,7 +94,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           }
         ],
         "intent": "general"
@@ -100,15 +102,15 @@
       "output": {
         "messages": [
           {
-            "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 30,
-                "prompt_tokens": 91,
-                "total_tokens": 121,
+                "completion_tokens": 27,
+                "prompt_tokens": 172,
+                "total_tokens": 199,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -120,20 +122,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1iiBtCqR7B2gp5bvpaMs7czEEPk9",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "lc_run--019bf2a6-b944-7141-a232-c9e06c427e90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 91,
-              "output_tokens": 30,
-              "total_tokens": 121,
+              "input_tokens": 172,
+              "output_tokens": 27,
+              "total_tokens": 199,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -148,13 +152,13 @@
       }
     },
     {
-      "uuid": "019bc088-7b5b-7c80-89f8-62b1a4a7454d",
+      "uuid": "019bf2a6-be2a-76c3-b937-9479620c8ff0",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:08.603Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "019bf2a6-b943-70f3-a380-f4c5a1e9cf8b",
+      "startTime": "2026-01-25T00:56:12.586Z",
+      "endTime": "2026-01-25T00:56:12.587Z",
       "input": {
         "messages": [
           {
@@ -162,18 +166,18 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           },
           {
-            "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+            "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 30,
-                "prompt_tokens": 91,
-                "total_tokens": 121,
+                "completion_tokens": 27,
+                "prompt_tokens": 172,
+                "total_tokens": 199,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -185,20 +189,22 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1iiBtCqR7B2gp5bvpaMs7czEEPk9",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+            "id": "lc_run--019bf2a6-b944-7141-a232-c9e06c427e90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 91,
-              "output_tokens": 30,
-              "total_tokens": 121,
+              "input_tokens": 172,
+              "output_tokens": 27,
+              "total_tokens": 199,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -215,13 +221,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
+      "uuid": "019bf2a6-b942-7823-acd5-aa44f6f15592",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7697-72b3-b6a7-26501c98a6a6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "019bf2a6-b942-7823-acd5-aa36e1f2f934",
+      "startTime": "2026-01-25T00:56:11.330Z",
+      "endTime": "2026-01-25T00:56:11.331Z",
       "input": {
         "messages": [
           {
@@ -229,7 +235,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           }
         ]
       },
@@ -240,20 +246,20 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           }
         ],
         "intent": "general"
       }
     },
     {
-      "uuid": "019bc088-7698-7e53-82ea-794664a30c5f",
+      "uuid": "019bf2a6-b943-70f3-a380-f4b95ff76d59",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-7698-7e53-82ea-793ad6a1742d",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:07.384Z",
+      "parentUuid": "019bf2a6-b942-7823-acd5-aa44f6f15592",
+      "startTime": "2026-01-25T00:56:11.331Z",
+      "endTime": "2026-01-25T00:56:11.331Z",
       "input": {
         "messages": [
           {
@@ -261,7 +267,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+            "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
           }
         ],
         "intent": "general"
@@ -272,13 +278,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-7698-7e53-82ea-79664a38748b",
+      "uuid": "019bf2a6-b944-7141-a232-c9e06c427e90",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-7698-7e53-82ea-795816c223f6",
-      "startTime": "2026-01-15T07:22:07.384Z",
-      "endTime": "2026-01-15T07:22:08.603Z",
+      "parentUuid": "019bf2a6-b943-70f3-a380-f4c5a1e9cf8b",
+      "startTime": "2026-01-25T00:56:11.332Z",
+      "endTime": "2026-01-25T00:56:12.585Z",
       "input": [
         {
           "role": "human",
@@ -299,19 +305,19 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 91.0,
-      "outputTokenCount": 30.0
+      "inputTokenCount": 172.0,
+      "outputTokenCount": 27.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-15T07:22:07.383Z",
-  "endTime": "2026-01-15T07:22:08.604Z",
+  "startTime": "2026-01-25T00:56:11.330Z",
+  "endTime": "2026-01-25T00:56:12.588Z",
   "name": "langgraph-conditional-general",
   "tags": [
     "langgraph",
@@ -326,7 +332,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
       }
     ]
   },
@@ -337,18 +343,18 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "88f92455-cdc2-4917-8f92-e3e7211efb34"
+        "id": "fd841eee-7fd3-4bf4-a7d3-7ab59559c94e"
       },
       {
-        "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+        "content": "I'm doing well, thanks \u2014 how are you? What can I help you with today?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 30,
-            "prompt_tokens": 91,
-            "total_tokens": 121,
+            "completion_tokens": 27,
+            "prompt_tokens": 172,
+            "total_tokens": 199,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -360,20 +366,22 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyByBuFUMqRxXUXmgyF2klP0bCvlC",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1iiBtCqR7B2gp5bvpaMs7czEEPk9",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-7698-7e53-82ea-79664a38748b-0",
+        "id": "lc_run--019bf2a6-b944-7141-a232-c9e06c427e90-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 91,
-          "output_tokens": 30,
-          "total_tokens": 121,
+          "input_tokens": 172,
+          "output_tokens": 27,
+          "total_tokens": 199,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0

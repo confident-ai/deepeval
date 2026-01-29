@@ -1,53 +1,43 @@
 {
-  "uuid": "407326ec-d8dc-42e3-b49d-b5745223de72",
+  "uuid": "5d08b9b3-ab24-4fba-bbd3-233928d81d43",
   "baseSpans": [
     {
-      "uuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
+      "uuid": "019bf625-4dac-7921-b839-3c97ee9bbdbb",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:57.620Z",
-      "endTime": "2026-01-15T07:25:00.047Z",
+      "startTime": "2026-01-25T17:13:18.509Z",
+      "endTime": "2026-01-25T17:13:36.565Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -59,29 +49,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -98,24 +90,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           },
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Summary of recent developments in space exploration (short):\n\n- New exoplanets and habitable-zone candidates: ongoing surveys (TESS, ground-based) plus follow-up with JWST and large ground telescopes have produced new planet discoveries and improved characterization of some potentially habitable worlds.  \n- JWST science advances: detailed spectra revealing atmospheres (water, CO2 and other molecules) on several exoplanets and deeper observations of very early/unexpectedly bright galaxies.  \n- Lunar and Artemis activity: NASA\u2019s Artemis program and commercial lunar partnerships are advancing hardware, lander contracts and plans for crewed lunar missions; multiple commercial lunar payloads and CLPS contracts are in development.  \n- Large launch and spacecraft development: Rapid progress and testing from commercial providers (SpaceX Starship development and ongoing test flights, continued Crew Dragon operations, expanding commercial launch cadence).  \n- Planetary missions & sample return: OSIRIS\u2011REx sample return from Bennu and Perseverance\u2019s Mars sample caching continue to drive sample-return planning; DART\u2019s asteroid deflection test has follow-up missions planned.  \n- Global and commercial expansion: China, ESA, India and private companies continue active programs (lunar, Mars, robotic exploration, space stations, and space tourism), increasing mission diversity and cadence.\n\nIf you want a one-page brief on any single item above (exoplanets, JWST findings, Artemis status, Starship progress, sample returns, etc.), I can produce that next.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
-                "total_tokens": 200,
+                "completion_tokens": 1333,
+                "prompt_tokens": 256,
+                "total_tokens": 1589,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 1024,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -123,27 +115,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxo02ojPMSKcOfrBWF9ShYL8N7U",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "lc_run--019bf625-54b9-7fc2-84ca-ad1961404d09-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
-              "total_tokens": 200,
+              "input_tokens": 256,
+              "output_tokens": 1333,
+              "total_tokens": 1589,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 1024
               }
             }
           }
@@ -152,42 +146,32 @@
       }
     },
     {
-      "uuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
+      "uuid": "019bf625-54b8-7fe3-acc5-bdd4a57e7827",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:58.638Z",
-      "endTime": "2026-01-15T07:25:00.046Z",
+      "parentUuid": "019bf625-4dac-7921-b839-3c97ee9bbdbb",
+      "startTime": "2026-01-25T17:13:20.312Z",
+      "endTime": "2026-01-25T17:13:36.562Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -199,29 +183,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -238,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           }
         ],
@@ -248,19 +234,19 @@
       "output": {
         "messages": [
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Summary of recent developments in space exploration (short):\n\n- New exoplanets and habitable-zone candidates: ongoing surveys (TESS, ground-based) plus follow-up with JWST and large ground telescopes have produced new planet discoveries and improved characterization of some potentially habitable worlds.  \n- JWST science advances: detailed spectra revealing atmospheres (water, CO2 and other molecules) on several exoplanets and deeper observations of very early/unexpectedly bright galaxies.  \n- Lunar and Artemis activity: NASA\u2019s Artemis program and commercial lunar partnerships are advancing hardware, lander contracts and plans for crewed lunar missions; multiple commercial lunar payloads and CLPS contracts are in development.  \n- Large launch and spacecraft development: Rapid progress and testing from commercial providers (SpaceX Starship development and ongoing test flights, continued Crew Dragon operations, expanding commercial launch cadence).  \n- Planetary missions & sample return: OSIRIS\u2011REx sample return from Bennu and Perseverance\u2019s Mars sample caching continue to drive sample-return planning; DART\u2019s asteroid deflection test has follow-up missions planned.  \n- Global and commercial expansion: China, ESA, India and private companies continue active programs (lunar, Mars, robotic exploration, space stations, and space tourism), increasing mission diversity and cadence.\n\nIf you want a one-page brief on any single item above (exoplanets, JWST findings, Artemis status, Starship progress, sample returns, etc.), I can produce that next.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
-                "total_tokens": 200,
+                "completion_tokens": 1333,
+                "prompt_tokens": 256,
+                "total_tokens": 1589,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 1024,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -268,27 +254,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxo02ojPMSKcOfrBWF9ShYL8N7U",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "lc_run--019bf625-54b9-7fc2-84ca-ad1961404d09-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
-              "total_tokens": 200,
+              "input_tokens": 256,
+              "output_tokens": 1333,
+              "total_tokens": 1589,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 1024
               }
             }
           }
@@ -296,42 +284,32 @@
       }
     },
     {
-      "uuid": "019bc08b-190c-7063-95dd-5e4a6acc6637",
+      "uuid": "019bf625-942d-73f0-9a04-8d820d97b2d8",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
-      "startTime": "2026-01-15T07:25:00.044Z",
-      "endTime": "2026-01-15T07:25:00.045Z",
+      "parentUuid": "019bf625-54b8-7fe3-acc5-bdd4a57e7827",
+      "startTime": "2026-01-25T17:13:36.558Z",
+      "endTime": "2026-01-25T17:13:36.561Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -343,29 +321,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -382,24 +362,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           },
           {
-            "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+            "content": "Summary of recent developments in space exploration (short):\n\n- New exoplanets and habitable-zone candidates: ongoing surveys (TESS, ground-based) plus follow-up with JWST and large ground telescopes have produced new planet discoveries and improved characterization of some potentially habitable worlds.  \n- JWST science advances: detailed spectra revealing atmospheres (water, CO2 and other molecules) on several exoplanets and deeper observations of very early/unexpectedly bright galaxies.  \n- Lunar and Artemis activity: NASA\u2019s Artemis program and commercial lunar partnerships are advancing hardware, lander contracts and plans for crewed lunar missions; multiple commercial lunar payloads and CLPS contracts are in development.  \n- Large launch and spacecraft development: Rapid progress and testing from commercial providers (SpaceX Starship development and ongoing test flights, continued Crew Dragon operations, expanding commercial launch cadence).  \n- Planetary missions & sample return: OSIRIS\u2011REx sample return from Bennu and Perseverance\u2019s Mars sample caching continue to drive sample-return planning; DART\u2019s asteroid deflection test has follow-up missions planned.  \n- Global and commercial expansion: China, ESA, India and private companies continue active programs (lunar, Mars, robotic exploration, space stations, and space tourism), increasing mission diversity and cadence.\n\nIf you want a one-page brief on any single item above (exoplanets, JWST findings, Artemis status, Starship progress, sample returns, etc.), I can produce that next.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 53,
-                "prompt_tokens": 147,
-                "total_tokens": 200,
+                "completion_tokens": 1333,
+                "prompt_tokens": 256,
+                "total_tokens": 1589,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 1024,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -407,27 +387,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxo02ojPMSKcOfrBWF9ShYL8N7U",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+            "id": "lc_run--019bf625-54b9-7fc2-84ca-ad1961404d09-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 53,
-              "total_tokens": 200,
+              "input_tokens": 256,
+              "output_tokens": 1333,
+              "total_tokens": 1589,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 1024
               }
             }
           }
@@ -437,42 +419,32 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
+      "uuid": "019bf625-54b0-7441-9020-568473d42b5e",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:58.633Z",
-      "endTime": "2026-01-15T07:24:58.637Z",
+      "parentUuid": "019bf625-4dac-7921-b839-3c97ee9bbdbb",
+      "startTime": "2026-01-25T17:13:20.305Z",
+      "endTime": "2026-01-25T17:13:20.311Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -484,29 +456,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -528,8 +502,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           }
         ]
@@ -543,53 +517,43 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           },
           "inputParameters": {
-            "topic": "latest on space exploration"
+            "topic": "latest developments in space exploration"
           }
         }
       ]
     },
     {
-      "uuid": "019bc08b-138c-7fd3-b70f-7ac0b6f5c79f",
+      "uuid": "019bf625-54b5-7b31-bdab-051b595e28f2",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
-      "startTime": "2026-01-15T07:24:58.636Z",
-      "endTime": "2026-01-15T07:24:58.636Z",
+      "parentUuid": "019bf625-54b0-7441-9020-568473d42b5e",
+      "startTime": "2026-01-25T17:13:20.309Z",
+      "endTime": "2026-01-25T17:13:20.310Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -601,29 +565,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -640,8 +606,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "research_topic",
-            "id": "02848308-7a06-450e-85e5-4d9681259820",
-            "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+            "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "status": "success"
           }
         ],
@@ -650,21 +616,21 @@
       "output": "research"
     },
     {
-      "uuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
+      "uuid": "019bf625-4db1-77c0-9783-72f119de8dd7",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:57.624Z",
-      "endTime": "2026-01-15T07:24:58.632Z",
+      "parentUuid": "019bf625-4dac-7921-b839-3c97ee9bbdbb",
+      "startTime": "2026-01-25T17:13:18.513Z",
+      "endTime": "2026-01-25T17:13:20.303Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           }
         ],
         "intent": "research"
@@ -674,23 +640,13 @@
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -702,29 +658,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -739,42 +697,32 @@
       }
     },
     {
-      "uuid": "019bc08b-1386-72d0-acd8-cac5383731ff",
+      "uuid": "019bf625-54ae-79a2-a67a-472783955311",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
-      "startTime": "2026-01-15T07:24:58.630Z",
-      "endTime": "2026-01-15T07:24:58.631Z",
+      "parentUuid": "019bf625-4db1-77c0-9783-72f119de8dd7",
+      "startTime": "2026-01-25T17:13:20.302Z",
+      "endTime": "2026-01-25T17:13:20.302Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-                  "function": {
-                    "arguments": "{\"topic\":\"latest on space exploration\"}",
-                    "name": "research_topic"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 109,
-                "total_tokens": 127,
+                "completion_tokens": 28,
+                "prompt_tokens": 211,
+                "total_tokens": 239,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -786,29 +734,31 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_c4585b5b9c",
-              "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+            "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
             "tool_calls": [
               {
                 "name": "research_topic",
                 "args": {
-                  "topic": "latest on space exploration"
+                  "topic": "latest developments in space exploration"
                 },
-                "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+                "id": "call_u61G6vJtalO8jerv3bzEGI8i",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 109,
-              "output_tokens": 18,
-              "total_tokens": 127,
+              "input_tokens": 211,
+              "output_tokens": 28,
+              "total_tokens": 239,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -825,53 +775,53 @@
       "output": "tools"
     },
     {
-      "uuid": "019bc08b-0f96-7c82-8428-a970b40115f2",
+      "uuid": "019bf625-4daf-7752-aaca-0c45397990d3",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f94-7ca2-b50d-f072f6ef81ef",
-      "startTime": "2026-01-15T07:24:57.622Z",
-      "endTime": "2026-01-15T07:24:57.623Z",
+      "parentUuid": "019bf625-4dac-7921-b839-3c97ee9bbdbb",
+      "startTime": "2026-01-25T17:13:18.511Z",
+      "endTime": "2026-01-25T17:13:18.513Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           }
         ],
         "intent": "research"
       }
     },
     {
-      "uuid": "019bc08b-0f96-7c82-8428-a9800098ab03",
+      "uuid": "019bf625-4db0-7e30-b49f-b906c3707ded",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0f96-7c82-8428-a970b40115f2",
-      "startTime": "2026-01-15T07:24:57.622Z",
-      "endTime": "2026-01-15T07:24:57.623Z",
+      "parentUuid": "019bf625-4daf-7752-aaca-0c45397990d3",
+      "startTime": "2026-01-25T17:13:18.512Z",
+      "endTime": "2026-01-25T17:13:18.512Z",
       "input": {
         "messages": [
           {
-            "content": "Research the latest on space exploration",
+            "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+            "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
           }
         ],
         "intent": "research"
@@ -882,13 +832,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc08b-138e-75e3-bef4-3345f9153f40",
+      "uuid": "019bf625-54b9-7fc2-84ca-ad1961404d09",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08b-138d-7c22-be2e-f56c35997cbd",
-      "startTime": "2026-01-15T07:24:58.639Z",
-      "endTime": "2026-01-15T07:25:00.043Z",
+      "parentUuid": "019bf625-54b8-7fe3-acc5-bdd4a57e7827",
+      "startTime": "2026-01-25T17:13:20.313Z",
+      "endTime": "2026-01-25T17:13:36.555Z",
       "input": [
         {
           "role": "human",
@@ -896,11 +846,11 @@
         },
         {
           "role": "human",
-          "content": "Research the latest on space exploration"
+          "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings."
         },
         {
           "role": "ai",
-          "content": "[{'name': 'research_topic', 'args': {'topic': 'latest on space exploration'}, 'id': 'call_7s6lAiLTkeSwQhQgvoEyEztb', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -921,22 +871,22 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+        "content": "Summary of recent developments in space exploration (short):\n\n- New exoplanets and habitable-zone candidates: ongoing surveys (TESS, ground-based) plus follow-up with JWST and large ground telescopes have produced new planet discoveries and improved characterization of some potentially habitable worlds.  \n- JWST science advances: detailed spectra revealing atmospheres (water, CO2 and other molecules) on several exoplanets and deeper observations of very early/unexpectedly bright galaxies.  \n- Lunar and Artemis activity: NASA\u2019s Artemis program and commercial lunar partnerships are advancing hardware, lander contracts and plans for crewed lunar missions; multiple commercial lunar payloads and CLPS contracts are in development.  \n- Large launch and spacecraft development: Rapid progress and testing from commercial providers (SpaceX Starship development and ongoing test flights, continued Crew Dragon operations, expanding commercial launch cadence).  \n- Planetary missions & sample return: OSIRIS\u2011REx sample return from Bennu and Perseverance\u2019s Mars sample caching continue to drive sample-return planning; DART\u2019s asteroid deflection test has follow-up missions planned.  \n- Global and commercial expansion: China, ESA, India and private companies continue active programs (lunar, Mars, robotic exploration, space stations, and space tourism), increasing mission diversity and cadence.\n\nIf you want a one-page brief on any single item above (exoplanets, JWST findings, Artemis status, Starship progress, sample returns, etc.), I can produce that next.",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 147.0,
-      "outputTokenCount": 53.0
+      "inputTokenCount": 256.0,
+      "outputTokenCount": 1333.0
     },
     {
-      "uuid": "019bc08b-0f99-7303-a714-ae0e46825491",
+      "uuid": "019bf625-4db3-73c0-95ff-bfa49be1b941",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08b-0f98-7c20-a45c-8e391ffdf3b8",
-      "startTime": "2026-01-15T07:24:57.625Z",
-      "endTime": "2026-01-15T07:24:58.629Z",
+      "parentUuid": "019bf625-4db1-77c0-9783-72f119de8dd7",
+      "startTime": "2026-01-25T17:13:18.515Z",
+      "endTime": "2026-01-25T17:13:20.301Z",
       "input": [
         {
           "role": "human",
@@ -944,7 +894,7 @@
         },
         {
           "role": "human",
-          "content": "Research the latest on space exploration"
+          "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings."
         },
         {
           "role": "Tool Input",
@@ -966,30 +916,30 @@
           {
             "name": "research_topic",
             "args": {
-              "topic": "latest on space exploration"
+              "topic": "latest developments in space exploration"
             },
-            "id": "call_7s6lAiLTkeSwQhQgvoEyEztb"
+            "id": "call_u61G6vJtalO8jerv3bzEGI8i"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
+      "model": "gpt-5-mini-2025-08-07",
       "prompt": {},
-      "inputTokenCount": 109.0,
-      "outputTokenCount": 18.0
+      "inputTokenCount": 211.0,
+      "outputTokenCount": 28.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08b-138a-75f0-9a7c-e858e2970908",
+      "uuid": "019bf625-54b3-7641-b568-fa65eba8c460",
       "name": "research_topic",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-1389-73d2-bb67-ec508d4d4f0f",
-      "startTime": "2026-01-15T07:24:58.634Z",
-      "endTime": "2026-01-15T07:24:58.635Z",
+      "parentUuid": "019bf625-54b0-7441-9020-568473d42b5e",
+      "startTime": "2026-01-25T17:13:20.307Z",
+      "endTime": "2026-01-25T17:13:20.308Z",
       "input": {
-        "topic": "latest on space exploration"
+        "topic": "latest developments in space exploration"
       },
       "output": {
         "content": "Space research reveals new exoplanets in habitable zones.",
@@ -997,14 +947,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+        "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:24:57.620Z",
-  "endTime": "2026-01-15T07:25:00.047Z",
+  "startTime": "2026-01-25T17:13:18.509Z",
+  "endTime": "2026-01-25T17:13:36.565Z",
   "name": "langgraph-conditional-async",
   "tags": [
     "langgraph",
@@ -1015,43 +965,33 @@
   "input": {
     "messages": [
       {
-        "content": "Research the latest on space exploration",
+        "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+        "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Research the latest on space exploration",
+        "content": "Use the research tool to research: latest developments in space exploration. Do not ask clarification questions. Return a short summary of the findings.",
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "08e62db4-47e9-40dd-a1f7-810d39685fb5"
+        "id": "8079eeda-18f2-42a5-869a-301732e4a9ca"
       },
       {
         "content": "",
         "additional_kwargs": {
-          "tool_calls": [
-            {
-              "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
-              "function": {
-                "arguments": "{\"topic\":\"latest on space exploration\"}",
-                "name": "research_topic"
-              },
-              "type": "function"
-            }
-          ],
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 18,
-            "prompt_tokens": 109,
-            "total_tokens": 127,
+            "completion_tokens": 28,
+            "prompt_tokens": 211,
+            "total_tokens": 239,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1063,29 +1003,31 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyC0wo5rDbY8UejRF9nlVgtqeBGZ2",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1xxmLelc75lW0CmthI50SLVEnzY1",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-0f99-7303-a714-ae0e46825491-0",
+        "id": "lc_run--019bf625-4db3-73c0-95ff-bfa49be1b941-0",
         "tool_calls": [
           {
             "name": "research_topic",
             "args": {
-              "topic": "latest on space exploration"
+              "topic": "latest developments in space exploration"
             },
-            "id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+            "id": "call_u61G6vJtalO8jerv3bzEGI8i",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 109,
-          "output_tokens": 18,
-          "total_tokens": 127,
+          "input_tokens": 211,
+          "output_tokens": 28,
+          "total_tokens": 239,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1102,24 +1044,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+        "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
         "status": "success"
       },
       {
-        "content": "Recent research in space exploration has revealed the discovery of new exoplanets located in habitable zones, which are regions around stars where conditions may be suitable for life. This finding is significant as it expands our understanding of potentially habitable worlds beyond our solar system.",
+        "content": "Summary of recent developments in space exploration (short):\n\n- New exoplanets and habitable-zone candidates: ongoing surveys (TESS, ground-based) plus follow-up with JWST and large ground telescopes have produced new planet discoveries and improved characterization of some potentially habitable worlds.  \n- JWST science advances: detailed spectra revealing atmospheres (water, CO2 and other molecules) on several exoplanets and deeper observations of very early/unexpectedly bright galaxies.  \n- Lunar and Artemis activity: NASA\u2019s Artemis program and commercial lunar partnerships are advancing hardware, lander contracts and plans for crewed lunar missions; multiple commercial lunar payloads and CLPS contracts are in development.  \n- Large launch and spacecraft development: Rapid progress and testing from commercial providers (SpaceX Starship development and ongoing test flights, continued Crew Dragon operations, expanding commercial launch cadence).  \n- Planetary missions & sample return: OSIRIS\u2011REx sample return from Bennu and Perseverance\u2019s Mars sample caching continue to drive sample-return planning; DART\u2019s asteroid deflection test has follow-up missions planned.  \n- Global and commercial expansion: China, ESA, India and private companies continue active programs (lunar, Mars, robotic exploration, space stations, and space tourism), increasing mission diversity and cadence.\n\nIf you want a one-page brief on any single item above (exoplanets, JWST findings, Artemis status, Starship progress, sample returns, etc.), I can produce that next.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 53,
-            "prompt_tokens": 147,
-            "total_tokens": 200,
+            "completion_tokens": 1333,
+            "prompt_tokens": 256,
+            "total_tokens": 1589,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 1024,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1127,27 +1069,29 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_c4585b5b9c",
-          "id": "chatcmpl-CyC0xq0SQ0LR8bLRqD1Jc8vCEZHhe",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1xxo02ojPMSKcOfrBWF9ShYL8N7U",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-138e-75e3-bef4-3345f9153f40-0",
+        "id": "lc_run--019bf625-54b9-7fc2-84ca-ad1961404d09-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 147,
-          "output_tokens": 53,
-          "total_tokens": 200,
+          "input_tokens": 256,
+          "output_tokens": 1333,
+          "total_tokens": 1589,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 1024
           }
         }
       }
@@ -1164,12 +1108,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "research_topic",
-        "id": "02848308-7a06-450e-85e5-4d9681259820",
-        "tool_call_id": "call_7s6lAiLTkeSwQhQgvoEyEztb",
+        "id": "04f9b377-f0b5-409c-a8e2-21ec886789df",
+        "tool_call_id": "call_u61G6vJtalO8jerv3bzEGI8i",
         "status": "success"
       },
       "inputParameters": {
-        "topic": "latest on space exploration"
+        "topic": "latest developments in space exploration"
       }
     }
   ]

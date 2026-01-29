@@ -1,0 +1,381 @@
+{
+  "uuid": "c4d4f6ea-91ab-44a8-b0ac-3e4c8aadacfc",
+  "baseSpans": [
+    {
+      "uuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "name": "streaming_multi_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T09:28:59.712Z",
+      "endTime": "2026-01-26T09:29:01.548Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "tool_calls",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a2-9242-7021-8a28-d47a2802f35c",
+            "tool_calls": [
+              {
+                "name": "get_stock_price",
+                "args": {
+                  "symbol": "TSLA"
+                },
+                "id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 174,
+              "output_tokens": 25,
+              "total_tokens": 199,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "$245.60 (+2.1%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+            "status": "success"
+          },
+          {
+            "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
+            "additional_kwargs": {},
+            "response_metadata": {
+              "finish_reason": "stop",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a2-9692-7313-9131-a979ca977159",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 214,
+              "output_tokens": 22,
+              "total_tokens": 236,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "output": {
+            "content": "$245.60 (+2.1%)",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "get_stock_price",
+            "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+            "status": "success"
+          },
+          "inputParameters": {
+            "symbol": "TSLA"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf9a2-9692-7313-9131-a979ca977159",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:29:00.818Z",
+      "endTime": "2026-01-26T09:29:01.548Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "$245.60 (+2.1%)"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-26T09:29:01.294592Z": "",
+        "2026-01-26T09:29:01.322412Z": "The",
+        "2026-01-26T09:29:01.322727Z": " current",
+        "2026-01-26T09:29:01.342124Z": " stock",
+        "2026-01-26T09:29:01.342427Z": " price",
+        "2026-01-26T09:29:01.365698Z": " for",
+        "2026-01-26T09:29:01.366246Z": " TS",
+        "2026-01-26T09:29:01.400184Z": "LA",
+        "2026-01-26T09:29:01.401592Z": " is",
+        "2026-01-26T09:29:01.418739Z": " $",
+        "2026-01-26T09:29:01.420154Z": "245",
+        "2026-01-26T09:29:01.443491Z": ".",
+        "2026-01-26T09:29:01.444021Z": "60",
+        "2026-01-26T09:29:01.465988Z": " (",
+        "2026-01-26T09:29:01.466402Z": "up",
+        "2026-01-26T09:29:01.489894Z": " ",
+        "2026-01-26T09:29:01.490360Z": "2",
+        "2026-01-26T09:29:01.521892Z": ".",
+        "2026-01-26T09:29:01.522353Z": "1",
+        "2026-01-26T09:29:01.536794Z": "%).",
+        "2026-01-26T09:29:01.537440Z": "",
+        "2026-01-26T09:29:01.547610Z": "",
+        "2026-01-26T09:29:01.548067Z": ""
+      }
+    },
+    {
+      "uuid": "019bf9a2-9242-7021-8a28-d47a2802f35c",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:28:59.715Z",
+      "endTime": "2026-01-26T09:29:00.813Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get the current stock price for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'get_company_info', 'description': 'Get company information for a ticker symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_a67kqf5edZVqw4n3iBbJBrVG"
+          }
+        ]
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt": {},
+      "tokenIntervals": {
+        "2026-01-26T09:29:00.726473Z": "",
+        "2026-01-26T09:29:00.743532Z": "",
+        "2026-01-26T09:29:00.745653Z": "",
+        "2026-01-26T09:29:00.765099Z": "",
+        "2026-01-26T09:29:00.767203Z": "",
+        "2026-01-26T09:29:00.787390Z": "",
+        "2026-01-26T09:29:00.789179Z": "",
+        "2026-01-26T09:29:00.806468Z": "",
+        "2026-01-26T09:29:00.807707Z": "",
+        "2026-01-26T09:29:00.812023Z": ""
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "019bf9a2-968e-7111-a4b3-e8a9e43b5bc4",
+      "name": "get_stock_price",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "019bf9a2-9240-70c3-9938-acaf0a6d38db",
+      "startTime": "2026-01-26T09:29:00.814Z",
+      "endTime": "2026-01-26T09:29:00.817Z",
+      "input": {
+        "symbol": "TSLA"
+      },
+      "output": {
+        "content": "$245.60 (+2.1%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+        "status": "success"
+      }
+    }
+  ],
+  "startTime": "2026-01-26T09:28:59.712Z",
+  "endTime": "2026-01-26T09:29:01.548Z",
+  "name": "langchain-streaming-multi",
+  "tags": [
+    "langchain",
+    "streaming",
+    "multi-tool"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {},
+        "response_metadata": {
+          "finish_reason": "tool_calls",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a2-9242-7021-8a28-d47a2802f35c",
+        "tool_calls": [
+          {
+            "name": "get_stock_price",
+            "args": {
+              "symbol": "TSLA"
+            },
+            "id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 174,
+          "output_tokens": 25,
+          "total_tokens": 199,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "$245.60 (+2.1%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+        "status": "success"
+      },
+      {
+        "content": "The current stock price for TSLA is $245.60 (up 2.1%).",
+        "additional_kwargs": {},
+        "response_metadata": {
+          "finish_reason": "stop",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a2-9692-7313-9131-a979ca977159",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 214,
+          "output_tokens": 22,
+          "total_tokens": 236,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_stock_price",
+      "output": {
+        "content": "$245.60 (+2.1%)",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "get_stock_price",
+        "tool_call_id": "call_a67kqf5edZVqw4n3iBbJBrVG",
+        "status": "success"
+      },
+      "inputParameters": {
+        "symbol": "TSLA"
+      }
+    }
+  ]
+}

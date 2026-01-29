@@ -13,10 +13,18 @@ from tests.test_integrations.utils import (
 
 # App imports
 from tests.test_integrations.test_crewai.apps.simple_app import get_simple_app
-from tests.test_integrations.test_crewai.apps.multi_agent_app import get_multi_agent_app
-from tests.test_integrations.test_crewai.apps.tool_usage_app import get_tool_usage_app
-from tests.test_integrations.test_crewai.apps.knowledge_retriever_app import get_knowledge_app
-from tests.test_integrations.test_crewai.apps.hierarchical_app import get_hierarchical_app
+from tests.test_integrations.test_crewai.apps.multi_agent_app import (
+    get_multi_agent_app,
+)
+from tests.test_integrations.test_crewai.apps.tool_usage_app import (
+    get_tool_usage_app,
+)
+from tests.test_integrations.test_crewai.apps.knowledge_retriever_app import (
+    get_knowledge_app,
+)
+from tests.test_integrations.test_crewai.apps.hierarchical_app import (
+    get_hierarchical_app,
+)
 
 # =============================================================================
 # CONFIGURATION

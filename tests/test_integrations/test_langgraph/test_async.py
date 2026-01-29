@@ -10,6 +10,7 @@ from deepeval.integrations.langchain import CallbackHandler
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
+    is_generate_mode,
 )
 
 # App imports
@@ -33,27 +34,19 @@ from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import
 # CONFIGURATION
 # =============================================================================
 
-# Set to True to generate schemas, False to assert against existing schemas
-# Can be overridden via environment variable: GENERATE_SCHEMAS=true pytest ...
-GENERATE_MODE = os.environ.get("GENERATE_SCHEMAS", "").lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
 
 
 def trace_test(schema_name: str):
     """
-    Decorator that switches between generate and assert mode based on GENERATE_MODE.
+    Decorator that switches between generate and assert mode based on GENERATE_SCHEMAS env var.
 
     Args:
         schema_name: Name of the schema file (without path)
     """
     schema_path = os.path.join(_schemas_dir, schema_name)
-    if GENERATE_MODE:
+    if is_generate_mode():
         return generate_trace_json(schema_path)
     else:
         return assert_trace_json(schema_path)
@@ -82,7 +75,12 @@ class TestAsyncApp:
         result = await async_app.ainvoke(
             {
                 "messages": [
-                    HumanMessage(content="Search for information about Rust")
+                    HumanMessage(
+                        content=(
+                            "Use the search_database tool to look up 'Rust (programming language)'. "
+                            "Do not ask clarification questions."
+                        )
+                    )
                 ]
             },
             config={"callbacks": [callback]},
@@ -106,7 +104,11 @@ class TestAsyncApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Search for information about Python and translate it to Spanish"
+                        content=(
+                            "Use the search_database tool to look up 'Python (programming language)'. "
+                            "Then translate the result to Spanish using the translate tool. "
+                            "Do not ask clarification questions."
+                        )
                     )
                 ]
             },
@@ -209,7 +211,11 @@ class TestAsyncConditionalApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Research the latest on space exploration"
+                        content=(
+                            "Use the research tool exactly once to research: space exploration. "
+                            "Do not ask clarification questions. "
+                            "After the tool returns, respond with a short 3-bullet summary and stop."
+                        )
                     )
                 ]
             },
@@ -240,7 +246,13 @@ class TestAsyncParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Get weather in Sydney and Tokyo, and search for tech news"
+                        content=(
+                            "Do the following using tools (do not ask clarification questions):"
+                            "1) Call get_weather with location=Sydney, Australia. "
+                            "2) Call get_weather with location=Tokyo, Japan. "
+                            "3) Call search_news with topic=tech. "
+                            "Then return a short combined result."
+                        )
                     )
                 ]
             },
@@ -262,11 +274,22 @@ class TestAsyncParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="""I need a comprehensive report:
-                        1. Weather in Tokyo, New York, London, Paris, Sydney
-                        2. Stock prices for AAPL, GOOGL, MSFT
-                        3. Exchange rate USD to EUR and USD to GBP
-                        4. Calculate 15% of 378.90"""
+                        content=(
+                            "Call exactly these tools with the exact parameters shown. "
+                            "Do NOT use any other tools.\n\n"
+                            "1. get_weather(city='Tokyo')\n"
+                            "2. get_weather(city='New York')\n"
+                            "3. get_weather(city='London')\n"
+                            "4. get_weather(city='Paris')\n"
+                            "5. get_weather(city='Sydney')\n"
+                            "6. get_stock_price(symbol='AAPL')\n"
+                            "7. get_stock_price(symbol='GOOGL')\n"
+                            "8. get_stock_price(symbol='MSFT')\n"
+                            "9. calculate(expression='1/0.92')\n"
+                            "10. calculate(expression='1/0.79')\n"
+                            "11. calculate(expression='0.15*378.90')\n\n"
+                            "After receiving all results, provide a brief summary."
+                        )
                     )
                 ]
             },
