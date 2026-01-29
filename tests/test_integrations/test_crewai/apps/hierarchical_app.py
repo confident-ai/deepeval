@@ -12,17 +12,20 @@ def get_hierarchical_app():
     # Junior agents
     researcher = Agent(
         role="Researcher",
-        goal="Find facts",
-        backstory="Junior researcher",
+        goal="Find facts about frogs",
+        backstory="Junior researcher specialized in amphibians.",
         llm=llm,
     )
 
     writer = Agent(
-        role="Writer", goal="Write content", backstory="Junior writer", llm=llm
+        role="Writer",
+        goal="Write content about frogs",
+        backstory="Junior writer who writes poems.",
+        llm=llm,
     )
 
     task = Task(
-        description="Research frogs and write a short poem about them.",
+        description="Research frogs and write a short poem about them. You are the Manager. You MUST delegate the research task to the Researcher and the writing task to the Writer. Do not perform these tasks yourself.",
         expected_output="A poem about frogs.",
         agent=writer,  # In hierarchical, manager delegates, but we assign a primary
     )

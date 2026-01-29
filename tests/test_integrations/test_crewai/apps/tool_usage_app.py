@@ -25,15 +25,15 @@ def get_tool_usage_app():
     agent = Agent(
         role="Meteorologist",
         goal="Check weather",
-        backstory="Weather expert",
+        backstory="You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.",
         tools=[get_weather],
         llm=llm,
         verbose=True,
     )
 
     task = Task(
-        description="Check the weather in {city}.",
-        expected_output="The weather report.",
+        description="Check the weather in {city}. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.",
+        expected_output="The weather report directly from the tool.",
         agent=agent,
     )
 

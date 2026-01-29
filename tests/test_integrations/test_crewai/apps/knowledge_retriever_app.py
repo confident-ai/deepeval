@@ -18,14 +18,14 @@ def get_knowledge_app():
     agent = Agent(
         role="Security Analyst",
         goal="Retrieve secret information",
-        backstory="Authorized personnel",
+        backstory="You are an authorized analyst. You do not have the codes memorized; you must always look them up in the knowledge base.",
         llm=llm,
         verbose=True,
     )
 
     task = Task(
-        description="What is the launch code?",
-        expected_output="The code.",
+        description="What is the launch code? You MUST search the knowledge base for 'launch code' to find the answer.",
+        expected_output="The exact launch code found in the knowledge base.",
         agent=agent,
     )
 

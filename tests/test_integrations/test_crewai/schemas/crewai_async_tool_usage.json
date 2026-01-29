@@ -1,24 +1,24 @@
 {
-  "uuid": "fd41153d-807f-4dc4-871c-8e5fe3295fa3",
+  "uuid": "1c41e91b-3eb2-4a6d-b60a-c430f5ef3bdd",
   "baseSpans": [
     {
-      "uuid": "e97226e8-3c71-47fa-9915-d2803942291f",
+      "uuid": "4e8816fa-8439-40c4-8407-b5e4f6d63ecd",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-28T18:06:55.992Z",
-      "endTime": "2026-01-28T18:06:57.729Z",
+      "startTime": "2026-01-29T04:13:22.187Z",
+      "endTime": "2026-01-29T04:13:24.277Z",
       "input": {},
       "output": "Weather in Tokyo: Clear, 70\u00b0F"
     },
     {
-      "uuid": "d0eccfeb-9d66-443a-a269-53f8c760cabb",
+      "uuid": "c291a77f-4040-4b34-b913-f764a10eb072",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e97226e8-3c71-47fa-9915-d2803942291f",
-      "startTime": "2026-01-28T18:06:55.992Z",
-      "endTime": "2026-01-28T18:06:57.728Z",
+      "parentUuid": "4e8816fa-8439-40c4-8407-b5e4f6d63ecd",
+      "startTime": "2026-01-29T04:13:22.187Z",
+      "endTime": "2026-01-29T04:13:24.276Z",
       "input": {
         "city": "Tokyo"
       },
@@ -27,14 +27,14 @@
   ],
   "agentSpans": [
     {
-      "uuid": "da873125-ba6f-4fdf-b868-99a7404ba68e",
+      "uuid": "a0923bc8-d446-4223-b841-1764288b003a",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "d0eccfeb-9d66-443a-a269-53f8c760cabb",
-      "startTime": "2026-01-28T18:06:55.997Z",
-      "endTime": "2026-01-28T18:06:57.720Z",
-      "input": "Check the weather in Tokyo.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "c291a77f-4040-4b34-b913-f764a10eb072",
+      "startTime": "2026-01-29T04:13:22.191Z",
+      "endTime": "2026-01-29T04:13:24.272Z",
+      "input": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
       "toolsCalled": [
         {
@@ -51,28 +51,28 @@
   ],
   "llmSpans": [
     {
-      "uuid": "a289b25b-72ca-4acd-a61a-7eea1769d89e",
+      "uuid": "e7ccdc56-424e-43cd-b79d-c8eeea544281",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "da873125-ba6f-4fdf-b868-99a7404ba68e",
-      "startTime": "2026-01-28T18:06:56.936Z",
-      "endTime": "2026-01-28T18:06:57.718Z",
+      "parentUuid": "a0923bc8-d446-4223-b841-1764288b003a",
+      "startTime": "2026-01-29T04:13:23.624Z",
+      "endTime": "2026-01-29T04:13:24.272Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+              "id": "call_reo4ORhfDB63v5KnUz34BkV0",
               "type": "function",
               "function": {
                 "name": "'get_weather'",
@@ -83,7 +83,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+          "tool_call_id": "call_reo4ORhfDB63v5KnUz34BkV0",
           "name": "get_weather",
           "content": "Weather in Tokyo: Clear, 70\u00b0F"
         },
@@ -97,28 +97,28 @@
       "prompt": {}
     },
     {
-      "uuid": "8a994c12-9a1b-4a2e-ae91-df0749f32846",
+      "uuid": "4dddd35d-ea01-4534-b614-34ac9a90386e",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a289b25b-72ca-4acd-a61a-7eea1769d89e",
-      "startTime": "2026-01-28T18:06:56.936Z",
-      "endTime": "2026-01-28T18:06:57.718Z",
+      "parentUuid": "e7ccdc56-424e-43cd-b79d-c8eeea544281",
+      "startTime": "2026-01-29T04:13:23.624Z",
+      "endTime": "2026-01-29T04:13:24.272Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+              "id": "call_reo4ORhfDB63v5KnUz34BkV0",
               "type": "function",
               "function": {
                 "name": "'get_weather'",
@@ -129,7 +129,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+          "tool_call_id": "call_reo4ORhfDB63v5KnUz34BkV0",
           "name": "get_weather",
           "content": "Weather in Tokyo: Clear, 70\u00b0F"
         },
@@ -143,26 +143,26 @@
       "prompt": {}
     },
     {
-      "uuid": "1f9d5412-5851-43df-9db3-9b833aad0cd7",
+      "uuid": "feaca198-95fd-43ea-b318-0ed47b9f6679",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "da873125-ba6f-4fdf-b868-99a7404ba68e",
-      "startTime": "2026-01-28T18:06:55.999Z",
-      "endTime": "2026-01-28T18:06:56.932Z",
+      "parentUuid": "a0923bc8-d446-4223-b841-1764288b003a",
+      "startTime": "2026-01-29T04:13:22.193Z",
+      "endTime": "2026-01-29T04:13:23.619Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
         }
       ],
       "output": [
         {
-          "id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+          "id": "call_reo4ORhfDB63v5KnUz34BkV0",
           "function": {
             "arguments": "{\"city\":\"Tokyo\"}",
             "name": "get_weather"
@@ -174,26 +174,26 @@
       "prompt": {}
     },
     {
-      "uuid": "963169b2-024b-47e0-9eec-40b31dddc2d8",
+      "uuid": "3eebc8a1-1cc7-43fa-9715-72a7e8fdc8ca",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1f9d5412-5851-43df-9db3-9b833aad0cd7",
-      "startTime": "2026-01-28T18:06:55.999Z",
-      "endTime": "2026-01-28T18:06:56.932Z",
+      "parentUuid": "feaca198-95fd-43ea-b318-0ed47b9f6679",
+      "startTime": "2026-01-29T04:13:22.193Z",
+      "endTime": "2026-01-29T04:13:23.619Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. Weather expert\nYour personal goal is: Check weather"
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo.\n\nThis is the expected criteria for your final answer: The weather report.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is VERY important to you, your job depends on it!"
         }
       ],
       "output": [
         {
-          "id": "call_TCFcf4nr2tggmTyJoZWAPnhA",
+          "id": "call_reo4ORhfDB63v5KnUz34BkV0",
           "function": {
             "arguments": "{\"city\":\"Tokyo\"}",
             "name": "get_weather"
@@ -208,39 +208,43 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "04c13a50-02fb-405a-8f7b-e6784c0ad715",
+      "uuid": "46f50df0-5566-4cdc-891b-88834361f703",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "da873125-ba6f-4fdf-b868-99a7404ba68e",
-      "startTime": "2026-01-28T18:06:56.930Z",
-      "endTime": "2026-01-28T18:06:56.937Z",
+      "parentUuid": "a0923bc8-d446-4223-b841-1764288b003a",
+      "startTime": "2026-01-29T04:13:23.620Z",
+      "endTime": "2026-01-29T04:13:23.622Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
       "toolsCalled": [
         {
-          "name": "get_weather"
+          "name": "get_weather",
+          "output": "Weather in Tokyo: Clear, 70\u00b0F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
         }
       ]
     },
     {
-      "uuid": "101ea3c8-3fff-48cf-8440-d28bf4d4feeb",
+      "uuid": "864dcf33-2230-4ea2-860a-66c27496adf8",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "04c13a50-02fb-405a-8f7b-e6784c0ad715",
-      "startTime": "2026-01-28T18:06:56.930Z",
-      "endTime": "2026-01-28T18:06:56.937Z",
+      "parentUuid": "46f50df0-5566-4cdc-891b-88834361f703",
+      "startTime": "2026-01-29T04:13:23.620Z",
+      "endTime": "2026-01-29T04:13:23.620Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Weather in Tokyo: Clear, 70\u00b0F"
     }
   ],
-  "startTime": "2026-01-28T18:06:55.992Z",
-  "endTime": "2026-01-28T18:06:57.729Z",
+  "startTime": "2026-01-29T04:13:22.187Z",
+  "endTime": "2026-01-29T04:13:24.277Z",
   "environment": "development",
   "input": {
     "city": "Tokyo"

@@ -1,31 +1,31 @@
 {
-  "uuid": "26438634-712f-4fe6-b976-5e93e5ae9b59",
+  "uuid": "7976a946-4516-4aac-ade4-3bb6b1ad63ba",
   "baseSpans": [
     {
-      "uuid": "518a8d96-f563-48da-bfef-627fac0fe32a",
+      "uuid": "c85c371e-ddd4-4454-95e4-8483bed66a00",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T03:14:49.801Z",
-      "endTime": "2026-01-29T03:14:51.003Z",
+      "startTime": "2026-01-29T04:11:07.468Z",
+      "endTime": "2026-01-29T04:11:08.971Z",
       "input": {
         "input": "Hello World"
       },
-      "output": "Hello World! It's great to see you! How can I assist you today?",
+      "output": "Hello World! It's great to see you here! How can I assist you today?",
       "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "c0b915da-e666-45a0-8016-63be804de6cf",
+      "uuid": "81f85a11-a859-418b-94e4-4ce1ff25fc1d",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "518a8d96-f563-48da-bfef-627fac0fe32a",
-      "startTime": "2026-01-29T03:14:49.805Z",
-      "endTime": "2026-01-29T03:14:50.999Z",
+      "parentUuid": "c85c371e-ddd4-4454-95e4-8483bed66a00",
+      "startTime": "2026-01-29T04:11:07.473Z",
+      "endTime": "2026-01-29T04:11:08.967Z",
       "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello World! It's great to see you! How can I assist you today?",
+      "output": "Hello World! It's great to see you here! How can I assist you today?",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "metric_collection_1"
@@ -33,13 +33,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "11da35a1-99e0-41b8-a80c-49211627c7fc",
+      "uuid": "4df0670d-34c3-4784-b1b0-830155f815b8",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c0b915da-e666-45a0-8016-63be804de6cf",
-      "startTime": "2026-01-29T03:14:49.806Z",
-      "endTime": "2026-01-29T03:14:50.997Z",
+      "parentUuid": "81f85a11-a859-418b-94e4-4ce1ff25fc1d",
+      "startTime": "2026-01-29T04:11:07.475Z",
+      "endTime": "2026-01-29T04:11:08.965Z",
       "input": [
         {
           "role": "system",
@@ -50,19 +50,19 @@
           "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you! How can I assist you today?",
+      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you here! How can I assist you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "33d552f9-aad2-4a33-af54-1341ab70f065",
+      "uuid": "5e6133e7-9dcf-4a0a-9dfe-524f27bb4edd",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "11da35a1-99e0-41b8-a80c-49211627c7fc",
-      "startTime": "2026-01-29T03:14:49.806Z",
-      "endTime": "2026-01-29T03:14:50.997Z",
+      "parentUuid": "4df0670d-34c3-4784-b1b0-830155f815b8",
+      "startTime": "2026-01-29T04:11:07.475Z",
+      "endTime": "2026-01-29T04:11:08.965Z",
       "input": [
         {
           "role": "system",
@@ -73,7 +73,7 @@
           "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you! How can I assist you today?",
+      "output": "I now can give a great answer  \nFinal Answer: Hello World! It's great to see you here! How can I assist you today?",
       "model": "gpt-4o-mini",
       "prompt": {},
       "metricCollection": "metric_collection_1"
@@ -81,13 +81,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T03:14:49.801Z",
-  "endTime": "2026-01-29T03:14:51.003Z",
+  "startTime": "2026-01-29T04:11:07.468Z",
+  "endTime": "2026-01-29T04:11:08.971Z",
   "environment": "development",
   "input": {
     "input": "Hello World"
   },
-  "output": "Hello World! It's great to see you! How can I assist you today?",
+  "output": "Hello World! It's great to see you here! How can I assist you today?",
   "status": "SUCCESS",
   "metricCollection": "metric_collection_1"
 }
