@@ -1,31 +1,16 @@
 {
-  "uuid": "0b7f0a63-7c8f-4e3c-a63b-58ed0158c999",
+  "uuid": "25694e4a-0d77-4b16-ab4b-9cc4460c48fa",
   "baseSpans": [
     {
-      "uuid": "ReActAgent._done-bdafbda0-2036-48c7-9d5d-3ce28bceedea",
-      "name": "_done",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:11.308Z",
-      "endTime": "2025-10-28T13:36:11.309Z",
-      "input": {
-        "ctx": {
-          "is_running": false
-        },
-        "ev": {}
-      }
-    },
-    {
-      "uuid": "ReActAgent.parse_agent_output-6d494158-9c0b-45f0-b923-f0499416c548",
+      "uuid": "ReActAgent.parse_agent_output-c3ce5bb7-43fd-4638-885a-09a909add71c",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:11.306Z",
-      "endTime": "2025-10-28T13:36:11.308Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:09.911Z",
+      "endTime": "2026-01-29T12:37:09.917Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "response": {
             "role": "assistant",
@@ -44,22 +29,46 @@
               "tool_kwargs": {
                 "location": "sf"
               },
-              "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c"
+              "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80"
             }
           ],
           "retry_messages": []
         }
       },
-      "output": {}
+      "output": {
+        "result": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "location": "sf"
+              },
+              "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80"
+            }
+          ],
+          "retry_messages": []
+        }
+      }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-774f9364-39d4-4cb9-a889-ff2b1e69cfc9",
+      "uuid": "ReActAgent.run_agent_step-dc160d78-56d9-4d7a-8ce8-c9cd99aac600",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:09.715Z",
-      "endTime": "2025-10-28T13:36:11.305Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:08.688Z",
+      "endTime": "2026-01-29T12:37:09.908Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -96,20 +105,20 @@
             "tool_kwargs": {
               "location": "sf"
             },
-            "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c"
+            "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80"
           }
         ],
         "retry_messages": []
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-9230ba6f-5cf3-4742-9407-e655550bbe66",
+      "uuid": "ReActOutputParser.parse-2bcd877d-2a2b-4db7-a810-a98060fa2a85",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-774f9364-39d4-4cb9-a889-ff2b1e69cfc9",
-      "startTime": "2025-10-28T13:36:11.304Z",
-      "endTime": "2025-10-28T13:36:11.304Z",
+      "parentUuid": "ReActAgent.run_agent_step-dc160d78-56d9-4d7a-8ce8-c9cd99aac600",
+      "startTime": "2026-01-29T12:37:09.907Z",
+      "endTime": "2026-01-29T12:37:09.908Z",
       "input": {
         "output": "Thought: I cannot answer the question with the provided tools.\nAnswer: I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time.",
         "is_streaming": false
@@ -121,13 +130,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-e82347e5-3e85-45f5-a5dd-7e1cbcb9a392",
+      "uuid": "OpenAI.astream_chat-0afa85ca-95bb-423c-94d6-8bddfeb48feb",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-774f9364-39d4-4cb9-a889-ff2b1e69cfc9",
-      "startTime": "2025-10-28T13:36:09.716Z",
-      "endTime": "2025-10-28T13:36:09.716Z",
+      "parentUuid": "ReActAgent.run_agent_step-dc160d78-56d9-4d7a-8ce8-c9cd99aac600",
+      "startTime": "2026-01-29T12:37:08.689Z",
+      "endTime": "2026-01-29T12:37:08.690Z",
       "input": {
         "messages": [
           {
@@ -172,16 +181,16 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1266b1d80>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x150bc68a0>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-284cc457-63c6-4e0e-812c-98a5ee6fd959",
+      "uuid": "ReActAgent.setup_agent-0d80c8c0-e2a4-4a44-b0fd-291a4712ca8b",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:09.714Z",
-      "endTime": "2025-10-28T13:36:09.714Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:08.685Z",
+      "endTime": "2026-01-29T12:37:08.685Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -217,13 +226,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.aggregate_tool_results-dfe80001-b71d-4d31-8476-a1254743852d",
+      "uuid": "ReActAgent.aggregate_tool_results-8684ec6b-0b46-4c89-8676-4831ffbbbc56",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:09.713Z",
-      "endTime": "2025-10-28T13:36:09.713Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:08.685Z",
+      "endTime": "2026-01-29T12:37:08.685Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -231,7 +240,7 @@
           "tool_kwargs": {
             "location": "sf"
           },
-          "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c",
+          "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80",
           "tool_output": {
             "blocks": [
               {
@@ -269,13 +278,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.call_tool-8476879e-6488-49f5-a68d-7ef329030ecb",
+      "uuid": "ReActAgent.call_tool-080a54fa-0774-4e62-a65b-3f40f0e0f4e2",
       "name": "call_tool",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:09.711Z",
-      "endTime": "2025-10-28T13:36:09.712Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:08.684Z",
+      "endTime": "2026-01-29T12:37:08.684Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -283,7 +292,7 @@
           "tool_kwargs": {
             "location": "sf"
           },
-          "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c"
+          "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80"
         }
       },
       "output": {
@@ -291,7 +300,7 @@
         "tool_kwargs": {
           "location": "sf"
         },
-        "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c",
+        "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80",
         "tool_output": {
           "blocks": [
             {
@@ -338,13 +347,13 @@
       ]
     },
     {
-      "uuid": "ReActAgent.parse_agent_output-131274ac-fc39-404f-a895-a100d3f00056",
+      "uuid": "ReActAgent.parse_agent_output-5e7f3388-e90b-4914-9dc5-e6eae8e8197d",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:09.710Z",
-      "endTime": "2025-10-28T13:36:09.711Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:08.684Z",
+      "endTime": "2026-01-29T12:37:08.684Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -361,7 +370,7 @@
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c",
+              "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80",
               "tool_name": "get_weather",
               "tool_kwargs": {
                 "location": "sf"
@@ -373,13 +382,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-c01d002c-9344-4a4b-b771-4332eca1a038",
+      "uuid": "ReActAgent.run_agent_step-65ebb70b-da76-4db2-870f-3f1b427ab6ac",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:07.399Z",
-      "endTime": "2025-10-28T13:36:09.709Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:07.424Z",
+      "endTime": "2026-01-29T12:37:08.683Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -412,7 +421,7 @@
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c",
+            "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80",
             "tool_name": "get_weather",
             "tool_kwargs": {
               "location": "sf"
@@ -423,13 +432,13 @@
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-ee640b58-28d6-4dcf-93f9-33eed88965fb",
+      "uuid": "ReActOutputParser.parse-7c135e9d-c4ab-42ba-8067-4587d0d21e41",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-c01d002c-9344-4a4b-b771-4332eca1a038",
-      "startTime": "2025-10-28T13:36:09.704Z",
-      "endTime": "2025-10-28T13:36:09.709Z",
+      "parentUuid": "ReActAgent.run_agent_step-65ebb70b-da76-4db2-870f-3f1b427ab6ac",
+      "startTime": "2026-01-29T12:37:08.676Z",
+      "endTime": "2026-01-29T12:37:08.682Z",
       "input": {
         "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"location\":\"sf\"}",
         "is_streaming": false
@@ -443,13 +452,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-961b9ea2-eeb3-4bd8-927a-44fd5e61895d",
+      "uuid": "OpenAI.astream_chat-8e0f93f7-2047-4158-b472-82923d2805e1",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-c01d002c-9344-4a4b-b771-4332eca1a038",
-      "startTime": "2025-10-28T13:36:07.400Z",
-      "endTime": "2025-10-28T13:36:07.404Z",
+      "parentUuid": "ReActAgent.run_agent_step-65ebb70b-da76-4db2-870f-3f1b427ab6ac",
+      "startTime": "2026-01-29T12:37:07.424Z",
+      "endTime": "2026-01-29T12:37:07.456Z",
       "input": {
         "messages": [
           {
@@ -474,16 +483,16 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x125007760>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1299e3220>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-7117bcc7-f30e-4b1f-b9c6-5bdc047097c5",
+      "uuid": "ReActAgent.setup_agent-736c93e1-9739-47ab-ae57-1f3d08e46c45",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:07.399Z",
-      "endTime": "2025-10-28T13:36:07.399Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:07.423Z",
+      "endTime": "2026-01-29T12:37:07.423Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -519,19 +528,20 @@
       }
     },
     {
-      "uuid": "ReActAgent.init_run-cda62bc5-f47c-4cc0-ab53-a2e0e6d9d84b",
+      "uuid": "ReActAgent.init_run-79433711-f28f-46f9-af14-a7abdf11371c",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
-      "startTime": "2025-10-28T13:36:07.344Z",
-      "endTime": "2025-10-28T13:36:07.399Z",
+      "parentUuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
+      "startTime": "2026-01-29T12:37:07.422Z",
+      "endTime": "2026-01-29T12:37:07.423Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
           "user_msg": "what is the weather in sf",
           "chat_history": null,
-          "max_iterations": null
+          "max_iterations": null,
+          "early_stopping_method": null
         }
       },
       "output": {
@@ -553,16 +563,17 @@
   ],
   "agentSpans": [
     {
-      "uuid": "ReActAgent.run-79aaf1fd-0df9-4207-9de0-394f0b4b618f",
+      "uuid": "ReActAgent.run-ccb6e376-37ff-4c79-8b94-21a6768d50f5",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2025-10-28T13:36:07.342Z",
-      "endTime": "2025-10-28T13:36:11.309Z",
+      "startTime": "2026-01-29T12:37:07.419Z",
+      "endTime": "2026-01-29T12:37:09.918Z",
       "input": {
         "user_msg": "what is the weather in sf",
         "chat_history": null,
-        "max_iterations": null
+        "max_iterations": null,
+        "early_stopping_method": null
       },
       "output": {
         "response": {
@@ -582,7 +593,7 @@
             "tool_kwargs": {
               "location": "sf"
             },
-            "tool_id": "c47c8611-6017-4577-912d-63b0f52c044c"
+            "tool_id": "5f552993-5f1a-4c6d-a154-bc3369522d80"
           }
         ],
         "retry_messages": []
@@ -593,13 +604,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "15fc2a82-e994-4039-ba3d-d6fc7d236898",
+      "uuid": "e37f597a-872b-4228-94ca-5e95cacd4357",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-e82347e5-3e85-45f5-a5dd-7e1cbcb9a392",
-      "startTime": "2025-10-28T13:36:09.716Z",
-      "endTime": "2025-10-28T13:36:11.303Z",
+      "parentUuid": "OpenAI.astream_chat-0afa85ca-95bb-423c-94d6-8bddfeb48feb",
+      "startTime": "2026-01-29T12:37:08.689Z",
+      "endTime": "2026-01-29T12:37:09.906Z",
       "input": [
         {
           "role": "system",
@@ -628,13 +639,13 @@
       "prompt": {}
     },
     {
-      "uuid": "c346f471-3885-491c-9b40-a1a3817ad02d",
+      "uuid": "f70ee5b0-82fa-4b15-aba1-6bdcb9aef005",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-961b9ea2-eeb3-4bd8-927a-44fd5e61895d",
-      "startTime": "2025-10-28T13:36:07.400Z",
-      "endTime": "2025-10-28T13:36:09.704Z",
+      "parentUuid": "OpenAI.astream_chat-8e0f93f7-2047-4158-b472-82923d2805e1",
+      "startTime": "2026-01-29T12:37:07.425Z",
+      "endTime": "2026-01-29T12:37:08.675Z",
       "input": [
         {
           "role": "system",
@@ -658,13 +669,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "FunctionTool.acall-c71a7bc6-9e28-4eb2-a222-74fc49c542e9",
+      "uuid": "FunctionTool.acall-d8ffa64c-020f-4a85-b131-1760c36523ea",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ReActAgent.call_tool-8476879e-6488-49f5-a68d-7ef329030ecb",
-      "startTime": "2025-10-28T13:36:09.711Z",
-      "endTime": "2025-10-28T13:36:09.712Z",
+      "parentUuid": "ReActAgent.call_tool-080a54fa-0774-4e62-a65b-3f40f0e0f4e2",
+      "startTime": "2026-01-29T12:37:08.684Z",
+      "endTime": "2026-01-29T12:37:08.684Z",
       "input": {
         "kwargs": {
           "location": "sf"
@@ -689,8 +700,8 @@
       }
     }
   ],
-  "startTime": "2025-10-28T13:36:07.342Z",
-  "endTime": "2025-10-28T13:36:11.309Z",
+  "startTime": "2026-01-29T12:37:07.419Z",
+  "endTime": "2026-01-29T12:37:09.918Z",
   "environment": "development",
   "status": "SUCCESS"
 }
