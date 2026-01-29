@@ -83,11 +83,12 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Install Dependencies (CrewAI)
+      - name: Install Dependencies
         run: |
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
-          poetry run pip install -U crewai pydantic-ai sdk
+          poetry run pip install -U crewai
+          poetry run pip install -U pydantic-ai sdk
 
       - name: Install Project
         run: poetry install --no-interaction --only main
@@ -132,7 +133,7 @@ jobs:
 
       - name: Run Pydantic AI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_pydantic_ai/
+        run: poetry run pytest tests/test_integrations/test_pydanticai/
 
   # ===========================================================================
   # 4. LlamaIndex Tests
@@ -170,7 +171,7 @@ jobs:
 
       - name: Run LlamaIndex Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_llama_index/
+        run: poetry run pytest tests/test_integrations/test_llamaindex/
 
   # ===========================================================================
   # 5. OpenAI Agents Tests
