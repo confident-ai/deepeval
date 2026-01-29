@@ -40,8 +40,13 @@ jobs:
     # - OR IF pull_request where PR head repo == this repo and owner is confident-ai
     # - OR IF push to main on confident-ai/*
     if: ${{ github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && !github.event.pull_request.draft) ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      (github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.repository, 'confident-ai/') &&
+      !github.event.pull_request.draft) ||
+      (github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      startsWith(github.repository, 'confident-ai/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: ci-secrets
