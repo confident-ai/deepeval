@@ -1,0 +1,29 @@
+{
+  "uuid": "36bf0e7b-73bf-4bb5-9fad-7ac3f7b0c710",
+  "baseSpans": [
+    {
+      "uuid": "030d0197-3019-4f15-ae03-c467012c0150",
+      "name": "process_with_email",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T10:10:19.641Z",
+      "endTime": "2026-01-29T10:10:19.641Z",
+      "input": {
+        "user_input": "Contact: ***@***.***"
+      },
+      "output": "Email processed: Contact: ***@***.***"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T10:10:19.641Z",
+  "endTime": "2026-01-29T10:10:19.641Z",
+  "environment": "development",
+  "input": {
+    "user_input": "Contact: ***@***.***"
+  },
+  "output": "Email processed: Contact: ***@***.***",
+  "status": "SUCCESS"
+}

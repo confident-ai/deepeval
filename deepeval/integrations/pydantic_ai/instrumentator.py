@@ -132,7 +132,12 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     ):
         is_dependency_installed()
 
-        _environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT", "development")
+        if trace_manager.environment is not None:
+            _environment = trace_manager.environment
+        elif settings.CONFIDENT_TRACE_ENVIRONMENT is not None:
+            _environment = settings.CONFIDENT_TRACE_ENVIRONMENT
+        else:
+            _environment = "development"
         if _environment and _environment in [
             "production",
             "staging",

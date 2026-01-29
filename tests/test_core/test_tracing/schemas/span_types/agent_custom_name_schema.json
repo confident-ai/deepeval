@@ -1,0 +1,33 @@
+{
+  "uuid": "9db38c49-5584-42e6-8b45-dd75b2181aab",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "4f290c83-025e-4b6e-80db-fd38b977ea05",
+      "name": "custom_agent_name",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.209Z",
+      "endTime": "2026-01-29T09:53:13.209Z",
+      "input": {
+        "query": "Test"
+      },
+      "output": "Named agent: Test",
+      "availableTools": [
+        "tool1"
+      ],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.209Z",
+  "endTime": "2026-01-29T09:53:13.209Z",
+  "environment": "testing",
+  "input": {
+    "query": "Test"
+  },
+  "output": "Named agent: Test",
+  "status": "SUCCESS"
+}

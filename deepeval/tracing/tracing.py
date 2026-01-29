@@ -969,9 +969,9 @@ class Observer:
         else:
             current_trace = current_trace_context.get()
             if current_trace.input is None:
-                current_trace.input = self.function_kwargs
+                current_trace.input = trace_manager.mask(self.function_kwargs)
             if current_trace.output is None:
-                current_trace.output = self.result
+                current_trace.output = trace_manager.mask(self.result)
             if current_span.status == TraceSpanStatus.ERRORED:
                 current_trace.status = TraceSpanStatus.ERRORED
             if current_trace and current_trace.uuid == current_span.trace_uuid:
@@ -1037,7 +1037,8 @@ class Observer:
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
-            return ToolSpan(**span_kwargs, **self.observe_kwargs)
+            description = self.observe_kwargs.get("description", None)
+            return ToolSpan(**span_kwargs, description=description)
         else:
             return BaseSpan(**span_kwargs)
 
@@ -1107,7 +1108,7 @@ def observe(
                             yield chunk
                         observer.__exit__(None, None, None)
                     except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
+                        observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
 
                 return gen()
@@ -1150,7 +1151,7 @@ def observe(
                         yield from original_gen
                         observer.__exit__(None, None, None)
                     except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
+                        observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
 
                 return gen()

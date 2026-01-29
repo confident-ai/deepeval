@@ -1,0 +1,29 @@
+{
+  "uuid": "02544873-8680-4e2a-85f3-3998da9d84cb",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "78e36019-22f2-4af5-a3f4-ba30d47f3b97",
+      "name": "custom_tool_name",
+      "status": "SUCCESS",
+      "type": "tool",
+      "startTime": "2026-01-29T09:53:13.708Z",
+      "endTime": "2026-01-29T09:53:13.708Z",
+      "input": {
+        "data": "test data"
+      },
+      "output": "Processed: test data"
+    }
+  ],
+  "startTime": "2026-01-29T09:53:13.708Z",
+  "endTime": "2026-01-29T09:53:13.708Z",
+  "environment": "testing",
+  "input": {
+    "data": "test data"
+  },
+  "output": "Processed: test data",
+  "status": "SUCCESS"
+}

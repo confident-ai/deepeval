@@ -1,0 +1,31 @@
+{
+  "uuid": "f389d17c-441d-4ffe-b75a-9835921ea7bc",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "68ad8f47-fc28-40db-bb43-2da1c15539c7",
+      "name": "minimal_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.192Z",
+      "endTime": "2026-01-29T09:53:13.192Z",
+      "input": {
+        "query": "Simple query"
+      },
+      "output": "Minimal agent: Simple query",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.192Z",
+  "endTime": "2026-01-29T09:53:13.192Z",
+  "environment": "testing",
+  "input": {
+    "query": "Simple query"
+  },
+  "output": "Minimal agent: Simple query",
+  "status": "SUCCESS"
+}

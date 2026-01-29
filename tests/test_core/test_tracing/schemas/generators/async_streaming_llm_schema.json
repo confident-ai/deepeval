@@ -1,0 +1,31 @@
+{
+  "uuid": "c964e80f-5897-4e2c-b1b0-0b972a95e086",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "fc907064-ea2f-4efe-92c5-71443c7eced8",
+      "name": "async_streaming_llm",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:50:14.491Z",
+      "endTime": "2026-01-29T09:50:14.536Z",
+      "input": {
+        "prompt": "Test async prompt"
+      },
+      "model": "gpt-4-turbo",
+      "prompt": {},
+      "inputTokenCount": 3.0,
+      "outputTokenCount": 4.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:50:14.491Z",
+  "endTime": "2026-01-29T09:50:14.536Z",
+  "environment": "development",
+  "input": {
+    "prompt": "Test async prompt"
+  },
+  "status": "SUCCESS"
+}

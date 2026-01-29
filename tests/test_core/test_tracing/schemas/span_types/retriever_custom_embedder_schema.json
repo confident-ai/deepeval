@@ -1,0 +1,36 @@
+{
+  "uuid": "7db7f62c-7edb-403d-819f-63cba6de0c78",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "e4a41793-bee1-49fd-b58d-306107c069c3",
+      "name": "retrieve_with_custom_embedder",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "startTime": "2026-01-29T09:53:13.479Z",
+      "endTime": "2026-01-29T09:53:13.479Z",
+      "input": {
+        "query": "machine learning"
+      },
+      "output": [
+        "Result for: machine learning"
+      ],
+      "embedder": "all-MiniLM-L6-v2",
+      "topK": 3,
+      "chunkSize": 256
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.479Z",
+  "endTime": "2026-01-29T09:53:13.479Z",
+  "environment": "testing",
+  "input": {
+    "query": "machine learning"
+  },
+  "output": [
+    "Result for: machine learning"
+  ],
+  "status": "SUCCESS"
+}
