@@ -1037,7 +1037,8 @@ class Observer:
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
-            return ToolSpan(**span_kwargs, **self.observe_kwargs)
+            description = self.observe_kwargs.get("description", None)
+            return ToolSpan(**span_kwargs, description=description)
         else:
             return BaseSpan(**span_kwargs)
 
@@ -1107,7 +1108,7 @@ def observe(
                             yield chunk
                         observer.__exit__(None, None, None)
                     except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
+                        observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
 
                 return gen()
@@ -1150,7 +1151,7 @@ def observe(
                         yield from original_gen
                         observer.__exit__(None, None, None)
                     except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
+                        observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
 
                 return gen()

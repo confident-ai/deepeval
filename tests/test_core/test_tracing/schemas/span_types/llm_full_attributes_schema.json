@@ -1,0 +1,35 @@
+{
+  "uuid": "fc8202b7-50e7-486b-b666-fe3087016ad3",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "0eed1bd7-570a-43b7-be1c-5808cdebcf1f",
+      "name": "llm_with_full_attributes",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.425Z",
+      "endTime": "2026-01-29T09:53:13.425Z",
+      "input": {
+        "prompt": "Analyze this"
+      },
+      "output": "Full attributes response",
+      "model": "gpt-4",
+      "prompt": {},
+      "inputTokenCount": 100.0,
+      "outputTokenCount": 500.0,
+      "costPerInputToken": 0.03,
+      "costPerOutputToken": 0.06
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.425Z",
+  "endTime": "2026-01-29T09:53:13.425Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Analyze this"
+  },
+  "output": "Full attributes response",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,35 @@
+{
+  "uuid": "39b5ceb2-6e8d-4f65-8eea-4125d1e7fbe0",
+  "baseSpans": [
+    {
+      "uuid": "3836338d-8c99-42ba-8fbe-220820cdc510",
+      "name": "trace_with_name_and_tags",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.828Z",
+      "endTime": "2026-01-29T09:53:13.828Z",
+      "input": {
+        "data": "test data"
+      },
+      "output": "test data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.828Z",
+  "endTime": "2026-01-29T09:53:13.828Z",
+  "name": "custom_workflow",
+  "tags": [
+    "workflow",
+    "custom",
+    "test"
+  ],
+  "environment": "testing",
+  "input": {
+    "data": "test data"
+  },
+  "output": "test data",
+  "status": "SUCCESS"
+}

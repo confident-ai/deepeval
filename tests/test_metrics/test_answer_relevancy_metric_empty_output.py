@@ -6,7 +6,7 @@ when actual_output is missing/empty:
   - "" (empty string)
 
 Whitespace-only strings are intentionally not validated because we can't make assumptions
-about the value of the actual_output beyond its existence or emptiness. 
+about the value of the actual_output beyond its existence or emptiness.
 
 These tests use DummyModel and do not require OPENAI_API_KEY.
 """
@@ -32,17 +32,19 @@ def make_metric(*, async_mode: bool = False) -> AnswerRelevancyMetric:
             evaluation_template=AnswerRelevancyTemplate,
         )
 
-    
+
 def test_answer_relevancy_none_actual_output_raises_sync():
     metric = make_metric(async_mode=False)
     tc = LLMTestCase(input="hi", actual_output=None)
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
-        metric.measure(tc, _show_indicator=False, _log_metric_to_confident=False)
+        metric.measure(
+            tc, _show_indicator=False, _log_metric_to_confident=False
+        )
 
     msg = str(exc_info.value).lower()
     assert "actual_output" in msg
-    
+
 
 def test_answer_relevancy_empty_actual_output_raises_sync():
     """Empty string actual_output should raise MissingTestCaseParamsError (sync)."""
@@ -61,7 +63,9 @@ def test_answer_relevancy_empty_actual_output_raises_sync():
 def test_answer_relevancy_whitespace_actual_output_does_not_raise_validation():
     """Whitespace-only actual_output should NOT raise MissingTestCaseParamsError."""
     metric = make_metric(async_mode=False)
-    tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="   ")
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?", actual_output="   "
+    )
 
     # Only validate inputs here. Running the full metric would require a real
     # model that supports generate_with_schema.

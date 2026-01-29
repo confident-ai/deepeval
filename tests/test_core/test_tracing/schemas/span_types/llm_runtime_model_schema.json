@@ -1,0 +1,33 @@
+{
+  "uuid": "e09821b3-fa08-4cd7-ab74-d61de8a059ce",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "3de1e141-26d8-48e2-b331-1cace530e485",
+      "name": "llm_set_model_at_runtime",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.443Z",
+      "endTime": "2026-01-29T09:53:13.444Z",
+      "input": {
+        "prompt": "Hello"
+      },
+      "output": "Generated: Hello",
+      "model": "claude-3-opus",
+      "prompt": {},
+      "inputTokenCount": 20.0,
+      "outputTokenCount": 40.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.443Z",
+  "endTime": "2026-01-29T09:53:13.444Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Hello"
+  },
+  "output": "Generated: Hello",
+  "status": "SUCCESS"
+}

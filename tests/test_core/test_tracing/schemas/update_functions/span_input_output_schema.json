@@ -1,0 +1,27 @@
+{
+  "uuid": "e4f3318b-c2a2-4ea6-bcd4-1a1bbf3e2e1f",
+  "baseSpans": [
+    {
+      "uuid": "777a4b46-bdce-4120-8dbb-8f688aade0c5",
+      "name": "span_update_input_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.845Z",
+      "endTime": "2026-01-29T09:53:13.845Z",
+      "input": "Custom input override",
+      "output": "Custom output override"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.845Z",
+  "endTime": "2026-01-29T09:53:13.845Z",
+  "environment": "testing",
+  "input": {
+    "data": "test"
+  },
+  "output": "Result: test",
+  "status": "SUCCESS"
+}

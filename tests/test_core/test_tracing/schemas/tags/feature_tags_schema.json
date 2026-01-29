@@ -1,0 +1,42 @@
+{
+  "uuid": "cb375ed2-77dd-4994-9d1d-0fc2a060b214",
+  "baseSpans": [
+    {
+      "uuid": "256db32c-343f-45ca-ac55-0e4265fa5342",
+      "name": "trace_with_feature_tags",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.812Z",
+      "endTime": "2026-01-29T09:53:13.812Z",
+      "input": {
+        "query": "AI query",
+        "features": [
+          "semantic",
+          "reranking"
+        ]
+      },
+      "output": "Search: AI query"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.812Z",
+  "endTime": "2026-01-29T09:53:13.812Z",
+  "tags": [
+    "search",
+    "semantic",
+    "reranking"
+  ],
+  "environment": "testing",
+  "input": {
+    "query": "AI query",
+    "features": [
+      "semantic",
+      "reranking"
+    ]
+  },
+  "output": "Search: AI query",
+  "status": "SUCCESS"
+}

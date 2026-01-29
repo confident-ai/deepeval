@@ -1,0 +1,30 @@
+{
+  "uuid": "c9a200de-7ac9-4b19-8779-e394043eb485",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "c3302748-2366-4083-9b28-e23e67099bd2",
+      "name": "calculator",
+      "status": "SUCCESS",
+      "type": "tool",
+      "startTime": "2026-01-29T09:53:13.690Z",
+      "endTime": "2026-01-29T09:53:13.690Z",
+      "input": {
+        "expression": "2 + 2"
+      },
+      "output": 4.0,
+      "description": "Calculate mathematical expressions"
+    }
+  ],
+  "startTime": "2026-01-29T09:53:13.690Z",
+  "endTime": "2026-01-29T09:53:13.690Z",
+  "environment": "testing",
+  "input": {
+    "expression": "2 + 2"
+  },
+  "output": 4.0,
+  "status": "SUCCESS"
+}

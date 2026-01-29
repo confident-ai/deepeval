@@ -1,0 +1,30 @@
+{
+  "uuid": "d7cf94a4-1a94-4148-bf7e-bc74f20de1e9",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "d3b92461-6d40-4106-a769-92520b66655f",
+      "name": "llm_minimal",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.391Z",
+      "endTime": "2026-01-29T09:53:13.391Z",
+      "input": {
+        "prompt": "Simple prompt"
+      },
+      "output": "Response: Simple prompt",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.391Z",
+  "endTime": "2026-01-29T09:53:13.391Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Simple prompt"
+  },
+  "output": "Response: Simple prompt",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,37 @@
+{
+  "uuid": "0db9393f-19bd-4f9c-b9bf-1a0e20572cb5",
+  "baseSpans": [
+    {
+      "uuid": "9b7b6500-e97a-4bee-9045-9f664b26f47c",
+      "name": "trace_update_context_info",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:14.016Z",
+      "endTime": "2026-01-29T09:53:14.016Z",
+      "input": {
+        "query": "query"
+      },
+      "output": "Context set: query"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:14.016Z",
+  "endTime": "2026-01-29T09:53:14.016Z",
+  "environment": "testing",
+  "input": {
+    "query": "query"
+  },
+  "output": "Context set: query",
+  "status": "SUCCESS",
+  "retrievalContext": [
+    "Trace-level doc 1",
+    "Trace-level doc 2"
+  ],
+  "context": [
+    "Additional trace context"
+  ],
+  "expectedOutput": "Expected trace output"
+}

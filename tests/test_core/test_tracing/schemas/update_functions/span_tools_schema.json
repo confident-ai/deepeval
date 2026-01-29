@@ -1,0 +1,48 @@
+{
+  "uuid": "7e49c6a2-eba9-4ba7-8940-f3856fc61500",
+  "baseSpans": [
+    {
+      "uuid": "3eae975a-ee0e-4e20-ac13-492a96b3c5c1",
+      "name": "span_update_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.897Z",
+      "endTime": "2026-01-29T09:53:13.897Z",
+      "input": {
+        "query": "search query"
+      },
+      "output": "Tools used for: search query",
+      "toolsCalled": [
+        {
+          "name": "search",
+          "inputParameters": {
+            "query": "search query"
+          }
+        },
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "expr": "2+2"
+          }
+        }
+      ],
+      "expectedTools": [
+        {
+          "name": "search"
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.897Z",
+  "endTime": "2026-01-29T09:53:13.897Z",
+  "environment": "testing",
+  "input": {
+    "query": "search query"
+  },
+  "output": "Tools used for: search query",
+  "status": "SUCCESS"
+}

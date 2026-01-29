@@ -1,0 +1,36 @@
+{
+  "uuid": "df0508b9-6bb6-4aca-b6aa-3c6ddac8ca56",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "193925c8-5a97-42bc-b76d-a55a1138c26f",
+      "name": "api_fetcher",
+      "status": "SUCCESS",
+      "type": "tool",
+      "startTime": "2026-01-29T09:53:13.742Z",
+      "endTime": "2026-01-29T09:53:13.742Z",
+      "input": {
+        "url": "https://api.example.com"
+      },
+      "output": {
+        "url": "https://api.example.com",
+        "data": "fetched"
+      },
+      "description": "Fetch data from API"
+    }
+  ],
+  "startTime": "2026-01-29T09:53:13.742Z",
+  "endTime": "2026-01-29T09:53:13.742Z",
+  "environment": "testing",
+  "input": {
+    "url": "https://api.example.com"
+  },
+  "output": {
+    "url": "https://api.example.com",
+    "data": "fetched"
+  },
+  "status": "SUCCESS"
+}

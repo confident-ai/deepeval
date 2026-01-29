@@ -1,0 +1,68 @@
+{
+  "uuid": "c28847ed-bf9b-4c49-a992-d0d06757cd19",
+  "baseSpans": [
+    {
+      "uuid": "02cea7dd-dd3e-4d4b-9a48-e3c31f2deafb",
+      "name": "parent_with_multiple_children",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.100Z",
+      "endTime": "2026-01-29T09:53:13.101Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "First: data | Second: data | Third: data"
+    },
+    {
+      "uuid": "e584d027-7bd6-4990-8a9a-0f3b18acf383",
+      "name": "third_child",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "02cea7dd-dd3e-4d4b-9a48-e3c31f2deafb",
+      "startTime": "2026-01-29T09:53:13.100Z",
+      "endTime": "2026-01-29T09:53:13.101Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Third: data"
+    },
+    {
+      "uuid": "d0aae7ab-702b-4b6d-bdba-f64ad7aa17ab",
+      "name": "second_child",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "02cea7dd-dd3e-4d4b-9a48-e3c31f2deafb",
+      "startTime": "2026-01-29T09:53:13.100Z",
+      "endTime": "2026-01-29T09:53:13.100Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Second: data"
+    },
+    {
+      "uuid": "4db4e8cf-2a76-4885-a180-666ec6cff0eb",
+      "name": "first_child",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "02cea7dd-dd3e-4d4b-9a48-e3c31f2deafb",
+      "startTime": "2026-01-29T09:53:13.100Z",
+      "endTime": "2026-01-29T09:53:13.100Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "First: data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.100Z",
+  "endTime": "2026-01-29T09:53:13.101Z",
+  "environment": "testing",
+  "input": {
+    "data": "data"
+  },
+  "output": "First: data | Second: data | Third: data",
+  "status": "SUCCESS"
+}

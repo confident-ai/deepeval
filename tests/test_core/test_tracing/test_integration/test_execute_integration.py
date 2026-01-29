@@ -19,7 +19,7 @@ from deepeval.evaluate.configs import (
     ErrorConfig,
 )
 from deepeval.evaluate import execute as exec_mod
-from .helpers import get_active_trace_and_span
+from tests.test_core.test_tracing.conftest import get_active_trace_and_span
 
 
 @pytest.fixture(autouse=True)

@@ -2,10 +2,10 @@ import asyncio
 import pytest
 
 
-from tests.test_core.test_tracing.async_app import (
+from tests.test_core.test_tracing.apps.async_app import (
     meta_agent as async_meta_agent,
 )
-from tests.test_core.test_tracing.sync_app import meta_agent
+from tests.test_core.test_tracing.apps.sync_app import meta_agent
 
 from deepeval.evaluate.configs import (
     AsyncConfig,
