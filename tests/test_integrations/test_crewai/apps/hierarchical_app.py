@@ -9,7 +9,6 @@ from crewai import Agent, Task, Crew, Process, LLM
 def get_hierarchical_app():
     llm = LLM(model="gpt-4o-mini", temperature=0)
 
-
     writer = Agent(
         role="Writer",
         goal="Write simple words",

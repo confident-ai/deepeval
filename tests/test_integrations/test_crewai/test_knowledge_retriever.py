@@ -16,7 +16,9 @@ json_path = os.path.join(_current_dir, "knowledge_retriever.json")
 @assert_trace_json(json_path)
 def test_knowledge_retriever():
     # Create a knowledge source
-    content = "Users name is John. He is 30 years old and lives in San Francisco."
+    content = (
+        "Users name is John. He is 30 years old and lives in San Francisco."
+    )
     string_source = StringKnowledgeSource(content=content)
 
     # Create an LLM with a temperature of 0 to ensure deterministic outputs
@@ -51,4 +53,3 @@ def test_knowledge_retriever():
     crew.kickoff(
         inputs={"question": "What city does John live in and how old is he?"}
     )
-    
