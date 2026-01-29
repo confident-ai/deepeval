@@ -1,0 +1,77 @@
+{
+  "uuid": "6e8ac095a734eb14b164c8fb217d778d",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f8f3eeb869eac1b2",
+      "name": "tool_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:14.874Z",
+      "endTime": "2026-01-29T19:10:17.439Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 9 multiplied by 6?"
+        }
+      ],
+      "output": "9 multiplied by 6 is 54.",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "f8f3eeb869eac1b2",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T19:10:14.874Z",
+      "endTime": "2026-01-29T19:10:17.439Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "What is 9 multiplied by 6?"
+        }
+      ],
+      "output": "9 multiplied by 6 is 54.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T19:10:14.874Z",
+  "endTime": "2026-01-29T19:10:17.439Z",
+  "name": "pydanticai-async-tool-test",
+  "metadata": {
+    "test_type": "async_tool"
+  },
+  "tags": [
+    "pydanticai",
+    "tool",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-tool-123",
+  "userId": "test-user-async",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "What is 9 multiplied by 6?"
+    }
+  ],
+  "output": "9 multiplied by 6 is 54.",
+  "status": "SUCCESS"
+}
