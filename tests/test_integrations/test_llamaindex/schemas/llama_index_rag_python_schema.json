@@ -1,0 +1,479 @@
+{
+  "uuid": "47f98e80-d2af-4cdc-b37f-7274172a4821",
+  "baseSpans": [
+    {
+      "uuid": "RetrieverQueryEngine.query-6e0d1119-138e-4980-b8f1-259ebaa848d7",
+      "name": "query",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:36.344Z",
+      "input": {
+        "str_or_query_bundle": "What is Python?"
+      },
+      "output": {
+        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
+        "source_nodes": [
+          {
+            "node": {
+              "id_": "fixed_node_python",
+              "extra_info": {},
+              "excluded_embed_metadata_keys": [],
+              "excluded_llm_metadata_keys": [],
+              "relationships": {},
+              "metadata_template": "{key}: {value}",
+              "metadata_seperator": "\n",
+              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+              "mimetype": "text/plain",
+              "text_template": "{metadata_str}\n\n{content}",
+              "class_name": "TextNode"
+            },
+            "score": 0.95,
+            "class_name": "NodeWithScore"
+          }
+        ],
+        "metadata": {
+          "fixed_node_python": {}
+        }
+      }
+    },
+    {
+      "uuid": "RetrieverQueryEngine._query-b51c3862-06ac-4c43-8055-79b9c47aeb6b",
+      "name": "_query",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine.query-6e0d1119-138e-4980-b8f1-259ebaa848d7",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:36.344Z",
+      "input": {
+        "query_bundle": {
+          "query_str": "What is Python?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": {
+        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
+        "source_nodes": [
+          {
+            "node": {
+              "id_": "fixed_node_python",
+              "extra_info": {},
+              "excluded_embed_metadata_keys": [],
+              "excluded_llm_metadata_keys": [],
+              "relationships": {},
+              "metadata_template": "{key}: {value}",
+              "metadata_seperator": "\n",
+              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+              "mimetype": "text/plain",
+              "text_template": "{metadata_str}\n\n{content}",
+              "class_name": "TextNode"
+            },
+            "score": 0.95,
+            "class_name": "NodeWithScore"
+          }
+        ],
+        "metadata": {
+          "fixed_node_python": {}
+        }
+      }
+    },
+    {
+      "uuid": "CompactAndRefine.synthesize-62d7fac9-b114-4ae1-b198-76a69c88c062",
+      "name": "synthesize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine._query-b51c3862-06ac-4c43-8055-79b9c47aeb6b",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:36.344Z",
+      "input": {
+        "query": {
+          "query_str": "What is Python?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        },
+        "nodes": [
+          {
+            "node": {
+              "id_": "fixed_node_python",
+              "extra_info": {},
+              "excluded_embed_metadata_keys": [],
+              "excluded_llm_metadata_keys": [],
+              "relationships": {},
+              "metadata_template": "{key}: {value}",
+              "metadata_seperator": "\n",
+              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+              "mimetype": "text/plain",
+              "text_template": "{metadata_str}\n\n{content}",
+              "class_name": "TextNode"
+            },
+            "score": 0.95,
+            "class_name": "NodeWithScore"
+          }
+        ]
+      },
+      "output": {
+        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
+        "source_nodes": [
+          {
+            "node": {
+              "id_": "fixed_node_python",
+              "extra_info": {},
+              "excluded_embed_metadata_keys": [],
+              "excluded_llm_metadata_keys": [],
+              "relationships": {},
+              "metadata_template": "{key}: {value}",
+              "metadata_seperator": "\n",
+              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+              "mimetype": "text/plain",
+              "text_template": "{metadata_str}\n\n{content}",
+              "class_name": "TextNode"
+            },
+            "score": 0.95,
+            "class_name": "NodeWithScore"
+          }
+        ],
+        "metadata": {
+          "fixed_node_python": {}
+        }
+      }
+    },
+    {
+      "uuid": "CompactAndRefine.get_response-2ec834b5-a4fd-4ed2-bdb9-2ae4a3a14dc8",
+      "name": "get_response",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.synthesize-62d7fac9-b114-4ae1-b198-76a69c88c062",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": {
+        "query_str": "What is Python?",
+        "text_chunks": [
+          "Python is a high-level, interpreted programming language known for its simplicity."
+        ]
+      },
+      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+    },
+    {
+      "uuid": "CompactAndRefine.get_response-b9de84aa-6cc3-464c-8f07-eb17cd4e1f39",
+      "name": "get_response",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-2ec834b5-a4fd-4ed2-bdb9-2ae4a3a14dc8",
+      "startTime": "2026-01-29T15:35:35.610Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": {
+        "query_str": "What is Python?",
+        "text_chunks": [
+          "Python is a high-level, interpreted programming language known for its simplicity."
+        ],
+        "prev_response": null
+      },
+      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+    },
+    {
+      "uuid": "DefaultRefineProgram.__call__-fa663592-b105-456c-8695-094a7193989f",
+      "name": "__call__",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-b9de84aa-6cc3-464c-8f07-eb17cd4e1f39",
+      "startTime": "2026-01-29T15:35:35.611Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": {
+        "kwds": {
+          "context_str": "Python is a high-level, interpreted programming language known for its simplicity."
+        }
+      },
+      "output": {
+        "answer": "Python is a high-level, interpreted programming language known for its simplicity.",
+        "query_satisfied": true
+      }
+    },
+    {
+      "uuid": "OpenAI.predict-f4c80a6f-e37e-4eec-9e10-6f805df5948b",
+      "name": "predict",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "DefaultRefineProgram.__call__-fa663592-b105-456c-8695-094a7193989f",
+      "startTime": "2026-01-29T15:35:35.611Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": {
+        "prompt": {
+          "metadata": {
+            "prompt_type": "text_qa"
+          },
+          "template_vars": [
+            "context_str",
+            "query_str"
+          ],
+          "kwargs": {
+            "query_str": "What is Python?"
+          },
+          "template_var_mappings": {},
+          "function_mappings": {},
+          "default_template": {
+            "metadata": {
+              "prompt_type": "text_qa"
+            },
+            "template_vars": [
+              "context_str",
+              "query_str"
+            ],
+            "kwargs": {
+              "query_str": "What is Python?"
+            },
+            "template": "Context information is below.\n---------------------\n{context_str}\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: {query_str}\nAnswer: "
+          },
+          "conditionals": [
+            [
+              {},
+              {
+                "metadata": {
+                  "prompt_type": "custom"
+                },
+                "template_vars": [
+                  "context_str",
+                  "query_str"
+                ],
+                "kwargs": {
+                  "query_str": "What is Python?"
+                }
+              }
+            ]
+          ]
+        },
+        "prompt_args": {
+          "context_str": "Python is a high-level, interpreted programming language known for its simplicity."
+        }
+      },
+      "output": "Python is a high-level, interpreted programming language known for its simplicity."
+    },
+    {
+      "uuid": "OpenAI.chat-f7480b97-ca7d-422e-a53f-3cdd1bea8460",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "OpenAI.predict-f4c80a6f-e37e-4eec-9e10-6f805df5948b",
+      "startTime": "2026-01-29T15:35:35.611Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are an expert Q&A system that is trusted around the world.\nAlways answer the query using the provided context information, and not prior knowledge.\nSome rules to follow:\n1. Never directly reference the given context in your answer.\n2. Avoid statements like 'Based on the context, ...' or 'The context information ...' or anything along those lines."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Context information is below.\n---------------------\nPython is a high-level, interpreted programming language known for its simplicity.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is Python?\nAnswer: "
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "message": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Python is a high-level, interpreted programming language known for its simplicity."
+            }
+          ]
+        },
+        "raw": {
+          "id": "chatcmpl-D3OLQCWaD5CvTMpuXrFWRUNQH519K",
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "Python is a high-level, interpreted programming language known for its simplicity.",
+                "role": "assistant",
+                "annotations": []
+              }
+            }
+          ],
+          "created": 1769700936,
+          "model": "gpt-4o-2024-08-06",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_a0e9480a2f",
+          "usage": {
+            "completion_tokens": 14,
+            "prompt_tokens": 128,
+            "total_tokens": 142,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          }
+        },
+        "additional_kwargs": {
+          "prompt_tokens": 128,
+          "completion_tokens": 14,
+          "total_tokens": 142
+        }
+      }
+    },
+    {
+      "uuid": "TokenTextSplitter.split_text-a3c1aaa7-595d-415e-9790-bfd5394b7288",
+      "name": "split_text",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-b9de84aa-6cc3-464c-8f07-eb17cd4e1f39",
+      "startTime": "2026-01-29T15:35:35.610Z",
+      "endTime": "2026-01-29T15:35:35.611Z",
+      "input": {
+        "text": "Python is a high-level, interpreted programming language known for its simplicity."
+      },
+      "output": [
+        "Python is a high-level, interpreted programming language known for its simplicity."
+      ]
+    },
+    {
+      "uuid": "TokenTextSplitter.split_text-3fde3887-0a84-463f-9c61-9f0b9e405d73",
+      "name": "split_text",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-2ec834b5-a4fd-4ed2-bdb9-2ae4a3a14dc8",
+      "startTime": "2026-01-29T15:35:35.610Z",
+      "endTime": "2026-01-29T15:35:35.610Z",
+      "input": {
+        "text": "Python is a high-level, interpreted programming language known for its simplicity."
+      },
+      "output": [
+        "Python is a high-level, interpreted programming language known for its simplicity."
+      ]
+    },
+    {
+      "uuid": "DeterministicRetriever.retrieve-3b36e592-da87-4b19-b765-9b6af619df1b",
+      "name": "retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine._query-b51c3862-06ac-4c43-8055-79b9c47aeb6b",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:35.609Z",
+      "input": {
+        "str_or_query_bundle": {
+          "query_str": "What is Python?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": [
+        {
+          "node": {
+            "id_": "fixed_node_python",
+            "extra_info": {},
+            "excluded_embed_metadata_keys": [],
+            "excluded_llm_metadata_keys": [],
+            "relationships": {},
+            "metadata_template": "{key}: {value}",
+            "metadata_seperator": "\n",
+            "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+            "mimetype": "text/plain",
+            "text_template": "{metadata_str}\n\n{content}",
+            "class_name": "TextNode"
+          },
+          "score": 0.95,
+          "class_name": "NodeWithScore"
+        }
+      ],
+      "retrievalContext": [
+        "Python is a high-level, interpreted programming language known for its simplicity."
+      ]
+    },
+    {
+      "uuid": "DeterministicRetriever._retrieve-8740cfc4-d342-4975-9a0a-d89e23d1d4fc",
+      "name": "_retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "DeterministicRetriever.retrieve-3b36e592-da87-4b19-b765-9b6af619df1b",
+      "startTime": "2026-01-29T15:35:35.609Z",
+      "endTime": "2026-01-29T15:35:35.609Z",
+      "input": {
+        "query_bundle": {
+          "query_str": "What is Python?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": [
+        {
+          "node": {
+            "id_": "fixed_node_python",
+            "extra_info": {},
+            "excluded_embed_metadata_keys": [],
+            "excluded_llm_metadata_keys": [],
+            "relationships": {},
+            "metadata_template": "{key}: {value}",
+            "metadata_seperator": "\n",
+            "text": "Python is a high-level, interpreted programming language known for its simplicity.",
+            "mimetype": "text/plain",
+            "text_template": "{metadata_str}\n\n{content}",
+            "class_name": "TextNode"
+          },
+          "score": 0.95,
+          "class_name": "NodeWithScore"
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "f3dd7c74-9c07-4f22-aa63-c00ceb824d67",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.chat-f7480b97-ca7d-422e-a53f-3cdd1bea8460",
+      "startTime": "2026-01-29T15:35:35.611Z",
+      "endTime": "2026-01-29T15:35:36.343Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are an expert Q&A system that is trusted around the world.\nAlways answer the query using the provided context information, and not prior knowledge.\nSome rules to follow:\n1. Never directly reference the given context in your answer.\n2. Avoid statements like 'Based on the context, ...' or 'The context information ...' or anything along those lines."
+        },
+        {
+          "role": "user",
+          "content": "Context information is below.\n---------------------\nPython is a high-level, interpreted programming language known for its simplicity.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is Python?\nAnswer:"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Python is a high-level, interpreted programming language known for its simplicity."
+        }
+      ],
+      "model": "gpt-4o",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T15:35:35.609Z",
+  "endTime": "2026-01-29T15:35:36.344Z",
+  "environment": "development",
+  "status": "SUCCESS"
+}
