@@ -2,6 +2,7 @@
 RAG LlamaIndex App
 Complexity: MEDIUM - Custom Retriever + Synthesizer
 """
+
 from typing import List
 from llama_index.core import QueryBundle, get_response_synthesizer
 from llama_index.core.retrievers import BaseRetriever
@@ -27,7 +28,7 @@ class DeterministicRetriever(BaseRetriever):
                 NodeWithScore(
                     node=TextNode(
                         text="Python is a high-level, interpreted programming language known for its simplicity.",
-                        id_="fixed_node_python"
+                        id_="fixed_node_python",
                     ),
                     score=0.95,
                 )
@@ -37,7 +38,7 @@ class DeterministicRetriever(BaseRetriever):
                 NodeWithScore(
                     node=TextNode(
                         text="LlamaIndex is a data framework for your LLM applications.",
-                        id_="fixed_node_llama"
+                        id_="fixed_node_llama",
                     ),
                     score=0.98,
                 )

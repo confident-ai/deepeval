@@ -2,8 +2,10 @@
 Tool OpenAI Agent
 Complexity: MEDIUM - Uses DeepEval's function_tool wrapper
 """
+
 from agents import Agent, ModelSettings
 from deepeval.openai_agents import function_tool
+
 
 # Use DeepEval's wrapper to test tool tracking
 @function_tool
@@ -20,6 +22,7 @@ def get_weather(city: str) -> str:
         city.lower(), f"Weather data not available for {city}"
     )
 
+
 @function_tool
 def calculate(expression: str) -> str:
     """Evaluates a mathematical expression."""
@@ -31,6 +34,7 @@ def calculate(expression: str) -> str:
         return "Invalid expression"
     except Exception:
         return "Error"
+
 
 agent = Agent(
     name="ToolAgent",

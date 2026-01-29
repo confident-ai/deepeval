@@ -14,10 +14,14 @@ from tests.test_integrations.utils import (
 )
 
 # App imports
-from tests.test_integrations.test_llamaindex.apps.simple_app import get_simple_engine
+from tests.test_integrations.test_llamaindex.apps.simple_app import (
+    get_simple_engine,
+)
 from tests.test_integrations.test_llamaindex.apps.rag_app import get_rag_engine
 from tests.test_integrations.test_llamaindex.apps.agent_app import get_agent
-from tests.test_integrations.test_llamaindex.apps.router_app import get_router_engine
+from tests.test_integrations.test_llamaindex.apps.router_app import (
+    get_router_engine,
+)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")

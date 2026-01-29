@@ -2,6 +2,7 @@
 Eval OpenAI Agent
 Complexity: MEDIUM - Uses DeepEvalAgent for metric collection
 """
+
 from agents import ModelSettings
 from deepeval.openai_agents import Agent as DeepEvalAgent
 

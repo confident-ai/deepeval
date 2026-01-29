@@ -2,6 +2,7 @@
 Simple OpenAI Agent
 Complexity: LOW - Standard Agent, no tools
 """
+
 from agents import Agent, ModelSettings
 
 

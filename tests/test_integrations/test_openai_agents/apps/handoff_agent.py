@@ -2,6 +2,7 @@
 Handoff OpenAI Agent
 Complexity: HIGH - Multi-agent swarm
 """
+
 from agents import Agent, ModelSettings
 
 spanish = Agent(

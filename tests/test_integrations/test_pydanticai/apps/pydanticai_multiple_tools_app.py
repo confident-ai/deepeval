@@ -78,7 +78,9 @@ def create_multiple_tools_agent(
             "paris": "8:00 AM CET",
             "new york": "2:00 AM EST",
         }
-        return time_data.get(city.lower(), f"Time data not available for {city}")
+        return time_data.get(
+            city.lower(), f"Time data not available for {city}"
+        )
 
     return agent
 

@@ -53,7 +53,10 @@ class TestSimpleAgent:
         """Test a simple greeting with standard Agent."""
         with trace(
             workflow_name="openai_agents_simple",
-            metadata={"test_type": "simple", "tags": ["openai_agents", "simple"]},
+            metadata={
+                "test_type": "simple",
+                "tags": ["openai_agents", "simple"],
+            },
         ):
             result = Runner.run_sync(simple_agent, "Hello")
             assert result.final_output
@@ -113,9 +116,13 @@ class TestSessionAgent:
         agent = get_session_agent()
         session = get_session("sync_sess_1")
 
-        with trace(workflow_name="openai_agents_session", group_id="sync_sess_1"):
+        with trace(
+            workflow_name="openai_agents_session", group_id="sync_sess_1"
+        ):
             Runner.run_sync(agent, "My name is Bob", session=session)
 
-        with trace(workflow_name="openai_agents_session", group_id="sync_sess_1"):
+        with trace(
+            workflow_name="openai_agents_session", group_id="sync_sess_1"
+        ):
             result = Runner.run_sync(agent, "What is my name?", session=session)
             assert "Bob" in result.final_output
