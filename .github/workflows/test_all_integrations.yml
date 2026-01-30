@@ -83,10 +83,10 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
-      - name: Install Dependencies
+      - name: Install Dependencies (CrewAI)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with crewai
           poetry run pip install -U crewai
           poetry run pip install -U pydantic-ai sdk
 
@@ -95,7 +95,7 @@ jobs:
 
       - name: Run CrewAI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_crewai/ 
+        run: poetry run pytest tests/test_integrations/test_crewai/
 
   # ===========================================================================
   # 3. Pydantic AI Tests
@@ -128,8 +128,11 @@ jobs:
       - name: Install Dependencies (Pydantic AI)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with pydantic-ai
           poetry run pip install -U pydantic-ai sdk
+
+      - name: Install Project
+        run: poetry install --no-interaction --only main
 
       - name: Run Pydantic AI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
@@ -166,8 +169,11 @@ jobs:
       - name: Install Dependencies (LlamaIndex)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with llama-index
           poetry run pip install -U llama-index
+
+      - name: Install Project
+        run: poetry install --no-interaction --only main
 
       - name: Run LlamaIndex Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
@@ -204,10 +210,12 @@ jobs:
       - name: Install Dependencies (OpenAI Agents)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with openai-agents
           poetry run pip install -U openai-agents
+
+      - name: Install Project
+        run: poetry install --no-interaction --only main
 
       - name: Run OpenAI Agents Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: poetry run pytest tests/test_integrations/test_openai_agents/
-        

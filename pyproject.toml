@@ -85,14 +85,29 @@ markers = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.poetry.group.integrations]
+[tool.poetry.group.crewai]
 optional = true
 
-[tool.poetry.group.integrations.dependencies]
-crewai = { version = "*", python = ">=3.10,<3.14" }
+[tool.poetry.group.crewai.dependencies]
+crewai = { version = "*", python = ">=3.10,<3.13" }
+
+[tool.poetry.group.pydantic-ai]
+optional = true
+
+[tool.poetry.group.pydantic-ai.dependencies]
 pydantic-ai = { version = "*", python = ">=3.10,<3.14" }
-llama-index = "^0.14.4"
-openai-agents = "^0.3.3"
+
+[tool.poetry.group.llama-index]
+optional = true
+
+[tool.poetry.group.llama-index.dependencies]
+llama-index = "*"
+
+[tool.poetry.group.openai-agents]
+optional = true
+
+[tool.poetry.group.openai-agents.dependencies]
+openai-agents = "*"
 
 [tool.poetry.group.langchain]
 optional = true
