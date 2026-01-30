@@ -97,7 +97,9 @@ class CrewAIEventsListener(BaseEventListener):
         Generates a unique key for the tool stack.
         FIX: Uses role/name instead of id() to be robust against object copying by CrewAI.
         """
-        identifier = getattr(source, "role", getattr(source, "name", str(id(source))))
+        identifier = getattr(
+            source, "role", getattr(source, "name", str(id(source)))
+        )
         return f"{tool_name}_{identifier}"
 
     @staticmethod
@@ -240,7 +242,10 @@ class CrewAIEventsListener(BaseEventListener):
             current_span = current_span_context.get()
             span_type = getattr(current_span, "type", None)
             is_tool_span = span_type == "tool" or span_type == SpanType.TOOL
-            if is_tool_span and getattr(current_span, "name", "") == event.tool_name:
+            if (
+                is_tool_span
+                and getattr(current_span, "name", "") == event.tool_name
+            ):
                 self.tool_observers_stack[key].append(None)
                 return
 
@@ -273,31 +278,39 @@ class CrewAIEventsListener(BaseEventListener):
             key = self.get_tool_stack_key(source, event.tool_name)
             observer = None
 
-            if key in self.tool_observers_stack and self.tool_observers_stack[key]:
+            if (
+                key in self.tool_observers_stack
+                and self.tool_observers_stack[key]
+            ):
                 item = self.tool_observers_stack[key].pop()
                 if item is None:
                     return
                 observer = item
-            
+
             if not observer:
                 current_span = current_span_context.get()
                 if (
-                    current_span 
-                    and getattr(current_span, "type", None) in ["tool", SpanType.TOOL]
+                    current_span
+                    and getattr(current_span, "type", None)
+                    in ["tool", SpanType.TOOL]
                     and getattr(current_span, "name", "") == event.tool_name
                 ):
-                    current_span.output = getattr(event, "output", getattr(event, "result", None))
-                    
+                    current_span.output = getattr(
+                        event, "output", getattr(event, "result", None)
+                    )
+
                     if current_span.end_time is None:
                         current_span.end_time = perf_counter()
-                    
+
                     current_span.status = TraceSpanStatus.SUCCESS
-                    
+
                     self._flatten_tool_span(current_span)
                     trace_manager.remove_span(current_span.uuid)
-                    
+
                     if current_span.parent_uuid:
-                        parent = trace_manager.get_span_by_uuid(current_span.parent_uuid)
+                        parent = trace_manager.get_span_by_uuid(
+                            current_span.parent_uuid
+                        )
                         current_span_context.set(parent if parent else None)
                     else:
                         current_span_context.set(None)
@@ -306,18 +319,13 @@ class CrewAIEventsListener(BaseEventListener):
             if observer:
                 current_span = current_span_context.get()
                 token = None
-                span_to_close = trace_manager.get_span_by_uuid(
-                    observer.uuid
-                )
+                span_to_close = trace_manager.get_span_by_uuid(observer.uuid)
 
                 if span_to_close:
                     span_to_close.output = getattr(
                         event, "output", getattr(event, "result", None)
                     )
-                    if (
-                        not current_span
-                        or current_span.uuid != observer.uuid
-                    ):
+                    if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
 
                 observer.update_span_properties = self._flatten_tool_span
