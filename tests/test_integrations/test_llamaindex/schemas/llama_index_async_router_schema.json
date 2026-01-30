@@ -1,39 +1,28 @@
 {
-  "uuid": "1e082849-2f62-44a8-93d0-28739b46bebd",
+  "uuid": "768f2627-b2f0-4283-855d-ed456eaeb198",
   "baseSpans": [
     {
-      "uuid": "RouterQueryEngine.aquery-abd21c3d-1d8a-4926-9e9d-cb8304c51d04",
+      "uuid": "RouterQueryEngine.aquery-077deeb8-28f3-41de-a9ab-e8d28082da99",
       "name": "aquery",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T15:36:00.385Z",
-      "endTime": "2026-01-29T15:36:02.375Z",
+      "startTime": "2026-01-30T14:14:48.530Z",
+      "endTime": "2026-01-30T14:14:49.839Z",
       "input": {
         "str_or_query_bundle": "Calculate 21 + 21"
       },
       "output": {
-        "response": "Calculated Result: 42 (Mock)",
-        "source_nodes": [],
-        "metadata": {
-          "selector_result": {
-            "selections": [
-              {
-                "index": 1,
-                "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
-              }
-            ]
-          }
-        }
+        "response": "Calculated Result: 42 (Mock)"
       }
     },
     {
-      "uuid": "RouterQueryEngine._aquery-e1e18d32-a326-4c7e-9e12-8bc6b517b740",
+      "uuid": "RouterQueryEngine._aquery-6584d165-2a30-4236-9a63-ba7622019c14",
       "name": "_aquery",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RouterQueryEngine.aquery-abd21c3d-1d8a-4926-9e9d-cb8304c51d04",
-      "startTime": "2026-01-29T15:36:00.386Z",
-      "endTime": "2026-01-29T15:36:02.375Z",
+      "parentUuid": "RouterQueryEngine.aquery-077deeb8-28f3-41de-a9ab-e8d28082da99",
+      "startTime": "2026-01-30T14:14:48.530Z",
+      "endTime": "2026-01-30T14:14:49.839Z",
       "input": {
         "query_bundle": {
           "query_str": "Calculate 21 + 21",
@@ -43,28 +32,17 @@
         }
       },
       "output": {
-        "response": "Calculated Result: 42 (Mock)",
-        "source_nodes": [],
-        "metadata": {
-          "selector_result": {
-            "selections": [
-              {
-                "index": 1,
-                "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
-              }
-            ]
-          }
-        }
+        "response": "Calculated Result: 42 (Mock)"
       }
     },
     {
-      "uuid": "LLMSingleSelector._aselect-3a694f2b-a757-4cf6-8c68-545851ec427d",
+      "uuid": "LLMSingleSelector._aselect-06de3c88-8225-4be0-862f-bfd8ab6d12b6",
       "name": "_aselect",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RouterQueryEngine._aquery-e1e18d32-a326-4c7e-9e12-8bc6b517b740",
-      "startTime": "2026-01-29T15:36:00.386Z",
-      "endTime": "2026-01-29T15:36:02.375Z",
+      "parentUuid": "RouterQueryEngine._aquery-6584d165-2a30-4236-9a63-ba7622019c14",
+      "startTime": "2026-01-30T14:14:48.530Z",
+      "endTime": "2026-01-30T14:14:49.839Z",
       "input": {
         "choices": [
           {
@@ -93,40 +71,40 @@
         "selections": [
           {
             "index": 1,
-            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
+            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2."
           }
         ]
       }
     },
     {
-      "uuid": "SelectionOutputParser.parse-8030c3db-f906-4b46-8794-abb55d77bfa8",
+      "uuid": "SelectionOutputParser.parse-ae1ee96b-8f0b-44e7-8800-66732e027cb8",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "LLMSingleSelector._aselect-3a694f2b-a757-4cf6-8c68-545851ec427d",
-      "startTime": "2026-01-29T15:36:02.372Z",
-      "endTime": "2026-01-29T15:36:02.374Z",
+      "parentUuid": "LLMSingleSelector._aselect-06de3c88-8225-4be0-862f-bfd8ab6d12b6",
+      "startTime": "2026-01-30T14:14:49.838Z",
+      "endTime": "2026-01-30T14:14:49.838Z",
       "input": {
-        "output": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]"
+        "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```"
       },
       "output": {
-        "raw_output": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]",
+        "raw_output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```",
         "parsed_output": [
           {
             "choice": 2,
-            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
+            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2."
           }
         ]
       }
     },
     {
-      "uuid": "OpenAI.apredict-c2287f46-5e54-4868-a351-c0ed4125af77",
+      "uuid": "OpenAI.apredict-48d6e16b-73e5-405b-b5a5-26b2cadbc9b7",
       "name": "apredict",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "LLMSingleSelector._aselect-3a694f2b-a757-4cf6-8c68-545851ec427d",
-      "startTime": "2026-01-29T15:36:00.386Z",
-      "endTime": "2026-01-29T15:36:02.371Z",
+      "parentUuid": "LLMSingleSelector._aselect-06de3c88-8225-4be0-862f-bfd8ab6d12b6",
+      "startTime": "2026-01-30T14:14:48.530Z",
+      "endTime": "2026-01-30T14:14:49.838Z",
       "input": {
         "prompt": {
           "metadata": {
@@ -147,16 +125,16 @@
           "query_str": "Calculate 21 + 21"
         }
       },
-      "output": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]"
+      "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```"
     },
     {
-      "uuid": "OpenAI.achat-5342f6a2-7739-4d4b-a323-376be85e353a",
+      "uuid": "OpenAI.achat-44062f94-bc38-43bd-94be-db4be9bf9838",
       "name": "achat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "OpenAI.apredict-c2287f46-5e54-4868-a351-c0ed4125af77",
-      "startTime": "2026-01-29T15:36:00.386Z",
-      "endTime": "2026-01-29T15:36:02.370Z",
+      "parentUuid": "OpenAI.apredict-48d6e16b-73e5-405b-b5a5-26b2cadbc9b7",
+      "startTime": "2026-01-30T14:14:48.530Z",
+      "endTime": "2026-01-30T14:14:49.838Z",
       "input": {
         "messages": [
           {
@@ -178,32 +156,32 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]"
+              "text": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```"
             }
           ]
         },
         "raw": {
-          "id": "chatcmpl-D3OLoWx4EoRAagIPWvoT48za8wTdT",
+          "id": "chatcmpl-D3jYmjvuLdPGRvPVLk4BRhce42rxk",
           "choices": [
             {
               "finish_reason": "stop",
               "index": 0,
               "message": {
-                "content": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]",
+                "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```",
                 "role": "assistant",
                 "annotations": []
               }
             }
           ],
-          "created": 1769700960,
+          "created": 1769782488,
           "model": "gpt-4o-2024-08-06",
           "object": "chat.completion",
           "service_tier": "default",
-          "system_fingerprint": "fp_a0e9480a2f",
+          "system_fingerprint": "fp_eadf229d54",
           "usage": {
-            "completion_tokens": 42,
+            "completion_tokens": 46,
             "prompt_tokens": 135,
-            "total_tokens": 177,
+            "total_tokens": 181,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -218,8 +196,8 @@
         },
         "additional_kwargs": {
           "prompt_tokens": 135,
-          "completion_tokens": 42,
-          "total_tokens": 177
+          "completion_tokens": 46,
+          "total_tokens": 181
         }
       }
     }
@@ -227,13 +205,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "5bf40fe0-0946-42eb-b243-f0dd03384637",
+      "uuid": "38353a52-1379-4ee0-a727-1693f65fdfb3",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.achat-5342f6a2-7739-4d4b-a323-376be85e353a",
-      "startTime": "2026-01-29T15:36:00.387Z",
-      "endTime": "2026-01-29T15:36:02.369Z",
+      "parentUuid": "OpenAI.achat-44062f94-bc38-43bd-94be-db4be9bf9838",
+      "startTime": "2026-01-30T14:14:48.531Z",
+      "endTime": "2026-01-30T14:14:49.838Z",
       "input": [
         {
           "role": "user",
@@ -243,7 +221,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]"
+          "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which corresponds to choice 2.\"\n    }\n]\n```"
         }
       ],
       "model": "gpt-4o",
@@ -252,8 +230,17 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T15:36:00.385Z",
-  "endTime": "2026-01-29T15:36:02.375Z",
+  "startTime": "2026-01-30T14:14:48.530Z",
+  "endTime": "2026-01-30T14:14:49.839Z",
+  "name": "llama_index_async_router",
+  "tags": [
+    "llama_index",
+    "async",
+    "router"
+  ],
   "environment": "development",
-  "status": "SUCCESS"
+  "threadId": "llama_async_index_thread_id",
+  "userId": "llama_async_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_async_index_metric_collection"
 }

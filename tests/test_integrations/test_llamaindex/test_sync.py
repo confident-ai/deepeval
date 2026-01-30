@@ -7,7 +7,7 @@ NOTE: Run with GENERATE_SCHEMAS=1 first to generate the JSON schemas.
 
 import os
 from deepeval.tracing import trace
-
+from deepeval.metrics import AnswerRelevancyMetric
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
@@ -54,6 +54,10 @@ class TestSimpleApp:
         with trace(
             name="llama_index_simple",
             tags=["llama_index", "simple"],
+            thread_id="llama_index_thread_id",
+            user_id="llama_index_user_id",
+            metrics=[AnswerRelevancyMetric()],
+            metric_collection="llama_index_metric_collection",
         ):
             response = engine.query("What is LlamaIndex?")
             assert "framework" in str(response).lower()
@@ -74,6 +78,10 @@ class TestRAGApp:
         with trace(
             name="llama_index_rag",
             tags=["llama_index", "rag", "python"],
+            thread_id="llama_index_thread_id",
+            user_id="llama_index_user_id",
+            metrics=[AnswerRelevancyMetric()],
+            metric_collection="llama_index_metric_collection",
         ):
             response = engine.query("What is Python?")
             assert "programming language" in str(response).lower()
@@ -85,6 +93,10 @@ class TestRAGApp:
         with trace(
             name="llama_index_rag",
             tags=["llama_index", "rag", "llama"],
+            thread_id="llama_index_thread_id",
+            user_id="llama_index_user_id",
+            metrics=[AnswerRelevancyMetric()],
+            metric_collection="llama_index_metric_collection",
         ):
             response = engine.query("What is LlamaIndex?")
             assert "data framework" in str(response).lower()
@@ -105,6 +117,10 @@ class TestRouterApp:
         with trace(
             name="llama_index_router",
             tags=["llama_index", "router"],
+            thread_id="llama_index_thread_id",
+            user_id="llama_index_user_id",
+            metrics=[AnswerRelevancyMetric()],
+            metric_collection="llama_index_metric_collection",
         ):
             # This query should route to the MockMathEngine
             response = engine.query("Calculate 21 + 21")

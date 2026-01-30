@@ -1,50 +1,28 @@
 {
-  "uuid": "17b05f40-c422-431b-8c00-fa8abb0dbe8a",
+  "uuid": "4df2a61d-962a-4f93-8755-240f2f1068c5",
   "baseSpans": [
     {
-      "uuid": "RetrieverQueryEngine.query-06184421-6e94-4c04-9ec1-4a614054a519",
+      "uuid": "RetrieverQueryEngine.query-96fcacb0-d56e-4e11-99b9-f1f1dc72430f",
       "name": "query",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
       "input": {
         "str_or_query_bundle": "What is LlamaIndex?"
       },
       "output": {
-        "response": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_llama",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for your LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.98,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_llama": {}
-        }
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
       }
     },
     {
-      "uuid": "RetrieverQueryEngine._query-fa818f74-4e51-4fac-b728-55a583d2f543",
+      "uuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
       "name": "_query",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine.query-06184421-6e94-4c04-9ec1-4a614054a519",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "RetrieverQueryEngine.query-96fcacb0-d56e-4e11-99b9-f1f1dc72430f",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
       "input": {
         "query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -54,39 +32,17 @@
         }
       },
       "output": {
-        "response": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_llama",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for your LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.98,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_llama": {}
-        }
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
       }
     },
     {
-      "uuid": "CompactAndRefine.synthesize-fe669f32-2e69-4244-81bc-2ed1fbd73626",
+      "uuid": "CompactAndRefine.synthesize-27202316-de57-430f-870b-b04d6ef02f38",
       "name": "synthesize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._query-fa818f74-4e51-4fac-b728-55a583d2f543",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
       "input": {
         "query": {
           "query_str": "What is LlamaIndex?",
@@ -115,55 +71,33 @@
         ]
       },
       "output": {
-        "response": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_llama",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for your LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.98,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_llama": {}
-        }
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
       }
     },
     {
-      "uuid": "CompactAndRefine.get_response-ea93806e-e9a9-46ac-b734-5ac325151b65",
+      "uuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
       "name": "get_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.synthesize-fe669f32-2e69-4244-81bc-2ed1fbd73626",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "CompactAndRefine.synthesize-27202316-de57-430f-870b-b04d6ef02f38",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
       "input": {
         "query_str": "What is LlamaIndex?",
         "text_chunks": [
           "LlamaIndex is a data framework for your LLM applications."
         ]
       },
-      "output": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
     },
     {
-      "uuid": "CompactAndRefine.get_response-06883fed-b53d-4368-b56e-1c80eb26a3aa",
+      "uuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
       "name": "get_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-ea93806e-e9a9-46ac-b734-5ac325151b65",
-      "startTime": "2026-01-29T15:35:36.353Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
       "input": {
         "query_str": "What is LlamaIndex?",
         "text_chunks": [
@@ -171,34 +105,34 @@
         ],
         "prev_response": null
       },
-      "output": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
     },
     {
-      "uuid": "DefaultRefineProgram.__call__-d6a80d3a-42f1-4fc0-8d8c-743dccbf292a",
+      "uuid": "DefaultRefineProgram.__call__-1cd3eedb-81bd-4671-806a-79f77e71ae1a",
       "name": "__call__",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-06883fed-b53d-4368-b56e-1c80eb26a3aa",
-      "startTime": "2026-01-29T15:35:36.354Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
       "input": {
         "kwds": {
           "context_str": "LlamaIndex is a data framework for your LLM applications."
         }
       },
       "output": {
-        "answer": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications.",
+        "answer": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
         "query_satisfied": true
       }
     },
     {
-      "uuid": "OpenAI.predict-e86eadbf-763f-40cb-93bf-aa5068d983db",
+      "uuid": "OpenAI.predict-6302e4e1-48a2-44ec-bce7-c5a5008b810a",
       "name": "predict",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "DefaultRefineProgram.__call__-d6a80d3a-42f1-4fc0-8d8c-743dccbf292a",
-      "startTime": "2026-01-29T15:35:36.354Z",
-      "endTime": "2026-01-29T15:35:37.221Z",
+      "parentUuid": "DefaultRefineProgram.__call__-1cd3eedb-81bd-4671-806a-79f77e71ae1a",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
       "input": {
         "prompt": {
           "metadata": {
@@ -248,16 +182,16 @@
           "context_str": "LlamaIndex is a data framework for your LLM applications."
         }
       },
-      "output": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications."
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
     },
     {
-      "uuid": "OpenAI.chat-8f89167b-8617-4bb3-9adc-cf419f46df08",
+      "uuid": "OpenAI.chat-3ee963fb-fd53-466f-9547-f5fbf8225d2e",
       "name": "chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "OpenAI.predict-e86eadbf-763f-40cb-93bf-aa5068d983db",
-      "startTime": "2026-01-29T15:35:36.354Z",
-      "endTime": "2026-01-29T15:35:37.220Z",
+      "parentUuid": "OpenAI.predict-6302e4e1-48a2-44ec-bce7-c5a5008b810a",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
       "input": {
         "messages": [
           {
@@ -289,32 +223,32 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications."
+              "text": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
             }
           ]
         },
         "raw": {
-          "id": "chatcmpl-D3OLQcc3fSbSvdrY1f1UadRUhhLFQ",
+          "id": "chatcmpl-D3jYskGLkx3yAREpgQIj5yvXIlBNv",
           "choices": [
             {
               "finish_reason": "stop",
               "index": 0,
               "message": {
-                "content": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications.",
+                "content": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
                 "role": "assistant",
                 "annotations": []
               }
             }
           ],
-          "created": 1769700936,
+          "created": 1769782494,
           "model": "gpt-4o-2024-08-06",
           "object": "chat.completion",
           "service_tier": "default",
-          "system_fingerprint": "fp_deacdd5f6f",
+          "system_fingerprint": "fp_fa7f5b168b",
           "usage": {
-            "completion_tokens": 20,
+            "completion_tokens": 18,
             "prompt_tokens": 129,
-            "total_tokens": 149,
+            "total_tokens": 147,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -329,19 +263,19 @@
         },
         "additional_kwargs": {
           "prompt_tokens": 129,
-          "completion_tokens": 20,
-          "total_tokens": 149
+          "completion_tokens": 18,
+          "total_tokens": 147
         }
       }
     },
     {
-      "uuid": "TokenTextSplitter.split_text-727b7e6b-04fd-4e0a-94a2-9f4d24275b24",
+      "uuid": "TokenTextSplitter.split_text-8ebafa59-cbf3-4e16-b03f-bfa9682680d2",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-06883fed-b53d-4368-b56e-1c80eb26a3aa",
-      "startTime": "2026-01-29T15:35:36.354Z",
-      "endTime": "2026-01-29T15:35:36.354Z",
+      "parentUuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:54.471Z",
       "input": {
         "text": "LlamaIndex is a data framework for your LLM applications."
       },
@@ -350,13 +284,13 @@
       ]
     },
     {
-      "uuid": "TokenTextSplitter.split_text-7d082277-832d-426d-8655-13c4966ce25b",
+      "uuid": "TokenTextSplitter.split_text-e3a119ba-5f47-4168-8aac-a4b146a702ae",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-ea93806e-e9a9-46ac-b734-5ac325151b65",
-      "startTime": "2026-01-29T15:35:36.353Z",
-      "endTime": "2026-01-29T15:35:36.353Z",
+      "parentUuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:54.471Z",
       "input": {
         "text": "LlamaIndex is a data framework for your LLM applications."
       },
@@ -365,13 +299,13 @@
       ]
     },
     {
-      "uuid": "DeterministicRetriever.retrieve-0329264c-f91f-4917-8a69-e097d368ce2c",
+      "uuid": "DeterministicRetriever.retrieve-1327e55b-e999-44e2-b719-f95888d13c1e",
       "name": "retrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._query-fa818f74-4e51-4fac-b728-55a583d2f543",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:36.352Z",
+      "parentUuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:54.470Z",
       "input": {
         "str_or_query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -404,13 +338,13 @@
       ]
     },
     {
-      "uuid": "DeterministicRetriever._retrieve-6ab29a54-3fe8-47ae-a700-4d2adb3c6658",
+      "uuid": "DeterministicRetriever._retrieve-ef279b1d-9ff2-4685-a0d6-3ede58650cd2",
       "name": "_retrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "DeterministicRetriever.retrieve-0329264c-f91f-4917-8a69-e097d368ce2c",
-      "startTime": "2026-01-29T15:35:36.352Z",
-      "endTime": "2026-01-29T15:35:36.352Z",
+      "parentUuid": "DeterministicRetriever.retrieve-1327e55b-e999-44e2-b719-f95888d13c1e",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:54.470Z",
       "input": {
         "query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -443,13 +377,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "cf710ad7-08df-4c63-bcec-6434fac93c6a",
+      "uuid": "13221cc3-e768-4dff-861d-74241536eccc",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.chat-8f89167b-8617-4bb3-9adc-cf419f46df08",
-      "startTime": "2026-01-29T15:35:36.354Z",
-      "endTime": "2026-01-29T15:35:37.220Z",
+      "parentUuid": "OpenAI.chat-3ee963fb-fd53-466f-9547-f5fbf8225d2e",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
       "input": [
         {
           "role": "system",
@@ -463,7 +397,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "LlamaIndex is a data framework designed for use in LLM (Large Language Model) applications."
+          "content": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
         }
       ],
       "model": "gpt-4o",
@@ -472,8 +406,17 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T15:35:36.352Z",
-  "endTime": "2026-01-29T15:35:37.221Z",
+  "startTime": "2026-01-30T14:14:54.470Z",
+  "endTime": "2026-01-30T14:14:55.282Z",
+  "name": "llama_index_rag",
+  "tags": [
+    "llama_index",
+    "rag",
+    "llama"
+  ],
   "environment": "development",
-  "status": "SUCCESS"
+  "threadId": "llama_index_thread_id",
+  "userId": "llama_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_index_metric_collection"
 }

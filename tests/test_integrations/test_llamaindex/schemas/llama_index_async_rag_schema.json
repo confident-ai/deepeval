@@ -1,50 +1,28 @@
 {
-  "uuid": "a6e7dc82-da00-4fef-a630-20b519e9bb8c",
+  "uuid": "a8f62fc2-e3bb-462e-8422-bbb740b73de9",
   "baseSpans": [
     {
-      "uuid": "RetrieverQueryEngine.aquery-e0872ad4-a320-4d6b-8d11-f6523b9ef279",
+      "uuid": "RetrieverQueryEngine.aquery-8228ecc5-aaaa-41f4-91fc-f0c4e33cdfef",
       "name": "aquery",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:52.118Z",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:44.679Z",
       "input": {
         "str_or_query_bundle": "What is Python?"
       },
       "output": {
-        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_python",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.95,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_python": {}
-        }
+        "response": "Python is a high-level, interpreted programming language known for its simplicity."
       }
     },
     {
-      "uuid": "RetrieverQueryEngine._aquery-905efd2c-be81-4c24-ad23-6ab3004067cb",
+      "uuid": "RetrieverQueryEngine._aquery-ebf2e110-f9d5-4e59-90dd-4aec0838bc8b",
       "name": "_aquery",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine.aquery-e0872ad4-a320-4d6b-8d11-f6523b9ef279",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:52.118Z",
+      "parentUuid": "RetrieverQueryEngine.aquery-8228ecc5-aaaa-41f4-91fc-f0c4e33cdfef",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:44.679Z",
       "input": {
         "query_bundle": {
           "query_str": "What is Python?",
@@ -54,39 +32,17 @@
         }
       },
       "output": {
-        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_python",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.95,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_python": {}
-        }
+        "response": "Python is a high-level, interpreted programming language known for its simplicity."
       }
     },
     {
-      "uuid": "CompactAndRefine.asynthesize-4c28e5a3-5247-4329-a427-e72840b06e15",
+      "uuid": "CompactAndRefine.asynthesize-8bbe09e8-95ae-49b1-a164-8ab9c23e6bd1",
       "name": "asynthesize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._aquery-905efd2c-be81-4c24-ad23-6ab3004067cb",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:52.118Z",
+      "parentUuid": "RetrieverQueryEngine._aquery-ebf2e110-f9d5-4e59-90dd-4aec0838bc8b",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:44.679Z",
       "input": {
         "query": {
           "query_str": "What is Python?",
@@ -115,39 +71,17 @@
         ]
       },
       "output": {
-        "response": "Python is a high-level, interpreted programming language known for its simplicity.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_node_python",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "Python is a high-level, interpreted programming language known for its simplicity.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.95,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_node_python": {}
-        }
+        "response": "Python is a high-level, interpreted programming language known for its simplicity."
       }
     },
     {
-      "uuid": "CompactAndRefine.aget_response-31534cd3-ff2c-495b-9fcc-abbd6e28e8d4",
+      "uuid": "CompactAndRefine.aget_response-c4730eb6-6585-4903-a7e2-7deea855b7cf",
       "name": "aget_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.asynthesize-4c28e5a3-5247-4329-a427-e72840b06e15",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:52.117Z",
+      "parentUuid": "CompactAndRefine.asynthesize-8bbe09e8-95ae-49b1-a164-8ab9c23e6bd1",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:44.679Z",
       "input": {
         "query_str": "What is Python?",
         "text_chunks": [
@@ -157,13 +91,13 @@
       "output": "Python is a high-level, interpreted programming language known for its simplicity."
     },
     {
-      "uuid": "CompactAndRefine.aget_response-079830a3-058a-4b7b-b398-c057d3651665",
+      "uuid": "CompactAndRefine.aget_response-e0f17734-315f-4852-9077-c5fa219dc3f3",
       "name": "aget_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.aget_response-31534cd3-ff2c-495b-9fcc-abbd6e28e8d4",
-      "startTime": "2026-01-29T15:35:50.914Z",
-      "endTime": "2026-01-29T15:35:52.117Z",
+      "parentUuid": "CompactAndRefine.aget_response-c4730eb6-6585-4903-a7e2-7deea855b7cf",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:44.679Z",
       "input": {
         "query_str": "What is Python?",
         "text_chunks": [
@@ -174,13 +108,13 @@
       "output": "Python is a high-level, interpreted programming language known for its simplicity."
     },
     {
-      "uuid": "OpenAI.apredict-1c5af4b1-aad5-47ee-bb33-7c57aeea1d80",
+      "uuid": "OpenAI.apredict-9f86d11c-73a5-4cbd-99e8-ab1e2447f5df",
       "name": "apredict",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.aget_response-079830a3-058a-4b7b-b398-c057d3651665",
-      "startTime": "2026-01-29T15:35:50.915Z",
-      "endTime": "2026-01-29T15:35:52.117Z",
+      "parentUuid": "CompactAndRefine.aget_response-e0f17734-315f-4852-9077-c5fa219dc3f3",
+      "startTime": "2026-01-30T14:14:43.876Z",
+      "endTime": "2026-01-30T14:14:44.678Z",
       "input": {
         "prompt": {
           "metadata": {
@@ -233,13 +167,13 @@
       "output": "Python is a high-level, interpreted programming language known for its simplicity."
     },
     {
-      "uuid": "OpenAI.achat-5e7635c4-bf42-45f6-a3c9-8a6426a8de5f",
+      "uuid": "OpenAI.achat-3ad0222e-3686-442f-9ec0-92cccb3a226d",
       "name": "achat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "OpenAI.apredict-1c5af4b1-aad5-47ee-bb33-7c57aeea1d80",
-      "startTime": "2026-01-29T15:35:50.915Z",
-      "endTime": "2026-01-29T15:35:52.117Z",
+      "parentUuid": "OpenAI.apredict-9f86d11c-73a5-4cbd-99e8-ab1e2447f5df",
+      "startTime": "2026-01-30T14:14:43.876Z",
+      "endTime": "2026-01-30T14:14:44.678Z",
       "input": {
         "messages": [
           {
@@ -276,7 +210,7 @@
           ]
         },
         "raw": {
-          "id": "chatcmpl-D3OLfdTthsRidiVdfVbMOABAZl0Ez",
+          "id": "chatcmpl-D3jYi2TFOPamGlEqDz0kujJF0cqem",
           "choices": [
             {
               "finish_reason": "stop",
@@ -288,11 +222,11 @@
               }
             }
           ],
-          "created": 1769700951,
+          "created": 1769782484,
           "model": "gpt-4o-2024-08-06",
           "object": "chat.completion",
           "service_tier": "default",
-          "system_fingerprint": "fp_a0e9480a2f",
+          "system_fingerprint": "fp_fa7f5b168b",
           "usage": {
             "completion_tokens": 14,
             "prompt_tokens": 128,
@@ -317,13 +251,13 @@
       }
     },
     {
-      "uuid": "TokenTextSplitter.split_text-17e4c0aa-0fa8-407a-a344-e4c47be51f4e",
+      "uuid": "TokenTextSplitter.split_text-3024060c-bee7-4cfb-9e60-fce0d55b38a6",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.aget_response-079830a3-058a-4b7b-b398-c057d3651665",
-      "startTime": "2026-01-29T15:35:50.914Z",
-      "endTime": "2026-01-29T15:35:50.915Z",
+      "parentUuid": "CompactAndRefine.aget_response-e0f17734-315f-4852-9077-c5fa219dc3f3",
+      "startTime": "2026-01-30T14:14:43.876Z",
+      "endTime": "2026-01-30T14:14:43.876Z",
       "input": {
         "text": "Python is a high-level, interpreted programming language known for its simplicity."
       },
@@ -332,13 +266,13 @@
       ]
     },
     {
-      "uuid": "TokenTextSplitter.split_text-bcb30cb1-23ef-4763-9210-3fe0e26c28d5",
+      "uuid": "TokenTextSplitter.split_text-bf3bf0d5-2289-4e8b-b214-4934af812d19",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.aget_response-31534cd3-ff2c-495b-9fcc-abbd6e28e8d4",
-      "startTime": "2026-01-29T15:35:50.914Z",
-      "endTime": "2026-01-29T15:35:50.914Z",
+      "parentUuid": "CompactAndRefine.aget_response-c4730eb6-6585-4903-a7e2-7deea855b7cf",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:43.875Z",
       "input": {
         "text": "Python is a high-level, interpreted programming language known for its simplicity."
       },
@@ -347,13 +281,13 @@
       ]
     },
     {
-      "uuid": "DeterministicRetriever.aretrieve-981ffcd6-b8c7-4ccc-95f3-ee1859ad15e4",
+      "uuid": "DeterministicRetriever.aretrieve-6eacaf60-6e26-470a-983c-ec29d417f420",
       "name": "aretrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._aquery-905efd2c-be81-4c24-ad23-6ab3004067cb",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:50.913Z",
+      "parentUuid": "RetrieverQueryEngine._aquery-ebf2e110-f9d5-4e59-90dd-4aec0838bc8b",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:43.875Z",
       "input": {
         "str_or_query_bundle": {
           "query_str": "What is Python?",
@@ -386,13 +320,13 @@
       ]
     },
     {
-      "uuid": "DeterministicRetriever._retrieve-c3945add-cd47-4229-8a00-d41ea2d196ab",
+      "uuid": "DeterministicRetriever._retrieve-eb6ba02b-39e3-4bed-a97d-ca99505dff66",
       "name": "_retrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "DeterministicRetriever.aretrieve-981ffcd6-b8c7-4ccc-95f3-ee1859ad15e4",
-      "startTime": "2026-01-29T15:35:50.913Z",
-      "endTime": "2026-01-29T15:35:50.913Z",
+      "parentUuid": "DeterministicRetriever.aretrieve-6eacaf60-6e26-470a-983c-ec29d417f420",
+      "startTime": "2026-01-30T14:14:43.875Z",
+      "endTime": "2026-01-30T14:14:43.875Z",
       "input": {
         "query_bundle": {
           "query_str": "What is Python?",
@@ -425,13 +359,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "0642d056-52a5-43c8-9a99-37c43d9eefc4",
+      "uuid": "18137c49-d17c-411e-a333-226a1a5d91c3",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.achat-5e7635c4-bf42-45f6-a3c9-8a6426a8de5f",
-      "startTime": "2026-01-29T15:35:50.915Z",
-      "endTime": "2026-01-29T15:35:52.117Z",
+      "parentUuid": "OpenAI.achat-3ad0222e-3686-442f-9ec0-92cccb3a226d",
+      "startTime": "2026-01-30T14:14:43.876Z",
+      "endTime": "2026-01-30T14:14:44.678Z",
       "input": [
         {
           "role": "system",
@@ -454,8 +388,17 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T15:35:50.913Z",
-  "endTime": "2026-01-29T15:35:52.118Z",
+  "startTime": "2026-01-30T14:14:43.875Z",
+  "endTime": "2026-01-30T14:14:44.679Z",
+  "name": "llama_index_async_rag",
+  "tags": [
+    "llama_index",
+    "async",
+    "rag"
+  ],
   "environment": "development",
-  "status": "SUCCESS"
+  "threadId": "llama_async_index_thread_id",
+  "userId": "llama_async_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_async_index_metric_collection"
 }

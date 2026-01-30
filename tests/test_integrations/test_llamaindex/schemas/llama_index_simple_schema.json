@@ -1,50 +1,28 @@
 {
-  "uuid": "639b4b0b-f284-4795-99bd-1a1de8eebdc2",
+  "uuid": "3a70100d-944e-4352-8989-356a3d5c6c88",
   "baseSpans": [
     {
-      "uuid": "RetrieverQueryEngine.query-ff2e91a5-7718-4b78-a11b-f6798d388b50",
+      "uuid": "RetrieverQueryEngine.query-bcc23e3b-3a8c-43fa-9840-e603daaea5a0",
       "name": "query",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T15:35:33.858Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "str_or_query_bundle": "What is LlamaIndex?"
       },
       "output": {
-        "response": "LlamaIndex is a data framework for LLM applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_simple_node_id",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.9245890166588201,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_simple_node_id": {}
-        }
+        "response": "LlamaIndex is a data framework for LLM applications."
       }
     },
     {
-      "uuid": "RetrieverQueryEngine._query-ae077c4b-43b0-4604-82f3-aaebe7645e1d",
+      "uuid": "RetrieverQueryEngine._query-685c4ee4-19c1-419d-b7fe-46c8e5a9b679",
       "name": "_query",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine.query-ff2e91a5-7718-4b78-a11b-f6798d388b50",
-      "startTime": "2026-01-29T15:35:33.859Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "RetrieverQueryEngine.query-bcc23e3b-3a8c-43fa-9840-e603daaea5a0",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -1591,39 +1569,17 @@
         }
       },
       "output": {
-        "response": "LlamaIndex is a data framework for LLM applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_simple_node_id",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.9245890166588201,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_simple_node_id": {}
-        }
+        "response": "LlamaIndex is a data framework for LLM applications."
       }
     },
     {
-      "uuid": "CompactAndRefine.synthesize-c9d26bc3-ca47-4c4c-be7a-2f5f38eef707",
+      "uuid": "CompactAndRefine.synthesize-04e7b5bb-be90-4353-ba37-3923080040fc",
       "name": "synthesize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._query-ae077c4b-43b0-4604-82f3-aaebe7645e1d",
-      "startTime": "2026-01-29T15:35:34.398Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "RetrieverQueryEngine._query-685c4ee4-19c1-419d-b7fe-46c8e5a9b679",
+      "startTime": "2026-01-30T14:14:52.707Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "query": {
           "query_str": "What is LlamaIndex?",
@@ -3189,39 +3145,17 @@
         ]
       },
       "output": {
-        "response": "LlamaIndex is a data framework for LLM applications.",
-        "source_nodes": [
-          {
-            "node": {
-              "id_": "fixed_simple_node_id",
-              "extra_info": {},
-              "excluded_embed_metadata_keys": [],
-              "excluded_llm_metadata_keys": [],
-              "relationships": {},
-              "metadata_template": "{key}: {value}",
-              "metadata_seperator": "\n",
-              "text": "LlamaIndex is a data framework for LLM applications.",
-              "mimetype": "text/plain",
-              "text_template": "{metadata_str}\n\n{content}",
-              "class_name": "TextNode"
-            },
-            "score": 0.9245890166588201,
-            "class_name": "NodeWithScore"
-          }
-        ],
-        "metadata": {
-          "fixed_simple_node_id": {}
-        }
+        "response": "LlamaIndex is a data framework for LLM applications."
       }
     },
     {
-      "uuid": "CompactAndRefine.get_response-7b8a578a-3954-4276-8370-457525bad7a8",
+      "uuid": "CompactAndRefine.get_response-7ae12aaf-8b31-43b3-9468-ae1034f83960",
       "name": "get_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.synthesize-c9d26bc3-ca47-4c4c-be7a-2f5f38eef707",
-      "startTime": "2026-01-29T15:35:34.399Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "CompactAndRefine.synthesize-04e7b5bb-be90-4353-ba37-3923080040fc",
+      "startTime": "2026-01-30T14:14:52.707Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "query_str": "What is LlamaIndex?",
         "text_chunks": [
@@ -3231,13 +3165,13 @@
       "output": "LlamaIndex is a data framework for LLM applications."
     },
     {
-      "uuid": "CompactAndRefine.get_response-6b1de408-94bf-4b57-aa70-11cd3376be12",
+      "uuid": "CompactAndRefine.get_response-14823dd7-0f8e-45b7-a45a-747d4cd55531",
       "name": "get_response",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-7b8a578a-3954-4276-8370-457525bad7a8",
-      "startTime": "2026-01-29T15:35:34.403Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "CompactAndRefine.get_response-7ae12aaf-8b31-43b3-9468-ae1034f83960",
+      "startTime": "2026-01-30T14:14:52.709Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "query_str": "What is LlamaIndex?",
         "text_chunks": [
@@ -3248,13 +3182,13 @@
       "output": "LlamaIndex is a data framework for LLM applications."
     },
     {
-      "uuid": "DefaultRefineProgram.__call__-ea2dd8a3-7833-40b8-8bdd-0f1bec007fb7",
+      "uuid": "DefaultRefineProgram.__call__-5d53a53c-6766-4187-9a0e-46fcf371f0db",
       "name": "__call__",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-6b1de408-94bf-4b57-aa70-11cd3376be12",
-      "startTime": "2026-01-29T15:35:34.404Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "CompactAndRefine.get_response-14823dd7-0f8e-45b7-a45a-747d4cd55531",
+      "startTime": "2026-01-30T14:14:52.710Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "kwds": {
           "context_str": "LlamaIndex is a data framework for LLM applications."
@@ -3266,13 +3200,13 @@
       }
     },
     {
-      "uuid": "OpenAI.predict-224328cf-ce63-4154-9f55-544228cfc1f1",
+      "uuid": "OpenAI.predict-693f06ae-847a-41a6-ad23-eb1b51fdc3ca",
       "name": "predict",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "DefaultRefineProgram.__call__-ea2dd8a3-7833-40b8-8bdd-0f1bec007fb7",
-      "startTime": "2026-01-29T15:35:34.404Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "DefaultRefineProgram.__call__-5d53a53c-6766-4187-9a0e-46fcf371f0db",
+      "startTime": "2026-01-30T14:14:52.710Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "prompt": {
           "metadata": {
@@ -3325,13 +3259,13 @@
       "output": "LlamaIndex is a data framework for LLM applications."
     },
     {
-      "uuid": "OpenAI.chat-561d48ca-2db8-414f-8774-8a65e6b7bc9a",
+      "uuid": "OpenAI.chat-16002ddf-2c8a-48af-8909-698b5d887d8f",
       "name": "chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "OpenAI.predict-224328cf-ce63-4154-9f55-544228cfc1f1",
-      "startTime": "2026-01-29T15:35:34.405Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "OpenAI.predict-693f06ae-847a-41a6-ad23-eb1b51fdc3ca",
+      "startTime": "2026-01-30T14:14:52.710Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": {
         "messages": [
           {
@@ -3368,7 +3302,7 @@
           ]
         },
         "raw": {
-          "id": "chatcmpl-D3OLOV5p2nBig1tbC88darRBMydgQ",
+          "id": "chatcmpl-D3jYrs6oNDb0e8YPBjWuN9JXkxvDg",
           "choices": [
             {
               "finish_reason": "stop",
@@ -3380,7 +3314,7 @@
               }
             }
           ],
-          "created": 1769700934,
+          "created": 1769782493,
           "model": "gpt-4o-2024-08-06",
           "object": "chat.completion",
           "service_tier": "default",
@@ -3409,13 +3343,13 @@
       }
     },
     {
-      "uuid": "TokenTextSplitter.split_text-65a533c9-3d10-41df-83e8-fb861732d979",
+      "uuid": "TokenTextSplitter.split_text-ce85bc10-c42f-4b8f-ab63-061a9e8ec7fd",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-6b1de408-94bf-4b57-aa70-11cd3376be12",
-      "startTime": "2026-01-29T15:35:34.404Z",
-      "endTime": "2026-01-29T15:35:34.404Z",
+      "parentUuid": "CompactAndRefine.get_response-14823dd7-0f8e-45b7-a45a-747d4cd55531",
+      "startTime": "2026-01-30T14:14:52.709Z",
+      "endTime": "2026-01-30T14:14:52.710Z",
       "input": {
         "text": "LlamaIndex is a data framework for LLM applications."
       },
@@ -3424,13 +3358,13 @@
       ]
     },
     {
-      "uuid": "TokenTextSplitter.split_text-3c66f4f5-0a53-4f65-990d-037a0f33e286",
+      "uuid": "TokenTextSplitter.split_text-9d5a59f5-a486-48ab-9e42-7836a78ac9f0",
       "name": "split_text",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "CompactAndRefine.get_response-7b8a578a-3954-4276-8370-457525bad7a8",
-      "startTime": "2026-01-29T15:35:34.403Z",
-      "endTime": "2026-01-29T15:35:34.403Z",
+      "parentUuid": "CompactAndRefine.get_response-7ae12aaf-8b31-43b3-9468-ae1034f83960",
+      "startTime": "2026-01-30T14:14:52.708Z",
+      "endTime": "2026-01-30T14:14:52.708Z",
       "input": {
         "text": "LlamaIndex is a data framework for LLM applications."
       },
@@ -3439,13 +3373,13 @@
       ]
     },
     {
-      "uuid": "VectorIndexRetriever.retrieve-41b3fb4c-3a34-4c3a-aa8c-b7aa07e1d09b",
+      "uuid": "VectorIndexRetriever.retrieve-35a0b916-3d14-4348-91eb-0cf219b5c723",
       "name": "retrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "RetrieverQueryEngine._query-ae077c4b-43b0-4604-82f3-aaebe7645e1d",
-      "startTime": "2026-01-29T15:35:33.859Z",
-      "endTime": "2026-01-29T15:35:34.398Z",
+      "parentUuid": "RetrieverQueryEngine._query-685c4ee4-19c1-419d-b7fe-46c8e5a9b679",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:52.706Z",
       "input": {
         "str_or_query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -5015,13 +4949,13 @@
       ]
     },
     {
-      "uuid": "VectorIndexRetriever._retrieve-2c9c2fef-0df9-4fa2-a35d-52a5077eb84b",
+      "uuid": "VectorIndexRetriever._retrieve-45025f4c-c452-4a2e-b746-6e7f5b19e559",
       "name": "_retrieve",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "VectorIndexRetriever.retrieve-41b3fb4c-3a34-4c3a-aa8c-b7aa07e1d09b",
-      "startTime": "2026-01-29T15:35:33.859Z",
-      "endTime": "2026-01-29T15:35:34.398Z",
+      "parentUuid": "VectorIndexRetriever.retrieve-35a0b916-3d14-4348-91eb-0cf219b5c723",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:52.706Z",
       "input": {
         "query_bundle": {
           "query_str": "What is LlamaIndex?",
@@ -6588,13 +6522,13 @@
       ]
     },
     {
-      "uuid": "OpenAIEmbedding.get_query_embedding-a35579cc-7027-422c-bfca-55ed2a435163",
+      "uuid": "OpenAIEmbedding.get_query_embedding-1263f354-4da7-4f0f-b4da-f4b28f032619",
       "name": "get_query_embedding",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "VectorIndexRetriever._retrieve-2c9c2fef-0df9-4fa2-a35d-52a5077eb84b",
-      "startTime": "2026-01-29T15:35:33.859Z",
-      "endTime": "2026-01-29T15:35:34.396Z",
+      "parentUuid": "VectorIndexRetriever._retrieve-45025f4c-c452-4a2e-b746-6e7f5b19e559",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:52.705Z",
       "input": {
         "query": "What is LlamaIndex?"
       },
@@ -8138,13 +8072,13 @@
       ]
     },
     {
-      "uuid": "OpenAIEmbedding._get_query_embedding-1439f159-1933-4168-845f-9d7a537835e8",
+      "uuid": "OpenAIEmbedding._get_query_embedding-61e9cc3f-22cd-491b-ad97-3828ba105841",
       "name": "_get_query_embedding",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "OpenAIEmbedding.get_query_embedding-a35579cc-7027-422c-bfca-55ed2a435163",
-      "startTime": "2026-01-29T15:35:33.859Z",
-      "endTime": "2026-01-29T15:35:34.396Z",
+      "parentUuid": "OpenAIEmbedding.get_query_embedding-1263f354-4da7-4f0f-b4da-f4b28f032619",
+      "startTime": "2026-01-30T14:14:52.273Z",
+      "endTime": "2026-01-30T14:14:52.705Z",
       "input": {
         "query": "What is LlamaIndex?"
       },
@@ -9691,13 +9625,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "648deae5-0c48-4d78-8909-bd867fc3d63f",
+      "uuid": "3fad4040-6963-4668-b4f4-e6eb6949d357",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.chat-561d48ca-2db8-414f-8774-8a65e6b7bc9a",
-      "startTime": "2026-01-29T15:35:34.405Z",
-      "endTime": "2026-01-29T15:35:35.587Z",
+      "parentUuid": "OpenAI.chat-16002ddf-2c8a-48af-8909-698b5d887d8f",
+      "startTime": "2026-01-30T14:14:52.710Z",
+      "endTime": "2026-01-30T14:14:53.659Z",
       "input": [
         {
           "role": "system",
@@ -9720,8 +9654,16 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T15:35:33.858Z",
-  "endTime": "2026-01-29T15:35:35.587Z",
+  "startTime": "2026-01-30T14:14:52.272Z",
+  "endTime": "2026-01-30T14:14:53.659Z",
+  "name": "llama_index_simple",
+  "tags": [
+    "llama_index",
+    "simple"
+  ],
   "environment": "development",
-  "status": "SUCCESS"
+  "threadId": "llama_index_thread_id",
+  "userId": "llama_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_index_metric_collection"
 }
