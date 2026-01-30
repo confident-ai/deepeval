@@ -237,7 +237,7 @@ class TestPromptList:
             interpolation_type=PromptInterpolationType.MUSTACHE,
         )
 
-        time.sleep(3)
+        time.sleep(5)
 
         prompt.pull()
 

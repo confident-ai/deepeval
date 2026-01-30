@@ -6,7 +6,7 @@ from typing import Optional, Tuple, Any, List, Union
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
-from deepeval.tracing.types import ToolSpan, SpanType
+from deepeval.tracing.types import ToolSpan, SpanType, TraceSpanStatus
 from deepeval.config.settings import get_settings
 
 
@@ -86,7 +86,6 @@ class CrewAIEventsListener(BaseEventListener):
             defaultdict(list)
         )
 
-    # === NEW: Reset Method to clear state between tests ===
     def reset_state(self):
         """Clears all internal state to prevent pollution between tests."""
         self.span_observers.clear()
@@ -96,9 +95,10 @@ class CrewAIEventsListener(BaseEventListener):
     def get_tool_stack_key(source, tool_name) -> str:
         """
         Generates a unique key for the tool stack.
-        Includes asyncio Task ID to ensure isolation between concurrent/async executions.
+        FIX: Uses role/name instead of id() to be robust against object copying by CrewAI.
         """
-        return f"{tool_name}_{id(source)}"
+        identifier = getattr(source, "role", getattr(source, "name", str(id(source))))
+        return f"{tool_name}_{identifier}"
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
@@ -113,7 +113,6 @@ class CrewAIEventsListener(BaseEventListener):
         source_id = id(source)
         return f"llm_{source_id}"
 
-    # === NEW: Flattening Logic (Required for schema compliance) ===
     def _flatten_tool_span(self, span):
         """
         Callback to move any child ToolSpans up to the parent.
@@ -131,7 +130,6 @@ class CrewAIEventsListener(BaseEventListener):
         ]
 
         if tools_to_move:
-            # Add them to parent
             if parent_span.children is None:
                 parent_span.children = []
 
@@ -139,7 +137,6 @@ class CrewAIEventsListener(BaseEventListener):
                 child.parent_uuid = parent_span.uuid
                 parent_span.children.append(child)
 
-            # Remove them from current span
             span.children = [
                 child
                 for child in span.children
@@ -149,30 +146,21 @@ class CrewAIEventsListener(BaseEventListener):
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
         def on_crew_started(source, event: CrewKickoffStartedEvent):
-            # Assuming that this event is called in the crew.kickoff method
             current_span = current_span_context.get()
-
-            # set the input
             if current_span:
                 current_span.input = event.inputs
-
-            # set trace input
             current_trace = current_trace_context.get()
             if current_trace:
                 current_trace.input = event.inputs
 
         @crewai_event_bus.on(CrewKickoffCompletedEvent)
         def on_crew_completed(source, event: CrewKickoffCompletedEvent):
-            # Assuming that this event is called in the crew.kickoff method
             current_span = current_span_context.get()
-
-            # set the output
             output = getattr(
                 event, "output", getattr(event, "result", str(event))
             )
             if current_span:
                 current_span.output = str(output)
-            # set trace output
             current_trace = current_trace_context.get()
             if current_trace:
                 current_trace.output = str(output)
@@ -227,18 +215,13 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
         def on_agent_started(source, event: AgentExecutionStartedEvent):
-            # Assuming that this event is called in the agent.execute_task method
             current_span = current_span_context.get()
-
-            # set the input
             if current_span:
                 current_span.input = event.task_prompt
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
         def on_agent_completed(source, event: AgentExecutionCompletedEvent):
-            # Assuming that this event is called in the agent.execute_task method
             current_span = current_span_context.get()
-            # set the ouput
             if current_span:
                 current_span.output = getattr(
                     event, "output", getattr(event, "result", "")
@@ -248,16 +231,16 @@ class CrewAIEventsListener(BaseEventListener):
         def on_tool_started(source, event: ToolUsageStartedEvent):
             key = self.get_tool_stack_key(source, event.tool_name)
 
-            # 1. Internal Stack Check (Recursive calls)
+            # 1. Internal Stack Check
             if self.tool_observers_stack[key]:
                 self.tool_observers_stack[key].append(None)
                 return
 
-            # 2. SMART DEDUPING (Decorator Check)
+            # 2. SMART DEDUPING
             current_span = current_span_context.get()
             span_type = getattr(current_span, "type", None)
             is_tool_span = span_type == "tool" or span_type == SpanType.TOOL
-            if is_tool_span:
+            if is_tool_span and getattr(current_span, "name", "") == event.tool_name:
                 self.tool_observers_stack[key].append(None)
                 return
 
@@ -288,69 +271,64 @@ class CrewAIEventsListener(BaseEventListener):
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_completed(source, event: ToolUsageFinishedEvent):
             key = self.get_tool_stack_key(source, event.tool_name)
+            observer = None
 
-            if (
-                key in self.tool_observers_stack
-                and self.tool_observers_stack[key]
-            ):
+            if key in self.tool_observers_stack and self.tool_observers_stack[key]:
                 item = self.tool_observers_stack[key].pop()
-
                 if item is None:
                     return
-
                 observer = item
-
-                if not observer:
-                    current_span = current_span_context.get()
-                    # Confirm the active span is actually this tool
-                    if (
-                        current_span
-                        and getattr(current_span, "type", None)
-                        in ["tool", SpanType.TOOL]
-                        and getattr(current_span, "name", "") == event.tool_name
-                    ):
-                        current_span.output = getattr(
-                            event, "output", getattr(event, "result", None)
-                        )
+            
+            if not observer:
+                current_span = current_span_context.get()
+                if (
+                    current_span 
+                    and getattr(current_span, "type", None) in ["tool", SpanType.TOOL]
+                    and getattr(current_span, "name", "") == event.tool_name
+                ):
+                    current_span.output = getattr(event, "output", getattr(event, "result", None))
+                    
+                    if current_span.end_time is None:
                         current_span.end_time = perf_counter()
-                        current_span.status = (
-                            deepeval.tracing.types.TraceSpanStatus.SUCCESS
-                        )
+                    
+                    current_span.status = TraceSpanStatus.SUCCESS
+                    
+                    self._flatten_tool_span(current_span)
+                    trace_manager.remove_span(current_span.uuid)
+                    
+                    if current_span.parent_uuid:
+                        parent = trace_manager.get_span_by_uuid(current_span.parent_uuid)
+                        current_span_context.set(parent if parent else None)
+                    else:
+                        current_span_context.set(None)
+                    return
 
-                        self._flatten_tool_span(current_span)
-                        trace_manager.remove_span(current_span.uuid)
-                        if current_span.parent_uuid:
-                            parent = trace_manager.get_span_by_uuid(
-                                current_span.parent_uuid
-                            )
-                            current_span_context.set(parent if parent else None)
-                        else:
-                            current_span_context.set(None)
-                        return
+            if observer:
+                current_span = current_span_context.get()
+                token = None
+                span_to_close = trace_manager.get_span_by_uuid(
+                    observer.uuid
+                )
 
-                if observer:
-                    current_span = current_span_context.get()
-                    token = None
-                    span_to_close = trace_manager.get_span_by_uuid(
-                        observer.uuid
+                if span_to_close:
+                    span_to_close.output = getattr(
+                        event, "output", getattr(event, "result", None)
                     )
+                    if (
+                        not current_span
+                        or current_span.uuid != observer.uuid
+                    ):
+                        token = current_span_context.set(span_to_close)
 
-                    if span_to_close:
-                        span_to_close.output = getattr(
-                            event, "output", getattr(event, "result", None)
-                        )
-                        if (
-                            not current_span
-                            or current_span.uuid != observer.uuid
-                        ):
-                            token = current_span_context.set(span_to_close)
+                observer.update_span_properties = self._flatten_tool_span
+                observer.__exit__(None, None, None)
 
-                    observer.update_span_properties = self._flatten_tool_span
+                if span_to_close and span_to_close.end_time is None:
+                    span_to_close.end_time = perf_counter()
+                    span_to_close.status = TraceSpanStatus.SUCCESS
 
-                    observer.__exit__(None, None, None)
-
-                    if token:
-                        current_span_context.reset(token)
+                if token:
+                    current_span_context.reset(token)
 
         @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
         def on_knowledge_started(source, event: KnowledgeRetrievalStartedEvent):
