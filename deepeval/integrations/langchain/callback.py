@@ -84,6 +84,7 @@ class CallbackHandler(BaseCallbackHandler):
         user_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
+        test_case_id: Optional[str] = None,
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
@@ -108,6 +109,7 @@ class CallbackHandler(BaseCallbackHandler):
                 "metadata": metadata,
                 "thread_id": thread_id,
                 "user_id": user_id,
+                "test_case_id": test_case_id,
             }
             self._trace_init_fields: Dict[str, Any] = dict(
                 self._original_init_fields
@@ -200,6 +202,8 @@ class CallbackHandler(BaseCallbackHandler):
                 trace.thread_id = fields["thread_id"]
             if fields.get("user_id") is not None:
                 trace.user_id = fields["user_id"]
+            if fields.get("test_case_id") is not None:
+                trace.test_case_id = fields["test_case_id"]
             # prevent re-applying on every callback
             self._trace_init_fields = {}
 
