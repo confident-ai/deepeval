@@ -5,11 +5,14 @@ Sync CrewAI Tests
 
 import os
 import pytest
-from deepeval.integrations.crewai import instrument_crewai
+from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
 )
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 # App imports
 from tests.test_integrations.test_crewai.apps.simple_app import get_simple_app
@@ -102,3 +105,12 @@ class TestCrewAISync:
         inputs = [{"input": "User A"}, {"input": "User B"}]
         results = crew.kickoff_for_each(inputs=inputs)
         assert len(results) == 2
+
+    @pytest.fixture(autouse=True)
+    def reset_instrumentation(self):
+        """Reset ALL tracing state before each test."""
+        reset_crewai_instrumentation()
+        trace_manager.clear_traces()
+        test_exporter.clear_span_json_list()
+        trace_testing_manager.test_dict = None
+        yield

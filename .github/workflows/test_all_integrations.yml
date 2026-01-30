@@ -93,20 +93,9 @@ jobs:
       - name: Install Project
         run: poetry install --no-interaction --only main
 
-      - name: Run CrewAI Common Tests
+      - name: Run CrewAI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
-        run: |
-          poetry run pytest tests/test_integrations/test_crewai/ \
-            --ignore=tests/test_integrations/test_crewai/test_sync.py \
-            --ignore=tests/test_integrations/test_crewai/test_async.py
-
-      - name: Run CrewAI Sync Tests
-        if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_crewai/test_sync.py
-
-      - name: Run CrewAI Async Tests
-        if: ${{ env.OPENAI_API_KEY != '' }}
-        run: poetry run pytest tests/test_integrations/test_crewai/test_async.py
+        run: poetry run pytest tests/test_integrations/test_crewai/ 
 
   # ===========================================================================
   # 3. Pydantic AI Tests

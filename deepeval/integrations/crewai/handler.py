@@ -98,19 +98,7 @@ class CrewAIEventsListener(BaseEventListener):
         Generates a unique key for the tool stack.
         Includes asyncio Task ID to ensure isolation between concurrent/async executions.
         """
-        task_id = "sync"
-        try:
-            try:
-                loop = asyncio.get_running_loop()
-                task = asyncio.current_task(loop=loop)
-                if task:
-                    task_id = str(id(task))
-            except RuntimeError:
-                pass
-        except Exception:
-            pass
-
-        return f"{tool_name}_{task_id}"
+        return f"{tool_name}_{id(source)}"
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
