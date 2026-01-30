@@ -1,7 +1,7 @@
 import logging
 import deepeval
 from collections import defaultdict
-
+import asyncio
 from typing import Optional, Tuple, Any, List, Union
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -94,8 +94,23 @@ class CrewAIEventsListener(BaseEventListener):
 
     @staticmethod
     def get_tool_stack_key(source, tool_name) -> str:
-        # Changed: Use only tool_name as source ID is unstable across async/proxied calls
-        return tool_name
+        """
+        Generates a unique key for the tool stack.
+        Includes asyncio Task ID to ensure isolation between concurrent/async executions.
+        """
+        task_id = "sync"
+        try:
+            try:
+                loop = asyncio.get_running_loop()
+                task = asyncio.current_task(loop=loop)
+                if task:
+                    task_id = str(id(task))
+            except RuntimeError:
+                pass
+        except Exception:
+            pass
+
+        return f"{tool_name}_{task_id}"
 
     @staticmethod
     def get_knowledge_execution_id(source, event) -> str:
