@@ -74,7 +74,7 @@ def update_current_trace(
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
     confident_api_key: Optional[str] = None,
-    test_case_id: Optional[str] = None
+    test_case_id: Optional[str] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
