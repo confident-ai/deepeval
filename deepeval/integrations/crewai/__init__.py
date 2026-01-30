@@ -6,4 +6,11 @@ from .subs import (
 )
 from .tool import tool
 
-__all__ = ["instrument_crewai", "Crew", "Agent", "LLM", "tool", "reset_crewai_instrumentation"]
+__all__ = [
+    "instrument_crewai",
+    "Crew",
+    "Agent",
+    "LLM",
+    "tool",
+    "reset_crewai_instrumentation",
+]

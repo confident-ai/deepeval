@@ -5,7 +5,10 @@ Sync CrewAI Tests
 
 import os
 import pytest
-from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
+from deepeval.integrations.crewai import (
+    instrument_crewai,
+    reset_crewai_instrumentation,
+)
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
@@ -13,8 +16,11 @@ from tests.test_integrations.utils import (
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.tracing import trace
+from deepeval.tracing.context import current_trace_context, current_span_context
 
 # App imports
+from tests.test_integrations.test_crewai.apps.evals_app import get_evals_crew
 from tests.test_integrations.test_crewai.apps.simple_app import get_simple_app
 from tests.test_integrations.test_crewai.apps.multi_agent_app import (
     get_multi_agent_app,
@@ -106,6 +112,19 @@ class TestCrewAISync:
         results = crew.kickoff_for_each(inputs=inputs)
         assert len(results) == 2
 
+    @trace_test("crewai_features_sync.json")
+    def test_features_sync(self):
+        crew = get_evals_crew()
+        with trace(
+            name="CrewAI Metadata Check Sync",
+            tags=["crewai", "metadata", "sync"],
+            user_id="user_sync_001",
+            metadata={"env": "testing"},
+            metric_collection="trace_metrics_v1",
+        ):
+            res = crew.kickoff(inputs={"input": "Sync Data"})
+            return res
+
     @pytest.fixture(autouse=True)
     def reset_instrumentation(self):
         """Reset ALL tracing state before each test."""
@@ -113,4 +132,6 @@ class TestCrewAISync:
         trace_manager.clear_traces()
         test_exporter.clear_span_json_list()
         trace_testing_manager.test_dict = None
+        current_trace_context.set(None)
+        current_span_context.set(None)
         yield

@@ -5,7 +5,10 @@ Async CrewAI Tests
 
 import os
 import pytest
-from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
+from deepeval.integrations.crewai import (
+    instrument_crewai,
+    reset_crewai_instrumentation,
+)
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
@@ -13,8 +16,11 @@ from tests.test_integrations.utils import (
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.tracing import trace
+from deepeval.tracing.context import current_trace_context, current_span_context
 
 # App imports
+from tests.test_integrations.test_crewai.apps.evals_app import get_evals_crew
 from tests.test_integrations.test_crewai.apps.simple_app import get_simple_app
 from tests.test_integrations.test_crewai.apps.async_app import get_async_app
 from tests.test_integrations.test_crewai.apps.tool_usage_app import (
@@ -91,6 +97,20 @@ class TestCrewAIAsync:
         result = await crew.akickoff(inputs={"input": "Testing Alias"})
         assert result is not None
 
+    @pytest.mark.asyncio
+    @trace_test("crewai_features_async.json")
+    async def test_features_async(self):
+        crew = get_evals_crew()
+        with trace(
+            name="CrewAI Metadata Check Async",
+            tags=["crewai", "metadata", "async"],
+            user_id="user_async_002",
+            metadata={"env": "testing_async"},
+            metric_collection="trace_metrics_async_v1",
+        ):
+            result = await crew.kickoff_async(inputs={"input": "Async Data"})
+            return result
+
     @pytest.fixture(autouse=True)
     def reset_instrumentation(self):
         """Reset ALL tracing state before each test."""
@@ -98,4 +118,7 @@ class TestCrewAIAsync:
         trace_manager.clear_traces()
         test_exporter.clear_span_json_list()
         trace_testing_manager.test_dict = None
+        current_trace_context.set(None)
+        current_span_context.set(None)
+        
         yield

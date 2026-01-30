@@ -6,9 +6,12 @@ from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 
 from crewai import Task, Agent, LLM, Crew
 from crewai.tools import tool
-
+from deepeval.tracing.context import current_trace_context, current_span_context
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 # from deepeval.integrations.crewai import Crew, Agent, LLM
-from deepeval.integrations.crewai import instrument_crewai
+from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
 from deepeval.tracing import trace
 
 
@@ -59,6 +62,14 @@ json_path = os.path.join(_current_dir, "crewai.json")
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 def test_crewai():
+    reset_crewai_instrumentation()
+    trace_manager.clear_traces()
+    test_exporter.clear_span_json_list()
+    trace_testing_manager.test_dict = None
+    
+    # Fix state leakage from async tests running before this
+    current_trace_context.set(None)
+    current_span_context.set(None)
     # Initialize inside test to ensure fresh state
     agent = Agent(
         role="Weather Reporter",
