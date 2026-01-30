@@ -1,0 +1,144 @@
+{
+  "uuid": "d7cc0d45-cdf1-4307-bdf8-594329668f86",
+  "baseSpans": [
+    {
+      "uuid": "b7a3c216-4b02-459b-9837-a7a8aedacb46",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T06:11:42.689Z",
+      "endTime": "2026-01-29T06:11:44.499Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "44928c20-877f-4db6-9240-b6d46a4b2eb0",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "b7a3c216-4b02-459b-9837-a7a8aedacb46",
+      "startTime": "2026-01-29T06:11:42.691Z",
+      "endTime": "2026-01-29T06:11:44.491Z",
+      "input": "Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Weather in Paris: Cloudy, 65\u00b0F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "010640e4-a3d0-428b-97f9-218d5da44ae9",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "44928c20-877f-4db6-9240-b6d46a4b2eb0",
+      "startTime": "2026-01-29T06:11:43.583Z",
+      "endTime": "2026-01-29T06:11:44.488Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_hkacJCTrAAp11YXXU6gcETM6",
+              "type": "function",
+              "function": {
+                "name": "'get_weather'",
+                "arguments": "'{\"city\":\"Paris\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_hkacJCTrAAp11YXXU6gcETM6",
+          "name": "get_weather",
+          "content": "Weather in Paris: Cloudy, 65\u00b0F"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "439c27d6-45fa-4c1c-86b5-e1478754d89c",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "44928c20-877f-4db6-9240-b6d46a4b2eb0",
+      "startTime": "2026-01-29T06:11:42.693Z",
+      "endTime": "2026-01-29T06:11:43.578Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_hkacJCTrAAp11YXXU6gcETM6",
+          "function": {
+            "arguments": "{\"city\":\"Paris\"}",
+            "name": "get_weather"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "8786f615-6555-4abf-aa76-1258e6894ee2",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "44928c20-877f-4db6-9240-b6d46a4b2eb0",
+      "startTime": "2026-01-29T06:11:43.578Z",
+      "endTime": "2026-01-29T06:11:43.584Z",
+      "input": {
+        "city": "Paris"
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F"
+    }
+  ],
+  "startTime": "2026-01-29T06:11:42.689Z",
+  "endTime": "2026-01-29T06:11:44.499Z",
+  "environment": "development",
+  "input": {
+    "city": "Paris"
+  },
+  "output": "Weather in Paris: Cloudy, 65\u00b0F",
+  "status": "SUCCESS"
+}

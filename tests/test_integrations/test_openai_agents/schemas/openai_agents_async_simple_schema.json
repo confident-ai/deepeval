@@ -1,0 +1,95 @@
+{
+  "uuid": "trace_fb3422348dba4e7ba3a6fc97c62c6d87",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "57350c1c-9206-4e7a-9edd-50d67a24cb60",
+      "name": "SimpleAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:38:55.896Z",
+      "endTime": "2026-01-29T14:38:57.304Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Hello",
+      "output": "Hi there! How can I assist you today?",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "02bb752f-03db-4333-bd04-8d487bab8034",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "57350c1c-9206-4e7a-9edd-50d67a24cb60",
+      "startTime": "2026-01-29T14:38:55.919Z",
+      "endTime": "2026-01-29T14:38:57.303Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hello"
+        }
+      ],
+      "output": "Hi there! How can I assist you today?",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 32.0,
+      "outputTokenCount": 11.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T14:38:55.896Z",
+  "endTime": "2026-01-29T14:38:57.304Z",
+  "name": "openai_agents_async_simple",
+  "metadata": {
+    "tags": [
+      "openai_agents",
+      "async"
+    ]
+  },
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Hello"
+    }
+  ],
+  "output": "Hi there! How can I assist you today?",
+  "status": "SUCCESS"
+}

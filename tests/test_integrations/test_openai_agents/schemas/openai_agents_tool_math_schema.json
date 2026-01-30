@@ -1,0 +1,261 @@
+{
+  "uuid": "trace_46e8e6382c86414d92def855d756c346",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "c34fe38a-d592-4594-9a49-50c463f0295a",
+      "name": "ToolAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:38:35.137Z",
+      "endTime": "2026-01-29T14:38:38.412Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Calculate 10 + 5",
+      "output": "The result of \\(10 + 5\\) is 15.",
+      "toolsCalled": [
+        {
+          "name": "Function tool: calculate",
+          "description": "Function tool",
+          "output": "10 + 5 = 15",
+          "inputParameters": {
+            "expression": "10 + 5"
+          }
+        }
+      ],
+      "availableTools": [
+        "get_weather",
+        "calculate"
+      ],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "70f87b6e-17d7-47d1-b96f-4530b6060a3c",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c34fe38a-d592-4594-9a49-50c463f0295a",
+      "startTime": "2026-01-29T14:38:36.513Z",
+      "endTime": "2026-01-29T14:38:38.412Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Returns the current weather in a city."
+            },
+            {
+              "name": "calculate",
+              "parameters": {
+                "properties": {
+                  "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "title": "calculate_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Evaluates a mathematical expression."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Calculate 10 + 5"
+        },
+        {
+          "call_id": "call_uMT0BRAxnLlBfhcFFnzLBffZ",
+          "name": "calculate",
+          "arguments": "{\"expression\":\"10 + 5\"}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_uMT0BRAxnLlBfhcFFnzLBffZ",
+          "output": "10 + 5 = 15"
+        }
+      ],
+      "output": "The result of \\(10 + 5\\) is 15.",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 132.0,
+      "outputTokenCount": 16.0
+    },
+    {
+      "uuid": "09171280-479f-40ad-9101-a085b3a9eae4",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c34fe38a-d592-4594-9a49-50c463f0295a",
+      "startTime": "2026-01-29T14:38:35.137Z",
+      "endTime": "2026-01-29T14:38:36.506Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Returns the current weather in a city."
+            },
+            {
+              "name": "calculate",
+              "parameters": {
+                "properties": {
+                  "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "title": "calculate_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Evaluates a mathematical expression."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Calculate 10 + 5"
+        }
+      ],
+      "output": "{\"call_id\": \"call_uMT0BRAxnLlBfhcFFnzLBffZ\", \"name\": \"calculate\", \"arguments\": \"{\\\"expression\\\":\\\"10 + 5\\\"}\"}",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 101.0,
+      "outputTokenCount": 17.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "7439881b-f70c-424f-b415-fadbd10285dc",
+      "name": "Function tool: calculate",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "c34fe38a-d592-4594-9a49-50c463f0295a",
+      "startTime": "2026-01-29T14:38:36.511Z",
+      "endTime": "2026-01-29T14:38:36.512Z",
+      "input": {
+        "expression": "10 + 5"
+      },
+      "output": "10 + 5 = 15",
+      "description": "Function tool"
+    }
+  ],
+  "startTime": "2026-01-29T14:38:35.137Z",
+  "endTime": "2026-01-29T14:38:38.413Z",
+  "name": "openai_agents_tool_math",
+  "metadata": {
+    "tags": [
+      "openai_agents",
+      "tool",
+      "math"
+    ]
+  },
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Calculate 10 + 5"
+    }
+  ],
+  "output": "The result of \\(10 + 5\\) is 15.",
+  "status": "SUCCESS"
+}

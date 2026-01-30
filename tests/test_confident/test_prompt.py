@@ -237,6 +237,8 @@ class TestPromptList:
             interpolation_type=PromptInterpolationType.MUSTACHE,
         )
 
+        time.sleep(5)
+
         prompt.pull()
 
         assert prompt.version[0] == "0"

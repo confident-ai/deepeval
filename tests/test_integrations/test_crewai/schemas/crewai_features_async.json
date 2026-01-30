@@ -1,0 +1,271 @@
+{
+  "uuid": "7e96cbb4-df66-48ae-9808-c7549bd0953c",
+  "baseSpans": [
+    {
+      "uuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-30T14:26:56.256Z",
+      "endTime": "2026-01-30T14:26:59.519Z",
+      "input": {},
+      "output": "Calculated metrics for: Async Data",
+      "metricCollection": "crew_metrics_v1"
+    },
+    {
+      "uuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
+      "startTime": "2026-01-30T14:26:56.256Z",
+      "endTime": "2026-01-30T14:26:59.518Z",
+      "input": {
+        "input": "Async Data"
+      },
+      "output": "Calculated metrics for: Async Data",
+      "metricCollection": "crew_metrics_v1"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
+      "startTime": "2026-01-30T14:26:56.261Z",
+      "endTime": "2026-01-30T14:26:59.503Z",
+      "input": "Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Calculated metrics for: Async Data",
+      "toolsCalled": [
+        {
+          "name": "special_metric_tool",
+          "output": "Calculated metrics for: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        },
+        {
+          "name": "special_metric_tool",
+          "output": "Calculated metrics for: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "2e810d39-d76f-45b5-b6fb-c766fa1bb5b9",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:58.772Z",
+      "endTime": "2026-01-30T14:26:59.500Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Async Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Async Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Async Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Async Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Calculated metrics for: Async Data",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "f167f9b3-e8be-4b2c-b68a-48588ece3e3a",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:57.656Z",
+      "endTime": "2026-01-30T14:26:58.768Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Async Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Async Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+          "function": {
+            "arguments": "{\"query\":\"Async Data\"}",
+            "name": "special_metric_tool"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "ba8a7b63-8bd2-4f15-8267-57485e8a8ba0",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:56.262Z",
+      "endTime": "2026-01-30T14:26:57.650Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "function": {
+            "arguments": "{\"query\":\"Async Data\"}",
+            "name": "special_metric_tool"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "a8219542-4310-43cb-895b-234680a83a8c",
+      "name": "special_metric_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:58.769Z",
+      "endTime": "2026-01-30T14:26:58.772Z",
+      "input": {
+        "query": "Async Data"
+      },
+      "output": "Calculated metrics for: Async Data",
+      "metricCollection": "agent_metrics_v1"
+    },
+    {
+      "uuid": "2bcb764a-71a2-45a7-adf9-ac078b8e0590",
+      "name": "special_metric_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:57.651Z",
+      "endTime": "2026-01-30T14:26:57.657Z",
+      "input": {
+        "query": "Async Data"
+      },
+      "output": "Calculated metrics for: Async Data",
+      "metricCollection": "agent_metrics_v1"
+    }
+  ],
+  "startTime": "2026-01-30T14:26:56.256Z",
+  "endTime": "2026-01-30T14:26:59.519Z",
+  "name": "CrewAI Metadata Check Async",
+  "metadata": {
+    "env": "testing_async"
+  },
+  "tags": [
+    "crewai",
+    "metadata",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "trace_thred_id",
+  "userId": "user_async_002",
+  "input": {
+    "input": "Async Data"
+  },
+  "output": "Calculated metrics for: Async Data",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_async_v1"
+}

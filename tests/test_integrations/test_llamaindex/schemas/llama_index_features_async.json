@@ -1,31 +1,16 @@
 {
-  "uuid": "f845d51a-0fc1-4052-b1ef-7c3250ecf05c",
+  "uuid": "996966a2-9316-408b-8efc-887087b1a36f",
   "baseSpans": [
     {
-      "uuid": "FunctionAgent._done-7772fd4e-2659-4157-be9b-29a399aae683",
-      "name": "_done",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:39.293Z",
-      "endTime": "2025-10-28T13:37:39.293Z",
-      "input": {
-        "ctx": {
-          "is_running": false
-        },
-        "ev": {}
-      }
-    },
-    {
-      "uuid": "FunctionAgent.parse_agent_output-4529a4f5-292f-464f-8248-bca786388685",
+      "uuid": "FunctionAgent.parse_agent_output-bc29a01c-7a53-4b76-87c6-04438dbbcb98",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:39.292Z",
-      "endTime": "2025-10-28T13:37:39.293Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:51.725Z",
+      "endTime": "2026-01-30T14:14:51.727Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "response": {
             "role": "assistant",
@@ -33,7 +18,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "The result of \\( 3 \\times 12 \\) is 36."
+                "text": "The result of \\( 4 \\times 6 \\) is 24."
               }
             ]
           },
@@ -42,25 +27,50 @@
             {
               "tool_name": "multiply",
               "tool_kwargs": {
-                "a": 3,
-                "b": 12
+                "a": 4,
+                "b": 6
               },
-              "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
+              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
             }
           ],
           "retry_messages": []
         }
       },
-      "output": {}
+      "output": {
+        "result": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "The result of \\( 4 \\times 6 \\) is 24."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 4,
+                "b": 6
+              },
+              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+            }
+          ],
+          "retry_messages": []
+        }
+      }
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
+      "uuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:38.189Z",
-      "endTime": "2025-10-28T13:37:39.292Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:50.758Z",
+      "endTime": "2026-01-30T14:14:51.724Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -71,7 +81,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "You are a helpful assistant that can perform calculations."
+                  "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
                 }
               ]
             },
@@ -81,7 +91,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "What is 3 * 12?"
+                  "text": "What is 4 * 6?"
                 }
               ]
             }
@@ -96,32 +106,24 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "The result of \\( 3 \\times 12 \\) is 36."
+              "text": "The result of \\( 4 \\times 6 \\) is 24."
             }
           ]
         },
+        "structured_response": null,
         "current_agent_name": "Agent",
-        "tool_calls": [
-          {
-            "tool_name": "multiply",
-            "tool_kwargs": {
-              "a": 3,
-              "b": 12
-            },
-            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
-          }
-        ],
+        "tool_calls": [],
         "retry_messages": []
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-2d843507-1e98-4e5b-b002-cbc54c8fe161",
+      "uuid": "OpenAI.astream_chat-3d8514bd-6e48-40a4-945d-f6ffd1751824",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
-      "startTime": "2025-10-28T13:37:38.189Z",
-      "endTime": "2025-10-28T13:37:38.190Z",
+      "parentUuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
+      "startTime": "2026-01-30T14:14:50.759Z",
+      "endTime": "2026-01-30T14:14:50.760Z",
       "input": {
         "messages": [
           {
@@ -130,7 +132,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -140,7 +142,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           },
@@ -150,9 +152,9 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
                   "function": {
-                    "arguments": "{\"a\":3,\"b\":12}",
+                    "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
                   },
                   "type": "function"
@@ -163,18 +165,24 @@
               {
                 "block_type": "text",
                 "text": ""
+              },
+              {
+                "block_type": "tool_call",
+                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_name": "multiply",
+                "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
             ]
           },
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
+              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
             },
             "blocks": [
               {
                 "block_type": "text",
-                "text": "36"
+                "text": "24"
               }
             ]
           }
@@ -211,16 +219,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x117e267a0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53ed60>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-4530865d-c900-453e-b6d5-21201e11ac34",
+      "uuid": "OpenAI._prepare_chat_with_tools-64952e6c-874e-44be-a872-f4824aee890c",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
-      "startTime": "2025-10-28T13:37:38.189Z",
-      "endTime": "2025-10-28T13:37:38.189Z",
+      "parentUuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
+      "startTime": "2026-01-30T14:14:50.759Z",
+      "endTime": "2026-01-30T14:14:50.759Z",
       "input": {
         "tools": [
           {
@@ -237,7 +245,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -247,7 +255,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           },
@@ -257,9 +265,9 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
                   "function": {
-                    "arguments": "{\"a\":3,\"b\":12}",
+                    "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
                   },
                   "type": "function"
@@ -270,18 +278,24 @@
               {
                 "block_type": "text",
                 "text": ""
+              },
+              {
+                "block_type": "tool_call",
+                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_name": "multiply",
+                "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
             ]
           },
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
+              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
             },
             "blocks": [
               {
                 "block_type": "text",
-                "text": "36"
+                "text": "24"
               }
             ]
           }
@@ -298,7 +312,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -308,7 +322,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           },
@@ -318,9 +332,9 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
                   "function": {
-                    "arguments": "{\"a\":3,\"b\":12}",
+                    "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
                   },
                   "type": "function"
@@ -331,18 +345,24 @@
               {
                 "block_type": "text",
                 "text": ""
+              },
+              {
+                "block_type": "tool_call",
+                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_name": "multiply",
+                "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
             ]
           },
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
+              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
             },
             "blocks": [
               {
                 "block_type": "text",
-                "text": "36"
+                "text": "24"
               }
             ]
           }
@@ -379,13 +399,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-07fbfbad-9ce7-420f-b89d-a9f6bb7077d2",
+      "uuid": "FunctionAgent.setup_agent-b1abc3e9-d47a-41a3-aa68-414555f4afa8",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:38.189Z",
-      "endTime": "2025-10-28T13:37:38.189Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:50.757Z",
+      "endTime": "2026-01-30T14:14:50.758Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -396,7 +416,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "What is 3 * 12?"
+                  "text": "What is 4 * 6?"
                 }
               ]
             }
@@ -412,7 +432,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -422,7 +442,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -431,38 +451,38 @@
       }
     },
     {
-      "uuid": "FunctionAgent.aggregate_tool_results-24325da6-ecb9-4a79-a60a-c62b4471928d",
+      "uuid": "FunctionAgent.aggregate_tool_results-b9f1715f-440c-410f-8ccb-b0a2c8f7452b",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:38.188Z",
-      "endTime": "2025-10-28T13:37:38.188Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:50.756Z",
+      "endTime": "2026-01-30T14:14:50.757Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
           "tool_name": "multiply",
           "tool_kwargs": {
-            "a": 3,
-            "b": 12
+            "a": 4,
+            "b": 6
           },
-          "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+          "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
           "tool_output": {
             "blocks": [
               {
                 "block_type": "text",
-                "text": "36"
+                "text": "24"
               }
             ],
             "tool_name": "multiply",
             "raw_input": {
               "args": [],
               "kwargs": {
-                "a": 3,
-                "b": 12
+                "a": 4,
+                "b": 6
               }
             },
-            "raw_output": 36,
+            "raw_output": 24,
             "is_error": false
           },
           "return_direct": false
@@ -476,7 +496,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -485,87 +505,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.call_tool-ade25798-dc44-4aef-9e1a-bbca1b33fd41",
-      "name": "call_tool",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:38.187Z",
-      "endTime": "2025-10-28T13:37:38.188Z",
-      "input": {
-        "ctx": "<circular>",
-        "ev": {
-          "tool_name": "multiply",
-          "tool_kwargs": {
-            "a": 3,
-            "b": 12
-          },
-          "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
-        }
-      },
-      "output": {
-        "tool_name": "multiply",
-        "tool_kwargs": {
-          "a": 3,
-          "b": 12
-        },
-        "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
-        "tool_output": {
-          "blocks": [
-            {
-              "block_type": "text",
-              "text": "36"
-            }
-          ],
-          "tool_name": "multiply",
-          "raw_input": {
-            "args": "<circular>",
-            "kwargs": {
-              "a": 3,
-              "b": 12
-            }
-          },
-          "raw_output": 36,
-          "is_error": false
-        },
-        "return_direct": false
-      },
-      "toolsCalled": [
-        {
-          "name": "multiply",
-          "output": {
-            "blocks": [
-              {
-                "block_type": "text",
-                "text": "36"
-              }
-            ],
-            "tool_name": "multiply",
-            "raw_input": {
-              "args": [],
-              "kwargs": {
-                "a": 3,
-                "b": 12
-              }
-            },
-            "raw_output": 36,
-            "is_error": false
-          },
-          "inputParameters": {
-            "a": 3,
-            "b": 12
-          }
-        }
-      ]
-    },
-    {
-      "uuid": "FunctionAgent.parse_agent_output-336c1e30-9f93-46b5-af36-9eebb3c92a86",
+      "uuid": "FunctionAgent.parse_agent_output-a32abc21-9aa7-4f20-bb47-eb875e4d7408",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:38.187Z",
-      "endTime": "2025-10-28T13:37:38.187Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:50.753Z",
+      "endTime": "2026-01-30T14:14:50.753Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -575,9 +521,9 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
                   "function": {
-                    "arguments": "{\"a\":3,\"b\":12}",
+                    "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
                   },
                   "type": "function"
@@ -588,17 +534,23 @@
               {
                 "block_type": "text",
                 "text": ""
+              },
+              {
+                "block_type": "tool_call",
+                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_name": "multiply",
+                "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
             ]
           },
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
               "tool_name": "multiply",
               "tool_kwargs": {
-                "a": 3,
-                "b": 12
+                "a": 4,
+                "b": 6
               }
             }
           ],
@@ -607,13 +559,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
+      "uuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:36.942Z",
-      "endTime": "2025-10-28T13:37:38.186Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:49.935Z",
+      "endTime": "2026-01-30T14:14:50.749Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -624,7 +576,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "You are a helpful assistant that can perform calculations."
+                  "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
                 }
               ]
             },
@@ -634,7 +586,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "What is 3 * 12?"
+                  "text": "What is 4 * 6?"
                 }
               ]
             }
@@ -649,9 +601,9 @@
             "tool_calls": [
               {
                 "index": 0,
-                "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+                "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
                 "function": {
-                  "arguments": "{\"a\":3,\"b\":12}",
+                  "arguments": "{\"a\":4,\"b\":6}",
                   "name": "multiply"
                 },
                 "type": "function"
@@ -662,17 +614,24 @@
             {
               "block_type": "text",
               "text": ""
+            },
+            {
+              "block_type": "tool_call",
+              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+              "tool_name": "multiply",
+              "tool_kwargs": "{\"a\":4,\"b\":6}"
             }
           ]
         },
+        "structured_response": null,
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
+            "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
             "tool_name": "multiply",
             "tool_kwargs": {
-              "a": 3,
-              "b": 12
+              "a": 4,
+              "b": 6
             }
           }
         ],
@@ -680,13 +639,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-1067bcd8-3f94-4ba8-b8ef-0225c29bef4a",
+      "uuid": "OpenAI.astream_chat-6985d557-6ebf-46ed-bd5a-6fc958d35cff",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
-      "startTime": "2025-10-28T13:37:36.943Z",
-      "endTime": "2025-10-28T13:37:36.948Z",
+      "parentUuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
+      "startTime": "2026-01-30T14:14:49.935Z",
+      "endTime": "2026-01-30T14:14:49.952Z",
       "input": {
         "messages": [
           {
@@ -695,7 +654,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -705,7 +664,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -742,16 +701,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x117869240>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53ec30>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-2bc7bc4b-5ec5-4160-bd36-31b7174d98ac",
+      "uuid": "OpenAI._prepare_chat_with_tools-98687874-7fbe-4dce-9bf5-38b0bbc024c6",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
-      "startTime": "2025-10-28T13:37:36.942Z",
-      "endTime": "2025-10-28T13:37:36.943Z",
+      "parentUuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
+      "startTime": "2026-01-30T14:14:49.935Z",
+      "endTime": "2026-01-30T14:14:49.935Z",
       "input": {
         "tools": [
           "<circular>"
@@ -764,7 +723,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -774,7 +733,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -791,7 +750,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -801,7 +760,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -838,13 +797,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-0c354653-b0cb-4660-926a-b092bd5c0192",
+      "uuid": "FunctionAgent.setup_agent-535bdc51-5216-4c06-a580-96e70b126aab",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:36.942Z",
-      "endTime": "2025-10-28T13:37:36.942Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:49.935Z",
+      "endTime": "2026-01-30T14:14:49.935Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -855,7 +814,7 @@
               "blocks": [
                 {
                   "block_type": "text",
-                  "text": "What is 3 * 12?"
+                  "text": "What is 4 * 6?"
                 }
               ]
             }
@@ -871,7 +830,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "You are a helpful assistant that can perform calculations."
+                "text": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
               }
             ]
           },
@@ -881,7 +840,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -890,19 +849,20 @@
       }
     },
     {
-      "uuid": "FunctionAgent.init_run-f1474106-873c-4956-8866-4657dfb97396",
+      "uuid": "FunctionAgent.init_run-4e4023d1-c32d-4fb2-9cbc-8f4326f25cd3",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
-      "startTime": "2025-10-28T13:37:36.881Z",
-      "endTime": "2025-10-28T13:37:36.942Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:49.934Z",
+      "endTime": "2026-01-30T14:14:49.934Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
-          "user_msg": "What is 3 * 12?",
+          "user_msg": "What is 4 * 6?",
           "chat_history": null,
-          "max_iterations": null
+          "max_iterations": null,
+          "early_stopping_method": null
         }
       },
       "output": {
@@ -913,7 +873,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "What is 3 * 12?"
+                "text": "What is 4 * 6?"
               }
             ]
           }
@@ -924,63 +884,50 @@
   ],
   "agentSpans": [
     {
-      "uuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "uuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2025-10-28T13:37:36.881Z",
-      "endTime": "2025-10-28T13:37:39.294Z",
+      "startTime": "2026-01-30T14:14:49.931Z",
+      "endTime": "2026-01-30T14:14:49.933Z",
       "input": {
-        "user_msg": "What is 3 * 12?",
+        "user_msg": "What is 4 * 6?",
         "chat_history": null,
-        "max_iterations": null
+        "max_iterations": null,
+        "early_stopping_method": null
       },
-      "output": {
-        "response": {
-          "role": "assistant",
-          "additional_kwargs": {},
-          "blocks": [
-            {
-              "block_type": "text",
-              "text": "The result of \\( 3 \\times 12 \\) is 36."
-            }
-          ]
-        },
-        "current_agent_name": "Agent",
-        "tool_calls": [
-          {
-            "tool_name": "multiply",
-            "tool_kwargs": {
-              "a": 3,
-              "b": 12
-            },
-            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
-          }
-        ],
-        "retry_messages": []
-      },
+      "output": "The result of \\( 4 \\times 6 \\) is 24.",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "test_collection_1"
+      "metricCollection": "production_agent_metrics",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "575431c3-cde7-45e9-9440-bf3e4d5fdedb",
+      "uuid": "fc45b51a-2e1c-4140-9291-16098b51acb4",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-2d843507-1e98-4e5b-b002-cbc54c8fe161",
-      "startTime": "2025-10-28T13:37:38.189Z",
-      "endTime": "2025-10-28T13:37:39.292Z",
+      "parentUuid": "OpenAI.astream_chat-3d8514bd-6e48-40a4-945d-f6ffd1751824",
+      "startTime": "2026-01-30T14:14:50.759Z",
+      "endTime": "2026-01-30T14:14:51.723Z",
       "input": [
         {
           "role": "system",
-          "content": "You are a helpful assistant that can perform calculations."
+          "content": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
         },
         {
           "role": "user",
-          "content": "What is 3 * 12?"
+          "content": "What is 4 * 6?"
         },
         {
           "role": "assistant",
@@ -988,92 +935,191 @@
         },
         {
           "role": "tool",
-          "content": "36"
+          "content": "24"
         }
       ],
       "output": [
         {
           "role": "assistant",
-          "content": "The result of \\( 3 \\times 12 \\) is 36."
+          "content": "The result of \\( 4 \\times 6 \\) is 24."
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
-      "metricCollection": "test_collection_1"
+      "prompt": {},
+      "metricCollection": "production_llm_metrics",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
     },
     {
-      "uuid": "0e812482-588b-477a-a8c7-a57d88d8e073",
+      "uuid": "19b1f71e-c286-4d74-858f-0b37596339e0",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-1067bcd8-3f94-4ba8-b8ef-0225c29bef4a",
-      "startTime": "2025-10-28T13:37:36.943Z",
-      "endTime": "2025-10-28T13:37:38.186Z",
+      "parentUuid": "OpenAI.astream_chat-6985d557-6ebf-46ed-bd5a-6fc958d35cff",
+      "startTime": "2026-01-30T14:14:49.935Z",
+      "endTime": "2026-01-30T14:14:50.749Z",
       "input": [
         {
           "role": "system",
-          "content": "You are a helpful assistant that can perform calculations."
+          "content": "You are a helpful assistant that can perform calculations. You MUST use the tools provided."
         },
         {
           "role": "user",
-          "content": "What is 3 * 12?"
+          "content": "What is 4 * 6?"
         }
       ],
       "output": [
         {
           "role": "assistant",
           "content": ""
+        },
+        {
+          "name": "multiply",
+          "input_parameters": "{\"a\":4,\"b\":6}",
+          "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
-      "metricCollection": "test_collection_1"
+      "prompt": {},
+      "metricCollection": "production_llm_metrics",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "FunctionTool.acall-a0088c8a-b252-4e88-907f-d2d5dc1b4de2",
+      "uuid": "FunctionAgent.call_tool-e162cd1b-f8a4-4190-82d9-792a1f9ddaf8",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "FunctionAgent.call_tool-ade25798-dc44-4aef-9e1a-bbca1b33fd41",
-      "startTime": "2025-10-28T13:37:38.187Z",
-      "endTime": "2025-10-28T13:37:38.188Z",
+      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "startTime": "2026-01-30T14:14:50.754Z",
+      "endTime": "2026-01-30T14:14:50.754Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "tool_name": "multiply",
+          "tool_kwargs": {
+            "a": 4,
+            "b": 6
+          },
+          "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+        }
+      },
+      "output": {
+        "tool_name": "multiply",
+        "tool_kwargs": {
+          "a": 4,
+          "b": 6
+        },
+        "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+        "tool_output": {
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "24"
+            }
+          ],
+          "tool_name": "multiply",
+          "raw_input": {
+            "args": "<circular>",
+            "kwargs": {
+              "a": 4,
+              "b": 6
+            }
+          },
+          "raw_output": 24,
+          "is_error": false
+        },
+        "return_direct": false
+      },
+      "toolsCalled": [
+        {
+          "name": "multiply",
+          "output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "24"
+              }
+            ],
+            "tool_name": "multiply",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "a": 4,
+                "b": 6
+              }
+            },
+            "raw_output": 24,
+            "is_error": false
+          },
+          "inputParameters": {
+            "a": 4,
+            "b": 6
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "FunctionTool.acall-fa5a5dfa-b50c-451e-a0c8-defd7c0ea22e",
+      "name": "multiply",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "FunctionAgent.call_tool-e162cd1b-f8a4-4190-82d9-792a1f9ddaf8",
+      "startTime": "2026-01-30T14:14:50.754Z",
+      "endTime": "2026-01-30T14:14:50.754Z",
       "input": {
         "kwargs": {
-          "a": 3,
-          "b": 12
+          "a": 4,
+          "b": 6
         }
       },
       "output": {
         "blocks": [
           {
             "block_type": "text",
-            "text": "36"
+            "text": "24"
           }
         ],
         "tool_name": "multiply",
         "raw_input": {
           "args": "<circular>",
           "kwargs": {
-            "a": 3,
-            "b": 12
+            "a": 4,
+            "b": 6
           }
         },
-        "raw_output": 36,
+        "raw_output": 24,
         "is_error": false
       }
     }
   ],
-  "startTime": "2025-10-28T13:37:36.881Z",
-  "endTime": "2025-10-28T13:37:39.294Z",
+  "startTime": "2026-01-30T14:14:49.931Z",
+  "endTime": "2026-01-30T14:14:49.933Z",
+  "name": "Calculation Check Async",
+  "tags": [
+    "production",
+    "async"
+  ],
   "environment": "development",
-  "status": "SUCCESS"
+  "threadId": "thread_async_XYZ",
+  "userId": "user_async_456",
+  "status": "SUCCESS",
+  "metricCollection": "llama_async_index_metric_collection"
 }

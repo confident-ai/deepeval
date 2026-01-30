@@ -1,0 +1,261 @@
+{
+  "uuid": "trace_1d0681f9f65141378cba772f27beeb65",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "0eeb76bb-e631-40b6-b0ef-1b71ebf7e6cf",
+      "name": "ToolAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:38:57.307Z",
+      "endTime": "2026-01-29T14:39:00.532Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Weather in Tokyo",
+      "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+      "toolsCalled": [
+        {
+          "name": "Function tool: get_weather",
+          "description": "Function tool",
+          "output": "Cloudy, 68\u00b0F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "availableTools": [
+        "get_weather",
+        "calculate"
+      ],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "1eae24df-734c-4536-9664-a84368f232b4",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0eeb76bb-e631-40b6-b0ef-1b71ebf7e6cf",
+      "startTime": "2026-01-29T14:38:59.208Z",
+      "endTime": "2026-01-29T14:39:00.531Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Returns the current weather in a city."
+            },
+            {
+              "name": "calculate",
+              "parameters": {
+                "properties": {
+                  "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "title": "calculate_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Evaluates a mathematical expression."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Weather in Tokyo"
+        },
+        {
+          "call_id": "call_Q2RYMEJVbuA4r64HvyJbBqZv",
+          "name": "get_weather",
+          "arguments": "{\"city\":\"Tokyo\"}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_Q2RYMEJVbuA4r64HvyJbBqZv",
+          "output": "Cloudy, 68\u00b0F"
+        }
+      ],
+      "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 127.0,
+      "outputTokenCount": 17.0
+    },
+    {
+      "uuid": "533c7357-a066-4214-83f9-cac2c1b2ab4c",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "0eeb76bb-e631-40b6-b0ef-1b71ebf7e6cf",
+      "startTime": "2026-01-29T14:38:57.308Z",
+      "endTime": "2026-01-29T14:38:59.195Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_weather",
+              "parameters": {
+                "properties": {
+                  "city": {
+                    "title": "City",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city"
+                ],
+                "title": "get_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Returns the current weather in a city."
+            },
+            {
+              "name": "calculate",
+              "parameters": {
+                "properties": {
+                  "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "expression"
+                ],
+                "title": "calculate_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Evaluates a mathematical expression."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Weather in Tokyo"
+        }
+      ],
+      "output": "{\"call_id\": \"call_Q2RYMEJVbuA4r64HvyJbBqZv\", \"name\": \"get_weather\", \"arguments\": \"{\\\"city\\\":\\\"Tokyo\\\"}\"}",
+      "model": "gpt-4o-2024-08-06",
+      "prompt": {},
+      "inputTokenCount": 98.0,
+      "outputTokenCount": 15.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "ce539b6f-7e5c-4cd1-837a-ca84ad075f3b",
+      "name": "Function tool: get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "0eeb76bb-e631-40b6-b0ef-1b71ebf7e6cf",
+      "startTime": "2026-01-29T14:38:59.202Z",
+      "endTime": "2026-01-29T14:38:59.203Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "Cloudy, 68\u00b0F",
+      "description": "Function tool"
+    }
+  ],
+  "startTime": "2026-01-29T14:38:57.307Z",
+  "endTime": "2026-01-29T14:39:00.533Z",
+  "name": "openai_agents_async_tool",
+  "metadata": {
+    "tags": [
+      "openai_agents",
+      "async",
+      "tool"
+    ]
+  },
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helper. Use tools for weather or math. Do not answer from memory."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Weather in Tokyo"
+    }
+  ],
+  "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
+  "status": "SUCCESS"
+}

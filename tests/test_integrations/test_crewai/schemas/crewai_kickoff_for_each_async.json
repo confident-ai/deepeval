@@ -1,0 +1,151 @@
+{
+  "uuid": "6d18fa19-1946-4ce7-8750-aac904715d3f",
+  "baseSpans": [
+    {
+      "uuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
+      "name": "kickoff_for_each_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T05:58:47.182Z",
+      "endTime": "2026-01-29T05:58:48.362Z",
+      "input": {},
+      "output": "[CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 1', name='Reply to the user: Batch 1', expected_output='A short greeting.', summary='Reply to the user: Batch 1...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 1\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=178, prompt_tokens=164, cached_prompt_tokens=0, completion_tokens=14, successful_requests=2)), CrewOutput(raw='Hello! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: Batch 2', name='Reply to the user: Batch 2', expected_output='A short greeting.', summary='Reply to the user: Batch 2...', raw='Hello! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _async_batch', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _async_batch. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: Batch 2\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello! How are you today?'}])], token_usage=UsageMetrics(total_tokens=89, prompt_tokens=82, cached_prompt_tokens=0, completion_tokens=7, successful_requests=1))]",
+      "metricCollection": "metric_collection_1"
+    },
+    {
+      "uuid": "f0aebfaf-088d-4387-8a65-98e2d03262eb",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.274Z",
+      "input": {},
+      "output": "Hello! How are you today?"
+    },
+    {
+      "uuid": "36688f1b-6e1e-46b1-ad43-88be56859280",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f0aebfaf-088d-4387-8a65-98e2d03262eb",
+      "startTime": "2026-01-29T05:58:47.185Z",
+      "endTime": "2026-01-29T05:58:48.273Z",
+      "input": {
+        "input": "Batch 2"
+      },
+      "output": "Hello! How are you today?"
+    },
+    {
+      "uuid": "a5e858f3-ae88-4d24-9f5f-87a0082772a2",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6379f6a8-f4b1-48a7-8211-63471bce0a9d",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.361Z",
+      "input": {},
+      "output": "Hello! How are you today?"
+    },
+    {
+      "uuid": "031ca876-3da8-482a-aa07-7595b420a7f2",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "a5e858f3-ae88-4d24-9f5f-87a0082772a2",
+      "startTime": "2026-01-29T05:58:47.184Z",
+      "endTime": "2026-01-29T05:58:48.361Z",
+      "input": {
+        "input": "Batch 1"
+      },
+      "output": "Hello! How are you today?"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "b770b52f-7d93-4158-9bb3-36e3fcd77be1",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "36688f1b-6e1e-46b1-ad43-88be56859280",
+      "startTime": "2026-01-29T05:58:47.190Z",
+      "endTime": "2026-01-29T05:58:48.267Z",
+      "input": "Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Hello! How are you today?",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "c5a4be54-26be-45aa-834b-db7c22aee494",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "031ca876-3da8-482a-aa07-7595b420a7f2",
+      "startTime": "2026-01-29T05:58:47.188Z",
+      "endTime": "2026-01-29T05:58:48.358Z",
+      "input": "Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Hello! How are you today?",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "356d1830-f3a1-4e2a-b43e-0a12c84ae6fc",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "b770b52f-7d93-4158-9bb3-36e3fcd77be1",
+      "startTime": "2026-01-29T05:58:47.192Z",
+      "endTime": "2026-01-29T05:58:48.266Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Reply to the user: Batch 2\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "Hello! How are you today?",
+      "model": "gpt-4o-mini",
+      "prompt": {},
+      "metricCollection": "metric_collection_1"
+    },
+    {
+      "uuid": "152b2c95-308d-4338-9491-6b9b9dd3f992",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c5a4be54-26be-45aa-834b-db7c22aee494",
+      "startTime": "2026-01-29T05:58:47.190Z",
+      "endTime": "2026-01-29T05:58:48.356Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Simple Greeter _async_batch. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Reply to the user: Batch 1\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "Hello! How are you today?",
+      "model": "gpt-4o-mini",
+      "prompt": {},
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T05:58:47.182Z",
+  "endTime": "2026-01-29T05:58:48.362Z",
+  "environment": "development",
+  "input": {
+    "input": "Batch 2"
+  },
+  "output": "Hello! How are you today?",
+  "status": "SUCCESS",
+  "metricCollection": "metric_collection_1"
+}

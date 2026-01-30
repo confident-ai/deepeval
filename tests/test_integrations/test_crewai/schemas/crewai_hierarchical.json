@@ -1,0 +1,179 @@
+{
+  "uuid": "9dd4d80f-f813-4ee3-a0d2-fe59e31def2e",
+  "baseSpans": [
+    {
+      "uuid": "3cfb04a1-e2a8-431d-b8ce-a88086b5d267",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T06:11:46.545Z",
+      "endTime": "2026-01-29T06:11:50.057Z",
+      "input": {},
+      "output": "SUCCESS"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "3cfb04a1-e2a8-431d-b8ce-a88086b5d267",
+      "startTime": "2026-01-29T06:11:46.556Z",
+      "endTime": "2026-01-29T06:11:50.054Z",
+      "input": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "SUCCESS",
+      "toolsCalled": [
+        {
+          "name": "delegate_work_to_coworker",
+          "output": "SUCCESS",
+          "inputParameters": {
+            "task": "Write the word: 'SUCCESS'.",
+            "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+            "coworker": "Writer"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "f7678d90-79fc-4694-b7ab-639c057e0308",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "startTime": "2026-01-29T06:11:48.504Z",
+      "endTime": "2026-01-29T06:11:49.162Z",
+      "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+      "output": "SUCCESS",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "ae83e46b-6b60-46d0-b379-f0801a20dc3a",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "startTime": "2026-01-29T06:11:49.166Z",
+      "endTime": "2026-01-29T06:11:50.054Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+              "type": "function",
+              "function": {
+                "name": "'delegate_work_to_coworker'",
+                "arguments": "'{\"task\":\"Write the word: \\'SUCCESS\\'.\",\"context\":\"The task is to simply write the word \\'SUCCESS\\' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\",\"coworker\":\"Writer\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+          "name": "delegate_work_to_coworker",
+          "content": "SUCCESS"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "SUCCESS",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "3653ce8c-422b-47fc-b082-957d8c05958b",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "f7678d90-79fc-4694-b7ab-639c057e0308",
+      "startTime": "2026-01-29T06:11:48.506Z",
+      "endTime": "2026-01-29T06:11:49.160Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Writer. You are a junior writer. You simply write back what you are told.\nYour personal goal is: Write simple words"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "SUCCESS",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "102b0a4d-6ec6-43d9-af7e-689e18dd9190",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "startTime": "2026-01-29T06:11:46.560Z",
+      "endTime": "2026-01-29T06:11:48.502Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+          "function": {
+            "arguments": "{\"task\":\"Write the word: 'SUCCESS'.\",\"context\":\"The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\",\"coworker\":\"Writer\"}",
+            "name": "delegate_work_to_coworker"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "d05b5918-6cb0-4757-9146-6221197698a6",
+      "name": "delegate_work_to_coworker",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "startTime": "2026-01-29T06:11:48.502Z",
+      "endTime": "2026-01-29T06:11:49.166Z",
+      "input": {
+        "task": "Write the word: 'SUCCESS'.",
+        "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
+        "coworker": "Writer"
+      },
+      "output": "SUCCESS"
+    }
+  ],
+  "startTime": "2026-01-29T06:11:46.545Z",
+  "endTime": "2026-01-29T06:11:50.057Z",
+  "environment": "development",
+  "input": {},
+  "output": "SUCCESS",
+  "status": "SUCCESS"
+}

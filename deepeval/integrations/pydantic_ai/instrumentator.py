@@ -36,7 +36,10 @@ try:
         SpanProcessor as _SpanProcessor,
         TracerProvider,
     )
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+        SimpleSpanProcessor,
+    )
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
@@ -172,7 +175,9 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         trace_provider.add_span_processor(span_interceptor)
 
         if is_test_mode:
-            trace_provider.add_span_processor(BatchSpanProcessor(test_exporter))
+            trace_provider.add_span_processor(
+                SimpleSpanProcessor(ConfidentSpanExporter())
+            )
         else:
             trace_provider.add_span_processor(
                 BatchSpanProcessor(
@@ -345,7 +350,6 @@ class SpanInterceptor(SpanProcessor):
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
                 trace_manager.traces_to_evaluate.append(trace)
-                test_exporter.clear_span_json_list()
 
     def _add_agent_span(self, span, name):
         span.set_attribute("confident.span.type", "agent")

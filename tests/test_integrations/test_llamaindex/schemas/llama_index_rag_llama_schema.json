@@ -1,0 +1,422 @@
+{
+  "uuid": "4df2a61d-962a-4f93-8755-240f2f1068c5",
+  "baseSpans": [
+    {
+      "uuid": "RetrieverQueryEngine.query-96fcacb0-d56e-4e11-99b9-f1f1dc72430f",
+      "name": "query",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
+      "input": {
+        "str_or_query_bundle": "What is LlamaIndex?"
+      },
+      "output": {
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      }
+    },
+    {
+      "uuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
+      "name": "_query",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine.query-96fcacb0-d56e-4e11-99b9-f1f1dc72430f",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
+      "input": {
+        "query_bundle": {
+          "query_str": "What is LlamaIndex?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": {
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      }
+    },
+    {
+      "uuid": "CompactAndRefine.synthesize-27202316-de57-430f-870b-b04d6ef02f38",
+      "name": "synthesize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
+      "input": {
+        "query": {
+          "query_str": "What is LlamaIndex?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        },
+        "nodes": [
+          {
+            "node": {
+              "id_": "fixed_node_llama",
+              "extra_info": {},
+              "excluded_embed_metadata_keys": [],
+              "excluded_llm_metadata_keys": [],
+              "relationships": {},
+              "metadata_template": "{key}: {value}",
+              "metadata_seperator": "\n",
+              "text": "LlamaIndex is a data framework for your LLM applications.",
+              "mimetype": "text/plain",
+              "text_template": "{metadata_str}\n\n{content}",
+              "class_name": "TextNode"
+            },
+            "score": 0.98,
+            "class_name": "NodeWithScore"
+          }
+        ]
+      },
+      "output": {
+        "response": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+      }
+    },
+    {
+      "uuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
+      "name": "get_response",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.synthesize-27202316-de57-430f-870b-b04d6ef02f38",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
+      "input": {
+        "query_str": "What is LlamaIndex?",
+        "text_chunks": [
+          "LlamaIndex is a data framework for your LLM applications."
+        ]
+      },
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+    },
+    {
+      "uuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
+      "name": "get_response",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.282Z",
+      "input": {
+        "query_str": "What is LlamaIndex?",
+        "text_chunks": [
+          "LlamaIndex is a data framework for your LLM applications."
+        ],
+        "prev_response": null
+      },
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+    },
+    {
+      "uuid": "DefaultRefineProgram.__call__-1cd3eedb-81bd-4671-806a-79f77e71ae1a",
+      "name": "__call__",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
+      "input": {
+        "kwds": {
+          "context_str": "LlamaIndex is a data framework for your LLM applications."
+        }
+      },
+      "output": {
+        "answer": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
+        "query_satisfied": true
+      }
+    },
+    {
+      "uuid": "OpenAI.predict-6302e4e1-48a2-44ec-bce7-c5a5008b810a",
+      "name": "predict",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "DefaultRefineProgram.__call__-1cd3eedb-81bd-4671-806a-79f77e71ae1a",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
+      "input": {
+        "prompt": {
+          "metadata": {
+            "prompt_type": "text_qa"
+          },
+          "template_vars": [
+            "context_str",
+            "query_str"
+          ],
+          "kwargs": {
+            "query_str": "What is LlamaIndex?"
+          },
+          "template_var_mappings": {},
+          "function_mappings": {},
+          "default_template": {
+            "metadata": {
+              "prompt_type": "text_qa"
+            },
+            "template_vars": [
+              "context_str",
+              "query_str"
+            ],
+            "kwargs": {
+              "query_str": "What is LlamaIndex?"
+            },
+            "template": "Context information is below.\n---------------------\n{context_str}\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: {query_str}\nAnswer: "
+          },
+          "conditionals": [
+            [
+              {},
+              {
+                "metadata": {
+                  "prompt_type": "custom"
+                },
+                "template_vars": [
+                  "context_str",
+                  "query_str"
+                ],
+                "kwargs": {
+                  "query_str": "What is LlamaIndex?"
+                }
+              }
+            ]
+          ]
+        },
+        "prompt_args": {
+          "context_str": "LlamaIndex is a data framework for your LLM applications."
+        }
+      },
+      "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+    },
+    {
+      "uuid": "OpenAI.chat-3ee963fb-fd53-466f-9547-f5fbf8225d2e",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "OpenAI.predict-6302e4e1-48a2-44ec-bce7-c5a5008b810a",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are an expert Q&A system that is trusted around the world.\nAlways answer the query using the provided context information, and not prior knowledge.\nSome rules to follow:\n1. Never directly reference the given context in your answer.\n2. Avoid statements like 'Based on the context, ...' or 'The context information ...' or anything along those lines."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Context information is below.\n---------------------\nLlamaIndex is a data framework for your LLM applications.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is LlamaIndex?\nAnswer: "
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "message": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+            }
+          ]
+        },
+        "raw": {
+          "id": "chatcmpl-D3jYskGLkx3yAREpgQIj5yvXIlBNv",
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
+                "role": "assistant",
+                "annotations": []
+              }
+            }
+          ],
+          "created": 1769782494,
+          "model": "gpt-4o-2024-08-06",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_fa7f5b168b",
+          "usage": {
+            "completion_tokens": 18,
+            "prompt_tokens": 129,
+            "total_tokens": 147,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          }
+        },
+        "additional_kwargs": {
+          "prompt_tokens": 129,
+          "completion_tokens": 18,
+          "total_tokens": 147
+        }
+      }
+    },
+    {
+      "uuid": "TokenTextSplitter.split_text-8ebafa59-cbf3-4e16-b03f-bfa9682680d2",
+      "name": "split_text",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-0b05a246-9426-4df3-8438-7678e835a4ca",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:54.471Z",
+      "input": {
+        "text": "LlamaIndex is a data framework for your LLM applications."
+      },
+      "output": [
+        "LlamaIndex is a data framework for your LLM applications."
+      ]
+    },
+    {
+      "uuid": "TokenTextSplitter.split_text-e3a119ba-5f47-4168-8aac-a4b146a702ae",
+      "name": "split_text",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "CompactAndRefine.get_response-cf4101f4-3845-49c9-9f90-fc3570c96453",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:54.471Z",
+      "input": {
+        "text": "LlamaIndex is a data framework for your LLM applications."
+      },
+      "output": [
+        "LlamaIndex is a data framework for your LLM applications."
+      ]
+    },
+    {
+      "uuid": "DeterministicRetriever.retrieve-1327e55b-e999-44e2-b719-f95888d13c1e",
+      "name": "retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RetrieverQueryEngine._query-9603cac9-f63a-4efd-a46d-7d4e828ad25b",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:54.470Z",
+      "input": {
+        "str_or_query_bundle": {
+          "query_str": "What is LlamaIndex?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": [
+        {
+          "node": {
+            "id_": "fixed_node_llama",
+            "extra_info": {},
+            "excluded_embed_metadata_keys": [],
+            "excluded_llm_metadata_keys": [],
+            "relationships": {},
+            "metadata_template": "{key}: {value}",
+            "metadata_seperator": "\n",
+            "text": "LlamaIndex is a data framework for your LLM applications.",
+            "mimetype": "text/plain",
+            "text_template": "{metadata_str}\n\n{content}",
+            "class_name": "TextNode"
+          },
+          "score": 0.98,
+          "class_name": "NodeWithScore"
+        }
+      ],
+      "retrievalContext": [
+        "LlamaIndex is a data framework for your LLM applications."
+      ]
+    },
+    {
+      "uuid": "DeterministicRetriever._retrieve-ef279b1d-9ff2-4685-a0d6-3ede58650cd2",
+      "name": "_retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "DeterministicRetriever.retrieve-1327e55b-e999-44e2-b719-f95888d13c1e",
+      "startTime": "2026-01-30T14:14:54.470Z",
+      "endTime": "2026-01-30T14:14:54.470Z",
+      "input": {
+        "query_bundle": {
+          "query_str": "What is LlamaIndex?",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": [
+        {
+          "node": {
+            "id_": "fixed_node_llama",
+            "extra_info": {},
+            "excluded_embed_metadata_keys": [],
+            "excluded_llm_metadata_keys": [],
+            "relationships": {},
+            "metadata_template": "{key}: {value}",
+            "metadata_seperator": "\n",
+            "text": "LlamaIndex is a data framework for your LLM applications.",
+            "mimetype": "text/plain",
+            "text_template": "{metadata_str}\n\n{content}",
+            "class_name": "TextNode"
+          },
+          "score": 0.98,
+          "class_name": "NodeWithScore"
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "13221cc3-e768-4dff-861d-74241536eccc",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.chat-3ee963fb-fd53-466f-9547-f5fbf8225d2e",
+      "startTime": "2026-01-30T14:14:54.471Z",
+      "endTime": "2026-01-30T14:14:55.281Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are an expert Q&A system that is trusted around the world.\nAlways answer the query using the provided context information, and not prior knowledge.\nSome rules to follow:\n1. Never directly reference the given context in your answer.\n2. Avoid statements like 'Based on the context, ...' or 'The context information ...' or anything along those lines."
+        },
+        {
+          "role": "user",
+          "content": "Context information is below.\n---------------------\nLlamaIndex is a data framework for your LLM applications.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is LlamaIndex?\nAnswer:"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications."
+        }
+      ],
+      "model": "gpt-4o",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-30T14:14:54.470Z",
+  "endTime": "2026-01-30T14:14:55.282Z",
+  "name": "llama_index_rag",
+  "tags": [
+    "llama_index",
+    "rag",
+    "llama"
+  ],
+  "environment": "development",
+  "threadId": "llama_index_thread_id",
+  "userId": "llama_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_index_metric_collection"
+}

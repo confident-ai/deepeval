@@ -1,0 +1,259 @@
+{
+  "uuid": "27f77413-53fe-40c7-a554-7ed9dceb9a2d",
+  "baseSpans": [
+    {
+      "uuid": "16ce1212-855a-4397-bcf4-96c8f9f05737",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-30T14:27:07.668Z",
+      "endTime": "2026-01-30T14:27:10.652Z",
+      "input": {
+        "input": "Sync Data"
+      },
+      "output": "Calculated metrics for: Sync Data",
+      "metricCollection": "crew_metrics_v1"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "16ce1212-855a-4397-bcf4-96c8f9f05737",
+      "startTime": "2026-01-30T14:27:07.671Z",
+      "endTime": "2026-01-30T14:27:10.642Z",
+      "input": "Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Calculated metrics for: Sync Data",
+      "toolsCalled": [
+        {
+          "name": "special_metric_tool",
+          "output": "Calculated metrics for: Sync Data",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        },
+        {
+          "name": "special_metric_tool",
+          "output": "Calculated metrics for: Sync Data",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "6bdd5182-4ac3-4362-a9e0-8968d803c237",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "startTime": "2026-01-30T14:27:09.834Z",
+      "endTime": "2026-01-30T14:27:10.640Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_GaACufJrZ1M4kXxhRXxOU6BP",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Sync Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_GaACufJrZ1M4kXxhRXxOU6BP",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Sync Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_coM9DF0n6kJLv02us19kn01R",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Sync Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_coM9DF0n6kJLv02us19kn01R",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Sync Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": "Calculated metrics for: Sync Data",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "a8fc81aa-2332-471f-b5e0-6543aaafaec2",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "startTime": "2026-01-30T14:27:08.612Z",
+      "endTime": "2026-01-30T14:27:09.827Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        },
+        {
+          "role": "assistant",
+          "content": null,
+          "tool_calls": [
+            {
+              "id": "call_GaACufJrZ1M4kXxhRXxOU6BP",
+              "type": "function",
+              "function": {
+                "name": "'special_metric_tool'",
+                "arguments": "'{\"query\":\"Sync Data\"}'"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "call_GaACufJrZ1M4kXxhRXxOU6BP",
+          "name": "special_metric_tool",
+          "content": "Calculated metrics for: Sync Data"
+        },
+        {
+          "role": "user",
+          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_coM9DF0n6kJLv02us19kn01R",
+          "function": {
+            "arguments": "{\"query\":\"Sync Data\"}",
+            "name": "special_metric_tool"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "0d2afacc-b03d-408f-a019-d572bd49dc0f",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "startTime": "2026-01-30T14:27:07.673Z",
+      "endTime": "2026-01-30T14:27:08.606Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+        }
+      ],
+      "output": [
+        {
+          "id": "call_GaACufJrZ1M4kXxhRXxOU6BP",
+          "function": {
+            "arguments": "{\"query\":\"Sync Data\"}",
+            "name": "special_metric_tool"
+          },
+          "type": "function"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "88a20596-f884-4f66-8731-7d8718cef79d",
+      "name": "special_metric_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "startTime": "2026-01-30T14:27:09.829Z",
+      "endTime": "2026-01-30T14:27:09.833Z",
+      "input": {
+        "query": "Sync Data"
+      },
+      "output": "Calculated metrics for: Sync Data",
+      "metricCollection": "agent_metrics_v1"
+    },
+    {
+      "uuid": "8795f514-219e-40d0-a128-8d1e0bb73b3f",
+      "name": "special_metric_tool",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "4eef142f-b78d-4eb1-bb7f-954550e0a864",
+      "startTime": "2026-01-30T14:27:08.606Z",
+      "endTime": "2026-01-30T14:27:08.613Z",
+      "input": {
+        "query": "Sync Data"
+      },
+      "output": "Calculated metrics for: Sync Data",
+      "metricCollection": "agent_metrics_v1"
+    }
+  ],
+  "startTime": "2026-01-30T14:27:07.668Z",
+  "endTime": "2026-01-30T14:27:10.652Z",
+  "name": "CrewAI Metadata Check Sync",
+  "metadata": {
+    "env": "testing"
+  },
+  "tags": [
+    "crewai",
+    "metadata",
+    "sync"
+  ],
+  "environment": "development",
+  "threadId": "trace_thred_id",
+  "userId": "user_sync_001",
+  "input": {
+    "input": "Sync Data"
+  },
+  "output": "Calculated metrics for: Sync Data",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_v1"
+}

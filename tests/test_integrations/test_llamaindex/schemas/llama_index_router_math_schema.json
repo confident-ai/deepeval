@@ -1,0 +1,245 @@
+{
+  "uuid": "1db5ac6b-2e6a-4e7f-bba9-50d53ff75145",
+  "baseSpans": [
+    {
+      "uuid": "RouterQueryEngine.query-017da3dc-b831-4251-9374-416fee99426e",
+      "name": "query",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-30T14:14:55.331Z",
+      "endTime": "2026-01-30T14:14:56.630Z",
+      "input": {
+        "str_or_query_bundle": "Calculate 21 + 21"
+      },
+      "output": {
+        "response": "Calculated Result: 42 (Mock)"
+      }
+    },
+    {
+      "uuid": "RouterQueryEngine._query-dc5bde90-c264-4bd2-ab28-4a17ef82db74",
+      "name": "_query",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RouterQueryEngine.query-017da3dc-b831-4251-9374-416fee99426e",
+      "startTime": "2026-01-30T14:14:55.331Z",
+      "endTime": "2026-01-30T14:14:56.630Z",
+      "input": {
+        "query_bundle": {
+          "query_str": "Calculate 21 + 21",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": {
+        "response": "Calculated Result: 42 (Mock)"
+      }
+    },
+    {
+      "uuid": "LLMSingleSelector._select-19f894dc-91f5-41b7-9db2-3ab19bb8719a",
+      "name": "_select",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "RouterQueryEngine._query-dc5bde90-c264-4bd2-ab28-4a17ef82db74",
+      "startTime": "2026-01-30T14:14:55.331Z",
+      "endTime": "2026-01-30T14:14:56.630Z",
+      "input": {
+        "choices": [
+          {
+            "description": "Useful for questions about Python or LlamaIndex programming.",
+            "name": "query_engine_tool",
+            "fn_schema": {
+              "model_config": {}
+            },
+            "return_direct": false
+          },
+          {
+            "description": "Useful for questions about math or calculations.",
+            "name": "query_engine_tool",
+            "fn_schema": "<circular>",
+            "return_direct": false
+          }
+        ],
+        "query": {
+          "query_str": "Calculate 21 + 21",
+          "image_path": null,
+          "custom_embedding_strs": null,
+          "embedding": null
+        }
+      },
+      "output": {
+        "selections": [
+          {
+            "index": 1,
+            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "SelectionOutputParser.parse-e1ef9e81-eaed-4cf6-9eb0-3f1456f3612a",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "LLMSingleSelector._select-19f894dc-91f5-41b7-9db2-3ab19bb8719a",
+      "startTime": "2026-01-30T14:14:56.630Z",
+      "endTime": "2026-01-30T14:14:56.630Z",
+      "input": {
+        "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
+      },
+      "output": {
+        "raw_output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```",
+        "parsed_output": [
+          {
+            "choice": 2,
+            "reason": "The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2."
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "OpenAI.predict-41a92c11-dc2b-4d88-9849-3aaab27a4737",
+      "name": "predict",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "LLMSingleSelector._select-19f894dc-91f5-41b7-9db2-3ab19bb8719a",
+      "startTime": "2026-01-30T14:14:55.331Z",
+      "endTime": "2026-01-30T14:14:56.630Z",
+      "input": {
+        "prompt": {
+          "metadata": {
+            "prompt_type": "single_select"
+          },
+          "template_vars": [
+            "num_choices",
+            "context_list",
+            "query_str"
+          ],
+          "kwargs": {},
+          "output_parser": {},
+          "template": "Some choices are given below. It is provided in a numbered list (1 to {num_choices}), where each item in the list corresponds to a summary.\n---------------------\n{context_list}\n---------------------\nUsing only the choices above and not prior knowledge, return the choice that is most relevant to the question: '{query_str}'\n"
+        },
+        "prompt_args": {
+          "num_choices": 2,
+          "context_list": "(1) Useful for questions about Python or LlamaIndex programming.\n\n(2) Useful for questions about math or calculations.",
+          "query_str": "Calculate 21 + 21"
+        }
+      },
+      "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
+    },
+    {
+      "uuid": "OpenAI.chat-0a5e3a84-da85-4fd8-bb17-0ee8d527f383",
+      "name": "chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "OpenAI.predict-41a92c11-dc2b-4d88-9849-3aaab27a4737",
+      "startTime": "2026-01-30T14:14:55.332Z",
+      "endTime": "2026-01-30T14:14:56.629Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Some choices are given below. It is provided in a numbered list (1 to 2), where each item in the list corresponds to a summary.\n---------------------\n(1) Useful for questions about Python or LlamaIndex programming.\n\n(2) Useful for questions about math or calculations.\n---------------------\nUsing only the choices above and not prior knowledge, return the choice that is most relevant to the question: 'Calculate 21 + 21'\n\n\nThe output should be ONLY JSON formatted as a JSON instance.\n\nHere is an example:\n[\n    {{\n        choice: 1,\n        reason: \"<insert reason for choice>\"\n    }},\n    ...\n]\n"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "message": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
+            }
+          ]
+        },
+        "raw": {
+          "id": "chatcmpl-D3jYtUqVeSfW1VwIoSBd9vrkvJG6T",
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```",
+                "role": "assistant",
+                "annotations": []
+              }
+            }
+          ],
+          "created": 1769782495,
+          "model": "gpt-4o-2024-08-06",
+          "object": "chat.completion",
+          "service_tier": "default",
+          "system_fingerprint": "fp_eadf229d54",
+          "usage": {
+            "completion_tokens": 46,
+            "prompt_tokens": 135,
+            "total_tokens": 181,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          }
+        },
+        "additional_kwargs": {
+          "prompt_tokens": 135,
+          "completion_tokens": 46,
+          "total_tokens": 181
+        }
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "40237125-5fe5-4b26-a4e8-23a98344f471",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.chat-0a5e3a84-da85-4fd8-bb17-0ee8d527f383",
+      "startTime": "2026-01-30T14:14:55.332Z",
+      "endTime": "2026-01-30T14:14:56.629Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Some choices are given below. It is provided in a numbered list (1 to 2), where each item in the list corresponds to a summary.\n---------------------\n(1) Useful for questions about Python or LlamaIndex programming.\n\n(2) Useful for questions about math or calculations.\n---------------------\nUsing only the choices above and not prior knowledge, return the choice that is most relevant to the question: 'Calculate 21 + 21'\n\n\nThe output should be ONLY JSON formatted as a JSON instance.\n\nHere is an example:\n[\n    {{\n        choice: 1,\n        reason: \"<insert reason for choice>\"\n    }},\n    ...\n]"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
+        }
+      ],
+      "model": "gpt-4o",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-30T14:14:55.331Z",
+  "endTime": "2026-01-30T14:14:56.630Z",
+  "name": "llama_index_router",
+  "tags": [
+    "llama_index",
+    "router"
+  ],
+  "environment": "development",
+  "threadId": "llama_index_thread_id",
+  "userId": "llama_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_index_metric_collection"
+}

@@ -6,6 +6,7 @@ import os
 from typing import Dict, Any
 from functools import wraps
 import inspect
+from deepeval.utils import get_or_create_event_loop
 
 
 def is_generate_mode() -> bool:
@@ -220,8 +221,16 @@ def assert_json_object_structure(
 
     # Validate tools-used invariant at the top level before detailed comparison.
     # This ensures we never mask a regression where tools appear unexpectedly.
-    expected_tools_used = _compute_tools_used(expected_json_obj)
-    actual_tools_used = _compute_tools_used(actual_json_obj)
+    expected_tools_used = (
+        _compute_tools_used(expected_json_obj)
+        if isinstance(expected_json_obj, dict)
+        else _compute_tools_used(expected_json_obj[0])
+    )
+    actual_tools_used = (
+        _compute_tools_used(actual_json_obj)
+        if isinstance(actual_json_obj, dict)
+        else _compute_tools_used(actual_json_obj[0])
+    )
 
     if expected_tools_used != actual_tools_used:
         print("❌ Tools-used invariant violation:")
@@ -467,7 +476,7 @@ def generate_trace_json(json_path: str):
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
-                loop = asyncio.get_event_loop()
+                loop = get_or_create_event_loop()
                 actual_dict = loop.run_until_complete(
                     trace_testing_manager.wait_for_test_dict()
                 )
@@ -539,7 +548,7 @@ def assert_trace_json(json_path: str):
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
-                loop = asyncio.get_event_loop()
+                loop = get_or_create_event_loop()
                 actual_dict = loop.run_until_complete(
                     trace_testing_manager.wait_for_test_dict()
                 )

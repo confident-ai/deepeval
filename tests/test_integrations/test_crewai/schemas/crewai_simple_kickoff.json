@@ -1,0 +1,70 @@
+{
+  "uuid": "e7943c38-4efb-49f0-807c-f8c95ac2d339",
+  "baseSpans": [
+    {
+      "uuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T06:11:39.488Z",
+      "endTime": "2026-01-29T06:11:40.704Z",
+      "input": {
+        "input": "Hello World"
+      },
+      "output": "Hello World! \ud83d\ude0a",
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
+      "startTime": "2026-01-29T06:11:39.493Z",
+      "endTime": "2026-01-29T06:11:40.698Z",
+      "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Hello World! \ud83d\ude0a",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "5a8a26c9-d66a-4559-99b9-886ef575d4d1",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
+      "startTime": "2026-01-29T06:11:39.495Z",
+      "endTime": "2026-01-29T06:11:40.695Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "Hello World! \ud83d\ude0a",
+      "model": "gpt-4o-mini",
+      "prompt": {},
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T06:11:39.488Z",
+  "endTime": "2026-01-29T06:11:40.704Z",
+  "environment": "development",
+  "input": {
+    "input": "Hello World"
+  },
+  "output": "Hello World! \ud83d\ude0a",
+  "status": "SUCCESS",
+  "metricCollection": "metric_collection_1"
+}
