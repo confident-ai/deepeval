@@ -10,8 +10,12 @@ from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
+
 # from deepeval.integrations.crewai import Crew, Agent, LLM
-from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
+from deepeval.integrations.crewai import (
+    instrument_crewai,
+    reset_crewai_instrumentation,
+)
 from deepeval.tracing import trace
 
 
@@ -66,7 +70,7 @@ def test_crewai():
     trace_manager.clear_traces()
     test_exporter.clear_span_json_list()
     trace_testing_manager.test_dict = None
-    
+
     # Fix state leakage from async tests running before this
     current_trace_context.set(None)
     current_span_context.set(None)

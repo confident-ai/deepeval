@@ -86,7 +86,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input_messages.append({"role": role, "content": content})
 
             llm_span_context = current_llm_context.get()
-            
+
             parent_span = trace_manager.get_span_by_uuid(event.span_id)
             if parent_span:
                 trace_uuid = parent_span.trace_uuid
@@ -161,18 +161,22 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         current_trace = current_trace_context.get()
         trace_uuid = None
 
-        if parent_span_id is None or (class_name == "Workflow" and method_name == "run"):
+        if parent_span_id is None or (
+            class_name == "Workflow" and method_name == "run"
+        ):
             if current_trace:
                 trace_uuid = current_trace.uuid
             else:
                 trace_uuid = trace_manager.start_new_trace().uuid
-            
+
             if class_name == "Workflow" and method_name == "run":
                 parent_span_id = None
-        
+
         elif trace_manager.get_span_by_uuid(parent_span_id):
-            trace_uuid = trace_manager.get_span_by_uuid(parent_span_id).trace_uuid
-            
+            trace_uuid = trace_manager.get_span_by_uuid(
+                parent_span_id
+            ).trace_uuid
+
         else:
             if current_trace:
                 trace_uuid = current_trace.uuid
@@ -233,7 +237,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input=bound_args.arguments,
                 name="Tool",
             )
-        
+
         prepare_input_llm_test_case_params(
             class_name, method_name, span, bound_args.arguments
         )
@@ -245,16 +249,16 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     def _get_output_value(self, result: Any) -> Any:
         """Helper to ensure AgentChatResponse and similar objects are serialized as dicts."""
         if hasattr(result, "response") and hasattr(result, "sources"):
-             if hasattr(result, "model_dump"):
-                 return result.model_dump()
-             if hasattr(result, "to_dict"):
-                 return result.to_dict()
-             return {"response": result.response, "sources": result.sources}
-        
+            if hasattr(result, "model_dump"):
+                return result.model_dump()
+            if hasattr(result, "to_dict"):
+                return result.to_dict()
+            return {"response": result.response, "sources": result.sources}
+
         if hasattr(result, "response"):
-             if hasattr(result, "model_dump"):
-                 return result.model_dump()
-             return {"response": result.response}
+            if hasattr(result, "model_dump"):
+                return result.model_dump()
+            return {"response": result.response}
 
         return result
 
@@ -272,7 +276,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             return None
 
         class_name, method_name = parse_id(id_)
-        
+
         if method_name in ["call_tool", "acall_tool"]:
             output_json = make_json_serializable(result)
             if output_json and isinstance(output_json, dict):

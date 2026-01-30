@@ -176,6 +176,7 @@ class TestStreamingApp:
         assert result is not None
         assert len(result) > 0
 
+
 # =============================================================================
 # DEEPEVAL FEATURES TESTS
 # =============================================================================
@@ -188,7 +189,6 @@ class TestDeepEvalFeaturesAsync:
     @trace_test("pydanticai_features_async.json")
     async def test_full_features_async(self):
         """Test passing all available DeepEval settings in Async context."""
-        
 
         agent = create_evals_agent(
             name="pydanticai-full-features-async",
@@ -199,9 +199,11 @@ class TestDeepEvalFeaturesAsync:
             metric_collection="trace_metrics_async_v1",
             agent_metric_collection="agent_metrics_async_v1",
             llm_metric_collection="llm_metrics_async_v1",
-            tool_metric_collection_map={"special_tool": "tool_metrics_async_v1"},
+            tool_metric_collection_map={
+                "special_tool": "tool_metrics_async_v1"
+            },
             trace_metric_collection="trace_metrics_override_async_v1",
-            agent_metrics=[AnswerRelevancyMetric()], 
+            agent_metrics=[AnswerRelevancyMetric()],
         )
 
         result = await ainvoke_evals_agent(

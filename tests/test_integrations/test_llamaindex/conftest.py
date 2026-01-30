@@ -7,6 +7,7 @@ from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing.context import current_trace_context, current_span_context
 
+
 @pytest.fixture(scope="session", autouse=True)
 def _setup_llama_index_instrumentation():
     """
@@ -22,8 +23,8 @@ def reset_trace_state():
     trace_manager.clear_traces()
     test_exporter.clear_span_json_list()
     trace_testing_manager.test_dict = None
-    
+
     current_trace_context.set(None)
     current_span_context.set(None)
-    
+
     yield

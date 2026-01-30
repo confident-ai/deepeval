@@ -12,7 +12,10 @@ from crewai import Task
 from crewai.tools import tool
 
 from deepeval.integrations.crewai import Crew, Agent, LLM, tool
-from deepeval.integrations.crewai import instrument_crewai, reset_crewai_instrumentation
+from deepeval.integrations.crewai import (
+    instrument_crewai,
+    reset_crewai_instrumentation,
+)
 from deepeval.tracing import trace
 
 
@@ -67,7 +70,7 @@ def test_crewai_component():
     trace_manager.clear_traces()
     test_exporter.clear_span_json_list()
     trace_testing_manager.test_dict = None
-    
+
     current_trace_context.set(None)
     current_span_context.set(None)
     # Initialize inside test to ensure fresh state

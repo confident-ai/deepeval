@@ -120,5 +120,5 @@ class TestCrewAIAsync:
         trace_testing_manager.test_dict = None
         current_trace_context.set(None)
         current_span_context.set(None)
-        
+
         yield

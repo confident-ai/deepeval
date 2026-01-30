@@ -304,18 +304,25 @@ class CrewAIEventsListener(BaseEventListener):
                     current_span = current_span_context.get()
                     # Confirm the active span is actually this tool
                     if (
-                        current_span 
-                        and getattr(current_span, "type", None) in ["tool", SpanType.TOOL]
+                        current_span
+                        and getattr(current_span, "type", None)
+                        in ["tool", SpanType.TOOL]
                         and getattr(current_span, "name", "") == event.tool_name
                     ):
-                        current_span.output = getattr(event, "output", getattr(event, "result", None))
+                        current_span.output = getattr(
+                            event, "output", getattr(event, "result", None)
+                        )
                         current_span.end_time = perf_counter()
-                        current_span.status = deepeval.tracing.types.TraceSpanStatus.SUCCESS
-                        
+                        current_span.status = (
+                            deepeval.tracing.types.TraceSpanStatus.SUCCESS
+                        )
+
                         self._flatten_tool_span(current_span)
                         trace_manager.remove_span(current_span.uuid)
                         if current_span.parent_uuid:
-                            parent = trace_manager.get_span_by_uuid(current_span.parent_uuid)
+                            parent = trace_manager.get_span_by_uuid(
+                                current_span.parent_uuid
+                            )
                             current_span_context.set(parent if parent else None)
                         else:
                             current_span_context.set(None)

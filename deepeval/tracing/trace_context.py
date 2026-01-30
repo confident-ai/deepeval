@@ -107,6 +107,6 @@ def trace(
     finally:
         if started_new_trace:
             trace_manager.end_trace(current_trace.uuid)
-            
+
         current_llm_context.set(LlmSpanContext())
         current_agent_context.set(AgentSpanContext())

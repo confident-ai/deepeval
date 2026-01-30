@@ -313,6 +313,7 @@ class TestMultipleToolsApp:
         # Time should mention 8:00 or CET
         assert "8:00" in result or "CET" in result
 
+
 # =============================================================================
 # DEEPEVAL FEATURES TESTS
 # =============================================================================
@@ -324,7 +325,7 @@ class TestDeepEvalFeatures:
     @trace_test("pydanticai_features_sync.json")
     def test_full_features_sync(self):
         """Test passing all available DeepEval settings via instrumentation."""
-        
+
         agent = create_evals_agent(
             name="pydanticai-full-features-sync",
             tags=["pydanticai", "features", "sync"],
