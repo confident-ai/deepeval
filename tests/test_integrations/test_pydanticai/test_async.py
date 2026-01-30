@@ -10,6 +10,11 @@ from tests.test_integrations.utils import (
     generate_trace_json,
     is_generate_mode,
 )
+from deepeval.metrics import AnswerRelevancyMetric
+from tests.test_integrations.test_pydanticai.apps.eval_app import (
+    create_evals_agent,
+    ainvoke_evals_agent,
+)
 
 # App imports
 from tests.test_integrations.test_pydanticai.apps.pydanticai_simple_app import (
@@ -170,3 +175,38 @@ class TestStreamingApp:
 
         assert result is not None
         assert len(result) > 0
+
+# =============================================================================
+# DEEPEVAL FEATURES TESTS
+# =============================================================================
+
+
+class TestDeepEvalFeaturesAsync:
+    """Async tests for DeepEval specific features."""
+
+    @pytest.mark.asyncio
+    @trace_test("pydanticai_features_async.json")
+    async def test_full_features_async(self):
+        """Test passing all available DeepEval settings in Async context."""
+        
+
+        agent = create_evals_agent(
+            name="pydanticai-full-features-async",
+            tags=["pydanticai", "features", "async"],
+            metadata={"env": "testing_async", "mode": "async"},
+            thread_id="thread-async-features-002",
+            user_id="user-async-002",
+            metric_collection="trace_metrics_async_v1",
+            agent_metric_collection="agent_metrics_async_v1",
+            llm_metric_collection="llm_metrics_async_v1",
+            tool_metric_collection_map={"special_tool": "tool_metrics_async_v1"},
+            trace_metric_collection="trace_metrics_override_async_v1",
+            agent_metrics=[AnswerRelevancyMetric()], 
+        )
+
+        result = await ainvoke_evals_agent(
+            "Use the special_tool to process 'Async Data'",
+            agent=agent,
+        )
+
+        assert result is not None

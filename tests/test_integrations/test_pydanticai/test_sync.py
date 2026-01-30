@@ -10,6 +10,12 @@ from tests.test_integrations.utils import (
     is_generate_mode,
 )
 
+from deepeval.metrics import AnswerRelevancyMetric
+from tests.test_integrations.test_pydanticai.apps.eval_app import (
+    create_evals_agent,
+    invoke_evals_agent,
+)
+
 # App imports
 from tests.test_integrations.test_pydanticai.apps.pydanticai_simple_app import (
     create_simple_agent,
@@ -306,3 +312,36 @@ class TestMultipleToolsApp:
         assert "62" in result or "cloudy" in result.lower()
         # Time should mention 8:00 or CET
         assert "8:00" in result or "CET" in result
+
+# =============================================================================
+# DEEPEVAL FEATURES TESTS
+# =============================================================================
+
+
+class TestDeepEvalFeatures:
+    """Tests for DeepEval specific features (Metric Collections, Metadata, Prompts)."""
+
+    @trace_test("pydanticai_features_sync.json")
+    def test_full_features_sync(self):
+        """Test passing all available DeepEval settings via instrumentation."""
+        
+        agent = create_evals_agent(
+            name="pydanticai-full-features-sync",
+            tags=["pydanticai", "features", "sync"],
+            metadata={"env": "testing", "priority": "high"},
+            thread_id="thread-sync-features-001",
+            user_id="user-sync-001",
+            metric_collection="trace_metrics_v1",
+            agent_metric_collection="agent_metrics_v1",
+            llm_metric_collection="llm_metrics_v1",
+            tool_metric_collection_map={"special_tool": "tool_metrics_v1"},
+            trace_metric_collection="trace_metrics_override_v1",
+            agent_metrics=[AnswerRelevancyMetric()],
+        )
+
+        result = invoke_evals_agent(
+            "Use the special_tool to process 'Sync Data'",
+            agent=agent,
+        )
+
+        assert result is not None
