@@ -1,25 +1,25 @@
 {
-  "uuid": "e2908ef9-313e-40aa-9f0d-ffa8411122d3",
+  "uuid": "7e96cbb4-df66-48ae-9808-c7549bd0953c",
   "baseSpans": [
     {
-      "uuid": "aa35f12c-efea-42f8-80f2-035374dc1025",
+      "uuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-30T07:40:28.458Z",
-      "endTime": "2026-01-30T07:40:31.158Z",
+      "startTime": "2026-01-30T14:26:56.256Z",
+      "endTime": "2026-01-30T14:26:59.519Z",
       "input": {},
       "output": "Calculated metrics for: Async Data",
       "metricCollection": "crew_metrics_v1"
     },
     {
-      "uuid": "0d556f8f-0e79-4952-85d4-b929cc5c8764",
+      "uuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "aa35f12c-efea-42f8-80f2-035374dc1025",
-      "startTime": "2026-01-30T07:40:28.459Z",
-      "endTime": "2026-01-30T07:40:31.157Z",
+      "parentUuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
+      "startTime": "2026-01-30T14:26:56.256Z",
+      "endTime": "2026-01-30T14:26:59.518Z",
       "input": {
         "input": "Async Data"
       },
@@ -29,13 +29,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
+      "uuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "0d556f8f-0e79-4952-85d4-b929cc5c8764",
-      "startTime": "2026-01-30T07:40:28.465Z",
-      "endTime": "2026-01-30T07:40:31.144Z",
+      "parentUuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
+      "startTime": "2026-01-30T14:26:56.261Z",
+      "endTime": "2026-01-30T14:26:59.503Z",
       "input": "Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Calculated metrics for: Async Data",
       "toolsCalled": [
@@ -61,13 +61,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "27ed35f7-968d-4a97-a66f-d25eaee6291b",
+      "uuid": "2e810d39-d76f-45b5-b6fb-c766fa1bb5b9",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
-      "startTime": "2026-01-30T07:40:30.427Z",
-      "endTime": "2026-01-30T07:40:31.141Z",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:58.772Z",
+      "endTime": "2026-01-30T14:26:59.500Z",
       "input": [
         {
           "role": "system",
@@ -82,7 +82,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_bg1EeLieRfd9vLpVRp2nircp",
+              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -93,7 +93,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_bg1EeLieRfd9vLpVRp2nircp",
+          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -106,7 +106,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_jLVnaS4eAuHlRDk1ChEsgQ5B",
+              "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -117,7 +117,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_jLVnaS4eAuHlRDk1ChEsgQ5B",
+          "tool_call_id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -131,13 +131,13 @@
       "prompt": {}
     },
     {
-      "uuid": "4f34b0f0-89ee-4b6b-b9c5-1e11aae8ecda",
+      "uuid": "f167f9b3-e8be-4b2c-b68a-48588ece3e3a",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
-      "startTime": "2026-01-30T07:40:29.633Z",
-      "endTime": "2026-01-30T07:40:30.421Z",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:57.656Z",
+      "endTime": "2026-01-30T14:26:58.768Z",
       "input": [
         {
           "role": "system",
@@ -152,7 +152,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_bg1EeLieRfd9vLpVRp2nircp",
+              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -163,7 +163,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_bg1EeLieRfd9vLpVRp2nircp",
+          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -174,7 +174,7 @@
       ],
       "output": [
         {
-          "id": "call_jLVnaS4eAuHlRDk1ChEsgQ5B",
+          "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
           "function": {
             "arguments": "{\"query\":\"Async Data\"}",
             "name": "special_metric_tool"
@@ -186,13 +186,13 @@
       "prompt": {}
     },
     {
-      "uuid": "dd59260f-2680-4d61-8f56-c7c011fe4fff",
+      "uuid": "ba8a7b63-8bd2-4f15-8267-57485e8a8ba0",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
-      "startTime": "2026-01-30T07:40:28.468Z",
-      "endTime": "2026-01-30T07:40:29.631Z",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:56.262Z",
+      "endTime": "2026-01-30T14:26:57.650Z",
       "input": [
         {
           "role": "system",
@@ -205,7 +205,7 @@
       ],
       "output": [
         {
-          "id": "call_bg1EeLieRfd9vLpVRp2nircp",
+          "id": "call_80e41wFNtN23qJjpxf3wYUoD",
           "function": {
             "arguments": "{\"query\":\"Async Data\"}",
             "name": "special_metric_tool"
@@ -220,13 +220,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "ad441d64-0ca2-469b-ba3e-87c6a35b7081",
+      "uuid": "a8219542-4310-43cb-895b-234680a83a8c",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
-      "startTime": "2026-01-30T07:40:30.421Z",
-      "endTime": "2026-01-30T07:40:30.422Z",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:58.769Z",
+      "endTime": "2026-01-30T14:26:58.772Z",
       "input": {
         "query": "Async Data"
       },
@@ -234,13 +234,13 @@
       "metricCollection": "agent_metrics_v1"
     },
     {
-      "uuid": "4547dec3-19a0-4853-ae38-377be6041868",
+      "uuid": "2bcb764a-71a2-45a7-adf9-ac078b8e0590",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "fcb10e70-bca2-486b-8a3f-5d67282051a9",
-      "startTime": "2026-01-30T07:40:29.631Z",
-      "endTime": "2026-01-30T07:40:29.631Z",
+      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "startTime": "2026-01-30T14:26:57.651Z",
+      "endTime": "2026-01-30T14:26:57.657Z",
       "input": {
         "query": "Async Data"
       },
@@ -248,8 +248,8 @@
       "metricCollection": "agent_metrics_v1"
     }
   ],
-  "startTime": "2026-01-30T07:40:28.458Z",
-  "endTime": "2026-01-30T07:40:31.158Z",
+  "startTime": "2026-01-30T14:26:56.256Z",
+  "endTime": "2026-01-30T14:26:59.519Z",
   "name": "CrewAI Metadata Check Async",
   "metadata": {
     "env": "testing_async"
@@ -260,6 +260,7 @@
     "async"
   ],
   "environment": "development",
+  "threadId": "trace_thred_id",
   "userId": "user_async_002",
   "input": {
     "input": "Async Data"

@@ -18,6 +18,7 @@ from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing import trace
 from deepeval.tracing.context import current_trace_context, current_span_context
+from deepeval.metrics import AnswerRelevancyMetric
 
 # App imports
 from tests.test_integrations.test_crewai.apps.evals_app import get_evals_crew
@@ -121,6 +122,8 @@ class TestCrewAISync:
             user_id="user_sync_001",
             metadata={"env": "testing"},
             metric_collection="trace_metrics_v1",
+            thread_id="trace_thred_id",
+            metrics=[AnswerRelevancyMetric()],
         ):
             res = crew.kickoff(inputs={"input": "Sync Data"})
             return res

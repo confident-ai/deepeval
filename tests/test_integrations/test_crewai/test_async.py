@@ -13,6 +13,7 @@ from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
 )
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
@@ -107,6 +108,8 @@ class TestCrewAIAsync:
             user_id="user_async_002",
             metadata={"env": "testing_async"},
             metric_collection="trace_metrics_async_v1",
+            thread_id="trace_thred_id",
+            metrics=[AnswerRelevancyMetric()],
         ):
             result = await crew.kickoff_async(inputs={"input": "Async Data"})
             return result
