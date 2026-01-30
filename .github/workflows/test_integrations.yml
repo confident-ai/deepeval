@@ -188,9 +188,6 @@ jobs:
       - name: Install project
         run: poetry install --no-interaction --only main
 
-      - name: Install integration extras
-        run: poetry install --with integrations
-
       - name: Show installed integrations
         run: |
           poetry show crewai || true
