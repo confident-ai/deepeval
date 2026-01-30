@@ -2,6 +2,7 @@ import pytest
 from deepeval.integrations.crewai import instrument_crewai
 from deepeval.integrations.crewai.handler import reset_crewai_instrumentation
 from deepeval.tracing.tracing import trace_manager
+
 # Import the context variables to reset them
 from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.tracing.otel.test_exporter import test_exporter
