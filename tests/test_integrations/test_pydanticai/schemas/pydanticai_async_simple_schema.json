@@ -1,0 +1,56 @@
+{
+  "uuid": "2fa103b12b84e94e41afe1ff9a5f4b75",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "967b3835198584aa",
+      "name": "simple_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T04:35:02.474Z",
+      "endTime": "2026-01-29T04:35:03.745Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "Be concise, reply with one short sentence only."
+        },
+        {
+          "role": "user",
+          "content": "Say goodbye in exactly three words."
+        }
+      ],
+      "output": "Farewell, take care.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T04:35:02.474Z",
+  "endTime": "2026-01-29T04:35:03.745Z",
+  "name": "pydanticai-async-simple-test",
+  "metadata": {
+    "test_type": "async_simple"
+  },
+  "tags": [
+    "pydanticai",
+    "simple",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-simple-123",
+  "userId": "test-user-async",
+  "input": [
+    {
+      "role": "system",
+      "content": "Be concise, reply with one short sentence only."
+    },
+    {
+      "role": "user",
+      "content": "Say goodbye in exactly three words."
+    }
+  ],
+  "output": "Farewell, take care.",
+  "status": "SUCCESS"
+}
