@@ -74,6 +74,7 @@ def update_current_trace(
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
     confident_api_key: Optional[str] = None,
+    test_case_id: Optional[str] = None
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -112,6 +113,8 @@ def update_current_trace(
         current_trace.expected_tools = expected_tools
     if confident_api_key:
         current_trace.confident_api_key = confident_api_key
+    if test_case_id:
+        current_trace.test_case_id = test_case_id
 
 
 def update_llm_span(
