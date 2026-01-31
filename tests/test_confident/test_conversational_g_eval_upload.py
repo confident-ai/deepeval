@@ -28,7 +28,7 @@ class TestConversationalGEval:
                 TurnParams.EXPECTED_OUTCOME,
                 TurnParams.RETRIEVAL_CONTEXT,
                 TurnParams.SCENARIO,
-                # TurnParams.TOOLS_CALLED,
+                TurnParams.TOOLS_CALLED,
             ],
             criteria=(
                 "Test whether the assistant responses are relevant, grounded, "
@@ -62,7 +62,7 @@ class TestConversationalGEval:
             "expectedOutcome",
             "retrievalContext",
             "scenario",
-            # "toolsCalled"
+            "toolsCalled",
         }
 
         duplicate_metric = ConversationalGEval(

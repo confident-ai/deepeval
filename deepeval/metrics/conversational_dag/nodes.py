@@ -7,7 +7,11 @@ from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
     ConversationalGEval,
 )
-from deepeval.metrics.g_eval.utils import CONVERSATIONAL_G_EVAL_PARAMS
+from deepeval.metrics.g_eval.utils import (
+    CONVERSATIONAL_G_EVAL_PARAMS,
+    CONVERSATIONAL_G_EVAL_API_PARAMS,
+    construct_api_g_eval,
+)
 from deepeval.metrics.utils import (
     copy_metrics,
     a_generate_with_schema_and_extract,
@@ -26,6 +30,13 @@ from .templates import (
     ConversationalNonBinaryJudgementTemplate,
     ConversationalTaskNodeTemplate,
     ConversationalVerdictNodeTemplate,
+)
+from deepeval.metrics.dag.types import (
+    ApiBinaryJudgementNode,
+    ApiNonBinaryJudgementNode,
+    ApiTaskNode,
+    ApiVerdictNode,
+    ApiMetric,
 )
 from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
@@ -65,6 +76,11 @@ class ConversationalBaseNode:
     ):
         raise NotImplementedError(
             "This node type must implement the _a_execute method."
+        )
+
+    def _convert_to_api_node(self, visited: dict):
+        raise NotImplementedError(
+            "This node type must implement the _convert_to_api_node method."
         )
 
 
@@ -291,6 +307,21 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             extract_json=lambda data: data["reason"],
         )
 
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+
+        api_node = ApiVerdictNode(
+            verdict=self.verdict,
+            score=self.score,
+            child=(
+                _handle_child_node(self.child, visited) if self.child else None
+            ),
+        )
+
+        visited[id(self)] = api_node
+        return api_node
+
 
 @dataclass
 class ConversationalTaskNode(ConversationalBaseNode):
@@ -442,6 +473,43 @@ class ConversationalTaskNode(ConversationalBaseNode):
                 for child in self.children
             )
         )
+
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+
+        if self.evaluation_params:
+            unsupported_params = [
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+            ]
+            if unsupported_params:
+                raise ValueError(
+                    "Unsupported evaluation params for ConversationalDAG upload: "
+                    + ", ".join(param.name for param in unsupported_params)
+                )
+
+        api_node = ApiTaskNode(
+            instructions=self.instructions,
+            label=self.label,
+            outputLabel=self.output_label,
+            evaluationParams=(
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
+        )
+
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -610,6 +678,42 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                 for child in self.children
             )
         )
+
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+
+        if self.evaluation_params:
+            unsupported_params = [
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+            ]
+            if unsupported_params:
+                raise ValueError(
+                    "Unsupported evaluation params for ConversationalDAG upload: "
+                    + ", ".join(param.name for param in unsupported_params)
+                )
+
+        api_node = ApiBinaryJudgementNode(
+            criteria=self.criteria,
+            label=self.label,
+            evaluationParams=(
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
+        )
+
+        visited[id(self)] = api_node
+        return api_node
 
 
 @dataclass
@@ -788,6 +892,42 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
             )
         )
 
+    def _convert_to_api_node(self, visited: dict):
+        if id(self) in visited:
+            return visited[id(self)]
+
+        if self.evaluation_params:
+            unsupported_params = [
+                param
+                for param in self.evaluation_params
+                if param not in CONVERSATIONAL_G_EVAL_API_PARAMS
+            ]
+            if unsupported_params:
+                raise ValueError(
+                    "Unsupported evaluation params for ConversationalDAG upload: "
+                    + ", ".join(param.name for param in unsupported_params)
+                )
+
+        api_node = ApiNonBinaryJudgementNode(
+            criteria=self.criteria,
+            label=self.label,
+            evaluationParams=(
+                [
+                    CONVERSATIONAL_G_EVAL_API_PARAMS[param]
+                    for param in self.evaluation_params
+                ]
+                if self.evaluation_params
+                else None
+            ),
+            children=[
+                child._convert_to_api_node(visited=visited)
+                for child in self.children
+            ],
+        )
+
+        visited[id(self)] = api_node
+        return api_node
+
 
 def construct_node_verbose_log(
     node: ConversationalBaseNode,
@@ -880,3 +1020,47 @@ def is_valid_turn_window(
             "The 'turn_window' passed is invalid. Please recheck your 'turn_window' values."
         )
     return True
+
+
+def _handle_child_node(
+    child: Union[
+        ConversationalBaseNode, ConversationalGEval, BaseConversationalMetric
+    ],
+    visited: dict,
+):
+    if isinstance(child, ConversationalBaseNode):
+        return child._convert_to_api_node(visited=visited)
+    elif isinstance(child, ConversationalGEval):
+        api_g_eval = construct_api_g_eval(
+            child.name,
+            child.evaluation_params,
+            CONVERSATIONAL_G_EVAL_API_PARAMS,
+            child.criteria,
+            child.evaluation_steps,
+            True,
+            child.rubric,
+        )
+
+        try:
+            body = api_g_eval.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_g_eval.dict(by_alias=True, exclude_none=True)
+
+        try:
+            child.upload()
+            metric_id = child.metric_id
+        except Exception as e:
+            print(
+                f"There was an error uploading child ConversationalGEval metric: {child.name}"
+            )
+            raise e
+
+        return ApiMetric(name=child.__class__.__name__, data=body, id=metric_id)
+
+    elif isinstance(child, BaseConversationalMetric):
+        return ApiMetric(name=child.__class__.__name__, data={}, id=None)
+    else:
+        raise ValueError(
+            f"Invalid child in DAG: {child}, cannot convert to dictionary"
+        )
