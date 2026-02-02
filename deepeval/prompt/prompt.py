@@ -806,6 +806,9 @@ class Prompt:
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
+                    model_settings=data.get("modelSettings", None),
+                    output_type=data.get("outputType", None),
+                    output_schema=data.get("outputSchema", None),
                     tools=data.get("tools", None),
                 )
 
@@ -819,6 +822,9 @@ class Prompt:
                     prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
+                    model_settings=response.model_settings,
+                    output_type=response.output_type,
+                    output_schema=response.output_schema,
                     tools=response.tools,
                 )
 
@@ -831,6 +837,9 @@ class Prompt:
                     self._prompt_version_id = response.id
                     self.type = response.type
                     self.interpolation_type = response.interpolation_type
+                    self.model_settings = response.model_settings
+                    self.output_type = response.output_type
+                    self.output_schema = construct_base_model(response.output_schema)
                     self.tools = response.tools
 
             except Exception:
