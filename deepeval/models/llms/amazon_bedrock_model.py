@@ -1,6 +1,6 @@
 import base64
 from typing import Optional, Tuple, Union, Dict, List
-from contextlib import AsyncExitStack
+from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, SecretStr
 
@@ -97,7 +97,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             install_hint="Install it with `pip install botocore`.",
         )
         self._session = aiobotocore_session.get_session()
-        self._exit_stack = AsyncExitStack()
 
         # Defaults from settings
         model = model or settings.AWS_BEDROCK_MODEL_NAME
@@ -145,8 +144,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
         self.kwargs = normalized_kwargs
         self.generation_kwargs = generation_kwargs or {}
-        self._client = None
-        self._sdk_retry_mode: Optional[bool] = None
 
         super().__init__(model)
 
@@ -169,12 +166,12 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         else:
             payload = self.get_converse_request_body(prompt)
 
-        client = await self._ensure_client()
-        response = await client.converse(
-            modelId=self.get_model_name(),
-            messages=payload["messages"],
-            inferenceConfig=payload["inferenceConfig"],
-        )
+        async with self._get_client() as client:
+            response = await client.converse(
+                modelId=self.get_model_name(),
+                messages=payload["messages"],
+                inferenceConfig=payload["inferenceConfig"],
+            )
 
         message = self._extract_text_from_converse_response(response)
 
@@ -251,46 +248,39 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     # Client management
     ###############################################
 
-    async def _ensure_client(self):
-
+    @asynccontextmanager
+    async def _get_client(self):
         use_sdk = sdk_retries_for(PS.BEDROCK)
 
-        # only rebuild if client is missing or the sdk retry mode changes
-        if self._client is None or self._sdk_retry_mode != use_sdk:
+        retries_config = {"max_attempts": (5 if use_sdk else 1)}
+        if use_sdk:
+            retries_config["mode"] = "adaptive"
 
-            # create retry config for botocore
-            retries_config = {"max_attempts": (5 if use_sdk else 1)}
-            if use_sdk:
-                retries_config["mode"] = "adaptive"
+        Config = self.botocore_module.config.Config
+        config = Config(retries=retries_config)
 
-            Config = self.botocore_module.config.Config
-            config = Config(retries=retries_config)
+        client_kwargs = {
+            "region_name": self.region,
+            "config": config,
+            **self.kwargs,
+        }
 
-            client_kwargs = {
-                "region_name": self.region,
-                "config": config,
-                **self.kwargs,
-            }
+        if self.aws_access_key_id is not None:
+            client_kwargs["aws_access_key_id"] = (
+                self.aws_access_key_id.get_secret_value()
+            )
+        if self.aws_secret_access_key is not None:
+            client_kwargs["aws_secret_access_key"] = (
+                self.aws_secret_access_key.get_secret_value()
+            )
 
-            if self.aws_access_key_id is not None:
-                client_kwargs["aws_access_key_id"] = (
-                    self.aws_access_key_id.get_secret_value()
-                )
-            if self.aws_secret_access_key is not None:
-                client_kwargs["aws_secret_access_key"] = (
-                    self.aws_secret_access_key.get_secret_value()
-                )
-
-            cm = self._session.create_client("bedrock-runtime", **client_kwargs)
-
-            self._client = await self._exit_stack.enter_async_context(cm)
-            self._sdk_retry_mode = use_sdk
-
-        return self._client
+        async with self._session.create_client(
+            "bedrock-runtime", **client_kwargs
+        ) as client:
+            yield client
 
     async def close(self):
-        await self._exit_stack.aclose()
-        self._client = None
+        pass
 
     ###############################################
     # Helpers
