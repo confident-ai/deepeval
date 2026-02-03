@@ -42,6 +42,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
+        aws_session_token: Optional[str] = None,
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         region: Optional[str] = None,
@@ -85,6 +86,14 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         else:
             self.aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
 
+        if aws_session_token is not None:
+            self.aws_session_token: Optional[SecretStr] = SecretStr(
+                aws_session_token
+            )
+        else:
+            self.aws_session_token = settings.AWS_SESSION_TOKEN
+    
+    
         # Dependencies: aiobotocore & botocore
         aiobotocore_session = require_dependency(
             "aiobotocore.session",
@@ -273,6 +282,10 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             client_kwargs["aws_secret_access_key"] = (
                 self.aws_secret_access_key.get_secret_value()
             )
+        if self.aws_session_token is not None:
+            client_kwargs["aws_session_token"] = (
+                self.aws_session_token.get_secret_value()
+            )    
 
         async with self._session.create_client(
             "bedrock-runtime", **client_kwargs
