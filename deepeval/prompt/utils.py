@@ -130,7 +130,7 @@ def construct_base_model(
     if not schema:
         return None
     if not schema.fields:
-        return create_model(schema.name)
+        return create_model(schema.name or "EmptySchema")
 
     parent_id_map: Dict[Optional[str], List[OutputSchemaField]] = {}
     for field in schema.fields:
@@ -153,7 +153,7 @@ def construct_base_model(
         default = ... if field.required else None
         root_fields[field.name] = (python_type, default)
 
-    return create_model(schema.name, **root_fields)
+    return create_model(schema.name or "Schema", **root_fields)
 
 
 ###################################
@@ -219,3 +219,72 @@ def construct_output_schema(
         return None
     all_fields = _process_model(base_model_class)
     return OutputSchema(fields=all_fields, name=base_model_class.__name__)
+
+def output_schema_to_json_schema(
+    schema: Optional[OutputSchema] = None,
+) -> Dict[str, Any]:
+    if not schema or not schema.fields:
+        return {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        }
+
+    # Build parent-child mapping
+    children_map: Dict[Optional[str], List[OutputSchemaField]] = {}
+    for field in schema.fields:
+        parent_id = field.parent_id
+        children_map.setdefault(parent_id, []).append(field)
+
+    # Map SchemaDataType to JSON Schema types
+    def map_type(dtype: SchemaDataType) -> str:
+        return {
+            SchemaDataType.STRING: "string",
+            SchemaDataType.INTEGER: "integer",
+            SchemaDataType.FLOAT: "number",
+            SchemaDataType.BOOLEAN: "boolean",
+            SchemaDataType.OBJECT: "object",
+            SchemaDataType.NULL: "null",
+        }.get(dtype, "string")
+
+    def build_node(field_list: List[OutputSchemaField]) -> Dict[str, Any]:
+        properties = {}
+        required_fields = []
+
+        for field in field_list:
+            field_type = (
+                field.type.value if hasattr(field.type, "value") else field.type
+            )
+            field_schema = {"type": map_type(field.type)}
+
+            # Add description if available
+            if field.description:
+                field_schema["description"] = field.description
+
+            # Handle nested objects
+            if field_type == SchemaDataType.OBJECT.value:
+                children = children_map.get(field.id, [])
+                if children:
+                    nested = build_node(children)
+                    field_schema.update(nested)
+                else:
+                    field_schema["properties"] = {}
+                    field_schema["additionalProperties"] = False
+
+            properties[field.name] = field_schema
+            if field.required:
+                required_fields.append(field.name)
+
+        schema_dict = {
+            "type": "object",
+            "properties": properties,
+            "additionalProperties": False,
+        }
+
+        if required_fields:
+            schema_dict["required"] = required_fields
+
+        return schema_dict
+
+    root_fields = children_map.get(None, [])
+    return build_node(root_fields)
