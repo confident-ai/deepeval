@@ -3,8 +3,6 @@ from deepeval.prompt import Prompt
 prompt = Prompt(alias="ApiPromptTest")
 prompt.pull()
 
-print(prompt.tools)
-
 openai_tools = [
     {
         "type": "function",

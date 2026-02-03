@@ -130,6 +130,11 @@ class Tool(BaseModel):
         validation_alias=AliasChoices("structured_schema", "structuredSchema"),
     )
 
+    @property
+    def input_schema(self) -> Dict[str, Any]:
+        from deepeval.prompt.utils import output_schema_to_json_schema
+        return output_schema_to_json_schema(self.structured_schema)
+
 ###################################
 # Prompt
 ###################################
