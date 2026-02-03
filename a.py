@@ -10,12 +10,13 @@ from deepeval.prompt import Prompt
 prompt = Prompt(alias="Message Prompt")
 prompt.pull()
 
+
 @observe(
     type="llm",
     model="gemini-2.5-flash",
     cost_per_input_token=0.0000003,
     cost_per_output_token=0.0000025,
-    metric_collection="default123"
+    metric_collection="default123",
 )
 async def meta_agent(query: str):
     update_current_span(
@@ -40,8 +41,8 @@ async def meta_agent(query: str):
         retrieval_context=[query],
         user_id="clickhouse user",
         tags=["test", "example"],
-        metadata={"query": {"query" : query}},
-        test_case_id="ffb10651-010e-4d37-9947-b75324c31971"
+        metadata={"query": {"query": query}},
+        test_case_id="ffb10651-010e-4d37-9947-b75324c31971",
     )
     return query
 

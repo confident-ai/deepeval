@@ -839,7 +839,9 @@ class Prompt:
                     self.interpolation_type = response.interpolation_type
                     self.model_settings = response.model_settings
                     self.output_type = response.output_type
-                    self.output_schema = construct_base_model(response.output_schema)
+                    self.output_schema = construct_base_model(
+                        response.output_schema
+                    )
                     self.tools = response.tools
 
             except Exception:
