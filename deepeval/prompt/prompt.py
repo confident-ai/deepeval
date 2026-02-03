@@ -25,6 +25,7 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
+    Tool,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -101,6 +102,7 @@ class CachedPrompt(BaseModel):
     model_settings: Optional[ModelSettings]
     output_type: Optional[OutputType]
     output_schema: Optional[OutputSchema]
+    tools: Optional[List[Tool]] = None
 
 
 class Prompt:
@@ -131,6 +133,7 @@ class Prompt:
             interpolation_type or PromptInterpolationType.FSTRING
         )
         self.confident_api_key = confident_api_key
+        self.tools: Optional[List[Tool]] = None
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -308,6 +311,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[OutputSchema] = None,
+        tools: Optional[List[Tool]] = None,
     ):
         if portalocker is None or not self.alias:
             return
@@ -354,6 +358,7 @@ class Prompt:
                     "model_settings": model_settings,
                     "output_type": output_type,
                     "output_schema": output_schema,
+                    "tools": tools,
                 }
 
                 if cache_key == VERSION_CACHE_KEY:
@@ -415,6 +420,7 @@ class Prompt:
             self.output_schema = construct_base_model(
                 cached_prompt.output_schema
             )
+            self.tools = cached_prompt.tools
 
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
@@ -494,6 +500,7 @@ class Prompt:
                         self.output_schema = construct_base_model(
                             cached_prompt.output_schema
                         )
+                        self.tools = cached_prompt.tools
                     return
             except Exception:
                 pass
@@ -547,6 +554,7 @@ class Prompt:
                     model_settings=data.get("modelSettings", None),
                     output_type=data.get("outputType", None),
                     output_schema=data.get("outputSchema", None),
+                    tools=data.get("tools", None),
                 )
             except Exception:
                 if fallback_to_cache:
@@ -573,6 +581,7 @@ class Prompt:
                 self.output_schema = construct_base_model(
                     response.output_schema
                 )
+                self.tools = response.tools
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -594,6 +603,7 @@ class Prompt:
                     model_settings=response.model_settings,
                     output_type=response.output_type,
                     output_schema=response.output_schema,
+                    tools=response.tools,
                 )
 
     def push(
@@ -796,6 +806,10 @@ class Prompt:
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
+                    model_settings=data.get("modelSettings", None),
+                    output_type=data.get("outputType", None),
+                    output_schema=data.get("outputSchema", None),
+                    tools=data.get("tools", None),
                 )
 
                 # Update the cache with fresh data from server
@@ -808,6 +822,10 @@ class Prompt:
                     prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
+                    model_settings=response.model_settings,
+                    output_type=response.output_type,
+                    output_schema=response.output_schema,
+                    tools=response.tools,
                 )
 
                 # Update in-memory properties with fresh data (thread-safe)
@@ -819,6 +837,12 @@ class Prompt:
                     self._prompt_version_id = response.id
                     self.type = response.type
                     self.interpolation_type = response.interpolation_type
+                    self.model_settings = response.model_settings
+                    self.output_type = response.output_type
+                    self.output_schema = construct_base_model(
+                        response.output_schema
+                    )
+                    self.tools = response.tools
 
             except Exception:
                 pass
