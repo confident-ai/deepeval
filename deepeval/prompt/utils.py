@@ -256,7 +256,13 @@ def output_schema_to_json_schema(
             field_type = (
                 field.type.value if hasattr(field.type, "value") else field.type
             )
-            field_schema = {"type": map_type(field.type)}
+            normalized_type = (
+                SchemaDataType(field_type)
+                if not isinstance(field_type, SchemaDataType)
+                else field_type
+            )
+
+            field_schema = {"type": map_type(normalized_type)}
 
             # Add description if available
             if field.description:
