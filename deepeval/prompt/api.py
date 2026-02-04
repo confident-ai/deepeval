@@ -1,6 +1,14 @@
-from pydantic import BaseModel, Field, AliasChoices, ConfigDict
+from pydantic import (
+    BaseModel,
+    Field,
+    AliasChoices,
+    ConfigDict,
+    model_validator,
+    model_serializer,
+)
 from enum import Enum
-from typing import List, Optional, Dict, Any
+import uuid
+from typing import List, Optional, Dict, Any, Union, Type
 from pydantic import TypeAdapter
 
 from deepeval.utils import make_model_config
@@ -106,6 +114,7 @@ class OutputSchemaField(BaseModel):
     id: str
     type: SchemaDataType
     name: str
+    description: Optional[str] = None
     required: Optional[bool] = False
     parent_id: Optional[str] = Field(
         default=None,
@@ -115,8 +124,36 @@ class OutputSchemaField(BaseModel):
 
 
 class OutputSchema(BaseModel):
+    id: Optional[str] = None
     fields: Optional[List[OutputSchemaField]] = None
+    name: Optional[str] = None
+
+
+class Tool(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    description: Optional[str] = None
+    mode: ToolMode
+    structured_schema: Optional[Union[Type[BaseModel], OutputSchema]] = Field(
+        serialization_alias="structuredSchema",
+        validation_alias=AliasChoices("structured_schema", "structuredSchema"),
+    )
+
+    @model_validator(mode="after")
+    def update_schema(self):
+        if not isinstance(self.structured_schema, OutputSchema):
+            from deepeval.prompt.utils import construct_output_schema
+
+            self.structured_schema = construct_output_schema(
+                self.structured_schema
+            )
+        return self
+
+    @property
+    def input_schema(self) -> Dict[str, Any]:
+        from deepeval.prompt.utils import output_schema_to_json_schema
+
+        return output_schema_to_json_schema(self.structured_schema)
 
 
 ###################################
@@ -135,41 +172,6 @@ class PromptInterpolationType(Enum):
 class PromptMessage(BaseModel):
     role: str
     content: str
-
-
-class StructuredSchemaField(BaseModel):
-    id: str
-    name: str
-    type: SchemaDataType
-    description: Optional[str] = None
-    required: bool = False
-    parent_id: Optional[str] = Field(
-        default=None,
-        serialization_alias="parentId",
-        validation_alias="parentId",
-    )
-
-
-class StructuredSchema(BaseModel):
-    id: str
-    name: Optional[str] = None
-    fields: List[StructuredSchemaField]
-
-
-class Tool(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = None
-    mode: ToolMode
-    structured_schema: StructuredSchema = Field(
-        serialization_alias="structuredSchema",
-        validation_alias="structuredSchema",
-    )
-
-    @property
-    def input_schema(self) -> Dict[str, Any]:
-        """Returns the JSON Schema parameters for this tool."""
-        return _fields_to_json_schema(self.structured_schema.fields)
 
 
 PromptMessageList = TypeAdapter(List[PromptMessage])
@@ -238,6 +240,7 @@ class PromptPushRequest(BaseModel):
     alias: str
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
@@ -257,6 +260,7 @@ class PromptUpdateRequest(BaseModel):
 
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
@@ -274,59 +278,3 @@ class PromptUpdateRequest(BaseModel):
 class PromptApi(BaseModel):
     id: str
     type: PromptType
-
-
-def _fields_to_json_schema(
-    fields: List["StructuredSchemaField"],
-) -> Dict[str, Any]:
-    children_map = {}
-
-    for f in fields:
-        children_map.setdefault(f.parent_id, []).append(f)
-
-    def map_type(dtype: SchemaDataType):
-        return {
-            SchemaDataType.STRING: "string",
-            SchemaDataType.INTEGER: "integer",
-            SchemaDataType.FLOAT: "number",
-            SchemaDataType.BOOLEAN: "boolean",
-            SchemaDataType.OBJECT: "object",
-            SchemaDataType.NULL: "null",
-        }.get(dtype, "string")
-
-    def build_node(field_list):
-        properties = {}
-        required_fields = []
-
-        for field in field_list:
-            field_schema = {"type": map_type(field.type)}
-
-            if field.description:
-                field_schema["description"] = field.description
-
-            if field.type == SchemaDataType.OBJECT:
-                children = children_map.get(field.id, [])
-                if children:
-                    nested = build_node(children)
-                    field_schema.update(nested)
-                else:
-                    field_schema["properties"] = {}
-                    field_schema["additionalProperties"] = False
-
-            properties[field.name] = field_schema
-            if field.required:
-                required_fields.append(field.name)
-
-        schema = {
-            "type": "object",
-            "properties": properties,
-            "additionalProperties": False,
-        }
-
-        if required_fields:
-            schema["required"] = required_fields
-
-        return schema
-
-    root_fields = children_map.get(None, [])
-    return build_node(root_fields)
