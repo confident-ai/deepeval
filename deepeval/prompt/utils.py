@@ -220,6 +220,7 @@ def construct_output_schema(
     all_fields = _process_model(base_model_class)
     return OutputSchema(fields=all_fields, name=base_model_class.__name__)
 
+
 def output_schema_to_json_schema(
     schema: Optional[OutputSchema] = None,
 ) -> Dict[str, Any]:

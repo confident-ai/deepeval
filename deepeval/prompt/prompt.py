@@ -639,7 +639,7 @@ class Prompt:
             output_type=output_type or self.output_type,
             output_schema=construct_output_schema(output_schema)
             or construct_output_schema(self.output_schema),
-            tools=tools or self.tools
+            tools=tools or self.tools,
         )
         try:
             body = body.model_dump(

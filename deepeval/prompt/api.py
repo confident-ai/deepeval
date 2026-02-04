@@ -1,4 +1,11 @@
-from pydantic import BaseModel, Field, AliasChoices, ConfigDict, model_validator, model_serializer
+from pydantic import (
+    BaseModel,
+    Field,
+    AliasChoices,
+    ConfigDict,
+    model_validator,
+    model_serializer,
+)
 from enum import Enum
 import uuid
 from typing import List, Optional, Dict, Any, Union, Type
@@ -121,6 +128,7 @@ class OutputSchema(BaseModel):
     fields: Optional[List[OutputSchemaField]] = None
     name: Optional[str] = None
 
+
 class Tool(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -135,14 +143,18 @@ class Tool(BaseModel):
     def update_schema(self):
         if not isinstance(self.structured_schema, OutputSchema):
             from deepeval.prompt.utils import construct_output_schema
-            self.structured_schema = construct_output_schema(self.structured_schema)
+
+            self.structured_schema = construct_output_schema(
+                self.structured_schema
+            )
         return self
-    
 
     @property
     def input_schema(self) -> Dict[str, Any]:
         from deepeval.prompt.utils import output_schema_to_json_schema
+
         return output_schema_to_json_schema(self.structured_schema)
+
 
 ###################################
 # Prompt
