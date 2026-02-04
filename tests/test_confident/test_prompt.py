@@ -76,15 +76,17 @@ class TestPromptText:
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
 
-        UUID = uuid.uuid4()
+        UUID = str(uuid.uuid4())
+
+        TEXT = f"Hello, world! {UUID}"
 
         # generate uuid
-        prompt.push(text=f"Hello, world! {UUID}")
+        prompt.push(text=TEXT)
 
         prompt.pull()
 
         assert prompt.version[0] == "0"
-        assert prompt.text_template == f"Hello, world! {UUID}"
+        assert prompt.text_template == TEXT
         assert prompt.messages_template is None
         assert prompt._prompt_version_id is not None
         assert prompt.type == PromptType.TEXT
@@ -93,17 +95,18 @@ class TestPromptText:
     def test_push_with_interpolation_type(self):
         prompt = Prompt(alias=self.ALIAS_WITH_INTERPOLATION_TYPE)
 
-        UUID = uuid.uuid4()
+        UUID = str(uuid.uuid4())
+        TEXT = f"Hello, world! {UUID}"
 
         prompt.push(
-            text=f"Hello, world! {UUID}",
+            text=TEXT,
             interpolation_type=PromptInterpolationType.MUSTACHE,
         )
 
         prompt.pull()
 
         assert prompt.version[0] == "0"
-        assert prompt.text_template == f"Hello, world! {UUID}"
+        assert prompt.text_template == TEXT
         assert prompt.messages_template is None
         assert prompt._prompt_version_id is not None
         assert prompt.type == PromptType.TEXT
@@ -316,8 +319,8 @@ class TestPromptText:
             text=f"Use the search tool {UUID}",
             tools=[tool],
         )
-
-        prompt.pull()
+        prompt.tools = None
+        prompt.pull(default_to_cache=False)
 
         # Verify tools
         assert prompt.tools is not None
@@ -416,8 +419,8 @@ class TestPromptText:
             version="latest",
             tools=[updated_tool],
         )
-
-        prompt.pull()
+        prompt.tools = None
+        prompt.pull(default_to_cache=False)
 
         # Verify tool was updated
         assert prompt.tools is not None
@@ -955,8 +958,8 @@ class TestPromptList:
             messages=messages,
             tools=[tool],
         )
-
-        prompt.pull()
+        prompt.tools = None
+        prompt.pull(default_to_cache=False)
 
         # Verify tool
         assert prompt.tools is not None
@@ -1250,6 +1253,7 @@ class TestPromptList:
             version="latest",
             tools=[tool3],
         )
+        prompt.tools = None
         prompt.pull()
 
         assert len(prompt.tools) == 1
