@@ -616,6 +616,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        tools: Optional[List[Tool]] = None,
         _verbose: Optional[bool] = True,
     ):
         if self.alias is None:
@@ -638,6 +639,7 @@ class Prompt:
             output_type=output_type or self.output_type,
             output_schema=construct_output_schema(output_schema)
             or construct_output_schema(self.output_schema),
+            tools=tools or self.tools
         )
         try:
             body = body.model_dump(
@@ -665,6 +667,7 @@ class Prompt:
             self.model_settings = model_settings or self.model_settings
             self.output_type = output_type or self.output_type
             self.output_schema = output_schema or self.output_schema
+            self.tools = tools or self.tools
             self.type = PromptType.TEXT if text_template else PromptType.LIST
             if _verbose:
                 console = Console()
@@ -684,6 +687,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        tools: Optional[List[Tool]] = None,
     ):
         if self.alias is None:
             raise ValueError(
@@ -697,6 +701,7 @@ class Prompt:
             model_settings=model_settings,
             output_type=output_type,
             output_schema=construct_output_schema(output_schema),
+            tools=tools,
         )
         try:
             body = body.model_dump(
@@ -722,6 +727,7 @@ class Prompt:
             self.model_settings = model_settings
             self.output_type = output_type
             self.output_schema = output_schema
+            self.tools = tools
             self.type = PromptType.TEXT if text else PromptType.LIST
             console = Console()
             console.print("✅ Prompt successfully updated on Confident AI!")

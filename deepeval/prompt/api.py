@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field, AliasChoices, ConfigDict
+from pydantic import BaseModel, Field, AliasChoices, ConfigDict, model_validator, model_serializer
 from enum import Enum
-from typing import List, Optional, Dict, Any
+import uuid
+from typing import List, Optional, Dict, Any, Union, Type
 from pydantic import TypeAdapter
 
 from deepeval.utils import make_model_config
@@ -121,14 +122,22 @@ class OutputSchema(BaseModel):
     name: Optional[str] = None
 
 class Tool(BaseModel):
-    id: str
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     description: Optional[str] = None
     mode: ToolMode
-    structured_schema: OutputSchema = Field(
+    structured_schema: Optional[Union[Type[BaseModel], OutputSchema]] = Field(
         serialization_alias="structuredSchema",
         validation_alias=AliasChoices("structured_schema", "structuredSchema"),
     )
+
+    @model_validator(mode="after")
+    def update_schema(self):
+        if not isinstance(self.structured_schema, OutputSchema):
+            from deepeval.prompt.utils import construct_output_schema
+            self.structured_schema = construct_output_schema(self.structured_schema)
+        return self
+    
 
     @property
     def input_schema(self) -> Dict[str, Any]:
@@ -219,6 +228,7 @@ class PromptPushRequest(BaseModel):
     alias: str
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
@@ -238,6 +248,7 @@ class PromptUpdateRequest(BaseModel):
 
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
