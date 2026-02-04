@@ -103,7 +103,7 @@ class TestPromptText:
             interpolation_type=PromptInterpolationType.MUSTACHE,
         )
 
-        prompt.pull()
+        prompt.pull(default_to_cache=False)
 
         assert prompt.version[0] == "0"
         assert prompt.text_template == TEXT
@@ -640,9 +640,7 @@ class TestPromptList:
             interpolation_type=PromptInterpolationType.MUSTACHE,
         )
 
-        time.sleep(5)
-
-        prompt.pull()
+        prompt.pull(default_to_cache=False)
 
         assert prompt.version[0] == "0"
         assert prompt.text_template is None
