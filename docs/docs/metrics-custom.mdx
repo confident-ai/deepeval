@@ -9,7 +9,8 @@ sidebar_label: Do it yourself
 </head>
 
 import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
-import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 <MetricTagsDisplayer custom={true} usesLLMs={false} />
 
@@ -31,13 +32,13 @@ There are many ways one can implement an LLM evaluation metric. Here is a [great
 
 ## Rules To Follow When Creating A Custom Metric
 
-<Timeline>
-  <TimelineItem title="Inherit the `BaseMetric` class"></TimelineItem>
-</Timeline>
-
 ### 1. Inherit the `BaseMetric` class
 
 To begin, create a class that inherits from `deepeval`'s `BaseMetric` class:
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -46,11 +47,27 @@ class CustomMetric(BaseMetric):
     ...
 ```
 
-This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric during evaluation.
+This is important because the `BaseMetric` class will help `deepeval` acknowledge your custom metric as a single-turn metric during evaluation.
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.metrics import BaseConversationalMetric
+
+class CustomConversationalMetric(BaseConversationalMetric):
+    ...
+```
+
+This is important because the `BaseConversationalMetric` class will help `deepeval` acknowledge your custom metric as a multi-turn metric  during evaluation.
+
+</TabItem>
+
+</Tabs>
 
 ### 2. Implement the `__init__()` method
 
-The `BaseMetric` class gives your custom metric a few properties that you can configure and be displayed post-evaluation, either locally or on Confident AI.
+The `BaseMetric` / `BaseConversationalMetric` class gives your custom metric a few properties that you can configure and be displayed post-evaluation, either locally or on Confident AI.
 
 An example is the `threshold` property, which determines whether the `LLMTestCase` being evaluated has passed or not. Although **the `threshold` property is all you need to make a custom metric functional**, here are some additional properties for those who want even more customizability:
 
@@ -64,6 +81,10 @@ Don't read too much into the advanced properties for now, we'll go over how they
 :::
 
 The `__init__()` method is a great place to set these properties:
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -85,6 +106,33 @@ class CustomMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
 ```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.metrics import BaseConversationalMetric
+
+class CustomConversationalMetric(BaseConversationalMetric):
+    def __init__(
+        self,
+        threshold: float = 0.5,
+        # Optional
+        evaluation_model: str,
+        include_reason: bool = True,
+        strict_mode: bool = True,
+        async_mode: bool = True
+    ):
+        self.threshold = threshold
+        # Optional
+        self.evaluation_model = evaluation_model
+        self.include_reason = include_reason
+        self.strict_mode = strict_mode
+        self.async_mode = async_mode
+```
+</TabItem>
+
+</Tabs>
 
 ### 3. Implement the `measure()` and `a_measure()` methods
 
@@ -113,6 +161,12 @@ Both `measure()` and `a_measure()` **MUST**:
 - set `self.success`
 
 You can also optionally set `self.reason` in the measure methods (if you're using an LLM for evaluation), or wrap everything in a `try` block to catch any exceptions and set it to `self.error`. Here's a hypothetical example:
+
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
+
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -150,6 +204,49 @@ class CustomMetric(BaseMetric):
             raise
 ```
 
+</TabItem>
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.metrics import BaseConversationalMetric
+from deepeval.test_case import ConversationalTestCase
+
+class CustomConversationalMetric(BaseConversationalMetric):
+    ...
+
+    def measure(self, test_case: ConversationalTestCase) -> float:
+        # Although not required, we recommend catching errors
+        # in a try block
+        try:
+            self.score = generate_hypothetical_score(test_case)
+            if self.include_reason:
+                self.reason = generate_hypothetical_reason(test_case)
+            self.success = self.score >= self.threshold
+            return self.score
+        except Exception as e:
+            # set metric error and re-raise it
+            self.error = str(e)
+            raise
+
+    async def a_measure(self, test_case: ConversationalTestCase) -> float:
+        # Although not required, we recommend catching errors
+        # in a try block
+        try:
+            self.score = await async_generate_hypothetical_score(test_case)
+            if self.include_reason:
+                self.reason = await async_generate_hypothetical_reason(test_case)
+            self.success = self.score >= self.threshold
+            return self.score
+        except Exception as e:
+            # set metric error and re-raise it
+            self.error = str(e)
+            raise
+```
+
+</TabItem>
+
+</Tabs>
+
 :::tip
 
 Often times, the blocking part of an LLM evaluation metric stems from the API calls made to your LLM provider (such as OpenAI's API endpoints), and so ultimately you'll have to ensure that LLM inference can indeed be made asynchronous.
@@ -174,6 +271,10 @@ You can also [click here to find an example of offloading LLM inference to a sep
 
 Under the hood, `deepeval` calls the `is_successful()` method to determine the status of your metric for a given `LLMTestCase`. We recommend copy and pasting the code below directly as your `is_successful()` implementation:
 
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
+
 ```python
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
@@ -185,12 +286,45 @@ class CustomMetric(BaseMetric):
         if self.error is not None:
             self.success = False
         else:
-            return self.success
+            try:
+                self.success = self.score >= self.threshold
+            except TypeError:
+                self.success = False
+        return self.success
 ```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.metrics import BaseConversationalMetric
+from deepeval.test_case import ConversationalTestCase
+
+class CustomConversationalMetric(BaseConversationalMetric):
+    ...
+
+    def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except TypeError:
+                self.success = False
+        return self.success
+```
+
+</TabItem>
+
+</Tabs>
 
 ### 5. Name Your Custom Metric
 
 Probably the easiest step, all that's left is to name your custom metric:
+
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
 from deepeval.metrics import BaseMetric
@@ -203,6 +337,26 @@ class CustomMetric(BaseMetric):
     def __name__(self):
         return "My Custom Metric"
 ```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.metrics import BaseConversationalMetric
+from deepeval.test_case import ConversationalTestCase
+
+class CustomConversationalMetric(BaseConversationalMetric):
+    ...
+
+    @property
+    def __name__(self):
+        return "My Custom Metric"
+```
+
+</TabItem>
+
+</Tabs>
+
 
 **Congratulations 🎉!** You've just learnt how to build a custom metric that is 100% integrated with `deepeval`'s ecosystem. In the following section, we'll go through a few real-life examples.
 

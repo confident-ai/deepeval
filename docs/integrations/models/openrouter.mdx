@@ -1,5 +1,5 @@
 ---
-# id: openrouter
+id: openrouter
 title: OpenRouter
 sidebar_label: OpenRouter
 ---
@@ -43,7 +43,7 @@ model = OpenRouterModel(
     model="openai/gpt-4.1",
     api_key="your-openrouter-api-key",
     # Optional: override the default OpenRouter endpoint
-    # base_url="https://openrouter.ai/api/v1",
+    base_url="https://openrouter.ai/api/v1",
     # Optional: pass OpenRouter headers via **kwargs
     default_headers={
         "HTTP-Referer": "https://your-site.com",
@@ -59,12 +59,12 @@ There are **ZERO** mandatory and **SEVEN** optional parameters when creating an 
 - [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to "openai/gpt-4.1".
 - [Optional] `api_key`: A string specifying your OpenRouter API key for authentication. Defaults to `OPENROUTER_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying the base URL for the OpenRouter API endpoint. Defaults to `OPENROUTER_BASE_URL` if set; otherwise falls back to "https://openrouter.ai/api/v1".
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset; raises if < 0.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENROUTER_COST_PER_INPUT_TOKEN` if set.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENROUTER_COST_PER_OUTPUT_TOKEN` if set.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENROUTER_COST_PER_INPUT_TOKEN` if not passed; raises an error at runtime if unset.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENROUTER_COST_PER_OUTPUT_TOKEN` if not passed; raises an error at runtime if unset.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to OpenRouter's `chat.completions.create(...)` call
 
-Any additional **kwargs you would like to use for your OpenRouter client can be passed directly to OpenRouterModel(...). These are forwarded to the underlying OpenAI client constructor. We recommend double-checking the parameters and headers supported by your chosen model in the [official OpenRouter docs](https://openrouter.ai/docs).
+Any additional `**kwargs` you would like to use for your `OpenRouter` client can be passed directly to `OpenRouterModel(...)`. These are forwarded to the underlying OpenAI client constructor. We recommend double-checking the parameters and headers supported by your chosen model in the [official OpenRouter docs](https://openrouter.ai/docs).
 
 :::tip
 Pass headers specific to OpenRouter via kwargs:

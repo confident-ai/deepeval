@@ -405,3 +405,42 @@ There are **TWO** output settings you can associate with a prompt:
 
 - `output_type`: The string specifying the model to use for generation.
 - `output_schema`: The schema of type `BaseModel` of the output, if `output_type` is `OutputType.SCHEMA`.
+
+### Tools
+
+The tools in a prompt are used to specify the tools your agent has access to, all tools are identified using thier name and hence must be unique.
+
+```python
+from deepeval.prompt import Prompt, Tool
+from deepeval.prompt.api import ToolMode
+from pydantic import BaseModel
+
+class ToolInputSchema(BaseModel):
+    result: str
+    confidence: float
+
+prompt = Prompt(alias="YOUR-PROMPT-ALIAS")
+tool = Tool(
+    name="ExploreTool",
+    description="Tool used for browsing the internet",
+    mode=ToolMode.STRICT,
+    structured_schema=ToolInputSchema,
+)
+
+prompt.push(
+    text="This is a prompt with a tool",
+    tools=[tool]
+)
+
+# You can also update an existing tool by using the new tool in the push / update method:
+tool2 = Tool(
+    name="ExploreTool", # Must have the same name to update a tool
+    description="Tool used for browsing the internet",
+    mode=ToolMode.ALLOW_ADDITIONAL,
+    structured_schema=ToolInputSchema,
+)
+
+prompt.update(
+    tools=[tool2]
+)
+```
