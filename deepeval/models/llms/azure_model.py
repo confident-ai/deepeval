@@ -480,6 +480,14 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 )
             # else: neither key nor token nor provider set -> defer to SDK
 
+        # Enforce precedence: provider > token > api_key
+        
+        if self.azure_ad_token_provider is not None:
+            azure_ad_token_value = None
+            api_key_value = None
+        elif azure_ad_token_value is not None:
+            api_key_value = None
+        # else: api_key_value may be used (or None => SDK-managed auth)
 
         kw = dict(
             api_key=api_key_value,
@@ -487,7 +495,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             azure_endpoint=self.base_url,
             azure_deployment=self.deployment_name,
             azure_ad_token_provider=self.azure_ad_token_provider,
-            azure_ad_token=self.azure_ad_token_value,
+            azure_ad_token=azure_ad_token_value,
             **self._client_kwargs(),
         )
         try:
