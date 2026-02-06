@@ -1,6 +1,14 @@
-from pydantic import BaseModel, Field, AliasChoices, ConfigDict
+from pydantic import (
+    BaseModel,
+    Field,
+    AliasChoices,
+    ConfigDict,
+    model_validator,
+    model_serializer,
+)
 from enum import Enum
-from typing import List, Optional
+import uuid
+from typing import List, Optional, Dict, Any, Union, Type
 from pydantic import TypeAdapter
 
 from deepeval.utils import make_model_config
@@ -31,6 +39,12 @@ class ModelProvider(Enum):
     DEEPSEEK = "DEEPSEEK"
     BEDROCK = "BEDROCK"
     OPENROUTER = "OPENROUTER"
+
+
+class ToolMode(str, Enum):
+    ALLOW_ADDITIONAL = "ALLOW_ADDITIONAL"
+    NO_ADDITIONAL = "NO_ADDITIONAL"
+    STRICT = "STRICT"
 
 
 class ModelSettings(BaseModel):
@@ -100,6 +114,7 @@ class OutputSchemaField(BaseModel):
     id: str
     type: SchemaDataType
     name: str
+    description: Optional[str] = None
     required: Optional[bool] = False
     parent_id: Optional[str] = Field(
         default=None,
@@ -109,8 +124,36 @@ class OutputSchemaField(BaseModel):
 
 
 class OutputSchema(BaseModel):
+    id: Optional[str] = None
     fields: Optional[List[OutputSchemaField]] = None
+    name: Optional[str] = None
+
+
+class Tool(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    description: Optional[str] = None
+    mode: ToolMode
+    structured_schema: Optional[Union[Type[BaseModel], OutputSchema]] = Field(
+        serialization_alias="structuredSchema",
+        validation_alias=AliasChoices("structured_schema", "structuredSchema"),
+    )
+
+    @model_validator(mode="after")
+    def update_schema(self):
+        if not isinstance(self.structured_schema, OutputSchema):
+            from deepeval.prompt.utils import construct_output_schema
+
+            self.structured_schema = construct_output_schema(
+                self.structured_schema
+            )
+        return self
+
+    @property
+    def input_schema(self) -> Dict[str, Any]:
+        from deepeval.prompt.utils import output_schema_to_json_schema
+
+        return output_schema_to_json_schema(self.structured_schema)
 
 
 ###################################
@@ -186,6 +229,7 @@ class PromptHttpResponse(BaseModel):
         serialization_alias="outputSchema",
         validation_alias=AliasChoices("output_schema", "outputSchema"),
     )
+    tools: Optional[List[Tool]] = None
 
 
 class PromptPushRequest(BaseModel):
@@ -196,6 +240,7 @@ class PromptPushRequest(BaseModel):
     alias: str
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
@@ -215,6 +260,7 @@ class PromptUpdateRequest(BaseModel):
 
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
+    tools: Optional[List[Tool]] = None
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )

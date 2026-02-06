@@ -316,6 +316,12 @@ class Settings(BaseSettings):
         description="If set, export a timestamped JSON of the latest test run into this folder (created if missing).",
     )
 
+    # When set, overrides the default DeepEval cache directory
+    DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
+        ".deepeval",
+        description="Path to the directory used by DeepEval to store cache files. If set, this overrides the default cache location. The directory will be created if it does not exist.",
+    )
+
     # Display / Truncation
     DEEPEVAL_MAXLEN_TINY: Optional[int] = Field(
         40,
@@ -1015,7 +1021,12 @@ class Settings(BaseSettings):
     def _coerce_yes_no(cls, v):
         return None if v is None else parse_bool(v, default=False)
 
-    @field_validator("DEEPEVAL_RESULTS_FOLDER", "ENV_DIR_PATH", mode="before")
+    @field_validator(
+        "DEEPEVAL_RESULTS_FOLDER",
+        "ENV_DIR_PATH",
+        "DEEPEVAL_CACHE_FOLDER",
+        mode="before",
+    )
     @classmethod
     def _coerce_path(cls, v):
         if v is None:

@@ -7,6 +7,7 @@ from .api import (
     ReasoningEffort,
     OutputType,
     PromptInterpolationType,
+    Tool,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "ReasoningEffort",
     "OutputType",
     "PromptInterpolationType",
+    "Tool",
 ]
