@@ -50,7 +50,7 @@ Example JSON:
 ===== END OF EXAMPLE ======
 
 The 'intentions' key must be a list of strings.
-If there are multiple individual tasks at each turn, please give the intentions separately as well, DON'T summarize the intentions into a single one
+If there are multiple individual tasks at each turn, please give the intentions separately, DON'T summarize the intentions into a single one
 **
 
 Turns:
