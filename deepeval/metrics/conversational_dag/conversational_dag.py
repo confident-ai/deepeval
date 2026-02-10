@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+from rich.console import Console
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.test_case import (
     ConversationalTestCase,
@@ -12,11 +13,13 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics import DeepAcyclicGraph
+from deepeval.metrics.dag.types import ApiDAG, ApiDAGMetric
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
     copy_graph,
 )
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -146,6 +149,45 @@ class ConversationalDAGMetric(BaseConversationalMetric):
             except TypeError:
                 self.success = False
         return self.success
+
+    def upload(self):
+        api = Api()
+        visited = dict()
+
+        api_dag_metric = ApiDAGMetric(
+            name=self.name,
+            multiTurn=True,
+            dag=ApiDAG(
+                rootNodes=[
+                    node._convert_to_api_node(visited=visited)
+                    for node in self.dag.root_nodes
+                ]
+            ),
+        )
+
+        try:
+            body = api_dag_metric.model_dump(by_alias=True, exclude_none=False)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_dag_metric.dict(by_alias=True, exclude_none=False)
+
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.METRICS_ENDPOINT,
+            body=body,
+        )
+
+        metric_id = data.get("id")
+        self.metric_id = metric_id
+        console = Console()
+
+        if metric_id:
+            console.print(
+                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] [{self.name}] Metric (Conversational DAG) uploaded successfully "
+                f"(id: [bold]{metric_id}[/bold])"
+            )
+
+        return data
 
     @property
     def __name__(self):

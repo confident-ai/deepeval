@@ -17,6 +17,48 @@ from deepeval.metrics.conversational_dag import (
     ConversationalVerdictNode,
 )
 from deepeval.test_case import LLMTestCaseParams, TurnParams
+from deepeval.metrics.constants import (
+    SINGLE_TURN_METRICS_MAPPING,
+    MULTI_TURN_METRICS_MAPPING,
+)
+
+DAG_NODE_MAPPING = {
+    "taskNode": TaskNode,
+    "binaryJudgementNode": BinaryJudgementNode,
+    "nonBinaryJudgementNode": NonBinaryJudgementNode,
+    "verdictNode": VerdictNode,
+}
+
+CONVERSATIONAL_DAG_NODE_MAPPING = {
+    "taskNode": ConversationalTaskNode,
+    "binaryJudgementNode": ConversationalBinaryJudgementNode,
+    "nonBinaryJudgementNode": ConversationalNonBinaryJudgementNode,
+    "verdictNode": ConversationalVerdictNode,
+}
+
+PARAMS_MAPPING = {
+    "outputLabel": "output_label",
+    "evaluationParams": "evaluation_params",
+}
+
+DAG_API_PARAMS_MAPPING = {
+    "input": LLMTestCaseParams.INPUT,
+    "actualOutput": LLMTestCaseParams.ACTUAL_OUTPUT,
+    "expectedOutput": LLMTestCaseParams.EXPECTED_OUTPUT,
+    "context": LLMTestCaseParams.CONTEXT,
+    "retrievalContext": LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    "expectedTools": LLMTestCaseParams.EXPECTED_TOOLS,
+    "toolsCalled": LLMTestCaseParams.TOOLS_CALLED,
+}
+
+CONVERSATIONAL_DAG_API_PARAMS_MAPPING = {
+    "role": TurnParams.ROLE,
+    "content": TurnParams.CONTENT,
+    "scenario": TurnParams.SCENARIO,
+    "expectedOutcome": TurnParams.EXPECTED_OUTCOME,
+    "retrievalContext": TurnParams.RETRIEVAL_CONTEXT,
+    "toolsCalled": TurnParams.TOOLS_CALLED,
+}
 
 
 def is_valid_dag_from_roots(
@@ -153,7 +195,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, VerdictNode) and node.child:
@@ -170,7 +212,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
             ):
                 copied_node = node_class(
                     **valid_args,
-                    children=[copy_node(child) for child in node.children]
+                    children=[copy_node(child) for child in node.children],
                 )
             else:
                 if isinstance(node, ConversationalVerdictNode) and node.child:
@@ -186,3 +228,110 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
     # Copy all root nodes (the recursion handles the rest).
     new_root_nodes = [copy_node(root) for root in original_dag.root_nodes]
     return DeepAcyclicGraph(new_root_nodes)
+
+
+def normalize_params(payload: dict, param_mapping: Dict) -> dict:
+    normalized = {}
+
+    for key, value in payload.items():
+        if key in {"name", "children", "child"}:
+            continue
+
+        python_key = param_mapping.get(key, key)
+        normalized[python_key] = value
+
+    return normalized
+
+
+def handle_metric_child(
+    node_dict: Dict, metric_mapping: Dict, api_params_mapping: Dict
+):
+    metric_name = node_dict["name"]
+    metric_data = node_dict["data"]
+    if metric_name in ["GEval", "ConversationalGEval"]:
+        normalized_metric_data = {}
+        for key, value in metric_data.items():
+            python_key = PARAMS_MAPPING.get(key, key)
+            normalized_metric_data[python_key] = value
+        metric_data = normalized_metric_data
+        new_params = []
+        for param in metric_data["evaluation_params"]:
+            new_params.append(api_params_mapping[param])
+        metric_data["evaluation_params"] = new_params
+        metric_data.pop("multiTurn")
+        return metric_mapping[metric_name](**metric_data)
+    else:
+        return metric_mapping[metric_name](**metric_data)
+
+
+def deserialize_node(
+    node_dict: Dict,
+    multi_turn: bool,
+):
+    if multi_turn is False:
+        nodes_mapping = DAG_NODE_MAPPING
+        api_params_mapping = DAG_API_PARAMS_MAPPING
+        metric_mapping = SINGLE_TURN_METRICS_MAPPING
+    else:
+        nodes_mapping = CONVERSATIONAL_DAG_NODE_MAPPING
+        api_params_mapping = CONVERSATIONAL_DAG_API_PARAMS_MAPPING
+        metric_mapping = MULTI_TURN_METRICS_MAPPING
+
+    node_type = node_dict["name"]
+
+    if node_type not in nodes_mapping:
+        if node_type in metric_mapping.keys():
+            return handle_metric_child(
+                node_dict, metric_mapping, api_params_mapping
+            )
+        raise ValueError(f"Unknown node type: {node_type}")
+
+    cls = nodes_mapping[node_type]
+
+    kwargs = normalize_params(node_dict, PARAMS_MAPPING)
+
+    if "evaluation_params" in kwargs:
+        if kwargs["evaluation_params"] is not None:
+            new_params = []
+            for param in kwargs["evaluation_params"]:
+                new_params.append(api_params_mapping[param])
+            kwargs["evaluation_params"] = new_params
+
+    if node_dict.get("children") is not None:
+        kwargs["children"] = [
+            deserialize_node(child, multi_turn=multi_turn)
+            for child in node_dict["children"]
+        ]
+        return cls(**kwargs)
+
+    if node_dict.get("child") is not None:
+        kwargs["child"] = deserialize_node(
+            node_dict["child"],
+            multi_turn=multi_turn,
+        )
+        return cls(**kwargs)
+
+    return cls(**kwargs)
+
+
+def create_dag_from_dict(dag_dict: Dict):
+    from deepeval.metrics import DAGMetric, ConversationalDAGMetric
+
+    if not dag_dict.get("isDag") or "dag" not in dag_dict:
+        raise ValueError(f"Invalid dictionary for a 'DAGMetric' {dag_dict}.")
+
+    multi_turn = dag_dict.get("multiTurn", False)
+
+    cls = ConversationalDAGMetric if multi_turn else DAGMetric
+
+    root_nodes = [
+        deserialize_node(node, multi_turn=multi_turn)
+        for node in dag_dict["dag"].get("rootNodes", [])
+    ]
+
+    dag = DeepAcyclicGraph(root_nodes=root_nodes)
+
+    return cls(
+        name=dag_dict["name"],
+        dag=dag,
+    )
