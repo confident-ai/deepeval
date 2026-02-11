@@ -180,7 +180,7 @@ class Prompt:
             return "latest"
         else:
             return versions[-1].version
-        
+
     @hash.setter
     def hash(self, value):
         self._hash = value
@@ -275,7 +275,7 @@ class Prompt:
         )
         versions = PromptVersionsHttpResponse(**data)
         return versions.text_versions or versions.messages_versions or []
-    
+
     def _get_commits(self) -> List:
         if self.alias is None:
             raise ValueError(
@@ -438,7 +438,10 @@ class Prompt:
         Raises if unable to load from cache.
         """
         cached_prompt = self._read_from_cache(
-            self.alias, version=version, label=label, hash=hash,
+            self.alias,
+            version=version,
+            label=label,
+            hash=hash,
         )
         if not cached_prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
@@ -525,9 +528,7 @@ class Prompt:
                         self.label = cached_prompt.label
                         self.text_template = cached_prompt.template
                         self.messages_template = cached_prompt.messages_template
-                        self._prompt_id = (
-                            cached_prompt.prompt_id
-                        )
+                        self._prompt_id = cached_prompt.prompt_id
                         self.type = (
                             PromptType(cached_prompt.type)
                             if cached_prompt.type
@@ -625,7 +626,7 @@ class Prompt:
                         start_time,
                         version=version,
                         label=label,
-                        hash=hash
+                        hash=hash,
                     )
                     return
                 raise
@@ -677,15 +678,13 @@ class Prompt:
                 )
 
     def create_version(
-        self,
-        hash: Optional[str] = None,
-        _verbose: Optional[bool] = True
+        self, hash: Optional[str] = None, _verbose: Optional[bool] = True
     ):
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-        
+
         body = PromptCreateVersion(hash=hash)
         try:
             body = body.model_dump(
@@ -696,12 +695,12 @@ class Prompt:
             body = body.dict(by_alias=True, exclude_none=True)
 
         api = Api(api_key=self.confident_api_key)
-        
+
         data, _ = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
             url_params={"alias": self.alias},
-            body=body
+            body=body,
         )
 
         version = data.get("version")
@@ -808,7 +807,7 @@ class Prompt:
             cache_value = version
         else:
             CACHE_KEY = HASH_CACHE_KEY
-            cache_value = hash
+            cache_value = hash or "latest"
 
         # Initialize nested dicts if they don't exist
         if CACHE_KEY not in self._polling_tasks:
@@ -850,7 +849,7 @@ class Prompt:
             cache_value = version
         else:
             CACHE_KEY = HASH_CACHE_KEY
-            cache_value = hash
+            cache_value = hash or "latest"
 
         while True:
             await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
