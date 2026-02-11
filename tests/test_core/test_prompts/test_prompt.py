@@ -50,7 +50,7 @@ def test_write_to_cache_flushes_and_syncs(
     prompt_mod.Prompt._write_to_cache(
         dummy_self,
         cache_key=cache_key,
-        version="v1",
+        hash="bab04ce"
     )
 
     # Assert file was flushed and synced
