@@ -38,16 +38,16 @@ def process_hyperparameters(
             except AttributeError:
                 prompt_key = f"{value.alias}_00.00.01"
 
-            if value._prompt_version_id is not None and value.type is not None:
+            if value._prompt_id is not None and value.type is not None:
                 processed_hyperparameters[key] = PromptApi(
-                    id=value._prompt_version_id,
+                    id=value._prompt_id,
                     type=value.type,
                 )
             elif is_confident():
                 if prompt_key not in prompts_version_id_map:
                     value.push(_verbose=verbose)
                     prompts_version_id_map[prompt_key] = (
-                        value._prompt_version_id
+                        value._prompt_id
                     )
                 processed_hyperparameters[key] = PromptApi(
                     id=prompts_version_id_map[prompt_key],
