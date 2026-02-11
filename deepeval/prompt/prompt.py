@@ -792,7 +792,9 @@ class Prompt:
         version: Optional[str] = None,
         text: Optional[str] = None,
         messages: Optional[List[PromptMessage]] = None,
-        interpolation_type: Optional[PromptInterpolationType] = PromptInterpolationType.FSTRING,
+        interpolation_type: Optional[
+            PromptInterpolationType
+        ] = PromptInterpolationType.FSTRING,
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
@@ -802,14 +804,15 @@ class Prompt:
         Backward compatibility wrapper for update method.
         """
         import warnings
+
         warnings.warn(
             "The update() method is deprecated. We no longer support "
             "updating existing versions. Each prompt update will now create a new commit instead. "
             "Please use push() directly for new code. This call is now redirecting to push method.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
-        
+
         # Delegate to push() which creates a new commit
         return self.push(
             text=text,
@@ -819,7 +822,7 @@ class Prompt:
             output_type=output_type,
             output_schema=output_schema,
             tools=tools,
-            _verbose=True
+            _verbose=True,
         )
 
     ############################################
