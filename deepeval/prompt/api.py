@@ -185,10 +185,20 @@ class PromptType(Enum):
 class PromptVersion(BaseModel):
     id: str
     version: str
-    commit_message: str = Field(
-        serialization_alias="commitMessage",
-        validation_alias=AliasChoices("commit_message", "commitMessage"),
-    )
+
+
+class PromptCommit(BaseModel):
+    id: str
+    hash: str
+    message: str
+
+
+class PromptCommitsHttpResponse(BaseModel):
+    commits: List[PromptCommit]
+
+
+class PromptCreateVersion(BaseModel):
+    hash: Optional[str] = None
 
 
 class PromptVersionsHttpResponse(BaseModel):
@@ -206,7 +216,8 @@ class PromptVersionsHttpResponse(BaseModel):
 
 class PromptHttpResponse(BaseModel):
     id: str
-    version: str
+    hash: str
+    version: Optional[str] = None
     label: Optional[str] = None
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
@@ -238,26 +249,6 @@ class PromptPushRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     alias: str
-    text: Optional[str] = None
-    messages: Optional[List[PromptMessage]] = None
-    tools: Optional[List[Tool]] = None
-    interpolation_type: PromptInterpolationType = Field(
-        serialization_alias="interpolationType"
-    )
-    model_settings: Optional[ModelSettings] = Field(
-        default=None, serialization_alias="modelSettings"
-    )
-    output_schema: Optional[OutputSchema] = Field(
-        default=None, serialization_alias="outputSchema"
-    )
-    output_type: Optional[OutputType] = Field(
-        default=None, serialization_alias="outputType"
-    )
-
-
-class PromptUpdateRequest(BaseModel):
-    model_config = make_model_config(use_enum_values=True)
-
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
     tools: Optional[List[Tool]] = None
