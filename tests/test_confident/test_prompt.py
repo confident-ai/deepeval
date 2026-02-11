@@ -126,6 +126,13 @@ class TestPromptText:
         assert prompt._prompt_version_id is not None
         assert prompt.interpolation_type is not None
 
+    def test_get_versions(self):
+        """Test get versions for text prompt"""
+        prompt = Prompt(alias=self.ALIAS)
+
+        versions = prompt._get_versions()
+        assert versions is not None
+
     def test_version_vs_label_pull(self):
         """Test that version and label pulls work independently"""
         # Pull by version (latest)
@@ -662,6 +669,13 @@ class TestPromptList:
         assert prompt.type == PromptType.LIST
         assert prompt._prompt_version_id is not None
         assert prompt.interpolation_type is not None
+
+    def test_get_versions(self):
+        """Test get versions for list prompt"""
+        prompt = Prompt(alias=self.ALIAS)
+
+        versions = prompt._get_versions()
+        assert versions is not None
 
     def test_version_vs_label_pull(self):
         """Test that version and label pulls work independently"""
