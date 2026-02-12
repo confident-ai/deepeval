@@ -175,9 +175,8 @@ class Prompt:
     def version(self):
         if self._version is not None and self._version != "latest":
             return self._version
-        versions = self._get_versions()
-        if len(versions) > 0:
-            return versions[-1].version
+        else:
+            return None
 
     @hash.setter
     def hash(self, value):
