@@ -41,7 +41,7 @@ class ModelProvider(Enum):
     OPENROUTER = "OPENROUTER"
 
 
-class ToolMode(str, Enum):
+class ToolMode(Enum):
     ALLOW_ADDITIONAL = "ALLOW_ADDITIONAL"
     NO_ADDITIONAL = "NO_ADDITIONAL"
     STRICT = "STRICT"
@@ -132,7 +132,7 @@ class OutputSchema(BaseModel):
 class Tool(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
-    description: Optional[str] = None
+    description: str
     mode: ToolMode
     structured_schema: Optional[Union[Type[BaseModel], OutputSchema]] = Field(
         serialization_alias="structuredSchema",
@@ -198,7 +198,7 @@ class PromptCommitsHttpResponse(BaseModel):
 
 
 class PromptCreateVersion(BaseModel):
-    hash: Optional[str] = None
+    commit: Optional[str] = None
 
 
 class PromptVersionsHttpResponse(BaseModel):

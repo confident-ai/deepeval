@@ -685,7 +685,7 @@ class Prompt:
                 "Prompt alias is not set. Please set an alias to continue."
             )
 
-        body = PromptCreateVersion(hash=hash)
+        body = PromptCreateVersion(commit=hash)
         try:
             body = body.model_dump(
                 by_alias=True, exclude_none=True, mode="json"
