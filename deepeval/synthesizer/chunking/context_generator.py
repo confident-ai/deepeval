@@ -12,6 +12,7 @@ import os
 import gc
 import tempfile
 import logging
+import subprocess
 
 from deepeval.synthesizer.utils import (
     print_synthesizer_status,
@@ -29,7 +30,6 @@ from deepeval.models.base_model import (
 )
 from deepeval.utils import update_pbar, add_pbar, remove_pbars
 from deepeval.config.settings import get_settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,18 @@ def safe_rmtree(
             gc.collect()
             time.sleep(1)
             if sys.platform == "win32":
-                os.system(f'attrib -r -s -h "{path}\\*" /s /d')
+                subprocess.run(
+                    [
+                        "attrib",
+                        "-r",
+                        "-s",
+                        "-h",
+                        os.path.join(path, "*"),
+                        "/s",
+                        "/d",
+                    ],
+                    capture_output=True,
+                )
             kwargs["ignore_errors"] = True
             original_rmtree(path, *args, **kwargs)
             print_synthesizer_status(
