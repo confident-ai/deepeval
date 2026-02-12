@@ -176,9 +176,7 @@ class Prompt:
         if self._version is not None and self._version != "latest":
             return self._version
         versions = self._get_versions()
-        if len(versions) == 0:
-            return "latest"
-        else:
+        if len(versions) > 0:
             return versions[-1].version
 
     @hash.setter

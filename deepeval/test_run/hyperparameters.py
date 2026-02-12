@@ -35,7 +35,7 @@ def process_hyperparameters(
         if isinstance(value, Prompt):
             try:
                 prompt_key = f"{value.alias}_{value.hash}"
-            except:
+            except Exception:
                 prompt_key = f"{value.alias}_[hash]"
 
             if value._prompt_id is not None and value.type is not None:

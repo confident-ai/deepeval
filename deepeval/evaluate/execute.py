@@ -3158,8 +3158,8 @@ def log_prompt(
         return
 
     span_hyperparameters = {}
-    prompt_version = prompt.version if is_confident() else None
-    key = f"{prompt.alias}_{prompt_version}"
+    prompt_hash = prompt.hash if is_confident() else None
+    key = f"{prompt.alias}_{prompt_hash}"
     span_hyperparameters[key] = prompt
 
     test_run = test_run_manager.get_test_run()
@@ -3173,11 +3173,11 @@ def log_prompt(
             process_hyperparameters(span_hyperparameters, False)
         )
         existing_prompt_keys = {
-            f"{p.alias}_{p.version}" for p in test_run.prompts
+            f"{p.alias}_{p.hash}" for p in test_run.prompts
         }
         new_prompts = process_prompts(span_hyperparameters)
         for new_prompt in new_prompts:
-            new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
+            new_prompt_key = f"{new_prompt.alias}_{new_prompt.hash}"
             if new_prompt_key not in existing_prompt_keys:
                 test_run.prompts.append(new_prompt)
 
