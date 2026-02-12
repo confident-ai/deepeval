@@ -588,10 +588,10 @@ class Prompt:
                 elif version:
                     data, _ = api.send_request(
                         method=HttpMethods.GET,
-                        endpoint=Endpoints.PROMPTS_LABEL_ENDPOINT,
+                        endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
                         url_params={
                             "alias": self.alias,
-                            "version": version,
+                            "versionId": version,
                         },
                     )
                 else:
