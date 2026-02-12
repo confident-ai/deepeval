@@ -98,6 +98,7 @@ class TraceMetricScores(BaseModel):
 
 class PromptData(BaseModel):
     alias: Optional[str] = None
+    hash: Optional[str] = None
     version: Optional[str] = None
     text_template: Optional[str] = None
     messages_template: Optional[List[PromptMessage]] = None

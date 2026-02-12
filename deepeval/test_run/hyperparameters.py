@@ -18,7 +18,7 @@ def process_hyperparameters(
         raise TypeError("Hyperparameters must be a dictionary or None")
 
     processed_hyperparameters = {}
-    prompts_version_id_map = {}
+    prompts_hash_id_map = {}
 
     for key, value in hyperparameters.items():
         if not isinstance(key, str):
@@ -34,9 +34,9 @@ def process_hyperparameters(
 
         if isinstance(value, Prompt):
             try:
-                prompt_key = f"{value.alias}_{value.version}"
-            except AttributeError:
-                prompt_key = f"{value.alias}_00.00.01"
+                prompt_key = f"{value.alias}_{value.hash}"
+            except:
+                prompt_key = f"{value.alias}_[hash]"
 
             if value._prompt_id is not None and value.type is not None:
                 processed_hyperparameters[key] = PromptApi(
@@ -44,13 +44,14 @@ def process_hyperparameters(
                     type=value.type,
                 )
             elif is_confident():
-                if prompt_key not in prompts_version_id_map:
+                if prompt_key not in prompts_hash_id_map:
                     value.push(_verbose=verbose)
-                    prompts_version_id_map[prompt_key] = (
+                    prompt_key = prompt_key.replace("[hash]", value.hash)
+                    prompts_hash_id_map[prompt_key] = (
                         value._prompt_id
                     )
                 processed_hyperparameters[key] = PromptApi(
-                    id=prompts_version_id_map[prompt_key],
+                    id=prompts_hash_id_map[prompt_key],
                     type=value.type,
                 )
         else:
@@ -91,14 +92,15 @@ def process_prompts(
         value for value in hyperparameters.values() if isinstance(value, Prompt)
     ]
     for prompt in prompt_objects:
-        prompt_version = prompt.version if is_confident() else None
-        prompt_key = f"{prompt.alias}_{prompt_version}"
+        prompt_hash = prompt.hash if is_confident() else None
+        prompt_key = f"{prompt.alias}_{prompt_hash}"
         if prompt_key in seen_prompts:
             continue
         seen_prompts.add(prompt_key)
         prompt_data = PromptData(
             alias=prompt.alias,
-            version=prompt_version,
+            hash=prompt_hash,
+            version=prompt.version,
             text_template=prompt.text_template,
             messages_template=prompt.messages_template,
             model_settings=prompt.model_settings,
