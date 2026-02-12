@@ -3172,9 +3172,7 @@ def log_prompt(
         test_run.hyperparameters.update(
             process_hyperparameters(span_hyperparameters, False)
         )
-        existing_prompt_keys = {
-            f"{p.alias}_{p.hash}" for p in test_run.prompts
-        }
+        existing_prompt_keys = {f"{p.alias}_{p.hash}" for p in test_run.prompts}
         new_prompts = process_prompts(span_hyperparameters)
         for new_prompt in new_prompts:
             new_prompt_key = f"{new_prompt.alias}_{new_prompt.hash}"

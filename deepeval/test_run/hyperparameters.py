@@ -47,9 +47,7 @@ def process_hyperparameters(
                 if prompt_key not in prompts_hash_id_map:
                     value.push(_verbose=verbose)
                     prompt_key = prompt_key.replace("[hash]", value.hash)
-                    prompts_hash_id_map[prompt_key] = (
-                        value._prompt_id
-                    )
+                    prompts_hash_id_map[prompt_key] = value._prompt_id
                 processed_hyperparameters[key] = PromptApi(
                     id=prompts_hash_id_map[prompt_key],
                     type=value.type,
