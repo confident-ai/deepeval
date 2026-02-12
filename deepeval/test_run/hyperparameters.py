@@ -39,19 +39,15 @@ def process_hyperparameters(
                 prompt_key = f"{value.alias}_[hash]"
 
             if value._prompt_id is not None and value.type is not None:
-                commits = value._get_commits()
-                commit_id = commits[0].id
                 processed_hyperparameters[key] = PromptApi(
-                    id=commit_id,
+                    id=value.hash,
                     type=value.type,
                 )
             elif is_confident():
                 if prompt_key not in prompts_hash_id_map:
                     value.push(_verbose=verbose)
                     prompt_key = prompt_key.replace("[hash]", value.hash)
-                    commits = value._get_commits()
-                    commit_id = commits[0].id
-                    prompts_hash_id_map[prompt_key] = commit_id
+                    prompts_hash_id_map[prompt_key] = value.hash
                 processed_hyperparameters[key] = PromptApi(
                     id=prompts_hash_id_map[prompt_key],
                     type=value.type,
