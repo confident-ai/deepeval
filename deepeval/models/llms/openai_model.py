@@ -128,7 +128,9 @@ class GPTModel(DeepEvalBaseLLM):
         # Extract async_http_client for separate async HTTP client support (#2351).
         # This allows users to provide different httpx clients for sync (httpx.Client)
         # and async (httpx.AsyncClient) operations.
-        self.async_http_client = normalized_kwargs.pop("async_http_client", None)
+        self.async_http_client = normalized_kwargs.pop(
+            "async_http_client", None
+        )
 
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs

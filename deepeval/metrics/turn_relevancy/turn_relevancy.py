@@ -254,8 +254,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         # Filter out None verdicts that can occur during parallel evaluation
         # when verdict generation fails (e.g., LLM timeout, parse error).
         valid_verdicts = [
-            v for v in self.verdicts
-            if v is not None and v.verdict is not None
+            v for v in self.verdicts if v is not None and v.verdict is not None
         ]
         number_of_verdicts = len(valid_verdicts)
         if number_of_verdicts == 0:

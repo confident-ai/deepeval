@@ -447,8 +447,12 @@ def update_test_run_map(
         test_run.metrics_scores[0].scores.append(
             1 if winner == contestant.name else 0
         )
-        test_run.metrics_scores[0].passes += 1 if winner == contestant.name else 0
-        test_run.metrics_scores[0].fails += 1 if winner != contestant.name else 0
+        test_run.metrics_scores[0].passes += (
+            1 if winner == contestant.name else 0
+        )
+        test_run.metrics_scores[0].fails += (
+            1 if winner != contestant.name else 0
+        )
         test_run.metrics_scores[0].errors += 0
 
 

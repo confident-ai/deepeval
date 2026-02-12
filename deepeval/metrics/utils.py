@@ -458,10 +458,10 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls
         )
 
-     # Handle models that return (result, cost) tuple even when not native
+    # Handle models that return (result, cost) tuple even when not native
     if isinstance(result, tuple) and len(result) == 2:
-        actual_result, cost = result 
-        if hasattr(metric, '_accrue_cost'):
+        actual_result, cost = result
+        if hasattr(metric, "_accrue_cost"):
             metric._accrue_cost(cost)
         result = actual_result
 
