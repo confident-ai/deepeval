@@ -1,13 +1,13 @@
 {
-  "uuid": "cbed3731-5059-4fba-a528-77bd7af2c9bf",
+  "uuid": "953135bb-1f30-4281-b2d5-3b41116aaf8f",
   "baseSpans": [
     {
-      "uuid": "019c575c-3c90-7ef0-8af4-00a34ecba702",
+      "uuid": "019bf99b-c4c0-7cb0-b2b5-f8b9c26496be",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-13T14:16:28.560Z",
-      "endTime": "2026-02-13T14:16:31.570Z",
+      "startTime": "2026-01-26T09:21:33.888Z",
+      "endTime": "2026-01-26T09:21:35.135Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+            "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+            "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
           },
           {
             "content": "",
@@ -51,14 +51,14 @@
               },
               "model_provider": "openai",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_f4ae844694",
-              "id": "chatcmpl-D8oG558sJM3K6gJv64UgHtRndWi2w",
+              "system_fingerprint": "fp_8bbc38b4db",
+              "id": "chatcmpl-D2D4ozmBe4KOCXSH9VkPPouu9JUYj",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c575c-3c92-7290-a913-9c21d89f2453-0",
+            "id": "lc_run--019bf99b-c4c4-7c21-89db-b24040b71eea-0",
             "tool_calls": [
               {
                 "name": "multiply",
@@ -66,7 +66,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+                "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
                 "type": "tool_call"
               }
             ],
@@ -91,12 +91,12 @@
             "response_metadata": {},
             "type": "tool",
             "name": "multiply",
-            "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-            "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+            "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+            "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
             "status": "success"
           },
           {
-            "content": "8 multiplied by 6 equals 48.",
+            "content": "8 multiplied by 6 is 48.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -118,14 +118,14 @@
               },
               "model_provider": "openai",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_f4ae844694",
-              "id": "chatcmpl-D8oG6PTK3aezMYrONBhTJATCgpzcr",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D2D4obmXmyh8zs5eqDm0SviuErZ1J",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c575c-4231-7541-adea-cad23110ac3b-0",
+            "id": "lc_run--019bf99b-c81a-7422-8f10-8779f143676a-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -147,13 +147,13 @@
       "metricCollection": "task_completion"
     },
     {
-      "uuid": "019c575c-4230-7e40-80be-e65e87455f7c",
+      "uuid": "019bf99b-c816-7d83-8889-7b263f102b18",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c575c-3c90-7ef0-8af4-00a34ecba702",
-      "startTime": "2026-02-13T14:16:30.000Z",
-      "endTime": "2026-02-13T14:16:31.570Z",
+      "parentUuid": "019bf99b-c4c0-7cb0-b2b5-f8b9c26496be",
+      "startTime": "2026-01-26T09:21:34.742Z",
+      "endTime": "2026-01-26T09:21:35.135Z",
       "input": {
         "messages": [
           {
@@ -161,7 +161,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+            "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
           },
           {
             "content": "",
@@ -186,14 +186,14 @@
               },
               "model_provider": "openai",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_f4ae844694",
-              "id": "chatcmpl-D8oG558sJM3K6gJv64UgHtRndWi2w",
+              "system_fingerprint": "fp_8bbc38b4db",
+              "id": "chatcmpl-D2D4ozmBe4KOCXSH9VkPPouu9JUYj",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c575c-3c92-7290-a913-9c21d89f2453-0",
+            "id": "lc_run--019bf99b-c4c4-7c21-89db-b24040b71eea-0",
             "tool_calls": [
               {
                 "name": "multiply",
@@ -201,7 +201,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+                "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
                 "type": "tool_call"
               }
             ],
@@ -226,8 +226,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "multiply",
-            "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-            "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+            "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+            "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
             "status": "success"
           }
         ]
@@ -235,7 +235,7 @@
       "output": {
         "messages": [
           {
-            "content": "8 multiplied by 6 equals 48.",
+            "content": "8 multiplied by 6 is 48.",
             "additional_kwargs": {
               "refusal": null
             },
@@ -257,14 +257,14 @@
               },
               "model_provider": "openai",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_f4ae844694",
-              "id": "chatcmpl-D8oG6PTK3aezMYrONBhTJATCgpzcr",
+              "system_fingerprint": "fp_c4585b5b9c",
+              "id": "chatcmpl-D2D4obmXmyh8zs5eqDm0SviuErZ1J",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c575c-4231-7541-adea-cad23110ac3b-0",
+            "id": "lc_run--019bf99b-c81a-7422-8f10-8779f143676a-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -285,13 +285,13 @@
       }
     },
     {
-      "uuid": "019c575c-422f-78f3-a1f5-c57ab5614689",
+      "uuid": "019bf99b-c814-7681-8a77-c9d5e1c713bc",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c575c-3c90-7ef0-8af4-00a34ecba702",
-      "startTime": "2026-02-13T14:16:29.999Z",
-      "endTime": "2026-02-13T14:16:30.000Z",
+      "parentUuid": "019bf99b-c4c0-7cb0-b2b5-f8b9c26496be",
+      "startTime": "2026-01-26T09:21:34.740Z",
+      "endTime": "2026-01-26T09:21:34.742Z",
       "input": {
         "__type": "tool_call_with_context",
         "tool_call": {
@@ -300,7 +300,7 @@
             "a": 8,
             "b": 6
           },
-          "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+          "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
           "type": "tool_call"
         },
         "state": {
@@ -310,7 +310,7 @@
               "additional_kwargs": {},
               "response_metadata": {},
               "type": "human",
-              "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+              "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
             },
             {
               "content": "",
@@ -335,14 +335,14 @@
                 },
                 "model_provider": "openai",
                 "model_name": "gpt-4o-mini-2024-07-18",
-                "system_fingerprint": "fp_f4ae844694",
-                "id": "chatcmpl-D8oG558sJM3K6gJv64UgHtRndWi2w",
+                "system_fingerprint": "fp_8bbc38b4db",
+                "id": "chatcmpl-D2D4ozmBe4KOCXSH9VkPPouu9JUYj",
                 "service_tier": "default",
                 "finish_reason": "tool_calls",
                 "logprobs": null
               },
               "type": "ai",
-              "id": "lc_run--019c575c-3c92-7290-a913-9c21d89f2453-0",
+              "id": "lc_run--019bf99b-c4c4-7c21-89db-b24040b71eea-0",
               "tool_calls": [
                 {
                   "name": "multiply",
@@ -350,7 +350,7 @@
                     "a": 8,
                     "b": 6
                   },
-                  "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+                  "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
                   "type": "tool_call"
                 }
               ],
@@ -380,8 +380,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "multiply",
-            "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-            "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+            "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+            "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
             "status": "success"
           }
         ]
@@ -395,8 +395,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "multiply",
-            "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-            "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+            "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+            "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
             "status": "success"
           },
           "inputParameters": {
@@ -407,13 +407,13 @@
       ]
     },
     {
-      "uuid": "019c575c-3c90-7ef0-8af4-00b673373a43",
+      "uuid": "019bf99b-c4c1-7b91-a491-29d22ecc9a04",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019c575c-3c90-7ef0-8af4-00a34ecba702",
-      "startTime": "2026-02-13T14:16:28.560Z",
-      "endTime": "2026-02-13T14:16:29.999Z",
+      "parentUuid": "019bf99b-c4c0-7cb0-b2b5-f8b9c26496be",
+      "startTime": "2026-01-26T09:21:33.889Z",
+      "endTime": "2026-01-26T09:21:34.739Z",
       "input": {
         "messages": [
           {
@@ -421,7 +421,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+            "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
           }
         ]
       },
@@ -450,14 +450,14 @@
               },
               "model_provider": "openai",
               "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_f4ae844694",
-              "id": "chatcmpl-D8oG558sJM3K6gJv64UgHtRndWi2w",
+              "system_fingerprint": "fp_8bbc38b4db",
+              "id": "chatcmpl-D2D4ozmBe4KOCXSH9VkPPouu9JUYj",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019c575c-3c92-7290-a913-9c21d89f2453-0",
+            "id": "lc_run--019bf99b-c4c4-7c21-89db-b24040b71eea-0",
             "tool_calls": [
               {
                 "name": "multiply",
@@ -465,7 +465,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+                "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
                 "type": "tool_call"
               }
             ],
@@ -492,13 +492,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019c575c-4231-7541-adea-cad23110ac3b",
+      "uuid": "019bf99b-c81a-7422-8f10-8779f143676a",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019c575c-4230-7e40-80be-e65e87455f7c",
-      "startTime": "2026-02-13T14:16:30.001Z",
-      "endTime": "2026-02-13T14:16:31.570Z",
+      "parentUuid": "019bf99b-c816-7d83-8889-7b263f102b18",
+      "startTime": "2026-01-26T09:21:34.746Z",
+      "endTime": "2026-01-26T09:21:35.135Z",
       "input": [
         {
           "role": "system",
@@ -523,26 +523,26 @@
       ],
       "output": {
         "role": "AI",
-        "content": "8 multiplied by 6 equals 48.",
+        "content": "8 multiplied by 6 is 48.",
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
       "inputTokenCount": 92.0,
       "outputTokenCount": 10.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "metricCollection": "test_collection_1"
     },
     {
-      "uuid": "019c575c-3c92-7290-a913-9c21d89f2453",
+      "uuid": "019bf99b-c4c4-7c21-89db-b24040b71eea",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019c575c-3c90-7ef0-8af4-00b673373a43",
-      "startTime": "2026-02-13T14:16:28.562Z",
-      "endTime": "2026-02-13T14:16:29.998Z",
+      "parentUuid": "019bf99b-c4c1-7b91-a491-29d22ecc9a04",
+      "startTime": "2026-01-26T09:21:33.892Z",
+      "endTime": "2026-01-26T09:21:34.739Z",
       "input": [
         {
           "role": "system",
@@ -567,30 +567,30 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_URoN7n7frAJuMsCXsTwp0v48"
+            "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w"
           }
         ]
       },
       "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
       "inputTokenCount": 67.0,
       "outputTokenCount": 17.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019c575c-422f-78f3-a1f5-c58a7bf7a676",
+      "uuid": "019bf99b-c815-7a30-83a1-e1f75cf9c753",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019c575c-422f-78f3-a1f5-c57ab5614689",
-      "startTime": "2026-02-13T14:16:29.999Z",
-      "endTime": "2026-02-13T14:16:30.000Z",
+      "parentUuid": "019bf99b-c814-7681-8a77-c9d5e1c713bc",
+      "startTime": "2026-01-26T09:21:34.741Z",
+      "endTime": "2026-01-26T09:21:34.741Z",
       "input": {
         "a": 8,
         "b": 6
@@ -601,14 +601,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "multiply",
-        "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-        "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+        "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+        "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-02-13T14:16:28.560Z",
-  "endTime": "2026-02-13T14:16:31.570Z",
+  "startTime": "2026-01-26T09:21:33.888Z",
+  "endTime": "2026-01-26T09:21:35.135Z",
   "environment": "development",
   "input": {
     "messages": [
@@ -617,7 +617,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+        "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
       }
     ]
   },
@@ -628,7 +628,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "4ecc77db-481d-4a19-be02-f9857ffb334f"
+        "id": "ae0618e4-72ed-4502-a186-6ad5dac8feb3"
       },
       {
         "content": "",
@@ -653,14 +653,14 @@
           },
           "model_provider": "openai",
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_f4ae844694",
-          "id": "chatcmpl-D8oG558sJM3K6gJv64UgHtRndWi2w",
+          "system_fingerprint": "fp_8bbc38b4db",
+          "id": "chatcmpl-D2D4ozmBe4KOCXSH9VkPPouu9JUYj",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019c575c-3c92-7290-a913-9c21d89f2453-0",
+        "id": "lc_run--019bf99b-c4c4-7c21-89db-b24040b71eea-0",
         "tool_calls": [
           {
             "name": "multiply",
@@ -668,7 +668,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_URoN7n7frAJuMsCXsTwp0v48",
+            "id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
             "type": "tool_call"
           }
         ],
@@ -693,12 +693,12 @@
         "response_metadata": {},
         "type": "tool",
         "name": "multiply",
-        "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-        "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+        "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+        "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
         "status": "success"
       },
       {
-        "content": "8 multiplied by 6 equals 48.",
+        "content": "8 multiplied by 6 is 48.",
         "additional_kwargs": {
           "refusal": null
         },
@@ -720,14 +720,14 @@
           },
           "model_provider": "openai",
           "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_f4ae844694",
-          "id": "chatcmpl-D8oG6PTK3aezMYrONBhTJATCgpzcr",
+          "system_fingerprint": "fp_c4585b5b9c",
+          "id": "chatcmpl-D2D4obmXmyh8zs5eqDm0SviuErZ1J",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019c575c-4231-7541-adea-cad23110ac3b-0",
+        "id": "lc_run--019bf99b-c81a-7422-8f10-8779f143676a-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -756,8 +756,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "multiply",
-        "id": "16ebf501-37a9-4c3f-a96a-f518f14edc7a",
-        "tool_call_id": "call_URoN7n7frAJuMsCXsTwp0v48",
+        "id": "ce2de6a6-459a-43bd-af7d-4cc45b9b4e83",
+        "tool_call_id": "call_JZ1U0m4SJ83u5fGTay1DJS6w",
         "status": "success"
       },
       "inputParameters": {
