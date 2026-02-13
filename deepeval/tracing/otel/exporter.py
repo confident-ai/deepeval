@@ -524,12 +524,17 @@ class ConfidentSpanExporter(SpanExporter):
                 except Exception:
                     pass
             prompt = span.attributes.get("confident.span.prompt")
+            prompt_alias = span.attributes.get("confident.span.prompt_alias")
+            prompt_commit_hash = span.attributes.get("confident.span.prompt_commit_hash")
+            prompt_label = span.attributes.get("confident.span.prompt_label")
+            prompt_version = span.attributes.get("confident.span.prompt_version")
             confident_prompt = None
             if prompt and isinstance(prompt, str):
                 prompt = json.loads(prompt)
                 try:
                     confident_prompt = Prompt(alias=prompt["alias"])
                     confident_prompt.hash = prompt["hash"]
+                    confident_prompt.version = prompt["version"]
                 except Exception:
                     pass
 
@@ -550,7 +555,11 @@ class ConfidentSpanExporter(SpanExporter):
                 output_token_count=output_token_count,
                 input=input,
                 output=output,
-                prompt=confident_prompt,
+                # prompt=confident_prompt,
+                prompt_alias=prompt_alias,                
+                prompt_commit_hash=prompt_commit_hash,
+                prompt_label=prompt_label,
+                prompt_version=prompt_version,
             )
             return llm_span
 
