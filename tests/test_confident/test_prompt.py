@@ -72,7 +72,7 @@ class TestPromptText:
     ALIAS = "test_prompt_text"
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_text_interpolation_type"
     LABEL = "STAGING"
-    LABEL_VERSION = "00.06.95"
+    LABEL_VERSION = "00.17.93"
 
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
