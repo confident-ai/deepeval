@@ -116,7 +116,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     if llm_span_context
                     else None
                 ),
-                # prompt=llm_span_context.prompt if llm_span_context else None,
+                prompt=llm_span_context.prompt if llm_span_context else None,
                 prompt_alias=(
                     llm_span_context.prompt.alias if llm_span_context else None
                 ),
