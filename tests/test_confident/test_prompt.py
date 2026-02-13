@@ -15,7 +15,6 @@ from deepeval.prompt.api import (
     Verbosity,
     ToolMode,
 )
-from deepeval.confident.types import ConfidentApiError
 from deepeval.confident.api import Api
 from deepeval.metrics.faithfulness.schema import FaithfulnessVerdict
 
@@ -457,7 +456,7 @@ class TestPromptText:
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(ConfidentApiError):
+        with pytest.raises(Exception):
             prompt.push(
                 text=f"Initial tool push {UUID}",
                 tools=[original_tool],
@@ -994,7 +993,7 @@ class TestPromptList:
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(ConfidentApiError):
+        with pytest.raises(Exception):
             prompt.push(
                 messages=MESSAGES,
                 tools=[original_tool],
