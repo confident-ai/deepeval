@@ -529,7 +529,7 @@ class ConfidentSpanExporter(SpanExporter):
                 prompt = json.loads(prompt)
                 try:
                     confident_prompt = Prompt(alias=prompt["alias"])
-                    confident_prompt.version = prompt["version"]
+                    confident_prompt.hash = prompt["hash"]
                 except Exception:
                     pass
 

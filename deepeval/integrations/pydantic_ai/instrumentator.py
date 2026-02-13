@@ -239,6 +239,7 @@ class SpanInterceptor(SpanProcessor):
                     {
                         "alias": self.settings.confident_prompt.alias,
                         "version": self.settings.confident_prompt.version,
+                        "hash": self.settings.confident_prompt.hash,
                     }
                 ),
             )

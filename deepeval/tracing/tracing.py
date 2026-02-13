@@ -773,7 +773,8 @@ class TraceManager:
             api_span.model = span.model
             alias = span.prompt.alias if span.prompt else None
             version = span.prompt.version if span.prompt else None
-            api_span.prompt = PromptApi(alias=alias, version=version)
+            hash = span.prompt.hash if span.prompt else None
+            api_span.prompt = PromptApi(alias=alias, version=version, hash=hash)
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
             api_span.input_token_count = span.input_token_count

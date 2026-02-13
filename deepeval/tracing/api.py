@@ -25,6 +25,7 @@ class TraceSpanApiStatus(Enum):
 class PromptApi(BaseModel):
     alias: Optional[str] = None
     version: Optional[str] = None
+    hash: Optional[str] = None
 
 
 class MetricData(BaseModel):
