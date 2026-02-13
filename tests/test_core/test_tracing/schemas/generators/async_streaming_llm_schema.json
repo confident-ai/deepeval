@@ -14,7 +14,6 @@
         "prompt": "Test async prompt"
       },
       "model": "gpt-4-turbo",
-      "prompt": {},
       "inputTokenCount": 3.0,
       "outputTokenCount": 4.0
     }

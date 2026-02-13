@@ -14,7 +14,6 @@
         "prompt": "Test prompt"
       },
       "model": "gpt-4",
-      "prompt": {},
       "inputTokenCount": 2.0,
       "outputTokenCount": 4.0
     }
