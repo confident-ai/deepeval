@@ -777,7 +777,9 @@ class TraceManager:
             api_span.input_token_count = span.input_token_count
             api_span.output_token_count = span.output_token_count
             api_span.prompt_alias = span.prompt.alias or span.prompt_alias
-            api_span.prompt_commit_hash = span.prompt.hash or span.prompt_commit_hash
+            api_span.prompt_commit_hash = (
+                span.prompt.hash or span.prompt_commit_hash
+            )
             api_span.prompt_label = span.prompt.label or span.prompt_label
             api_span.prompt_version = span.prompt.version or span.prompt_version
 

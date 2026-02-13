@@ -117,10 +117,20 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     else None
                 ),
                 # prompt=llm_span_context.prompt if llm_span_context else None,
-                prompt_alias=llm_span_context.prompt.alias if llm_span_context else None,
-                prompt_commit_hash=llm_span_context.prompt.hash if llm_span_context else None,
-                prompt_label=llm_span_context.prompt.label if llm_span_context else None,
-                prompt_version=llm_span_context.prompt.version if llm_span_context else None,
+                prompt_alias=(
+                    llm_span_context.prompt.alias if llm_span_context else None
+                ),
+                prompt_commit_hash=(
+                    llm_span_context.prompt.hash if llm_span_context else None
+                ),
+                prompt_label=(
+                    llm_span_context.prompt.label if llm_span_context else None
+                ),
+                prompt_version=(
+                    llm_span_context.prompt.version
+                    if llm_span_context
+                    else None
+                ),
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
