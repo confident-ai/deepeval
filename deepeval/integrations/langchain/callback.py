@@ -381,6 +381,11 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.metrics = md.get("metrics")
             llm_span.metric_collection = md.get("metric_collection")
             llm_span.prompt = md.get("prompt")
+            prompt = md.get("prompt")
+            llm_span.prompt_alias = prompt.alias if prompt else None
+            llm_span.prompt_commit_hash = prompt.hash if prompt else None
+            llm_span.prompt_label = prompt.label if prompt else None
+            llm_span.prompt_version = prompt.version if prompt else None
 
     def on_llm_start(
         self,
@@ -428,6 +433,11 @@ class CallbackHandler(BaseCallbackHandler):
             llm_span.metrics = md.get("metrics")
             llm_span.metric_collection = md.get("metric_collection")
             llm_span.prompt = md.get("prompt")
+            prompt = md.get("prompt")
+            llm_span.prompt_alias = prompt.alias if prompt else None
+            llm_span.prompt_commit_hash = prompt.hash if prompt else None
+            llm_span.prompt_label = prompt.label if prompt else None
+            llm_span.prompt_version = prompt.version if prompt else None
 
     def on_llm_end(
         self,

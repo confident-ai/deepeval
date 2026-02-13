@@ -771,14 +771,17 @@ class TraceManager:
             api_span.chunk_size = span.chunk_size
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
-            alias = span.prompt.alias if span.prompt else None
-            version = span.prompt.version if span.prompt else None
-            hash = span.prompt.hash if span.prompt else None
-            api_span.prompt = PromptApi(alias=alias, version=version, hash=hash)
+            # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
             api_span.input_token_count = span.input_token_count
             api_span.output_token_count = span.output_token_count
+            api_span.prompt_alias = span.prompt.alias or span.prompt_alias
+            api_span.prompt_commit_hash = (
+                span.prompt.hash or span.prompt_commit_hash
+            )
+            api_span.prompt_label = span.prompt.label or span.prompt_label
+            api_span.prompt_version = span.prompt.version or span.prompt_version
 
             processed_token_intervals = {}
             if span.token_intervals:
