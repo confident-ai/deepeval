@@ -123,7 +123,7 @@ class Endpoints(Enum):
     METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
-    PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:versionId"
+    PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:version"
     PROMPTS_LABEL_ENDPOINT = "/v1/prompts/:alias/labels/:label"
     PROMPTS_ENDPOINT = "/v1/prompts"
     PROMPTS_VERSIONS_ENDPOINT = "/v1/prompts/:alias/versions"

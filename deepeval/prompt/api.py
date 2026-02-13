@@ -198,7 +198,7 @@ class PromptCommitsHttpResponse(BaseModel):
 
 
 class PromptCreateVersion(BaseModel):
-    commit: Optional[str] = None
+    hash: Optional[str] = None
 
 
 class PromptVersionsHttpResponse(BaseModel):

@@ -588,7 +588,7 @@ class Prompt:
                         endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
                         url_params={
                             "alias": self.alias,
-                            "versionId": version,
+                            "version": version,
                         },
                     )
                 else:
@@ -682,7 +682,7 @@ class Prompt:
                 "Prompt alias is not set. Please set an alias to continue."
             )
 
-        body = PromptCreateVersion(commit=hash)
+        body = PromptCreateVersion(hash=hash)
         try:
             body = body.model_dump(
                 by_alias=True, exclude_none=True, mode="json"
@@ -906,7 +906,7 @@ class Prompt:
                         endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
                         url_params={
                             "alias": self.alias,
-                            "versionId": version,
+                            "version": version,
                         },
                     )
                 else:
