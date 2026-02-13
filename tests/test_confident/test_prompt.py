@@ -206,7 +206,7 @@ class TestPromptText:
     def test_cache_functionality(self):
         """Test that pulling from cache doesn't make API requests"""
         unique_alias = f"{self.ALIAS}_cache_{uuid.uuid4().hex[:8]}"
-        
+
         # First, ensure the prompt exists on the backend to be cached
         prompt_setup = Prompt(alias=unique_alias)
         prompt_setup.push(text=f"Setup cache content {uuid.uuid4()}")
@@ -457,7 +457,7 @@ class TestPromptText:
             mode=ToolMode.NO_ADDITIONAL,
             structured_schema=ToolInputSchema,
         )
-        
+
         with pytest.raises(Exception):
             prompt.push(
                 text=f"Initial tool push {UUID}",
@@ -610,7 +610,9 @@ class TestPromptList:
         assert prompt.interpolation_type == PromptInterpolationType.FSTRING
 
     def test_push_with_interpolation_type(self):
-        unique_alias = f"{self.ALIAS_WITH_INTERPOLATION_TYPE}_{uuid.uuid4().hex[:8]}"
+        unique_alias = (
+            f"{self.ALIAS_WITH_INTERPOLATION_TYPE}_{uuid.uuid4().hex[:8]}"
+        )
         prompt = Prompt(alias=unique_alias)
 
         UUID = str(uuid.uuid4())
