@@ -559,7 +559,7 @@ class ConfidentSpanExporter(SpanExporter):
                 output_token_count=output_token_count,
                 input=input,
                 output=output,
-                # prompt=confident_prompt,
+                prompt=confident_prompt,
                 prompt_alias=prompt_alias,
                 prompt_commit_hash=prompt_commit_hash,
                 prompt_label=prompt_label,
