@@ -117,29 +117,29 @@ class TestPromptText:
     def test_pull_by_hash_latest(self):
         prompt = Prompt(alias=self.ALIAS)
         UUID = uuid.uuid4()
-        
+
         prompt.push(text=f"Latest content {UUID}")
         latest_hash = prompt.hash
-        
+
         prompt2 = Prompt(alias=self.ALIAS)
         prompt2.pull()
-        
+
         assert prompt2.hash == latest_hash
         assert prompt2.text_template == f"Latest content {UUID}"
 
     def test_pull_by_hash_specific(self):
         prompt = Prompt(alias=self.ALIAS)
-        
+
         UUID1 = uuid.uuid4()
         prompt.push(text=f"Version 1 {UUID1}")
         hash1 = prompt.hash
-        
+
         UUID2 = uuid.uuid4()
         prompt.push(text=f"Version 2 {UUID2}")
-        
+
         prompt2 = Prompt(alias=self.ALIAS)
         prompt2.pull(hash=hash1)
-        
+
         assert prompt2.hash == hash1
         assert prompt2.text_template == f"Version 1 {UUID1}"
 
@@ -245,7 +245,9 @@ class TestPromptText:
 
             time.sleep(5)  # polls twice in 5 seconds
 
-            assert spy_api.call_count >= 2 # At least 1 polling happens after the pull
+            assert (
+                spy_api.call_count >= 2
+            )  # At least 1 polling happens after the pull
             prompt._stop_polling()
 
     def test_label_polling(self):
@@ -257,7 +259,9 @@ class TestPromptText:
             time.sleep(5)  # polls twice in 5 seconds
 
             assert prompt.version == self.LABEL_VERSION
-            assert spy_api.call_count >= 2 # At least 1 polling happens after the pull
+            assert (
+                spy_api.call_count >= 2
+            )  # At least 1 polling happens after the pull
             prompt._stop_polling()
 
     def test_push_with_simple_output_schema(self):
@@ -532,9 +536,7 @@ class TestPromptText:
         assert "nested_obj" in input_schema["properties"]
 
         # Verify nested structure
-        nested_props = input_schema["properties"]["nested_obj"][
-            "properties"
-        ]
+        nested_props = input_schema["properties"]["nested_obj"]["properties"]
         assert "level2_field" in nested_props
         assert "deep_object" in nested_props
 
@@ -592,9 +594,7 @@ class TestPromptList:
 
         UUID = str(uuid.uuid4())
 
-        MESSAGES = [
-            PromptMessage(role="user", content=f"Hello, world! {UUID}")
-        ]
+        MESSAGES = [PromptMessage(role="user", content=f"Hello, world! {UUID}")]
 
         # generate uuid
         prompt.push(messages=MESSAGES)
@@ -612,9 +612,7 @@ class TestPromptList:
         prompt = Prompt(alias=self.ALIAS_WITH_INTERPOLATION_TYPE)
 
         UUID = str(uuid.uuid4())
-        MESSAGES = [
-            PromptMessage(role="user", content=f"Hello, world! {UUID}")
-        ]
+        MESSAGES = [PromptMessage(role="user", content=f"Hello, world! {UUID}")]
 
         prompt.push(
             messages=MESSAGES,
@@ -633,38 +631,34 @@ class TestPromptList:
     def test_pull_by_hash_latest(self):
         prompt = Prompt(alias=self.ALIAS)
         UUID = uuid.uuid4()
-        
+
         MESSAGES = [
             PromptMessage(role="user", content=f"Latest content {UUID}")
         ]
         prompt.push(messages=MESSAGES)
         latest_hash = prompt.hash
-        
+
         prompt2 = Prompt(alias=self.ALIAS)
         prompt2.pull()
-        
+
         assert prompt2.hash == latest_hash
         assert prompt2.messages_template == MESSAGES
 
     def test_pull_by_hash_specific(self):
         prompt = Prompt(alias=self.ALIAS)
-        
+
         UUID1 = uuid.uuid4()
-        MESSAGES1 = [
-            PromptMessage(role="user", content=f"Version 1 {UUID1}")
-        ]
+        MESSAGES1 = [PromptMessage(role="user", content=f"Version 1 {UUID1}")]
         prompt.push(messages=MESSAGES1)
         hash1 = prompt.hash
-        
+
         UUID2 = uuid.uuid4()
-        MESSAGES2 = [
-            PromptMessage(role="user", content=f"Version 2 {UUID2}")
-        ]
+        MESSAGES2 = [PromptMessage(role="user", content=f"Version 2 {UUID2}")]
         prompt.push(messages=MESSAGES2)
-        
+
         prompt2 = Prompt(alias=self.ALIAS)
         prompt2.pull(hash=hash1)
-        
+
         assert prompt2.hash == hash1
         assert prompt2.messages_template == MESSAGES1
 
@@ -770,7 +764,9 @@ class TestPromptList:
 
             time.sleep(5)  # polls twice in 5 seconds
 
-            assert spy_api.call_count >= 2 # At least 1 polling happens after the pull
+            assert (
+                spy_api.call_count >= 2
+            )  # At least 1 polling happens after the pull
             prompt._stop_polling()
 
     def test_label_polling(self):
@@ -782,7 +778,9 @@ class TestPromptList:
             time.sleep(5)  # polls twice in 5 seconds
 
             assert prompt.version == self.LABEL_VERSION
-            assert spy_api.call_count >= 2 # At least 1 polling happens after the pull
+            assert (
+                spy_api.call_count >= 2
+            )  # At least 1 polling happens after the pull
             prompt._stop_polling()
 
     def test_push_with_simple_output_schema(self):
@@ -790,9 +788,7 @@ class TestPromptList:
         prompt = Prompt(alias=ALIAS)
 
         UUID = uuid.uuid4()
-        MESSAGES = [
-            PromptMessage(role="user", content=f"Generate data {UUID}")
-        ]
+        MESSAGES = [PromptMessage(role="user", content=f"Generate data {UUID}")]
 
         prompt.push(
             messages=MESSAGES,
@@ -853,7 +849,9 @@ class TestPromptList:
 
         UUID = uuid.uuid4()
         MESSAGES = [
-            PromptMessage(role="user", content=f"Generate very complex data {UUID}")
+            PromptMessage(
+                role="user", content=f"Generate very complex data {UUID}"
+            )
         ]
 
         prompt.push(
@@ -1081,9 +1079,7 @@ class TestPromptList:
         assert "nested_obj" in input_schema["properties"]
 
         # Verify nested structure
-        nested_props = input_schema["properties"]["nested_obj"][
-            "properties"
-        ]
+        nested_props = input_schema["properties"]["nested_obj"]["properties"]
         assert "level2_field" in nested_props
         assert "deep_object" in nested_props
 
@@ -1094,9 +1090,7 @@ class TestPromptList:
 
         UUID = uuid.uuid4()
         TOOL_NAME = f"CachedTool_{UUID}"
-        MESSAGES = [
-            PromptMessage(role="user", content=f"Cache test {UUID}")
-        ]
+        MESSAGES = [PromptMessage(role="user", content=f"Cache test {UUID}")]
 
         tool = Tool(
             name=TOOL_NAME,
