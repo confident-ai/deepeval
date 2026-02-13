@@ -143,6 +143,11 @@ def update_llm_span(
         current_span.token_intervals = token_intervals
     if prompt:
         current_span.prompt = prompt
+        # Updating on span as well
+        current_span.prompt_alias = prompt.alias
+        current_span.prompt_commit_hash = prompt.hash
+        current_span.prompt_label = prompt.label
+        current_span.prompt_version = prompt.version
 
 
 def update_retriever_span(
