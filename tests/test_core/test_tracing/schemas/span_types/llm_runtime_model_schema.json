@@ -15,7 +15,6 @@
       },
       "output": "Generated: Hello",
       "model": "claude-3-opus",
-      "prompt": {},
       "inputTokenCount": 20.0,
       "outputTokenCount": 40.0
     }

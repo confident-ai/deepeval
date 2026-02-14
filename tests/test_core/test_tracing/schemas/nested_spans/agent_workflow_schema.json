@@ -30,8 +30,7 @@
         "context": "Retrieved docs for: search query"
       },
       "output": "Generated from: Retrieved docs for: search query",
-      "model": "gpt-4",
-      "prompt": {}
+      "model": "gpt-4"
     }
   ],
   "retrieverSpans": [
