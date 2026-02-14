@@ -14,8 +14,7 @@
         "prompt": "Test"
       },
       "output": "Named LLM: Test",
-      "model": "gpt-4",
-      "prompt": {}
+      "model": "gpt-4"
     }
   ],
   "retrieverSpans": [],

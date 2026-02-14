@@ -30,8 +30,7 @@
         "context": "Async docs: async query"
       },
       "output": "Async response: Async docs: async query",
-      "model": "gpt-4",
-      "prompt": {}
+      "model": "gpt-4"
     }
   ],
   "retrieverSpans": [

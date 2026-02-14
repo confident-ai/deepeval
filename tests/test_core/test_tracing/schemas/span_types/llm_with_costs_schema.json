@@ -15,7 +15,6 @@
       },
       "output": "Premium response: Premium query",
       "model": "gpt-4-turbo",
-      "prompt": {},
       "inputTokenCount": 10.0,
       "outputTokenCount": 20.0,
       "costPerInputToken": 0.01,

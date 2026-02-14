@@ -15,7 +15,6 @@
       },
       "output": "Generated response to: Hello world",
       "model": "gpt-4",
-      "prompt": {},
       "inputTokenCount": 2.0,
       "outputTokenCount": 5.0
     }

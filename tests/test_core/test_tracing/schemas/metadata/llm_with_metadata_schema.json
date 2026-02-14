@@ -18,8 +18,7 @@
         "prompt": "Hello"
       },
       "output": "Response: Hello",
-      "model": "gpt-4",
-      "prompt": {}
+      "model": "gpt-4"
     }
   ],
   "retrieverSpans": [],

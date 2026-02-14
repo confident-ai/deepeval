@@ -13,8 +13,7 @@
       "input": {
         "prompt": "Simple prompt"
       },
-      "output": "Response: Simple prompt",
-      "prompt": {}
+      "output": "Response: Simple prompt"
     }
   ],
   "retrieverSpans": [],

@@ -15,7 +15,6 @@
       },
       "output": "Full attributes response",
       "model": "gpt-4",
-      "prompt": {},
       "inputTokenCount": 100.0,
       "outputTokenCount": 500.0,
       "costPerInputToken": 0.03,
