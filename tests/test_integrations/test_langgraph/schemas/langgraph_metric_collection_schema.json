@@ -1,13 +1,13 @@
 {
-  "uuid": "6c932118-cfe7-4400-b190-19a92a97fa56",
+  "uuid": "1456093b-bbf4-49e3-968d-426c33a23404",
   "baseSpans": [
     {
-      "uuid": "019bfcb9-a61a-7fd0-965e-feec76464d9b",
+      "uuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T23:53:03.770Z",
-      "endTime": "2026-01-26T23:53:08.254Z",
+      "startTime": "2026-02-15T06:38:16.618Z",
+      "endTime": "2026-02-15T06:38:19.915Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           },
           {
             "content": "",
@@ -52,20 +52,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -90,8 +90,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "5db2b156-c69a-4377-8679-1820eec32394",
-            "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
             "status": "success"
           },
           {
@@ -118,13 +118,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgDJ90angwYJxZh7D2X9yhXEXuC",
+              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-ae42-7a03-a55b-c1601e5cd698-0",
+            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -146,13 +146,13 @@
       "metricCollection": "trace_quality"
     },
     {
-      "uuid": "019bfcb9-ae42-7a03-a55b-c1505f7313ea",
+      "uuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-a61a-7fd0-965e-feec76464d9b",
-      "startTime": "2026-01-26T23:53:05.858Z",
-      "endTime": "2026-01-26T23:53:08.254Z",
+      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
+      "startTime": "2026-02-15T06:38:18.086Z",
+      "endTime": "2026-02-15T06:38:19.914Z",
       "input": {
         "messages": [
           {
@@ -160,7 +160,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           },
           {
             "content": "",
@@ -186,20 +186,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -224,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "5db2b156-c69a-4377-8679-1820eec32394",
-            "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
             "status": "success"
           }
         ]
@@ -256,13 +256,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgDJ90angwYJxZh7D2X9yhXEXuC",
+              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-ae42-7a03-a55b-c1601e5cd698-0",
+            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -283,13 +283,13 @@
       }
     },
     {
-      "uuid": "019bfcb9-b79e-7c22-b8a7-c851e285385d",
+      "uuid": "019c6005-830a-78c2-bb4e-7fbc2556427c",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-ae42-7a03-a55b-c1505f7313ea",
-      "startTime": "2026-01-26T23:53:08.254Z",
-      "endTime": "2026-01-26T23:53:08.254Z",
+      "parentUuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
+      "startTime": "2026-02-15T06:38:19.914Z",
+      "endTime": "2026-02-15T06:38:19.914Z",
       "input": {
         "messages": [
           {
@@ -297,7 +297,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           },
           {
             "content": "",
@@ -323,20 +323,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -361,8 +361,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "5db2b156-c69a-4377-8679-1820eec32394",
-            "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
             "status": "success"
           },
           {
@@ -389,13 +389,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgDJ90angwYJxZh7D2X9yhXEXuC",
+              "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-ae42-7a03-a55b-c1601e5cd698-0",
+            "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -417,13 +417,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bfcb9-ae40-7762-a36c-bd9831d38c91",
+      "uuid": "019c6005-7be3-76f3-a7d9-11fb1159d3a9",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-a61a-7fd0-965e-feec76464d9b",
-      "startTime": "2026-01-26T23:53:05.856Z",
-      "endTime": "2026-01-26T23:53:05.858Z",
+      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
+      "startTime": "2026-02-15T06:38:18.083Z",
+      "endTime": "2026-02-15T06:38:18.085Z",
       "input": {
         "messages": [
           {
@@ -431,7 +431,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           },
           {
             "content": "",
@@ -457,20 +457,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -499,8 +499,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "5db2b156-c69a-4377-8679-1820eec32394",
-            "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
             "status": "success"
           }
         ]
@@ -514,8 +514,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "convert_temperature",
-            "id": "5db2b156-c69a-4377-8679-1820eec32394",
-            "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+            "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
             "status": "success"
           },
           "inputParameters": {
@@ -525,13 +525,13 @@
       ]
     },
     {
-      "uuid": "019bfcb9-a61c-7423-ae92-95e2cd961d63",
+      "uuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-a61a-7fd0-965e-feec76464d9b",
-      "startTime": "2026-01-26T23:53:03.772Z",
-      "endTime": "2026-01-26T23:53:05.855Z",
+      "parentUuid": "019c6005-762a-7a90-a1d3-623b95abfaae",
+      "startTime": "2026-02-15T06:38:16.618Z",
+      "endTime": "2026-02-15T06:38:18.082Z",
       "input": {
         "messages": [
           {
@@ -539,7 +539,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           }
         ]
       },
@@ -569,20 +569,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -605,13 +605,13 @@
       }
     },
     {
-      "uuid": "019bfcb9-ae3f-7bd2-911c-bc40c00371d6",
+      "uuid": "019c6005-7be2-7563-aae5-3d31fefb89c5",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-a61c-7423-ae92-95e2cd961d63",
-      "startTime": "2026-01-26T23:53:05.855Z",
-      "endTime": "2026-01-26T23:53:05.855Z",
+      "parentUuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
+      "startTime": "2026-02-15T06:38:18.082Z",
+      "endTime": "2026-02-15T06:38:18.082Z",
       "input": {
         "messages": [
           {
@@ -619,7 +619,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+            "id": "ab3e6df2-60fa-479b-a502-49180165f957"
           },
           {
             "content": "",
@@ -645,20 +645,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+              "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+            "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
             "tool_calls": [
               {
                 "name": "convert_temperature",
                 "args": {
                   "celsius": 25
                 },
-                "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+                "id": "call_o47YwDseY2waWs1oflXVFm5A",
                 "type": "tool_call"
               }
             ],
@@ -686,13 +686,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bfcb9-ae42-7a03-a55b-c1601e5cd698",
+      "uuid": "019c6005-7be6-7c22-9fe7-63c70cddae90",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcb9-ae42-7a03-a55b-c1505f7313ea",
-      "startTime": "2026-01-26T23:53:05.858Z",
-      "endTime": "2026-01-26T23:53:08.253Z",
+      "parentUuid": "019c6005-7be6-7c22-9fe7-63baee27a8e6",
+      "startTime": "2026-02-15T06:38:18.086Z",
+      "endTime": "2026-02-15T06:38:19.913Z",
       "input": [
         {
           "role": "human",
@@ -717,22 +717,22 @@
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {
-        "alias": "langgraph-metric-collection-prompt",
-        "version": "02.00.00"
-      },
       "inputTokenCount": 187.0,
       "outputTokenCount": 81.0,
-      "metricCollection": "llm_accuracy"
+      "metricCollection": "llm_accuracy",
+      "promptAlias": "langgraph-metric-collection-prompt",
+      "promptVersion": "02.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "019bfcb9-a61c-7423-ae92-95f0dcb59f11",
+      "uuid": "019c6005-762b-7850-be30-fcfe2815876d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcb9-a61c-7423-ae92-95e2cd961d63",
-      "startTime": "2026-01-26T23:53:03.772Z",
-      "endTime": "2026-01-26T23:53:05.855Z",
+      "parentUuid": "019c6005-762a-7a90-a1d3-6244433e9e63",
+      "startTime": "2026-02-15T06:38:16.619Z",
+      "endTime": "2026-02-15T06:38:18.082Z",
       "input": [
         {
           "role": "human",
@@ -752,30 +752,30 @@
             "args": {
               "celsius": 25
             },
-            "id": "call_ktBSusAi2hM83g9yg6oaA9R1"
+            "id": "call_o47YwDseY2waWs1oflXVFm5A"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {
-        "alias": "langgraph-metric-collection-prompt",
-        "version": "02.00.00"
-      },
       "inputTokenCount": 148.0,
       "outputTokenCount": 24.0,
-      "metricCollection": "llm_accuracy"
+      "metricCollection": "llm_accuracy",
+      "promptAlias": "langgraph-metric-collection-prompt",
+      "promptVersion": "02.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bfcb9-ae41-7cb3-b101-d0ea28b32d96",
+      "uuid": "019c6005-7be4-7272-8a38-585e3c3da71c",
       "name": "convert_temperature",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcb9-ae40-7762-a36c-bd9831d38c91",
-      "startTime": "2026-01-26T23:53:05.857Z",
-      "endTime": "2026-01-26T23:53:05.857Z",
+      "parentUuid": "019c6005-7be3-76f3-a7d9-11fb1159d3a9",
+      "startTime": "2026-02-15T06:38:18.084Z",
+      "endTime": "2026-02-15T06:38:18.085Z",
       "input": {
         "celsius": 25
       },
@@ -785,14 +785,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "convert_temperature",
-        "id": "5db2b156-c69a-4377-8679-1820eec32394",
-        "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T23:53:03.770Z",
-  "endTime": "2026-01-26T23:53:08.254Z",
+  "startTime": "2026-02-15T06:38:16.618Z",
+  "endTime": "2026-02-15T06:38:19.915Z",
   "name": "langgraph-metric-collection",
   "metadata": {
     "test_type": "metric_collection"
@@ -809,7 +809,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+        "id": "ab3e6df2-60fa-479b-a502-49180165f957"
       }
     ]
   },
@@ -820,7 +820,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "2996d51c-675b-43eb-80c7-de45e2bd3bbf"
+        "id": "ab3e6df2-60fa-479b-a502-49180165f957"
       },
       {
         "content": "",
@@ -846,20 +846,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2QgCWyKXUOn5wreBtPdD7jpwFXER",
+          "id": "chatcmpl-D9Q3lp8B9J3ADmGpQNFcMDoqzik1U",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcb9-a61c-7423-ae92-95f0dcb59f11-0",
+        "id": "lc_run--019c6005-762b-7850-be30-fcfe2815876d-0",
         "tool_calls": [
           {
             "name": "convert_temperature",
             "args": {
               "celsius": 25
             },
-            "id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+            "id": "call_o47YwDseY2waWs1oflXVFm5A",
             "type": "tool_call"
           }
         ],
@@ -884,8 +884,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "convert_temperature",
-        "id": "5db2b156-c69a-4377-8679-1820eec32394",
-        "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
         "status": "success"
       },
       {
@@ -912,13 +912,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2QgDJ90angwYJxZh7D2X9yhXEXuC",
+          "id": "chatcmpl-D9Q3mlbAxPCE3qdZ5QXYy1wYSUMke",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcb9-ae42-7a03-a55b-c1601e5cd698-0",
+        "id": "lc_run--019c6005-7be6-7c22-9fe7-63c70cddae90-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -947,8 +947,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "convert_temperature",
-        "id": "5db2b156-c69a-4377-8679-1820eec32394",
-        "tool_call_id": "call_ktBSusAi2hM83g9yg6oaA9R1",
+        "id": "448c44b5-6794-478f-b5a7-772f55d6fac2",
+        "tool_call_id": "call_o47YwDseY2waWs1oflXVFm5A",
         "status": "success"
       },
       "inputParameters": {
