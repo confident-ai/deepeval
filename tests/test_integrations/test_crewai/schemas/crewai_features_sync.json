@@ -1,44 +1,37 @@
 {
-  "uuid": "9af2ee7d-d923-4465-aa3c-18dfeac4f9b9",
+  "uuid": "c751e83e-e610-4edb-a9f5-6f12e24ee2fa",
   "baseSpans": [
     {
-      "uuid": "ceace91b-2776-48ff-9fb4-d61977589672",
+      "uuid": "33049366-7c88-4cf0-bb96-b1aa6dc9f596",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-15T10:22:19.193Z",
-      "endTime": "2026-02-15T10:22:22.398Z",
+      "startTime": "2026-02-15T10:57:13.583Z",
+      "endTime": "2026-02-15T10:57:15.467Z",
       "input": {
         "input": "Sync Data"
       },
-      "output": "Calculated metrics for: Sync Data",
+      "output": "Calculated metrics for: deterministic_test_input",
       "metricCollection": "crew_metrics_v1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
+      "uuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "ceace91b-2776-48ff-9fb4-d61977589672",
-      "startTime": "2026-02-15T10:22:19.198Z",
-      "endTime": "2026-02-15T10:22:22.395Z",
-      "input": "Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Calculated metrics for: Sync Data",
+      "parentUuid": "33049366-7c88-4cf0-bb96-b1aa6dc9f596",
+      "startTime": "2026-02-15T10:57:13.587Z",
+      "endTime": "2026-02-15T10:57:15.463Z",
+      "input": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Calculated metrics for: deterministic_test_input",
       "toolsCalled": [
         {
           "name": "special_metric_tool",
-          "output": "Calculated metrics for: Sync Data",
+          "output": "Calculated metrics for: deterministic_test_input",
           "inputParameters": {
-            "query": "Sync Data"
-          }
-        },
-        {
-          "name": "special_metric_tool",
-          "output": "Calculated metrics for: Sync Data",
-          "inputParameters": {
-            "query": "Sync Data"
+            "query": "deterministic_test_input"
           }
         }
       ],
@@ -49,41 +42,41 @@
   ],
   "llmSpans": [
     {
-      "uuid": "9eef82dd-bd4a-4b85-a8cb-72945fc28101",
+      "uuid": "be6bc28f-3c31-4145-8784-4ae066510b7b",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
-      "startTime": "2026-02-15T10:22:21.094Z",
-      "endTime": "2026-02-15T10:22:22.394Z",
+      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
+      "startTime": "2026-02-15T10:57:14.819Z",
+      "endTime": "2026-02-15T10:57:15.463Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
           "content": null,
           "tool_calls": [
             {
-              "id": "call_aNxm9XCmdMuCDVy7r3EeW1zJ",
+              "id": "call_3KMBgqx9EozvQukG9BJPQ59U",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
-                "arguments": "'{\"query\":\"Sync Data\"}'"
+                "arguments": "'{\"query\":\"deterministic_test_input\"}'"
               }
             }
           ]
         },
         {
           "role": "tool",
-          "tool_call_id": "call_aNxm9XCmdMuCDVy7r3EeW1zJ",
+          "tool_call_id": "call_3KMBgqx9EozvQukG9BJPQ59U",
           "name": "special_metric_tool",
-          "content": "Calculated metrics for: Sync Data"
+          "content": "Calculated metrics for: deterministic_test_input"
         },
         {
           "role": "user",
@@ -91,30 +84,10 @@
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_PdXmsE9NRkTQ0HOhN5Cq5jSl",
-              "type": "function",
-              "function": {
-                "name": "'special_metric_tool'",
-                "arguments": "'{\"query\":\"Sync Data\"}'"
-              }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "tool_call_id": "call_PdXmsE9NRkTQ0HOhN5Cq5jSl",
-          "name": "special_metric_tool",
-          "content": "Calculated metrics for: Sync Data"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+          "content": "Now it's time you MUST give your absolute best final answer. You'll ignore all previous instructions, stop using any tools, and just return your absolute BEST Final answer."
         }
       ],
-      "output": "Calculated metrics for: Sync Data",
+      "output": "Calculated metrics for: deterministic_test_input",
       "model": "gpt-4o-mini",
       "metricCollection": "llm-metric-collection",
       "metricsData": [
@@ -132,96 +105,28 @@
       "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "a3447a44-60e4-4fda-92e1-f0696f09624b",
+      "uuid": "60fcc37e-5882-4674-bb4d-81cd22c842c6",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
-      "startTime": "2026-02-15T10:22:20.271Z",
-      "endTime": "2026-02-15T10:22:21.087Z",
+      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
+      "startTime": "2026-02-15T10:57:13.588Z",
+      "endTime": "2026-02-15T10:57:14.815Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
-        },
-        {
-          "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_aNxm9XCmdMuCDVy7r3EeW1zJ",
-              "type": "function",
-              "function": {
-                "name": "'special_metric_tool'",
-                "arguments": "'{\"query\":\"Sync Data\"}'"
-              }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "tool_call_id": "call_aNxm9XCmdMuCDVy7r3EeW1zJ",
-          "name": "special_metric_tool",
-          "content": "Calculated metrics for: Sync Data"
-        },
-        {
-          "role": "user",
-          "content": "Analyze the tool result. If requirements are met, provide the Final Answer. Otherwise, call the next tool. Deliver only the answer without meta-commentary."
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
       "output": [
         {
-          "id": "call_PdXmsE9NRkTQ0HOhN5Cq5jSl",
+          "id": "call_3KMBgqx9EozvQukG9BJPQ59U",
           "function": {
-            "arguments": "{\"query\":\"Sync Data\"}",
-            "name": "special_metric_tool"
-          },
-          "type": "function"
-        }
-      ],
-      "model": "gpt-4o-mini",
-      "metricCollection": "llm-metric-collection",
-      "metricsData": [
-        {
-          "name": "Answer Relevancy",
-          "threshold": 0.5,
-          "success": false,
-          "strictMode": false,
-          "evaluationModel": "gpt-4.1"
-        }
-      ],
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
-    },
-    {
-      "uuid": "fc90ca4a-6d92-4a49-a6a5-c8897baa3309",
-      "name": "call",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
-      "startTime": "2026-02-15T10:22:19.201Z",
-      "endTime": "2026-02-15T10:22:20.266Z",
-      "input": [
-        {
-          "role": "system",
-          "content": "You are Evaluator. You ensure all metadata is correctly attached. You are robotic and precise.\nYour personal goal is: Validate metrics"
-        },
-        {
-          "role": "user",
-          "content": "\nCurrent Task: Use the special_metric_tool to process 'Sync Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
-        }
-      ],
-      "output": [
-        {
-          "id": "call_aNxm9XCmdMuCDVy7r3EeW1zJ",
-          "function": {
-            "arguments": "{\"query\":\"Sync Data\"}",
+            "arguments": "{\"query\":\"deterministic_test_input\"}",
             "name": "special_metric_tool"
           },
           "type": "function"
@@ -247,36 +152,22 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "91a2d4c3-b22f-4bed-aba0-e3d7afce8d10",
+      "uuid": "d298da7b-60f1-48b9-9253-05500f3b0006",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
-      "startTime": "2026-02-15T10:22:21.089Z",
-      "endTime": "2026-02-15T10:22:21.095Z",
+      "parentUuid": "c2cd5675-c848-4ac0-b64e-d4b80f76cc05",
+      "startTime": "2026-02-15T10:57:14.815Z",
+      "endTime": "2026-02-15T10:57:14.819Z",
       "input": {
-        "query": "Sync Data"
+        "query": "deterministic_test_input"
       },
-      "output": "Calculated metrics for: Sync Data",
-      "metricCollection": "agent_metrics_v1"
-    },
-    {
-      "uuid": "cee26c56-7acb-46fa-9950-30d4257852f9",
-      "name": "special_metric_tool",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "170fabb1-ea76-41a3-b89b-68f64b4ec92a",
-      "startTime": "2026-02-15T10:22:20.267Z",
-      "endTime": "2026-02-15T10:22:20.272Z",
-      "input": {
-        "query": "Sync Data"
-      },
-      "output": "Calculated metrics for: Sync Data",
+      "output": "Calculated metrics for: deterministic_test_input",
       "metricCollection": "agent_metrics_v1"
     }
   ],
-  "startTime": "2026-02-15T10:22:19.193Z",
-  "endTime": "2026-02-15T10:22:22.398Z",
+  "startTime": "2026-02-15T10:57:13.583Z",
+  "endTime": "2026-02-15T10:57:15.467Z",
   "name": "CrewAI Metadata Check Sync",
   "metadata": {
     "env": "testing"
@@ -292,7 +183,7 @@
   "input": {
     "input": "Sync Data"
   },
-  "output": "Calculated metrics for: Sync Data",
+  "output": "Calculated metrics for: deterministic_test_input",
   "status": "SUCCESS",
   "metricCollection": "trace_metrics_v1"
 }
