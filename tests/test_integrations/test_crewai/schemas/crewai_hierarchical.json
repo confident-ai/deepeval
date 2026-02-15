@@ -1,26 +1,26 @@
 {
-  "uuid": "9dd4d80f-f813-4ee3-a0d2-fe59e31def2e",
+  "uuid": "b3abfe33-dfd0-4dd0-b5ec-0c220944be52",
   "baseSpans": [
     {
-      "uuid": "3cfb04a1-e2a8-431d-b8ce-a88086b5d267",
+      "uuid": "afa9ffd2-8894-47da-90dc-31584315d8b1",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T06:11:46.545Z",
-      "endTime": "2026-01-29T06:11:50.057Z",
+      "startTime": "2026-02-15T10:22:14.857Z",
+      "endTime": "2026-02-15T10:22:17.694Z",
       "input": {},
       "output": "SUCCESS"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
+      "uuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "3cfb04a1-e2a8-431d-b8ce-a88086b5d267",
-      "startTime": "2026-01-29T06:11:46.556Z",
-      "endTime": "2026-01-29T06:11:50.054Z",
+      "parentUuid": "afa9ffd2-8894-47da-90dc-31584315d8b1",
+      "startTime": "2026-02-15T10:22:14.865Z",
+      "endTime": "2026-02-15T10:22:17.687Z",
       "input": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "SUCCESS",
       "toolsCalled": [
@@ -38,13 +38,13 @@
       "agentHandoffs": []
     },
     {
-      "uuid": "f7678d90-79fc-4694-b7ab-639c057e0308",
+      "uuid": "eda4d0fb-504a-4bd9-bfbd-1212d8223bcb",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
-      "startTime": "2026-01-29T06:11:48.504Z",
-      "endTime": "2026-01-29T06:11:49.162Z",
+      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
+      "startTime": "2026-02-15T10:22:16.539Z",
+      "endTime": "2026-02-15T10:22:17.083Z",
       "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
       "output": "SUCCESS",
       "availableTools": [],
@@ -53,13 +53,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "ae83e46b-6b60-46d0-b379-f0801a20dc3a",
+      "uuid": "730dc135-a7fe-4c6d-b654-61d202a1e7fc",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
-      "startTime": "2026-01-29T06:11:49.166Z",
-      "endTime": "2026-01-29T06:11:50.054Z",
+      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
+      "startTime": "2026-02-15T10:22:17.089Z",
+      "endTime": "2026-02-15T10:22:17.684Z",
       "input": [
         {
           "role": "system",
@@ -74,7 +74,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+              "id": "call_ZOCeSudq71vvKP0v3fE02G5a",
               "type": "function",
               "function": {
                 "name": "'delegate_work_to_coworker'",
@@ -85,7 +85,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+          "tool_call_id": "call_ZOCeSudq71vvKP0v3fE02G5a",
           "name": "delegate_work_to_coworker",
           "content": "SUCCESS"
         },
@@ -95,17 +95,16 @@
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "model": "gpt-4o-mini"
     },
     {
-      "uuid": "3653ce8c-422b-47fc-b082-957d8c05958b",
+      "uuid": "5de562dd-8123-4c54-b3fe-1ae5d37615fb",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f7678d90-79fc-4694-b7ab-639c057e0308",
-      "startTime": "2026-01-29T06:11:48.506Z",
-      "endTime": "2026-01-29T06:11:49.160Z",
+      "parentUuid": "eda4d0fb-504a-4bd9-bfbd-1212d8223bcb",
+      "startTime": "2026-02-15T10:22:16.543Z",
+      "endTime": "2026-02-15T10:22:17.080Z",
       "input": [
         {
           "role": "system",
@@ -117,17 +116,16 @@
         }
       ],
       "output": "SUCCESS",
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "model": "gpt-4o-mini"
     },
     {
-      "uuid": "102b0a4d-6ec6-43d9-af7e-689e18dd9190",
+      "uuid": "7d3eccdc-4316-4ee7-9d8b-a580bbf9a500",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
-      "startTime": "2026-01-29T06:11:46.560Z",
-      "endTime": "2026-01-29T06:11:48.502Z",
+      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
+      "startTime": "2026-02-15T10:22:14.868Z",
+      "endTime": "2026-02-15T10:22:16.535Z",
       "input": [
         {
           "role": "system",
@@ -140,7 +138,7 @@
       ],
       "output": [
         {
-          "id": "call_C2ft0afdrf8OhoMMizJOfPwj",
+          "id": "call_ZOCeSudq71vvKP0v3fE02G5a",
           "function": {
             "arguments": "{\"task\":\"Write the word: 'SUCCESS'.\",\"context\":\"The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.\",\"coworker\":\"Writer\"}",
             "name": "delegate_work_to_coworker"
@@ -148,20 +146,19 @@
           "type": "function"
         }
       ],
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "model": "gpt-4o-mini"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d05b5918-6cb0-4757-9146-6221197698a6",
+      "uuid": "8a5d0deb-6c24-48c6-8624-921973768c96",
       "name": "delegate_work_to_coworker",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "26eaa4ff-8159-419a-8080-5133ef4e3ab7",
-      "startTime": "2026-01-29T06:11:48.502Z",
-      "endTime": "2026-01-29T06:11:49.166Z",
+      "parentUuid": "40e56059-fbc6-4cd6-b55a-e51cafa59722",
+      "startTime": "2026-02-15T10:22:16.538Z",
+      "endTime": "2026-02-15T10:22:17.089Z",
       "input": {
         "task": "Write the word: 'SUCCESS'.",
         "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context. This is a straightforward writing task that requires no elaboration or explanation.",
@@ -170,8 +167,8 @@
       "output": "SUCCESS"
     }
   ],
-  "startTime": "2026-01-29T06:11:46.545Z",
-  "endTime": "2026-01-29T06:11:50.057Z",
+  "startTime": "2026-02-15T10:22:14.857Z",
+  "endTime": "2026-02-15T10:22:17.694Z",
   "environment": "development",
   "input": {},
   "output": "SUCCESS",

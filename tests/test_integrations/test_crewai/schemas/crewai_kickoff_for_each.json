@@ -1,38 +1,38 @@
 {
-  "uuid": "1a51e2eb-2ccd-4e18-9e33-456dc9904113",
+  "uuid": "16f74069-1124-4946-9411-f9458d157d29",
   "baseSpans": [
     {
-      "uuid": "d9c5d5c1-2b60-4416-9fae-543554081569",
+      "uuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
       "name": "kickoff_for_each",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T06:11:50.096Z",
-      "endTime": "2026-01-29T06:11:51.883Z",
+      "startTime": "2026-02-15T10:22:17.723Z",
+      "endTime": "2026-02-15T10:22:19.150Z",
       "input": {},
       "output": "[CrewOutput(raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User A! How are you today?'}])], token_usage=UsageMetrics(total_tokens=90, prompt_tokens=80, cached_prompt_tokens=0, completion_tokens=10, successful_requests=1)), CrewOutput(raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}, {'role': 'assistant', 'content': 'Hello, User B! How are you today?'}])], token_usage=UsageMetrics(total_tokens=180, prompt_tokens=160, cached_prompt_tokens=0, completion_tokens=20, successful_requests=2))]",
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "99043520-c112-40c3-8c96-c21d5070797e",
+      "uuid": "83358ce8-7c8b-432b-9c88-7774235fcd8b",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "d9c5d5c1-2b60-4416-9fae-543554081569",
-      "startTime": "2026-01-29T06:11:51.095Z",
-      "endTime": "2026-01-29T06:11:51.881Z",
+      "parentUuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
+      "startTime": "2026-02-15T10:22:18.521Z",
+      "endTime": "2026-02-15T10:22:19.148Z",
       "input": {
         "input": "User B"
       },
       "output": "Hello, User B! How are you today?"
     },
     {
-      "uuid": "f104641f-c6d5-4d81-9aad-d34b89e6e8f6",
+      "uuid": "09111740-359e-4a57-9db1-311ba0fcd9f9",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "d9c5d5c1-2b60-4416-9fae-543554081569",
-      "startTime": "2026-01-29T06:11:50.098Z",
-      "endTime": "2026-01-29T06:11:51.092Z",
+      "parentUuid": "5bed86d0-d0b8-4044-b739-b82319cede4b",
+      "startTime": "2026-02-15T10:22:17.727Z",
+      "endTime": "2026-02-15T10:22:18.518Z",
       "input": {
         "input": "User A"
       },
@@ -41,26 +41,26 @@
   ],
   "agentSpans": [
     {
-      "uuid": "96570039-fffe-4a1f-83bf-f58387af99fd",
+      "uuid": "83a41489-4782-4056-bded-c58698b6384b",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "99043520-c112-40c3-8c96-c21d5070797e",
-      "startTime": "2026-01-29T06:11:51.101Z",
-      "endTime": "2026-01-29T06:11:51.873Z",
+      "parentUuid": "83358ce8-7c8b-432b-9c88-7774235fcd8b",
+      "startTime": "2026-02-15T10:22:18.527Z",
+      "endTime": "2026-02-15T10:22:19.139Z",
       "input": "Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User B! How are you today?",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "20ddedff-35e6-483b-b04a-634b9b6107fa",
+      "uuid": "cacd13f6-2b01-4b66-b2b9-729a44304590",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "f104641f-c6d5-4d81-9aad-d34b89e6e8f6",
-      "startTime": "2026-01-29T06:11:50.100Z",
-      "endTime": "2026-01-29T06:11:51.086Z",
+      "parentUuid": "09111740-359e-4a57-9db1-311ba0fcd9f9",
+      "startTime": "2026-02-15T10:22:17.731Z",
+      "endTime": "2026-02-15T10:22:18.510Z",
       "input": "Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Hello, User A! How are you today?",
       "availableTools": [],
@@ -69,13 +69,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "94869e47-9f74-4821-b52a-3dd126d36ef2",
+      "uuid": "0086887b-1636-4627-9723-0e767a4d7fba",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "96570039-fffe-4a1f-83bf-f58387af99fd",
-      "startTime": "2026-01-29T06:11:51.104Z",
-      "endTime": "2026-01-29T06:11:51.871Z",
+      "parentUuid": "83a41489-4782-4056-bded-c58698b6384b",
+      "startTime": "2026-02-15T10:22:18.531Z",
+      "endTime": "2026-02-15T10:22:19.136Z",
       "input": [
         {
           "role": "system",
@@ -88,17 +88,16 @@
       ],
       "output": "Hello, User B! How are you today?",
       "model": "gpt-4o-mini",
-      "prompt": {},
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "fce3026b-2827-4d6a-872d-dc86c129c600",
+      "uuid": "1389bc17-e93e-434a-ac5f-498f775803b4",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "20ddedff-35e6-483b-b04a-634b9b6107fa",
-      "startTime": "2026-01-29T06:11:50.102Z",
-      "endTime": "2026-01-29T06:11:51.084Z",
+      "parentUuid": "cacd13f6-2b01-4b66-b2b9-729a44304590",
+      "startTime": "2026-02-15T10:22:17.734Z",
+      "endTime": "2026-02-15T10:22:18.507Z",
       "input": [
         {
           "role": "system",
@@ -111,14 +110,13 @@
       ],
       "output": "Hello, User A! How are you today?",
       "model": "gpt-4o-mini",
-      "prompt": {},
       "metricCollection": "metric_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T06:11:50.096Z",
-  "endTime": "2026-01-29T06:11:51.883Z",
+  "startTime": "2026-02-15T10:22:17.723Z",
+  "endTime": "2026-02-15T10:22:19.150Z",
   "environment": "development",
   "input": {
     "input": "User B"

@@ -1,25 +1,25 @@
 {
-  "uuid": "7e96cbb4-df66-48ae-9808-c7549bd0953c",
+  "uuid": "c160b62b-3990-4776-961f-adf5763a6cb8",
   "baseSpans": [
     {
-      "uuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
+      "uuid": "5efec12a-8369-44fb-a8ce-1a6f5b373143",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-30T14:26:56.256Z",
-      "endTime": "2026-01-30T14:26:59.519Z",
+      "startTime": "2026-02-15T10:29:27.609Z",
+      "endTime": "2026-02-15T10:29:30.706Z",
       "input": {},
       "output": "Calculated metrics for: Async Data",
       "metricCollection": "crew_metrics_v1"
     },
     {
-      "uuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
+      "uuid": "fe35878e-36e4-452f-b8b6-4a5e57f4bcf9",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "96351cbf-2163-4c8e-bf12-1fceb462c6c6",
-      "startTime": "2026-01-30T14:26:56.256Z",
-      "endTime": "2026-01-30T14:26:59.518Z",
+      "parentUuid": "5efec12a-8369-44fb-a8ce-1a6f5b373143",
+      "startTime": "2026-02-15T10:29:27.609Z",
+      "endTime": "2026-02-15T10:29:30.705Z",
       "input": {
         "input": "Async Data"
       },
@@ -29,13 +29,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
+      "uuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "eb78efeb-4b69-428e-a2ff-f9b666d29740",
-      "startTime": "2026-01-30T14:26:56.261Z",
-      "endTime": "2026-01-30T14:26:59.503Z",
+      "parentUuid": "fe35878e-36e4-452f-b8b6-4a5e57f4bcf9",
+      "startTime": "2026-02-15T10:29:27.614Z",
+      "endTime": "2026-02-15T10:29:30.694Z",
       "input": "Use the special_metric_tool to process 'Async Data'. Your final answer MUST be EXACTLY the output of the tool. Do not add any other text.\n\nThis is the expected criteria for your final answer: The exact string returned by the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Calculated metrics for: Async Data",
       "toolsCalled": [
@@ -61,13 +61,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "2e810d39-d76f-45b5-b6fb-c766fa1bb5b9",
+      "uuid": "0f5bbdc7-0f99-4188-a919-9d39d300bb81",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
-      "startTime": "2026-01-30T14:26:58.772Z",
-      "endTime": "2026-01-30T14:26:59.500Z",
+      "parentUuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
+      "startTime": "2026-02-15T10:29:29.931Z",
+      "endTime": "2026-02-15T10:29:30.691Z",
       "input": [
         {
           "role": "system",
@@ -82,7 +82,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+              "id": "call_M79P3nFTu7Fw99TAnYZWoZ3h",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -93,7 +93,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "tool_call_id": "call_M79P3nFTu7Fw99TAnYZWoZ3h",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -106,7 +106,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+              "id": "call_AWQ4aiY5DuP0DF6DFMuBEgt3",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -117,7 +117,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+          "tool_call_id": "call_AWQ4aiY5DuP0DF6DFMuBEgt3",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -128,16 +128,19 @@
       ],
       "output": "Calculated metrics for: Async Data",
       "model": "gpt-4o-mini",
-      "prompt": {}
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "f167f9b3-e8be-4b2c-b68a-48588ece3e3a",
+      "uuid": "69ef1269-5711-4d89-96f1-2c860dcdbbaf",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
-      "startTime": "2026-01-30T14:26:57.656Z",
-      "endTime": "2026-01-30T14:26:58.768Z",
+      "parentUuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
+      "startTime": "2026-02-15T10:29:28.919Z",
+      "endTime": "2026-02-15T10:29:29.924Z",
       "input": [
         {
           "role": "system",
@@ -152,7 +155,7 @@
           "content": null,
           "tool_calls": [
             {
-              "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+              "id": "call_M79P3nFTu7Fw99TAnYZWoZ3h",
               "type": "function",
               "function": {
                 "name": "'special_metric_tool'",
@@ -163,7 +166,7 @@
         },
         {
           "role": "tool",
-          "tool_call_id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "tool_call_id": "call_M79P3nFTu7Fw99TAnYZWoZ3h",
           "name": "special_metric_tool",
           "content": "Calculated metrics for: Async Data"
         },
@@ -174,7 +177,7 @@
       ],
       "output": [
         {
-          "id": "call_WOqC9qOhofYpTVPJPoKMoWzy",
+          "id": "call_AWQ4aiY5DuP0DF6DFMuBEgt3",
           "function": {
             "arguments": "{\"query\":\"Async Data\"}",
             "name": "special_metric_tool"
@@ -183,16 +186,19 @@
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {}
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "ba8a7b63-8bd2-4f15-8267-57485e8a8ba0",
+      "uuid": "955763a1-473a-452a-8733-45ebf8d03e82",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
-      "startTime": "2026-01-30T14:26:56.262Z",
-      "endTime": "2026-01-30T14:26:57.650Z",
+      "parentUuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
+      "startTime": "2026-02-15T10:29:27.616Z",
+      "endTime": "2026-02-15T10:29:28.914Z",
       "input": [
         {
           "role": "system",
@@ -205,7 +211,7 @@
       ],
       "output": [
         {
-          "id": "call_80e41wFNtN23qJjpxf3wYUoD",
+          "id": "call_M79P3nFTu7Fw99TAnYZWoZ3h",
           "function": {
             "arguments": "{\"query\":\"Async Data\"}",
             "name": "special_metric_tool"
@@ -214,19 +220,22 @@
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {}
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "a8219542-4310-43cb-895b-234680a83a8c",
+      "uuid": "fc55dc64-53c1-4ba7-af1e-7eec943e7161",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
-      "startTime": "2026-01-30T14:26:58.769Z",
-      "endTime": "2026-01-30T14:26:58.772Z",
+      "parentUuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
+      "startTime": "2026-02-15T10:29:29.926Z",
+      "endTime": "2026-02-15T10:29:29.932Z",
       "input": {
         "query": "Async Data"
       },
@@ -234,13 +243,13 @@
       "metricCollection": "agent_metrics_v1"
     },
     {
-      "uuid": "2bcb764a-71a2-45a7-adf9-ac078b8e0590",
+      "uuid": "b9bb13e1-efa6-4ee3-8ca0-d0f54dbd78cf",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "09d0cc88-664b-43a1-b607-a786fc9f3de6",
-      "startTime": "2026-01-30T14:26:57.651Z",
-      "endTime": "2026-01-30T14:26:57.657Z",
+      "parentUuid": "1fa29167-3407-4bf5-a607-6c5cc9ee6b7f",
+      "startTime": "2026-02-15T10:29:28.915Z",
+      "endTime": "2026-02-15T10:29:28.916Z",
       "input": {
         "query": "Async Data"
       },
@@ -248,8 +257,8 @@
       "metricCollection": "agent_metrics_v1"
     }
   ],
-  "startTime": "2026-01-30T14:26:56.256Z",
-  "endTime": "2026-01-30T14:26:59.519Z",
+  "startTime": "2026-02-15T10:29:27.609Z",
+  "endTime": "2026-02-15T10:29:30.706Z",
   "name": "CrewAI Metadata Check Async",
   "metadata": {
     "env": "testing_async"
