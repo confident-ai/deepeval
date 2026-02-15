@@ -1,13 +1,13 @@
 {
-  "uuid": "f0184dfb-588a-41fe-9213-641c87ff07f5",
+  "uuid": "b230c69a-dacb-4f11-ab3b-0f6de17524ce",
   "baseSpans": [
     {
-      "uuid": "019bfcb9-5868-7df3-8d3a-58f67ed97753",
+      "uuid": "019c5ffb-4b44-7152-a60d-4f49dee734d2",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T23:52:43.881Z",
-      "endTime": "2026-01-26T23:52:48.722Z",
+      "startTime": "2026-02-15T06:27:10.276Z",
+      "endTime": "2026-02-15T06:27:12.632Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+            "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+            "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
           },
           {
             "content": "",
@@ -35,13 +35,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 25,
+                "completion_tokens": 89,
                 "prompt_tokens": 165,
-                "total_tokens": 190,
+                "total_tokens": 254,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -52,35 +52,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Qfs0ucShWLaGOzRtb9FIIFYWwFo",
+              "id": "chatcmpl-D9Pt0dDOWuNgzyzurowcwol2OpfEK",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-586e-7892-bcf1-486b8fd48fe8-0",
+            "id": "lc_run--019c5ffb-4b46-7601-baa1-e82f7f6d79a2-0",
             "tool_calls": [
               {
                 "name": "calculate",
                 "args": {
                   "expression": "15 * 3"
                 },
-                "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+                "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 165,
-              "output_tokens": 25,
-              "total_tokens": 190,
+              "output_tokens": 89,
+              "total_tokens": 254,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
@@ -90,8 +90,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-            "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+            "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+            "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
             "status": "success"
           },
           {
@@ -118,13 +118,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QftcOz8i5gGkC6YY58rfRZNAT6D",
+              "id": "chatcmpl-D9Pt2lRloj9qZ4tPpsMFxXns7K8TI",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-5f50-7180-9d2f-f31e2f9e25bc-0",
+            "id": "lc_run--019c5ffb-51ce-7cb0-a0a1-818f17e1c977-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -146,13 +146,13 @@
       "metricCollection": "trace_quality"
     },
     {
-      "uuid": "019bfcb9-5f4d-7241-abaa-ba6a80a7956c",
+      "uuid": "019c5ffb-51cd-7011-bd9c-1865dcfdcd2d",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-5868-7df3-8d3a-58f67ed97753",
-      "startTime": "2026-01-26T23:52:45.646Z",
-      "endTime": "2026-01-26T23:52:48.721Z",
+      "parentUuid": "019c5ffb-4b44-7152-a60d-4f49dee734d2",
+      "startTime": "2026-02-15T06:27:11.949Z",
+      "endTime": "2026-02-15T06:27:12.631Z",
       "input": {
         "messages": [
           {
@@ -160,7 +160,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+            "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
           },
           {
             "content": "",
@@ -169,13 +169,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 25,
+                "completion_tokens": 89,
                 "prompt_tokens": 165,
-                "total_tokens": 190,
+                "total_tokens": 254,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -186,35 +186,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Qfs0ucShWLaGOzRtb9FIIFYWwFo",
+              "id": "chatcmpl-D9Pt0dDOWuNgzyzurowcwol2OpfEK",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-586e-7892-bcf1-486b8fd48fe8-0",
+            "id": "lc_run--019c5ffb-4b46-7601-baa1-e82f7f6d79a2-0",
             "tool_calls": [
               {
                 "name": "calculate",
                 "args": {
                   "expression": "15 * 3"
                 },
-                "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+                "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 165,
-              "output_tokens": 25,
-              "total_tokens": 190,
+              "output_tokens": 89,
+              "total_tokens": 254,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
@@ -224,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-            "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+            "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+            "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
             "status": "success"
           }
         ]
@@ -256,13 +256,13 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2QftcOz8i5gGkC6YY58rfRZNAT6D",
+              "id": "chatcmpl-D9Pt2lRloj9qZ4tPpsMFxXns7K8TI",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-5f50-7180-9d2f-f31e2f9e25bc-0",
+            "id": "lc_run--019c5ffb-51ce-7cb0-a0a1-818f17e1c977-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
@@ -283,13 +283,13 @@
       }
     },
     {
-      "uuid": "019bfcb9-5f4b-7ee2-9085-cebc16f7fc56",
+      "uuid": "019c5ffb-51cc-77b0-8dba-ca00167a1272",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-5868-7df3-8d3a-58f67ed97753",
-      "startTime": "2026-01-26T23:52:45.643Z",
-      "endTime": "2026-01-26T23:52:45.645Z",
+      "parentUuid": "019c5ffb-4b44-7152-a60d-4f49dee734d2",
+      "startTime": "2026-02-15T06:27:11.948Z",
+      "endTime": "2026-02-15T06:27:11.949Z",
       "input": {
         "__type": "tool_call_with_context",
         "tool_call": {
@@ -297,7 +297,7 @@
           "args": {
             "expression": "15 * 3"
           },
-          "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+          "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
           "type": "tool_call"
         },
         "state": {
@@ -307,7 +307,7 @@
               "additional_kwargs": {},
               "response_metadata": {},
               "type": "human",
-              "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+              "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
             },
             {
               "content": "",
@@ -316,13 +316,13 @@
               },
               "response_metadata": {
                 "token_usage": {
-                  "completion_tokens": 25,
+                  "completion_tokens": 89,
                   "prompt_tokens": 165,
-                  "total_tokens": 190,
+                  "total_tokens": 254,
                   "completion_tokens_details": {
                     "accepted_prediction_tokens": 0,
                     "audio_tokens": 0,
-                    "reasoning_tokens": 0,
+                    "reasoning_tokens": 64,
                     "rejected_prediction_tokens": 0
                   },
                   "prompt_tokens_details": {
@@ -333,35 +333,35 @@
                 "model_provider": "openai",
                 "model_name": "gpt-5-mini-2025-08-07",
                 "system_fingerprint": null,
-                "id": "chatcmpl-D2Qfs0ucShWLaGOzRtb9FIIFYWwFo",
+                "id": "chatcmpl-D9Pt0dDOWuNgzyzurowcwol2OpfEK",
                 "service_tier": "default",
                 "finish_reason": "tool_calls",
                 "logprobs": null
               },
               "type": "ai",
-              "id": "lc_run--019bfcb9-586e-7892-bcf1-486b8fd48fe8-0",
+              "id": "lc_run--019c5ffb-4b46-7601-baa1-e82f7f6d79a2-0",
               "tool_calls": [
                 {
                   "name": "calculate",
                   "args": {
                     "expression": "15 * 3"
                   },
-                  "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+                  "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
                   "type": "tool_call"
                 }
               ],
               "invalid_tool_calls": [],
               "usage_metadata": {
                 "input_tokens": 165,
-                "output_tokens": 25,
-                "total_tokens": 190,
+                "output_tokens": 89,
+                "total_tokens": 254,
                 "input_token_details": {
                   "audio": 0,
                   "cache_read": 0
                 },
                 "output_token_details": {
                   "audio": 0,
-                  "reasoning": 0
+                  "reasoning": 64
                 }
               }
             }
@@ -376,8 +376,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-            "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+            "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+            "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
             "status": "success"
           }
         ]
@@ -391,8 +391,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "calculate",
-            "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-            "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+            "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+            "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
             "status": "success"
           },
           "inputParameters": {
@@ -402,13 +402,13 @@
       ]
     },
     {
-      "uuid": "019bfcb9-586a-73d3-8ede-19f7a7107566",
+      "uuid": "019c5ffb-4b44-7152-a60d-4f59f347df0a",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfcb9-5868-7df3-8d3a-58f67ed97753",
-      "startTime": "2026-01-26T23:52:43.882Z",
-      "endTime": "2026-01-26T23:52:45.643Z",
+      "parentUuid": "019c5ffb-4b44-7152-a60d-4f49dee734d2",
+      "startTime": "2026-02-15T06:27:10.276Z",
+      "endTime": "2026-02-15T06:27:11.948Z",
       "input": {
         "messages": [
           {
@@ -416,7 +416,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+            "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
           }
         ]
       },
@@ -429,13 +429,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 25,
+                "completion_tokens": 89,
                 "prompt_tokens": 165,
-                "total_tokens": 190,
+                "total_tokens": 254,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -446,35 +446,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Qfs0ucShWLaGOzRtb9FIIFYWwFo",
+              "id": "chatcmpl-D9Pt0dDOWuNgzyzurowcwol2OpfEK",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfcb9-586e-7892-bcf1-486b8fd48fe8-0",
+            "id": "lc_run--019c5ffb-4b46-7601-baa1-e82f7f6d79a2-0",
             "tool_calls": [
               {
                 "name": "calculate",
                 "args": {
                   "expression": "15 * 3"
                 },
-                "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+                "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 165,
-              "output_tokens": 25,
-              "total_tokens": 190,
+              "output_tokens": 89,
+              "total_tokens": 254,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -486,13 +486,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bfcb9-5f50-7180-9d2f-f31e2f9e25bc",
+      "uuid": "019c5ffb-51ce-7cb0-a0a1-818f17e1c977",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcb9-5f4d-7241-abaa-ba6a80a7956c",
-      "startTime": "2026-01-26T23:52:45.648Z",
-      "endTime": "2026-01-26T23:52:48.720Z",
+      "parentUuid": "019c5ffb-51cd-7011-bd9c-1865dcfdcd2d",
+      "startTime": "2026-02-15T06:27:11.950Z",
+      "endTime": "2026-02-15T06:27:12.631Z",
       "input": [
         {
           "role": "system",
@@ -521,22 +521,22 @@
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {
-        "alias": "metric-collection-test-prompt",
-        "version": "01.00.00"
-      },
       "inputTokenCount": 195.0,
       "outputTokenCount": 4.0,
-      "metricCollection": "llm_quality"
+      "metricCollection": "llm_quality",
+      "promptAlias": "metric-collection-test-prompt",
+      "promptVersion": "01.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "019bfcb9-586e-7892-bcf1-486b8fd48fe8",
+      "uuid": "019c5ffb-4b46-7601-baa1-e82f7f6d79a2",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfcb9-586a-73d3-8ede-19f7a7107566",
-      "startTime": "2026-01-26T23:52:43.886Z",
-      "endTime": "2026-01-26T23:52:45.642Z",
+      "parentUuid": "019c5ffb-4b44-7152-a60d-4f59f347df0a",
+      "startTime": "2026-02-15T06:27:10.278Z",
+      "endTime": "2026-02-15T06:27:11.947Z",
       "input": [
         {
           "role": "system",
@@ -560,30 +560,30 @@
             "args": {
               "expression": "15 * 3"
             },
-            "id": "call_j6uH1Evog3WxTImrHU1WtsHQ"
+            "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {
-        "alias": "metric-collection-test-prompt",
-        "version": "01.00.00"
-      },
       "inputTokenCount": 165.0,
-      "outputTokenCount": 25.0,
-      "metricCollection": "llm_quality"
+      "outputTokenCount": 89.0,
+      "metricCollection": "llm_quality",
+      "promptAlias": "metric-collection-test-prompt",
+      "promptVersion": "01.00.00",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bfcb9-5f4c-75c1-b840-a9b5cc1c76c7",
+      "uuid": "019c5ffb-51cc-77b0-8dba-ca1fb33c4704",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfcb9-5f4b-7ee2-9085-cebc16f7fc56",
-      "startTime": "2026-01-26T23:52:45.644Z",
-      "endTime": "2026-01-26T23:52:45.645Z",
+      "parentUuid": "019c5ffb-51cc-77b0-8dba-ca00167a1272",
+      "startTime": "2026-02-15T06:27:11.948Z",
+      "endTime": "2026-02-15T06:27:11.949Z",
       "input": {
         "expression": "15 * 3"
       },
@@ -593,14 +593,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-        "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+        "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+        "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T23:52:43.881Z",
-  "endTime": "2026-01-26T23:52:48.722Z",
+  "startTime": "2026-02-15T06:27:10.276Z",
+  "endTime": "2026-02-15T06:27:12.632Z",
   "name": "langchain-metric-collection",
   "metadata": {
     "test_type": "metric_collection"
@@ -617,7 +617,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+        "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
       }
     ]
   },
@@ -628,7 +628,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3a90ef9e-caf3-4731-8e53-a731cf3d27b0"
+        "id": "796d5c4e-bb4d-443d-867e-0f8b5901bee5"
       },
       {
         "content": "",
@@ -637,13 +637,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 25,
+            "completion_tokens": 89,
             "prompt_tokens": 165,
-            "total_tokens": 190,
+            "total_tokens": 254,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 64,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -654,35 +654,35 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2Qfs0ucShWLaGOzRtb9FIIFYWwFo",
+          "id": "chatcmpl-D9Pt0dDOWuNgzyzurowcwol2OpfEK",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcb9-586e-7892-bcf1-486b8fd48fe8-0",
+        "id": "lc_run--019c5ffb-4b46-7601-baa1-e82f7f6d79a2-0",
         "tool_calls": [
           {
             "name": "calculate",
             "args": {
               "expression": "15 * 3"
             },
-            "id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+            "id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 165,
-          "output_tokens": 25,
-          "total_tokens": 190,
+          "output_tokens": 89,
+          "total_tokens": 254,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 64
           }
         }
       },
@@ -692,8 +692,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-        "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+        "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+        "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
         "status": "success"
       },
       {
@@ -720,13 +720,13 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2QftcOz8i5gGkC6YY58rfRZNAT6D",
+          "id": "chatcmpl-D9Pt2lRloj9qZ4tPpsMFxXns7K8TI",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfcb9-5f50-7180-9d2f-f31e2f9e25bc-0",
+        "id": "lc_run--019c5ffb-51ce-7cb0-a0a1-818f17e1c977-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
@@ -755,8 +755,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "calculate",
-        "id": "3a9964e9-457e-4162-8718-b0af4c62758d",
-        "tool_call_id": "call_j6uH1Evog3WxTImrHU1WtsHQ",
+        "id": "5ce47f7d-bec6-4700-bca7-332589985598",
+        "tool_call_id": "call_uVJ6k5JuAED41DkKoiZ7mzXT",
         "status": "success"
       },
       "inputParameters": {
