@@ -26,8 +26,9 @@ def create_prompt_agent(
     """
     # Create prompt object for attribution (without pulling)
     prompt = Prompt(alias=prompt_alias)
-    # Manually set version to avoid network call
+    prompt.hash = "bab4ce0"
     prompt.version = prompt_version
+    prompt.label = "test-prompt-label"
 
     settings = ConfidentInstrumentationSettings(
         name=name,
