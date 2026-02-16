@@ -1,14 +1,14 @@
 {
-  "uuid": "996966a2-9316-408b-8efc-887087b1a36f",
+  "uuid": "5639bd64-aa2f-4d93-b722-1fa4dc726419",
   "baseSpans": [
     {
-      "uuid": "FunctionAgent.parse_agent_output-bc29a01c-7a53-4b76-87c6-04438dbbcb98",
+      "uuid": "FunctionAgent.parse_agent_output-0460e0c9-b24d-4d4e-a348-256d82315202",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:51.725Z",
-      "endTime": "2026-01-30T14:14:51.727Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:09.278Z",
+      "endTime": "2026-02-16T06:09:09.279Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -30,7 +30,7 @@
                 "a": 4,
                 "b": 6
               },
-              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+              "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
             }
           ],
           "retry_messages": []
@@ -56,7 +56,7 @@
                 "a": 4,
                 "b": 6
               },
-              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+              "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
             }
           ],
           "retry_messages": []
@@ -64,15 +64,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
+      "uuid": "FunctionAgent.run_agent_step-dcf18998-57c1-4e3d-b107-1aac7513e39d",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:50.758Z",
-      "endTime": "2026-01-30T14:14:51.724Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:08.017Z",
+      "endTime": "2026-02-16T06:09:09.277Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -117,13 +117,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-3d8514bd-6e48-40a4-945d-f6ffd1751824",
+      "uuid": "OpenAI.astream_chat-bab2411c-ab4a-4d17-8af9-0101e928c04f",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
-      "startTime": "2026-01-30T14:14:50.759Z",
-      "endTime": "2026-01-30T14:14:50.760Z",
+      "parentUuid": "FunctionAgent.run_agent_step-dcf18998-57c1-4e3d-b107-1aac7513e39d",
+      "startTime": "2026-02-16T06:09:08.018Z",
+      "endTime": "2026-02-16T06:09:08.018Z",
       "input": {
         "messages": [
           {
@@ -152,7 +152,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                  "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                   "function": {
                     "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
@@ -168,7 +168,7 @@
               },
               {
                 "block_type": "tool_call",
-                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                 "tool_name": "multiply",
                 "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
@@ -177,7 +177,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+              "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
             },
             "blocks": [
               {
@@ -219,16 +219,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53ed60>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11367f6e0>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-64952e6c-874e-44be-a872-f4824aee890c",
+      "uuid": "OpenAI._prepare_chat_with_tools-673dbfd6-6f5f-419e-bfd1-f7849acc37d2",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-b357988e-5bd4-4cc9-8176-5bef6eb008c2",
-      "startTime": "2026-01-30T14:14:50.759Z",
-      "endTime": "2026-01-30T14:14:50.759Z",
+      "parentUuid": "FunctionAgent.run_agent_step-dcf18998-57c1-4e3d-b107-1aac7513e39d",
+      "startTime": "2026-02-16T06:09:08.017Z",
+      "endTime": "2026-02-16T06:09:08.018Z",
       "input": {
         "tools": [
           {
@@ -265,7 +265,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                  "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                   "function": {
                     "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
@@ -281,7 +281,7 @@
               },
               {
                 "block_type": "tool_call",
-                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                 "tool_name": "multiply",
                 "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
@@ -290,7 +290,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+              "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
             },
             "blocks": [
               {
@@ -332,7 +332,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                  "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                   "function": {
                     "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
@@ -348,7 +348,7 @@
               },
               {
                 "block_type": "tool_call",
-                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                 "tool_name": "multiply",
                 "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
@@ -357,7 +357,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+              "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
             },
             "blocks": [
               {
@@ -399,15 +399,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-b1abc3e9-d47a-41a3-aa68-414555f4afa8",
+      "uuid": "FunctionAgent.setup_agent-108bdfef-2199-4ca5-8ff3-45823ed794e2",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:50.757Z",
-      "endTime": "2026-01-30T14:14:50.758Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:08.017Z",
+      "endTime": "2026-02-16T06:09:08.017Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -451,22 +451,22 @@
       }
     },
     {
-      "uuid": "FunctionAgent.aggregate_tool_results-b9f1715f-440c-410f-8ccb-b0a2c8f7452b",
+      "uuid": "FunctionAgent.aggregate_tool_results-49541e32-9e1c-4653-9cd0-68ffe745795f",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:50.756Z",
-      "endTime": "2026-01-30T14:14:50.757Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:08.016Z",
+      "endTime": "2026-02-16T06:09:08.016Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "tool_name": "multiply",
           "tool_kwargs": {
             "a": 4,
             "b": 6
           },
-          "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+          "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
           "tool_output": {
             "blocks": [
               {
@@ -505,15 +505,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.parse_agent_output-a32abc21-9aa7-4f20-bb47-eb875e4d7408",
+      "uuid": "FunctionAgent.parse_agent_output-e4a488fd-62d4-4f6b-9d82-ebb94c3e3cff",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:50.753Z",
-      "endTime": "2026-01-30T14:14:50.753Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:08.013Z",
+      "endTime": "2026-02-16T06:09:08.013Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "response": {
             "role": "assistant",
@@ -521,7 +521,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                  "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                   "function": {
                     "arguments": "{\"a\":4,\"b\":6}",
                     "name": "multiply"
@@ -537,7 +537,7 @@
               },
               {
                 "block_type": "tool_call",
-                "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                 "tool_name": "multiply",
                 "tool_kwargs": "{\"a\":4,\"b\":6}"
               }
@@ -546,7 +546,7 @@
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+              "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
               "tool_name": "multiply",
               "tool_kwargs": {
                 "a": 4,
@@ -559,15 +559,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
+      "uuid": "FunctionAgent.run_agent_step-790a4afb-480a-44d8-bd54-6ec1d7cc54f1",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:49.935Z",
-      "endTime": "2026-01-30T14:14:50.749Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:06.693Z",
+      "endTime": "2026-02-16T06:09:08.011Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -601,7 +601,7 @@
             "tool_calls": [
               {
                 "index": 0,
-                "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+                "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
                 "function": {
                   "arguments": "{\"a\":4,\"b\":6}",
                   "name": "multiply"
@@ -617,7 +617,7 @@
             },
             {
               "block_type": "tool_call",
-              "tool_call_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+              "tool_call_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
               "tool_name": "multiply",
               "tool_kwargs": "{\"a\":4,\"b\":6}"
             }
@@ -627,7 +627,7 @@
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+            "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
             "tool_name": "multiply",
             "tool_kwargs": {
               "a": 4,
@@ -639,13 +639,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-6985d557-6ebf-46ed-bd5a-6fc958d35cff",
+      "uuid": "OpenAI.astream_chat-aa3e71c5-3aad-4db2-9827-f5afd6a8d779",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
-      "startTime": "2026-01-30T14:14:49.935Z",
-      "endTime": "2026-01-30T14:14:49.952Z",
+      "parentUuid": "FunctionAgent.run_agent_step-790a4afb-480a-44d8-bd54-6ec1d7cc54f1",
+      "startTime": "2026-02-16T06:09:06.693Z",
+      "endTime": "2026-02-16T06:09:06.699Z",
       "input": {
         "messages": [
           {
@@ -701,16 +701,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53ec30>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1187949c0>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-98687874-7fbe-4dce-9bf5-38b0bbc024c6",
+      "uuid": "OpenAI._prepare_chat_with_tools-8dfc2d38-e3eb-4e77-84f0-c379d6bcb172",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-fd74c130-8063-46bb-a117-9e55473b4b16",
-      "startTime": "2026-01-30T14:14:49.935Z",
-      "endTime": "2026-01-30T14:14:49.935Z",
+      "parentUuid": "FunctionAgent.run_agent_step-790a4afb-480a-44d8-bd54-6ec1d7cc54f1",
+      "startTime": "2026-02-16T06:09:06.693Z",
+      "endTime": "2026-02-16T06:09:06.693Z",
       "input": {
         "tools": [
           "<circular>"
@@ -797,15 +797,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-535bdc51-5216-4c06-a580-96e70b126aab",
+      "uuid": "FunctionAgent.setup_agent-8b596c8e-0336-47d3-9cb7-976215197dd2",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:49.935Z",
-      "endTime": "2026-01-30T14:14:49.935Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:06.692Z",
+      "endTime": "2026-02-16T06:09:06.693Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -849,15 +849,15 @@
       }
     },
     {
-      "uuid": "FunctionAgent.init_run-4e4023d1-c32d-4fb2-9cbc-8f4326f25cd3",
+      "uuid": "FunctionAgent.init_run-718334bb-9bd0-4311-b54b-85b0d670034b",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:49.934Z",
-      "endTime": "2026-01-30T14:14:49.934Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:06.692Z",
+      "endTime": "2026-02-16T06:09:06.692Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "user_msg": "What is 4 * 6?",
           "chat_history": null,
@@ -884,19 +884,21 @@
   ],
   "agentSpans": [
     {
-      "uuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
+      "uuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T14:14:49.931Z",
-      "endTime": "2026-01-30T14:14:49.933Z",
+      "startTime": "2026-02-16T06:09:06.690Z",
+      "endTime": "2026-02-16T06:09:06.691Z",
       "input": {
         "user_msg": "What is 4 * 6?",
         "chat_history": null,
         "max_iterations": null,
         "early_stopping_method": null
       },
-      "output": "The result of \\( 4 \\times 6 \\) is 24.",
+      "output": {
+        "run_id": "bQr7AgLKuW"
+      },
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "production_agent_metrics",
@@ -913,13 +915,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "fc45b51a-2e1c-4140-9291-16098b51acb4",
+      "uuid": "35389c46-1aef-42ef-81c5-d5c6db992aba",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-3d8514bd-6e48-40a4-945d-f6ffd1751824",
-      "startTime": "2026-01-30T14:14:50.759Z",
-      "endTime": "2026-01-30T14:14:51.723Z",
+      "parentUuid": "OpenAI.astream_chat-bab2411c-ab4a-4d17-8af9-0101e928c04f",
+      "startTime": "2026-02-16T06:09:08.018Z",
+      "endTime": "2026-02-16T06:09:09.277Z",
       "input": [
         {
           "role": "system",
@@ -945,7 +947,6 @@
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {},
       "metricCollection": "production_llm_metrics",
       "metricsData": [
         {
@@ -955,16 +956,20 @@
           "strictMode": false,
           "evaluationModel": "gpt-4.1"
         }
-      ]
+      ],
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "19b1f71e-c286-4d74-858f-0b37596339e0",
+      "uuid": "56a5c5b2-0f1d-494f-bdd3-1e3fe6d20bb6",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-6985d557-6ebf-46ed-bd5a-6fc958d35cff",
-      "startTime": "2026-01-30T14:14:49.935Z",
-      "endTime": "2026-01-30T14:14:50.749Z",
+      "parentUuid": "OpenAI.astream_chat-aa3e71c5-3aad-4db2-9827-f5afd6a8d779",
+      "startTime": "2026-02-16T06:09:06.694Z",
+      "endTime": "2026-02-16T06:09:08.011Z",
       "input": [
         {
           "role": "system",
@@ -983,11 +988,10 @@
         {
           "name": "multiply",
           "input_parameters": "{\"a\":4,\"b\":6}",
-          "id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+          "id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
         }
       ],
       "model": "gpt-4o-mini",
-      "prompt": {},
       "metricCollection": "production_llm_metrics",
       "metricsData": [
         {
@@ -997,28 +1001,32 @@
           "strictMode": false,
           "evaluationModel": "gpt-4.1"
         }
-      ]
+      ],
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "FunctionAgent.call_tool-e162cd1b-f8a4-4190-82d9-792a1f9ddaf8",
+      "uuid": "FunctionAgent.call_tool-e5ed17b4-9869-4a0a-b1c4-c59190056511",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "FunctionAgent.run-3f06972e-7255-4f52-a435-b961c4475c17",
-      "startTime": "2026-01-30T14:14:50.754Z",
-      "endTime": "2026-01-30T14:14:50.754Z",
+      "parentUuid": "FunctionAgent.run-23b25614-0c54-4068-8675-72f37414d497",
+      "startTime": "2026-02-16T06:09:08.014Z",
+      "endTime": "2026-02-16T06:09:08.015Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "tool_name": "multiply",
           "tool_kwargs": {
             "a": 4,
             "b": 6
           },
-          "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt"
+          "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6"
         }
       },
       "output": {
@@ -1027,7 +1035,7 @@
           "a": 4,
           "b": 6
         },
-        "tool_id": "call_PEbR6pzwOgnQfuiBf4qVvrTt",
+        "tool_id": "call_UVdtOFrDFcrKnXzzqHK5FCs6",
         "tool_output": {
           "blocks": [
             {
@@ -1077,13 +1085,13 @@
       ]
     },
     {
-      "uuid": "FunctionTool.acall-fa5a5dfa-b50c-451e-a0c8-defd7c0ea22e",
+      "uuid": "FunctionTool.acall-88d2fad9-032a-41be-84d0-4bc5d6c59408",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "FunctionAgent.call_tool-e162cd1b-f8a4-4190-82d9-792a1f9ddaf8",
-      "startTime": "2026-01-30T14:14:50.754Z",
-      "endTime": "2026-01-30T14:14:50.754Z",
+      "parentUuid": "FunctionAgent.call_tool-e5ed17b4-9869-4a0a-b1c4-c59190056511",
+      "startTime": "2026-02-16T06:09:08.014Z",
+      "endTime": "2026-02-16T06:09:08.015Z",
       "input": {
         "kwargs": {
           "a": 4,
@@ -1110,8 +1118,8 @@
       }
     }
   ],
-  "startTime": "2026-01-30T14:14:49.931Z",
-  "endTime": "2026-01-30T14:14:49.933Z",
+  "startTime": "2026-02-16T06:09:06.690Z",
+  "endTime": "2026-02-16T06:09:09.279Z",
   "name": "Calculation Check Async",
   "tags": [
     "production",

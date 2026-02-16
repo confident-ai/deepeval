@@ -6,6 +6,7 @@ All asynchronous tests using .aquery(), .achat(), or .astream_chat()
 import os
 import pytest
 from deepeval.tracing import trace
+from deepeval.prompt import Prompt
 
 from tests.test_integrations.utils import (
     assert_trace_json,
@@ -35,6 +36,11 @@ from tests.test_integrations.test_llamaindex.apps.router_app import (
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
+
+prompt = Prompt(alias="asd")
+prompt._version = "00.00.01"
+prompt.label = "test-label"
+prompt.hash = "bab04ec"
 
 
 def trace_test(schema_name: str):
@@ -198,6 +204,7 @@ class TestDeepEvalFeaturesAsync:
         )
         llm_ctx = LlmSpanContext(
             metric_collection="production_llm_metrics",
+            prompt=prompt,
             metrics=[AnswerRelevancyMetric()],
             expected_output="exp output llm level async",
             context=["context here llm level async"],

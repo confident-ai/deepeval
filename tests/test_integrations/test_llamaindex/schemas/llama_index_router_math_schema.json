@@ -224,8 +224,7 @@
           "content": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```"
         }
       ],
-      "model": "gpt-4o",
-      "prompt": {}
+      "model": "gpt-4o"
     }
   ],
   "retrieverSpans": [],

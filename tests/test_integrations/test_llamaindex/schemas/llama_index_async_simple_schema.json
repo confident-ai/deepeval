@@ -3482,8 +3482,7 @@
           "content": "LlamaIndex is a data framework for LLM applications."
         }
       ],
-      "model": "gpt-4o",
-      "prompt": {}
+      "model": "gpt-4o"
     }
   ],
   "retrieverSpans": [],

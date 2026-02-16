@@ -1,14 +1,14 @@
 {
-  "uuid": "e0463956-5ca5-4faa-beb0-9312c56f4ad9",
+  "uuid": "4ff494f6-91eb-47ce-9e23-9f82c2349471",
   "baseSpans": [
     {
-      "uuid": "ReActAgent.parse_agent_output-b1749d08-ee68-4d6d-bee1-e4aaca1186c8",
+      "uuid": "ReActAgent.parse_agent_output-409f541d-03be-4965-9b1c-823cf96111b7",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:48.482Z",
-      "endTime": "2026-01-30T14:14:48.483Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:34.048Z",
+      "endTime": "2026-02-16T06:12:34.049Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -30,7 +30,7 @@
                 "a": 50,
                 "b": 2
               },
-              "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5"
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
             }
           ],
           "retry_messages": []
@@ -56,7 +56,7 @@
                 "a": 50,
                 "b": 2
               },
-              "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5"
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
             }
           ],
           "retry_messages": []
@@ -64,15 +64,15 @@
       }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-0e89e378-cb65-424b-bebf-349eef7de220",
+      "uuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:47.469Z",
-      "endTime": "2026-01-30T14:14:48.481Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:34.048Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -106,7 +106,7 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: The result of 50 * 2 is 100."
+              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100."
             }
           ]
         },
@@ -117,31 +117,31 @@
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-c53cb392-86a8-4494-a54a-3e4bfbf5fca9",
+      "uuid": "ReActOutputParser.parse-9dc0458e-0c44-407f-b42c-205ac662c645",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0e89e378-cb65-424b-bebf-349eef7de220",
-      "startTime": "2026-01-30T14:14:48.481Z",
-      "endTime": "2026-01-30T14:14:48.481Z",
+      "parentUuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
+      "startTime": "2026-02-16T06:12:34.048Z",
+      "endTime": "2026-02-16T06:12:34.048Z",
       "input": {
-        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: The result of 50 * 2 is 100.",
+        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100.",
         "is_streaming": false
       },
       "output": {
-        "thought": "I can answer without using any more tools. I'll use the user's language to answer",
+        "thought": "I can answer without using any more tools. I'll use the user's language to answer.",
         "response": "The result of 50 * 2 is 100.",
         "is_streaming": false
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-b0b7d515-ca57-4838-b459-34a4807349e5",
+      "uuid": "OpenAI.astream_chat-0e3964ef-a638-47cb-9c7a-4e96dbde276c",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0e89e378-cb65-424b-bebf-349eef7de220",
-      "startTime": "2026-01-30T14:14:47.470Z",
-      "endTime": "2026-01-30T14:14:47.471Z",
+      "parentUuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:32.820Z",
       "input": {
         "messages": [
           {
@@ -170,7 +170,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
               }
             ]
           },
@@ -186,18 +186,18 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53eb00>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231cc0>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-fba79331-5301-41e6-96f5-f5a523d21398",
+      "uuid": "ReActAgent.setup_agent-2e56213e-9c1c-40b6-98dd-0d866ea84d41",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:47.468Z",
-      "endTime": "2026-01-30T14:14:47.469Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.818Z",
+      "endTime": "2026-02-16T06:12:32.818Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -241,22 +241,22 @@
       }
     },
     {
-      "uuid": "ReActAgent.aggregate_tool_results-7d13f0bc-f566-443b-aa79-9fab8b9d7644",
+      "uuid": "ReActAgent.aggregate_tool_results-02402e86-cb25-4c71-825d-d4ad6c3e8fe7",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:47.467Z",
-      "endTime": "2026-01-30T14:14:47.468Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.810Z",
+      "endTime": "2026-02-16T06:12:32.811Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "tool_name": "multiply",
           "tool_kwargs": {
             "a": 50,
             "b": 2
           },
-          "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5",
+          "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
           "tool_output": {
             "blocks": [
               {
@@ -295,15 +295,15 @@
       }
     },
     {
-      "uuid": "ReActAgent.parse_agent_output-6a6ab58f-bb6b-4685-b1dc-03a7467ade51",
+      "uuid": "ReActAgent.parse_agent_output-33e40173-6a3d-459d-9209-c73c3caeba81",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:47.464Z",
-      "endTime": "2026-01-30T14:14:47.464Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.807Z",
+      "endTime": "2026-02-16T06:12:32.808Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "response": {
             "role": "assistant",
@@ -311,14 +311,14 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
               }
             ]
           },
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5",
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
               "tool_name": "multiply",
               "tool_kwargs": {
                 "a": 50,
@@ -331,15 +331,15 @@
       }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-0aa84be5-10af-4977-b53b-b843ff094592",
+      "uuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:46.597Z",
-      "endTime": "2026-01-30T14:14:47.462Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:32.806Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -373,7 +373,7 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+              "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
             }
           ]
         },
@@ -381,7 +381,7 @@
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5",
+            "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
             "tool_name": "multiply",
             "tool_kwargs": {
               "a": 50,
@@ -393,19 +393,19 @@
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-a31daeb3-4756-4b4a-b4c4-37d638871ecb",
+      "uuid": "ReActOutputParser.parse-aabf46ef-af6e-4739-8d5a-d758470825d6",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0aa84be5-10af-4977-b53b-b843ff094592",
-      "startTime": "2026-01-30T14:14:47.462Z",
-      "endTime": "2026-01-30T14:14:47.462Z",
+      "parentUuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
+      "startTime": "2026-02-16T06:12:32.806Z",
+      "endTime": "2026-02-16T06:12:32.806Z",
       "input": {
-        "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}",
+        "output": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}",
         "is_streaming": false
       },
       "output": {
-        "thought": "The current language of the user is: English. I need to use a tool to help me answer the question.",
+        "thought": "The current language of the user is English. I need to use a tool to help me answer the question.",
         "action": "multiply",
         "action_input": {
           "a": 50,
@@ -414,13 +414,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-394db952-aa16-45fd-871c-230a84f8b51d",
+      "uuid": "OpenAI.astream_chat-ab1c50ff-dc19-4eea-ba20-2e473b449273",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0aa84be5-10af-4977-b53b-b843ff094592",
-      "startTime": "2026-01-30T14:14:46.598Z",
-      "endTime": "2026-01-30T14:14:46.619Z",
+      "parentUuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:31.860Z",
       "input": {
         "messages": [
           {
@@ -445,18 +445,18 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11e53e9d0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231b90>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-49f6702a-23d6-4384-ada8-f68e166d45b9",
+      "uuid": "ReActAgent.setup_agent-8b095608-29fd-4b6b-b41e-1790b13cc65e",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:46.597Z",
-      "endTime": "2026-01-30T14:14:46.597Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.851Z",
+      "endTime": "2026-02-16T06:12:31.851Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "input": [
             {
@@ -500,15 +500,15 @@
       }
     },
     {
-      "uuid": "ReActAgent.init_run-8c5e1e04-a42e-42f5-9910-b05771cc11fc",
+      "uuid": "ReActAgent.init_run-526f60b8-a246-491e-86cb-42012d8b95f9",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:46.596Z",
-      "endTime": "2026-01-30T14:14:46.596Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.850Z",
+      "endTime": "2026-02-16T06:12:31.851Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "user_msg": "Calculate 50 * 2",
           "chat_history": null,
@@ -535,32 +535,34 @@
   ],
   "agentSpans": [
     {
-      "uuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
+      "uuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T14:14:46.594Z",
-      "endTime": "2026-01-30T14:14:46.595Z",
+      "startTime": "2026-02-16T06:12:31.847Z",
+      "endTime": "2026-02-16T06:12:31.849Z",
       "input": {
         "user_msg": "Calculate 50 * 2",
         "chat_history": null,
         "max_iterations": null,
         "early_stopping_method": null
       },
-      "output": "The result of 50 * 2 is 100.",
+      "output": {
+        "run_id": "HNqdOIcj7N"
+      },
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "87a02e06-a593-4cec-b5c7-3cf76a629f8b",
+      "uuid": "c0a6cb27-e3f4-4f1e-8a8b-168fcb8a54c1",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-b0b7d515-ca57-4838-b459-34a4807349e5",
-      "startTime": "2026-01-30T14:14:47.470Z",
-      "endTime": "2026-01-30T14:14:48.480Z",
+      "parentUuid": "OpenAI.astream_chat-0e3964ef-a638-47cb-9c7a-4e96dbde276c",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:34.047Z",
       "input": [
         {
           "role": "system",
@@ -572,7 +574,7 @@
         },
         {
           "role": "assistant",
-          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
         },
         {
           "role": "user",
@@ -582,20 +584,19 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: The result of 50 * 2 is 100."
+          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100."
         }
       ],
-      "model": "gpt-4o",
-      "prompt": {}
+      "model": "gpt-4o"
     },
     {
-      "uuid": "32e174f1-e944-4093-8670-33b16933138e",
+      "uuid": "07fa70c6-27aa-467c-9899-03cd70625175",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-394db952-aa16-45fd-871c-230a84f8b51d",
-      "startTime": "2026-01-30T14:14:46.598Z",
-      "endTime": "2026-01-30T14:14:47.461Z",
+      "parentUuid": "OpenAI.astream_chat-ab1c50ff-dc19-4eea-ba20-2e473b449273",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:32.805Z",
       "input": [
         {
           "role": "system",
@@ -609,32 +610,31 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
         }
       ],
-      "model": "gpt-4o",
-      "prompt": {}
+      "model": "gpt-4o"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "ReActAgent.call_tool-d8292da8-d044-4162-a5c9-c6e778513427",
+      "uuid": "ReActAgent.call_tool-d1c69442-1452-40eb-a62a-d70a0534bf0b",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ReActAgent.run-6407eaf3-1297-421e-b3e8-17a961e7f9d5",
-      "startTime": "2026-01-30T14:14:47.466Z",
-      "endTime": "2026-01-30T14:14:47.466Z",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.809Z",
+      "endTime": "2026-02-16T06:12:32.809Z",
       "input": {
-        "ctx": "<circular>",
+        "ctx": {},
         "ev": {
           "tool_name": "multiply",
           "tool_kwargs": {
             "a": 50,
             "b": 2
           },
-          "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5"
+          "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
         }
       },
       "output": {
@@ -643,7 +643,7 @@
           "a": 50,
           "b": 2
         },
-        "tool_id": "f9a435ed-f4da-43b1-a357-f85bb7592ad5",
+        "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
         "tool_output": {
           "blocks": [
             {
@@ -693,13 +693,13 @@
       ]
     },
     {
-      "uuid": "FunctionTool.acall-68f9f61d-9321-472f-aaf5-146a6b4b82b2",
+      "uuid": "FunctionTool.acall-22486954-dc2e-49a6-83c5-b3066a1988f6",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ReActAgent.call_tool-d8292da8-d044-4162-a5c9-c6e778513427",
-      "startTime": "2026-01-30T14:14:47.466Z",
-      "endTime": "2026-01-30T14:14:47.466Z",
+      "parentUuid": "ReActAgent.call_tool-d1c69442-1452-40eb-a62a-d70a0534bf0b",
+      "startTime": "2026-02-16T06:12:32.809Z",
+      "endTime": "2026-02-16T06:12:32.809Z",
       "input": {
         "kwargs": {
           "a": 50,
@@ -726,8 +726,8 @@
       }
     }
   ],
-  "startTime": "2026-01-30T14:14:46.594Z",
-  "endTime": "2026-01-30T14:14:46.595Z",
+  "startTime": "2026-02-16T06:12:31.847Z",
+  "endTime": "2026-02-16T06:12:34.049Z",
   "name": "llama_index_async_agent",
   "tags": [
     "llama_index",
