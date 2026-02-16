@@ -72,6 +72,7 @@ def test_request_succeeds_by_auto_routing_eu_key_when_region_unset(monkeypatch):
     assert data == {"ok": True}
     assert link is None
 
+
 def test_request_succeeds_by_auto_routing_au_key_when_region_unset(monkeypatch):
     """
     Red today:
