@@ -29,14 +29,14 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
         # These will be read by the event listener in handler.py
         wrapped._metric_collection = metric_collection
         wrapped._metrics = metric
-        
+
         # Pass the wrapped function to CrewAI's tool decorator
         tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-        
+
         # Also attach to the tool instance itself for redundancy
         tool_instance._metric_collection = metric_collection
         tool_instance._metrics = metric
-        
+
         return tool_instance
 
     # Case 2: @tool("name")
@@ -52,13 +52,13 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
             # Attach metrics as attributes
             wrapped._metric_collection = metric_collection
             wrapped._metrics = metric
-            
+
             tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-            
+
             # Also attach to the tool instance
             tool_instance._metric_collection = metric_collection
             tool_instance._metrics = metric
-            
+
             return tool_instance
 
         return _decorator
@@ -77,13 +77,13 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
             # Attach metrics as attributes
             wrapped._metric_collection = metric_collection
             wrapped._metrics = metric
-            
+
             tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-            
+
             # Also attach to the tool instance
             tool_instance._metric_collection = metric_collection
             tool_instance._metrics = metric
-            
+
             return tool_instance
 
         return _decorator

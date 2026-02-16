@@ -183,6 +183,7 @@ def patch_default_agent_run_single_turn():
         return
 
     import agents.run_internal.run_loop as run_loop
+
     original_run_single_turn = run_loop.run_single_turn
 
     async def patched_run_single_turn(*args, **kwargs):
@@ -191,23 +192,32 @@ def patch_default_agent_run_single_turn():
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    
+
                     # 1. Safely extract agent from positional args if it isn't in kwargs
-                    agent = kwargs.get("agent") if "agent" in kwargs else (args[0] if len(args) > 0 else None)
+                    agent = (
+                        kwargs.get("agent")
+                        if "agent" in kwargs
+                        else (args[0] if len(args) > 0 else None)
+                    )
                     _set_agent_metrics(agent, agent_span)
-                    
+
                     # 2. Safely extract input
                     if agent_span.input is None or agent_span.input == {}:
                         pre_items = getattr(res, "pre_step_items", []) or []
                         _pre_step_items_raw_list = [
-                            getattr(item, "raw_item", str(item)) for item in pre_items
+                            getattr(item, "raw_item", str(item))
+                            for item in pre_items
                         ]
-                        
+
                         if _pre_step_items_raw_list:
-                            agent_span.input = make_json_serializable(_pre_step_items_raw_list)
+                            agent_span.input = make_json_serializable(
+                                _pre_step_items_raw_list
+                            )
                         else:
-                            agent_span.input = make_json_serializable(getattr(res, "original_input", None))
-                    
+                            agent_span.input = make_json_serializable(
+                                getattr(res, "original_input", None)
+                            )
+
                     # 3. Safely extract output
                     model_response = getattr(res, "model_response", None)
                     if model_response is not None:
@@ -219,15 +229,16 @@ def patch_default_agent_run_single_turn():
 
     # Patch the source module
     run_loop.run_single_turn = patched_run_single_turn
-    
+
     try:
         import agents.run as agents_run
+
         if hasattr(agents_run, "run_single_turn"):
             agents_run.run_single_turn = patched_run_single_turn
     except ImportError:
         pass
 
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True 
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True
 
 
 def patch_default_agent_run_single_turn_streamed():
@@ -236,31 +247,43 @@ def patch_default_agent_run_single_turn_streamed():
         return
 
     import agents.run_internal.run_loop as run_loop
+
     original_run_single_turn_streamed = run_loop.run_single_turn_streamed
 
     async def patched_run_single_turn_streamed(*args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn_streamed(*args, **kwargs)
+        res: SingleStepResult = await original_run_single_turn_streamed(
+            *args, **kwargs
+        )
         try:
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    
+
                     # 1. Safely extract agent
-                    agent = kwargs.get("agent") if "agent" in kwargs else (args[0] if len(args) > 0 else None)
+                    agent = (
+                        kwargs.get("agent")
+                        if "agent" in kwargs
+                        else (args[0] if len(args) > 0 else None)
+                    )
                     _set_agent_metrics(agent, agent_span)
-                    
+
                     # 2. Safely extract input
                     if agent_span.input is None or agent_span.input == {}:
                         pre_items = getattr(res, "pre_step_items", []) or []
                         _pre_step_items_raw_list = [
-                            getattr(item, "raw_item", str(item)) for item in pre_items
+                            getattr(item, "raw_item", str(item))
+                            for item in pre_items
                         ]
-                        
+
                         if _pre_step_items_raw_list:
-                            agent_span.input = make_json_serializable(_pre_step_items_raw_list)
+                            agent_span.input = make_json_serializable(
+                                _pre_step_items_raw_list
+                            )
                         else:
-                            agent_span.input = make_json_serializable(getattr(res, "original_input", None))
-                    
+                            agent_span.input = make_json_serializable(
+                                getattr(res, "original_input", None)
+                            )
+
                     # 3. Safely extract output
                     model_response = getattr(res, "model_response", None)
                     if model_response is not None:
@@ -271,16 +294,18 @@ def patch_default_agent_run_single_turn_streamed():
         return res
 
     run_loop.run_single_turn_streamed = patched_run_single_turn_streamed
-    
+
     try:
         import agents.run as agents_run
+
         if hasattr(agents_run, "run_single_turn_streamed"):
-            agents_run.run_single_turn_streamed = patched_run_single_turn_streamed
+            agents_run.run_single_turn_streamed = (
+                patched_run_single_turn_streamed
+            )
     except ImportError:
         pass
 
     _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True
-
 
 
 def patch_default_agent_runner_get_model():
@@ -292,7 +317,7 @@ def patch_default_agent_runner_get_model():
         # Import the new run_loop module where get_model now lives
         import agents.run_internal.run_loop as run_loop
     except ImportError:
-        return # Fallback in case the SDK structure changes again
+        return  # Fallback in case the SDK structure changes again
 
     # Depending on the exact minor version, it might be public or private
     if hasattr(run_loop, "get_model"):
@@ -322,7 +347,7 @@ def patch_default_agent_runner_get_model():
         llm_metrics = getattr(agent, "llm_metrics", None)
         llm_metric_collection = getattr(agent, "llm_metric_collection", None)
         confident_prompt = getattr(agent, "confident_prompt", None)
-        
+
         return _ObservedModel(
             inner=model,
             llm_metric_collection=llm_metric_collection,
