@@ -124,7 +124,6 @@
       ],
       "output": "The current weather in Tokyo is cloudy with a temperature of 68\u00b0F.",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 127.0,
       "outputTokenCount": 17.0
     },
@@ -210,7 +209,6 @@
       ],
       "output": "{\"call_id\": \"call_Q2RYMEJVbuA4r64HvyJbBqZv\", \"name\": \"get_weather\", \"arguments\": \"{\\\"city\\\":\\\"Tokyo\\\"}\"}",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 98.0,
       "outputTokenCount": 15.0
     }

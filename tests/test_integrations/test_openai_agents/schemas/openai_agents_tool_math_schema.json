@@ -124,7 +124,6 @@
       ],
       "output": "The result of \\(10 + 5\\) is 15.",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 132.0,
       "outputTokenCount": 16.0
     },
@@ -210,7 +209,6 @@
       ],
       "output": "{\"call_id\": \"call_uMT0BRAxnLlBfhcFFnzLBffZ\", \"name\": \"calculate\", \"arguments\": \"{\\\"expression\\\":\\\"10 + 5\\\"}\"}",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 101.0,
       "outputTokenCount": 17.0
     }
