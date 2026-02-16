@@ -16,6 +16,8 @@ from deepeval.prompt import Prompt
 # Create a Prompt object for prompt tracking
 test_prompt = Prompt(alias="metric-collection-test-prompt")
 test_prompt.version = "01.00.00"
+test_prompt.label = "test-label"
+test_prompt.hash = "bab04ec"
 
 
 @tool(metric_collection="tool_accuracy")

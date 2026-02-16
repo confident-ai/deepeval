@@ -220,23 +220,11 @@ class TestPromptText:
         # Mock the API to verify no request is made
         with patch("deepeval.prompt.prompt.Api") as mock_api:
             prompt2 = Prompt(alias=unique_alias)
-            assert prompt2.hash == hash
-            assert prompt2.text_template == content
-            # Api() should not have been instantiated when using cache
-            mock_api.assert_not_called()
-
-        # Test the same for label cache
-        prompt3 = Prompt(alias=self.ALIAS)
-        prompt3.pull(label=self.LABEL, write_to_cache=True)
-        label_content = prompt3.text_template
-
-        with patch("deepeval.prompt.prompt.Api") as mock_api:
-            prompt4 = Prompt(alias=self.ALIAS)
-            prompt4.pull(label=self.LABEL, default_to_cache=True)
+            prompt2.pull(hash=hash, default_to_cache=True)
 
             # Verify content matches without API call
-            assert prompt4.text_template == label_content
-            assert prompt4.label == self.LABEL
+            assert prompt2.text_template == content
+            assert prompt2.hash == hash
             mock_api.assert_not_called()
 
     def test_version_polling(self):

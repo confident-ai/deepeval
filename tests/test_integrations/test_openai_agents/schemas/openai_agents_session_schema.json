@@ -97,7 +97,6 @@
       ],
       "output": "Your name is Bob.",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 45.0,
       "outputTokenCount": 6.0
     }

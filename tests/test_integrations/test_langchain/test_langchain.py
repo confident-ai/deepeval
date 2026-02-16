@@ -10,6 +10,8 @@ from tests.test_integrations.utils import (
 
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
+prompt.label = "test-label"
+prompt.hash = "bab04ec"
 
 
 @tool(metric_collection="test_collection_1")

@@ -60,7 +60,6 @@
       ],
       "output": "Hi there! How can I assist you today?",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 32.0,
       "outputTokenCount": 11.0
     }

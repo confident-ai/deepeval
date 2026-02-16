@@ -61,7 +61,6 @@
       ],
       "output": "Hello! How can I assist you today?",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 19.0,
       "outputTokenCount": 10.0,
       "metricCollection": "test_llm_metrics"

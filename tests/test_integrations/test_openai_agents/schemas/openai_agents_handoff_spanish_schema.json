@@ -121,7 +121,6 @@
       ],
       "output": "Hola",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 55.0,
       "outputTokenCount": 2.0
     },
@@ -191,7 +190,6 @@
       ],
       "output": "{\"call_id\": \"call_mPmlPbHjEYwuzs4zc4Fq6PnJ\", \"name\": \"transfer_to_spanishagent\", \"arguments\": \"{}\"}",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 83.0,
       "outputTokenCount": 14.0
     }

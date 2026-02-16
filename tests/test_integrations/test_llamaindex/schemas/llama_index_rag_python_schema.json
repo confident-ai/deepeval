@@ -400,8 +400,7 @@
           "content": "Python is a high-level, interpreted programming language known for its simplicity."
         }
       ],
-      "model": "gpt-4o",
-      "prompt": {}
+      "model": "gpt-4o"
     }
   ],
   "retrieverSpans": [],

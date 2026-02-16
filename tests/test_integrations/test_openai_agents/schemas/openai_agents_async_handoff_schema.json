@@ -121,7 +121,6 @@
       ],
       "output": "Hello",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 55.0,
       "outputTokenCount": 2.0
     },
@@ -191,7 +190,6 @@
       ],
       "output": "{\"call_id\": \"call_TcGFTO45nB3IDzdHwTAVLZyb\", \"name\": \"transfer_to_englishagent\", \"arguments\": \"{}\"}",
       "model": "gpt-4o-2024-08-06",
-      "prompt": {},
       "inputTokenCount": 83.0,
       "outputTokenCount": 14.0
     }

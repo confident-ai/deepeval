@@ -1,24 +1,24 @@
 {
-  "uuid": "c5ed652a-a8a4-4d57-b873-5c4a2cfd5d1f",
+  "uuid": "c4bc1e03-0560-4013-8791-889b70ca22e0",
   "baseSpans": [
     {
-      "uuid": "c2616f2e-77dd-4c74-ae2e-f1977acc5fe5",
+      "uuid": "1bb93b37-840d-481d-9b10-d165438cb48c",
       "name": "kickoff_async",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T05:58:44.440Z",
-      "endTime": "2026-01-29T05:58:45.513Z",
+      "startTime": "2026-02-15T10:22:47.311Z",
+      "endTime": "2026-02-15T10:22:48.313Z",
       "input": {},
       "output": "Processed output: Async Request 1 has been successfully processed."
     },
     {
-      "uuid": "39fdbb72-f5da-49fd-aa6a-5e4ddad1e813",
+      "uuid": "8d8bce93-8cd8-4ffc-b5ad-f1c55124e0dc",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c2616f2e-77dd-4c74-ae2e-f1977acc5fe5",
-      "startTime": "2026-01-29T05:58:44.441Z",
-      "endTime": "2026-01-29T05:58:45.512Z",
+      "parentUuid": "1bb93b37-840d-481d-9b10-d165438cb48c",
+      "startTime": "2026-02-15T10:22:47.311Z",
+      "endTime": "2026-02-15T10:22:48.312Z",
       "input": {
         "input": "Async Request 1"
       },
@@ -27,13 +27,13 @@
   ],
   "agentSpans": [
     {
-      "uuid": "69568c3b-041f-45ff-919b-dcb8a9222e02",
+      "uuid": "27f3759e-6b24-4031-9fa1-6bf11ec4c6a6",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "39fdbb72-f5da-49fd-aa6a-5e4ddad1e813",
-      "startTime": "2026-01-29T05:58:44.445Z",
-      "endTime": "2026-01-29T05:58:45.506Z",
+      "parentUuid": "8d8bce93-8cd8-4ffc-b5ad-f1c55124e0dc",
+      "startTime": "2026-02-15T10:22:47.316Z",
+      "endTime": "2026-02-15T10:22:48.309Z",
       "input": "Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "Processed output: Async Request 1 has been successfully processed.",
       "availableTools": [],
@@ -42,13 +42,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "7cd30b4c-deca-4ff0-bd4c-955c49b17729",
+      "uuid": "7bddf087-570f-4f5f-88f9-ba3fda9eb1d1",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "69568c3b-041f-45ff-919b-dcb8a9222e02",
-      "startTime": "2026-01-29T05:58:44.447Z",
-      "endTime": "2026-01-29T05:58:45.503Z",
+      "parentUuid": "27f3759e-6b24-4031-9fa1-6bf11ec4c6a6",
+      "startTime": "2026-02-15T10:22:47.318Z",
+      "endTime": "2026-02-15T10:22:48.308Z",
       "input": [
         {
           "role": "system",
@@ -60,14 +60,13 @@
         }
       ],
       "output": "Processed output: Async Request 1 has been successfully processed.",
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "model": "gpt-4o-mini"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T05:58:44.440Z",
-  "endTime": "2026-01-29T05:58:45.513Z",
+  "startTime": "2026-02-15T10:22:47.311Z",
+  "endTime": "2026-02-15T10:22:48.313Z",
   "environment": "development",
   "input": {
     "input": "Async Request 1"

@@ -1,7 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 import inspect
 from time import perf_counter
 import uuid
+from pydantic import Field
 
 from llama_index.core.agent.workflow.workflow_events import (
     AgentWorkflowStartEvent,
@@ -66,6 +67,7 @@ def is_llama_index_installed():
 class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     root_span_trace_id_map: Dict[str, str] = {}
     open_ai_astream_to_llm_span_map: Dict[str, str] = {}
+    auto_created_trace_uuids: Set[str] = Field(default_factory=set)
 
     def __init__(self):
         is_llama_index_installed()
@@ -90,12 +92,15 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             parent_span = trace_manager.get_span_by_uuid(event.span_id)
             if parent_span:
                 trace_uuid = parent_span.trace_uuid
+            elif event.span_id in self.root_span_trace_id_map:
+                trace_uuid = self.root_span_trace_id_map[event.span_id]
             else:
                 current_trace = current_trace_context.get()
                 if current_trace:
                     trace_uuid = current_trace.uuid
                 else:
                     trace_uuid = trace_manager.start_new_trace().uuid
+                    self.auto_created_trace_uuids.add(trace_uuid)
 
             llm_span = LlmSpan(
                 name="ConfidentLLMSpan",
@@ -118,17 +123,23 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 ),
                 prompt=llm_span_context.prompt if llm_span_context else None,
                 prompt_alias=(
-                    llm_span_context.prompt.alias if llm_span_context else None
+                    llm_span_context.prompt.alias
+                    if llm_span_context.prompt
+                    else None
                 ),
                 prompt_commit_hash=(
-                    llm_span_context.prompt.hash if llm_span_context else None
+                    llm_span_context.prompt.hash
+                    if llm_span_context.prompt
+                    else None
                 ),
                 prompt_label=(
-                    llm_span_context.prompt.label if llm_span_context else None
+                    llm_span_context.prompt.label
+                    if llm_span_context.prompt
+                    else None
                 ),
                 prompt_version=(
                     llm_span_context.prompt.version
-                    if llm_span_context
+                    if llm_span_context.prompt
                     else None
                 ),
             )
@@ -145,6 +156,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             if llm_span_uuid:
                 llm_span = trace_manager.get_span_by_uuid(llm_span_uuid)
                 if llm_span:
+                    trace_uuid = llm_span.trace_uuid
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
                     llm_span.input = llm_span.input
@@ -153,6 +165,11 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     )
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
+                    # Fallback cleanup for streams
+                    if trace_uuid in self.auto_created_trace_uuids:
+                        if len(self.open_ai_astream_to_llm_span_map) == 0:
+                            trace_manager.end_trace(trace_uuid)
+                            self.auto_created_trace_uuids.remove(trace_uuid)
 
         if isinstance(event, RetrievalEndEvent):
             span = trace_manager.get_span_by_uuid(event.span_id)
@@ -182,9 +199,13 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 trace_uuid = current_trace.uuid
             else:
                 trace_uuid = trace_manager.start_new_trace().uuid
+                self.auto_created_trace_uuids.add(trace_uuid)
 
             if class_name == "Workflow" and method_name == "run":
                 parent_span_id = None
+
+        elif parent_span_id in self.root_span_trace_id_map:
+            trace_uuid = self.root_span_trace_id_map[parent_span_id]
 
         elif trace_manager.get_span_by_uuid(parent_span_id):
             trace_uuid = trace_manager.get_span_by_uuid(
@@ -196,6 +217,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 trace_uuid = current_trace.uuid
             else:
                 trace_uuid = trace_manager.start_new_trace().uuid
+                self.auto_created_trace_uuids.add(trace_uuid)
 
         self.root_span_trace_id_map[id_] = trace_uuid
 
@@ -323,12 +345,29 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 trace_manager.get_trace_by_uuid(base_span.trace_uuid)
             )
 
-        trace_manager.remove_span(base_span.uuid)
-
         if base_span.parent_uuid is None:
-            trace_manager.end_trace(base_span.trace_uuid)
-            if base_span.uuid in self.root_span_trace_id_map:
-                self.root_span_trace_id_map.pop(base_span.uuid)
+            is_streaming = (
+                hasattr(result, "response_gen")
+                or inspect.isgenerator(result)
+                or inspect.isasyncgen(result)
+            )
+            is_workflow = (
+                class_name in ["Workflow", "FunctionAgent"]
+                and method_name == "run"
+            )
+
+            if base_span.trace_uuid in self.auto_created_trace_uuids:
+                if (
+                    not is_streaming
+                    and not is_workflow
+                    and len(self.open_ai_astream_to_llm_span_map) == 0
+                ):
+                    trace_manager.end_trace(base_span.trace_uuid)
+                    self.auto_created_trace_uuids.remove(base_span.trace_uuid)
+                    if base_span.uuid in self.root_span_trace_id_map:
+                        self.root_span_trace_id_map.pop(base_span.uuid)
+
+        trace_manager.remove_span(base_span.uuid)
 
         return base_span
 

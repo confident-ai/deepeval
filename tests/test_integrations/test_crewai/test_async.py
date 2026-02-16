@@ -13,6 +13,8 @@ from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
 )
+from deepeval.tracing.trace_context import LlmSpanContext
+from deepeval.prompt import Prompt
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
@@ -102,6 +104,10 @@ class TestCrewAIAsync:
     @trace_test("crewai_features_async.json")
     async def test_features_async(self):
         crew = get_evals_crew()
+        prompt = Prompt(alias="asd")
+        prompt._version = "00.00.01"
+        prompt.label = "test-label"
+        prompt.hash = "bab04ec"
         with trace(
             name="CrewAI Metadata Check Async",
             tags=["crewai", "metadata", "async"],
@@ -109,6 +115,7 @@ class TestCrewAIAsync:
             metadata={"env": "testing_async"},
             metric_collection="trace_metrics_async_v1",
             thread_id="trace_thred_id",
+            llm_span_context=LlmSpanContext(prompt=prompt),
             metrics=[AnswerRelevancyMetric()],
         ):
             result = await crew.kickoff_async(inputs={"input": "Async Data"})

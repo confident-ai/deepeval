@@ -13,6 +13,8 @@ from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
 )
+from deepeval.tracing.trace_context import LlmSpanContext
+from deepeval.prompt import Prompt
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
@@ -116,6 +118,10 @@ class TestCrewAISync:
     @trace_test("crewai_features_sync.json")
     def test_features_sync(self):
         crew = get_evals_crew()
+        prompt = Prompt(alias="asd")
+        prompt._version = "00.00.01"
+        prompt.label = "test-label"
+        prompt.hash = "bab04ec"
         with trace(
             name="CrewAI Metadata Check Sync",
             tags=["crewai", "metadata", "sync"],
@@ -123,6 +129,11 @@ class TestCrewAISync:
             metadata={"env": "testing"},
             metric_collection="trace_metrics_v1",
             thread_id="trace_thred_id",
+            llm_span_context=LlmSpanContext(
+                prompt=prompt,
+                metric_collection="llm-metric-collection",
+                metrics=[AnswerRelevancyMetric()],
+            ),
             metrics=[AnswerRelevancyMetric()],
         ):
             res = crew.kickoff(inputs={"input": "Sync Data"})

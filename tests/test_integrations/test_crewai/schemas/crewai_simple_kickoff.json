@@ -1,31 +1,31 @@
 {
-  "uuid": "e7943c38-4efb-49f0-807c-f8c95ac2d339",
+  "uuid": "22ff82ad-a16c-44a4-b7e8-f739c266ec2a",
   "baseSpans": [
     {
-      "uuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
+      "uuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T06:11:39.488Z",
-      "endTime": "2026-01-29T06:11:40.704Z",
+      "startTime": "2026-02-15T10:21:57.368Z",
+      "endTime": "2026-02-15T10:21:58.243Z",
       "input": {
         "input": "Hello World"
       },
-      "output": "Hello World! \ud83d\ude0a",
+      "output": "Hello World! How are you today?",
       "metricCollection": "metric_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
+      "uuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "08dac7ca-980d-4df6-9a53-58fa9334cd3b",
-      "startTime": "2026-01-29T06:11:39.493Z",
-      "endTime": "2026-01-29T06:11:40.698Z",
+      "parentUuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
+      "startTime": "2026-02-15T10:21:57.375Z",
+      "endTime": "2026-02-15T10:21:58.236Z",
       "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Hello World! \ud83d\ude0a",
+      "output": "Hello World! How are you today?",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "metric_collection_1"
@@ -33,13 +33,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "5a8a26c9-d66a-4559-99b9-886ef575d4d1",
+      "uuid": "fc165bad-3b13-49db-a73a-9a413c5e4582",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6543f4f8-852d-45a4-8b5a-ecb1d851f8c2",
-      "startTime": "2026-01-29T06:11:39.495Z",
-      "endTime": "2026-01-29T06:11:40.695Z",
+      "parentUuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
+      "startTime": "2026-02-15T10:21:57.376Z",
+      "endTime": "2026-02-15T10:21:58.233Z",
       "input": [
         {
           "role": "system",
@@ -50,21 +50,20 @@
           "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "Hello World! \ud83d\ude0a",
+      "output": "Hello World! How are you today?",
       "model": "gpt-4o-mini",
-      "prompt": {},
       "metricCollection": "metric_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T06:11:39.488Z",
-  "endTime": "2026-01-29T06:11:40.704Z",
+  "startTime": "2026-02-15T10:21:57.368Z",
+  "endTime": "2026-02-15T10:21:58.243Z",
   "environment": "development",
   "input": {
     "input": "Hello World"
   },
-  "output": "Hello World! \ud83d\ude0a",
+  "output": "Hello World! How are you today?",
   "status": "SUCCESS",
   "metricCollection": "metric_collection_1"
 }

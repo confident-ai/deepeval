@@ -1,36 +1,36 @@
 {
-  "uuid": "e42c595f-1350-4fdc-8b38-752a0553c22a",
+  "uuid": "59810b66-fe8e-407e-a368-bf60002d9dee",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "f4f696c9-380c-417d-8d88-e7ad1fa960fb",
+      "uuid": "c04e242d-9bbe-4599-be93-2d88308efc49",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2025-10-17T03:17:01.266Z",
-      "endTime": "2025-10-17T03:17:02.966Z",
+      "startTime": "2026-02-15T05:57:13.379Z",
+      "endTime": "2026-02-15T05:57:14.245Z",
       "input": [
         {
           "role": "user",
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm here and ready to help. How can I assist you today?",
+      "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here to help you. How can I assist you today?",
       "model": "gpt-4o",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
       "inputTokenCount": 13.0,
-      "outputTokenCount": 16.0,
-      "metricCollection": "test_collection_1"
+      "outputTokenCount": 28.0,
+      "metricCollection": "test_collection_1",
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2025-10-17T03:17:01.266Z",
-  "endTime": "2025-10-17T03:17:02.966Z",
+  "startTime": "2026-02-15T05:57:13.379Z",
+  "endTime": "2026-02-15T05:57:14.246Z",
   "name": "test_name_1",
   "metadata": {
     "test_metadata_1": "test_value_1"
@@ -42,6 +42,6 @@
   "threadId": "test_thread_id_1",
   "userId": "test_user_id_1",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm here and ready to help. How can I assist you today?",
+  "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here to help you. How can I assist you today?",
   "status": "SUCCESS"
 }

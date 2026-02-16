@@ -6,7 +6,7 @@ from typing import Optional, Tuple, Any, List, Union
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
-from deepeval.tracing.types import ToolSpan, SpanType, TraceSpanStatus
+from deepeval.tracing.types import ToolSpan, TraceSpanStatus, LlmSpan
 from deepeval.config.settings import get_settings
 
 
@@ -63,16 +63,20 @@ def _get_metrics_data(obj: Any) -> Tuple[Optional[str], Optional[Any]]:
 
     if not obj:
         return None, None
-    metric_collection = getattr(obj, "_metric_collection", None)
-    metrics = getattr(obj, "_metrics", None)
+    metric_collection = getattr(
+        obj, "_metric_collection", getattr(obj, "metric_collection", None)
+    )
+    metrics = getattr(obj, "_metrics", getattr(obj, "metrics", None))
 
     if metric_collection is not None or metrics is not None:
         return metric_collection, metrics
 
     func = getattr(obj, "func", None)
     if func:
-        metric_collection = getattr(func, "_metric_collection", None)
-        metrics = getattr(func, "_metrics", None)
+        metric_collection = getattr(
+            func, "_metric_collection", getattr(func, "metric_collection", None)
+        )
+        metrics = getattr(func, "_metrics", getattr(func, "metrics", None))
 
     return metric_collection, metrics
 
@@ -187,6 +191,42 @@ class CrewAIEventsListener(BaseEventListener):
                 if span:
                     msgs = getattr(event, "messages")
                     span.input = msgs
+                    if isinstance(span, LlmSpan):
+                        from deepeval.tracing.trace_context import (
+                            current_llm_context,
+                        )
+
+                        llm_context = current_llm_context.get()
+                        if llm_context:
+                            if llm_context.prompt:
+                                span.prompt = llm_context.prompt
+                                span.prompt_alias = llm_context.prompt.alias
+                                span.prompt_version = llm_context.prompt.version
+                                span.prompt_label = llm_context.prompt.label
+                                span.prompt_commit_hash = (
+                                    llm_context.prompt.hash
+                                )
+                            if llm_context.metrics and not span.metrics:
+                                span.metrics = llm_context.metrics
+                            if (
+                                llm_context.metric_collection
+                                and not span.metric_collection
+                            ):
+                                span.metric_collection = (
+                                    llm_context.metric_collection
+                                )
+                            if llm_context.expected_output:
+                                span.expected_output = (
+                                    llm_context.expected_output
+                                )
+                            if llm_context.expected_tools:
+                                span.expected_tools = llm_context.expected_tools
+                            if llm_context.context:
+                                span.context = llm_context.context
+                            if llm_context.retrieval_context:
+                                span.retrieval_context = (
+                                    llm_context.retrieval_context
+                                )
 
         @crewai_event_bus.on(LLMCallCompletedEvent)
         def on_llm_completed(source, event: LLMCallCompletedEvent):
@@ -240,8 +280,7 @@ class CrewAIEventsListener(BaseEventListener):
 
             # 2. SMART DEDUPING
             current_span = current_span_context.get()
-            span_type = getattr(current_span, "type", None)
-            is_tool_span = span_type == "tool" or span_type == SpanType.TOOL
+            is_tool_span = isinstance(current_span, ToolSpan)
             if (
                 is_tool_span
                 and getattr(current_span, "name", "") == event.tool_name
@@ -253,9 +292,9 @@ class CrewAIEventsListener(BaseEventListener):
             metrics = None
 
             if hasattr(source, "tools"):
-                for tools in source.tools:
-                    if getattr(tools, "name", None) == event.tool_name:
-                        metric_collection, metrics = _get_metrics_data(tools)
+                for tool_obj in source.tools:
+                    if getattr(tool_obj, "name", None) == event.tool_name:
+                        metric_collection, metrics = _get_metrics_data(tool_obj)
                         break
 
             if not metric_collection:
@@ -278,27 +317,37 @@ class CrewAIEventsListener(BaseEventListener):
             key = self.get_tool_stack_key(source, event.tool_name)
             observer = None
 
-            if (
-                key in self.tool_observers_stack
-                and self.tool_observers_stack[key]
-            ):
-                item = self.tool_observers_stack[key].pop()
-                if item is None:
-                    return
-                observer = item
+            # 1. Drain the stack to find the actual observer, ignoring 'None' duplicates!
+            if key in self.tool_observers_stack:
+                while self.tool_observers_stack[key]:
+                    item = self.tool_observers_stack[key].pop()
+                    if item is not None:
+                        observer = item
+                        break
+
+            # 2. Key-Mismatch Fallback: If CrewAI mutated the source object ID,
+            # search the dictionary keys for the tool name.
+            if not observer:
+                for stack_key, stack in self.tool_observers_stack.items():
+                    if event.tool_name in stack_key and stack:
+                        while stack:
+                            item = stack.pop()
+                            if item is not None:
+                                observer = item
+                                break
+                        if observer:
+                            break
 
             if not observer:
                 current_span = current_span_context.get()
                 if (
                     current_span
-                    and getattr(current_span, "type", None)
-                    in ["tool", SpanType.TOOL]
+                    and isinstance(current_span, ToolSpan)
                     and getattr(current_span, "name", "") == event.tool_name
                 ):
                     current_span.output = getattr(
                         event, "output", getattr(event, "result", None)
                     )
-
                     if current_span.end_time is None:
                         current_span.end_time = perf_counter()
 
@@ -316,6 +365,21 @@ class CrewAIEventsListener(BaseEventListener):
                         current_span_context.set(None)
                     return
 
+                for span in list(trace_manager.active_spans.values()):
+                    if (
+                        isinstance(span, ToolSpan)
+                        and span.name == event.tool_name
+                        and span.end_time is None
+                    ):
+                        span.output = getattr(
+                            event, "output", getattr(event, "result", None)
+                        )
+                        span.end_time = perf_counter()
+                        span.status = TraceSpanStatus.SUCCESS
+                        self._flatten_tool_span(span)
+                        trace_manager.remove_span(span.uuid)
+                return
+
             if observer:
                 current_span = current_span_context.get()
                 token = None
@@ -328,12 +392,12 @@ class CrewAIEventsListener(BaseEventListener):
                     if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
 
-                observer.update_span_properties = self._flatten_tool_span
-                observer.__exit__(None, None, None)
-
                 if span_to_close and span_to_close.end_time is None:
                     span_to_close.end_time = perf_counter()
                     span_to_close.status = TraceSpanStatus.SUCCESS
+
+                observer.update_span_properties = self._flatten_tool_span
+                observer.__exit__(None, None, None)
 
                 if token:
                     current_span_context.reset(token)

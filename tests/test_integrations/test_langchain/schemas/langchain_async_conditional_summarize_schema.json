@@ -193,7 +193,6 @@
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {},
       "inputTokenCount": 192.0,
       "outputTokenCount": 11.0
     },
@@ -229,7 +228,6 @@
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
-      "prompt": {},
       "inputTokenCount": 147.0,
       "outputTokenCount": 174.0
     }
