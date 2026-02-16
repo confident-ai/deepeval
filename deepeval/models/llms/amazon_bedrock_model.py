@@ -259,6 +259,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     @asynccontextmanager
     async def _get_client(self):
         use_sdk = sdk_retries_for(PS.BEDROCK)
+        self._sdk_retry_mode = use_sdk
 
         retries_config = {"max_attempts": (5 if use_sdk else 1)}
         if use_sdk:
