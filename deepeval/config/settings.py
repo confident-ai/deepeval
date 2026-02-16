@@ -430,6 +430,10 @@ class Settings(BaseSettings):
         None,
         description="AWS secret access key (for Bedrock or other AWS-backed integrations).",
     )
+    AWS_SESSION_TOKEN: Optional[SecretStr] = Field(
+        None,
+        description="AWS session token (for temporary credentials with Bedrock or other AWS-backed integrations).",
+    )
     # AWS Bedrock
     USE_AWS_BEDROCK_MODEL: Optional[bool] = Field(
         None, description="Select AWS Bedrock as the active LLM provider."
