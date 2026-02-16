@@ -66,6 +66,7 @@ app.add_typer(test_app, name="test")
 class Regions(Enum):
     US = "US"
     EU = "EU"
+    AU = "AU"
 
 
 def version_callback(value: Optional[bool] = None) -> None:
@@ -156,7 +157,7 @@ def main(
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
-        ..., help="The data region to use (US or EU)"
+        ..., help="The data region to use (US or EU or AU)"
     ),
     save: Optional[str] = typer.Option(
         None,
@@ -174,7 +175,12 @@ def set_confident_region_command(
 ):
     """Set the Confident AI data region."""
     # Add flag emojis based on region
-    flag = "🇺🇸" if region == Regions.US else "🇪🇺"
+    if region == Regions.EU:
+        flag = "🇪🇺"
+    elif region == Regions.EU:
+        flag = "🇦🇺"
+    else:
+        flag = "🇺🇸"
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
