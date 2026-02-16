@@ -58,7 +58,7 @@ def render_login_message():
     print(pyfiglet.Figlet(font="big_money-ne").renderText("Confident AI"))
 
 
-def upload_and_open_link(_span: Span):
+def upload_and_open_link(_span: Optional[Span] = None):
     last_test_run_data = global_test_run_manager.get_latest_test_run_data()
     if last_test_run_data:
         confident_api_key = get_confident_api_key()
@@ -76,7 +76,8 @@ def upload_and_open_link(_span: Span):
                     print(
                         "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
                     )
-                    _span.set_attribute("completed", True)
+                    if _span is not None:
+                        _span.set_attribute("completed", True)
                     break
                 else:
                     print("❌ API Key cannot be empty. Please try again.\n")
