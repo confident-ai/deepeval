@@ -790,7 +790,7 @@ class Synthesizer:
                 prompt = SynthesizerTemplate.generate_text2sql_expected_output(
                     input=data.input, context="\n".join(context)
                 )
-                expected_output: SQLData = self._generate_schema(
+                expected_output: SQLData = await self._a_generate_schema(
                     prompt, SQLData, self.model
                 )
 
@@ -798,7 +798,9 @@ class Synthesizer:
             golden = Golden(
                 input=data.input,
                 context=context,
-                expected_output=expected_output.sql,
+                expected_output=(
+                    expected_output.sql if expected_output is not None else None
+                ),
             )
             goldens.append(golden)
 
@@ -953,14 +955,14 @@ class Synthesizer:
                         progress=progress,
                         pbar_evolve_input_id=pbar_evolve_input_id,
                     )
-                    evolved_prompts.append(evolved_prompt)
+                    evolved_prompts.append((evolved_prompt, evolutions_used))
                     update_pbar(progress, pbar_id)
 
                 # Synthesize Goldens
-                for evolved_prompt in evolved_prompts:
+                for evolved_prompt, evolutions in evolved_prompts:
                     golden = Golden(
                         input=evolved_prompt,
-                        additional_metadata={"evolutions": evolutions_used},
+                        additional_metadata={"evolutions": evolutions},
                     )
                     goldens.append(golden)
 
@@ -1129,6 +1131,8 @@ class Synthesizer:
         filtered_inputs = []
         for item in inputs:
             input = item.input
+            score = 0.0
+            feedback = ""
             for _ in range(self.filtration_config.max_quality_retries):
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
@@ -1172,6 +1176,8 @@ class Synthesizer:
         filtered_inputs = []
         for item in inputs:
             input = item.input
+            score = 0.0
+            feedback = ""
             for _ in range(self.filtration_config.max_quality_retries):
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
