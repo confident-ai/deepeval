@@ -92,8 +92,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             )
         else:
             self.aws_session_token = settings.AWS_SESSION_TOKEN
-    
-    
+
         # Dependencies: aiobotocore & botocore
         aiobotocore_session = require_dependency(
             "aiobotocore.session",
@@ -285,7 +284,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         if self.aws_session_token is not None:
             client_kwargs["aws_session_token"] = (
                 self.aws_session_token.get_secret_value()
-            )    
+            )
 
         async with self._session.create_client(
             "bedrock-runtime", **client_kwargs
