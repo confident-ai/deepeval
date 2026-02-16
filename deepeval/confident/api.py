@@ -21,8 +21,10 @@ from deepeval.config.settings import get_settings
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
+DEEPEVAL_BASE_URL_AU = "https://au.deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
+API_BASE_URL_AU = "https://au.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
 
 
@@ -33,6 +35,7 @@ def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
     Supported:
       - confident_eu_... => "EU"
       - confident_us_... => "US"
+      - confident_au_... => "AU"
 
     Returns None if prefix is not recognized or api_key is falsy.
     """
@@ -43,6 +46,8 @@ def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
         return "EU"
     if key.startswith("confident_us_"):
         return "US"
+    if key.startswith("confident_au_"):
+        return "AU"
     return None
 
 
@@ -54,13 +59,19 @@ def get_base_api_url():
     # If the user has explicitly set a region, respect it.
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
     if region:
-        return API_BASE_URL_EU if region == "EU" else API_BASE_URL
+        if region == "EU":
+            return API_BASE_URL_EU
+        elif region == "AU":
+            return API_BASE_URL_AU
+        return API_BASE_URL
 
     # Otherwise, infer region from the API key prefix.
     api_key = get_confident_api_key()
     inferred = _infer_region_from_api_key(api_key)
     if inferred == "EU":
         return API_BASE_URL_EU
+    elif inferred == "AU":
+        return API_BASE_URL_AU
 
     # Default to US (backwards compatible)
     return API_BASE_URL
