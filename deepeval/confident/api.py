@@ -61,7 +61,7 @@ def get_base_api_url():
     if region:
         if region == "EU":
             return API_BASE_URL_EU
-        elif region == "AI":
+        elif region == "AU":
             return API_BASE_URL_AU
         return API_BASE_URL
 
