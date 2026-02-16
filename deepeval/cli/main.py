@@ -177,7 +177,7 @@ def set_confident_region_command(
     # Add flag emojis based on region
     if region == Regions.EU:
         flag = "🇪🇺"
-    elif region == Regions.EU:
+    elif region == Regions.AU:
         flag = "🇦🇺"
     else:
         flag = "🇺🇸"
