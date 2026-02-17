@@ -53,7 +53,7 @@ async def a_evaluate_span(span_uuid: str, metric_collection: str):
 
     await api.a_send_request(
         method=HttpMethods.POST,
-        endpoint=Endpoints.EVALUATE_TRACE_ENDPOINT,
+        endpoint=Endpoints.EVALUATE_SPAN_ENDPOINT,
         body=body,
         url_params={"spanUuid": span_uuid},
     )
