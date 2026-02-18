@@ -4,7 +4,7 @@ from deepeval.tracing.offline_evals.api import EvaluateThreadRequestBody
 
 
 def evaluate_thread(
-    thread_id: str, metric_collection: str, overwrite_metrics: bool = False
+    thread_id: str, metric_collection: str, overwrite_metrics: bool = False, chatbot_role: str = None
 ):
     trace = current_trace_context.get()
     api_key = None
@@ -15,6 +15,7 @@ def evaluate_thread(
     evaluate_thread_request_body = EvaluateThreadRequestBody(
         metricCollection=metric_collection,
         overwriteMetrics=overwrite_metrics,
+        chatbotRole=chatbot_role
     )
     try:
         body = evaluate_thread_request_body.model_dump(
@@ -36,7 +37,7 @@ def evaluate_thread(
 
 
 async def a_evaluate_thread(
-    thread_id: str, metric_collection: str, overwrite_metrics: bool = False
+    thread_id: str, metric_collection: str, overwrite_metrics: bool = False, chatbot_role: str = None
 ):
     trace = current_trace_context.get()
     api_key = None
@@ -47,6 +48,7 @@ async def a_evaluate_thread(
     evaluate_thread_request_body = EvaluateThreadRequestBody(
         metricCollection=metric_collection,
         overwriteMetrics=overwrite_metrics,
+        chatbotRole=chatbot_role
     )
     try:
         body = evaluate_thread_request_body.model_dump(

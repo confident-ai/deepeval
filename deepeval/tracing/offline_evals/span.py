@@ -3,7 +3,7 @@ from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateSpanRequestBody
 
 
-def evaluate_span(span_uuid: str, metric_collection: str):
+def evaluate_span(span_uuid: str, metric_collection: str, overwrite_metrics: bool = False):
     trace = current_trace_context.get()
     api_key = None
     if trace:
@@ -11,8 +11,8 @@ def evaluate_span(span_uuid: str, metric_collection: str):
     api = Api(api_key=api_key)
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
-        spanUuid=span_uuid,
         metricCollection=metric_collection,
+        overwriteMetrics=overwrite_metrics
     )
     try:
         body = evaluate_span_request_body.model_dump(
@@ -31,7 +31,7 @@ def evaluate_span(span_uuid: str, metric_collection: str):
     )
 
 
-async def a_evaluate_span(span_uuid: str, metric_collection: str):
+async def a_evaluate_span(span_uuid: str, metric_collection: str, overwrite_metrics: bool = False):
     trace = current_trace_context.get()
     api_key = None
     if trace:
@@ -39,8 +39,8 @@ async def a_evaluate_span(span_uuid: str, metric_collection: str):
     api = Api(api_key=api_key)
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
-        spanUuid=span_uuid,
         metricCollection=metric_collection,
+        overwriteMetrics=overwrite_metrics
     )
     try:
         body = evaluate_span_request_body.model_dump(
