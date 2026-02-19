@@ -172,6 +172,8 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):
+    if not tools_called_list:
+        return ""
     string = "[\n"
     for index, tools_called in enumerate(tools_called_list):
         json_string = json.dumps(tools_called.model_dump(), indent=4)
