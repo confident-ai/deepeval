@@ -45,6 +45,10 @@ python-dotenv = "^1.1.1"
 pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
 jinja2 = "*"
+    
+gensim = {version = "^4.3.2", optional = true}
+numpy = {version = "^1.26.4", optional = true}
+nltk = {version = "^3.8.1", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
@@ -74,6 +78,9 @@ line-length = 80
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+adversarial = ["gensim", "numpy", "nltk"]
 
 [tool.pytest.ini_options]
 addopts = "-m 'not skip_test'"
