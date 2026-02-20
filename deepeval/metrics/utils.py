@@ -172,7 +172,10 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):
-    string = "[\n"
+    if not tools_called_list:
+        return ""
+    string = "[
+"
     for index, tools_called in enumerate(tools_called_list):
         json_string = json.dumps(tools_called.model_dump(), indent=4)
         indented_json_string = "\n".join(
@@ -180,7 +183,8 @@ def print_tools_called(tools_called_list: List[ToolCall]):
         )
         string += indented_json_string
         if index < len(tools_called_list) - 1:
-            string += ",\n"
+            string += ",
+"
         else:
             string += "\n"
     string += "]"
@@ -261,7 +265,7 @@ def check_conversational_test_case_params(
     if require_chatbot_role and test_case.chatbot_role is None:
         error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
-        raise MissingTestCaseParamsError(error_str)
+        raise ValueError(error_str)
 
     if len(test_case.turns) == 0:
         error_str = "'turns' in conversational test case cannot be empty."
@@ -353,7 +357,7 @@ def check_llm_test_case_params(
 
 def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
-    test_case_params: List[LLMTestCaseParams],
+    test_case_params: List[TurnParams],
     metric: BaseArenaMetric,
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
@@ -382,6 +386,48 @@ def check_arena_test_case_params(
         )
 
 
+def _fix_json_escapes(json_str: str) -> str:
+    """Fix common invalid escape sequences that cause JSONDecodeError."""
+    # Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+    # Replace invalid \X with X (drop the backslash)
+    return re.sub(r'\\(?![\\/"bfnrtu])', lambda m: m.group(0)[-1], json_str)
+
+
+def _extract_json_with_regex(json_str: str) -> Optional[Dict[str, Any]]:
+    """Fallback: extract score and reason from JSON-like text using regex."""
+    # Match "score": <number> (int or float)
+    score_match = re.search(r'"score"\s*:\s*(-?\d+(?:\.\d+)?)', json_str)
+    # Match "reason": "..." - handle escaped quotes and backslashes inside
+    # Also match truncated reason (no closing quote)
+    reason_match = re.search(
+        r'"reason"\s*:\s*"((?:[^"\\]|\\.)*)"',
+        json_str,
+        re.DOTALL,
+    )
+    if not reason_match:
+        reason_match = re.search(
+            r'"reason"\s*:\s*"((?:[^"\\]|\\.)*)',
+            json_str,
+            re.DOTALL,
+        )
+    if score_match and reason_match:
+        try:
+            score_val = int(score_match.group(1)) if "." not in score_match.group(1) else float(score_match.group(1))
+            reason_raw = reason_match.group(1)
+            # Unescape common JSON sequences in reason
+            reason_val = (
+                reason_raw.replace("\\", "\x00")
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace('\\"', '"')
+                .replace("\x00", "\\")
+            )
+            return {"score": score_val, "reason": reason_val}
+        except (ValueError, UnicodeDecodeError):
+            pass
+    return None
+
+
 def trimAndLoadJson(
     input_string: str,
     metric: Optional[BaseMetric] = None,
@@ -400,12 +446,24 @@ def trimAndLoadJson(
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        if metric is not None:
-            metric.error = error_str
-        raise ValueError(error_str)
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
+        pass
+
+    # Retry after fixing invalid escape sequences
+    try:
+        fixed = _fix_json_escapes(jsonStr)
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: regex extraction for common patterns (e.g. G-Eval score/reason)
+    extracted = _extract_json_with_regex(jsonStr)
+    if extracted is not None:
+        return extracted
+
+    error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+    if metric is not None:
+        metric.error = error_str
+    raise ValueError(error_str)
 
 
 SchemaType = TypeVar("SchemaType")
@@ -457,6 +515,13 @@ async def a_generate_with_schema_and_extract(
         result = await metric.model.a_generate_with_schema(
             prompt, schema=schema_cls
         )
+
+    # Handle models that return (result, cost) tuple even when not native
+    if isinstance(result, tuple) and len(result) == 2:
+        actual_result, cost = result
+        if hasattr(metric, "_accrue_cost"):
+            metric._accrue_cost(cost)
+        result = actual_result
 
     if isinstance(result, schema_cls):
         return extract_schema(result)
@@ -612,7 +677,7 @@ def should_use_azure_openai_embedding():
 
 
 def should_use_local_embedding():
-    value = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
+    value = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.LOCAL_EMBEDDINGS)
     return value.lower() == "yes" if value is not None else False
 
 

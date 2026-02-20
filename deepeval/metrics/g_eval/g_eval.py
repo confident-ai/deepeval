@@ -321,8 +321,9 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
+        except (AttributeError, Exception):
+            # Fallback when log_probs not supported (e.g. gpt-5-mini), API error,
+            # or a_generate_raw_response doesn't exist.
             return await a_generate_with_schema_and_extract(
                 metric=self,
                 prompt=prompt,
@@ -391,8 +392,9 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
+        except (AttributeError, Exception):
+            # Fallback when log_probs not supported (e.g. gpt-5-mini), API error,
+            # or generate_raw_response doesn't exist.
             return generate_with_schema_and_extract(
                 metric=self,
                 prompt=prompt,
