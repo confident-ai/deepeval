@@ -1,3 +1,4 @@
+import re
 from typing import Optional, List, Type, Union
 
 from deepeval.utils import (
@@ -23,6 +24,19 @@ from deepeval.metrics.answer_relevancy.schema import (
     AnswerRelevancyScoreReason,
 )
 from deepeval.metrics.api import metric_data_manager
+
+DEFAULT_REASON = "Unable to determine relevancy"
+
+
+def _is_malformed_reason(reason: Optional[str]) -> bool:
+    """Check if reason is empty or malformed (e.g. 'The score is  because ')."""
+    if reason is None:
+        return True
+    stripped = reason.strip()
+    if not stripped:
+        return True
+    # Match malformed template output from smaller models (empty score/reason)
+    return bool(re.match(r"^The score is\s+because\s*$", stripped, re.IGNORECASE))
 
 
 class AnswerRelevancyMetric(BaseMetric):
@@ -91,11 +105,18 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.statements: List[str] = self._generate_statements(
                     actual_output, test_case.multimodal
                 )
-                self.verdicts: List[AnswerRelevancyVerdict] = (
-                    self._generate_verdicts(input, test_case.multimodal)
-                )
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason(input, test_case.multimodal)
+                try:
+                    self.verdicts: List[AnswerRelevancyVerdict] = (
+                        self._generate_verdicts(input, test_case.multimodal)
+                    )
+                    self.score = self._calculate_score()
+                    self.reason = self._generate_reason(
+                        input, test_case.multimodal
+                    )
+                except (ValueError, KeyError):
+                    self.verdicts = []
+                    self.score = 0
+                    self.reason = DEFAULT_REASON
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -143,13 +164,18 @@ class AnswerRelevancyMetric(BaseMetric):
             self.statements: List[str] = await self._a_generate_statements(
                 actual_output, test_case.multimodal
             )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(input, test_case.multimodal)
-            )
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(
-                input, test_case.multimodal
-            )
+            try:
+                self.verdicts: List[AnswerRelevancyVerdict] = (
+                    await self._a_generate_verdicts(input, test_case.multimodal)
+                )
+                self.score = self._calculate_score()
+                self.reason = await self._a_generate_reason(
+                    input, test_case.multimodal
+                )
+            except (ValueError, KeyError):
+                self.verdicts = []
+                self.score = 0
+                self.reason = DEFAULT_REASON
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -172,7 +198,7 @@ class AnswerRelevancyMetric(BaseMetric):
         irrelevant_statements = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
-                irrelevant_statements.append(verdict.reason)
+                irrelevant_statements.append(verdict.reason or "")
 
         prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
@@ -181,13 +207,19 @@ class AnswerRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        return await a_generate_with_schema_and_extract(
-            metric=self,
-            prompt=prompt,
-            schema_cls=AnswerRelevancyScoreReason,
-            extract_schema=lambda score_reason: score_reason.reason,
-            extract_json=lambda data: data["reason"],
-        )
+        try:
+            reason = await a_generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=AnswerRelevancyScoreReason,
+                extract_schema=lambda score_reason: score_reason.reason,
+                extract_json=lambda data: data.get("reason", ""),
+            )
+            if _is_malformed_reason(reason):
+                return DEFAULT_REASON
+            return reason
+        except (ValueError, KeyError):
+            return DEFAULT_REASON
 
     def _generate_reason(self, input: str, multimodal: bool) -> str:
         if self.include_reason is False:
@@ -196,7 +228,7 @@ class AnswerRelevancyMetric(BaseMetric):
         irrelevant_statements = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "no":
-                irrelevant_statements.append(verdict.reason)
+                irrelevant_statements.append(verdict.reason or "")
 
         prompt = self.evaluation_template.generate_reason(
             irrelevant_statements=irrelevant_statements,
@@ -205,13 +237,19 @@ class AnswerRelevancyMetric(BaseMetric):
             multimodal=multimodal,
         )
 
-        return generate_with_schema_and_extract(
-            metric=self,
-            prompt=prompt,
-            schema_cls=AnswerRelevancyScoreReason,
-            extract_schema=lambda score_reason: score_reason.reason,
-            extract_json=lambda data: data["reason"],
-        )
+        try:
+            reason = generate_with_schema_and_extract(
+                metric=self,
+                prompt=prompt,
+                schema_cls=AnswerRelevancyScoreReason,
+                extract_schema=lambda score_reason: score_reason.reason,
+                extract_json=lambda data: data.get("reason", ""),
+            )
+            if _is_malformed_reason(reason):
+                return DEFAULT_REASON
+            return reason
+        except (ValueError, KeyError):
+            return DEFAULT_REASON
 
     async def _a_generate_verdicts(
         self, input: str, multimodal: bool
@@ -292,17 +330,20 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
+        try:
+            number_of_verdicts = len(self.verdicts)
+            if number_of_verdicts == 0:
+                return 1
 
-        relevant_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
+            relevant_count = 0
+            for verdict in self.verdicts:
+                if verdict.verdict.strip().lower() != "no":
+                    relevant_count += 1
 
-        score = relevant_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+            score = relevant_count / number_of_verdicts
+            return 0 if self.strict_mode and score < self.threshold else score
+        except (AttributeError, TypeError, ZeroDivisionError):
+            return 0
 
     def is_successful(self) -> bool:
         if self.error is not None:
