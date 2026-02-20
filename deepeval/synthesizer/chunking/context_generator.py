@@ -6,7 +6,6 @@ import shutil
 import random
 import atexit
 import time
-import math
 import sys
 import os
 import gc
@@ -897,68 +896,71 @@ class ContextGenerator:
         min_contexts_per_source_file: int,
         collection,
     ):
-        # Calculate the number of chunks the smallest document can produce.
-        document_token_count = collection.count()
-        document_num_chunks = 1 + math.floor(
-            max(document_token_count - self.chunk_size, 0)
-            / (self.chunk_size - self.chunk_overlap)
-        )
+        """
+        Validate that the document has enough chunks to generate the required number of contexts.
+
+        Note: collection.count() returns the number of chunks (documents) in the collection,
+        not the total token count. This is a common source of confusion.
+        """
+        # Get the actual number of chunks in the collection
+        # Note: collection.count() returns chunk count, NOT token count
+        num_chunks = collection.count()
 
         # If not enough chunks are produced, raise an error with suggestions.
-        if document_num_chunks < min_contexts_per_source_file:
+        if num_chunks < min_contexts_per_source_file:
 
             # Build the error message with suggestions.
             error_lines = [
-                f"Impossible to generate {min_contexts_per_source_file} contexts from a document of size {document_token_count}.",
+                f"Impossible to generate {min_contexts_per_source_file} contexts from a document with {num_chunks} chunks.",
                 "You have the following options:",
             ]
             suggestion_num = 1
 
             # 1. Suggest adjusting the number of contexts if applicable.
-            if document_num_chunks > 0:
+            if num_chunks > 0:
                 error_lines.append(
-                    f"{suggestion_num}. Adjust the `min_contexts_per_document` to no more than {document_num_chunks}."
+                    f"{suggestion_num}. Adjust the `min_contexts_per_document` to no more than {num_chunks}."
                 )
                 suggestion_num += 1
 
             # 2. Determine whether to suggest adjustments for chunk_size.
-            suggested_chunk_size = (
-                document_token_count
-                + (self.chunk_overlap * (min_contexts_per_source_file - 1))
-            ) // min_contexts_per_source_file
-            adjust_chunk_size = (
-                suggested_chunk_size > 0
-                and suggested_chunk_size > self.chunk_overlap
-            )
-            if adjust_chunk_size:
-                error_lines.append(
-                    f"{suggestion_num}. Adjust the `chunk_size` to no more than {suggested_chunk_size}."
+            # To get more chunks, we need smaller chunk_size
+            # Estimate: if we reduce chunk_size, we can get more chunks
+            # This is a rough estimate - actual chunk count depends on document content
+            if num_chunks > 0:
+                # Estimate current average chunk size in tokens
+                # We can't know exact token count, but we can suggest reducing chunk_size
+                # to potentially get more chunks
+                suggested_chunk_size = max(
+                    self.chunk_size // 2,  # Suggest halving chunk size
+                    self.chunk_overlap + 1,  # Must be > chunk_overlap
                 )
-                suggestion_num += 1
+                adjust_chunk_size = (
+                    suggested_chunk_size > 0
+                    and suggested_chunk_size > self.chunk_overlap
+                    and suggested_chunk_size < self.chunk_size
+                )
+                if adjust_chunk_size:
+                    error_lines.append(
+                        f"{suggestion_num}. Reduce the `chunk_size` (e.g., to {suggested_chunk_size}) to generate more chunks."
+                    )
+                    suggestion_num += 1
 
             # 3. Determine whether to suggest adjustments for chunk_overlap.
-            if min_contexts_per_source_file > 1:
-                suggested_overlap = (
-                    (
-                        (min_contexts_per_source_file * self.chunk_size)
-                        - document_num_chunks
-                    )
-                    // (min_contexts_per_source_file - 1)
-                ) + 1
-                adjust_overlap = (
-                    suggested_overlap > 0
-                    and self.chunk_size > suggested_overlap
-                )
+            # Reducing overlap can help generate more chunks, but this is less impactful
+            if min_contexts_per_source_file > 1 and self.chunk_overlap > 0:
+                suggested_overlap = max(0, self.chunk_overlap - 1)
+                adjust_overlap = suggested_overlap >= 0
                 if adjust_overlap:
                     error_lines.append(
-                        f"{suggestion_num}. Adjust the `chunk_overlap` to at least {suggested_overlap}."
+                        f"{suggestion_num}. Reduce the `chunk_overlap` (e.g., to {suggested_overlap}) to potentially generate more chunks."
                     )
                     suggestion_num += 1
 
             # 4. If either individual adjustment is suggested, also offer a combined adjustment option.
             if adjust_chunk_size or adjust_overlap:
                 error_lines.append(
-                    f"{suggestion_num}. Adjust both the `chunk_size` and `chunk_overlap`."
+                    f"{suggestion_num}. Adjust both the `chunk_size` and `chunk_overlap` to generate more chunks."
                 )
             error_message = "\n".join(error_lines)
             raise ValueError(error_message)
