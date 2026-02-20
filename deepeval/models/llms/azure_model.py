@@ -138,6 +138,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         )
 
         self.model_data = OPENAI_MODELS_DATA.get(model)
+
+        # Omit temperature for models that don't support it
+        if self.model_data and self.model_data.supports_temperature is False:
+            temperature = None
+
         cost_per_input_token, cost_per_output_token = require_costs(
             self.model_data,
             model,
@@ -149,7 +154,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self.model_data.input_price = cost_per_input_token
         self.model_data.output_price = cost_per_output_token
 
-        if temperature < 0:
+        if temperature is not None and temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
@@ -188,7 +193,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
-                    temperature=self.temperature,
+                    **(
+                        {"temperature": self.temperature}
+                        if self.temperature is not None
+                        else {}
+                    ),
                     **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
@@ -206,7 +215,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": content},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature,
+                    **(
+                        {"temperature": self.temperature}
+                        if self.temperature is not None
+                        else {}
+                    ),
                     **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
@@ -223,7 +236,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": content},
             ],
-            temperature=self.temperature,
+            **(
+                {"temperature": self.temperature}
+                if self.temperature is not None
+                else {}
+            ),
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -254,7 +271,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     model=self.deployment_name,
                     messages=[{"role": "user", "content": content}],
                     response_format=schema,
-                    temperature=self.temperature,
+                    **(
+                        {"temperature": self.temperature}
+                        if self.temperature is not None
+                        else {}
+                    ),
                     **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
@@ -272,7 +293,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": content},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature,
+                    **(
+                        {"temperature": self.temperature}
+                        if self.temperature is not None
+                        else {}
+                    ),
                     **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
@@ -289,7 +314,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": content},
             ],
-            temperature=self.temperature,
+            **(
+                {"temperature": self.temperature}
+                if self.temperature is not None
+                else {}
+            ),
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -323,7 +352,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
-            temperature=self.temperature,
+            **(
+                {"temperature": self.temperature}
+                if self.temperature is not None
+                else {}
+            ),
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
@@ -351,7 +384,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
-            temperature=self.temperature,
+            **(
+                {"temperature": self.temperature}
+                if self.temperature is not None
+                else {}
+            ),
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
