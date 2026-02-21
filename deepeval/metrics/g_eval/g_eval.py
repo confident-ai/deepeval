@@ -208,6 +208,7 @@ class GEval(BaseMetric):
                 steps=[
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Rubric:\n{format_rubrics(self.rubric)}",
                     (f"Score: {self.score}"),
                     f"Reason: {self.reason}",
                 ],
