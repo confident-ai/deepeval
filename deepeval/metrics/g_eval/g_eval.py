@@ -208,7 +208,6 @@ class GEval(BaseMetric):
                 steps=[
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
-                    f"Rubric:\n{format_rubrics(self.rubric)}",
                     (f"Score: {self.score}"),
                     f"Reason: {self.reason}",
                 ],
@@ -309,8 +308,8 @@ class GEval(BaseMetric):
 
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
-            reason = data["reason"]
-            score = data["score"]
+            reason = data.get("reason", "")
+            score = data.get("score", 0)
             if self.strict_mode:
                 return score, reason
 
@@ -321,7 +320,7 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
-        except AttributeError:
+        except (AttributeError, Exception):
             # This catches the case where a_generate_raw_response doesn't exist.
             return await a_generate_with_schema_and_extract(
                 metric=self,
@@ -379,8 +378,8 @@ class GEval(BaseMetric):
             self._accrue_cost(cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
-            reason = data["reason"]
-            score = data["score"]
+            reason = data.get("reason", "")
+            score = data.get("score", 0)
             if self.strict_mode:
                 return score, reason
 
@@ -391,8 +390,8 @@ class GEval(BaseMetric):
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
+        except (AttributeError, Exception):
+            # This catches the case where generate_raw_response doesn't exist.
             return generate_with_schema_and_extract(
                 metric=self,
                 prompt=prompt,
