@@ -3,7 +3,7 @@ from deepeval.annotation.api import AnnotationType
 from deepeval.confident.api import ConfidentApiError
 import pytest
 
-VALID_TRACE_UUID = "b1c32524-a985-42e9-a9f0-fbcdf3ad0e55"
+VALID_TRACE_UUID = "2efcec86-6d37-40c2-96c4-18d3f2300a0e"
 VALID_SPAN_UUID = "dffdee6c-eda2-459e-bab3-ec6793c6f5de"
 VALID_THREAD_ID = "131324ljihfsadiuyip"
 
