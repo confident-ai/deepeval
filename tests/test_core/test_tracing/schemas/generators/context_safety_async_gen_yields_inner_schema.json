@@ -1,0 +1,39 @@
+{
+  "uuid": "f202f237-78d4-43dd-bd36-c399992b4284",
+  "baseSpans": [
+    {
+      "uuid": "a8ee2aec-b4a5-4362-8115-d84a1483719e",
+      "name": "async_outer_gen_yields_from_inner_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.945Z",
+      "endTime": "2026-02-23T07:16:38.957Z",
+      "input": {
+        "message": "alpha beta"
+      }
+    },
+    {
+      "uuid": "c0d9b003-ff00-40e1-b204-b86b434b0bc6",
+      "name": "async_stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "a8ee2aec-b4a5-4362-8115-d84a1483719e",
+      "startTime": "2026-02-23T07:16:38.945Z",
+      "endTime": "2026-02-23T07:16:38.957Z",
+      "input": {
+        "message": "alpha beta"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.945Z",
+  "endTime": "2026-02-23T07:16:38.957Z",
+  "environment": "development",
+  "input": {
+    "message": "alpha beta"
+  },
+  "status": "SUCCESS"
+}

@@ -1,0 +1,79 @@
+{
+  "uuid": "ea08a446-d9eb-4655-a6fc-08acac231217",
+  "baseSpans": [
+    {
+      "uuid": "b95245bc-31c5-4d12-a3fc-788336275216",
+      "name": "outer_observe_consumes_inner_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.641Z",
+      "endTime": "2026-02-23T07:16:38.641Z",
+      "input": {
+        "message": "hello world"
+      },
+      "output": [
+        {
+          "type": "chunk",
+          "data": {
+            "token": "hello"
+          }
+        },
+        {
+          "type": "chunk",
+          "data": {
+            "token": "world"
+          }
+        },
+        {
+          "type": "final_response",
+          "data": {
+            "content": "hello world"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "16df6db7-0e80-41f4-8d77-a5891cdc2e72",
+      "name": "stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b95245bc-31c5-4d12-a3fc-788336275216",
+      "startTime": "2026-02-23T07:16:38.641Z",
+      "endTime": "2026-02-23T07:16:38.641Z",
+      "input": {
+        "message": "hello world"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.641Z",
+  "endTime": "2026-02-23T07:16:38.641Z",
+  "environment": "development",
+  "input": {
+    "message": "hello world"
+  },
+  "output": [
+    {
+      "type": "chunk",
+      "data": {
+        "token": "hello"
+      }
+    },
+    {
+      "type": "chunk",
+      "data": {
+        "token": "world"
+      }
+    },
+    {
+      "type": "final_response",
+      "data": {
+        "content": "hello world"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}

@@ -1,0 +1,103 @@
+{
+  "uuid": "b10a2417-35de-48e1-88a8-983e63fcdcee",
+  "baseSpans": [
+    {
+      "uuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
+      "name": "sibling_generators",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.734Z",
+      "endTime": "2026-02-23T07:16:38.734Z",
+      "input": {
+        "data": "a b"
+      },
+      "output": {
+        "simple": [
+          "a",
+          "b"
+        ],
+        "chunks": [
+          {
+            "type": "chunk",
+            "data": {
+              "token": "a"
+            }
+          },
+          {
+            "type": "chunk",
+            "data": {
+              "token": "b"
+            }
+          },
+          {
+            "type": "final_response",
+            "data": {
+              "content": "a b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "fb6bc742-58fa-4493-8ba3-c6b9bc11a783",
+      "name": "stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
+      "startTime": "2026-02-23T07:16:38.734Z",
+      "endTime": "2026-02-23T07:16:38.734Z",
+      "input": {
+        "message": "a b"
+      }
+    },
+    {
+      "uuid": "c13899b6-0a77-4906-9603-01c810bb44d9",
+      "name": "stream_simple",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
+      "startTime": "2026-02-23T07:16:38.734Z",
+      "endTime": "2026-02-23T07:16:38.734Z",
+      "input": {
+        "data": "a b"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.734Z",
+  "endTime": "2026-02-23T07:16:38.734Z",
+  "environment": "development",
+  "input": {
+    "data": "a b"
+  },
+  "output": {
+    "simple": [
+      "a",
+      "b"
+    ],
+    "chunks": [
+      {
+        "type": "chunk",
+        "data": {
+          "token": "a"
+        }
+      },
+      {
+        "type": "chunk",
+        "data": {
+          "token": "b"
+        }
+      },
+      {
+        "type": "final_response",
+        "data": {
+          "content": "a b"
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS"
+}

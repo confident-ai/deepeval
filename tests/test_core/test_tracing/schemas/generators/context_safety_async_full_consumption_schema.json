@@ -1,0 +1,27 @@
+{
+  "uuid": "c9aeecc3-c6c9-4980-aaa2-da3a6f3f9a26",
+  "baseSpans": [
+    {
+      "uuid": "9cad28db-1ad6-4074-8aa0-5fb4e1f262ff",
+      "name": "async_stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.781Z",
+      "endTime": "2026-02-23T07:16:38.793Z",
+      "input": {
+        "message": "hello world"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.781Z",
+  "endTime": "2026-02-23T07:16:38.793Z",
+  "environment": "development",
+  "input": {
+    "message": "hello world"
+  },
+  "status": "SUCCESS"
+}
