@@ -1,0 +1,72 @@
+{
+  "uuid": "466f8984-d710-4f8f-94c6-18b1274a18d8",
+  "baseSpans": [
+    {
+      "uuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
+      "name": "outer_gen_calls_regular_observe",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.702Z",
+      "endTime": "2026-02-23T07:16:38.703Z",
+      "input": {
+        "data": "a b c"
+      }
+    },
+    {
+      "uuid": "b71dee5d-e7af-451c-b15d-ff65a714ee4e",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
+      "startTime": "2026-02-23T07:16:38.703Z",
+      "endTime": "2026-02-23T07:16:38.703Z",
+      "input": {
+        "item": "c"
+      },
+      "output": {
+        "processed": "c"
+      }
+    },
+    {
+      "uuid": "3602b958-e458-4e41-b4a0-d45eaa931fa1",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
+      "startTime": "2026-02-23T07:16:38.703Z",
+      "endTime": "2026-02-23T07:16:38.703Z",
+      "input": {
+        "item": "b"
+      },
+      "output": {
+        "processed": "b"
+      }
+    },
+    {
+      "uuid": "c58938b2-cb02-4688-9f55-5420426911bc",
+      "name": "process_item",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
+      "startTime": "2026-02-23T07:16:38.703Z",
+      "endTime": "2026-02-23T07:16:38.703Z",
+      "input": {
+        "item": "a"
+      },
+      "output": {
+        "processed": "a"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.703Z",
+  "endTime": "2026-02-23T07:16:38.703Z",
+  "environment": "development",
+  "input": {
+    "data": "a b c"
+  },
+  "status": "SUCCESS"
+}

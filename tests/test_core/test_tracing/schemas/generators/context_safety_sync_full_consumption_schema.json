@@ -1,0 +1,27 @@
+{
+  "uuid": "e56c9fc4-ef6f-4f24-b5b9-2a27d4c0226d",
+  "baseSpans": [
+    {
+      "uuid": "6b3ac6a2-4b97-44ff-a07d-e421b26339e9",
+      "name": "stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-23T07:16:38.595Z",
+      "endTime": "2026-02-23T07:16:38.595Z",
+      "input": {
+        "message": "a b c"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-23T07:16:38.595Z",
+  "endTime": "2026-02-23T07:16:38.595Z",
+  "environment": "development",
+  "input": {
+    "message": "a b c"
+  },
+  "status": "SUCCESS"
+}

@@ -78,6 +78,83 @@ if TYPE_CHECKING:
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
+class _ObservedAsyncGenIter:
+    """Class-based async iterator that wraps an observed async generator.
+
+    Python 3.11's ``async for`` with ``break`` does NOT call ``aclose()``
+    on the async generator — the generator is silently abandoned.  This
+    means neither ``finally`` blocks nor ``except GeneratorExit`` handlers
+    will fire, and the observer span leaks.
+
+    By using a class with ``__del__``, CPython's reference-counting GC
+    calls cleanup the moment the iterator goes out of scope (immediately
+    after ``break``), ensuring the span is always closed.
+    """
+
+    __slots__ = ("_agen_iter", "_observer", "_entered", "_done")
+
+    def __init__(self, agen, observer):
+        self._agen_iter = agen.__aiter__()
+        self._observer = observer
+        self._entered = False
+        self._done = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self._entered:
+            self._observer.__enter__()
+            self._entered = True
+        try:
+            return await self._agen_iter.__anext__()
+        except StopAsyncIteration:
+            self._finish()
+            raise
+        except Exception as e:
+            self._finish_err(e)
+            raise
+
+    def _finish(self):
+        if self._entered and not self._done:
+            self._done = True
+            self._observer.__exit__(None, None, None)
+
+    def _finish_err(self, e):
+        if self._entered and not self._done:
+            self._done = True
+            self._observer.__exit__(type(e), e, e.__traceback__)
+
+    async def aclose(self):
+        self._finish()
+        await self._agen_iter.aclose()
+
+    async def athrow(self, typ, val=None, tb=None):
+        if not self._entered:
+            self._observer.__enter__()
+            self._entered = True
+        try:
+            return await self._agen_iter.athrow(typ, val, tb)
+        except StopAsyncIteration:
+            self._finish()
+            raise
+        except Exception as e:
+            self._finish_err(e)
+            raise
+
+    def __del__(self):
+        if self._entered and not self._done:
+            # Python 3.11: async for + break doesn't call aclose(), so
+            # nested inner spans may still sit in current_span_context.
+            # Force-restore context to our span so __exit__ sees a match.
+            current = current_span_context.get()
+            if current and current.uuid != self._observer.uuid:
+                our_span = trace_manager.get_span_by_uuid(self._observer.uuid)
+                if our_span:
+                    current_span_context.set(our_span)
+        self._finish()
+
+
 class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
@@ -1111,19 +1188,9 @@ def observe(
                     func_name=func_name,
                     **observer_kwargs,
                 )
-                observer.__enter__()
                 agen = func(*args, **func_kwargs)
 
-                async def gen():
-                    try:
-                        async for chunk in agen:
-                            yield chunk
-                        observer.__exit__(None, None, None)
-                    except Exception as e:
-                        observer.__exit__(e.__class__, e, e.__traceback__)
-                        raise
-
-                return gen()
+                return _ObservedAsyncGenIter(agen, observer)
 
             setattr(asyncgen_wrapper, "_is_deepeval_observed", True)
             return asyncgen_wrapper
@@ -1155,13 +1222,16 @@ def observe(
                     func_name=func_name,
                     **observer_kwargs,
                 )
-                observer.__enter__()
                 original_gen = func(*args, **func_kwargs)
 
                 def gen():
+                    observer.__enter__()
                     try:
                         yield from original_gen
                         observer.__exit__(None, None, None)
+                    except GeneratorExit:
+                        observer.__exit__(None, None, None)
+                        return
                     except Exception as e:
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
