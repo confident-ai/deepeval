@@ -177,7 +177,6 @@ async def async_mid_level_gen(data: str):
     yield {"level": "mid", "stage": "end"}
 
 
-
 class TestSyncGeneratorContextSafety:
 
     def test_thread_boundary(self):
@@ -218,6 +217,7 @@ class TestSyncGeneratorContextSafety:
 
     def test_run_in_executor(self):
         """Sync generator consumed via run_in_executor (FastAPI pattern)."""
+
         async def async_consumer():
             loop = asyncio.get_event_loop()
             gen = stream_chunks("one two three")
@@ -252,7 +252,9 @@ class TestSyncGeneratorContextSafety:
         del gen
         assert current_span_context.get() is None
 
-    @trace_test("generators/context_safety_sync_observe_between_yields_schema.json")
+    @trace_test(
+        "generators/context_safety_sync_observe_between_yields_schema.json"
+    )
     def test_consumer_calls_observe_between_yields(self):
         """Consumer calls another @observe function between generator yields."""
         gen = stream_simple("one two three")
@@ -348,7 +350,9 @@ class TestSyncNestedGeneratorContext:
         assert len(final) == 1
         assert current_span_context.get() is None
 
-    @trace_test("generators/context_safety_sync_gen_observe_between_schema.json")
+    @trace_test(
+        "generators/context_safety_sync_gen_observe_between_schema.json"
+    )
     def test_gen_calls_regular_observe_between_yields(self):
         """Generator calling a regular @observe function between every yield."""
         results = list(outer_gen_calls_regular_observe("a b c"))
@@ -396,6 +400,7 @@ class TestSyncNestedGeneratorContext:
 
     def test_nested_gen_inner_error_propagates(self):
         """Error in inner generator propagates cleanly through outer observe."""
+
         @observe()
         def outer_with_erroring_inner():
             results = []

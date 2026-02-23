@@ -149,9 +149,7 @@ class _ObservedAsyncGenIter:
             # Force-restore context to our span so __exit__ sees a match.
             current = current_span_context.get()
             if current and current.uuid != self._observer.uuid:
-                our_span = trace_manager.get_span_by_uuid(
-                    self._observer.uuid
-                )
+                our_span = trace_manager.get_span_by_uuid(self._observer.uuid)
                 if our_span:
                     current_span_context.set(our_span)
         self._finish()
