@@ -17,8 +17,7 @@ For example, if you're using a [custom LLM judge for evaluation](/guides/guides-
 The `AsyncConfig` controls how concurrently `metrics`, `observed_callback`, and `test_cases` will be evaluated during `evaluate()`.
 
 ```python
-from deepeval.evaluate import AsyncConfig
-from deepeval import evaluate
+from deepeval import AsyncConfig, evaluate
 
 evaluate(async_config=AsyncConfig(), ...)
 ```
@@ -36,8 +35,7 @@ The `throttle_value` and `max_concurrent` parameter is only used when `run_async
 The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()`.
 
 ```python
-from deepeval.evaluate import DisplayConfig
-from deepeval import evaluate
+from deepeval import DisplayConfig, evaluate
 
 evaluate(display_config=DisplayConfig(), ...)
 ```
@@ -55,8 +53,7 @@ There are **FOUR** optional parameters when creating an `DisplayConfig`:
 The `ErrorConfig` controls how error is handled in `evaluate()`.
 
 ```python
-from deepeval.evaluate import ErrorConfig
-from deepeval import evaluate
+from deepeval import ErrorConfig, evaluate
 
 evaluate(error_config=ErrorConfig(), ...)
 ```
@@ -73,8 +70,7 @@ If both `skip_on_missing_params` and `ignore_errors` are set to `True`, `skip_on
 The `CacheConfig` controls the caching behavior of `evaluate()`.
 
 ```python
-from deepeval.evaluate import CacheConfig
-from deepeval import evaluate
+from deepeval import CacheConfig, evaluate
 
 evaluate(cache_config=CacheConfig(), ...)
 ```
