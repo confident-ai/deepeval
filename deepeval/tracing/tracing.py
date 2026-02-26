@@ -740,10 +740,11 @@ class TraceManager:
             if trace.start_time
             else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
-        end_time = (
-            to_zod_compatible_iso(perf_counter_to_datetime(trace.end_time))
-            if trace.end_time
-            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
+        effective_end_time = (
+            trace.end_time if trace.end_time else perf_counter()
+        )
+        end_time = to_zod_compatible_iso(
+            perf_counter_to_datetime(effective_end_time)
         )
 
         return TraceApi(
@@ -1240,12 +1241,10 @@ def observe(
                 )
                 original_gen = func(*args, **func_kwargs)
 
-
                 def gen():
                     observer.__enter__()
                     _span = current_span_context.get()
                     _trace = current_trace_context.get()
-
                     try:
                         return_value = yield from original_gen
                         observer.result = return_value
