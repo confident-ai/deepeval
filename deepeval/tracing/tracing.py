@@ -742,7 +742,7 @@ class TraceManager:
         end_time = (
             to_zod_compatible_iso(perf_counter_to_datetime(trace.end_time))
             if trace.end_time
-            else None
+            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
 
         return TraceApi(
@@ -1224,17 +1224,28 @@ def observe(
                 )
                 original_gen = func(*args, **func_kwargs)
 
+
                 def gen():
                     observer.__enter__()
+                    ctx_span = current_span_context.get()
+                    ctx_trace = current_trace_context.get()
+
                     try:
-                        yield from original_gen
-                        observer.__exit__(None, None, None)
-                    except GeneratorExit:
-                        observer.__exit__(None, None, None)
-                        return
+                        return_value = yield from original_gen
+                        observer.result = return_value
                     except Exception as e:
+                        current_span_context.set(ctx_span)
+                        current_trace_context.set(ctx_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
+                    finally:
+                        if current_span_context.get() != ctx_span:
+                            current_span_context.set(ctx_span)
+                        if current_trace_context.get() != ctx_trace:
+                            current_trace_context.set(ctx_trace)
+                        
+                        if trace_manager.get_span_by_uuid(observer.uuid):
+                            observer.__exit__(None, None, None)
 
                 return gen()
 
