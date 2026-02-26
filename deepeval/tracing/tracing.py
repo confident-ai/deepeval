@@ -1274,13 +1274,7 @@ def observe(
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
                     finally: # GeneratorExit execption directly brings us to final block
-                        if current_span_context.get() != _span:
-                            current_span_context.set(_span)
-                        if _trace is not None:
-                            current_trace_context.set(_trace)
-                        
-                        if trace_manager.get_span_by_uuid(observer.uuid):
-                            observer.__exit__(None, None, None)
+                        observer.__exit__(None, None, None)
 
                 return gen()
 
