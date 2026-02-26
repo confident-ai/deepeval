@@ -1,0 +1,91 @@
+{
+  "uuid": "b354e6c6-e857-406e-99b2-f84667d89fac",
+  "baseSpans": [
+    {
+      "uuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
+      "name": "multi_step_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-26T06:37:14.924Z",
+      "endTime": "2026-02-26T06:37:14.924Z",
+      "input": {
+        "query": "hello"
+      }
+    },
+    {
+      "uuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
+      "name": "streaming_rag_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
+      "startTime": "2026-02-26T06:37:14.924Z",
+      "endTime": "2026-02-26T06:37:14.924Z",
+      "input": {
+        "query": "hello"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "24ef95da-8727-468d-9291-2af190b9a47e",
+      "name": "summarize",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
+      "startTime": "2026-02-26T06:37:14.924Z",
+      "endTime": "2026-02-26T06:37:14.924Z",
+      "input": {
+        "text": "[context] relevant context for: hello\n Based on relevant context for: hello,  the answer to 'hello'  is 42. [done]\n"
+      },
+      "output": "summary of: [context] relevant context for: hello\n Based on relevant context for: hello,  the answer to 'hello'  is 42. [done]\n",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 10.0,
+      "outputTokenCount": 5.0
+    },
+    {
+      "uuid": "72c9e405-a830-4b79-bd82-f2b430d79840",
+      "name": "stream_llm_tokens",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
+      "startTime": "2026-02-26T06:37:14.924Z",
+      "endTime": "2026-02-26T06:37:14.924Z",
+      "input": {
+        "query": "hello",
+        "context": "relevant context for: hello"
+      },
+      "model": "gpt-4o",
+      "inputTokenCount": 5.0,
+      "outputTokenCount": 3.0,
+      "costPerInputToken": 0.005,
+      "costPerOutputToken": 0.015
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "6bd7778a-17a9-4bb5-9013-bcfa774af866",
+      "name": "retrieve_documents",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
+      "startTime": "2026-02-26T06:37:14.924Z",
+      "endTime": "2026-02-26T06:37:14.924Z",
+      "input": {
+        "query": "hello"
+      },
+      "output": "relevant context for: hello",
+      "embedder": "text-embedding-3-small",
+      "topK": 5,
+      "chunkSize": 512
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-02-26T06:37:14.924Z",
+  "endTime": "2026-02-26T06:37:14.924Z",
+  "environment": "development",
+  "input": {
+    "query": "hello"
+  },
+  "status": "SUCCESS"
+}

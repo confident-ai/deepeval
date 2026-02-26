@@ -733,16 +733,18 @@ class TraceManager:
             if span.children:
                 span_stack.extend(span.children)
 
-        # Convert perf_counter values to ISO 8601 strings
+        # Convert perf_counter values to ISO 8601 strings.
+        # Fall back to current time when a value is missing.
         start_time = (
             to_zod_compatible_iso(perf_counter_to_datetime(trace.start_time))
             if trace.start_time
-            else None
+            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
-        end_time = (
-            to_zod_compatible_iso(perf_counter_to_datetime(trace.end_time))
-            if trace.end_time
-            else None
+        effective_end_time = (
+            trace.end_time if trace.end_time else perf_counter()
+        )
+        end_time = to_zod_compatible_iso(
+            perf_counter_to_datetime(effective_end_time)
         )
 
         return TraceApi(
@@ -796,16 +798,17 @@ class TraceManager:
         input_data = span.input
         output_data = span.output
 
-        # Convert perf_counter values to ISO 8601 strings
+        # Convert perf_counter values to ISO 8601 strings.
+        # Fall back to current time if end_time was never set (e.g. sync
+        # generators whose __exit__ ran in a different thread-pool thread).
         start_time = (
             to_zod_compatible_iso(perf_counter_to_datetime(span.start_time))
             if span.start_time
-            else None
+            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
-        end_time = (
-            to_zod_compatible_iso(perf_counter_to_datetime(span.end_time))
-            if span.end_time
-            else None
+        effective_end_time = span.end_time if span.end_time else perf_counter()
+        end_time = to_zod_compatible_iso(
+            perf_counter_to_datetime(effective_end_time)
         )
 
         from deepeval.evaluate.utils import create_metric_data
@@ -1002,11 +1005,13 @@ class Observer:
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
 
+        # ContextVar may not match when sync generators run across different
+        # thread-pool threads (e.g. FastAPI StreamingResponse). Fall back to a
+        # direct UUID lookup so the span still gets closed properly.
         if not current_span or current_span.uuid != self.uuid:
-            print(
-                f"Error: Current span in context does not match the span being exited. Expected UUID: {self.uuid}, Got: {current_span.uuid if current_span else 'None'}"
-            )
-            return
+            current_span = trace_manager.get_span_by_uuid(self.uuid)
+            if not current_span:
+                return
 
         current_span.end_time = end_time
         if exc_type is not None:
@@ -1057,22 +1062,34 @@ class Observer:
                 current_span_context.set(None)
         else:
             current_trace = current_trace_context.get()
-            if current_trace.input is None:
-                current_trace.input = trace_manager.mask(self.function_kwargs)
-            if current_trace.output is None:
-                current_trace.output = trace_manager.mask(self.result)
-            if current_span.status == TraceSpanStatus.ERRORED:
-                current_trace.status = TraceSpanStatus.ERRORED
-            if current_trace and current_trace.uuid == current_span.trace_uuid:
-                other_active_spans = [
-                    span
-                    for span in trace_manager.active_spans.values()
-                    if span.trace_uuid == current_span.trace_uuid
-                ]
+            # ContextVar for trace may also be lost in thread-pool scenarios;
+            # fall back to the trace UUID stored on the span.
+            if (
+                not current_trace
+                or current_trace.uuid != current_span.trace_uuid
+            ):
+                current_trace = trace_manager.get_trace_by_uuid(
+                    current_span.trace_uuid
+                )
+            if current_trace:
+                if current_trace.input is None:
+                    current_trace.input = trace_manager.mask(
+                        self.function_kwargs
+                    )
+                if current_trace.output is None:
+                    current_trace.output = trace_manager.mask(self.result)
+                if current_span.status == TraceSpanStatus.ERRORED:
+                    current_trace.status = TraceSpanStatus.ERRORED
+                if current_trace.uuid == current_span.trace_uuid:
+                    other_active_spans = [
+                        span
+                        for span in trace_manager.active_spans.values()
+                        if span.trace_uuid == current_span.trace_uuid
+                    ]
 
-                if not other_active_spans:
-                    trace_manager.end_trace(current_span.trace_uuid)
-                    current_trace_context.set(None)
+                    if not other_active_spans:
+                        trace_manager.end_trace(current_span.trace_uuid)
+                        current_trace_context.set(None)
 
             current_span_context.set(None)
 
@@ -1226,8 +1243,22 @@ def observe(
 
                 def gen():
                     observer.__enter__()
+                    # Capture the span and trace refs set by __enter__.
+                    # Generator locals survive across yields, but ContextVars
+                    # don't when Starlette dispatches each next() to a
+                    # different thread-pool thread. We restore them on every
+                    # resume so child @observe'd calls see the right parent.
+                    _span = current_span_context.get()
+                    _trace = current_trace_context.get()
                     try:
-                        yield from original_gen
+                        for value in original_gen:
+                            yield value
+                            # After resume (potentially in a new thread),
+                            # restore ContextVars before the next iteration
+                            # runs user code that may create child spans.
+                            current_span_context.set(_span)
+                            if _trace is not None:
+                                current_trace_context.set(_trace)
                         observer.__exit__(None, None, None)
                     except GeneratorExit:
                         observer.__exit__(None, None, None)

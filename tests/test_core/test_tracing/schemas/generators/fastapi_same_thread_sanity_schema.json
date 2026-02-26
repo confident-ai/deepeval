@@ -1,0 +1,63 @@
+{
+  "uuid": "215ffcc7-23e9-43d2-95c0-a11ac0ada644",
+  "baseSpans": [
+    {
+      "uuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
+      "name": "streaming_rag_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-26T06:37:14.940Z",
+      "endTime": "2026-02-26T06:37:14.940Z",
+      "input": {
+        "query": "test"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "e315bac9-db4f-4fc5-8ecc-bfb8b41a15cf",
+      "name": "stream_llm_tokens",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
+      "startTime": "2026-02-26T06:37:14.940Z",
+      "endTime": "2026-02-26T06:37:14.940Z",
+      "input": {
+        "query": "test",
+        "context": "relevant context for: test"
+      },
+      "model": "gpt-4o",
+      "inputTokenCount": 5.0,
+      "outputTokenCount": 3.0,
+      "costPerInputToken": 0.005,
+      "costPerOutputToken": 0.015
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "c078a72f-d01d-4b4b-b93e-7b755c1a9c97",
+      "name": "retrieve_documents",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
+      "startTime": "2026-02-26T06:37:14.940Z",
+      "endTime": "2026-02-26T06:37:14.940Z",
+      "input": {
+        "query": "test"
+      },
+      "output": "relevant context for: test",
+      "embedder": "text-embedding-3-small",
+      "topK": 5,
+      "chunkSize": 512
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-02-26T06:37:14.940Z",
+  "endTime": "2026-02-26T06:37:14.940Z",
+  "environment": "development",
+  "input": {
+    "query": "test"
+  },
+  "status": "SUCCESS"
+}

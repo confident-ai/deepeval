@@ -1,0 +1,63 @@
+{
+  "uuid": "d832a2dd-0a4a-42a9-a279-5f428fd8b9fa",
+  "baseSpans": [
+    {
+      "uuid": "890357da-9039-4082-80e3-4329bcda2652",
+      "name": "streaming_rag_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-26T06:37:14.908Z",
+      "endTime": "2026-02-26T06:37:14.908Z",
+      "input": {
+        "query": "hello"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "e8dc7126-60be-4303-9c11-9ddaa9ed5bd9",
+      "name": "stream_llm_tokens",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "890357da-9039-4082-80e3-4329bcda2652",
+      "startTime": "2026-02-26T06:37:14.908Z",
+      "endTime": "2026-02-26T06:37:14.908Z",
+      "input": {
+        "query": "hello",
+        "context": "relevant context for: hello"
+      },
+      "model": "gpt-4o",
+      "inputTokenCount": 5.0,
+      "outputTokenCount": 3.0,
+      "costPerInputToken": 0.005,
+      "costPerOutputToken": 0.015
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "326e30f6-a35b-4b2d-8c10-377f54749c8f",
+      "name": "retrieve_documents",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "890357da-9039-4082-80e3-4329bcda2652",
+      "startTime": "2026-02-26T06:37:14.908Z",
+      "endTime": "2026-02-26T06:37:14.908Z",
+      "input": {
+        "query": "hello"
+      },
+      "output": "relevant context for: hello",
+      "embedder": "text-embedding-3-small",
+      "topK": 5,
+      "chunkSize": 512
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-02-26T06:37:14.908Z",
+  "endTime": "2026-02-26T06:37:14.908Z",
+  "environment": "development",
+  "input": {
+    "query": "hello"
+  },
+  "status": "SUCCESS"
+}
