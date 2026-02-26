@@ -397,15 +397,32 @@ def trimAndLoadJson(
 
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
     # Remove trailing comma if one is present
-    jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
+    jsonStr = re.sub(r",\s*([\\]}])", r"\1", jsonStr)
 
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        if metric is not None:
-            metric.error = error_str
-        raise ValueError(error_str)
+        # Fix invalid escapes: backslash not followed by valid JSON escape char
+        fixed = re.sub(r'\\\\(?!["\\\\/bfnrtu])', r"\\\\", jsonStr)
+        try:
+            return json.loads(fixed)
+        except json.JSONDecodeError:
+            # Regex fallback: extract "score" and "reason"
+            score_match = re.search(r'"score"\\s*:\\s*([\\d.]+)', jsonStr)
+            reason_match = re.search(
+                r'"reason"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"', jsonStr
+            )
+            if score_match is not None and reason_match is not None:
+                score_val = score_match.group(1)
+                try:
+                    score_val = int(score_val) if "." not in score_val else float(score_val)
+                except ValueError:
+                    score_val = 0
+                return {"score": score_val, "reason": reason_match.group(1)}
+            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+            if metric is not None:
+                metric.error = error_str
+            raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
