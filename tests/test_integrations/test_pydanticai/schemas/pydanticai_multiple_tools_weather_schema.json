@@ -1,14 +1,14 @@
 {
-  "uuid": "91c9b75ef8bbe7dd518efef49b4845a5",
+  "uuid": "bb2b3a5ca9a30caf858d9ecadb27249f",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "a51c96ce0fa0afac",
+      "uuid": "c8407f7756958b62",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:35.239Z",
-      "endTime": "2026-01-29T19:10:37.076Z",
+      "startTime": "2026-02-26T18:18:28.906Z",
+      "endTime": "2026-02-26T18:18:30.843Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,24 @@
         }
       ],
       "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "a51c96ce0fa0afac",
+      "uuid": "c8407f7756958b62",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:35.239Z",
-      "endTime": "2026-01-29T19:10:37.076Z",
+      "startTime": "2026-02-26T18:18:28.906Z",
+      "endTime": "2026-02-26T18:18:30.843Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +49,14 @@
         }
       ],
       "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +64,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:35.239Z",
-  "endTime": "2026-01-29T19:10:37.076Z",
+  "startTime": "2026-02-26T18:18:28.906Z",
+  "endTime": "2026-02-26T18:18:30.843Z",
   "name": "pydanticai-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -73,5 +89,14 @@
     }
   ],
   "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    }
+  ],
+  "expectedTools": []
 }
