@@ -1250,21 +1250,39 @@ def observe(
                     # resume so child @observe'd calls see the right parent.
                     _span = current_span_context.get()
                     _trace = current_trace_context.get()
+                    it = iter(original_gen)
+                    return_value = None
                     try:
-                        return_value = yield from original_gen
+                        while True:
+                            try:
+                                # 1. Pull the next chunk
+                                value = next(it)
+                            except StopIteration as e:
+                                return_value = e.value
+                                break
+                            yield value
+                            current_span_context.set(_span)
+                            if _trace is not None:
+                                current_trace_context.set(_trace)
+                                
                         observer.result = return_value
+                    except GeneratorExit:
+                        if current_span_context.get() != _span:
+                            current_span_context.set(_span)
+                        if _trace is not None:
+                            current_trace_context.set(_trace)
+                        observer.__exit__(None, None, None)
+                        raise
                     except Exception as e:
                         current_span_context.set(_span)
-                        current_trace_context.set(_trace)
+                        if _trace is not None:
+                            current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
                     finally:
-                        # After resume (potentially in a new thread),
-                        # restore ContextVars before the next iteration
-                        # runs user code that may create child spans.
                         if current_span_context.get() != _span:
                             current_span_context.set(_span)
-                        if current_trace_context.get() != _trace:
+                        if _trace is not None:
                             current_trace_context.set(_trace)
                         
                         if trace_manager.get_span_by_uuid(observer.uuid):
