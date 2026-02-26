@@ -1243,6 +1243,11 @@ def observe(
 
                 def gen():
                     observer.__enter__()
+                    # Capture the span and trace refs set by __enter__.
+                    # Generator locals survive across yields, but ContextVars
+                    # don't when Starlette dispatches each next() to a
+                    # different thread-pool thread. We restore them on every
+                    # resume so child @observe'd calls see the right parent.
                     _span = current_span_context.get()
                     _trace = current_trace_context.get()
                     try:
@@ -1254,6 +1259,9 @@ def observe(
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
                     finally:
+                        # After resume (potentially in a new thread),
+                        # restore ContextVars before the next iteration
+                        # runs user code that may create child spans.
                         if current_span_context.get() != _span:
                             current_span_context.set(_span)
                         if current_trace_context.get() != _trace:
