@@ -1,14 +1,14 @@
 {
-  "uuid": "9225994a-f818-40a5-828a-57e509d4976e",
+  "uuid": "2b7b53e2-23f1-4b80-9a00-0e811fb48008",
   "baseSpans": [
     {
-      "uuid": "ReActAgent.parse_agent_output-b6afcda1-c179-4994-b936-a1a3d35583d2",
+      "uuid": "ReActAgent.parse_agent_output-c3145ea1-1ba5-4ae3-aa05-3f7d737483c6",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:31.815Z",
-      "endTime": "2026-02-16T06:12:31.818Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:48.675Z",
+      "endTime": "2026-02-26T18:16:48.677Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -29,7 +29,7 @@
               "tool_kwargs": {
                 "city": "Tokyo"
               },
-              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+              "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec"
             }
           ],
           "retry_messages": []
@@ -54,7 +54,7 @@
               "tool_kwargs": {
                 "city": "Tokyo"
               },
-              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+              "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec"
             }
           ],
           "retry_messages": []
@@ -62,13 +62,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
+      "uuid": "ReActAgent.run_agent_step-027afa49-1489-4e6f-b68d-db9d4fd2afca",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:30.828Z",
-      "endTime": "2026-02-16T06:12:31.814Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:47.640Z",
+      "endTime": "2026-02-26T18:16:48.674Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -115,13 +115,13 @@
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-848e4689-7aed-4d0a-8727-6be185527515",
+      "uuid": "ReActOutputParser.parse-a786c53f-7898-4537-aa34-d1443f4bb25d",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
-      "startTime": "2026-02-16T06:12:31.814Z",
-      "endTime": "2026-02-16T06:12:31.814Z",
+      "parentUuid": "ReActAgent.run_agent_step-027afa49-1489-4e6f-b68d-db9d4fd2afca",
+      "startTime": "2026-02-26T18:16:48.673Z",
+      "endTime": "2026-02-26T18:16:48.674Z",
       "input": {
         "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C.",
         "is_streaming": false
@@ -133,13 +133,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-953b3fe6-3c59-436f-b8cc-a1496ae9ab01",
+      "uuid": "OpenAI.astream_chat-d4c1f969-9216-4d46-bc6c-671f5750c143",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
-      "startTime": "2026-02-16T06:12:30.829Z",
-      "endTime": "2026-02-16T06:12:30.830Z",
+      "parentUuid": "ReActAgent.run_agent_step-027afa49-1489-4e6f-b68d-db9d4fd2afca",
+      "startTime": "2026-02-26T18:16:47.641Z",
+      "endTime": "2026-02-26T18:16:47.641Z",
       "input": {
         "messages": [
           {
@@ -168,7 +168,7 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
               }
             ]
           },
@@ -184,16 +184,16 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11712b5b0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x111f91df0>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-ef428812-4570-4184-b8c8-36076830e8c2",
+      "uuid": "ReActAgent.setup_agent-ba872a3b-1aeb-4cfc-82d0-da31d92afb5b",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:30.827Z",
-      "endTime": "2026-02-16T06:12:30.827Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:47.639Z",
+      "endTime": "2026-02-26T18:16:47.639Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -239,13 +239,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.aggregate_tool_results-82230a40-2765-48e8-a15f-a8b293ec23cf",
+      "uuid": "ReActAgent.aggregate_tool_results-1e03bcb1-d2ee-4eb0-97f7-f34e3b0de5ba",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:30.826Z",
-      "endTime": "2026-02-16T06:12:30.826Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:47.638Z",
+      "endTime": "2026-02-26T18:16:47.638Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -253,7 +253,7 @@
           "tool_kwargs": {
             "city": "Tokyo"
           },
-          "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+          "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec",
           "tool_output": {
             "blocks": [
               {
@@ -291,13 +291,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.parse_agent_output-a865f950-c76b-4a07-8df3-ed5838c05f3b",
+      "uuid": "ReActAgent.parse_agent_output-2ddc39d6-8f60-4eb0-b3b4-6023ab883465",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:30.824Z",
-      "endTime": "2026-02-16T06:12:30.824Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:47.635Z",
+      "endTime": "2026-02-26T18:16:47.635Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -307,14 +307,14 @@
             "blocks": [
               {
                 "block_type": "text",
-                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
               }
             ]
           },
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+              "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec",
               "tool_name": "get_weather",
               "tool_kwargs": {
                 "city": "Tokyo"
@@ -326,13 +326,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
+      "uuid": "ReActAgent.run_agent_step-571de344-c970-474e-b7e7-08772c518ff6",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:29.406Z",
-      "endTime": "2026-02-16T06:12:30.822Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:46.281Z",
+      "endTime": "2026-02-26T18:16:47.633Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -368,7 +368,7 @@
           "blocks": [
             {
               "block_type": "text",
-              "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+              "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
             }
           ]
         },
@@ -376,7 +376,7 @@
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+            "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec",
             "tool_name": "get_weather",
             "tool_kwargs": {
               "city": "Tokyo"
@@ -387,19 +387,19 @@
       }
     },
     {
-      "uuid": "ReActOutputParser.parse-0c4a4ca8-fe45-4da2-926a-56cc81086eed",
+      "uuid": "ReActOutputParser.parse-c6be619b-e137-48b4-bab1-510531dec3e1",
       "name": "parse",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
-      "startTime": "2026-02-16T06:12:30.815Z",
-      "endTime": "2026-02-16T06:12:30.822Z",
+      "parentUuid": "ReActAgent.run_agent_step-571de344-c970-474e-b7e7-08772c518ff6",
+      "startTime": "2026-02-26T18:16:47.628Z",
+      "endTime": "2026-02-26T18:16:47.633Z",
       "input": {
-        "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}",
+        "output": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}",
         "is_streaming": false
       },
       "output": {
-        "thought": "The current language of the user is: English. I need to use a tool to help me answer the question.",
+        "thought": "The current language of the user is English. I need to use a tool to help me answer the question.",
         "action": "get_weather",
         "action_input": {
           "city": "Tokyo"
@@ -407,13 +407,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-027579d6-c094-4ece-b1fd-f40c26e87b47",
+      "uuid": "OpenAI.astream_chat-ddbc3ee7-48ea-4c05-a7fd-dc21e3467395",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
-      "startTime": "2026-02-16T06:12:29.406Z",
-      "endTime": "2026-02-16T06:12:29.411Z",
+      "parentUuid": "ReActAgent.run_agent_step-571de344-c970-474e-b7e7-08772c518ff6",
+      "startTime": "2026-02-26T18:16:46.282Z",
+      "endTime": "2026-02-26T18:16:46.304Z",
       "input": {
         "messages": [
           {
@@ -438,16 +438,16 @@
           }
         ]
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1181a0040>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11165a770>"
     },
     {
-      "uuid": "ReActAgent.setup_agent-3bbbbc14-7f56-4036-bf95-f118206bba82",
+      "uuid": "ReActAgent.setup_agent-f257081f-c43b-465d-81c6-0fc302906550",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:29.405Z",
-      "endTime": "2026-02-16T06:12:29.405Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:46.280Z",
+      "endTime": "2026-02-26T18:16:46.280Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -493,13 +493,13 @@
       }
     },
     {
-      "uuid": "ReActAgent.init_run-f3ad061b-3244-42bf-8d01-0f11271d3349",
+      "uuid": "ReActAgent.init_run-a41d4a91-ed61-4e99-8adb-202d962c47e7",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:29.404Z",
-      "endTime": "2026-02-16T06:12:29.405Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:46.278Z",
+      "endTime": "2026-02-26T18:16:46.279Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -528,12 +528,12 @@
   ],
   "agentSpans": [
     {
-      "uuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "uuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-02-16T06:12:29.403Z",
-      "endTime": "2026-02-16T06:12:29.404Z",
+      "startTime": "2026-02-26T18:16:46.277Z",
+      "endTime": "2026-02-26T18:16:46.278Z",
       "input": {
         "user_msg": "What is the weather in Tokyo?",
         "chat_history": null,
@@ -541,7 +541,7 @@
         "early_stopping_method": null
       },
       "output": {
-        "run_id": "1ZevOdCPUH"
+        "run_id": "lpGqzQs7mj"
       },
       "availableTools": [],
       "agentHandoffs": []
@@ -549,13 +549,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "bc4e3308-3c14-4bca-af12-47a722c0dd7e",
+      "uuid": "7fdff962-3078-404f-aeb9-14afeba7c238",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-953b3fe6-3c59-436f-b8cc-a1496ae9ab01",
-      "startTime": "2026-02-16T06:12:30.829Z",
-      "endTime": "2026-02-16T06:12:31.813Z",
+      "parentUuid": "OpenAI.astream_chat-d4c1f969-9216-4d46-bc6c-671f5750c143",
+      "startTime": "2026-02-26T18:16:47.641Z",
+      "endTime": "2026-02-26T18:16:48.673Z",
       "input": [
         {
           "role": "system",
@@ -567,7 +567,7 @@
         },
         {
           "role": "assistant",
-          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
         },
         {
           "role": "user",
@@ -583,13 +583,13 @@
       "model": "gpt-4o"
     },
     {
-      "uuid": "be27b7b6-1f64-4790-842b-53321debf265",
+      "uuid": "7f80268b-e99c-4355-be4a-74931619ecf8",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-027579d6-c094-4ece-b1fd-f40c26e87b47",
-      "startTime": "2026-02-16T06:12:29.407Z",
-      "endTime": "2026-02-16T06:12:30.815Z",
+      "parentUuid": "OpenAI.astream_chat-ddbc3ee7-48ea-4c05-a7fd-dc21e3467395",
+      "startTime": "2026-02-26T18:16:46.282Z",
+      "endTime": "2026-02-26T18:16:47.628Z",
       "input": [
         {
           "role": "system",
@@ -603,7 +603,7 @@
       "output": [
         {
           "role": "assistant",
-          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
         }
       ],
       "model": "gpt-4o"
@@ -612,13 +612,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "ReActAgent.call_tool-9183e912-ba1b-4a76-ac1c-20f462fcd647",
+      "uuid": "ReActAgent.call_tool-fc08d91b-faf4-48ec-9370-21e47f0af226",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
-      "startTime": "2026-02-16T06:12:30.825Z",
-      "endTime": "2026-02-16T06:12:30.825Z",
+      "parentUuid": "ReActAgent.run-eb2d136d-1aab-4fdf-81af-e395c6768231",
+      "startTime": "2026-02-26T18:16:47.636Z",
+      "endTime": "2026-02-26T18:16:47.637Z",
       "input": {
         "ctx": {},
         "ev": {
@@ -626,7 +626,7 @@
           "tool_kwargs": {
             "city": "Tokyo"
           },
-          "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+          "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec"
         }
       },
       "output": {
@@ -634,7 +634,7 @@
         "tool_kwargs": {
           "city": "Tokyo"
         },
-        "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+        "tool_id": "4aaa925f-cbaf-4985-b760-b2b8b4f039ec",
         "tool_output": {
           "blocks": [
             {
@@ -681,13 +681,13 @@
       ]
     },
     {
-      "uuid": "FunctionTool.acall-3b60eb5a-ce9d-4f5c-ab5d-32eb2dd421a1",
+      "uuid": "FunctionTool.acall-6d02409f-e640-4685-be85-63859cbd42e3",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ReActAgent.call_tool-9183e912-ba1b-4a76-ac1c-20f462fcd647",
-      "startTime": "2026-02-16T06:12:30.825Z",
-      "endTime": "2026-02-16T06:12:30.825Z",
+      "parentUuid": "ReActAgent.call_tool-fc08d91b-faf4-48ec-9370-21e47f0af226",
+      "startTime": "2026-02-26T18:16:47.636Z",
+      "endTime": "2026-02-26T18:16:47.637Z",
       "input": {
         "kwargs": {
           "city": "Tokyo"
@@ -712,8 +712,8 @@
       }
     }
   ],
-  "startTime": "2026-02-16T06:12:29.402Z",
-  "endTime": "2026-02-16T06:12:31.818Z",
+  "startTime": "2026-02-26T18:16:46.277Z",
+  "endTime": "2026-02-26T18:16:48.677Z",
   "name": "llama_index_async_agent",
   "tags": [
     "llama_index",
@@ -724,5 +724,30 @@
   "threadId": "llama_async_index_thread_id",
   "userId": "llama_async_index_user_id",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "output": {
+        "blocks": [
+          {
+            "block_type": "text",
+            "text": "Cloudy, 20C"
+          }
+        ],
+        "tool_name": "get_weather",
+        "raw_input": {
+          "args": [],
+          "kwargs": {
+            "city": "Tokyo"
+          }
+        },
+        "raw_output": "Cloudy, 20C",
+        "is_error": false
+      },
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    }
+  ],
   "metricCollection": "llama_async_index_metric_collection"
 }
