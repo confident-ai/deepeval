@@ -1261,19 +1261,19 @@ def observe(
                                 return_value = e.value
                                 break
                             yield value
-                            # After resume (potentially in a new thread),
-                            # restore ContextVars before the next iteration
-                            # runs user code that may create child spans.
                             current_span_context.set(_span)
                             if _trace is not None:
                                 current_trace_context.set(_trace)
+                                
                         observer.result = return_value
                     except Exception as e:
+                        current_span_context.set(_span)
+                        if _trace is not None:
+                            current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
                     finally: # GeneratorExit execption directly brings us to final block
                         observer.__exit__(None, None, None)
-                        return
 
                 return gen()
 
