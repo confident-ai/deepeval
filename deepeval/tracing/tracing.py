@@ -74,6 +74,7 @@ from deepeval.tracing.trace_test_manager import trace_testing_manager
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic
+    GeneratorExit
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -1266,20 +1267,13 @@ def observe(
                                 current_trace_context.set(_trace)
                                 
                         observer.result = return_value
-                    except GeneratorExit:
-                        if current_span_context.get() != _span:
-                            current_span_context.set(_span)
-                        if _trace is not None:
-                            current_trace_context.set(_trace)
-                        observer.__exit__(None, None, None)
-                        raise
                     except Exception as e:
                         current_span_context.set(_span)
                         if _trace is not None:
                             current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
-                    finally:
+                    finally: # GeneratorExit execption directly brings us to final block
                         if current_span_context.get() != _span:
                             current_span_context.set(_span)
                         if _trace is not None:
