@@ -1250,8 +1250,16 @@ def observe(
                     # resume so child @observe'd calls see the right parent.
                     _span = current_span_context.get()
                     _trace = current_trace_context.get()
+                    it = iter(original_gen)
+                    return_value = None
                     try:
-                        for value in original_gen:
+                        while True:
+                            try:
+                                # 1. Pull the next chunk
+                                value = next(it)
+                            except StopIteration as e:
+                                return_value = e.value
+                                break
                             yield value
                             # After resume (potentially in a new thread),
                             # restore ContextVars before the next iteration
@@ -1259,13 +1267,16 @@ def observe(
                             current_span_context.set(_span)
                             if _trace is not None:
                                 current_trace_context.set(_trace)
-                        observer.__exit__(None, None, None)
-                    except GeneratorExit:
-                        observer.__exit__(None, None, None)
-                        return
+                                
+                        observer.result = return_value
                     except Exception as e:
+                        current_span_context.set(_span)
+                        if _trace is not None:
+                            current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
+                    finally: # GeneratorExit execption directly brings us to final block
+                        observer.__exit__(None, None, None)
 
                 return gen()
 
