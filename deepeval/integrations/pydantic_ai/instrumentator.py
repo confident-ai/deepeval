@@ -19,7 +19,6 @@ from deepeval.tracing.otel.utils import (
 )
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
 from deepeval.tracing.tracing import trace_manager
-from deepeval.contextvars import get_current_golden
 from deepeval.tracing.types import (
     AgentSpan,
     Trace,
