@@ -353,7 +353,6 @@ class SpanInterceptor(SpanProcessor):
                             if part.get("type") == "tool_call":
                                 name = part.get("name")
                                 try:
-                                    args = part.get("arguments")
                                     input_parameters = json.loads(
                                         part.get("arguments")
                                     )
