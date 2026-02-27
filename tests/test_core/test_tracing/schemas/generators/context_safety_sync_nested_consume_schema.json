@@ -1,13 +1,13 @@
 {
-  "uuid": "ea08a446-d9eb-4655-a6fc-08acac231217",
+  "uuid": "658ff4eb-adeb-43f3-a50d-dcc9bf059517",
   "baseSpans": [
     {
-      "uuid": "b95245bc-31c5-4d12-a3fc-788336275216",
+      "uuid": "dd5989d8-924d-4229-b90e-02a775e172c6",
       "name": "outer_observe_consumes_inner_gen",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.641Z",
-      "endTime": "2026-02-23T07:16:38.641Z",
+      "startTime": "2026-02-27T11:14:37.799Z",
+      "endTime": "2026-02-27T11:14:37.799Z",
       "input": {
         "message": "hello world"
       },
@@ -33,15 +33,21 @@
       ]
     },
     {
-      "uuid": "16df6db7-0e80-41f4-8d77-a5891cdc2e72",
+      "uuid": "a6a5d816-9b17-43a3-ad42-fa9f17c7144f",
       "name": "stream_chunks",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b95245bc-31c5-4d12-a3fc-788336275216",
-      "startTime": "2026-02-23T07:16:38.641Z",
-      "endTime": "2026-02-23T07:16:38.641Z",
+      "parentUuid": "dd5989d8-924d-4229-b90e-02a775e172c6",
+      "startTime": "2026-02-27T11:14:37.799Z",
+      "endTime": "2026-02-27T11:14:37.799Z",
       "input": {
         "message": "hello world"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "hello world"
+        }
       }
     }
   ],
@@ -49,8 +55,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.641Z",
-  "endTime": "2026-02-23T07:16:38.641Z",
+  "startTime": "2026-02-27T11:14:37.799Z",
+  "endTime": "2026-02-27T11:14:37.799Z",
   "environment": "development",
   "input": {
     "message": "hello world"

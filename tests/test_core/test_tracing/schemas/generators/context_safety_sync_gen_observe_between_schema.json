@@ -1,25 +1,28 @@
 {
-  "uuid": "466f8984-d710-4f8f-94c6-18b1274a18d8",
+  "uuid": "f3b0e29d-6071-4adc-a033-c4a3eccced35",
   "baseSpans": [
     {
-      "uuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
+      "uuid": "b83748b2-fd0d-4632-9412-7cf8e320f647",
       "name": "outer_gen_calls_regular_observe",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.702Z",
-      "endTime": "2026-02-23T07:16:38.703Z",
+      "startTime": "2026-02-27T11:14:37.850Z",
+      "endTime": "2026-02-27T11:14:37.850Z",
       "input": {
         "data": "a b c"
+      },
+      "output": {
+        "processed": "c"
       }
     },
     {
-      "uuid": "b71dee5d-e7af-451c-b15d-ff65a714ee4e",
+      "uuid": "b0088a07-4dc2-4b7e-95e4-aac8e003981d",
       "name": "process_item",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
-      "startTime": "2026-02-23T07:16:38.703Z",
-      "endTime": "2026-02-23T07:16:38.703Z",
+      "parentUuid": "b83748b2-fd0d-4632-9412-7cf8e320f647",
+      "startTime": "2026-02-27T11:14:37.850Z",
+      "endTime": "2026-02-27T11:14:37.850Z",
       "input": {
         "item": "c"
       },
@@ -28,13 +31,13 @@
       }
     },
     {
-      "uuid": "3602b958-e458-4e41-b4a0-d45eaa931fa1",
+      "uuid": "564805f8-2e6b-4f25-9b9d-24d8735c5f09",
       "name": "process_item",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
-      "startTime": "2026-02-23T07:16:38.703Z",
-      "endTime": "2026-02-23T07:16:38.703Z",
+      "parentUuid": "b83748b2-fd0d-4632-9412-7cf8e320f647",
+      "startTime": "2026-02-27T11:14:37.850Z",
+      "endTime": "2026-02-27T11:14:37.850Z",
       "input": {
         "item": "b"
       },
@@ -43,13 +46,13 @@
       }
     },
     {
-      "uuid": "c58938b2-cb02-4688-9f55-5420426911bc",
+      "uuid": "69ad084f-6c85-40da-b7df-a61d31da295b",
       "name": "process_item",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "1bbad25d-4471-4b90-89bf-e79cabd5c3f8",
-      "startTime": "2026-02-23T07:16:38.703Z",
-      "endTime": "2026-02-23T07:16:38.703Z",
+      "parentUuid": "b83748b2-fd0d-4632-9412-7cf8e320f647",
+      "startTime": "2026-02-27T11:14:37.850Z",
+      "endTime": "2026-02-27T11:14:37.850Z",
       "input": {
         "item": "a"
       },
@@ -62,11 +65,14 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.703Z",
-  "endTime": "2026-02-23T07:16:38.703Z",
+  "startTime": "2026-02-27T11:14:37.850Z",
+  "endTime": "2026-02-27T11:14:37.850Z",
   "environment": "development",
   "input": {
     "data": "a b c"
+  },
+  "output": {
+    "processed": "c"
   },
   "status": "SUCCESS"
 }

@@ -1,27 +1,37 @@
 {
-  "uuid": "c5a8946c-c757-4ff3-bf4a-4cdd7a190b80",
+  "uuid": "44a769bc-2f83-4de6-bd9c-c27ef147e8c9",
   "baseSpans": [
     {
-      "uuid": "5711fb44-15aa-4c7c-bcb8-521c96b4bb62",
+      "uuid": "256c1538-1eaf-4d71-93f5-dd6854cc9148",
       "name": "outer_gen_yields_from_inner_gen",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.671Z",
-      "endTime": "2026-02-23T07:16:38.672Z",
+      "startTime": "2026-02-27T11:14:37.825Z",
+      "endTime": "2026-02-27T11:14:37.825Z",
       "input": {
         "message": "alpha beta"
+      },
+      "output": {
+        "type": "wrapper",
+        "data": "end"
       }
     },
     {
-      "uuid": "b690a22c-9200-48cd-a7b1-8fa9815d63d1",
+      "uuid": "cce60c91-613d-4ff6-8f56-303fd27327cd",
       "name": "stream_chunks",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "5711fb44-15aa-4c7c-bcb8-521c96b4bb62",
-      "startTime": "2026-02-23T07:16:38.672Z",
-      "endTime": "2026-02-23T07:16:38.672Z",
+      "parentUuid": "256c1538-1eaf-4d71-93f5-dd6854cc9148",
+      "startTime": "2026-02-27T11:14:37.825Z",
+      "endTime": "2026-02-27T11:14:37.825Z",
       "input": {
         "message": "alpha beta"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "alpha beta"
+        }
       }
     }
   ],
@@ -29,11 +39,15 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.671Z",
-  "endTime": "2026-02-23T07:16:38.672Z",
+  "startTime": "2026-02-27T11:14:37.825Z",
+  "endTime": "2026-02-27T11:14:37.825Z",
   "environment": "development",
   "input": {
     "message": "alpha beta"
+  },
+  "output": {
+    "type": "wrapper",
+    "data": "end"
   },
   "status": "SUCCESS"
 }

@@ -1,13 +1,13 @@
 {
-  "uuid": "31bad367-9669-4f77-bfc2-34d9ccc7559c",
+  "uuid": "29b8f3f8-ac03-41bb-bea4-d51f757bcbb9",
   "baseSpans": [
     {
-      "uuid": "f7140978-c269-470d-9fa8-c62714d48abe",
+      "uuid": "f5c858bd-f899-4827-b53d-ee1d549f30b1",
       "name": "async_streaming_processor",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T09:50:14.556Z",
-      "endTime": "2026-01-29T09:50:14.590Z",
+      "startTime": "2026-02-27T11:14:37.359Z",
+      "endTime": "2026-02-27T11:14:37.392Z",
       "input": {
         "data": "alpha beta gamma"
       }
@@ -17,8 +17,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T09:50:14.556Z",
-  "endTime": "2026-01-29T09:50:14.590Z",
+  "startTime": "2026-02-27T11:14:37.359Z",
+  "endTime": "2026-02-27T11:14:37.392Z",
   "environment": "development",
   "input": {
     "data": "alpha beta gamma"

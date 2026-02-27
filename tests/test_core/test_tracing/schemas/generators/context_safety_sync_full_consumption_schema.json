@@ -1,15 +1,21 @@
 {
-  "uuid": "e56c9fc4-ef6f-4f24-b5b9-2a27d4c0226d",
+  "uuid": "c1c0d1a8-66da-48e3-bb68-8b4cfd419a72",
   "baseSpans": [
     {
-      "uuid": "6b3ac6a2-4b97-44ff-a07d-e421b26339e9",
+      "uuid": "1712bff8-19c3-40e3-a2d4-f0d3f1344aa1",
       "name": "stream_chunks",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.595Z",
-      "endTime": "2026-02-23T07:16:38.595Z",
+      "startTime": "2026-02-27T11:14:37.758Z",
+      "endTime": "2026-02-27T11:14:37.758Z",
       "input": {
         "message": "a b c"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "a b c"
+        }
       }
     }
   ],
@@ -17,11 +23,17 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.595Z",
-  "endTime": "2026-02-23T07:16:38.595Z",
+  "startTime": "2026-02-27T11:14:37.758Z",
+  "endTime": "2026-02-27T11:14:37.758Z",
   "environment": "development",
   "input": {
     "message": "a b c"
+  },
+  "output": {
+    "type": "final_response",
+    "data": {
+      "content": "a b c"
+    }
   },
   "status": "SUCCESS"
 }
