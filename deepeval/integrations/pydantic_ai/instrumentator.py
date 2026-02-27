@@ -269,23 +269,6 @@ class SpanInterceptor(SpanProcessor):
 
         if agent_name:
             self._add_agent_span(span, agent_name)
-            try:
-                current_golden = get_current_golden()
-                if current_golden and getattr(current_golden, "expected_tools", None):
-                    expected_tools_data = []
-                    for tool in current_golden.expected_tools:
-                        if hasattr(tool, "model_dump"):
-                            expected_tools_data.append(tool.model_dump(by_alias=True, exclude_none=True))
-                        elif hasattr(tool, "dict"):
-                            expected_tools_data.append(tool.dict(exclude_none=True))
-                        else:
-                            expected_tools_data.append(tool)
-                    span.set_attribute(
-                        "confident.span.expected_tools", 
-                        json.dumps(expected_tools_data)
-                    )
-            except Exception:
-                pass
 
         # set llm metric collection
         if span.attributes.get("gen_ai.operation.name") in [
@@ -368,16 +351,19 @@ class SpanInterceptor(SpanProcessor):
                     for message in normalized_messages:
                         for part in message.get("parts", []):
                             if part.get("type") == "tool_call":
+                                name = part.get("name")
                                 try:
                                     args = part.get("arguments")
-                                    input_params = json.loads(args) if isinstance(args, str) else args
+                                    input_parameters = json.loads(
+                                        part.get("arguments")
+                                    )
                                 except Exception:
-                                    input_params = {}
+                                    input_parameters = {}
 
                                 tools_called.append(
                                     ToolCall(
-                                        name=part.get("name"),
-                                        input_parameters=input_params,
+                                        name=name,
+                                        input_parameters=input_parameters,
                                         output=part.get("output") or part.get("result")
                                     )
                                 )
