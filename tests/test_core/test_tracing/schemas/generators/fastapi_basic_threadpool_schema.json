@@ -10,7 +10,8 @@
       "endTime": "2026-02-26T06:37:14.875Z",
       "input": {
         "prompt": "world"
-      }
+      },
+      "output": "world"
     }
   ],
   "agentSpans": [],
@@ -23,5 +24,6 @@
   "input": {
     "prompt": "world"
   },
+  "output": "world",
   "status": "SUCCESS"
 }
