@@ -1,5 +1,6 @@
 import copy
 import pytest
+from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
 from tests.test_core.stubs import _RecordingClient
@@ -13,6 +14,16 @@ class RecordingBedrockClient(_RecordingClient):
 
     async def converse(self, **kwargs):
         return self._response
+
+
+def _mock_get_client(response):
+    """Create an async context manager that yields a RecordingBedrockClient."""
+
+    @asynccontextmanager
+    async def _get_client():
+        yield RecordingBedrockClient(response)
+
+    return _get_client
 
 
 def _mk_model(gen_kwargs: Optional[Dict[str, Any]]):
@@ -116,10 +127,7 @@ async def test_bedrock_a_generate_skips_reasoning_content_and_reads_text_block(
         "stopReason": "end_turn",
     }
 
-    async def _ensure_client():
-        return RecordingBedrockClient(response)
-
-    monkeypatch.setattr(m, "_ensure_client", _ensure_client)
+    monkeypatch.setattr(m, "_get_client", _mock_get_client(response))
 
     out, cost = await m.a_generate("prompt", schema=None)
     assert out == '{"statements":["The capital of France is Paris."]}'
@@ -156,10 +164,7 @@ async def test_bedrock_a_generate_reads_text_block_when_first(monkeypatch):
         "stopReason": "end_turn",
     }
 
-    async def _ensure_client():
-        return RecordingBedrockClient(response)
-
-    monkeypatch.setattr(m, "_ensure_client", _ensure_client)
+    monkeypatch.setattr(m, "_get_client", _mock_get_client(response))
 
     out, cost = await m.a_generate("prompt", schema=None)
     assert out == '{"statements":["hello"]}'

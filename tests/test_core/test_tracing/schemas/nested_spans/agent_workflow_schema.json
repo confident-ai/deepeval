@@ -1,0 +1,61 @@
+{
+  "uuid": "4f2904e8-7761-4f07-9ade-bc5aabffe678",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "c0556887-cce8-4088-a67f-3784a611335b",
+      "name": "agent_workflow",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.067Z",
+      "endTime": "2026-01-29T09:53:13.067Z",
+      "input": {
+        "query": "search query"
+      },
+      "output": "Generated from: Retrieved docs for: search query",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "dc5bc2b9-6838-4e7a-bd5e-7e7331b46701",
+      "name": "llm_step",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "c0556887-cce8-4088-a67f-3784a611335b",
+      "startTime": "2026-01-29T09:53:13.067Z",
+      "endTime": "2026-01-29T09:53:13.067Z",
+      "input": {
+        "context": "Retrieved docs for: search query"
+      },
+      "output": "Generated from: Retrieved docs for: search query",
+      "model": "gpt-4"
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "bdae7306-f497-40a1-859f-0d7c7a58ee3d",
+      "name": "retriever_step",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "c0556887-cce8-4088-a67f-3784a611335b",
+      "startTime": "2026-01-29T09:53:13.067Z",
+      "endTime": "2026-01-29T09:53:13.067Z",
+      "input": {
+        "query": "search query"
+      },
+      "output": "Retrieved docs for: search query",
+      "embedder": "ada-002"
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.067Z",
+  "endTime": "2026-01-29T09:53:13.067Z",
+  "environment": "testing",
+  "input": {
+    "query": "search query"
+  },
+  "output": "Generated from: Retrieved docs for: search query",
+  "status": "SUCCESS"
+}

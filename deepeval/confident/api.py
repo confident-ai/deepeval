@@ -21,9 +21,34 @@ from deepeval.config.settings import get_settings
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
+DEEPEVAL_BASE_URL_AU = "https://au.deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
+API_BASE_URL_AU = "https://au.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
+
+
+def _infer_region_from_api_key(api_key: Optional[str]) -> Optional[str]:
+    """
+    Infer region from Confident API key prefix.
+
+    Supported:
+      - confident_eu_... => "EU"
+      - confident_us_... => "US"
+      - confident_au_... => "AU"
+
+    Returns None if prefix is not recognized or api_key is falsy.
+    """
+    if not api_key:
+        return None
+    key = api_key.strip().lower()
+    if key.startswith("confident_eu_"):
+        return "EU"
+    if key.startswith("confident_us_"):
+        return "US"
+    if key.startswith("confident_au_"):
+        return "AU"
+    return None
 
 
 def get_base_api_url():
@@ -31,11 +56,25 @@ def get_base_api_url():
     if s.CONFIDENT_BASE_URL:
         base_url = s.CONFIDENT_BASE_URL.rstrip("/")
         return base_url
+    # If the user has explicitly set a region, respect it.
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
-    if region == "EU":
-        return API_BASE_URL_EU
-    else:
+    if region:
+        if region == "EU":
+            return API_BASE_URL_EU
+        elif region == "AU":
+            return API_BASE_URL_AU
         return API_BASE_URL
+
+    # Otherwise, infer region from the API key prefix.
+    api_key = get_confident_api_key()
+    inferred = _infer_region_from_api_key(api_key)
+    if inferred == "EU":
+        return API_BASE_URL_EU
+    elif inferred == "AU":
+        return API_BASE_URL_AU
+
+    # Default to US (backwards compatible)
+    return API_BASE_URL
 
 
 def get_confident_api_key() -> Optional[str]:
@@ -95,10 +134,12 @@ class Endpoints(Enum):
     METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
-    PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:versionId"
+    PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:version"
     PROMPTS_LABEL_ENDPOINT = "/v1/prompts/:alias/labels/:label"
     PROMPTS_ENDPOINT = "/v1/prompts"
     PROMPTS_VERSIONS_ENDPOINT = "/v1/prompts/:alias/versions"
+    PROMPTS_COMMITS_ENDPOINT = "/v1/prompts/:alias/commits"
+    PROMPTS_COMMIT_HASH_ENDPOINT = "/v1/prompts/:alias/commits/:hash"
     SIMULATE_ENDPOINT = "/v1/simulate"
     EVALUATE_ENDPOINT = "/v1/evaluate"
 

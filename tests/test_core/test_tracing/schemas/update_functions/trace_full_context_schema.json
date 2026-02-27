@@ -1,0 +1,38 @@
+{
+  "uuid": "7f043f5e-52e1-4c5e-9cad-8aa271e43095",
+  "baseSpans": [
+    {
+      "uuid": "42d6b45b-333c-4060-b443-b89bfa2430af",
+      "name": "trace_update_all_context",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.999Z",
+      "endTime": "2026-01-29T09:53:13.999Z",
+      "input": {
+        "query": "query"
+      },
+      "output": "Full context: query"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.999Z",
+  "endTime": "2026-01-29T09:53:13.999Z",
+  "name": "full_context_trace",
+  "metadata": {
+    "version": "1.0",
+    "env": "test"
+  },
+  "tags": [
+    "test",
+    "full"
+  ],
+  "environment": "testing",
+  "threadId": "thread_001",
+  "userId": "user_001",
+  "input": "Custom trace input",
+  "output": "Custom trace output",
+  "status": "SUCCESS"
+}

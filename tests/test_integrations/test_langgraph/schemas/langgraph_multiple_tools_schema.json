@@ -1,13 +1,13 @@
 {
-  "uuid": "903a3b9c-d80d-4147-8628-95802710d16a",
+  "uuid": "95b2832d-8c53-487d-b8e7-de5eadfd99f5",
   "baseSpans": [
     {
-      "uuid": "019bc088-2e1d-7470-9743-9705f0937fa2",
+      "uuid": "019bf2a5-ade2-7080-9e60-74ef3d51c0a1",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:21:48.829Z",
-      "endTime": "2026-01-15T07:21:51.946Z",
+      "startTime": "2026-01-25T00:55:02.883Z",
+      "endTime": "2026-01-25T00:55:14.172Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           }
         ]
       },
@@ -26,48 +26,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -75,21 +49,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -97,7 +73,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -105,22 +81,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
@@ -130,8 +106,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-            "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+            "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "status": "success"
           },
           {
@@ -140,8 +116,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_population",
-            "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-            "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "23001089-8c5a-4871-a773-4832dced9457",
+            "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "status": "success"
           },
           {
@@ -150,24 +126,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_timezone",
-            "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-            "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+            "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
             "status": "success"
           },
           {
-            "content": "Here is the information about Tokyo:\n\n- **Weather**: Cloudy, 68\u00b0F\n- **Population**: Approximately 13,960,000\n- **Timezone**: JST (Japan Standard Time, UTC+9)",
+            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F (\u224820\u00b0C)  \n- Population: 13,960,000  \n- Timezone: JST (UTC+9)\n\nWould you like a short-term forecast, current local time in Tokyo, or more population details (city vs. metro)?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 220,
-                "total_tokens": 268,
+                "completion_tokens": 395,
+                "prompt_tokens": 307,
+                "total_tokens": 702,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 320,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -175,27 +151,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxuyTllMLnW905M2zBQczcbQlmM",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih7BSzx5I9OkNKCCIuXYs0BI7Vk",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-3495-7f60-9c9d-be34087b8dc0-0",
+            "id": "lc_run--019bf2a5-b7ce-7db2-a2ba-9410b1d0b5c3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 220,
-              "output_tokens": 48,
-              "total_tokens": 268,
+              "input_tokens": 307,
+              "output_tokens": 395,
+              "total_tokens": 702,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 320
               }
             }
           }
@@ -203,13 +181,13 @@
       }
     },
     {
-      "uuid": "019bc088-3495-7f60-9c9d-be2590a3036d",
+      "uuid": "019bf2a5-b7ce-7db2-a2ba-940a92f3be06",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-2e1d-7470-9743-9705f0937fa2",
-      "startTime": "2026-01-15T07:21:50.485Z",
-      "endTime": "2026-01-15T07:21:51.945Z",
+      "parentUuid": "019bf2a5-ade2-7080-9e60-74ef3d51c0a1",
+      "startTime": "2026-01-25T00:55:05.422Z",
+      "endTime": "2026-01-25T00:55:14.172Z",
       "input": {
         "messages": [
           {
@@ -217,48 +195,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -266,21 +218,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -288,7 +242,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -296,22 +250,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
@@ -321,8 +275,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-            "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+            "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "status": "success"
           },
           {
@@ -331,8 +285,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_population",
-            "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-            "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "23001089-8c5a-4871-a773-4832dced9457",
+            "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "status": "success"
           },
           {
@@ -341,8 +295,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_timezone",
-            "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-            "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+            "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
             "status": "success"
           }
         ]
@@ -350,19 +304,19 @@
       "output": {
         "messages": [
           {
-            "content": "Here is the information about Tokyo:\n\n- **Weather**: Cloudy, 68\u00b0F\n- **Population**: Approximately 13,960,000\n- **Timezone**: JST (Japan Standard Time, UTC+9)",
+            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F (\u224820\u00b0C)  \n- Population: 13,960,000  \n- Timezone: JST (UTC+9)\n\nWould you like a short-term forecast, current local time in Tokyo, or more population details (city vs. metro)?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 220,
-                "total_tokens": 268,
+                "completion_tokens": 395,
+                "prompt_tokens": 307,
+                "total_tokens": 702,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 320,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -370,27 +324,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxuyTllMLnW905M2zBQczcbQlmM",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih7BSzx5I9OkNKCCIuXYs0BI7Vk",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-3495-7f60-9c9d-be34087b8dc0-0",
+            "id": "lc_run--019bf2a5-b7ce-7db2-a2ba-9410b1d0b5c3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 220,
-              "output_tokens": 48,
-              "total_tokens": 268,
+              "input_tokens": 307,
+              "output_tokens": 395,
+              "total_tokens": 702,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 320
               }
             }
           }
@@ -398,13 +354,13 @@
       }
     },
     {
-      "uuid": "019bc088-3a49-71b3-8599-ddc65075bf46",
+      "uuid": "019bf2a5-d9fc-7af2-89a9-aaf05dfe4238",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-3495-7f60-9c9d-be2590a3036d",
-      "startTime": "2026-01-15T07:21:51.945Z",
-      "endTime": "2026-01-15T07:21:51.945Z",
+      "parentUuid": "019bf2a5-b7ce-7db2-a2ba-940a92f3be06",
+      "startTime": "2026-01-25T00:55:14.172Z",
+      "endTime": "2026-01-25T00:55:14.172Z",
       "input": {
         "messages": [
           {
@@ -412,48 +368,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -461,21 +391,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -483,7 +415,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -491,22 +423,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           },
@@ -516,8 +448,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-            "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+            "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "status": "success"
           },
           {
@@ -526,8 +458,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_population",
-            "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-            "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "23001089-8c5a-4871-a773-4832dced9457",
+            "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "status": "success"
           },
           {
@@ -536,24 +468,24 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_timezone",
-            "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-            "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+            "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
             "status": "success"
           },
           {
-            "content": "Here is the information about Tokyo:\n\n- **Weather**: Cloudy, 68\u00b0F\n- **Population**: Approximately 13,960,000\n- **Timezone**: JST (Japan Standard Time, UTC+9)",
+            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F (\u224820\u00b0C)  \n- Population: 13,960,000  \n- Timezone: JST (UTC+9)\n\nWould you like a short-term forecast, current local time in Tokyo, or more population details (city vs. metro)?",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 48,
-                "prompt_tokens": 220,
-                "total_tokens": 268,
+                "completion_tokens": 395,
+                "prompt_tokens": 307,
+                "total_tokens": 702,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 320,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -561,27 +493,29 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxuyTllMLnW905M2zBQczcbQlmM",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih7BSzx5I9OkNKCCIuXYs0BI7Vk",
+              "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-3495-7f60-9c9d-be34087b8dc0-0",
+            "id": "lc_run--019bf2a5-b7ce-7db2-a2ba-9410b1d0b5c3-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 220,
-              "output_tokens": 48,
-              "total_tokens": 268,
+              "input_tokens": 307,
+              "output_tokens": 395,
+              "total_tokens": 702,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 320
               }
             }
           }
@@ -590,13 +524,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bc088-3491-77f0-8623-07a5a0e8cd88",
+      "uuid": "019bf2a5-b7ca-73f0-a103-7652f0c048a6",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-2e1d-7470-9743-9705f0937fa2",
-      "startTime": "2026-01-15T07:21:50.481Z",
-      "endTime": "2026-01-15T07:21:50.484Z",
+      "parentUuid": "019bf2a5-ade2-7080-9e60-74ef3d51c0a1",
+      "startTime": "2026-01-25T00:55:05.418Z",
+      "endTime": "2026-01-25T00:55:05.421Z",
       "input": {
         "messages": [
           {
@@ -604,48 +538,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -653,21 +561,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -675,7 +585,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -683,22 +593,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -712,8 +622,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-            "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+            "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "status": "success"
           },
           {
@@ -722,8 +632,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_population",
-            "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-            "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "23001089-8c5a-4871-a773-4832dced9457",
+            "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "status": "success"
           },
           {
@@ -732,8 +642,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_timezone",
-            "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-            "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+            "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
             "status": "success"
           }
         ]
@@ -747,8 +657,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-            "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+            "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "status": "success"
           },
           "inputParameters": {
@@ -763,8 +673,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_population",
-            "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-            "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "23001089-8c5a-4871-a773-4832dced9457",
+            "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "status": "success"
           },
           "inputParameters": {
@@ -779,8 +689,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_timezone",
-            "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-            "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+            "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
             "status": "success"
           },
           "inputParameters": {
@@ -790,13 +700,13 @@
       ]
     },
     {
-      "uuid": "019bc088-2e1e-77b3-ab5a-8c980873378d",
+      "uuid": "019bf2a5-ade5-7f81-a086-ae29627f5d18",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-2e1d-7470-9743-9705f0937fa2",
-      "startTime": "2026-01-15T07:21:48.830Z",
-      "endTime": "2026-01-15T07:21:50.480Z",
+      "parentUuid": "019bf2a5-ade2-7080-9e60-74ef3d51c0a1",
+      "startTime": "2026-01-25T00:55:02.885Z",
+      "endTime": "2026-01-25T00:55:05.417Z",
       "input": {
         "messages": [
           {
@@ -804,7 +714,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           }
         ]
       },
@@ -813,43 +723,17 @@
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -857,21 +741,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -879,7 +765,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -887,22 +773,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -910,13 +796,13 @@
       }
     },
     {
-      "uuid": "019bc088-348f-7b63-b574-789205008310",
+      "uuid": "019bf2a5-b7c9-70f0-a3b3-e6828ab7d3b8",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc088-2e1e-77b3-ab5a-8c980873378d",
-      "startTime": "2026-01-15T07:21:50.480Z",
-      "endTime": "2026-01-15T07:21:50.480Z",
+      "parentUuid": "019bf2a5-ade5-7f81-a086-ae29627f5d18",
+      "startTime": "2026-01-25T00:55:05.417Z",
+      "endTime": "2026-01-25T00:55:05.417Z",
       "input": {
         "messages": [
           {
@@ -924,48 +810,22 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+            "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
           },
           {
             "content": "",
             "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_weather"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_population"
-                  },
-                  "type": "function"
-                },
-                {
-                  "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-                  "function": {
-                    "arguments": "{\"city\": \"Tokyo\"}",
-                    "name": "get_timezone"
-                  },
-                  "type": "function"
-                }
-              ],
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 124,
-                "total_tokens": 182,
+                "completion_tokens": 131,
+                "prompt_tokens": 205,
+                "total_tokens": 336,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 0,
+                  "reasoning_tokens": 64,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -973,21 +833,23 @@
                   "cached_tokens": 0
                 }
               },
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688",
-              "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+              "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+            "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+                "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
                 "type": "tool_call"
               },
               {
@@ -995,7 +857,7 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+                "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
                 "type": "tool_call"
               },
               {
@@ -1003,22 +865,22 @@
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+                "id": "call_bBMDNS9RHHgPihiimVAseHub",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
-              "input_tokens": 124,
-              "output_tokens": 58,
-              "total_tokens": 182,
+              "input_tokens": 205,
+              "output_tokens": 131,
+              "total_tokens": 336,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 0
+                "reasoning": 64
               }
             }
           }
@@ -1030,13 +892,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc088-3495-7f60-9c9d-be34087b8dc0",
+      "uuid": "019bf2a5-b7ce-7db2-a2ba-9410b1d0b5c3",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-3495-7f60-9c9d-be2590a3036d",
-      "startTime": "2026-01-15T07:21:50.485Z",
-      "endTime": "2026-01-15T07:21:51.944Z",
+      "parentUuid": "019bf2a5-b7ce-7db2-a2ba-940a92f3be06",
+      "startTime": "2026-01-25T00:55:05.423Z",
+      "endTime": "2026-01-25T00:55:14.171Z",
       "input": [
         {
           "role": "human",
@@ -1044,7 +906,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_weather', 'args': {'city': 'Tokyo'}, 'id': 'call_QEIUdZIDtxWcT6g5bH01zMnl', 'type': 'tool_call'}, {'name': 'get_population', 'args': {'city': 'Tokyo'}, 'id': 'call_3K2usx9TRaxyJS62WqFb1E8E', 'type': 'tool_call'}, {'name': 'get_timezone', 'args': {'city': 'Tokyo'}, 'id': 'call_pN66kIJyhjpHZvL5cpJhFIji', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -1077,22 +939,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here is the information about Tokyo:\n\n- **Weather**: Cloudy, 68\u00b0F\n- **Population**: Approximately 13,960,000\n- **Timezone**: JST (Japan Standard Time, UTC+9)",
+        "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F (\u224820\u00b0C)  \n- Population: 13,960,000  \n- Timezone: JST (UTC+9)\n\nWould you like a short-term forecast, current local time in Tokyo, or more population details (city vs. metro)?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 220.0,
-      "outputTokenCount": 48.0
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 307.0,
+      "outputTokenCount": 395.0
     },
     {
-      "uuid": "019bc088-2e1e-77b3-ab5a-8caebb1baec5",
+      "uuid": "019bf2a5-ade6-76e3-9775-8a98c3c6ed52",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc088-2e1e-77b3-ab5a-8c980873378d",
-      "startTime": "2026-01-15T07:21:48.830Z",
-      "endTime": "2026-01-15T07:21:50.479Z",
+      "parentUuid": "019bf2a5-ade5-7f81-a086-ae29627f5d18",
+      "startTime": "2026-01-25T00:55:02.886Z",
+      "endTime": "2026-01-25T00:55:05.417Z",
       "input": [
         {
           "role": "human",
@@ -1124,40 +985,39 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_QEIUdZIDtxWcT6g5bH01zMnl"
+            "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4"
           },
           {
             "name": "get_population",
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_3K2usx9TRaxyJS62WqFb1E8E"
+            "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ"
           },
           {
             "name": "get_timezone",
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_pN66kIJyhjpHZvL5cpJhFIji"
+            "id": "call_bBMDNS9RHHgPihiimVAseHub"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
-      "inputTokenCount": 124.0,
-      "outputTokenCount": 58.0
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 205.0,
+      "outputTokenCount": 131.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc088-3493-7fa3-8c41-9fab58da2813",
+      "uuid": "019bf2a5-b7cc-7951-8ac1-5f33820a5bbf",
       "name": "get_timezone",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-3491-77f0-8623-07a5a0e8cd88",
-      "startTime": "2026-01-15T07:21:50.483Z",
-      "endTime": "2026-01-15T07:21:50.484Z",
+      "parentUuid": "019bf2a5-b7ca-73f0-a103-7652f0c048a6",
+      "startTime": "2026-01-25T00:55:05.420Z",
+      "endTime": "2026-01-25T00:55:05.421Z",
       "input": {
         "city": "Tokyo"
       },
@@ -1167,19 +1027,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_timezone",
-        "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-        "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+        "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+        "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-3492-7013-b39b-d3a5b90eb1a4",
+      "uuid": "019bf2a5-b7cc-7951-8ac1-5f2113bbeb31",
       "name": "get_population",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-3491-77f0-8623-07a5a0e8cd88",
-      "startTime": "2026-01-15T07:21:50.482Z",
-      "endTime": "2026-01-15T07:21:50.483Z",
+      "parentUuid": "019bf2a5-b7ca-73f0-a103-7652f0c048a6",
+      "startTime": "2026-01-25T00:55:05.420Z",
+      "endTime": "2026-01-25T00:55:05.420Z",
       "input": {
         "city": "Tokyo"
       },
@@ -1189,19 +1049,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_population",
-        "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-        "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+        "id": "23001089-8c5a-4871-a773-4832dced9457",
+        "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
         "status": "success"
       }
     },
     {
-      "uuid": "019bc088-3491-77f0-8623-07b79f535666",
+      "uuid": "019bf2a5-b7cb-73b1-8ec1-b66cd17d478f",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc088-3491-77f0-8623-07a5a0e8cd88",
-      "startTime": "2026-01-15T07:21:50.482Z",
-      "endTime": "2026-01-15T07:21:50.482Z",
+      "parentUuid": "019bf2a5-b7ca-73f0-a103-7652f0c048a6",
+      "startTime": "2026-01-25T00:55:05.419Z",
+      "endTime": "2026-01-25T00:55:05.419Z",
       "input": {
         "city": "Tokyo"
       },
@@ -1211,14 +1071,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-        "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+        "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+        "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:21:48.828Z",
-  "endTime": "2026-01-15T07:21:51.946Z",
+  "startTime": "2026-01-25T00:55:02.883Z",
+  "endTime": "2026-01-25T00:55:14.172Z",
   "name": "langgraph-multi-tool-test",
   "metadata": {
     "test_type": "multiple_tools"
@@ -1237,7 +1097,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+        "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
       }
     ]
   },
@@ -1248,48 +1108,22 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3d18d202-87ff-4c69-8c7c-045f7dd3d7bc"
+        "id": "e338cf97-4ac5-4807-bb52-f727f7099552"
       },
       {
         "content": "",
         "additional_kwargs": {
-          "tool_calls": [
-            {
-              "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
-              "function": {
-                "arguments": "{\"city\": \"Tokyo\"}",
-                "name": "get_weather"
-              },
-              "type": "function"
-            },
-            {
-              "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
-              "function": {
-                "arguments": "{\"city\": \"Tokyo\"}",
-                "name": "get_population"
-              },
-              "type": "function"
-            },
-            {
-              "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
-              "function": {
-                "arguments": "{\"city\": \"Tokyo\"}",
-                "name": "get_timezone"
-              },
-              "type": "function"
-            }
-          ],
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 58,
-            "prompt_tokens": 124,
-            "total_tokens": 182,
+            "completion_tokens": 131,
+            "prompt_tokens": 205,
+            "total_tokens": 336,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 64,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1297,21 +1131,23 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyBxtLhMerk63QPKgb9H9FBwXKYyE",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1ih5LS82MZMZlBSzZvqDcEvJZlDm",
+          "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-2e1e-77b3-ab5a-8caebb1baec5-0",
+        "id": "lc_run--019bf2a5-ade6-76e3-9775-8a98c3c6ed52-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+            "id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
             "type": "tool_call"
           },
           {
@@ -1319,7 +1155,7 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+            "id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
             "type": "tool_call"
           },
           {
@@ -1327,22 +1163,22 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+            "id": "call_bBMDNS9RHHgPihiimVAseHub",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 124,
-          "output_tokens": 58,
-          "total_tokens": 182,
+          "input_tokens": 205,
+          "output_tokens": 131,
+          "total_tokens": 336,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 64
           }
         }
       },
@@ -1352,8 +1188,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-        "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+        "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+        "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
         "status": "success"
       },
       {
@@ -1362,8 +1198,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_population",
-        "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-        "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+        "id": "23001089-8c5a-4871-a773-4832dced9457",
+        "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
         "status": "success"
       },
       {
@@ -1372,24 +1208,24 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_timezone",
-        "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-        "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+        "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+        "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
         "status": "success"
       },
       {
-        "content": "Here is the information about Tokyo:\n\n- **Weather**: Cloudy, 68\u00b0F\n- **Population**: Approximately 13,960,000\n- **Timezone**: JST (Japan Standard Time, UTC+9)",
+        "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F (\u224820\u00b0C)  \n- Population: 13,960,000  \n- Timezone: JST (UTC+9)\n\nWould you like a short-term forecast, current local time in Tokyo, or more population details (city vs. metro)?",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 48,
-            "prompt_tokens": 220,
-            "total_tokens": 268,
+            "completion_tokens": 395,
+            "prompt_tokens": 307,
+            "total_tokens": 702,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 0,
+              "reasoning_tokens": 320,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1397,27 +1233,29 @@
               "cached_tokens": 0
             }
           },
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688",
-          "id": "chatcmpl-CyBxuyTllMLnW905M2zBQczcbQlmM",
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D1ih7BSzx5I9OkNKCCIuXYs0BI7Vk",
+          "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bc088-3495-7f60-9c9d-be34087b8dc0-0",
+        "id": "lc_run--019bf2a5-b7ce-7db2-a2ba-9410b1d0b5c3-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
-          "input_tokens": 220,
-          "output_tokens": 48,
-          "total_tokens": 268,
+          "input_tokens": 307,
+          "output_tokens": 395,
+          "total_tokens": 702,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 0
+            "reasoning": 320
           }
         }
       }
@@ -1433,8 +1271,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "id": "646a0b18-2118-4a1b-adbe-03626f21d6f3",
-        "tool_call_id": "call_QEIUdZIDtxWcT6g5bH01zMnl",
+        "id": "6155178d-c81d-443c-9059-096bdbb2d035",
+        "tool_call_id": "call_uk6dMQ0p4JZgr0SRa5EkV9c4",
         "status": "success"
       },
       "inputParameters": {
@@ -1449,8 +1287,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_population",
-        "id": "7c763847-5816-467c-bb69-abd5eed6bbf3",
-        "tool_call_id": "call_3K2usx9TRaxyJS62WqFb1E8E",
+        "id": "23001089-8c5a-4871-a773-4832dced9457",
+        "tool_call_id": "call_9nKiFQPNhXNwvF1FG4LdyEIQ",
         "status": "success"
       },
       "inputParameters": {
@@ -1465,8 +1303,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_timezone",
-        "id": "3365c15d-5941-44f2-98f9-2f7566f46b74",
-        "tool_call_id": "call_pN66kIJyhjpHZvL5cpJhFIji",
+        "id": "0af8c293-035b-419c-8aa5-b4d18ddd8d31",
+        "tool_call_id": "call_bBMDNS9RHHgPihiimVAseHub",
         "status": "success"
       },
       "inputParameters": {

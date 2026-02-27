@@ -1,0 +1,225 @@
+{
+  "uuid": "trace_406f6733e1a149bba79fc703a23c670f",
+  "baseSpans": [
+    {
+      "uuid": "a25db2a3-68b1-4b60-a4d3-4d3311216a1c",
+      "name": "Handoff \u2192 EnglishAgent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
+      "startTime": "2026-01-29T14:39:02.016Z",
+      "endTime": "2026-01-29T14:39:02.016Z",
+      "metadata": {
+        "from_agent": "TriageAgent",
+        "to_agent": "EnglishAgent"
+      },
+      "input": {}
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "7d9eda7d-3b2b-41bf-8a11-a5b3a94613f2",
+      "name": "EnglishAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:39:02.017Z",
+      "endTime": "2026-01-29T14:39:02.885Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": [
+        {
+          "arguments": "{}",
+          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "name": "transfer_to_englishagent",
+          "type": "function_call",
+          "id": "fc_0e365b104066eae100697b7105c560819180a0a5f87047f639",
+          "status": "completed"
+        },
+        {
+          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "output": "{\"assistant\": \"EnglishAgent\"}",
+          "type": "function_call_output"
+        }
+      ],
+      "output": "Hello",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
+      "name": "TriageAgent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T14:39:00.540Z",
+      "endTime": "2026-01-29T14:39:02.016Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Hello",
+      "output": {
+        "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+        "name": "transfer_to_englishagent",
+        "arguments": "{}"
+      },
+      "availableTools": [],
+      "agentHandoffs": [
+        "SpanishAgent",
+        "EnglishAgent"
+      ]
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "1e0d5c14-766e-47a0-8a16-bd372c08705b",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "7d9eda7d-3b2b-41bf-8a11-a5b3a94613f2",
+      "startTime": "2026-01-29T14:39:02.017Z",
+      "endTime": "2026-01-29T14:39:02.885Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You speak English. Answer 'Hello' to everything."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hello"
+        },
+        {
+          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "name": "transfer_to_englishagent",
+          "arguments": "{}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
+          "output": "{\"assistant\": \"EnglishAgent\"}"
+        }
+      ],
+      "output": "Hello",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 55.0,
+      "outputTokenCount": 2.0
+    },
+    {
+      "uuid": "da08668f-fdc1-4205-b038-a4d402351702",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "6bd3910a-2a97-440e-8d1e-402449f481d4",
+      "startTime": "2026-01-29T14:39:00.541Z",
+      "endTime": "2026-01-29T14:39:02.015Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 0.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "transfer_to_spanishagent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the SpanishAgent agent to handle the request. "
+            },
+            {
+              "name": "transfer_to_englishagent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the EnglishAgent agent to handle the request. "
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hello"
+        }
+      ],
+      "output": "{\"call_id\": \"call_TcGFTO45nB3IDzdHwTAVLZyb\", \"name\": \"transfer_to_englishagent\", \"arguments\": \"{}\"}",
+      "model": "gpt-4o-2024-08-06",
+      "inputTokenCount": 83.0,
+      "outputTokenCount": 14.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T14:39:00.540Z",
+  "endTime": "2026-01-29T14:39:02.885Z",
+  "name": "openai_agents_async_handoff",
+  "metadata": {
+    "tags": [
+      "openai_agents",
+      "async",
+      "handoff"
+    ]
+  },
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Hello"
+    }
+  ],
+  "output": "Hello",
+  "status": "SUCCESS"
+}

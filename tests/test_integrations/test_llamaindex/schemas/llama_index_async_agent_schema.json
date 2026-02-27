@@ -1,0 +1,728 @@
+{
+  "uuid": "9225994a-f818-40a5-828a-57e509d4976e",
+  "baseSpans": [
+    {
+      "uuid": "ReActAgent.parse_agent_output-b6afcda1-c179-4994-b936-a1a3d35583d2",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:31.815Z",
+      "endTime": "2026-02-16T06:12:31.818Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "city": "Tokyo"
+              },
+              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+            }
+          ],
+          "retry_messages": []
+        }
+      },
+      "output": {
+        "result": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "city": "Tokyo"
+              },
+              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+            }
+          ],
+          "retry_messages": []
+        }
+      }
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:30.828Z",
+      "endTime": "2026-02-16T06:12:31.814Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "system",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "What is the weather in Tokyo?"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+            }
+          ]
+        },
+        "structured_response": null,
+        "current_agent_name": "Agent",
+        "tool_calls": [],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-848e4689-7aed-4d0a-8727-6be185527515",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
+      "startTime": "2026-02-16T06:12:31.814Z",
+      "endTime": "2026-02-16T06:12:31.814Z",
+      "input": {
+        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C.",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "I can answer without using any more tools. I'll use the user's language to answer.",
+        "response": "The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C.",
+        "is_streaming": false
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-953b3fe6-3c59-436f-b8cc-a1496ae9ab01",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-0f1b3d3f-ce7b-4f10-af28-48706b53ccab",
+      "startTime": "2026-02-16T06:12:30.829Z",
+      "endTime": "2026-02-16T06:12:30.830Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Observation: Cloudy, 20C"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11712b5b0>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-ef428812-4570-4184-b8c8-36076830e8c2",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:30.827Z",
+      "endTime": "2026-02-16T06:12:30.827Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "What is the weather in Tokyo?"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.aggregate_tool_results-82230a40-2765-48e8-a15f-a8b293ec23cf",
+      "name": "aggregate_tool_results",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:30.826Z",
+      "endTime": "2026-02-16T06:12:30.826Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "tool_name": "get_weather",
+          "tool_kwargs": {
+            "city": "Tokyo"
+          },
+          "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+          "tool_output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Cloudy, 20C"
+              }
+            ],
+            "tool_name": "get_weather",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "city": "Tokyo"
+              }
+            },
+            "raw_output": "Cloudy, 20C",
+            "is_error": false
+          },
+          "return_direct": false
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.parse_agent_output-a865f950-c76b-4a07-8df3-ed5838c05f3b",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:30.824Z",
+      "endTime": "2026-02-16T06:12:30.824Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "city": "Tokyo"
+              }
+            }
+          ],
+          "retry_messages": []
+        }
+      }
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:29.406Z",
+      "endTime": "2026-02-16T06:12:30.822Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "system",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "What is the weather in Tokyo?"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+            }
+          ]
+        },
+        "structured_response": null,
+        "current_agent_name": "Agent",
+        "tool_calls": [
+          {
+            "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+            "tool_name": "get_weather",
+            "tool_kwargs": {
+              "city": "Tokyo"
+            }
+          }
+        ],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-0c4a4ca8-fe45-4da2-926a-56cc81086eed",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
+      "startTime": "2026-02-16T06:12:30.815Z",
+      "endTime": "2026-02-16T06:12:30.822Z",
+      "input": {
+        "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "The current language of the user is: English. I need to use a tool to help me answer the question.",
+        "action": "get_weather",
+        "action_input": {
+          "city": "Tokyo"
+        }
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-027579d6-c094-4ece-b1fd-f40c26e87b47",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-98dd13b4-9fdb-47fe-be0d-028b59ed7063",
+      "startTime": "2026-02-16T06:12:29.406Z",
+      "endTime": "2026-02-16T06:12:29.411Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x1181a0040>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-3bbbbc14-7f56-4036-bf95-f118206bba82",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:29.405Z",
+      "endTime": "2026-02-16T06:12:29.405Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "What is the weather in Tokyo?"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.init_run-f3ad061b-3244-42bf-8d01-0f11271d3349",
+      "name": "init_run",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:29.404Z",
+      "endTime": "2026-02-16T06:12:29.405Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "user_msg": "What is the weather in Tokyo?",
+          "chat_history": null,
+          "max_iterations": null,
+          "early_stopping_method": null
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "What is the weather in Tokyo?"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "name": "Agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-02-16T06:12:29.403Z",
+      "endTime": "2026-02-16T06:12:29.404Z",
+      "input": {
+        "user_msg": "What is the weather in Tokyo?",
+        "chat_history": null,
+        "max_iterations": null,
+        "early_stopping_method": null
+      },
+      "output": {
+        "run_id": "1ZevOdCPUH"
+      },
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "bc4e3308-3c14-4bca-af12-47a722c0dd7e",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-953b3fe6-3c59-436f-b8cc-a1496ae9ab01",
+      "startTime": "2026-02-16T06:12:30.829Z",
+      "endTime": "2026-02-16T06:12:31.813Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Tokyo?"
+        },
+        {
+          "role": "assistant",
+          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'city': 'Tokyo'}"
+        },
+        {
+          "role": "user",
+          "content": "Observation: Cloudy, 20C"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The weather in Tokyo is currently cloudy with a temperature of 20\u00b0C."
+        }
+      ],
+      "model": "gpt-4o"
+    },
+    {
+      "uuid": "be27b7b6-1f64-4790-842b-53321debf265",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-027579d6-c094-4ece-b1fd-f40c26e87b47",
+      "startTime": "2026-02-16T06:12:29.407Z",
+      "endTime": "2026-02-16T06:12:30.815Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "What is the weather in Tokyo?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"city\": \"Tokyo\"}"
+        }
+      ],
+      "model": "gpt-4o"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "ReActAgent.call_tool-9183e912-ba1b-4a76-ac1c-20f462fcd647",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "ReActAgent.run-b6116c5f-8abf-40a6-95ad-e07eb25c4f02",
+      "startTime": "2026-02-16T06:12:30.825Z",
+      "endTime": "2026-02-16T06:12:30.825Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "tool_name": "get_weather",
+          "tool_kwargs": {
+            "city": "Tokyo"
+          },
+          "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454"
+        }
+      },
+      "output": {
+        "tool_name": "get_weather",
+        "tool_kwargs": {
+          "city": "Tokyo"
+        },
+        "tool_id": "e4bc7496-58fe-425f-b03e-01b4df56f454",
+        "tool_output": {
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Cloudy, 20C"
+            }
+          ],
+          "tool_name": "get_weather",
+          "raw_input": {
+            "args": "<circular>",
+            "kwargs": {
+              "city": "Tokyo"
+            }
+          },
+          "raw_output": "Cloudy, 20C",
+          "is_error": false
+        },
+        "return_direct": false
+      },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Cloudy, 20C"
+              }
+            ],
+            "tool_name": "get_weather",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "city": "Tokyo"
+              }
+            },
+            "raw_output": "Cloudy, 20C",
+            "is_error": false
+          },
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "FunctionTool.acall-3b60eb5a-ce9d-4f5c-ab5d-32eb2dd421a1",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "ReActAgent.call_tool-9183e912-ba1b-4a76-ac1c-20f462fcd647",
+      "startTime": "2026-02-16T06:12:30.825Z",
+      "endTime": "2026-02-16T06:12:30.825Z",
+      "input": {
+        "kwargs": {
+          "city": "Tokyo"
+        }
+      },
+      "output": {
+        "blocks": [
+          {
+            "block_type": "text",
+            "text": "Cloudy, 20C"
+          }
+        ],
+        "tool_name": "get_weather",
+        "raw_input": {
+          "args": "<circular>",
+          "kwargs": {
+            "city": "Tokyo"
+          }
+        },
+        "raw_output": "Cloudy, 20C",
+        "is_error": false
+      }
+    }
+  ],
+  "startTime": "2026-02-16T06:12:29.402Z",
+  "endTime": "2026-02-16T06:12:31.818Z",
+  "name": "llama_index_async_agent",
+  "tags": [
+    "llama_index",
+    "async",
+    "agent"
+  ],
+  "environment": "development",
+  "threadId": "llama_async_index_thread_id",
+  "userId": "llama_async_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_async_index_metric_collection"
+}

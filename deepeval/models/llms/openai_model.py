@@ -125,6 +125,13 @@ class GPTModel(DeepEvalBaseLLM):
             raise DeepEvalError("Temperature must be >= 0.")
 
         self.temperature = temperature
+        # Extract async_http_client for separate async HTTP client support (#2351).
+        # This allows users to provide different httpx clients for sync (httpx.Client)
+        # and async (httpx.AsyncClient) operations.
+        self.async_http_client = normalized_kwargs.pop(
+            "async_http_client", None
+        )
+
         # Keep sanitized kwargs for client call to strip legacy keys
         self.kwargs = normalized_kwargs
         self.kwargs.pop("temperature", None)
@@ -475,6 +482,18 @@ class GPTModel(DeepEvalBaseLLM):
             base_url=self.base_url,
             **self._client_kwargs(),
         )
+
+        # Support separate sync/async HTTP clients (#2351).
+        # OpenAI expects httpx.Client; AsyncOpenAI expects httpx.AsyncClient.
+        # Passing the wrong type raises TypeError, so we handle them separately.
+        if cls is AsyncOpenAI:
+            if self.async_http_client is not None:
+                kw["http_client"] = self.async_http_client
+            elif "http_client" in kw:
+                # A sync httpx.Client cannot be used with AsyncOpenAI.
+                # Remove it to fall back to the SDK's default async client.
+                del kw["http_client"]
+
         try:
             return cls(**kw)
         except TypeError as e:

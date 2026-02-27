@@ -1,0 +1,186 @@
+{
+  "uuid": "ca64fe5b-b5ae-4f56-aa75-d4063f65681c",
+  "baseSpans": [
+    {
+      "uuid": "019bf9a1-282f-7c93-a11d-a81ff18330b4",
+      "name": "simple_chain",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T09:27:27.023Z",
+      "endTime": "2026-01-26T09:27:29.694Z",
+      "input": [
+        {
+          "content": "Say hello in one short sentence.",
+          "additional_kwargs": {},
+          "response_metadata": {},
+          "type": "human"
+        }
+      ],
+      "output": {
+        "messages": [
+          {
+            "content": "Say hello in one short sentence.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "Hello!",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 139,
+                "prompt_tokens": 13,
+                "total_tokens": 152,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2DAVtt3vnsRMwCdBlmSVuaSNZNyB",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bf9a1-2830-78e1-9a1e-4b9d53720772-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 13,
+              "output_tokens": 139,
+              "total_tokens": 152,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bf9a1-2830-78e1-9a1e-4b9d53720772",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bf9a1-282f-7c93-a11d-a81ff18330b4",
+      "startTime": "2026-01-26T09:27:27.024Z",
+      "endTime": "2026-01-26T09:27:29.693Z",
+      "input": [
+        {
+          "role": "human",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Hello!",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 13.0,
+      "outputTokenCount": 139.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-26T09:27:27.023Z",
+  "endTime": "2026-01-26T09:27:29.694Z",
+  "name": "langchain-async-simple",
+  "metadata": {
+    "test_type": "async_simple"
+  },
+  "tags": [
+    "langchain",
+    "async",
+    "simple"
+  ],
+  "environment": "development",
+  "threadId": "async-simple-123",
+  "userId": "async-user",
+  "input": [
+    {
+      "content": "Say hello in one short sentence.",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "type": "human"
+    }
+  ],
+  "output": {
+    "messages": [
+      {
+        "content": "Say hello in one short sentence.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "Hello!",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 139,
+            "prompt_tokens": 13,
+            "total_tokens": 152,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 128,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2DAVtt3vnsRMwCdBlmSVuaSNZNyB",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bf9a1-2830-78e1-9a1e-4b9d53720772-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 13,
+          "output_tokens": 139,
+          "total_tokens": 152,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS"
+}

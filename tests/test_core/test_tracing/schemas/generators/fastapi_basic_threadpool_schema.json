@@ -1,0 +1,27 @@
+{
+  "uuid": "9204925b-480b-43d0-8604-d1ed2d1a5b8b",
+  "baseSpans": [
+    {
+      "uuid": "d1b7ebd7-5150-4a80-8a17-9326241eed97",
+      "name": "streamed_tokens",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-26T06:37:14.874Z",
+      "endTime": "2026-02-26T06:37:14.875Z",
+      "input": {
+        "prompt": "world"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-26T06:37:14.874Z",
+  "endTime": "2026-02-26T06:37:14.875Z",
+  "environment": "development",
+  "input": {
+    "prompt": "world"
+  },
+  "status": "SUCCESS"
+}

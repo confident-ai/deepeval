@@ -24,6 +24,7 @@ module.exports = {
         'models/openai',
         'models/azure-openai',
         'models/ollama',
+        'models/openrouter',
         'models/anthropic',
         'models/amazon-bedrock',
         'models/gemini',

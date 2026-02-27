@@ -10,6 +10,8 @@ client = OpenAI()
 
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
+prompt.label = "test-label"
+prompt.hash = "bab04ec"
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 

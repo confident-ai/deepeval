@@ -1,0 +1,32 @@
+{
+  "uuid": "f7a23e32-ac5e-4022-ae4b-cb7f7be1aa31",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "df15d8cf-7536-4e3c-8cab-7a85317284ec",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.355Z",
+      "endTime": "2026-01-29T09:53:13.355Z",
+      "input": {
+        "prompt": "Hello world"
+      },
+      "output": "Generated response to: Hello world",
+      "model": "gpt-4",
+      "inputTokenCount": 2.0,
+      "outputTokenCount": 5.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.355Z",
+  "endTime": "2026-01-29T09:53:13.355Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Hello world"
+  },
+  "output": "Generated response to: Hello world",
+  "status": "SUCCESS"
+}

@@ -86,7 +86,12 @@ class ImageHelpfulnessMetric(BaseMetric):
                 self.contexts_below = []
                 self.scores = []
                 self.reasons = []
-                for image_index in self.get_image_indices(actual_output):
+                image_indices = self.get_image_indices(actual_output)
+                if not image_indices:
+                    raise ValueError(
+                        f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                    )
+                for image_index in image_indices:
                     context_above, context_below = self.get_image_context(
                         image_index, actual_output
                     )
@@ -189,6 +194,10 @@ class ImageHelpfulnessMetric(BaseMetric):
 
             tasks = []
             image_indices = self.get_image_indices(actual_output)
+            if not image_indices:
+                raise ValueError(
+                    f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                )
             for image_index in image_indices:
                 context_above, context_below = self.get_image_context(
                     image_index, actual_output

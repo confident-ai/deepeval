@@ -1,0 +1,47 @@
+{
+  "uuid": "5dab4c6d-fe46-4238-8304-7e6c69211eb9",
+  "baseSpans": [
+    {
+      "uuid": "8286a32b-f0d7-4ea7-8de3-c6a9a62e877b",
+      "name": "outer_sets_trace_context",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:14.066Z",
+      "endTime": "2026-01-29T09:53:14.066Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Inner: test"
+    },
+    {
+      "uuid": "a59bb03c-aba7-4694-b265-087c135393eb",
+      "name": "inner_reads_context",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8286a32b-f0d7-4ea7-8de3-c6a9a62e877b",
+      "startTime": "2026-01-29T09:53:14.066Z",
+      "endTime": "2026-01-29T09:53:14.066Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Inner: test"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:14.066Z",
+  "endTime": "2026-01-29T09:53:14.066Z",
+  "name": "outer_set_name",
+  "tags": [
+    "inner_added"
+  ],
+  "environment": "testing",
+  "userId": "outer_user",
+  "input": {
+    "data": "test"
+  },
+  "output": "Inner: test",
+  "status": "SUCCESS"
+}

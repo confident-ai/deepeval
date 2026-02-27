@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.8.0"
+version = "3.8.8"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -31,14 +31,13 @@ portalocker = "*"
 openai = "*"
 aiohttp = "*"
 typer = ">=0.9,<1.0.0"
-click = ">=8.0.0,<8.3.0"
+click = ">=8.0.0,<8.4.0"
 setuptools = "*"
 wheel = "*"
 nest_asyncio = "*"
 tenacity = ">=8.0.0,<=10.0.0"
 opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
-opentelemetry-exporter-otlp-proto-grpc = "^1.24.0"
 grpcio = "^1.67.1"
 posthog = "^5.4.0, <7.0.0"
 pyfiglet = "*"
@@ -59,7 +58,7 @@ tiktoken = "*"
 pypdf = "*"
 docx2txt = "*"
 pandas = "*"
-pysqlite3-binary = "^0.5.4"
+pysqlite3-binary = { version = "^0.5.4", markers = "platform_system == 'Linux'" }
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
 ollama = "*"
@@ -89,10 +88,15 @@ asyncio_default_fixture_loop_scope = "function"
 optional = true
 
 [tool.poetry.group.integrations.dependencies]
-crewai = { version = "*", python = ">=3.10,<3.11" }
-pydantic-ai = { version = "^1.0.18", python = ">=3.10,<3.11" }
-langgraph = "^0.6.10"
+crewai = { version = "*", python = ">=3.10,<3.14" }
+pydantic-ai = { version = "*", python = ">=3.10,<3.14" }
 llama-index = "^0.14.4"
-langchain_openai = "^0.3.35"
 openai-agents = "^0.3.3"
-langchain = "^0.3.27"
+
+[tool.poetry.group.langchain]
+optional = true
+
+[tool.poetry.group.langchain.dependencies]
+langchain = { version = "1.2.4", python = ">=3.10,<4.0" }
+langchain-openai = { version = "1.1.7", python = ">=3.10,<4.0" }
+langgraph = { version = "1.0.7", python = ">=3.10,<4.0" }

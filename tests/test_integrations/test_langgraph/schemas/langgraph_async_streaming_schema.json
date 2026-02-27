@@ -1,13 +1,13 @@
 {
-  "uuid": "3e450f37-e116-4bb9-beb2-bf443fe29c66",
+  "uuid": "01e913bd-68e1-477c-90a7-0d2e6fb764ee",
   "baseSpans": [
     {
-      "uuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
+      "uuid": "019bf2a4-78ee-7222-8bc5-1ba09548081b",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-15T07:24:52.706Z",
-      "endTime": "2026-01-15T07:24:54.541Z",
+      "startTime": "2026-01-25T00:53:43.790Z",
+      "endTime": "2026-01-25T00:53:48.757Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           }
         ]
       },
@@ -26,41 +26,43 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$142.30 (-0.5%)",
@@ -68,34 +70,48 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+            "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "status": "success"
           },
           {
-            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "content": "The current price for GOOGL is $142.30 (down 0.5%). Would you like recent news, a price chart, or company info?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "id": "lc_run--019bf2a4-8270-7a71-9d76-c205251d12d7",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 202,
+              "output_tokens": 170,
+              "total_tokens": 372,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-0029-7201-98b9-310f83e21609",
+      "uuid": "019bf2a4-826e-7c30-8bfc-acf76b5a687e",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
-      "startTime": "2026-01-15T07:24:53.674Z",
-      "endTime": "2026-01-15T07:24:54.540Z",
+      "parentUuid": "019bf2a4-78ee-7222-8bc5-1ba09548081b",
+      "startTime": "2026-01-25T00:53:46.223Z",
+      "endTime": "2026-01-25T00:53:48.755Z",
       "input": {
         "messages": [
           {
@@ -103,41 +119,43 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$142.30 (-0.5%)",
@@ -145,8 +163,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+            "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "status": "success"
           }
         ]
@@ -154,29 +172,43 @@
       "output": {
         "messages": [
           {
-            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "content": "The current price for GOOGL is $142.30 (down 0.5%). Would you like recent news, a price chart, or company info?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "id": "lc_run--019bf2a4-8270-7a71-9d76-c205251d12d7",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 202,
+              "output_tokens": 170,
+              "total_tokens": 372,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-038a-7ca1-ae87-586e33afb929",
+      "uuid": "019bf2a4-8c4f-7681-a974-ef9bfecfbb25",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08b-0029-7201-98b9-310f83e21609",
-      "startTime": "2026-01-15T07:24:54.538Z",
-      "endTime": "2026-01-15T07:24:54.539Z",
+      "parentUuid": "019bf2a4-826e-7c30-8bfc-acf76b5a687e",
+      "startTime": "2026-01-25T00:53:48.751Z",
+      "endTime": "2026-01-25T00:53:48.754Z",
       "input": {
         "messages": [
           {
@@ -184,41 +216,43 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           },
           {
             "content": "$142.30 (-0.5%)",
@@ -226,35 +260,49 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+            "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "status": "success"
           },
           {
-            "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+            "content": "The current price for GOOGL is $142.30 (down 0.5%). Would you like recent news, a price chart, or company info?",
             "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "stop",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_29330a9688"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+            "id": "lc_run--019bf2a4-8270-7a71-9d76-c205251d12d7",
             "tool_calls": [],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 202,
+              "output_tokens": 170,
+              "total_tokens": 372,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
           }
         ]
       },
       "output": "__end__"
     },
     {
-      "uuid": "019bc08b-0026-7d10-b56a-3b99d4544206",
+      "uuid": "019bf2a4-8265-7e81-bee8-5b4015379759",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
-      "startTime": "2026-01-15T07:24:53.670Z",
-      "endTime": "2026-01-15T07:24:53.673Z",
+      "parentUuid": "019bf2a4-78ee-7222-8bc5-1ba09548081b",
+      "startTime": "2026-01-25T00:53:46.214Z",
+      "endTime": "2026-01-25T00:53:46.220Z",
       "input": {
         "messages": [
           {
@@ -262,41 +310,43 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -308,8 +358,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+            "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "status": "success"
           }
         ]
@@ -323,8 +373,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_stock_price",
-            "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-            "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+            "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "status": "success"
           },
           "inputParameters": {
@@ -334,13 +384,13 @@
       ]
     },
     {
-      "uuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
+      "uuid": "019bf2a4-78f0-7d50-8f24-9ba03a0996ef",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-fc62-7262-b2ed-1b3fad0f03e3",
-      "startTime": "2026-01-15T07:24:52.707Z",
-      "endTime": "2026-01-15T07:24:53.670Z",
+      "parentUuid": "019bf2a4-78ee-7222-8bc5-1ba09548081b",
+      "startTime": "2026-01-25T00:53:43.792Z",
+      "endTime": "2026-01-25T00:53:46.211Z",
       "input": {
         "messages": [
           {
@@ -348,7 +398,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           }
         ]
       },
@@ -356,49 +406,51 @@
         "messages": [
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       }
     },
     {
-      "uuid": "019bc08b-0025-7b73-9513-5d8bc27a57e2",
+      "uuid": "019bf2a4-825f-78a3-94a3-e20edf4ad80c",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
-      "startTime": "2026-01-15T07:24:53.669Z",
-      "endTime": "2026-01-15T07:24:53.669Z",
+      "parentUuid": "019bf2a4-78f0-7d50-8f24-9ba03a0996ef",
+      "startTime": "2026-01-25T00:53:46.207Z",
+      "endTime": "2026-01-25T00:53:46.210Z",
       "input": {
         "messages": [
           {
@@ -406,41 +458,43 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+            "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
           },
           {
             "content": "",
-            "additional_kwargs": {
-              "tool_calls": [
-                {
-                  "index": 0,
-                  "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-                  "function": {
-                    "arguments": "{\"symbol\":\"GOOGL\"}",
-                    "name": "get_stock_price"
-                  },
-                  "type": "function"
-                }
-              ]
-            },
+            "additional_kwargs": {},
             "response_metadata": {
               "finish_reason": "tool_calls",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_3683ee3deb"
+              "model_name": "gpt-5-mini-2025-08-07",
+              "service_tier": "default",
+              "model_provider": "openai"
             },
             "type": "ai",
-            "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+            "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
             "tool_calls": [
               {
                 "name": "get_stock_price",
                 "args": {
                   "symbol": "GOOGL"
                 },
-                "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+                "id": "call_Vq7htK0zDtagisanIQmWBGpe",
                 "type": "tool_call"
               }
             ],
-            "invalid_tool_calls": []
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 161,
+              "output_tokens": 90,
+              "total_tokens": 251,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 64
+              }
+            }
           }
         ]
       },
@@ -450,13 +504,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bc08b-002a-7fe1-b781-a65e4011ea6a",
+      "uuid": "019bf2a4-8270-7a71-9d76-c205251d12d7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08b-0029-7201-98b9-310f83e21609",
-      "startTime": "2026-01-15T07:24:53.674Z",
-      "endTime": "2026-01-15T07:24:54.537Z",
+      "parentUuid": "019bf2a4-826e-7c30-8bfc-acf76b5a687e",
+      "startTime": "2026-01-25T00:53:46.225Z",
+      "endTime": "2026-01-25T00:53:48.749Z",
       "input": [
         {
           "role": "human",
@@ -464,7 +518,7 @@
         },
         {
           "role": "ai",
-          "content": "[{'name': 'get_stock_price', 'args': {'symbol': 'GOOGL'}, 'id': 'call_ynHH9Ys0hdXfKcDblOFKPjQs', 'type': 'tool_call'}]"
+          "content": ""
         },
         {
           "role": "tool",
@@ -481,49 +535,58 @@
       ],
       "output": {
         "role": "AI",
-        "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+        "content": "The current price for GOOGL is $142.30 (down 0.5%). Would you like recent news, a price chart, or company info?",
         "tool_calls": []
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
+      "model": "gpt-5-mini-2025-08-07",
       "tokenIntervals": {
-        "2026-01-15T07:24:54.245239Z": "",
-        "2026-01-15T07:24:54.266560Z": "The",
-        "2026-01-15T07:24:54.267616Z": " current",
-        "2026-01-15T07:24:54.289478Z": " stock",
-        "2026-01-15T07:24:54.290503Z": " price",
-        "2026-01-15T07:24:54.319276Z": " of",
-        "2026-01-15T07:24:54.320234Z": " G",
-        "2026-01-15T07:24:54.335229Z": "OO",
-        "2026-01-15T07:24:54.336010Z": "GL",
-        "2026-01-15T07:24:54.358355Z": " is",
-        "2026-01-15T07:24:54.359490Z": " $",
-        "2026-01-15T07:24:54.391423Z": "142",
-        "2026-01-15T07:24:54.391905Z": ".",
-        "2026-01-15T07:24:54.417712Z": "30",
-        "2026-01-15T07:24:54.418401Z": ",",
-        "2026-01-15T07:24:54.437697Z": " which",
-        "2026-01-15T07:24:54.438676Z": " is",
-        "2026-01-15T07:24:54.462545Z": " a",
-        "2026-01-15T07:24:54.463565Z": " decrease",
-        "2026-01-15T07:24:54.487816Z": " of",
-        "2026-01-15T07:24:54.488543Z": " ",
-        "2026-01-15T07:24:54.506539Z": "0",
-        "2026-01-15T07:24:54.507635Z": ".",
-        "2026-01-15T07:24:54.531299Z": "5",
-        "2026-01-15T07:24:54.532357Z": "%.",
-        "2026-01-15T07:24:54.535327Z": "",
-        "2026-01-15T07:24:54.536566Z": ""
+        "2026-01-25T00:53:48.385565Z": "",
+        "2026-01-25T00:53:48.399220Z": "The",
+        "2026-01-25T00:53:48.400127Z": " current",
+        "2026-01-25T00:53:48.419250Z": " price",
+        "2026-01-25T00:53:48.421333Z": " for",
+        "2026-01-25T00:53:48.436644Z": " G",
+        "2026-01-25T00:53:48.439052Z": "OO",
+        "2026-01-25T00:53:48.452327Z": "GL",
+        "2026-01-25T00:53:48.453140Z": " is",
+        "2026-01-25T00:53:48.471122Z": " $",
+        "2026-01-25T00:53:48.473499Z": "142",
+        "2026-01-25T00:53:48.488923Z": ".",
+        "2026-01-25T00:53:48.491795Z": "30",
+        "2026-01-25T00:53:48.514885Z": " (",
+        "2026-01-25T00:53:48.517688Z": "down",
+        "2026-01-25T00:53:48.532020Z": " ",
+        "2026-01-25T00:53:48.535083Z": "0",
+        "2026-01-25T00:53:48.548766Z": ".",
+        "2026-01-25T00:53:48.551207Z": "5",
+        "2026-01-25T00:53:48.564824Z": "%).",
+        "2026-01-25T00:53:48.565555Z": " Would",
+        "2026-01-25T00:53:48.586605Z": " you",
+        "2026-01-25T00:53:48.587582Z": " like",
+        "2026-01-25T00:53:48.601207Z": " recent",
+        "2026-01-25T00:53:48.603334Z": " news",
+        "2026-01-25T00:53:48.652717Z": ",",
+        "2026-01-25T00:53:48.655245Z": " a",
+        "2026-01-25T00:53:48.670643Z": " price",
+        "2026-01-25T00:53:48.673301Z": " chart",
+        "2026-01-25T00:53:48.695249Z": ",",
+        "2026-01-25T00:53:48.697764Z": " or",
+        "2026-01-25T00:53:48.713091Z": " company",
+        "2026-01-25T00:53:48.715514Z": " info",
+        "2026-01-25T00:53:48.738261Z": "?",
+        "2026-01-25T00:53:48.741127Z": "",
+        "2026-01-25T00:53:48.744234Z": "",
+        "2026-01-25T00:53:48.747078Z": ""
       }
     },
     {
-      "uuid": "019bc08a-fc63-7093-b82c-8130fb72cf08",
+      "uuid": "019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bc08a-fc63-7093-b82c-81209d6c82ca",
-      "startTime": "2026-01-15T07:24:52.708Z",
-      "endTime": "2026-01-15T07:24:53.668Z",
+      "parentUuid": "019bf2a4-78f0-7d50-8f24-9ba03a0996ef",
+      "startTime": "2026-01-25T00:53:43.793Z",
+      "endTime": "2026-01-25T00:53:46.205Z",
       "input": [
         {
           "role": "human",
@@ -547,36 +610,36 @@
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs"
+            "id": "call_Vq7htK0zDtagisanIQmWBGpe"
           }
         ]
       },
-      "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {},
+      "model": "gpt-5-mini-2025-08-07",
       "tokenIntervals": {
-        "2026-01-15T07:24:53.588806Z": "",
-        "2026-01-15T07:24:53.595207Z": "",
-        "2026-01-15T07:24:53.596266Z": "",
-        "2026-01-15T07:24:53.611336Z": "",
-        "2026-01-15T07:24:53.612262Z": "",
-        "2026-01-15T07:24:53.648411Z": "",
-        "2026-01-15T07:24:53.649970Z": "",
-        "2026-01-15T07:24:53.659030Z": "",
-        "2026-01-15T07:24:53.660208Z": "",
-        "2026-01-15T07:24:53.668023Z": ""
+        "2026-01-25T00:53:46.099579Z": "",
+        "2026-01-25T00:53:46.101714Z": "",
+        "2026-01-25T00:53:46.103167Z": "",
+        "2026-01-25T00:53:46.135609Z": "",
+        "2026-01-25T00:53:46.136879Z": "",
+        "2026-01-25T00:53:46.169518Z": "",
+        "2026-01-25T00:53:46.172455Z": "",
+        "2026-01-25T00:53:46.190273Z": "",
+        "2026-01-25T00:53:46.193890Z": "",
+        "2026-01-25T00:53:46.200037Z": "",
+        "2026-01-25T00:53:46.202996Z": ""
       }
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bc08b-0027-7440-9fed-13b398e13f38",
+      "uuid": "019bf2a4-8268-70d0-bd5f-70f96b58672d",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bc08b-0026-7d10-b56a-3b99d4544206",
-      "startTime": "2026-01-15T07:24:53.672Z",
-      "endTime": "2026-01-15T07:24:53.673Z",
+      "parentUuid": "019bf2a4-8265-7e81-bee8-5b4015379759",
+      "startTime": "2026-01-25T00:53:46.216Z",
+      "endTime": "2026-01-25T00:53:46.218Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -586,14 +649,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+        "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-15T07:24:52.706Z",
-  "endTime": "2026-01-15T07:24:54.541Z",
+  "startTime": "2026-01-25T00:53:43.790Z",
+  "endTime": "2026-01-25T00:53:48.757Z",
   "name": "langgraph-streaming-async",
   "metadata": {
     "test_type": "streaming_async"
@@ -611,7 +674,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+        "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
       }
     ]
   },
@@ -622,41 +685,43 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "3b023940-6fcd-48f5-b58a-f410b5cb055b"
+        "id": "324d78b8-55d9-4bb9-9d89-0df81d326e2e"
       },
       {
         "content": "",
-        "additional_kwargs": {
-          "tool_calls": [
-            {
-              "index": 0,
-              "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
-              "function": {
-                "arguments": "{\"symbol\":\"GOOGL\"}",
-                "name": "get_stock_price"
-              },
-              "type": "function"
-            }
-          ]
-        },
+        "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "tool_calls",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_3683ee3deb"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc08a-fc63-7093-b82c-8130fb72cf08",
+        "id": "lc_run--019bf2a4-78f1-7d32-9e0c-0f1483fe6231",
         "tool_calls": [
           {
             "name": "get_stock_price",
             "args": {
               "symbol": "GOOGL"
             },
-            "id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+            "id": "call_Vq7htK0zDtagisanIQmWBGpe",
             "type": "tool_call"
           }
         ],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 161,
+          "output_tokens": 90,
+          "total_tokens": 251,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 64
+          }
+        }
       },
       {
         "content": "$142.30 (-0.5%)",
@@ -664,22 +729,36 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+        "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
         "status": "success"
       },
       {
-        "content": "The current stock price of GOOGL is $142.30, which is a decrease of 0.5%.",
+        "content": "The current price for GOOGL is $142.30 (down 0.5%). Would you like recent news, a price chart, or company info?",
         "additional_kwargs": {},
         "response_metadata": {
           "finish_reason": "stop",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_29330a9688"
+          "model_name": "gpt-5-mini-2025-08-07",
+          "service_tier": "default",
+          "model_provider": "openai"
         },
         "type": "ai",
-        "id": "lc_run--019bc08b-002a-7fe1-b781-a65e4011ea6a",
+        "id": "lc_run--019bf2a4-8270-7a71-9d76-c205251d12d7",
         "tool_calls": [],
-        "invalid_tool_calls": []
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 202,
+          "output_tokens": 170,
+          "total_tokens": 372,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
       }
     ]
   },
@@ -693,8 +772,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_stock_price",
-        "id": "88c6266d-ea94-4b41-901a-7c215e9b015e",
-        "tool_call_id": "call_ynHH9Ys0hdXfKcDblOFKPjQs",
+        "id": "9f12e999-6671-426d-ace1-838655d72d8d",
+        "tool_call_id": "call_Vq7htK0zDtagisanIQmWBGpe",
         "status": "success"
       },
       "inputParameters": {

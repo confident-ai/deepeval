@@ -4,12 +4,13 @@ All synchronous tests using .invoke() and .stream()
 """
 
 import os
-import pytest
+from uuid import uuid4
 from langchain_core.messages import HumanMessage
 from deepeval.integrations.langchain import CallbackHandler
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
+    is_generate_mode,
 )
 
 # App imports
@@ -32,14 +33,17 @@ from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import
     get_app_with_memory,
     stateless_app,
 )
+from tests.test_integrations.test_langgraph.apps.langgraph_metric_collection_app import (
+    app as metric_collection_app,
+)
+from tests.test_integrations.test_langgraph.apps.langgraph_retriever_app import (
+    app as retriever_app,
+    app_with_metric_collection as retriever_app_with_metric_collection,
+)
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-
-# Set to True to generate schemas, False to assert against existing schemas
-# Can be overridden via environment variable: GENERATE_SCHEMAS=true pytest ...
-GENERATE_MODE = os.environ.get("GENERATE_SCHEMAS", "").lower() in ("true", "1", "yes")
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
@@ -47,13 +51,13 @@ _schemas_dir = os.path.join(_current_dir, "schemas")
 
 def trace_test(schema_name: str):
     """
-    Decorator that switches between generate and assert mode based on GENERATE_MODE.
+    Decorator that switches between generate and assert mode based on GENERATE_SCHEMAS env var.
 
     Args:
         schema_name: Name of the schema file (without path)
     """
     schema_path = os.path.join(_schemas_dir, schema_name)
-    if GENERATE_MODE:
+    if is_generate_mode():
         return generate_trace_json(schema_path)
     else:
         return assert_trace_json(schema_path)
@@ -222,7 +226,11 @@ class TestConditionalApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Research information about quantum computing"
+                        content=(
+                            "Use the research tool exactly once to research: quantum computing. "
+                            "Do not ask clarification questions. "
+                            "After the tool returns, respond with a short 3-bullet summary and stop."
+                        )
                     )
                 ]
             },
@@ -263,7 +271,13 @@ class TestConditionalApp:
         result = conditional_app.invoke(
             {
                 "messages": [
-                    HumanMessage(content="Fact check: The earth is round")
+                    HumanMessage(
+                        content=(
+                            "Use the fact_check tool exactly once to verify: The earth is round. "
+                            "Do not use any other tools. "
+                            "After the tool returns, respond with a brief verdict and stop."
+                        )
+                    )
                 ]
             },
             config={"callbacks": [callback]},
@@ -329,7 +343,15 @@ class TestParallelToolsApp:
             {
                 "messages": [
                     HumanMessage(
-                        content="Get weather in Paris, stock price of TSLA, exchange rate USD to EUR, and calculate 100 * 1.5"
+                        content=(
+                            "Call exactly these 4 tools, each exactly once, in this order:\n"
+                            "1. get_weather with city='Paris'\n"
+                            "2. get_stock_price with symbol='TSLA'\n"
+                            "3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n"
+                            "4. calculate with expression='100 * 1.5'\n"
+                            "Do NOT call any other tools (such as search_news).\n"
+                            "After receiving all tool results, summarize them briefly."
+                        )
                     )
                 ]
             },
@@ -383,11 +405,7 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result1 = app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Add 2 apples and 1 banana to my cart")
-                ]
-            },
+            {"messages": [HumanMessage(content="Add 3 apples to my cart")]},
             config={
                 "callbacks": [callback1],
                 "configurable": {"thread_id": thread_id},
@@ -403,7 +421,11 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result2 = app.invoke(
-            {"messages": [HumanMessage(content="What's in my cart?")]},
+            {
+                "messages": [
+                    HumanMessage(content="Use view_cart to show what I have")
+                ]
+            },
             config={
                 "callbacks": [callback2],
                 "configurable": {"thread_id": thread_id},
@@ -411,7 +433,7 @@ class TestMultiTurnApp:
         )
         assert len(result2["messages"]) > 0
 
-        # Turn 3: Apply coupon and checkout
+        # Turn 3: Apply coupon
         callback3 = CallbackHandler(
             name="langgraph-multi-turn-3",
             tags=["langgraph", "multi-turn", "turn-3"],
@@ -419,11 +441,7 @@ class TestMultiTurnApp:
             user_id="shopper-1",
         )
         result3 = app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Apply coupon SAVE10 and checkout")
-                ]
-            },
+            {"messages": [HumanMessage(content="Apply coupon SAVE10")]},
             config={
                 "callbacks": [callback3],
                 "configurable": {"thread_id": thread_id},
@@ -440,11 +458,7 @@ class TestMultiTurnApp:
         )
 
         result = stateless_app.invoke(
-            {
-                "messages": [
-                    HumanMessage(content="Add 3 oranges to my cart and view it")
-                ]
-            },
+            {"messages": [HumanMessage(content="Add 3 oranges to my cart")]},
             config={"callbacks": [callback]},
         )
 
@@ -452,51 +466,184 @@ class TestMultiTurnApp:
 
     @trace_test("langgraph_full_flow_schema.json")
     def test_full_shopping_flow(self):
-        """Test complete shopping flow from cart to order."""
-        # Create fresh app instance to avoid state leakage between tests
         app = get_app_with_memory()
-        thread_id = "full-flow-001"
+
+        # Prevent cross-run bleed from CallbackHandler’s class-level cache
+        with CallbackHandler._thread_id_lock:
+            CallbackHandler._thread_id_to_trace_uuid.clear()
+
+        thread_id = f"full-flow-{uuid4()}"
         config = {"configurable": {"thread_id": thread_id}}
 
-        # Add items
         callback = CallbackHandler(
             name="langgraph-full-flow",
             tags=["langgraph", "full-flow"],
             thread_id=thread_id,
         )
+
         app.invoke(
-            {"messages": [HumanMessage(content="Add 2 apples")]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Add exactly 2 apples to the cart.\n"
+                            "If you use tools in this system, you MUST call the tool required to update the cart.\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
             config={**config, "callbacks": [callback]},
         )
 
-        # Apply coupon
-        callback2 = CallbackHandler(
-            name="langgraph-full-flow-2",
-            thread_id=thread_id,
-        )
         app.invoke(
-            {"messages": [HumanMessage(content="Apply SAVE20")]},
-            config={**config, "callbacks": [callback2]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Apply the coupon code SAVE20.\n"
+                            "You MUST call the coupon tool (do not apply it yourself).\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
         )
 
-        # Checkout
-        callback3 = CallbackHandler(
-            name="langgraph-full-flow-3",
-            thread_id=thread_id,
-        )
         app.invoke(
-            {"messages": [HumanMessage(content="Checkout")]},
-            config={**config, "callbacks": [callback3]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Proceed to checkout now.\n"
+                            "You MUST call the checkout tool.\n"
+                            "Do not answer from memory."
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
         )
 
-        # Confirm
-        callback4 = CallbackHandler(
-            name="langgraph-full-flow-4",
-            thread_id=thread_id,
-        )
         result = app.invoke(
-            {"messages": [HumanMessage(content="Confirm my order")]},
-            config={**config, "callbacks": [callback4]},
+            {
+                "messages": [
+                    HumanMessage(
+                        content=(
+                            "Confirm my order.\n"
+                            "You MUST call the confirm tool.\n"
+                            "After tool output, reply with exactly: CONFIRMED"
+                        )
+                    )
+                ]
+            },
+            config={**config, "callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# RETRIEVER (RAG) TESTS
+# =============================================================================
+
+
+class TestRetrieverApp:
+    """Tests for RAG LangGraph app with retriever."""
+
+    @trace_test("langgraph_retriever_python_schema.json")
+    def test_retrieve_python_docs(self):
+        """Test retrieval of Python-related documents."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-python",
+            tags=["langgraph", "retriever", "python"],
+            metadata={"test_type": "retriever"},
+        )
+
+        result = retriever_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Tell me about Python programming language."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+    @trace_test("langgraph_retriever_langchain_schema.json")
+    def test_retrieve_langchain_docs(self):
+        """Test retrieval of LangChain-related documents."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-langchain",
+            tags=["langgraph", "retriever", "langchain-docs"],
+        )
+
+        result = retriever_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(content="What is LangChain framework?")
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert len(result["messages"]) > 0
+
+    @trace_test("langgraph_retriever_metric_collection_schema.json")
+    def test_retriever_metric_collection(self):
+        """Test metric_collection on retriever spans."""
+        callback = CallbackHandler(
+            name="langgraph-retriever-metric-collection",
+            tags=["langgraph", "retriever", "metric-collection"],
+            metadata={"test_type": "retriever_metric_collection"},
+        )
+
+        result = retriever_app_with_metric_collection.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Tell me about Python programming language."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
+        )
+
+        assert "messages" in result
+        assert len(result["messages"]) > 0
+
+
+# =============================================================================
+# METRIC COLLECTION TESTS
+# =============================================================================
+
+
+class TestMetricCollectionApp:
+    """Tests for metric_collection on LLM and tool spans."""
+
+    @trace_test("langgraph_metric_collection_schema.json")
+    def test_metric_collection(self):
+        """Test metric_collection on LLM and tool spans with prompt tracking."""
+        callback = CallbackHandler(
+            name="langgraph-metric-collection",
+            tags=["langgraph", "metric-collection"],
+            metadata={"test_type": "metric_collection"},
+            metric_collection="trace_quality",
+        )
+
+        result = metric_collection_app.invoke(
+            {
+                "messages": [
+                    HumanMessage(
+                        content="Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+                    )
+                ]
+            },
+            config={"callbacks": [callback]},
         )
 
         assert len(result["messages"]) > 0

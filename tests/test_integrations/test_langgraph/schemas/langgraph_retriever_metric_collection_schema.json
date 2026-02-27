@@ -1,0 +1,378 @@
+{
+  "uuid": "09a525ae-887e-4ba6-a078-50aeab739834",
+  "baseSpans": [
+    {
+      "uuid": "019bfdef-f253-7733-8b6f-39a8215ec6e6",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-27T05:31:59.443Z",
+      "endTime": "2026-01-27T05:32:04.171Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Tell me about Python programming language.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Tell me about Python programming language.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 167,
+                "prompt_tokens": 76,
+                "total_tokens": 243,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2VyBysD1GLeTUnsC0qeGF0bwEe0A",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bfdef-f256-7a51-9e5a-0ff3e075ef17-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 76,
+              "output_tokens": 167,
+              "total_tokens": 243,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ],
+        "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc1"
+            },
+            "page_content": "Python is a high-level programming language known for its simplicity.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc2"
+            },
+            "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+            "type": "Document"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bfdef-f255-7490-956a-42058af3838b",
+      "name": "generate",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bfdef-f253-7733-8b6f-39a8215ec6e6",
+      "startTime": "2026-01-27T05:31:59.445Z",
+      "endTime": "2026-01-27T05:32:04.171Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Tell me about Python programming language.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ],
+        "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc1"
+            },
+            "page_content": "Python is a high-level programming language known for its simplicity.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc2"
+            },
+            "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+            "type": "Document"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "Tell me about Python programming language.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 167,
+                "prompt_tokens": 76,
+                "total_tokens": 243,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2VyBysD1GLeTUnsC0qeGF0bwEe0A",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bfdef-f256-7a51-9e5a-0ff3e075ef17-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 76,
+              "output_tokens": 167,
+              "total_tokens": 243,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bfdef-f254-7330-bd2b-32fd209c5f64",
+      "name": "retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bfdef-f253-7733-8b6f-39a8215ec6e6",
+      "startTime": "2026-01-27T05:31:59.444Z",
+      "endTime": "2026-01-27T05:31:59.445Z",
+      "input": {
+        "messages": [
+          {
+            "content": "Tell me about Python programming language.",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc1"
+            },
+            "page_content": "Python is a high-level programming language known for its simplicity.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc2"
+            },
+            "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+            "type": "Document"
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bfdef-f256-7a51-9e5a-0ff3e075ef17",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bfdef-f255-7490-956a-42058af3838b",
+      "startTime": "2026-01-27T05:31:59.446Z",
+      "endTime": "2026-01-27T05:32:04.170Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Answer the user's question based ONLY on the provided context. Be concise and factual."
+        },
+        {
+          "role": "human",
+          "content": "Tell me about Python programming language."
+        },
+        {
+          "role": "human",
+          "content": "Context:\nPython is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.\n\nAnswer based on the context above."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 76.0,
+      "outputTokenCount": 167.0
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "019bfdef-f254-7330-bd2b-330ad39b95ec",
+      "name": "DeterministicRetriever",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "019bfdef-f254-7330-bd2b-32fd209c5f64",
+      "startTime": "2026-01-27T05:31:59.444Z",
+      "endTime": "2026-01-27T05:31:59.445Z",
+      "input": "Tell me about Python programming language.",
+      "output": [
+        "page_content='Python is a high-level programming language known for its simplicity.' metadata={'source': 'doc1'}",
+        "page_content='Python supports multiple programming paradigms including procedural and OOP.' metadata={'source': 'doc2'}"
+      ],
+      "embedder": "unknown",
+      "metricCollection": "retriever_quality"
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-27T05:31:59.443Z",
+  "endTime": "2026-01-27T05:32:04.171Z",
+  "name": "langgraph-retriever-metric-collection",
+  "metadata": {
+    "test_type": "retriever_metric_collection"
+  },
+  "tags": [
+    "langgraph",
+    "retriever",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "Tell me about Python programming language.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "Tell me about Python programming language.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 167,
+            "prompt_tokens": 76,
+            "total_tokens": 243,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 128,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2VyBysD1GLeTUnsC0qeGF0bwEe0A",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bfdef-f256-7a51-9e5a-0ff3e075ef17-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 76,
+          "output_tokens": 167,
+          "total_tokens": 243,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
+      }
+    ],
+    "context": "Python is a high-level programming language known for its simplicity.\n\nPython supports multiple programming paradigms including procedural and OOP.",
+    "source_documents": [
+      {
+        "metadata": {
+          "source": "doc1"
+        },
+        "page_content": "Python is a high-level programming language known for its simplicity.",
+        "type": "Document"
+      },
+      {
+        "metadata": {
+          "source": "doc2"
+        },
+        "page_content": "Python supports multiple programming paradigms including procedural and OOP.",
+        "type": "Document"
+      }
+    ]
+  },
+  "status": "SUCCESS"
+}

@@ -78,6 +78,83 @@ if TYPE_CHECKING:
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
+class _ObservedAsyncGenIter:
+    """Class-based async iterator that wraps an observed async generator.
+
+    Python 3.11's ``async for`` with ``break`` does NOT call ``aclose()``
+    on the async generator — the generator is silently abandoned.  This
+    means neither ``finally`` blocks nor ``except GeneratorExit`` handlers
+    will fire, and the observer span leaks.
+
+    By using a class with ``__del__``, CPython's reference-counting GC
+    calls cleanup the moment the iterator goes out of scope (immediately
+    after ``break``), ensuring the span is always closed.
+    """
+
+    __slots__ = ("_agen_iter", "_observer", "_entered", "_done")
+
+    def __init__(self, agen, observer):
+        self._agen_iter = agen.__aiter__()
+        self._observer = observer
+        self._entered = False
+        self._done = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self._entered:
+            self._observer.__enter__()
+            self._entered = True
+        try:
+            return await self._agen_iter.__anext__()
+        except StopAsyncIteration:
+            self._finish()
+            raise
+        except Exception as e:
+            self._finish_err(e)
+            raise
+
+    def _finish(self):
+        if self._entered and not self._done:
+            self._done = True
+            self._observer.__exit__(None, None, None)
+
+    def _finish_err(self, e):
+        if self._entered and not self._done:
+            self._done = True
+            self._observer.__exit__(type(e), e, e.__traceback__)
+
+    async def aclose(self):
+        self._finish()
+        await self._agen_iter.aclose()
+
+    async def athrow(self, typ, val=None, tb=None):
+        if not self._entered:
+            self._observer.__enter__()
+            self._entered = True
+        try:
+            return await self._agen_iter.athrow(typ, val, tb)
+        except StopAsyncIteration:
+            self._finish()
+            raise
+        except Exception as e:
+            self._finish_err(e)
+            raise
+
+    def __del__(self):
+        if self._entered and not self._done:
+            # Python 3.11: async for + break doesn't call aclose(), so
+            # nested inner spans may still sit in current_span_context.
+            # Force-restore context to our span so __exit__ sees a match.
+            current = current_span_context.get()
+            if current and current.uuid != self._observer.uuid:
+                our_span = trace_manager.get_span_by_uuid(self._observer.uuid)
+                if our_span:
+                    current_span_context.set(our_span)
+        self._finish()
+
+
 class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
@@ -656,16 +733,18 @@ class TraceManager:
             if span.children:
                 span_stack.extend(span.children)
 
-        # Convert perf_counter values to ISO 8601 strings
+        # Convert perf_counter values to ISO 8601 strings.
+        # Fall back to current time when a value is missing.
         start_time = (
             to_zod_compatible_iso(perf_counter_to_datetime(trace.start_time))
             if trace.start_time
-            else None
+            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
-        end_time = (
-            to_zod_compatible_iso(perf_counter_to_datetime(trace.end_time))
-            if trace.end_time
-            else None
+        effective_end_time = (
+            trace.end_time if trace.end_time else perf_counter()
+        )
+        end_time = to_zod_compatible_iso(
+            perf_counter_to_datetime(effective_end_time)
         )
 
         return TraceApi(
@@ -690,6 +769,7 @@ class TraceManager:
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
+            testCaseId=trace.test_case_id,
             confident_api_key=trace.confident_api_key,
             environment=(
                 self.environment if not trace.environment else trace.environment
@@ -718,16 +798,17 @@ class TraceManager:
         input_data = span.input
         output_data = span.output
 
-        # Convert perf_counter values to ISO 8601 strings
+        # Convert perf_counter values to ISO 8601 strings.
+        # Fall back to current time if end_time was never set (e.g. sync
+        # generators whose __exit__ ran in a different thread-pool thread).
         start_time = (
             to_zod_compatible_iso(perf_counter_to_datetime(span.start_time))
             if span.start_time
-            else None
+            else to_zod_compatible_iso(perf_counter_to_datetime(perf_counter()))
         )
-        end_time = (
-            to_zod_compatible_iso(perf_counter_to_datetime(span.end_time))
-            if span.end_time
-            else None
+        effective_end_time = span.end_time if span.end_time else perf_counter()
+        end_time = to_zod_compatible_iso(
+            perf_counter_to_datetime(effective_end_time)
         )
 
         from deepeval.evaluate.utils import create_metric_data
@@ -770,13 +851,24 @@ class TraceManager:
             api_span.chunk_size = span.chunk_size
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
-            alias = span.prompt.alias if span.prompt else None
-            version = span.prompt.version if span.prompt else None
-            api_span.prompt = PromptApi(alias=alias, version=version)
+            # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
             api_span.input_token_count = span.input_token_count
             api_span.output_token_count = span.output_token_count
+            if span.prompt:
+                api_span.prompt_alias = span.prompt.alias
+                api_span.prompt_commit_hash = span.prompt.hash
+                api_span.prompt_label = span.prompt.label
+                api_span.prompt_version = span.prompt.version
+            if span.prompt_alias:
+                api_span.prompt_alias = span.prompt_alias
+            if span.prompt_commit_hash:
+                api_span.prompt_commit_hash = span.prompt_commit_hash
+            if span.prompt_label:
+                api_span.prompt_label = span.prompt_label
+            if span.prompt_version:
+                api_span.prompt_version = span.prompt_version
 
             processed_token_intervals = {}
             if span.token_intervals:
@@ -913,11 +1005,13 @@ class Observer:
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
 
+        # ContextVar may not match when sync generators run across different
+        # thread-pool threads (e.g. FastAPI StreamingResponse). Fall back to a
+        # direct UUID lookup so the span still gets closed properly.
         if not current_span or current_span.uuid != self.uuid:
-            print(
-                f"Error: Current span in context does not match the span being exited. Expected UUID: {self.uuid}, Got: {current_span.uuid if current_span else 'None'}"
-            )
-            return
+            current_span = trace_manager.get_span_by_uuid(self.uuid)
+            if not current_span:
+                return
 
         current_span.end_time = end_time
         if exc_type is not None:
@@ -968,22 +1062,34 @@ class Observer:
                 current_span_context.set(None)
         else:
             current_trace = current_trace_context.get()
-            if current_trace.input is None:
-                current_trace.input = self.function_kwargs
-            if current_trace.output is None:
-                current_trace.output = self.result
-            if current_span.status == TraceSpanStatus.ERRORED:
-                current_trace.status = TraceSpanStatus.ERRORED
-            if current_trace and current_trace.uuid == current_span.trace_uuid:
-                other_active_spans = [
-                    span
-                    for span in trace_manager.active_spans.values()
-                    if span.trace_uuid == current_span.trace_uuid
-                ]
+            # ContextVar for trace may also be lost in thread-pool scenarios;
+            # fall back to the trace UUID stored on the span.
+            if (
+                not current_trace
+                or current_trace.uuid != current_span.trace_uuid
+            ):
+                current_trace = trace_manager.get_trace_by_uuid(
+                    current_span.trace_uuid
+                )
+            if current_trace:
+                if current_trace.input is None:
+                    current_trace.input = trace_manager.mask(
+                        self.function_kwargs
+                    )
+                if current_trace.output is None:
+                    current_trace.output = trace_manager.mask(self.result)
+                if current_span.status == TraceSpanStatus.ERRORED:
+                    current_trace.status = TraceSpanStatus.ERRORED
+                if current_trace.uuid == current_span.trace_uuid:
+                    other_active_spans = [
+                        span
+                        for span in trace_manager.active_spans.values()
+                        if span.trace_uuid == current_span.trace_uuid
+                    ]
 
-                if not other_active_spans:
-                    trace_manager.end_trace(current_span.trace_uuid)
-                    current_trace_context.set(None)
+                    if not other_active_spans:
+                        trace_manager.end_trace(current_span.trace_uuid)
+                        current_trace_context.set(None)
 
             current_span_context.set(None)
 
@@ -1037,7 +1143,8 @@ class Observer:
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
-            return ToolSpan(**span_kwargs, **self.observe_kwargs)
+            description = self.observe_kwargs.get("description", None)
+            return ToolSpan(**span_kwargs, description=description)
         else:
             return BaseSpan(**span_kwargs)
 
@@ -1098,19 +1205,9 @@ def observe(
                     func_name=func_name,
                     **observer_kwargs,
                 )
-                observer.__enter__()
                 agen = func(*args, **func_kwargs)
 
-                async def gen():
-                    try:
-                        async for chunk in agen:
-                            yield chunk
-                        observer.__exit__(None, None, None)
-                    except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
-                        raise
-
-                return gen()
+                return _ObservedAsyncGenIter(agen, observer)
 
             setattr(asyncgen_wrapper, "_is_deepeval_observed", True)
             return asyncgen_wrapper
@@ -1142,16 +1239,44 @@ def observe(
                     func_name=func_name,
                     **observer_kwargs,
                 )
-                observer.__enter__()
                 original_gen = func(*args, **func_kwargs)
 
                 def gen():
+                    observer.__enter__()
+                    # Capture the span and trace refs set by __enter__.
+                    # Generator locals survive across yields, but ContextVars
+                    # don't when Starlette dispatches each next() to a
+                    # different thread-pool thread. We restore them on every
+                    # resume so child @observe'd calls see the right parent.
+                    _span = current_span_context.get()
+                    _trace = current_trace_context.get()
+                    it = iter(original_gen)
+                    return_value = None
                     try:
-                        yield from original_gen
-                        observer.__exit__(None, None, None)
+                        while True:
+                            try:
+                                # 1. Pull the next chunk
+                                value = next(it)
+                            except StopIteration as e:
+                                return_value = e.value
+                                break
+                            yield value
+                            # After resume (potentially in a new thread),
+                            # restore ContextVars before the next iteration
+                            # runs user code that may create child spans.
+                            current_span_context.set(_span)
+                            if _trace is not None:
+                                current_trace_context.set(_trace)
+                                
+                        observer.result = return_value
                     except Exception as e:
-                        observer.__exit__(type(e), e, e.__traceback__)
+                        current_span_context.set(_span)
+                        if _trace is not None:
+                            current_trace_context.set(_trace)
+                        observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
+                    finally: # GeneratorExit execption directly brings us to final block
+                        observer.__exit__(None, None, None)
 
                 return gen()
 

@@ -1,0 +1,76 @@
+{
+  "uuid": "c4bc1e03-0560-4013-8791-889b70ca22e0",
+  "baseSpans": [
+    {
+      "uuid": "1bb93b37-840d-481d-9b10-d165438cb48c",
+      "name": "kickoff_async",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-15T10:22:47.311Z",
+      "endTime": "2026-02-15T10:22:48.313Z",
+      "input": {},
+      "output": "Processed output: Async Request 1 has been successfully processed."
+    },
+    {
+      "uuid": "8d8bce93-8cd8-4ffc-b5ad-f1c55124e0dc",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1bb93b37-840d-481d-9b10-d165438cb48c",
+      "startTime": "2026-02-15T10:22:47.311Z",
+      "endTime": "2026-02-15T10:22:48.312Z",
+      "input": {
+        "input": "Async Request 1"
+      },
+      "output": "Processed output: Async Request 1 has been successfully processed."
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "27f3759e-6b24-4031-9fa1-6bf11ec4c6a6",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "8d8bce93-8cd8-4ffc-b5ad-f1c55124e0dc",
+      "startTime": "2026-02-15T10:22:47.316Z",
+      "endTime": "2026-02-15T10:22:48.309Z",
+      "input": "Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Processed output: Async Request 1 has been successfully processed.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "7bddf087-570f-4f5f-88f9-ba3fda9eb1d1",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "27f3759e-6b24-4031-9fa1-6bf11ec4c6a6",
+      "startTime": "2026-02-15T10:22:47.318Z",
+      "endTime": "2026-02-15T10:22:48.308Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Async Worker. Digital worker\nYour personal goal is: Process requests fast"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "Processed output: Async Request 1 has been successfully processed.",
+      "model": "gpt-4o-mini"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-15T10:22:47.311Z",
+  "endTime": "2026-02-15T10:22:48.313Z",
+  "environment": "development",
+  "input": {
+    "input": "Async Request 1"
+  },
+  "output": "Processed output: Async Request 1 has been successfully processed.",
+  "status": "SUCCESS"
+}

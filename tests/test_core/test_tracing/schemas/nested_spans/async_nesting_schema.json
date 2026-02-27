@@ -1,0 +1,60 @@
+{
+  "uuid": "60f0c0d7-d7eb-498a-b7a4-51e38f43850d",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "e7ce379a-4dfd-487b-b13e-0bb2dad9d7c1",
+      "name": "async_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.118Z",
+      "endTime": "2026-01-29T09:53:13.141Z",
+      "input": {
+        "query": "async query"
+      },
+      "output": "Async response: Async docs: async query",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "a10fdbf0-f2b4-4557-b88b-0e3c17d2944e",
+      "name": "async_generate",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "e7ce379a-4dfd-487b-b13e-0bb2dad9d7c1",
+      "startTime": "2026-01-29T09:53:13.130Z",
+      "endTime": "2026-01-29T09:53:13.141Z",
+      "input": {
+        "context": "Async docs: async query"
+      },
+      "output": "Async response: Async docs: async query",
+      "model": "gpt-4"
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "b343a948-9323-4af3-a89a-40691406b4ec",
+      "name": "async_retrieve",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "e7ce379a-4dfd-487b-b13e-0bb2dad9d7c1",
+      "startTime": "2026-01-29T09:53:13.118Z",
+      "endTime": "2026-01-29T09:53:13.129Z",
+      "input": {
+        "query": "async query"
+      },
+      "output": "Async docs: async query"
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.118Z",
+  "endTime": "2026-01-29T09:53:13.141Z",
+  "environment": "testing",
+  "input": {
+    "query": "async query"
+  },
+  "output": "Async response: Async docs: async query",
+  "status": "SUCCESS"
+}

@@ -120,6 +120,14 @@ class LlmSpan(BaseSpan):
     token_intervals: Optional[Dict[float, str]] = Field(
         None, serialization_alias="tokenTimes"
     )
+    prompt_alias: Optional[str] = Field(None, serialization_alias="promptAlias")
+    prompt_version: Optional[str] = Field(
+        None, serialization_alias="promptVersion"
+    )
+    prompt_label: Optional[str] = Field(None, serialization_alias="promptLabel")
+    prompt_commit_hash: Optional[str] = Field(
+        None, serialization_alias="promptCommitHash"
+    )
 
     # input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
     # invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
@@ -157,6 +165,7 @@ class Trace(BaseModel):
     output: Optional[Any] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
+    test_case_id: Optional[str] = Field(None, serialization_alias="testCaseId")
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)

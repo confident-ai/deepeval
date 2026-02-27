@@ -25,6 +25,7 @@ class TraceSpanApiStatus(Enum):
 class PromptApi(BaseModel):
     alias: Optional[str] = None
     version: Optional[str] = None
+    hash: Optional[str] = None
 
 
 class MetricData(BaseModel):
@@ -100,6 +101,14 @@ class BaseApiSpan(BaseModel):
     ## evals
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
+    prompt_alias: Optional[str] = Field(None, serialization_alias="promptAlias")
+    prompt_version: Optional[str] = Field(
+        None, serialization_alias="promptVersion"
+    )
+    prompt_label: Optional[str] = Field(None, serialization_alias="promptLabel")
+    prompt_commit_hash: Optional[str] = Field(
+        None, serialization_alias="promptCommitHash"
+    )
 
 
 class TraceApi(BaseModel):
@@ -126,6 +135,7 @@ class TraceApi(BaseModel):
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
     status: Optional[TraceSpanApiStatus] = Field(TraceSpanApiStatus.SUCCESS)
+    test_case_id: Optional[str] = Field(None, alias="testCaseId")
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(

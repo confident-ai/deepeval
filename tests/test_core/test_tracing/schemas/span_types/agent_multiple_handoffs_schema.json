@@ -1,0 +1,35 @@
+{
+  "uuid": "94daaac3-0e24-4621-a0c9-471b45c15ece",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "2393e4d0-bad5-4eb4-885a-0b9009253fe6",
+      "name": "agent_multiple_handoffs",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.226Z",
+      "endTime": "2026-01-29T09:53:13.226Z",
+      "input": {
+        "query": "Query"
+      },
+      "output": "Multi-handoff agent: Query",
+      "availableTools": [],
+      "agentHandoffs": [
+        "agent_a",
+        "agent_b",
+        "agent_c"
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.226Z",
+  "endTime": "2026-01-29T09:53:13.226Z",
+  "environment": "testing",
+  "input": {
+    "query": "Query"
+  },
+  "output": "Multi-handoff agent: Query",
+  "status": "SUCCESS"
+}

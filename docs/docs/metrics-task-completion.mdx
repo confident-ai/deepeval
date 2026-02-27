@@ -11,8 +11,8 @@ sidebar_label: Task Completion
   />
 </head>
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
 <MetricTagsDisplayer singleTurn={true} agent={true} referenceless={true} />
 
@@ -57,7 +57,7 @@ dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
 task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
 
 # Loop through dataset
-for goldens in dataset.evals_iterator(metrics=[task_completion]):
+for golden in dataset.evals_iterator(metrics=[task_completion]):
     trip_planner_agent(golden.input)
 ```
 

@@ -1,0 +1,69 @@
+{
+  "uuid": "22ff82ad-a16c-44a4-b7e8-f739c266ec2a",
+  "baseSpans": [
+    {
+      "uuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
+      "name": "kickoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-15T10:21:57.368Z",
+      "endTime": "2026-02-15T10:21:58.243Z",
+      "input": {
+        "input": "Hello World"
+      },
+      "output": "Hello World! How are you today?",
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
+      "name": "execute_task",
+      "status": "SUCCESS",
+      "type": "agent",
+      "parentUuid": "655f005a-eeba-4f2b-a9b3-8b97b1f54703",
+      "startTime": "2026-02-15T10:21:57.375Z",
+      "endTime": "2026-02-15T10:21:58.236Z",
+      "input": "Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "output": "Hello World! How are you today?",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "fc165bad-3b13-49db-a73a-9a413c5e4582",
+      "name": "call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "a8b7e7d7-0117-4ebc-a602-3a9d6bd293b0",
+      "startTime": "2026-02-15T10:21:57.376Z",
+      "endTime": "2026-02-15T10:21:58.233Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are Simple Greeter _sync. You are a friendly bot.\nYour personal goal is: Reply to greetings"
+        },
+        {
+          "role": "user",
+          "content": "\nCurrent Task: Reply to the user: Hello World\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
+        }
+      ],
+      "output": "Hello World! How are you today?",
+      "model": "gpt-4o-mini",
+      "metricCollection": "metric_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-15T10:21:57.368Z",
+  "endTime": "2026-02-15T10:21:58.243Z",
+  "environment": "development",
+  "input": {
+    "input": "Hello World"
+  },
+  "output": "Hello World! How are you today?",
+  "status": "SUCCESS",
+  "metricCollection": "metric_collection_1"
+}

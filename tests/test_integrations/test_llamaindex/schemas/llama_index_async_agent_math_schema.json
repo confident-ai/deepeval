@@ -1,0 +1,743 @@
+{
+  "uuid": "4ff494f6-91eb-47ce-9e23-9f82c2349471",
+  "baseSpans": [
+    {
+      "uuid": "ReActAgent.parse_agent_output-409f541d-03be-4965-9b1c-823cf96111b7",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:34.048Z",
+      "endTime": "2026-02-16T06:12:34.049Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "The result of 50 * 2 is 100."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 50,
+                "b": 2
+              },
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
+            }
+          ],
+          "retry_messages": []
+        }
+      },
+      "output": {
+        "result": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "The result of 50 * 2 is 100."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 50,
+                "b": 2
+              },
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
+            }
+          ],
+          "retry_messages": []
+        }
+      }
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:34.048Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "system",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "Calculate 50 * 2"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100."
+            }
+          ]
+        },
+        "structured_response": null,
+        "current_agent_name": "Agent",
+        "tool_calls": [],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-9dc0458e-0c44-407f-b42c-205ac662c645",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
+      "startTime": "2026-02-16T06:12:34.048Z",
+      "endTime": "2026-02-16T06:12:34.048Z",
+      "input": {
+        "output": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100.",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "I can answer without using any more tools. I'll use the user's language to answer.",
+        "response": "The result of 50 * 2 is 100.",
+        "is_streaming": false
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-0e3964ef-a638-47cb-9c7a-4e96dbde276c",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-8b6776dc-c322-4b7d-8690-47d651e35e55",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:32.820Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Observation: 100"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231cc0>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-2e56213e-9c1c-40b6-98dd-0d866ea84d41",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.818Z",
+      "endTime": "2026-02-16T06:12:32.818Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "Calculate 50 * 2"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.aggregate_tool_results-02402e86-cb25-4c71-825d-d4ad6c3e8fe7",
+      "name": "aggregate_tool_results",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.810Z",
+      "endTime": "2026-02-16T06:12:32.811Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "tool_name": "multiply",
+          "tool_kwargs": {
+            "a": 50,
+            "b": 2
+          },
+          "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
+          "tool_output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "100"
+              }
+            ],
+            "tool_name": "multiply",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "a": 50,
+                "b": 2
+              }
+            },
+            "raw_output": 100,
+            "is_error": false
+          },
+          "return_direct": false
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.parse_agent_output-33e40173-6a3d-459d-9209-c73c3caeba81",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.807Z",
+      "endTime": "2026-02-16T06:12:32.808Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
+              "tool_name": "multiply",
+              "tool_kwargs": {
+                "a": 50,
+                "b": 2
+              }
+            }
+          ],
+          "retry_messages": []
+        }
+      }
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:32.806Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "system",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+                }
+              ]
+            },
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "Calculate 50 * 2"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+            }
+          ]
+        },
+        "structured_response": null,
+        "current_agent_name": "Agent",
+        "tool_calls": [
+          {
+            "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
+            "tool_name": "multiply",
+            "tool_kwargs": {
+              "a": 50,
+              "b": 2
+            }
+          }
+        ],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-aabf46ef-af6e-4739-8d5a-d758470825d6",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
+      "startTime": "2026-02-16T06:12:32.806Z",
+      "endTime": "2026-02-16T06:12:32.806Z",
+      "input": {
+        "output": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "The current language of the user is English. I need to use a tool to help me answer the question.",
+        "action": "multiply",
+        "action_input": {
+          "a": 50,
+          "b": 2
+        }
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-ab1c50ff-dc19-4eea-ba20-2e473b449273",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-7557140d-0616-46b8-bd32-e50aa329eae1",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:31.860Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x118231b90>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-8b095608-29fd-4b6b-b41e-1790b13cc65e",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.851Z",
+      "endTime": "2026-02-16T06:12:31.851Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "Calculate 50 * 2"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are a helpful assistant. You MUST use the provided tools to answer questions. Do not answer from your own knowledge."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.init_run-526f60b8-a246-491e-86cb-42012d8b95f9",
+      "name": "init_run",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:31.850Z",
+      "endTime": "2026-02-16T06:12:31.851Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "user_msg": "Calculate 50 * 2",
+          "chat_history": null,
+          "max_iterations": null,
+          "early_stopping_method": null
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Calculate 50 * 2"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "name": "Agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-02-16T06:12:31.847Z",
+      "endTime": "2026-02-16T06:12:31.849Z",
+      "input": {
+        "user_msg": "Calculate 50 * 2",
+        "chat_history": null,
+        "max_iterations": null,
+        "early_stopping_method": null
+      },
+      "output": {
+        "run_id": "HNqdOIcj7N"
+      },
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c0a6cb27-e3f4-4f1e-8a8b-168fcb8a54c1",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-0e3964ef-a638-47cb-9c7a-4e96dbde276c",
+      "startTime": "2026-02-16T06:12:32.819Z",
+      "endTime": "2026-02-16T06:12:34.047Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "Calculate 50 * 2"
+        },
+        {
+          "role": "assistant",
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {'a': 50, 'b': 2}"
+        },
+        {
+          "role": "user",
+          "content": "Observation: 100"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Thought: I can answer without using any more tools. I'll use the user's language to answer.\nAnswer: The result of 50 * 2 is 100."
+        }
+      ],
+      "model": "gpt-4o"
+    },
+    {
+      "uuid": "07fa70c6-27aa-467c-9899-03cd70625175",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-ab1c50ff-dc19-4eea-ba20-2e473b449273",
+      "startTime": "2026-02-16T06:12:31.852Z",
+      "endTime": "2026-02-16T06:12:32.805Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(city: str) -> str\nUseful for getting the weather for a specific city.\nTool Args: {\"properties\": {\"city\": {\"title\": \"City\", \"type\": \"string\"}}, \"required\": [\"city\"], \"type\": \"object\"}\n\n> Tool Name: multiply\nTool Description: multiply(a: float, b: float) -> float\nUseful for multiplying two numbers.\nTool Args: {\"properties\": {\"a\": {\"title\": \"A\", \"type\": \"number\"}, \"b\": {\"title\": \"B\", \"type\": \"number\"}}, \"required\": [\"a\", \"b\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather, multiply) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "Calculate 50 * 2"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": "Thought: The current language of the user is English. I need to use a tool to help me answer the question.\nAction: multiply\nAction Input: {\"a\": 50, \"b\": 2}"
+        }
+      ],
+      "model": "gpt-4o"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "ReActAgent.call_tool-d1c69442-1452-40eb-a62a-d70a0534bf0b",
+      "name": "multiply",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "ReActAgent.run-b4ac71df-08a1-4c7e-9a34-03af2fec2992",
+      "startTime": "2026-02-16T06:12:32.809Z",
+      "endTime": "2026-02-16T06:12:32.809Z",
+      "input": {
+        "ctx": {},
+        "ev": {
+          "tool_name": "multiply",
+          "tool_kwargs": {
+            "a": 50,
+            "b": 2
+          },
+          "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9"
+        }
+      },
+      "output": {
+        "tool_name": "multiply",
+        "tool_kwargs": {
+          "a": 50,
+          "b": 2
+        },
+        "tool_id": "fdf54100-6c6b-4e74-aede-fc17f12e31b9",
+        "tool_output": {
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "100"
+            }
+          ],
+          "tool_name": "multiply",
+          "raw_input": {
+            "args": "<circular>",
+            "kwargs": {
+              "a": 50,
+              "b": 2
+            }
+          },
+          "raw_output": 100,
+          "is_error": false
+        },
+        "return_direct": false
+      },
+      "toolsCalled": [
+        {
+          "name": "multiply",
+          "output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "100"
+              }
+            ],
+            "tool_name": "multiply",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "a": 50,
+                "b": 2
+              }
+            },
+            "raw_output": 100,
+            "is_error": false
+          },
+          "inputParameters": {
+            "a": 50,
+            "b": 2
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "FunctionTool.acall-22486954-dc2e-49a6-83c5-b3066a1988f6",
+      "name": "multiply",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "ReActAgent.call_tool-d1c69442-1452-40eb-a62a-d70a0534bf0b",
+      "startTime": "2026-02-16T06:12:32.809Z",
+      "endTime": "2026-02-16T06:12:32.809Z",
+      "input": {
+        "kwargs": {
+          "a": 50,
+          "b": 2
+        }
+      },
+      "output": {
+        "blocks": [
+          {
+            "block_type": "text",
+            "text": "100"
+          }
+        ],
+        "tool_name": "multiply",
+        "raw_input": {
+          "args": "<circular>",
+          "kwargs": {
+            "a": 50,
+            "b": 2
+          }
+        },
+        "raw_output": 100,
+        "is_error": false
+      }
+    }
+  ],
+  "startTime": "2026-02-16T06:12:31.847Z",
+  "endTime": "2026-02-16T06:12:34.049Z",
+  "name": "llama_index_async_agent",
+  "tags": [
+    "llama_index",
+    "async",
+    "agent",
+    "math"
+  ],
+  "environment": "development",
+  "threadId": "llama_async_index_thread_id",
+  "userId": "llama_async_index_user_id",
+  "status": "SUCCESS",
+  "metricCollection": "llama_async_index_metric_collection"
+}

@@ -1,0 +1,42 @@
+{
+  "uuid": "31ff496f-8e87-4d03-a473-66cfb36d3980",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "be1eee51-2425-4ce4-8e33-60bd74474def",
+      "name": "retrieve_documents",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "startTime": "2026-01-29T09:53:13.461Z",
+      "endTime": "2026-01-29T09:53:13.461Z",
+      "input": {
+        "query": "AI research",
+        "top_k": 3
+      },
+      "output": [
+        "Document 0 about AI research",
+        "Document 1 about AI research",
+        "Document 2 about AI research"
+      ],
+      "embedder": "text-embedding-ada-002",
+      "topK": 3,
+      "chunkSize": 512
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.461Z",
+  "endTime": "2026-01-29T09:53:13.461Z",
+  "environment": "testing",
+  "input": {
+    "query": "AI research",
+    "top_k": 3
+  },
+  "output": [
+    "Document 0 about AI research",
+    "Document 1 about AI research",
+    "Document 2 about AI research"
+  ],
+  "status": "SUCCESS"
+}

@@ -98,6 +98,7 @@ class TraceMetricScores(BaseModel):
 
 class PromptData(BaseModel):
     alias: Optional[str] = None
+    hash: Optional[str] = None
     version: Optional[str] = None
     text_template: Optional[str] = None
     messages_template: Optional[List[PromptMessage]] = None
@@ -1112,8 +1113,8 @@ class TestRunManager:
                 lines.append("")
                 lines.extend(settings_lines)
             title = f"{format_string(prompt.alias)}"
-            if prompt.version:
-                title += f" (v{prompt.version})"
+            if prompt.hash:
+                title += f" ({prompt.hash})"
             body = "\n".join(lines)
             panel = Panel(
                 body,

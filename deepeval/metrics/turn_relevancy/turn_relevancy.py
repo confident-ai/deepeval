@@ -168,7 +168,11 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
         irrelevancies: List[Dict[str, str]] = []
         for index, verdict in enumerate(self.verdicts):
-            if verdict.verdict.strip().lower() == "no":
+            if (
+                verdict is not None
+                and verdict.verdict is not None
+                and verdict.verdict.strip().lower() == "no"
+            ):
                 irrelevancies.append(
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
@@ -191,7 +195,11 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
         irrelevancies: List[Dict[str, str]] = []
         for index, verdict in enumerate(self.verdicts):
-            if verdict.verdict.strip().lower() == "no":
+            if (
+                verdict is not None
+                and verdict.verdict is not None
+                and verdict.verdict.strip().lower() == "no"
+            ):
                 irrelevancies.append(
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
@@ -243,12 +251,17 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
+        # Filter out None verdicts that can occur during parallel evaluation
+        # when verdict generation fails (e.g., LLM timeout, parse error).
+        valid_verdicts = [
+            v for v in self.verdicts if v is not None and v.verdict is not None
+        ]
+        number_of_verdicts = len(valid_verdicts)
         if number_of_verdicts == 0:
             return 1
 
         relevant_count = 0
-        for verdict in self.verdicts:
+        for verdict in valid_verdicts:
             if verdict.verdict.strip().lower() != "no":
                 relevant_count += 1
 

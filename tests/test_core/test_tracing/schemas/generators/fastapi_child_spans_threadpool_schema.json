@@ -1,0 +1,40 @@
+{
+  "uuid": "a6f8f912-dde3-4637-9aa6-6db0189e6384",
+  "baseSpans": [
+    {
+      "uuid": "01d79dc0-320c-43fa-84e6-0527774c63df",
+      "name": "streamed_with_child",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-26T06:37:14.891Z",
+      "endTime": "2026-02-26T06:37:14.892Z",
+      "input": {
+        "prompt": "hello"
+      }
+    },
+    {
+      "uuid": "b29912be-dee3-498f-a5b0-af333318934d",
+      "name": "transform_text",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "01d79dc0-320c-43fa-84e6-0527774c63df",
+      "startTime": "2026-02-26T06:37:14.892Z",
+      "endTime": "2026-02-26T06:37:14.892Z",
+      "input": {
+        "text": "hello"
+      },
+      "output": "processed hello"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-26T06:37:14.892Z",
+  "endTime": "2026-02-26T06:37:14.892Z",
+  "environment": "development",
+  "input": {
+    "prompt": "hello"
+  },
+  "status": "SUCCESS"
+}

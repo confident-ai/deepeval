@@ -1,7 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 import inspect
 from time import perf_counter
 import uuid
+from pydantic import Field
 
 from llama_index.core.agent.workflow.workflow_events import (
     AgentWorkflowStartEvent,
@@ -21,6 +22,7 @@ from deepeval.tracing.types import (
 from deepeval.tracing.trace_context import (
     current_llm_context,
     current_agent_context,
+    current_trace_context,
 )
 from deepeval.test_case import ToolCall
 from deepeval.tracing.utils import make_json_serializable
@@ -40,7 +42,10 @@ try:
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
-    from llama_index_instrumentation.dispatcher import Dispatcher
+    from llama_index.core.instrumentation import Dispatcher
+    from llama_index.core.instrumentation.events.retrieval import (
+        RetrievalEndEvent,
+    )
     from deepeval.integrations.llama_index.utils import (
         parse_id,
         prepare_input_llm_test_case_params,
@@ -62,6 +67,7 @@ def is_llama_index_installed():
 class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     root_span_trace_id_map: Dict[str, str] = {}
     open_ai_astream_to_llm_span_map: Dict[str, str] = {}
+    auto_created_trace_uuids: Set[str] = Field(default_factory=set)
 
     def __init__(self):
         is_llama_index_installed()
@@ -82,15 +88,26 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input_messages.append({"role": role, "content": content})
 
             llm_span_context = current_llm_context.get()
-            # create the span
+
+            parent_span = trace_manager.get_span_by_uuid(event.span_id)
+            if parent_span:
+                trace_uuid = parent_span.trace_uuid
+            elif event.span_id in self.root_span_trace_id_map:
+                trace_uuid = self.root_span_trace_id_map[event.span_id]
+            else:
+                current_trace = current_trace_context.get()
+                if current_trace:
+                    trace_uuid = current_trace.uuid
+                else:
+                    trace_uuid = trace_manager.start_new_trace().uuid
+                    self.auto_created_trace_uuids.add(trace_uuid)
+
             llm_span = LlmSpan(
                 name="ConfidentLLMSpan",
                 uuid=str(uuid.uuid4()),
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
-                trace_uuid=trace_manager.get_span_by_uuid(
-                    event.span_id
-                ).trace_uuid,
+                trace_uuid=trace_uuid,
                 parent_uuid=event.span_id,
                 start_time=perf_counter(),
                 model=getattr(event, "model_dict", {}).get(
@@ -105,6 +122,26 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     else None
                 ),
                 prompt=llm_span_context.prompt if llm_span_context else None,
+                prompt_alias=(
+                    llm_span_context.prompt.alias
+                    if llm_span_context.prompt
+                    else None
+                ),
+                prompt_commit_hash=(
+                    llm_span_context.prompt.hash
+                    if llm_span_context.prompt
+                    else None
+                ),
+                prompt_label=(
+                    llm_span_context.prompt.label
+                    if llm_span_context.prompt
+                    else None
+                ),
+                prompt_version=(
+                    llm_span_context.prompt.version
+                    if llm_span_context.prompt
+                    else None
+                ),
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -119,6 +156,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             if llm_span_uuid:
                 llm_span = trace_manager.get_span_by_uuid(llm_span_uuid)
                 if llm_span:
+                    trace_uuid = llm_span.trace_uuid
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
                     llm_span.input = llm_span.input
@@ -127,6 +165,18 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     )
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
+                    # Fallback cleanup for streams
+                    if trace_uuid in self.auto_created_trace_uuids:
+                        if len(self.open_ai_astream_to_llm_span_map) == 0:
+                            trace_manager.end_trace(trace_uuid)
+                            self.auto_created_trace_uuids.remove(trace_uuid)
+
+        if isinstance(event, RetrievalEndEvent):
+            span = trace_manager.get_span_by_uuid(event.span_id)
+            if span:
+                span.retrieval_context = [
+                    node.node.get_content() for node in event.nodes
+                ]
 
     def new_span(
         self,
@@ -139,18 +189,35 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     ) -> Optional[LlamaIndexBaseSpan]:
         class_name, method_name = parse_id(id_)
 
-        # check if it is a root span
-        if parent_span_id is None:
-            trace_uuid = trace_manager.start_new_trace().uuid
-        elif class_name == "Workflow" and method_name == "run":
-            trace_uuid = trace_manager.start_new_trace().uuid
-            parent_span_id = None  # since workflow is the root span, we need to set the parent span id to None
+        current_trace = current_trace_context.get()
+        trace_uuid = None
+
+        if parent_span_id is None or (
+            class_name == "Workflow" and method_name == "run"
+        ):
+            if current_trace:
+                trace_uuid = current_trace.uuid
+            else:
+                trace_uuid = trace_manager.start_new_trace().uuid
+                self.auto_created_trace_uuids.add(trace_uuid)
+
+            if class_name == "Workflow" and method_name == "run":
+                parent_span_id = None
+
+        elif parent_span_id in self.root_span_trace_id_map:
+            trace_uuid = self.root_span_trace_id_map[parent_span_id]
+
         elif trace_manager.get_span_by_uuid(parent_span_id):
             trace_uuid = trace_manager.get_span_by_uuid(
                 parent_span_id
             ).trace_uuid
+
         else:
-            trace_uuid = trace_manager.start_new_trace().uuid
+            if current_trace:
+                trace_uuid = current_trace.uuid
+            else:
+                trace_uuid = trace_manager.start_new_trace().uuid
+                self.auto_created_trace_uuids.add(trace_uuid)
 
         self.root_span_trace_id_map[id_] = trace_uuid
 
@@ -195,7 +262,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     else None
                 ),
             )
-        elif method_name == "acall":
+        elif method_name in ["acall", "call_tool", "acall_tool"]:
             span = ToolSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -206,7 +273,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input=bound_args.arguments,
                 name="Tool",
             )
-        # prepare input test case params for the span
+
         prepare_input_llm_test_case_params(
             class_name, method_name, span, bound_args.arguments
         )
@@ -214,6 +281,22 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         trace_manager.add_span_to_trace(span)
 
         return span
+
+    def _get_output_value(self, result: Any) -> Any:
+        """Helper to ensure AgentChatResponse and similar objects are serialized as dicts."""
+        if hasattr(result, "response") and hasattr(result, "sources"):
+            if hasattr(result, "model_dump"):
+                return result.model_dump()
+            if hasattr(result, "to_dict"):
+                return result.to_dict()
+            return {"response": result.response, "sources": result.sources}
+
+        if hasattr(result, "response"):
+            if hasattr(result, "model_dump"):
+                return result.model_dump()
+            return {"response": result.response}
+
+        return result
 
     def prepare_to_exit_span(
         self,
@@ -229,7 +312,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             return None
 
         class_name, method_name = parse_id(id_)
-        if method_name == "call_tool":
+
+        if method_name in ["call_tool", "acall_tool"]:
             output_json = make_json_serializable(result)
             if output_json and isinstance(output_json, dict):
                 if base_span.tools_called is None:
@@ -243,7 +327,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 )
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
-        base_span.output = result
+        base_span.output = self._get_output_value(result)
 
         if isinstance(base_span, ToolSpan):
             result_json = make_json_serializable(result)
@@ -261,11 +345,29 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 trace_manager.get_trace_by_uuid(base_span.trace_uuid)
             )
 
-        trace_manager.remove_span(base_span.uuid)
-
         if base_span.parent_uuid is None:
-            trace_manager.end_trace(base_span.trace_uuid)
-            self.root_span_trace_id_map.pop(base_span.uuid)
+            is_streaming = (
+                hasattr(result, "response_gen")
+                or inspect.isgenerator(result)
+                or inspect.isasyncgen(result)
+            )
+            is_workflow = (
+                class_name in ["Workflow", "FunctionAgent"]
+                and method_name == "run"
+            )
+
+            if base_span.trace_uuid in self.auto_created_trace_uuids:
+                if (
+                    not is_streaming
+                    and not is_workflow
+                    and len(self.open_ai_astream_to_llm_span_map) == 0
+                ):
+                    trace_manager.end_trace(base_span.trace_uuid)
+                    self.auto_created_trace_uuids.remove(base_span.trace_uuid)
+                    if base_span.uuid in self.root_span_trace_id_map:
+                        self.root_span_trace_id_map.pop(base_span.uuid)
+
+        trace_manager.remove_span(base_span.uuid)
 
         return base_span
 
@@ -282,13 +384,12 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             return None
 
         base_span.end_time = perf_counter()
-        base_span.status = (
-            TraceSpanStatus.SUCCESS
-        )  # find a way to add error and handle the span without the parent id
+        base_span.status = TraceSpanStatus.SUCCESS
 
         if base_span.parent_uuid is None:
             trace_manager.end_trace(base_span.trace_uuid)
-            self.root_span_trace_id_map.pop(base_span.uuid)
+            if base_span.uuid in self.root_span_trace_id_map:
+                self.root_span_trace_id_map.pop(base_span.uuid)
 
         return base_span
 

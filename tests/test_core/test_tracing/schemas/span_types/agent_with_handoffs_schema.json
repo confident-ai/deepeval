@@ -1,0 +1,37 @@
+{
+  "uuid": "c9bd658c-8a0c-4863-8de8-fffbbd4c3c3b",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "224c93da-97ef-44a1-a8c2-60e4acf38355",
+      "name": "agent_with_handoffs",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-29T09:53:13.176Z",
+      "endTime": "2026-01-29T09:53:13.176Z",
+      "input": {
+        "query": "Research this topic"
+      },
+      "output": "Agent with handoffs processed: Research this topic",
+      "availableTools": [
+        "research",
+        "summarize"
+      ],
+      "agentHandoffs": [
+        "writer_agent",
+        "reviewer_agent"
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.176Z",
+  "endTime": "2026-01-29T09:53:13.176Z",
+  "environment": "testing",
+  "input": {
+    "query": "Research this topic"
+  },
+  "output": "Agent with handoffs processed: Research this topic",
+  "status": "SUCCESS"
+}

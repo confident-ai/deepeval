@@ -1,0 +1,34 @@
+{
+  "uuid": "262f34a2-21fa-4d79-81a4-68d594a79d61",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "d9107822-eee9-4085-9782-53c54cf32017",
+      "name": "custom_retriever_name",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "startTime": "2026-01-29T09:53:13.607Z",
+      "endTime": "2026-01-29T09:53:13.607Z",
+      "input": {
+        "query": "test query"
+      },
+      "output": [
+        "Named retriever: test query"
+      ],
+      "embedder": "ada-002"
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.607Z",
+  "endTime": "2026-01-29T09:53:13.607Z",
+  "environment": "testing",
+  "input": {
+    "query": "test query"
+  },
+  "output": [
+    "Named retriever: test query"
+  ],
+  "status": "SUCCESS"
+}

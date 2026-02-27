@@ -1,0 +1,374 @@
+{
+  "uuid": "fd4d50f7-c88e-4350-9ad9-94c988b03921",
+  "baseSpans": [
+    {
+      "uuid": "019bfcb8-f879-7b61-af70-93b7f1ef699b",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-26T23:52:19.321Z",
+      "endTime": "2026-01-26T23:52:22.901Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What is LangChain framework?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What is LangChain framework?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 166,
+                "prompt_tokens": 79,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2QfTb5ZbjcN5SqFRn6zlwxHi40pP",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bfcb8-f87b-7663-853f-a4b96afb7a2f-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 166,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ],
+        "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc3"
+            },
+            "page_content": "LangChain is a framework for developing applications powered by language models.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc4"
+            },
+            "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
+            "type": "Document"
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bfcb8-f87b-7663-853f-a4aad8933bf5",
+      "name": "generate",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bfcb8-f879-7b61-af70-93b7f1ef699b",
+      "startTime": "2026-01-26T23:52:19.323Z",
+      "endTime": "2026-01-26T23:52:22.901Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What is LangChain framework?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ],
+        "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc3"
+            },
+            "page_content": "LangChain is a framework for developing applications powered by language models.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc4"
+            },
+            "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
+            "type": "Document"
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "What is LangChain framework?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          },
+          {
+            "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 166,
+                "prompt_tokens": 79,
+                "total_tokens": 245,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 128,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-5-mini-2025-08-07",
+              "system_fingerprint": null,
+              "id": "chatcmpl-D2QfTb5ZbjcN5SqFRn6zlwxHi40pP",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019bfcb8-f87b-7663-853f-a4b96afb7a2f-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 79,
+              "output_tokens": 166,
+              "total_tokens": 245,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 128
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "019bfcb8-f87a-70f1-bb60-251dead633eb",
+      "name": "retrieve",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019bfcb8-f879-7b61-af70-93b7f1ef699b",
+      "startTime": "2026-01-26T23:52:19.322Z",
+      "endTime": "2026-01-26T23:52:19.322Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What is LangChain framework?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human"
+          }
+        ]
+      },
+      "output": {
+        "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
+        "source_documents": [
+          {
+            "metadata": {
+              "source": "doc3"
+            },
+            "page_content": "LangChain is a framework for developing applications powered by language models.",
+            "type": "Document"
+          },
+          {
+            "metadata": {
+              "source": "doc4"
+            },
+            "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
+            "type": "Document"
+          }
+        ]
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "019bfcb8-f87b-7663-853f-a4b96afb7a2f",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "019bfcb8-f87b-7663-853f-a4aad8933bf5",
+      "startTime": "2026-01-26T23:52:19.323Z",
+      "endTime": "2026-01-26T23:52:22.901Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Answer the user's question based ONLY on the provided context. Be concise and factual."
+        },
+        {
+          "role": "human",
+          "content": "What is LangChain framework?"
+        },
+        {
+          "role": "human",
+          "content": "Context:\nLangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.\n\nAnswer based on the context above."
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
+        "tool_calls": []
+      },
+      "model": "gpt-5-mini-2025-08-07",
+      "inputTokenCount": 79.0,
+      "outputTokenCount": 166.0
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "019bfcb8-f87a-70f1-bb60-252da5c8baf7",
+      "name": "DeterministicRetriever",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "019bfcb8-f87a-70f1-bb60-251dead633eb",
+      "startTime": "2026-01-26T23:52:19.322Z",
+      "endTime": "2026-01-26T23:52:19.322Z",
+      "input": "What is LangChain framework?",
+      "output": [
+        "page_content='LangChain is a framework for developing applications powered by language models.' metadata={'source': 'doc3'}",
+        "page_content='LangChain provides tools for chaining LLM calls and integrating with external data.' metadata={'source': 'doc4'}"
+      ],
+      "embedder": "unknown"
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-26T23:52:19.321Z",
+  "endTime": "2026-01-26T23:52:22.901Z",
+  "name": "langgraph-retriever-langchain",
+  "tags": [
+    "langgraph",
+    "retriever",
+    "langchain-docs"
+  ],
+  "environment": "development",
+  "input": {
+    "messages": [
+      {
+        "content": "What is LangChain framework?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "content": "What is LangChain framework?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human"
+      },
+      {
+        "content": "LangChain is a framework for developing applications powered by language models. It provides tools for chaining LLM calls and integrating those models with external data.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 166,
+            "prompt_tokens": 79,
+            "total_tokens": 245,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 128,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-5-mini-2025-08-07",
+          "system_fingerprint": null,
+          "id": "chatcmpl-D2QfTb5ZbjcN5SqFRn6zlwxHi40pP",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019bfcb8-f87b-7663-853f-a4b96afb7a2f-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 79,
+          "output_tokens": 166,
+          "total_tokens": 245,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 128
+          }
+        }
+      }
+    ],
+    "context": "LangChain is a framework for developing applications powered by language models.\n\nLangChain provides tools for chaining LLM calls and integrating with external data.",
+    "source_documents": [
+      {
+        "metadata": {
+          "source": "doc3"
+        },
+        "page_content": "LangChain is a framework for developing applications powered by language models.",
+        "type": "Document"
+      },
+      {
+        "metadata": {
+          "source": "doc4"
+        },
+        "page_content": "LangChain provides tools for chaining LLM calls and integrating with external data.",
+        "type": "Document"
+      }
+    ]
+  },
+  "status": "SUCCESS"
+}
