@@ -326,12 +326,12 @@ class SpanInterceptor(SpanProcessor):
 
                     for message in normalized_messages:
                         for part in message.get("parts", []):
-                            if part.get("type") == "tool_call":
+                            if part.get("type") in ("tool_call", "function_call"):
                                 name = part.get("name")
                                 try:
                                     input_parameters = json.loads(
                                         part.get("arguments")
-                                    )
+                            )
                                 except Exception:
                                     input_parameters = {}
 
@@ -340,9 +340,21 @@ class SpanInterceptor(SpanProcessor):
                                         name=name,
                                         input_parameters=input_parameters,
                                     )
-                                )
+                         )
 
-                    # agent_span.tools_called = tools_called
+                    agent_span.tools_called = tools_called if tools_called else None
+
+                    from deepeval.tracing.otel.utils import check_pydantic_ai_agent_input_output
+                    input_val, output_val = check_pydantic_ai_agent_input_output(span)
+                    agent_span.input = input_val
+    
+                    if isinstance(output_val, dict):
+                        agent_span.output = output_val.get("content")
+                    elif isinstance(output_val, str):
+                        agent_span.output = output_val
+                    else:
+                        agent_span.output = None
+
                     return agent_span
 
                 agent_span = create_agent_span_for_evaluation(span)
