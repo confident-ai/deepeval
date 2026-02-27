@@ -318,13 +318,27 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             if output_json and isinstance(output_json, dict):
                 if base_span.tools_called is None:
                     base_span.tools_called = []
-                base_span.tools_called.append(
-                    ToolCall(
-                        name=output_json.get("tool_name", "Tool"),
-                        input_parameters=output_json.get("tool_kwargs", {}),
-                        output=output_json.get("tool_output", {}),
-                    )
+                tool_call = ToolCall(
+                    name=output_json.get("tool_name", "Tool"),
+                    input_parameters=output_json.get("tool_kwargs", {}),
+                    output=output_json.get("tool_output", {}),
                 )
+                base_span.tools_called.append(tool_call)
+                if base_span.parent_uuid:
+                    parent_span = trace_manager.get_span_by_uuid(
+                        base_span.parent_uuid
+                    )
+                    if parent_span:
+                        if parent_span.tools_called is None:
+                            parent_span.tools_called = []
+                        parent_span.tools_called.append(tool_call)
+
+                if base_span.trace_uuid:
+                    trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
+                    if trace:
+                        if trace.tools_called is None:
+                            trace.tools_called = []
+                        trace.tools_called.append(tool_call)
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = self._get_output_value(result)

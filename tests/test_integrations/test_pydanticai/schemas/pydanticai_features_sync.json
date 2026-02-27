@@ -1,14 +1,14 @@
 {
-  "uuid": "de844d8cac5d510dc1643269c2503b69",
+  "uuid": "8f19e2bccd828ec63de80104b7f0dfa0",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "87ce8fc0fdff3bb5",
+      "uuid": "b105722ac9332276",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T08:34:30.281Z",
-      "endTime": "2026-01-30T08:34:32.177Z",
+      "startTime": "2026-02-26T18:18:35.465Z",
+      "endTime": "2026-02-26T18:18:37.099Z",
       "input": [
         {
           "role": "system",
@@ -19,18 +19,26 @@
           "content": "Use the special_tool to process 'Sync Data'"
         }
       ],
-      "output": "The query \"Sync Data\" has been processed.",
+      "output": "The query \"Sync Data\" has been processed successfully.",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_v1"
     },
     {
-      "uuid": "87ce8fc0fdff3bb5",
+      "uuid": "b105722ac9332276",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-30T08:34:30.281Z",
-      "endTime": "2026-01-30T08:34:32.177Z",
+      "startTime": "2026-02-26T18:18:35.465Z",
+      "endTime": "2026-02-26T18:18:37.099Z",
       "input": [
         {
           "role": "system",
@@ -41,7 +49,15 @@
           "content": "Use the special_tool to process 'Sync Data'"
         }
       ],
-      "output": "The query \"Sync Data\" has been processed.",
+      "output": "The query \"Sync Data\" has been processed successfully.",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": [],
       "metricsData": [
@@ -58,8 +74,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-30T08:34:30.281Z",
-  "endTime": "2026-01-30T08:34:32.177Z",
+  "startTime": "2026-02-26T18:18:35.465Z",
+  "endTime": "2026-02-26T18:18:37.099Z",
   "name": "pydanticai-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -83,7 +99,16 @@
       "content": "Use the special_tool to process 'Sync Data'"
     }
   ],
-  "output": "The query \"Sync Data\" has been processed.",
+  "output": "The query \"Sync Data\" has been processed successfully.",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "inputParameters": {
+        "query": "Sync Data"
+      }
+    }
+  ],
+  "expectedTools": [],
   "metricCollection": "trace_metrics_override_v1"
 }

@@ -1,14 +1,14 @@
 {
-  "uuid": "8e1d7c79764d0d834e983c07b3e54b80",
+  "uuid": "478d4d92074ced23afa752a709de69a1",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "e5eb32e8ba0162a6",
+      "uuid": "da23e6778864eb22",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:30.246Z",
-      "endTime": "2026-01-29T19:10:32.383Z",
+      "startTime": "2026-02-26T18:18:24.066Z",
+      "endTime": "2026-02-26T18:18:25.948Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,26 @@
         }
       ],
       "output": "15 plus 25 is 40.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "add",
+            "a": 15,
+            "b": 25
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "e5eb32e8ba0162a6",
+      "uuid": "da23e6778864eb22",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:30.246Z",
-      "endTime": "2026-01-29T19:10:32.383Z",
+      "startTime": "2026-02-26T18:18:24.066Z",
+      "endTime": "2026-02-26T18:18:25.948Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +51,16 @@
         }
       ],
       "output": "15 plus 25 is 40.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "add",
+            "a": 15,
+            "b": 25
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +68,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:30.246Z",
-  "endTime": "2026-01-29T19:10:32.383Z",
+  "startTime": "2026-02-26T18:18:24.066Z",
+  "endTime": "2026-02-26T18:18:25.948Z",
   "name": "pydanticai-tool-metric-test",
   "metadata": {
     "test_type": "tool_metric_collection"
@@ -73,5 +93,16 @@
     }
   ],
   "output": "15 plus 25 is 40.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "inputParameters": {
+        "operation": "add",
+        "a": 15,
+        "b": 25
+      }
+    }
+  ],
+  "expectedTools": []
 }

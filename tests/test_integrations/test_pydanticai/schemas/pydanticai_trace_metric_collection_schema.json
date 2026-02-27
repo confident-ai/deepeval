@@ -1,14 +1,14 @@
 {
-  "uuid": "42b9a855dd9de71dd1854ed2d08ca00f",
+  "uuid": "b8ca6086e1eeb2cd1a919368926d445e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "33d8c1a3acce52f2",
+      "uuid": "0c6314ddf3f81a11",
       "name": "trace_metric_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:33.171Z",
-      "endTime": "2026-01-29T19:10:33.879Z",
+      "startTime": "2026-02-26T18:18:26.747Z",
+      "endTime": "2026-02-26T18:18:27.432Z",
       "input": [
         {
           "role": "system",
@@ -24,12 +24,12 @@
       "agentHandoffs": []
     },
     {
-      "uuid": "33d8c1a3acce52f2",
+      "uuid": "0c6314ddf3f81a11",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:33.171Z",
-      "endTime": "2026-01-29T19:10:33.879Z",
+      "startTime": "2026-02-26T18:18:26.747Z",
+      "endTime": "2026-02-26T18:18:27.432Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +41,7 @@
         }
       ],
       "output": "Hello there.",
+      "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +49,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:33.171Z",
-  "endTime": "2026-01-29T19:10:33.879Z",
+  "startTime": "2026-02-26T18:18:26.747Z",
+  "endTime": "2026-02-26T18:18:27.432Z",
   "name": "pydanticai-trace-metric-test",
   "metadata": {
     "test_type": "trace_metric_collection"
@@ -73,5 +74,7 @@
   ],
   "output": "Hello there.",
   "status": "SUCCESS",
+  "toolsCalled": [],
+  "expectedTools": [],
   "metricCollection": "test-trace-metrics"
 }

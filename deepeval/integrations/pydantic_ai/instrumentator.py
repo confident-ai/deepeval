@@ -19,6 +19,7 @@ from deepeval.tracing.otel.utils import (
 )
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
 from deepeval.tracing.tracing import trace_manager
+from deepeval.contextvars import get_current_golden
 from deepeval.tracing.types import (
     AgentSpan,
     Trace,
@@ -307,6 +308,29 @@ class SpanInterceptor(SpanProcessor):
             if agent_name:
                 self._add_agent_span(span, agent_name)
 
+        normalized_messages = normalize_pydantic_ai_messages(span)
+        tools_called_list = []
+
+        if normalized_messages:
+            for message in normalized_messages:
+                for part in message.get("parts", []):
+                    if part.get("type") == "tool_call":
+                        try:
+                            args = part.get("arguments")
+                            input_params = json.loads(args) if isinstance(args, str) else args
+                        except Exception:
+                            input_params = {}
+
+                        tools_called_list.append({
+                            "name": part.get("name"),
+                            "inputParameters": input_params,
+                            "output": part.get("output") or part.get("result")
+                        })
+
+        if tools_called_list:
+            span._attributes["confident.trace.tools_called"] = json.dumps(tools_called_list)
+            span._attributes["confident.span.tools_called"] = json.dumps(tools_called_list)
+
         if self.settings.is_test_mode:
             if span.attributes.get("confident.span.type") == "agent":
 
@@ -339,14 +363,22 @@ class SpanInterceptor(SpanProcessor):
                                     ToolCall(
                                         name=name,
                                         input_parameters=input_parameters,
+                                        output=part.get("output") or part.get("result")
                                     )
                                 )
 
-                    # agent_span.tools_called = tools_called
+                    agent_span.tools_called = tools_called
                     return agent_span
 
                 agent_span = create_agent_span_for_evaluation(span)
                 agent_span.metrics = self.settings.agent_metrics
+
+                try:
+                    current_golden = get_current_golden()
+                    if current_golden and getattr(current_golden, "expected_tools", None):
+                        agent_span.expected_tools = current_golden.expected_tools
+                except Exception:
+                    pass
 
                 # create a trace for evaluation
                 trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
@@ -355,6 +387,12 @@ class SpanInterceptor(SpanProcessor):
                         trace_uuid=agent_span.trace_uuid
                     )
 
+                if trace.tools_called is None:
+                    trace.tools_called = []
+                    trace.expected_tools = []
+
+                trace.tools_called.extend([ToolCall(**t) for t in tools_called_list])
+                trace.expected_tools.extend(agent_span.expected_tools or [])
                 trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()

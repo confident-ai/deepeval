@@ -1,14 +1,14 @@
 {
-  "uuid": "bb155723eae459cb860f5e9a2f2fdfad",
+  "uuid": "b5a17a2a879efe56995645d0d5c364b3",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "a8e5cbc0fa7e3480",
+      "uuid": "28e166fb8fcab8df",
       "name": "prompt_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:32.391Z",
-      "endTime": "2026-01-29T19:10:33.166Z",
+      "startTime": "2026-02-26T18:18:25.952Z",
+      "endTime": "2026-02-26T18:18:26.742Z",
       "input": [
         {
           "role": "system",
@@ -19,17 +19,17 @@
           "content": "Say hello in exactly two words."
         }
       ],
-      "output": "Hello there!",
+      "output": "Hello there.",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "a8e5cbc0fa7e3480",
+      "uuid": "28e166fb8fcab8df",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:32.391Z",
-      "endTime": "2026-01-29T19:10:33.166Z",
+      "startTime": "2026-02-26T18:18:25.952Z",
+      "endTime": "2026-02-26T18:18:26.742Z",
       "input": [
         {
           "role": "system",
@@ -40,7 +40,8 @@
           "content": "Say hello in exactly two words."
         }
       ],
-      "output": "Hello there!",
+      "output": "Hello there.",
+      "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +49,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:32.391Z",
-  "endTime": "2026-01-29T19:10:33.166Z",
+  "startTime": "2026-02-26T18:18:25.952Z",
+  "endTime": "2026-02-26T18:18:26.742Z",
   "name": "pydanticai-prompt-test",
   "metadata": {
     "test_type": "prompt"
@@ -71,6 +72,8 @@
       "content": "Say hello in exactly two words."
     }
   ],
-  "output": "Hello there!",
-  "status": "SUCCESS"
+  "output": "Hello there.",
+  "status": "SUCCESS",
+  "toolsCalled": [],
+  "expectedTools": []
 }

@@ -1,14 +1,14 @@
 {
-  "uuid": "8cb24b74b853cc2bf22a01ae5428edbe",
+  "uuid": "1307892f28679ebf0e297172bad0844c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "11a90d95b466307c",
+      "uuid": "2edecabbe3553806",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:26.396Z",
-      "endTime": "2026-01-29T19:10:27.728Z",
+      "startTime": "2026-02-26T18:18:21.008Z",
+      "endTime": "2026-02-26T18:18:22.280Z",
       "input": [
         {
           "role": "system",
@@ -19,17 +19,17 @@
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, how are you?",
+      "output": "Hello there, friend!",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "11a90d95b466307c",
+      "uuid": "2edecabbe3553806",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:26.396Z",
-      "endTime": "2026-01-29T19:10:27.728Z",
+      "startTime": "2026-02-26T18:18:21.008Z",
+      "endTime": "2026-02-26T18:18:22.280Z",
       "input": [
         {
           "role": "system",
@@ -40,7 +40,8 @@
           "content": "Say hello in exactly three words."
         }
       ],
-      "output": "Hello, how are you?",
+      "output": "Hello there, friend!",
+      "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +49,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:26.396Z",
-  "endTime": "2026-01-29T19:10:27.728Z",
+  "startTime": "2026-02-26T18:18:21.008Z",
+  "endTime": "2026-02-26T18:18:22.280Z",
   "name": "pydanticai-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -71,6 +72,8 @@
       "content": "Say hello in exactly three words."
     }
   ],
-  "output": "Hello, how are you?",
-  "status": "SUCCESS"
+  "output": "Hello there, friend!",
+  "status": "SUCCESS",
+  "toolsCalled": [],
+  "expectedTools": []
 }
