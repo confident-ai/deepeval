@@ -1,13 +1,13 @@
 {
-  "uuid": "b10a2417-35de-48e1-88a8-983e63fcdcee",
+  "uuid": "b0281b8e-486e-418e-886a-38482751e2e6",
   "baseSpans": [
     {
-      "uuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
+      "uuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
       "name": "sibling_generators",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.734Z",
-      "endTime": "2026-02-23T07:16:38.734Z",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
       "input": {
         "data": "a b"
       },
@@ -39,36 +39,43 @@
       }
     },
     {
-      "uuid": "fb6bc742-58fa-4493-8ba3-c6b9bc11a783",
+      "uuid": "4ee39325-c4fc-45f7-b5e5-5470022a5b28",
       "name": "stream_chunks",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
-      "startTime": "2026-02-23T07:16:38.734Z",
-      "endTime": "2026-02-23T07:16:38.734Z",
+      "parentUuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
       "input": {
         "message": "a b"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "a b"
+        }
       }
     },
     {
-      "uuid": "c13899b6-0a77-4906-9603-01c810bb44d9",
+      "uuid": "1d685f52-fd5f-4e9d-a4c2-976923771be8",
       "name": "stream_simple",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "023bcaf7-e14a-402b-bdf7-15f6ea325bab",
-      "startTime": "2026-02-23T07:16:38.734Z",
-      "endTime": "2026-02-23T07:16:38.734Z",
+      "parentUuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
       "input": {
         "data": "a b"
-      }
+      },
+      "output": "b"
     }
   ],
   "agentSpans": [],
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.734Z",
-  "endTime": "2026-02-23T07:16:38.734Z",
+  "startTime": "2026-02-27T11:14:37.876Z",
+  "endTime": "2026-02-27T11:14:37.876Z",
   "environment": "development",
   "input": {
     "data": "a b"

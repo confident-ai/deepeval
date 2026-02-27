@@ -1,18 +1,19 @@
 {
-  "uuid": "70bee08c-5ee5-4f34-a50d-23747e3b854d",
+  "uuid": "9c6599bd-885e-495e-aafe-9e316d9955d7",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "c3885ce9-ba0a-4400-b06e-c0718ec0460e",
+      "uuid": "f130796f-4c16-4ef0-b502-7f6780b25f66",
       "name": "streaming_with_updates",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-01-29T09:50:14.803Z",
-      "endTime": "2026-01-29T09:50:14.803Z",
+      "startTime": "2026-02-27T11:14:38.219Z",
+      "endTime": "2026-02-27T11:14:38.219Z",
       "input": {
         "prompt": "one two three four"
       },
+      "output": "four",
       "model": "streaming-model",
       "inputTokenCount": 4.0,
       "outputTokenCount": 4.0
@@ -20,11 +21,12 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T09:50:14.803Z",
-  "endTime": "2026-01-29T09:50:14.803Z",
+  "startTime": "2026-02-27T11:14:38.219Z",
+  "endTime": "2026-02-27T11:14:38.219Z",
   "environment": "development",
   "input": {
     "prompt": "one two three four"
   },
+  "output": "four",
   "status": "SUCCESS"
 }

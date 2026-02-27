@@ -1,32 +1,34 @@
 {
-  "uuid": "215ffcc7-23e9-43d2-95c0-a11ac0ada644",
+  "uuid": "fe557202-9053-4bd0-bfc3-99e48f0d92fa",
   "baseSpans": [
     {
-      "uuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
+      "uuid": "0d6fff50-c1a0-4ebb-af3b-ec2bf0800445",
       "name": "streaming_rag_pipeline",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-26T06:37:14.940Z",
-      "endTime": "2026-02-26T06:37:14.940Z",
+      "startTime": "2026-02-27T11:14:37.602Z",
+      "endTime": "2026-02-27T11:14:37.602Z",
       "input": {
         "query": "test"
-      }
+      },
+      "output": "[done]\n"
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "e315bac9-db4f-4fc5-8ecc-bfb8b41a15cf",
+      "uuid": "00a313d2-ea09-45d3-aaac-fd36c7eb5191",
       "name": "stream_llm_tokens",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
-      "startTime": "2026-02-26T06:37:14.940Z",
-      "endTime": "2026-02-26T06:37:14.940Z",
+      "parentUuid": "0d6fff50-c1a0-4ebb-af3b-ec2bf0800445",
+      "startTime": "2026-02-27T11:14:37.602Z",
+      "endTime": "2026-02-27T11:14:37.602Z",
       "input": {
         "query": "test",
         "context": "relevant context for: test"
       },
+      "output": "is 42.",
       "model": "gpt-4o",
       "inputTokenCount": 5.0,
       "outputTokenCount": 3.0,
@@ -36,13 +38,13 @@
   ],
   "retrieverSpans": [
     {
-      "uuid": "c078a72f-d01d-4b4b-b93e-7b755c1a9c97",
+      "uuid": "1a35c3fe-3817-450b-b524-709e47897e32",
       "name": "retrieve_documents",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "2f9d758c-15d4-4e93-8085-6610cebc45e3",
-      "startTime": "2026-02-26T06:37:14.940Z",
-      "endTime": "2026-02-26T06:37:14.940Z",
+      "parentUuid": "0d6fff50-c1a0-4ebb-af3b-ec2bf0800445",
+      "startTime": "2026-02-27T11:14:37.602Z",
+      "endTime": "2026-02-27T11:14:37.602Z",
       "input": {
         "query": "test"
       },
@@ -53,11 +55,12 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-02-26T06:37:14.940Z",
-  "endTime": "2026-02-26T06:37:14.940Z",
+  "startTime": "2026-02-27T11:14:37.602Z",
+  "endTime": "2026-02-27T11:14:37.602Z",
   "environment": "development",
   "input": {
     "query": "test"
   },
+  "output": "[done]\n",
   "status": "SUCCESS"
 }

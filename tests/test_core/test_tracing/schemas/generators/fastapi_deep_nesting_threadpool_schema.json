@@ -1,40 +1,44 @@
 {
-  "uuid": "b354e6c6-e857-406e-99b2-f84667d89fac",
+  "uuid": "008d8606-4762-43c7-a36d-9fea28dfde01",
   "baseSpans": [
     {
-      "uuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
+      "uuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
       "name": "multi_step_pipeline",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-26T06:37:14.924Z",
-      "endTime": "2026-02-26T06:37:14.924Z",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
       "input": {
         "query": "hello"
+      },
+      "output": {
+        "step": "done"
       }
     },
     {
-      "uuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
+      "uuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
       "name": "streaming_rag_pipeline",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
-      "startTime": "2026-02-26T06:37:14.924Z",
-      "endTime": "2026-02-26T06:37:14.924Z",
+      "parentUuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
       "input": {
         "query": "hello"
-      }
+      },
+      "output": "[done]\n"
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "24ef95da-8727-468d-9291-2af190b9a47e",
+      "uuid": "8610e320-b844-4550-8a23-dd8881ff7319",
       "name": "summarize",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "d6ca27ec-58e1-4282-b66f-a5134c2fa824",
-      "startTime": "2026-02-26T06:37:14.924Z",
-      "endTime": "2026-02-26T06:37:14.924Z",
+      "parentUuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
       "input": {
         "text": "[context] relevant context for: hello\n Based on relevant context for: hello,  the answer to 'hello'  is 42. [done]\n"
       },
@@ -44,17 +48,18 @@
       "outputTokenCount": 5.0
     },
     {
-      "uuid": "72c9e405-a830-4b79-bd82-f2b430d79840",
+      "uuid": "895997fd-7dd6-4f09-9d59-3c7beddfa344",
       "name": "stream_llm_tokens",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
-      "startTime": "2026-02-26T06:37:14.924Z",
-      "endTime": "2026-02-26T06:37:14.924Z",
+      "parentUuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
       "input": {
         "query": "hello",
         "context": "relevant context for: hello"
       },
+      "output": "is 42.",
       "model": "gpt-4o",
       "inputTokenCount": 5.0,
       "outputTokenCount": 3.0,
@@ -64,13 +69,13 @@
   ],
   "retrieverSpans": [
     {
-      "uuid": "6bd7778a-17a9-4bb5-9013-bcfa774af866",
+      "uuid": "c52774aa-b3aa-4bac-9ee1-6930f0567f61",
       "name": "retrieve_documents",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "1068832c-7b7d-42fe-a126-d22b2bef7e3c",
-      "startTime": "2026-02-26T06:37:14.924Z",
-      "endTime": "2026-02-26T06:37:14.924Z",
+      "parentUuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
       "input": {
         "query": "hello"
       },
@@ -81,11 +86,14 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-02-26T06:37:14.924Z",
-  "endTime": "2026-02-26T06:37:14.924Z",
+  "startTime": "2026-02-27T11:14:37.588Z",
+  "endTime": "2026-02-27T11:14:37.588Z",
   "environment": "development",
   "input": {
     "query": "hello"
+  },
+  "output": {
+    "step": "done"
   },
   "status": "SUCCESS"
 }

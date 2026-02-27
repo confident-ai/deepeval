@@ -1,51 +1,64 @@
 {
-  "uuid": "fa60f4c0-39ab-4225-8a6f-15f6c1c8f395",
+  "uuid": "712b9c48-40d5-4d23-8de8-93f6deca643b",
   "baseSpans": [
     {
-      "uuid": "0e705ba4-8c39-4b64-a5aa-d980df99994d",
+      "uuid": "9dbf0849-6cf4-43ce-8327-55b496f209c2",
       "name": "three_level_gen",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.718Z",
-      "endTime": "2026-02-23T07:16:38.718Z",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
       "input": {
         "data": "x y"
+      },
+      "output": {
+        "level": "top",
+        "stage": "end"
       }
     },
     {
-      "uuid": "7d835c74-1f2f-4524-adf6-b9b4ba0c0134",
+      "uuid": "de98435a-74fe-4c74-85a2-4689643ca6ad",
       "name": "mid_level_gen",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "0e705ba4-8c39-4b64-a5aa-d980df99994d",
-      "startTime": "2026-02-23T07:16:38.718Z",
-      "endTime": "2026-02-23T07:16:38.718Z",
+      "parentUuid": "9dbf0849-6cf4-43ce-8327-55b496f209c2",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
       "input": {
         "data": "x y"
+      },
+      "output": {
+        "level": "mid",
+        "stage": "end"
       }
     },
     {
-      "uuid": "17b2a1f3-d0f7-4ece-957e-987b18c3b3f9",
+      "uuid": "897078a2-3be6-4c36-a41d-530e3c8069f7",
       "name": "stream_simple",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7d835c74-1f2f-4524-adf6-b9b4ba0c0134",
-      "startTime": "2026-02-23T07:16:38.718Z",
-      "endTime": "2026-02-23T07:16:38.718Z",
+      "parentUuid": "de98435a-74fe-4c74-85a2-4689643ca6ad",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
       "input": {
         "data": "x y"
-      }
+      },
+      "output": "y"
     }
   ],
   "agentSpans": [],
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.718Z",
-  "endTime": "2026-02-23T07:16:38.718Z",
+  "startTime": "2026-02-27T11:14:37.863Z",
+  "endTime": "2026-02-27T11:14:37.863Z",
   "environment": "development",
   "input": {
     "data": "x y"
+  },
+  "output": {
+    "level": "top",
+    "stage": "end"
   },
   "status": "SUCCESS"
 }
