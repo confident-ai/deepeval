@@ -4,6 +4,7 @@ from .llm_test_case import (
     ToolCall,
     ToolCallParams,
     MLLMImage,
+    MLLMDocument,
 )
 from .conversational_test_case import (
     ConversationalTestCase,
@@ -32,6 +33,7 @@ __all__ = [
     "MCPResourceCall",
     "MCPToolCall",
     "MLLMImage",
+    "MLLMDocument", 
     "ArenaTestCase",
     "Contestant",
 ]

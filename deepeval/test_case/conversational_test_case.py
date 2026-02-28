@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
 
-from deepeval.test_case import ToolCall, MLLMImage
+from deepeval.test_case import ToolCall, MLLMImage, MLLMDocument
 from deepeval.test_case.mcp import (
     MCPServer,
     MCPPromptCall,
@@ -18,7 +18,7 @@ from deepeval.test_case.mcp import (
     MCPToolCall,
     validate_mcp_servers,
 )
-from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY, _MLLM_DOCUMENT_REGISTRY
 
 
 class TurnParams(Enum):
@@ -174,7 +174,7 @@ class ConversationalTestCase(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         if self.scenario:
             if re.search(pattern, self.scenario) is not None:
                 self.multimodal = True
@@ -238,7 +238,7 @@ class ConversationalTestCase(BaseModel):
         return data
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
@@ -265,5 +265,8 @@ class ConversationalTestCase(BaseModel):
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
+        for doc_id in image_ids:
+            if doc_id in _MLLM_DOCUMENT_REGISTRY:
+                images_mapping[doc_id] = _MLLM_DOCUMENT_REGISTRY[doc_id]
 
         return images_mapping if len(images_mapping) > 0 else None
