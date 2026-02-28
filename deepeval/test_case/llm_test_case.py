@@ -26,7 +26,7 @@ from deepeval.test_case.mcp import (
 )
 
 _MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
-
+_MLLM_DOCUMENT_REGISTRY: Dict[str, "MLLMDocument"] = {}
 
 @dataclass
 class MLLMImage:
@@ -162,6 +162,69 @@ class MLLMImage:
             return None
         return f"data:{self.mimeType};base64,{self.dataBase64}"
 
+@dataclass
+class MLLMDocument:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+    _id: str = field(default_factory=lambda: uuid.uuid4().hex)
+
+    def __post_init__(self):
+        if not self.url and not self.dataBase64:
+            raise ValueError(
+                "You must provide either a 'url' or both 'dataBase64' and 'mimeType' to create an MLLMDocument."
+            )
+
+        if self.dataBase64 is not None:
+            if self.mimeType is None:
+                raise ValueError(
+                    "mimeType must be provided when initializing from Base64 data."
+                )
+        else:
+            is_local = MLLMImage.is_local_path(self.url)
+            if self.local is not None:
+                assert self.local == is_local, "Local path mismatch"
+            else:
+                self.local = is_local
+
+            if self.local:
+                path = MLLMImage.process_url(self.url)
+                self.filename = os.path.basename(path)
+                self.mimeType = mimetypes.guess_type(path)[0] or "application/pdf"
+
+                if not os.path.exists(path):
+                    raise FileNotFoundError(f"Document file not found: {path}")
+
+                self._load_base64(path)
+            else:
+                if not self.url.startswith(("http://", "https://")):
+                    raise ValueError(
+                        f"Invalid remote URL format: {self.url}. URL must start with http:// or https://"
+                    )
+                self.filename = None
+                self.mimeType = None
+                self.dataBase64 = None
+
+        _MLLM_DOCUMENT_REGISTRY[self._id] = self
+
+    def _load_base64(self, path: str):
+        with open(path, "rb") as f:
+            raw = f.read()
+        self.dataBase64 = base64.b64encode(raw).decode("ascii")
+
+    def _placeholder(self) -> str:
+        return f"[DEEPEVAL:DOCUMENT:{self._id}]"
+
+    def __str__(self) -> str:
+        return self._placeholder()
+
+    def __repr__(self) -> str:
+        return self._placeholder()
+
+    def __format__(self, format_spec: str) -> str:
+        return self._placeholder()
 
 class LLMTestCaseParams(Enum):
     INPUT = "input"
@@ -379,7 +442,7 @@ class LLMTestCase(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
 
         auto_detect = (
             any(
@@ -539,5 +602,8 @@ class LLMTestCase(BaseModel):
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
-
+        for doc_id in image_ids:
+            if doc_id in _MLLM_DOCUMENT_REGISTRY:
+                images_mapping[doc_id] = _MLLM_DOCUMENT_REGISTRY[doc_id]
+                
         return images_mapping if len(images_mapping) > 0 else None
