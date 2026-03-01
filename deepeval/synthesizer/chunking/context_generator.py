@@ -88,6 +88,16 @@ def close_chroma_clients():
     time.sleep(1)
 
 
+def _release_chroma_client(client):
+    """Release ChromaDB client resources to avoid file locks on Windows."""
+    try:
+        if hasattr(client, "_system") and hasattr(client._system, "stop"):
+            client._system.stop()
+    except Exception:
+        pass
+    gc.collect()
+
+
 atexit.register(close_chroma_clients)
 shutil.rmtree = safe_rmtree
 
@@ -301,6 +311,7 @@ class ContextGenerator:
             return contexts, source_files, scores
 
         finally:
+            _release_chroma_client(client)
             if os.path.exists(temp_root):
                 shutil.rmtree(temp_root)
 
@@ -457,6 +468,7 @@ class ContextGenerator:
             return contexts, source_files, scores
 
         finally:
+            _release_chroma_client(client)
             if os.path.exists(temp_root):
                 shutil.rmtree(temp_root)
 
