@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, Dict, Literal
+from typing import List, Optional, Union, Tuple, Dict, Literal, Callable
 from rich.progress import (
     Progress,
 )
@@ -120,6 +120,7 @@ class Synthesizer:
             ConversationalStylingConfig
         ] = None,
         cost_tracking: bool = False,
+        prompt_builder: Optional[Callable[..., str]] = None,
     ):
         self.model, self.using_native_model = initialize_model(model)
         self.async_mode = async_mode
@@ -150,6 +151,7 @@ class Synthesizer:
         )
         self.cost_tracking = cost_tracking
         self.synthesis_cost = 0 if self.using_native_model else None
+        self.prompt_builder = prompt_builder
 
     #############################################################
     # Generate Goldens from Docs
@@ -439,13 +441,22 @@ class Synthesizer:
                         )
 
                     # Generate inputs
-                    prompt = SynthesizerTemplate.generate_synthetic_inputs(
-                        context=context,
-                        max_goldens_per_context=max_goldens_per_context,
-                        scenario=self.styling_config.scenario,
-                        task=self.styling_config.task,
-                        input_format=self.styling_config.input_format,
-                    )
+                    if self.prompt_builder:
+                        prompt = self.prompt_builder(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                            scenario=self.styling_config.scenario,
+                            task=self.styling_config.task,
+                            input_format=self.styling_config.input_format,
+                        )
+                    else:
+                        prompt = SynthesizerTemplate.generate_synthetic_inputs(
+                            context=context,
+                            max_goldens_per_context=max_goldens_per_context,
+                            scenario=self.styling_config.scenario,
+                            task=self.styling_config.task,
+                            input_format=self.styling_config.input_format,
+                        )
                     synthetic_inputs = self._generate_inputs(prompt)
                     update_pbar(progress, pbar_generate_inputs_id, remove=False)
 
@@ -658,13 +669,22 @@ class Synthesizer:
             )
 
         # Generate inputs
-        prompt = SynthesizerTemplate.generate_synthetic_inputs(
-            context=context,
-            max_goldens_per_context=max_goldens_per_context,
-            scenario=self.styling_config.scenario,
-            task=self.styling_config.task,
-            input_format=self.styling_config.input_format,
-        )
+        if self.prompt_builder:
+            prompt = self.prompt_builder(
+                context=context,
+                max_goldens_per_context=max_goldens_per_context,
+                scenario=self.styling_config.scenario,
+                task=self.styling_config.task,
+                input_format=self.styling_config.input_format,
+            )
+        else:
+            prompt = SynthesizerTemplate.generate_synthetic_inputs(
+                context=context,
+                max_goldens_per_context=max_goldens_per_context,
+                scenario=self.styling_config.scenario,
+                task=self.styling_config.task,
+                input_format=self.styling_config.input_format,
+            )
         synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
             prompt
         )
