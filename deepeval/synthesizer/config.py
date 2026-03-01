@@ -66,5 +66,6 @@ class ContextConstructionConfig:
     max_retries: int = 3
 
     def __post_init__(self):
-        self.critic_model, _ = initialize_model(self.critic_model)
+        if self.critic_model is not None:
+            self.critic_model, _ = initialize_model(self.critic_model)
         self.embedder = initialize_embedding_model(self.embedder)

@@ -169,6 +169,8 @@ class Synthesizer:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
 
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -272,6 +274,8 @@ class Synthesizer:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
             self.synthetic_goldens = []
@@ -1677,6 +1681,8 @@ class Synthesizer:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
 
         if self.async_mode:
             loop = get_or_create_event_loop()
@@ -1778,6 +1784,8 @@ class Synthesizer:
             context_construction_config = ContextConstructionConfig(
                 critic_model=self.model
             )
+        if context_construction_config.critic_model is None:
+            context_construction_config.critic_model = self.model
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
             self.synthetic_conversational_goldens = []
