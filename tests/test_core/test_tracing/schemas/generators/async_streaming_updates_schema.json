@@ -1,15 +1,15 @@
 {
-  "uuid": "8e18529e-fcfd-4c79-8be1-96fc8626fe51",
+  "uuid": "3e8cede8-b622-4f23-994d-59a239c587d5",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "b320e1e1-c93e-441e-ac86-9a60890afc72",
+      "uuid": "32b0ff3a-5620-4fb3-bdf4-423700ed0459",
       "name": "async_streaming_with_updates",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-01-29T09:50:14.637Z",
-      "endTime": "2026-01-29T09:50:14.654Z",
+      "startTime": "2026-02-27T11:14:37.436Z",
+      "endTime": "2026-02-27T11:14:37.454Z",
       "input": {
         "prompt": "one two three"
       },
@@ -20,8 +20,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T09:50:14.637Z",
-  "endTime": "2026-01-29T09:50:14.654Z",
+  "startTime": "2026-02-27T11:14:37.436Z",
+  "endTime": "2026-02-27T11:14:37.454Z",
   "environment": "development",
   "input": {
     "prompt": "one two three"

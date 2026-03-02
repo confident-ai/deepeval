@@ -1,25 +1,26 @@
 {
-  "uuid": "acfb92af-1377-45af-9520-8ba0d1950a9e",
+  "uuid": "1893036b-4a49-4326-9e66-43abd4a579da",
   "baseSpans": [
     {
-      "uuid": "04a5ee41-59b6-4770-8735-99ee966a2da0",
+      "uuid": "929c1ab8-04d9-4102-88a8-af639bc93c8c",
       "name": "streaming_with_nested_call",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-29T09:50:14.786Z",
-      "endTime": "2026-01-29T09:50:14.786Z",
+      "startTime": "2026-02-27T11:14:38.206Z",
+      "endTime": "2026-02-27T11:14:38.206Z",
       "input": {
         "data": "test"
-      }
+      },
+      "output": "End"
     },
     {
-      "uuid": "621f3159-7faf-4482-88f0-73db25a119a3",
+      "uuid": "c2fac24e-a6fb-4aef-86b3-b89c0df968fb",
       "name": "non_streaming_helper",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "04a5ee41-59b6-4770-8735-99ee966a2da0",
-      "startTime": "2026-01-29T09:50:14.786Z",
-      "endTime": "2026-01-29T09:50:14.786Z",
+      "parentUuid": "929c1ab8-04d9-4102-88a8-af639bc93c8c",
+      "startTime": "2026-02-27T11:14:38.206Z",
+      "endTime": "2026-02-27T11:14:38.206Z",
       "input": {
         "data": "test"
       },
@@ -30,11 +31,12 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T09:50:14.786Z",
-  "endTime": "2026-01-29T09:50:14.786Z",
+  "startTime": "2026-02-27T11:14:38.206Z",
+  "endTime": "2026-02-27T11:14:38.206Z",
   "environment": "development",
   "input": {
     "data": "test"
   },
+  "output": "End",
   "status": "SUCCESS"
 }
