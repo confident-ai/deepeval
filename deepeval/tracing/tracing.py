@@ -1270,7 +1270,11 @@ def observe(
                             if _trace is not None:
                                 current_trace_context.set(_trace)
 
-                        observer.result = return_value if return_value is not None else last_yielded_value
+                        observer.result = (
+                            return_value
+                            if return_value is not None
+                            else last_yielded_value
+                        )
                     except Exception as e:
                         current_span_context.set(_span)
                         if _trace is not None:
