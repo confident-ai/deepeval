@@ -1,4 +1,5 @@
 import asyncio
+import math
 import os
 from typing import Dict, Any
 from datetime import datetime, timezone
@@ -54,8 +55,12 @@ def make_json_serializable(obj):
         if isinstance(o, str):
             return _strip_nul(o)
 
+        # Replace non-finite floats (NaN, Infinity, -Infinity) with None
+        if isinstance(o, float):
+            return None if not math.isfinite(o) else o
+
         # Primitive types are already serializable
-        if isinstance(o, (str, int, float, bool)) or o is None:
+        if isinstance(o, (int, bool)) or o is None:
             return o
 
         # Detect circular reference
@@ -108,8 +113,12 @@ def make_json_serializable_for_metadata(obj):
         if isinstance(o, str):
             return _strip_nul(o)
 
+        # Replace non-finite floats (NaN, Infinity, -Infinity) with None
+        if isinstance(o, float):
+            return None if not math.isfinite(o) else str(o)
+
         # Primitive types are already serializable
-        if isinstance(o, (str, int, float, bool)) or o is None:
+        if isinstance(o, (int, bool)) or o is None:
             return str(o)
 
         # Detect circular reference

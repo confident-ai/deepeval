@@ -1269,7 +1269,7 @@ def observe(
                             current_span_context.set(_span)
                             if _trace is not None:
                                 current_trace_context.set(_trace)
-                                
+
                         observer.result = return_value if return_value is not None else last_yielded_value
                     except Exception as e:
                         current_span_context.set(_span)
@@ -1277,7 +1277,7 @@ def observe(
                             current_trace_context.set(_trace)
                         observer.__exit__(e.__class__, e, e.__traceback__)
                         raise
-                    finally: # GeneratorExit execption directly brings us to final block
+                    finally:  # GeneratorExit execption directly brings us to final block
                         observer.__exit__(None, None, None)
 
                 return gen()
