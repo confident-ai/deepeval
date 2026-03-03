@@ -1,15 +1,15 @@
 {
-  "uuid": "c964e80f-5897-4e2c-b1b0-0b972a95e086",
+  "uuid": "193d98ca-7461-4399-8189-c971ff295964",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "fc907064-ea2f-4efe-92c5-71443c7eced8",
+      "uuid": "ba758e16-cdde-47db-aa46-672a88090922",
       "name": "async_streaming_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-01-29T09:50:14.491Z",
-      "endTime": "2026-01-29T09:50:14.536Z",
+      "startTime": "2026-02-27T11:14:37.296Z",
+      "endTime": "2026-02-27T11:14:37.340Z",
       "input": {
         "prompt": "Test async prompt"
       },
@@ -20,8 +20,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T09:50:14.491Z",
-  "endTime": "2026-01-29T09:50:14.536Z",
+  "startTime": "2026-02-27T11:14:37.296Z",
+  "endTime": "2026-02-27T11:14:37.340Z",
   "environment": "development",
   "input": {
     "prompt": "Test async prompt"

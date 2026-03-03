@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import Optional, Any, Union, Tuple
 import aiohttp
 import requests
@@ -150,6 +151,24 @@ class Endpoints(Enum):
     METRICS_ENDPOINT = "/v1/metrics"
 
 
+def _sanitize_body(obj):
+    """Recursively replace non-finite floats (NaN, Inf, -Inf) with None.
+
+    Python's json.dumps() happily serializes float('nan') as the
+    literal token ``NaN`` which is **not** valid JSON and causes
+    server-side parsing failures.  This helper walks any dict/list
+    structure and neutralises those values before the payload is
+    handed to the HTTP layer.
+    """
+    if isinstance(obj, float):
+        return None if not math.isfinite(obj) else obj
+    if isinstance(obj, dict):
+        return {k: _sanitize_body(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_body(v) for v in obj]
+    return obj
+
+
 class Api:
     def __init__(self, api_key: Optional[str] = None):
         if api_key is None:
@@ -227,6 +246,9 @@ class Api:
                 if placeholder in url:
                     url = url.replace(placeholder, str(value))
 
+        if body is not None:
+            body = _sanitize_body(body)
+
         res = self._http_request(
             method=method.value,
             url=url,
@@ -270,6 +292,9 @@ class Api:
                 placeholder = f":{key}"
                 if placeholder in url:
                     url = url.replace(placeholder, str(value))
+
+        if body is not None:
+            body = _sanitize_body(body)
 
         async with aiohttp.ClientSession() as session:
             async with session.request(

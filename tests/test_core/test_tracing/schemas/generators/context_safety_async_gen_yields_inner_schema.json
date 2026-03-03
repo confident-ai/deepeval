@@ -1,25 +1,25 @@
 {
-  "uuid": "f202f237-78d4-43dd-bd36-c399992b4284",
+  "uuid": "9c0e5d09-8e7a-447e-bdf2-2aee313d46b9",
   "baseSpans": [
     {
-      "uuid": "a8ee2aec-b4a5-4362-8115-d84a1483719e",
+      "uuid": "ad609780-6fdc-42e3-94be-b9ca1f04de12",
       "name": "async_outer_gen_yields_from_inner_gen",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-23T07:16:38.945Z",
-      "endTime": "2026-02-23T07:16:38.957Z",
+      "startTime": "2026-02-27T11:14:38.066Z",
+      "endTime": "2026-02-27T11:14:38.078Z",
       "input": {
         "message": "alpha beta"
       }
     },
     {
-      "uuid": "c0d9b003-ff00-40e1-b204-b86b434b0bc6",
+      "uuid": "b7e900ec-8e03-4fe9-9f7f-e266013425ca",
       "name": "async_stream_chunks",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a8ee2aec-b4a5-4362-8115-d84a1483719e",
-      "startTime": "2026-02-23T07:16:38.945Z",
-      "endTime": "2026-02-23T07:16:38.957Z",
+      "parentUuid": "ad609780-6fdc-42e3-94be-b9ca1f04de12",
+      "startTime": "2026-02-27T11:14:38.067Z",
+      "endTime": "2026-02-27T11:14:38.078Z",
       "input": {
         "message": "alpha beta"
       }
@@ -29,8 +29,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T07:16:38.945Z",
-  "endTime": "2026-02-23T07:16:38.957Z",
+  "startTime": "2026-02-27T11:14:38.066Z",
+  "endTime": "2026-02-27T11:14:38.078Z",
   "environment": "development",
   "input": {
     "message": "alpha beta"

@@ -1,32 +1,34 @@
 {
-  "uuid": "d832a2dd-0a4a-42a9-a279-5f428fd8b9fa",
+  "uuid": "4f19ed30-c8ba-4c51-8bc6-f7385d66646c",
   "baseSpans": [
     {
-      "uuid": "890357da-9039-4082-80e3-4329bcda2652",
+      "uuid": "17790fa6-a83b-4bdb-ba03-e8a696050833",
       "name": "streaming_rag_pipeline",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-02-26T06:37:14.908Z",
-      "endTime": "2026-02-26T06:37:14.908Z",
+      "startTime": "2026-02-27T11:14:37.574Z",
+      "endTime": "2026-02-27T11:14:37.575Z",
       "input": {
         "query": "hello"
-      }
+      },
+      "output": "[done]\n"
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "e8dc7126-60be-4303-9c11-9ddaa9ed5bd9",
+      "uuid": "016b6e16-25f2-4ee9-9e93-97ceacf84c68",
       "name": "stream_llm_tokens",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "890357da-9039-4082-80e3-4329bcda2652",
-      "startTime": "2026-02-26T06:37:14.908Z",
-      "endTime": "2026-02-26T06:37:14.908Z",
+      "parentUuid": "17790fa6-a83b-4bdb-ba03-e8a696050833",
+      "startTime": "2026-02-27T11:14:37.575Z",
+      "endTime": "2026-02-27T11:14:37.575Z",
       "input": {
         "query": "hello",
         "context": "relevant context for: hello"
       },
+      "output": "is 42.",
       "model": "gpt-4o",
       "inputTokenCount": 5.0,
       "outputTokenCount": 3.0,
@@ -36,13 +38,13 @@
   ],
   "retrieverSpans": [
     {
-      "uuid": "326e30f6-a35b-4b2d-8c10-377f54749c8f",
+      "uuid": "b700288d-2669-4e9b-b405-5c68aeea9e31",
       "name": "retrieve_documents",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "890357da-9039-4082-80e3-4329bcda2652",
-      "startTime": "2026-02-26T06:37:14.908Z",
-      "endTime": "2026-02-26T06:37:14.908Z",
+      "parentUuid": "17790fa6-a83b-4bdb-ba03-e8a696050833",
+      "startTime": "2026-02-27T11:14:37.575Z",
+      "endTime": "2026-02-27T11:14:37.575Z",
       "input": {
         "query": "hello"
       },
@@ -53,11 +55,12 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-02-26T06:37:14.908Z",
-  "endTime": "2026-02-26T06:37:14.908Z",
+  "startTime": "2026-02-27T11:14:37.574Z",
+  "endTime": "2026-02-27T11:14:37.575Z",
   "environment": "development",
   "input": {
     "query": "hello"
   },
+  "output": "[done]\n",
   "status": "SUCCESS"
 }

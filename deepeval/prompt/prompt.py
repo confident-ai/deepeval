@@ -725,9 +725,9 @@ class Prompt:
         tools: Optional[List[Tool]] = None,
         _verbose: Optional[bool] = True,
     ):
-        if self.alias is None:
+        if not self.alias or not self.alias.strip():
             raise ValueError(
-                "Prompt alias is not set. Please set an alias to continue."
+                "Prompt alias is not set or is empty. Please set an alias to continue."
             )
         text_template = text or self.text_template
         messages_template = messages or self.messages_template
