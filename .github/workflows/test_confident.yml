@@ -60,6 +60,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
-          USE_OPENAI_MODEL: "yes"
+          USE_OPENAI_MODEL: 1
         run: |
           poetry run pytest tests/test_confident/
