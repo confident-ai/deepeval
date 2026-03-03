@@ -230,6 +230,16 @@ class KeyFileHandler:
     ):
         """Fetches the data from the hidden file.
         NOTE: secrets in this file are deprecated; prefer env/.env."""
+
+        from deepeval.config.settings import get_settings
+        env_key_name = _env_key_for_legacy_enum(key)
+        settings_val = getattr(get_settings(), env_key_name, None)
+        
+        if settings_val is not None:
+            if isinstance(settings_val, bool):
+                return "yes" if settings_val else "no"
+            return str(settings_val)
+
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:

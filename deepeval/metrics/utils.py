@@ -17,7 +17,6 @@ from typing import (
 from deepeval.errors import (
     MissingTestCaseParamsError,
 )
-from deepeval.config.settings import get_settings
 from deepeval.utils import convert_to_multi_modal_array
 from deepeval.models import (
     DeepEvalBaseLLM,
@@ -77,19 +76,6 @@ MULTIMODAL_SUPPORTED_MODELS = {
     AnthropicModel: ANTHROPIC_MODELS_DATA,
     GrokModel: GROK_MODELS_DATA,
 }
-
-MODEL_PROVIDER_MAPPING = {
-    "openai": GPTModel,
-    "anthropic": AnthropicModel,
-    "google": GeminiModel,
-    "xai": GrokModel,
-    "moonshotai": KimiModel,
-    "deepseek": DeepSeekModel,
-    "ollama": OllamaModel,
-}
-
-
-SETTINGS = get_settings()
 
 
 def copy_metrics(
@@ -494,78 +480,56 @@ async def a_generate_with_schema_and_extract(
 
 
 def should_use_anthropic_model():
-    if SETTINGS.USE_ANTHROPIC_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ANTHROPIC_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_azure_openai():
-    if SETTINGS.USE_AZURE_OPENAI:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_local_model():
-    if SETTINGS.USE_LOCAL_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LOCAL_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_ollama_model():
-    if SETTINGS.LOCAL_MODEL_API_KEY:
-        return SETTINGS.LOCAL_MODEL_API_KEY == "ollama"
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
     return value == "ollama"
 
 
 def should_use_gemini_model():
-    if SETTINGS.USE_GEMINI_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_openai_model():
-    if SETTINGS.USE_OPENAI_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENAI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_litellm():
-    if SETTINGS.USE_LITELLM:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_portkey():
-    if SETTINGS.USE_PORTKEY_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_PORTKEY_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_deepseek_model():
-    if SETTINGS.USE_DEEPSEEK_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_moonshot_model():
-    if SETTINGS.USE_MOONSHOT_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_MOONSHOT_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_grok_model():
-    if SETTINGS.USE_GROK_MODEL:
-        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GROK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
@@ -573,24 +537,6 @@ def should_use_grok_model():
 ###############################################
 # LLM
 ###############################################
-
-def resolve_model_string(model: str):
-    if isinstance(model, str):
-        if "/" in model:
-            provider, model_name = model.split("/", 1)
-            if provider in MODEL_PROVIDER_MAPPING.keys():
-                model_class = MODEL_PROVIDER_MAPPING.get(provider)
-                return model_class(name=model_name)
-            else:
-                raise ValueError(
-                    f"Invalid string for evaluation model '{model}', please pass a string with a valid provider prefix separated by a '/'. Ex: 'openai/gpt-4.1'. Avaliable provider prefixes: {[key for key in MODEL_PROVIDER_MAPPING.keys()]}"
-                )
-        elif model.startswith("gpt"): # Doesn't break any legacy code
-            return GPTModel(model=model)
-        else:
-            return AnthropicModel(model=model)
-    else:
-        return AnthropicModel()
 
 
 def initialize_model(
@@ -606,29 +552,29 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(model=model), True
+        return GPTModel(), True
     if should_use_gemini_model():
-        return GeminiModel(model=model), True
+        return GeminiModel(), True
     if should_use_litellm():
-        return LiteLLMModel(model=model), True
+        return LiteLLMModel(), True
     if should_use_portkey():
-        return PortkeyModel(model=model), True
+        return PortkeyModel(), True
     if should_use_ollama_model():
-        return OllamaModel(model=model), True
+        return OllamaModel(), True
     elif should_use_local_model():
-        return LocalModel(model=model), True
+        return LocalModel(), True
     elif should_use_azure_openai():
         return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(model=model), True
+        return GrokModel(), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
         return AnthropicModel(), True
     elif isinstance(model, str) or model is None:
-        return resolve_model_string(model), True
+        return GPTModel(model=model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
