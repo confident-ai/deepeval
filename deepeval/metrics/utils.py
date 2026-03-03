@@ -606,23 +606,23 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(), True
+        return GPTModel(model=model), True
     if should_use_gemini_model():
-        return GeminiModel(), True
+        return GeminiModel(model=model), True
     if should_use_litellm():
-        return LiteLLMModel(), True
+        return LiteLLMModel(model=model), True
     if should_use_portkey():
-        return PortkeyModel(), True
+        return PortkeyModel(model=model), True
     if should_use_ollama_model():
-        return OllamaModel(), True
+        return OllamaModel(model=model), True
     elif should_use_local_model():
-        return LocalModel(), True
+        return LocalModel(model=model), True
     elif should_use_azure_openai():
         return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(), True
+        return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
