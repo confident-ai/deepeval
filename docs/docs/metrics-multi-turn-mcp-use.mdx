@@ -11,8 +11,8 @@ sidebar_label: Multi-Turn MCP-Use
   />
 </head>
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
 <MetricTagsDisplayer multiTurn={true} chatbot={true} referenceless={true} />
 
@@ -54,7 +54,7 @@ evaluate(test_cases=[convo_test_case], metrics=[metric])
 There are **SIX** optional parameters when creating a `MultiTurnMCPUseMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `model`: a string specifying which of Anthropic's Claude models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'claude-3-7-sonnet-latest'
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
