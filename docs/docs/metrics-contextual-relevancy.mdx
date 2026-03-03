@@ -11,10 +11,10 @@ sidebar_label: Contextual Relevancy
   />
 </head>
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
 
@@ -63,7 +63,7 @@ retrieval_context = ["All customers are eligible for a 30 day full refund at no 
 
 metric = ContextualRelevancyMetric(
     threshold=0.7,
-    model="gpt-4.1",
+    model="claude-3-7-sonnet-latest",
     include_reason=True
 )
 test_case = LLMTestCase(
@@ -96,7 +96,7 @@ retrieval_context = [
 
 metric = ContextualRelevancyMetric(
     threshold=0.7,
-    model="gpt-4.1",
+    model="claude-3-7-sonnet-latest",
     include_reason=True
 )
 test_case = LLMTestCase(

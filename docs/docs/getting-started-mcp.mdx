@@ -4,10 +4,10 @@ title: MCP Evaluation Quickstart
 sidebar_label: MCP
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 Learn to evaluate model-context-protocol (MCP) based applications using `deepeval`, for both single-turn and multi-turn use cases.
 
@@ -63,7 +63,7 @@ In `deepeval` MCP evaluations can be done using either single-turn or multi-turn
 ```python
 from deepeval.metrics import MCPUseMetric
 
-task_completion_metric = MCPUseMetric(model="gpt-4.1")
+task_completion_metric = MCPUseMetric(model="claude-3-7-sonnet-latest")
 ```
 
 </TabItem>

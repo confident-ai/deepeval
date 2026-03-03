@@ -8,7 +8,7 @@ sidebar_label: Red-Teaming your LLM
   <link rel="canonical" href="https://deepeval.com/guides/guides-red-teaming" />
 </head>
 
-import Equation from "@site/src/components/Equation";
+import Equation from '@site/src/components/Equation';
 
 Ensuring the **security of your LLM application** is critical to the safety of your users, brand, and organization. DeepEval makes it easy to red-team your LLM, allowing you to detect critical risks and vulnerabilities within just a few lines of code.
 
@@ -28,17 +28,17 @@ This tutorial will walk you through **how to red-team your LLM from start to fin
 
 <div
   style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }}
 >
   <img
     src="https://deepeval-docs.s3.amazonaws.com/red_teaming_deepeval.svg"
     style={{
-      margin: "20px",
-      height: "auto",
-      maxHeight: "800px",
+      margin: '20px',
+      height: 'auto',
+      maxHeight: '800px',
     }}
   />
 </div>
@@ -138,7 +138,7 @@ target_system_prompt = target_llm.get_system_prompt()
 red_teamer = RedTeamer(
     target_purpose=target_purpose,
     target_system_prompt=target_system_prompt,
-    synthesizer_model="gpt-3.5-turbo-0125",
+    synthesizer_model="claude-3-7-sonnet-latest",
     evaluation_model="gpt-4.1",
     async_mode=True
 )
@@ -279,18 +279,18 @@ The final step is to refine your LLM based on the scan results and make improvem
 
 <div
   style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }}
 >
   <img
     src="https://deepeval-docs.s3.amazonaws.com/red_teaming_iteration.svg"
     style={{
-      margin: "20px",
-      marginBottom: "50px",
-      height: "auto",
-      maxHeight: "800px",
+      margin: '20px',
+      marginBottom: '50px',
+      height: 'auto',
+      maxHeight: '800px',
     }}
   />
 </div>

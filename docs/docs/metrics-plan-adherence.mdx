@@ -11,10 +11,15 @@ sidebar_label: Plan Adherence
   />
 </head>
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
-<MetricTagsDisplayer usesLLMs={true} singleTurn={true} agent={true} referenceless={true} />
+<MetricTagsDisplayer
+  usesLLMs={true}
+  singleTurn={true}
+  agent={true}
+  referenceless={true}
+/>
 
 The Plan Adherence metric is an agentic metric that extracts the task and plan from your agent's trace which are then used to evaluate **how well your agent has adhered to the plan** in completing the task. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
@@ -55,7 +60,7 @@ def agent(input):
 dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like in SF?")])
 
 # Initialize metric
-metric = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
+metric = PlanAdherenceMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Loop through dataset
 for golden in dataset.evals_iterator(metrics=[metric]):

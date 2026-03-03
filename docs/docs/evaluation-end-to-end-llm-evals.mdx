@@ -4,10 +4,10 @@ title: End-to-End LLM Evaluation
 sidebar_label: End-to-End Evals
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box.
 
@@ -240,7 +240,7 @@ evaluate(
     test_cases=test_cases,
     metrics=[AnswerRelevancyMetric()],
     hyperparameters={
-        model="gpt-4.1",
+        model="claude-3-7-sonnet-latest",
         system_prompt="..."
     }
 )
@@ -500,7 +500,7 @@ evaluate(
   conversational_test_cases,
   metrics=[TurnRelevancyMetric()],
   hyperparameters={
-      model="gpt-4.1",
+      model="claude-3-7-sonnet-latest",
       system_prompt="..."
   }
 )

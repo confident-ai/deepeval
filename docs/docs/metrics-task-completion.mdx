@@ -54,7 +54,7 @@ def trip_planner_agent(input):
 dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
 
 # Initialize metric
-task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
+task_completion = TaskCompletionMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Loop through dataset
 for golden in dataset.evals_iterator(metrics=[task_completion]):
