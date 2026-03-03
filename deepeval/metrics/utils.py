@@ -77,6 +77,16 @@ MULTIMODAL_SUPPORTED_MODELS = {
     GrokModel: GROK_MODELS_DATA,
 }
 
+MODEL_PROVIDER_MAPPING = {
+    "openai": GPTModel,
+    "anthropic": AnthropicModel,
+    "google": GeminiModel,
+    "xai": GrokModel,
+    "moonshotai": KimiModel,
+    "deepseek": DeepSeekModel,
+    "ollama": OllamaModel,
+}
+
 
 def copy_metrics(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
@@ -538,6 +548,23 @@ def should_use_grok_model():
 # LLM
 ###############################################
 
+def resolve_model_string(model: str):
+    if isinstance(model, str):
+        if "/" in model:
+            provider, model_name = model.split("/", 1)
+            if provider in MODEL_PROVIDER_MAPPING.keys():
+                model_class = MODEL_PROVIDER_MAPPING.get(provider)
+                return model_class(name=model_name)
+            else:
+                raise ValueError(
+                    f"Invalid string for evaluation model '{model}', please pass a string with a valid provider prefix separated by a '/'. Ex: 'openai/gpt-4.1'. Avaliable provider prefixes: {[key for key in MODEL_PROVIDER_MAPPING.keys()]}"
+                )
+        elif model.startswith("gpt"): # Doesn't break any legacy code
+            return GPTModel(model=model)
+        else:
+            return AnthropicModel(model=model)
+    else:
+        return AnthropicModel()
 
 def initialize_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -574,7 +601,7 @@ def initialize_model(
     elif should_use_anthropic_model():
         return AnthropicModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return GPTModel(model=model), True
+        return resolve_model_string(model), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
