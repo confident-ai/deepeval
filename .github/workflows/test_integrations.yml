@@ -22,6 +22,7 @@ jobs:
       CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       DEEPEVAL_TELEMETRY_OPT_OUT: "1"
+      USE_OPENAI_MODEL: yes
       PYTHONUNBUFFERED: "1"
       PYTEST_ADDOPTS: "-vv -rA --maxfail=1 --capture=tee-sys"
 

@@ -41,7 +41,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         _check_langchain_available()
@@ -119,7 +119,7 @@ class RAGASContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -189,7 +189,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -263,7 +263,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 #     def __init__(
 #         self,
 #         threshold: float = 0.3,
-#         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+#         model: Optional[Union[str, BaseChatModel]] = 'claude-3-7-sonnet-latest',
 #         _track: bool = True,
 #     ):
 #         self.threshold = threshold
@@ -336,7 +336,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         embeddings: Optional["Embeddings"] = None,
         _track: bool = True,
     ):
@@ -413,7 +413,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -484,7 +484,7 @@ class RagasMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         embeddings: Optional["Embeddings"] = None,
     ):
         self.threshold = threshold
