@@ -333,6 +333,7 @@ def test_benchmarks_imports():
         GSM8K,
         BoolQ,
         EquityMedQA,
+        HellaSwag,
     )
 
     assert MMLU is not None
@@ -351,6 +352,24 @@ def test_benchmarks_imports():
     assert GSM8K is not None
     assert BoolQ is not None
     assert EquityMedQA is not None
+    assert HellaSwag is not None
+
+
+def test_benchmarks_top_level_import():
+    """Test that benchmarks module is exposed at package level."""
+    import deepeval
+
+    # Test that benchmarks module is accessible from main package
+    assert hasattr(
+        deepeval, "benchmarks"
+    ), "benchmarks module not exposed at package level"
+    assert deepeval.benchmarks is not None
+
+    # Test that popular benchmarks can be accessed through the module
+    assert hasattr(deepeval.benchmarks, "MMLU")
+    assert hasattr(deepeval.benchmarks, "HellaSwag")
+    assert hasattr(deepeval.benchmarks, "TruthfulQA")
+    assert hasattr(deepeval.benchmarks, "BigBenchHard")
 
 
 def test_tracing_imports():
