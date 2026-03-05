@@ -517,6 +517,16 @@ class LLMTestCase(BaseModel):
                     "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
                 )
 
+        custom_column_key_values = data.get("custom_column_key_values")
+        if custom_column_key_values is not None:
+            if not isinstance(custom_column_key_values, dict) or not all(
+                isinstance(k, str) and isinstance(v, str)
+                for k, v in custom_column_key_values.items()
+            ):
+                raise TypeError(
+                    "'custom_column_key_values' must be None or a Dict[str, str]"
+                )
+
         return data
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
