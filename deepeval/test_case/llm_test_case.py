@@ -364,6 +364,12 @@ class LLMTestCase(BaseModel):
     mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(
         default=None, serialization_alias="mcpPromptsCalled"
     )
+    custom_column_key_values: Optional[Dict[str, str]] = Field(
+        default=None, serialization_alias="customColumnKeyValues",
+        validation_alias=AliasChoices(
+            "customColumnKeyValues", "custom_column_key_values"
+        ),
+    )
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
