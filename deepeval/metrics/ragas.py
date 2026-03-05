@@ -5,7 +5,7 @@ from typing import Optional, Union, List
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.models import GPTModel
+from deepeval.models import AnthropicModel
 from deepeval.telemetry import capture_metric_type
 
 # check langchain availability
@@ -41,7 +41,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         _check_langchain_available()
@@ -69,7 +69,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = AnthropicModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -119,7 +119,7 @@ class RAGASContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -151,7 +151,7 @@ class RAGASContextualRecallMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = AnthropicModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -189,7 +189,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -222,7 +222,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = AnthropicModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -263,7 +263,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 #     def __init__(
 #         self,
 #         threshold: float = 0.3,
-#         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
+#         model: Optional[Union[str, BaseChatModel]] = 'claude-3-7-sonnet-latest',
 #         _track: bool = True,
 #     ):
 #         self.threshold = threshold
@@ -294,7 +294,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
 #         # Set LLM model
 #         if isinstance(self.model, str):
-#             chat_model = GPTModel(model=self.model).load_model()
+#             chat_model = AnthropicModel(model=self.model).load_model()
 #         else:
 #             chat_model = self.model
 
@@ -336,7 +336,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         embeddings: Optional["Embeddings"] = None,
         _track: bool = True,
     ):
@@ -371,7 +371,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = AnthropicModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -413,7 +413,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -446,7 +446,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
 
         # Set LLM model
         if isinstance(self.model, str):
-            chat_model = GPTModel(model=self.model).load_model()
+            chat_model = AnthropicModel(model=self.model).load_model()
         else:
             chat_model = self.model
 
@@ -484,7 +484,7 @@ class RagasMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = 'claude-3-7-sonnet-latest',
         embeddings: Optional["Embeddings"] = None,
     ):
         self.threshold = threshold

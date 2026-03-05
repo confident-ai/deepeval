@@ -8,8 +8,8 @@ sidebar_label: DAG
   <link rel="canonical" href="https://deepeval.com/docs/metrics-dag" />
 </head>
 
-import Equation from "@site/src/components/Equation";
-import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import Equation from '@site/src/components/Equation';
+import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
 
 <MetricTagsDisplayer singleTurn={true} custom={true} />
 
@@ -17,9 +17,9 @@ The deep acyclic graph (DAG) metric in `deepeval` is currently the most versatil
 
 The `DAGMetric` gives you more **deterministic control** over [`GEval`.](/docs/metrics-llm-evals) You can however also use `GEval`, or any other default metric in `deepeval`, within your `DAGMetric`.
 
-<div style={{ display: "flex", justifyContent: "center" }}>
+<div style={{ display: 'flex', justifyContent: 'center' }}>
   <img
-    style={{ width: "75%" }}
+    style={{ width: '75%' }}
     src="https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png"
   />
 </div>
@@ -84,7 +84,7 @@ There are **TWO** mandatory and **SIX** optional parameters required when creati
 - `name`: name of the metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree. Here's [how to create one](#creating-a-dag).
 - [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `model`: a string specifying which of Anthropic's Claude models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'claude-3-7-sonnet-latest'
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -224,7 +224,7 @@ There are **TWO** mandatory and **SIX** optional parameters when creating a `DAG
 - `name`: name of metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree.
 - [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `model`: a string specifying which of Anthropic's Claude models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'claude-3-7-sonnet-latest'
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
