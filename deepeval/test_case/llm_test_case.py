@@ -518,6 +518,8 @@ class LLMTestCase(BaseModel):
                 )
 
         custom_column_key_values = data.get("custom_column_key_values")
+        if custom_column_key_values is None:
+            custom_column_key_values = data.get("customColumnKeyValues")
         if custom_column_key_values is not None:
             if not isinstance(custom_column_key_values, dict) or not all(
                 isinstance(k, str) and isinstance(v, str)
