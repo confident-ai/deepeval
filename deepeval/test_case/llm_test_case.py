@@ -365,7 +365,8 @@ class LLMTestCase(BaseModel):
         default=None, serialization_alias="mcpPromptsCalled"
     )
     custom_column_key_values: Optional[Dict[str, str]] = Field(
-        default=None, serialization_alias="customColumnKeyValues",
+        default=None,
+        serialization_alias="customColumnKeyValues",
         validation_alias=AliasChoices(
             "customColumnKeyValues", "custom_column_key_values"
         ),
