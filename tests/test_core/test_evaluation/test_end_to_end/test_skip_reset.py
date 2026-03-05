@@ -178,7 +178,9 @@ class TestSkipResetTrue:
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
-        duration_after_first = global_test_run_manager.get_test_run().run_duration
+        duration_after_first = (
+            global_test_run_manager.get_test_run().run_duration
+        )
         evaluate(
             test_cases=[_make_case("2")],
             metrics=[_AlwaysPassMetric()],
@@ -186,7 +188,9 @@ class TestSkipResetTrue:
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
-        duration_after_second = global_test_run_manager.get_test_run().run_duration
+        duration_after_second = (
+            global_test_run_manager.get_test_run().run_duration
+        )
         assert duration_after_second > duration_after_first
         assert duration_after_first > 0
 
@@ -206,7 +210,9 @@ class TestSkipResetTrue:
 class TestCLIModeAutoSkipsReset:
     """When running under `deepeval test run`, evaluate() should auto-skip reset."""
 
-    @patch("deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True)
+    @patch(
+        "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
+    )
     def test_cli_mode_accumulates_without_explicit_skip_reset(self, _mock):
         evaluate(
             test_cases=[_make_case("a")],
@@ -223,7 +229,9 @@ class TestCLIModeAutoSkipsReset:
         test_run = global_test_run_manager.get_test_run()
         assert len(test_run.test_cases) == 2
 
-    @patch("deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True)
+    @patch(
+        "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
+    )
     def test_cli_mode_does_not_call_wrap_up(self, _mock):
         with patch.object(
             global_test_run_manager, "wrap_up_test_run"
@@ -236,7 +244,9 @@ class TestCLIModeAutoSkipsReset:
             )
             mock_wrap_up.assert_not_called()
 
-    @patch("deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True)
+    @patch(
+        "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
+    )
     def test_cli_mode_returns_no_confident_link(self, _mock):
         result = evaluate(
             test_cases=[_make_case("a")],
