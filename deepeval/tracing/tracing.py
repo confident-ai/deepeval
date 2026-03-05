@@ -947,9 +947,7 @@ class Observer:
             ):
                 self.trace_uuid = current_trace.uuid
             else:
-                trace = trace_manager.start_new_trace(
-                    metric_collection=self.metric_collection
-                )
+                trace = trace_manager.start_new_trace()
                 self.trace_uuid = trace.uuid
                 current_trace_context.set(trace)
 
