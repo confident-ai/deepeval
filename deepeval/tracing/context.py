@@ -26,6 +26,7 @@ def update_current_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    metric_collection: Optional[str] = None,
 ):
     current_span = current_span_context.get()
     if not current_span:
@@ -57,6 +58,8 @@ def update_current_span(
         current_span.expected_tools = expected_tools
     if name:
         current_span.name = name
+    if metric_collection:
+        current_span.metric_collection = metric_collection
 
 
 def update_current_trace(
@@ -75,6 +78,7 @@ def update_current_trace(
     test_case: Optional[LLMTestCase] = None,
     confident_api_key: Optional[str] = None,
     test_case_id: Optional[str] = None,
+    metric_collection: Optional[str] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -115,6 +119,8 @@ def update_current_trace(
         current_trace.confident_api_key = confident_api_key
     if test_case_id:
         current_trace.test_case_id = test_case_id
+    if metric_collection:
+        current_trace.metric_collection = metric_collection
 
 
 def update_llm_span(
