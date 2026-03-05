@@ -364,6 +364,12 @@ class LLMTestCase(BaseModel):
     mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(
         default=None, serialization_alias="mcpPromptsCalled"
     )
+    custom_column_key_values: Optional[Dict[str, str]] = Field(
+        default=None, serialization_alias="customColumnKeyValues",
+        validation_alias=AliasChoices(
+            "customColumnKeyValues", "custom_column_key_values"
+        ),
+    )
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
@@ -509,6 +515,18 @@ class LLMTestCase(BaseModel):
             ):
                 raise TypeError(
                     "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
+                )
+
+        custom_column_key_values = data.get("custom_column_key_values")
+        if custom_column_key_values is None:
+            custom_column_key_values = data.get("customColumnKeyValues")
+        if custom_column_key_values is not None:
+            if not isinstance(custom_column_key_values, dict) or not all(
+                isinstance(k, str) and isinstance(v, str)
+                for k, v in custom_column_key_values.items()
+            ):
+                raise TypeError(
+                    "'custom_column_key_values' must be None or a Dict[str, str]"
                 )
 
         return data
