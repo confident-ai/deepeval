@@ -1,6 +1,7 @@
 import os
 import pytest
-from deepeval.metrics import TurnRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.metrics.knowledge_retention.schema import Knowledge
 from deepeval.test_case import ConversationalTestCase, MLLMImage, Turn
 from deepeval import evaluate
 
@@ -173,3 +174,71 @@ class TestTurnRelevancyMetric:
         results = evaluate([convo_test_case], [metric])
 
         assert results is not None
+
+
+class TestKnowledgeRetentionMetric:
+    """Tests for knowledge retention metric"""
+
+    def test_knowledge_schema_unpacking(self):
+        """Regression test for #2512: Knowledge(**data) should not
+        double-wrap the data dict."""
+        raw_llm_response = {"data": {"Full Name": "Emily Chen"}}
+        knowledge = Knowledge(**raw_llm_response)
+        assert knowledge.data == {"Full Name": "Emily Chen"}
+
+    def test_knowledge_schema_rejects_double_wrap(self):
+        """Verify that the old Knowledge(data=data) pattern with a full
+        LLM response dict raises a ValidationError."""
+        raw_llm_response = {"data": {"Full Name": "Emily Chen"}}
+        with pytest.raises(Exception):
+            Knowledge(data=raw_llm_response)
+
+    def test_normal_sync_metric_measure(self):
+        convo_test_case = ConversationalTestCase(
+            turns=[
+                Turn(
+                    role="user",
+                    content="My name is Emily Chen and I live in Berlin.",
+                ),
+                Turn(
+                    role="assistant",
+                    content="Nice to meet you, Emily!",
+                ),
+                Turn(role="user", content="What's my name?"),
+                Turn(
+                    role="assistant",
+                    content="Your name is Emily Chen.",
+                ),
+            ],
+        )
+        metric = KnowledgeRetentionMetric(async_mode=False)
+        metric.measure(convo_test_case)
+
+        assert metric.score is not None
+        assert metric.reason is not None
+        assert 0 <= metric.score <= 1
+
+    def test_normal_async_metric_measure(self):
+        convo_test_case = ConversationalTestCase(
+            turns=[
+                Turn(
+                    role="user",
+                    content="My name is Emily Chen and I live in Berlin.",
+                ),
+                Turn(
+                    role="assistant",
+                    content="Nice to meet you, Emily!",
+                ),
+                Turn(role="user", content="What's my name?"),
+                Turn(
+                    role="assistant",
+                    content="Your name is Emily Chen.",
+                ),
+            ],
+        )
+        metric = KnowledgeRetentionMetric()
+        metric.measure(convo_test_case)
+
+        assert metric.score is not None
+        assert metric.reason is not None
+        assert 0 <= metric.score <= 1
