@@ -191,24 +191,49 @@ class TestRun(BaseModel):
         if self.dataset_id is None:
             self.dataset_id = test_case._dataset_id
 
+    @staticmethod
+    def _assign_unique_orders(test_cases):
+        """Assign unique sequential orders to a sorted list of test cases.
+
+        Preserves the original gap-filling behaviour (only touch test cases
+        whose order is ``None``) **unless** duplicates are detected.  When
+        multiple ``evaluate()`` calls accumulate into the same test run each
+        call starts its order counter from 0, producing duplicates such as
+        ``[0, 0, 1, 1, ...]``.  Confident AI treats ``order`` as a unique
+        position identifier, so duplicates cause earlier test cases to be
+        displayed as *Skipped*.  In that case we fall back to a full
+        sequential re-number to guarantee uniqueness.
+        """
+        # --- original logic: fill Nones, keep existing values ---
+        highest_order = 0
+        for test_case in test_cases:
+            if test_case.order is None:
+                test_case.order = highest_order
+            highest_order = test_case.order + 1
+
+        # --- check for duplicates introduced by accumulation ---
+        seen = set()
+        has_duplicates = False
+        for test_case in test_cases:
+            if test_case.order in seen:
+                has_duplicates = True
+                break
+            seen.add(test_case.order)
+
+        if has_duplicates:
+            for i, test_case in enumerate(test_cases):
+                test_case.order = i
+
     def sort_test_cases(self):
         self.test_cases.sort(
             key=lambda x: (x.order if x.order is not None else float("inf"))
         )
-        # Always assign unique sequential orders after sorting.
-        # When multiple evaluate() calls accumulate test cases in CLI mode,
-        # each call starts its order counter from 0, producing duplicates
-        # (e.g. [0, 0, 1, 1, ...]). Confident AI uses order as a unique
-        # position identifier, so duplicates cause earlier test cases to be
-        # marked as "Skipped". Re-numbering here guarantees uniqueness.
-        for i, test_case in enumerate(self.test_cases):
-            test_case.order = i
+        self._assign_unique_orders(self.test_cases)
 
         self.conversational_test_cases.sort(
             key=lambda x: (x.order if x.order is not None else float("inf"))
         )
-        for i, test_case in enumerate(self.conversational_test_cases):
-            test_case.order = i
+        self._assign_unique_orders(self.conversational_test_cases)
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.

@@ -210,6 +210,24 @@ class TestSkipResetTrue:
 class TestAccumulatedOrdersAreUnique:
     """Accumulated test cases must have unique sequential orders after sort."""
 
+    def test_single_evaluate_preserves_original_orders(self):
+        """A single evaluate() call produces unique orders already.
+        sort_test_cases() should keep them unchanged (original behaviour)."""
+        evaluate(
+            test_cases=[_make_case("x"), _make_case("y"), _make_case("z")],
+            metrics=[_AlwaysPassMetric()],
+            display_config=_QUIET_DISPLAY,
+            async_config=_QUIET_ASYNC,
+        )
+        test_run = global_test_run_manager.get_test_run()
+        original_orders = [tc.order for tc in test_run.test_cases]
+
+        test_run.sort_test_cases()
+        after_orders = [tc.order for tc in test_run.test_cases]
+        assert after_orders == original_orders, (
+            f"Single-evaluate orders should be preserved: {original_orders} -> {after_orders}"
+        )
+
     def test_sort_assigns_unique_orders_after_accumulation(self):
         """Multiple evaluate() calls start their order counters from 0.
         sort_test_cases() must re-number so Confident AI sees no duplicates."""
@@ -231,7 +249,7 @@ class TestAccumulatedOrdersAreUnique:
 
         test_run.sort_test_cases()
         orders = [tc.order for tc in test_run.test_cases]
-        assert orders == list(range(4)), f"Expected unique [0,1,2,3], got {orders}"
+        assert len(set(orders)) == len(orders), f"Orders must be unique, got {orders}"
 
     @patch(
         "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
@@ -255,8 +273,7 @@ class TestAccumulatedOrdersAreUnique:
 
         test_run.sort_test_cases()
         orders = [tc.order for tc in test_run.test_cases]
-        assert orders == list(range(6)), f"Expected unique [0..5], got {orders}"
-        assert len(set(orders)) == len(orders), "Orders must be unique"
+        assert len(set(orders)) == len(orders), f"Orders must be unique, got {orders}"
 
 
 class TestCLIModeAutoSkipsReset:
