@@ -207,6 +207,58 @@ class TestSkipResetTrue:
         assert len(test_run.test_cases) == 1
 
 
+class TestAccumulatedOrdersAreUnique:
+    """Accumulated test cases must have unique sequential orders after sort."""
+
+    def test_sort_assigns_unique_orders_after_accumulation(self):
+        """Multiple evaluate() calls start their order counters from 0.
+        sort_test_cases() must re-number so Confident AI sees no duplicates."""
+        evaluate(
+            test_cases=[_make_case("a1"), _make_case("a2")],
+            metrics=[_AlwaysPassMetric()],
+            display_config=_QUIET_DISPLAY,
+            async_config=_QUIET_ASYNC,
+        )
+        evaluate(
+            test_cases=[_make_case("b1"), _make_case("b2")],
+            metrics=[_AlwaysPassMetric()],
+            skip_reset=True,
+            display_config=_QUIET_DISPLAY,
+            async_config=_QUIET_ASYNC,
+        )
+        test_run = global_test_run_manager.get_test_run()
+        assert len(test_run.test_cases) == 4
+
+        test_run.sort_test_cases()
+        orders = [tc.order for tc in test_run.test_cases]
+        assert orders == list(range(4)), f"Expected unique [0,1,2,3], got {orders}"
+
+    @patch(
+        "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
+    )
+    def test_cli_mode_orders_unique_across_files(self, _mock):
+        """Simulates two test files run via 'deepeval test run'."""
+        evaluate(
+            test_cases=[_make_case("file1_a"), _make_case("file1_b"), _make_case("file1_c")],
+            metrics=[_AlwaysPassMetric()],
+            display_config=_QUIET_DISPLAY,
+            async_config=_QUIET_ASYNC,
+        )
+        evaluate(
+            test_cases=[_make_case("file2_a"), _make_case("file2_b"), _make_case("file2_c")],
+            metrics=[_AlwaysPassMetric()],
+            display_config=_QUIET_DISPLAY,
+            async_config=_QUIET_ASYNC,
+        )
+        test_run = global_test_run_manager.get_test_run()
+        assert len(test_run.test_cases) == 6
+
+        test_run.sort_test_cases()
+        orders = [tc.order for tc in test_run.test_cases]
+        assert orders == list(range(6)), f"Expected unique [0..5], got {orders}"
+        assert len(set(orders)) == len(orders), "Orders must be unique"
+
+
 class TestCLIModeAutoSkipsReset:
     """When running under `deepeval test run`, evaluate() should auto-skip reset."""
 

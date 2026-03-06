@@ -195,22 +195,20 @@ class TestRun(BaseModel):
         self.test_cases.sort(
             key=lambda x: (x.order if x.order is not None else float("inf"))
         )
-        # Optionally update order only if not already set
-        highest_order = 0
-        for test_case in self.test_cases:
-            if test_case.order is None:
-                test_case.order = highest_order
-            highest_order = test_case.order + 1
+        # Always assign unique sequential orders after sorting.
+        # When multiple evaluate() calls accumulate test cases in CLI mode,
+        # each call starts its order counter from 0, producing duplicates
+        # (e.g. [0, 0, 1, 1, ...]). Confident AI uses order as a unique
+        # position identifier, so duplicates cause earlier test cases to be
+        # marked as "Skipped". Re-numbering here guarantees uniqueness.
+        for i, test_case in enumerate(self.test_cases):
+            test_case.order = i
 
         self.conversational_test_cases.sort(
             key=lambda x: (x.order if x.order is not None else float("inf"))
         )
-        # Optionally update order only if not already set
-        highest_order = 0
-        for test_case in self.conversational_test_cases:
-            if test_case.order is None:
-                test_case.order = highest_order
-            highest_order = test_case.order + 1
+        for i, test_case in enumerate(self.conversational_test_cases):
+            test_case.order = i
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
