@@ -147,7 +147,10 @@ def _classify_span(span) -> Optional[str]:
         return "tool"
     if any(kw in span_name_lower for kw in ("retriev", "memory", "datastore")):
         return "retriever"
-    if any(kw in span_name_lower for kw in ("llm", "chat", "invoke_model", "generate")):
+    if any(
+        kw in span_name_lower
+        for kw in ("llm", "chat", "invoke_model", "generate")
+    ):
         return "llm"
 
     return None
@@ -155,26 +158,35 @@ def _classify_span(span) -> Optional[str]:
 
 def _get_agent_name(span) -> Optional[str]:
     """Extract the most descriptive agent name available."""
-    return _get_attr(
-        span,
-        "gen_ai.agent.name",
-        "traceloop.entity.name",
-        "traceloop.workflow.name",
-    ) or span.name or None
+    return (
+        _get_attr(
+            span,
+            "gen_ai.agent.name",
+            "traceloop.entity.name",
+            "traceloop.workflow.name",
+        )
+        or span.name
+        or None
+    )
 
 
 def _get_tool_name(span) -> Optional[str]:
     """Extract the tool name from a tool span."""
-    return _get_attr(
-        span,
-        "gen_ai.tool.name",
-        "traceloop.entity.name",
-    ) or span.name or None
+    return (
+        _get_attr(
+            span,
+            "gen_ai.tool.name",
+            "traceloop.entity.name",
+        )
+        or span.name
+        or None
+    )
 
 
 # ---------------------------------------------------------------------------
 # Content / I/O extraction helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_genai_content(raw: Any) -> Optional[str]:
     if raw is None:
@@ -221,18 +233,26 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             body_raw = event_attrs.get("body") or event_attrs.get("event.body")
             if body_raw:
                 try:
-                    body = json.loads(body_raw) if isinstance(body_raw, str) else body_raw
+                    body = (
+                        json.loads(body_raw)
+                        if isinstance(body_raw, str)
+                        else body_raw
+                    )
                     if not input_text and "input" in body:
                         msgs = body["input"].get("messages", [])
                         if msgs:
                             input_text = _parse_genai_content(
-                                msgs[-1].get("content") if isinstance(msgs[-1], dict) else msgs[-1]
+                                msgs[-1].get("content")
+                                if isinstance(msgs[-1], dict)
+                                else msgs[-1]
                             )
                     if not output_text and "output" in body:
                         msgs = body["output"].get("messages", [])
                         if msgs:
                             output_text = _parse_genai_content(
-                                msgs[-1].get("content") if isinstance(msgs[-1], dict) else msgs[-1]
+                                msgs[-1].get("content")
+                                if isinstance(msgs[-1], dict)
+                                else msgs[-1]
                             )
                 except Exception:
                     pass
@@ -240,20 +260,20 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
     # --- 2. Fall back to attributes (LangChain, CrewAI, Traceloop) ---
     if not input_text:
         raw = _get_attr(
-            span, 
-            "gen_ai.input.messages", 
-            "gen_ai.prompt", 
-            "traceloop.entity.input"  # Crucial for CrewAI/LangChain
+            span,
+            "gen_ai.input.messages",
+            "gen_ai.prompt",
+            "traceloop.entity.input",  # Crucial for CrewAI/LangChain
         )
         if raw:
             input_text = _parse_genai_content(raw)
-            
+
     if not output_text:
         raw = _get_attr(
-            span, 
-            "gen_ai.output.messages", 
-            "gen_ai.completion", 
-            "traceloop.entity.output"  # Crucial for CrewAI/LangChain
+            span,
+            "gen_ai.output.messages",
+            "gen_ai.completion",
+            "traceloop.entity.output",  # Crucial for CrewAI/LangChain
         )
         if raw:
             output_text = _parse_genai_content(raw)
@@ -283,32 +303,52 @@ def _extract_tool_calls(span) -> List[ToolCall]:
                     or "{}"
                 )
                 input_params = (
-                    json.loads(args_raw) if isinstance(args_raw, str) else args_raw
+                    json.loads(args_raw)
+                    if isinstance(args_raw, str)
+                    else args_raw
                 )
-                tools.append(ToolCall(name=str(name), input_parameters=input_params))
+                tools.append(
+                    ToolCall(name=str(name), input_parameters=input_params)
+                )
             except Exception as exc:
                 logger.debug("Failed to parse tool call event: %s", exc)
 
     # --- 2. Extract from attributes (LangChain / CrewAI / Traceloop) ---
     attrs = span.attributes or {}
-    
+
     tool_calls_raw = (
         attrs.get("gen_ai.tool.calls")
         or attrs.get("traceloop.tool_calls")
         or attrs.get("llm.tool_calls")
     )
-    
+
     if tool_calls_raw:
         try:
-            calls = json.loads(tool_calls_raw) if isinstance(tool_calls_raw, str) else tool_calls_raw
+            calls = (
+                json.loads(tool_calls_raw)
+                if isinstance(tool_calls_raw, str)
+                else tool_calls_raw
+            )
             if isinstance(calls, list):
                 for call in calls:
                     # Traceloop/OpenLLMetry often nests these under a "function" key
-                    name = call.get("name") or call.get("function", {}).get("name") or "unknown_tool"
-                    args = call.get("arguments") or call.get("function", {}).get("arguments") or "{}"
-                    
-                    input_params = json.loads(args) if isinstance(args, str) else args
-                    tools.append(ToolCall(name=str(name), input_parameters=input_params))
+                    name = (
+                        call.get("name")
+                        or call.get("function", {}).get("name")
+                        or "unknown_tool"
+                    )
+                    args = (
+                        call.get("arguments")
+                        or call.get("function", {}).get("arguments")
+                        or "{}"
+                    )
+
+                    input_params = (
+                        json.loads(args) if isinstance(args, str) else args
+                    )
+                    tools.append(
+                        ToolCall(name=str(name), input_parameters=input_params)
+                    )
         except Exception as exc:
             logger.debug("Failed to parse tool call attributes: %s", exc)
 
@@ -327,11 +367,14 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
         or "{}"
     )
     try:
-        input_params = json.loads(args_raw) if isinstance(args_raw, str) else args_raw
+        input_params = (
+            json.loads(args_raw) if isinstance(args_raw, str) else args_raw
+        )
     except Exception:
         input_params = {}
 
     return ToolCall(name=tool_name, input_parameters=input_params)
+
 
 class AgentCoreInstrumentationSettings:
 
@@ -417,7 +460,9 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         if settings.tags:
             span.set_attribute("confident.trace.tags", settings.tags)
 
-        metric_collection = settings.trace_metric_collection or settings.metric_collection
+        metric_collection = (
+            settings.trace_metric_collection or settings.metric_collection
+        )
         _safe_set("confident.trace.metric_collection", metric_collection)
 
         if settings.confident_prompt:
@@ -427,7 +472,9 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             if getattr(prompt, "label", None):
                 span.set_attribute("confident.span.prompt_label", prompt.label)
             if getattr(prompt, "version", None):
-                span.set_attribute("confident.span.prompt_version", prompt.version)
+                span.set_attribute(
+                    "confident.span.prompt_version", prompt.version
+                )
 
         span_type = _classify_span(span)
         if span_type is None:
@@ -441,13 +488,15 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 span.set_attribute("confident.span.name", agent_name)
             if settings.agent_metric_collection:
                 span.set_attribute(
-                    "confident.span.metric_collection", settings.agent_metric_collection
+                    "confident.span.metric_collection",
+                    settings.agent_metric_collection,
                 )
 
         elif span_type == "llm":
             if settings.llm_metric_collection:
                 span.set_attribute(
-                    "confident.span.metric_collection", settings.llm_metric_collection
+                    "confident.span.metric_collection",
+                    settings.llm_metric_collection,
                 )
 
         elif span_type == "tool":
@@ -455,7 +504,9 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             if tool_name:
                 tool_mc = settings.tool_metric_collection_map.get(tool_name)
                 if tool_mc:
-                    span.set_attribute("confident.span.metric_collection", tool_mc)
+                    span.set_attribute(
+                        "confident.span.metric_collection", tool_mc
+                    )
 
         if not settings.thread_id:
             session_id = (span.attributes or {}).get("session.id")
@@ -485,18 +536,20 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             if span.parent is None or span_type == "agent":
                 span._attributes["confident.trace.output"] = output_text
 
-        input_tokens = (
-            attrs.get("gen_ai.usage.input_tokens")
-            or attrs.get("gen_ai.usage.prompt_tokens")
+        input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
+            "gen_ai.usage.prompt_tokens"
         )
-        output_tokens = (
-            attrs.get("gen_ai.usage.output_tokens")
-            or attrs.get("gen_ai.usage.completion_tokens")
+        output_tokens = attrs.get("gen_ai.usage.output_tokens") or attrs.get(
+            "gen_ai.usage.completion_tokens"
         )
         if input_tokens is not None:
-            span._attributes["confident.llm.input_token_count"] = int(input_tokens)
+            span._attributes["confident.llm.input_token_count"] = int(
+                input_tokens
+            )
         if output_tokens is not None:
-            span._attributes["confident.llm.output_token_count"] = int(output_tokens)
+            span._attributes["confident.llm.output_token_count"] = int(
+                output_tokens
+            )
 
         model = _get_attr(
             span,
@@ -511,20 +564,28 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         if span_type == "agent":
             tools_called = _extract_tool_calls(span)
 
-            tool_defs_raw = attrs.get("gen_ai.tool.definitions") or attrs.get("gen_ai.agent.tools")
+            tool_defs_raw = attrs.get("gen_ai.tool.definitions") or attrs.get(
+                "gen_ai.agent.tools"
+            )
             if tool_defs_raw:
-                span._attributes["confident.agent.tool_definitions"] = str(tool_defs_raw)
+                span._attributes["confident.agent.tool_definitions"] = str(
+                    tool_defs_raw
+                )
 
         elif span_type == "tool":
             tc = _extract_tool_call_from_tool_span(span)
             if tc:
                 tools_called = [tc]
-                
+
                 if tc.input_parameters and not input_text:
-                    span._attributes["confident.span.input"] = json.dumps(tc.input_parameters)
-            
+                    span._attributes["confident.span.input"] = json.dumps(
+                        tc.input_parameters
+                    )
+
             if not output_text:
-                raw_output = _get_attr(span, "traceloop.entity.output", "gen_ai.tool.output")
+                raw_output = _get_attr(
+                    span, "traceloop.entity.output", "gen_ai.tool.output"
+                )
                 if raw_output:
                     span._attributes["confident.span.output"] = raw_output
 
@@ -533,7 +594,10 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 t.model_dump_json() for t in tools_called
             ]
 
-        if span_type == "agent" and "confident.span.name" not in span._attributes:
+        if (
+            span_type == "agent"
+            and "confident.span.name" not in span._attributes
+        ):
             agent_name = _get_agent_name(span)
             if agent_name:
                 span._attributes["confident.span.name"] = agent_name

@@ -24,7 +24,9 @@ try:
         BatchSpanProcessor,
         SimpleSpanProcessor,
     )
-    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter,
+    )
 
     _opentelemetry_installed = True
 except ImportError:
@@ -92,7 +94,10 @@ def instrument_agentcore(
 
         current_provider = trace.get_tracer_provider()
 
-        if type(current_provider).__name__ in ("ProxyTracerProvider", "NoOpTracerProvider"):
+        if type(current_provider).__name__ in (
+            "ProxyTracerProvider",
+            "NoOpTracerProvider",
+        ):
             tracer_provider = TracerProvider()
             try:
                 trace.set_tracer_provider(tracer_provider)
