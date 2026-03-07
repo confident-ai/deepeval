@@ -1,14 +1,14 @@
 {
-  "uuid": "6e9b53c69013e6f076445857bc231e38",
+  "uuid": "2ec8309bab4adff079c20baa22f03fc4",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "e9f1c52e3d1a8688",
+      "uuid": "716fbfcbe58bd268",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:39.240Z",
-      "endTime": "2026-01-29T19:10:41.787Z",
+      "startTime": "2026-02-26T18:18:33.004Z",
+      "endTime": "2026-02-26T18:18:35.420Z",
       "input": [
         {
           "role": "system",
@@ -19,17 +19,31 @@
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "e9f1c52e3d1a8688",
+      "uuid": "716fbfcbe58bd268",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:39.240Z",
-      "endTime": "2026-01-29T19:10:41.787Z",
+      "startTime": "2026-02-26T18:18:33.004Z",
+      "endTime": "2026-02-26T18:18:35.420Z",
       "input": [
         {
           "role": "system",
@@ -40,7 +54,21 @@
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
         }
       ],
-      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
+      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +76,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:39.240Z",
-  "endTime": "2026-01-29T19:10:41.787Z",
+  "startTime": "2026-02-26T18:18:33.004Z",
+  "endTime": "2026-02-26T18:18:35.420Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -71,6 +99,21 @@
       "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
     }
   ],
-  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time in Paris is 8:00 AM CET.",
-  "status": "SUCCESS"
+  "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    },
+    {
+      "name": "get_time",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    }
+  ],
+  "expectedTools": []
 }

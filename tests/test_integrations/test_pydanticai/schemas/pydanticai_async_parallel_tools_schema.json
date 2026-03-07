@@ -1,14 +1,14 @@
 {
-  "uuid": "7dd1eb5631614d6fd26ba8a74c7b9419",
+  "uuid": "f1520ea9e020956a9bb7ad1a12bbaa7a",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "f353c8ba0a616e5a",
+      "uuid": "41f3471a475ac3ad",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:11.678Z",
-      "endTime": "2026-01-29T19:10:14.869Z",
+      "startTime": "2026-02-26T18:18:12.040Z",
+      "endTime": "2026-02-26T18:18:15.242Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,30 @@
         }
       ],
       "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "f353c8ba0a616e5a",
+      "uuid": "41f3471a475ac3ad",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:11.678Z",
-      "endTime": "2026-01-29T19:10:14.869Z",
+      "startTime": "2026-02-26T18:18:12.040Z",
+      "endTime": "2026-02-26T18:18:15.242Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +55,20 @@
         }
       ],
       "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +76,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:11.678Z",
-  "endTime": "2026-01-29T19:10:14.869Z",
+  "startTime": "2026-02-26T18:18:12.040Z",
+  "endTime": "2026-02-26T18:18:15.242Z",
   "name": "pydanticai-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -73,5 +101,20 @@
     }
   ],
   "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    },
+    {
+      "name": "get_time",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    }
+  ],
+  "expectedTools": []
 }

@@ -329,6 +329,36 @@ class CallbackHandler(BaseCallbackHandler):
                         trace.output = output
                 exit_current_context(uuid_str=uuid_str)
 
+    def on_chain_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        _debug_log(
+            f"on_chain_error: run_id={run_id}, parent_run_id={parent_run_id}, error={error}"
+        )
+        uuid_str = str(run_id)
+        base_span = trace_manager.get_span_by_uuid(uuid_str)
+        
+        if base_span is None:
+            _debug_log(f"on_chain_error: NO SPAN FOUND for run_id={run_id}")
+            return
+
+        # Guard against double-finalization
+        if base_span.end_time is not None:
+            _debug_log(
+                f"on_chain_error: span already finalized for run_id={run_id}, skipping"
+            )
+            return
+
+        with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+            base_span.status = TraceSpanStatus.ERRORED
+            base_span.error = str(error)
+            exit_current_context(uuid_str=uuid_str)
+
     def on_chat_model_start(
         self,
         serialized: dict[str, Any],

@@ -1,14 +1,14 @@
 {
-  "uuid": "48d9acf47a9e4453971c6e4642172e49",
+  "uuid": "785532a8da44a46258f265fd1b0d7826",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "30e5a3c5ae23cc38",
+      "uuid": "5eeae1290aad6dc1",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:37.094Z",
-      "endTime": "2026-01-29T19:10:39.233Z",
+      "startTime": "2026-02-26T18:18:30.852Z",
+      "endTime": "2026-02-26T18:18:32.981Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,24 @@
         }
       ],
       "output": "The current time in London is 7:00 AM GMT.",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "30e5a3c5ae23cc38",
+      "uuid": "5eeae1290aad6dc1",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:37.094Z",
-      "endTime": "2026-01-29T19:10:39.233Z",
+      "startTime": "2026-02-26T18:18:30.852Z",
+      "endTime": "2026-02-26T18:18:32.981Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +49,14 @@
         }
       ],
       "output": "The current time in London is 7:00 AM GMT.",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +64,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:37.094Z",
-  "endTime": "2026-01-29T19:10:39.233Z",
+  "startTime": "2026-02-26T18:18:30.852Z",
+  "endTime": "2026-02-26T18:18:32.981Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"
@@ -73,5 +89,14 @@
     }
   ],
   "output": "The current time in London is 7:00 AM GMT.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_time",
+      "inputParameters": {
+        "city": "London"
+      }
+    }
+  ],
+  "expectedTools": []
 }

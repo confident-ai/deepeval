@@ -691,15 +691,39 @@ class ConfidentSpanExporter(SpanExporter):
 
     def _parse_list_of_tools(self, tools: List[str]) -> List[ToolCall]:
         parsed_tools: List[ToolCall] = []
-        if tools and isinstance(tools, list):
-            for tool_json_str in tools:
-                if isinstance(tool_json_str, str):
-                    try:
-                        parsed_tools.append(
-                            ToolCall.model_validate_json(tool_json_str)
-                        )
-                    except ValidationError:
-                        pass
+        if tools:
+            if isinstance(tools, list):
+                for tool_json_str in tools:
+                    if isinstance(tool_json_str, str):
+                        try:
+                            tool = ToolCall.model_validate_json(tool_json_str)
+                            parsed_tools.append(
+                                tool
+                            )
+                        except ValidationError:
+                            pass
+            elif isinstance(tools, str):
+                try:
+                    tools_list = json.loads(tools)
+                    for tool in tools_list:
+                        if isinstance(tool, str):
+                            try:
+                                new_tool = ToolCall.model_validate_json(tool)
+                                parsed_tools.append(
+                                    new_tool
+                                )
+                            except ValidationError:
+                                pass
+                        elif isinstance(tool, dict):
+                            try:
+                                new_tool = ToolCall(**tool)
+                                parsed_tools.append(
+                                    new_tool
+                                )
+                            except ValidationError:
+                                pass
+                except Exception:
+                    pass
         return parsed_tools
 
     #######################################################

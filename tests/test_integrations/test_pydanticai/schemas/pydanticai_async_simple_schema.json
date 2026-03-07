@@ -1,14 +1,14 @@
 {
-  "uuid": "e5008f4b017008ea7d495ed134321d16",
+  "uuid": "fa40603e1151696fa414db6bb6fec082",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "021d400b56a9fbad",
+      "uuid": "575e9c5b279f9766",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:10.572Z",
-      "endTime": "2026-01-29T19:10:11.672Z",
+      "startTime": "2026-02-26T18:18:10.937Z",
+      "endTime": "2026-02-26T18:18:12.026Z",
       "input": [
         {
           "role": "system",
@@ -24,12 +24,12 @@
       "agentHandoffs": []
     },
     {
-      "uuid": "021d400b56a9fbad",
+      "uuid": "575e9c5b279f9766",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:10.572Z",
-      "endTime": "2026-01-29T19:10:11.672Z",
+      "startTime": "2026-02-26T18:18:10.937Z",
+      "endTime": "2026-02-26T18:18:12.026Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +41,7 @@
         }
       ],
       "output": "Farewell, take care.",
+      "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +49,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:10.572Z",
-  "endTime": "2026-01-29T19:10:11.672Z",
+  "startTime": "2026-02-26T18:18:10.937Z",
+  "endTime": "2026-02-26T18:18:12.026Z",
   "name": "pydanticai-async-simple-test",
   "metadata": {
     "test_type": "async_simple"
@@ -73,5 +74,7 @@
     }
   ],
   "output": "Farewell, take care.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [],
+  "expectedTools": []
 }

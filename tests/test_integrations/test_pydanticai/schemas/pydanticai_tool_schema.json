@@ -1,14 +1,14 @@
 {
-  "uuid": "468047769a9d029a4b17ed6aaf4abfa6",
+  "uuid": "1f6add60bc79afd289988b466bc450bc",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "df1624cea25fe83c",
+      "uuid": "41a6eff9ea93e1b0",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:27.738Z",
-      "endTime": "2026-01-29T19:10:30.236Z",
+      "startTime": "2026-02-26T18:18:22.296Z",
+      "endTime": "2026-02-26T18:18:24.059Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,26 @@
         }
       ],
       "output": "7 multiplied by 8 is 56.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 7,
+            "b": 8
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "df1624cea25fe83c",
+      "uuid": "41a6eff9ea93e1b0",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:27.738Z",
-      "endTime": "2026-01-29T19:10:30.236Z",
+      "startTime": "2026-02-26T18:18:22.296Z",
+      "endTime": "2026-02-26T18:18:24.059Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +51,16 @@
         }
       ],
       "output": "7 multiplied by 8 is 56.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 7,
+            "b": 8
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +68,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:27.738Z",
-  "endTime": "2026-01-29T19:10:30.236Z",
+  "startTime": "2026-02-26T18:18:22.296Z",
+  "endTime": "2026-02-26T18:18:24.059Z",
   "name": "pydanticai-tool-test",
   "metadata": {
     "test_type": "tool"
@@ -72,5 +92,16 @@
     }
   ],
   "output": "7 multiplied by 8 is 56.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "inputParameters": {
+        "operation": "multiply",
+        "a": 7,
+        "b": 8
+      }
+    }
+  ],
+  "expectedTools": []
 }

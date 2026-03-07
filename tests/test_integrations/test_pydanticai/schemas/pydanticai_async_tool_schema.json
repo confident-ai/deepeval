@@ -1,14 +1,14 @@
 {
-  "uuid": "6e8ac095a734eb14b164c8fb217d778d",
+  "uuid": "69eaf5692b8bfd80802db0b0a9dc6a57",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "f8f3eeb869eac1b2",
+      "uuid": "219e41f800698fce",
       "name": "tool_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:14.874Z",
-      "endTime": "2026-01-29T19:10:17.439Z",
+      "startTime": "2026-02-26T18:18:15.254Z",
+      "endTime": "2026-02-26T18:18:17.582Z",
       "input": [
         {
           "role": "system",
@@ -20,16 +20,26 @@
         }
       ],
       "output": "9 multiplied by 6 is 54.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 9,
+            "b": 6
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "f8f3eeb869eac1b2",
+      "uuid": "219e41f800698fce",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:14.874Z",
-      "endTime": "2026-01-29T19:10:17.439Z",
+      "startTime": "2026-02-26T18:18:15.254Z",
+      "endTime": "2026-02-26T18:18:17.582Z",
       "input": [
         {
           "role": "system",
@@ -41,6 +51,16 @@
         }
       ],
       "output": "9 multiplied by 6 is 54.",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 9,
+            "b": 6
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -48,8 +68,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:14.874Z",
-  "endTime": "2026-01-29T19:10:17.439Z",
+  "startTime": "2026-02-26T18:18:15.254Z",
+  "endTime": "2026-02-26T18:18:17.582Z",
   "name": "pydanticai-async-tool-test",
   "metadata": {
     "test_type": "async_tool"
@@ -73,5 +93,16 @@
     }
   ],
   "output": "9 multiplied by 6 is 54.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "inputParameters": {
+        "operation": "multiply",
+        "a": 9,
+        "b": 6
+      }
+    }
+  ],
+  "expectedTools": []
 }

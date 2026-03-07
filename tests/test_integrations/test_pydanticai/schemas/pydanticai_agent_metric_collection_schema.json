@@ -1,14 +1,14 @@
 {
-  "uuid": "237e18a136c66c0c774a3d911d9bcfb2",
+  "uuid": "16c7b40a7ec2b091000be9a90d03dda8",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "e165b4cbd101ced6",
+      "uuid": "eaf5e1707f75ca79",
       "name": "agent_metric_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:33.884Z",
-      "endTime": "2026-01-29T19:10:34.556Z",
+      "startTime": "2026-02-26T18:18:27.442Z",
+      "endTime": "2026-02-26T18:18:28.178Z",
       "input": [
         {
           "role": "system",
@@ -19,18 +19,18 @@
           "content": "Say hello in exactly two words."
         }
       ],
-      "output": "Hello there.",
+      "output": "Hello there!",
       "availableTools": [],
       "agentHandoffs": [],
       "metricCollection": "test-agent-metrics"
     },
     {
-      "uuid": "e165b4cbd101ced6",
+      "uuid": "eaf5e1707f75ca79",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T19:10:33.884Z",
-      "endTime": "2026-01-29T19:10:34.556Z",
+      "startTime": "2026-02-26T18:18:27.442Z",
+      "endTime": "2026-02-26T18:18:28.178Z",
       "input": [
         {
           "role": "system",
@@ -41,7 +41,8 @@
           "content": "Say hello in exactly two words."
         }
       ],
-      "output": "Hello there.",
+      "output": "Hello there!",
+      "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
     }
@@ -49,8 +50,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T19:10:33.884Z",
-  "endTime": "2026-01-29T19:10:34.556Z",
+  "startTime": "2026-02-26T18:18:27.442Z",
+  "endTime": "2026-02-26T18:18:28.178Z",
   "name": "pydanticai-agent-metric-test",
   "metadata": {
     "test_type": "agent_metric_collection"
@@ -72,6 +73,8 @@
       "content": "Say hello in exactly two words."
     }
   ],
-  "output": "Hello there.",
-  "status": "SUCCESS"
+  "output": "Hello there!",
+  "status": "SUCCESS",
+  "toolsCalled": [],
+  "expectedTools": []
 }
