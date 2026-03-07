@@ -250,6 +250,18 @@ def test_evaluate_imports():
     assert ErrorConfig is not None
 
 
+def test_evaluate_submodule_access():
+    """Test that deepeval.evaluate.configs is accessible via attribute access (#2216)."""
+    import deepeval.evaluate.configs
+
+    assert deepeval.evaluate.configs.AsyncConfig() is not None
+    assert deepeval.evaluate.configs.DisplayConfig() is not None
+    assert deepeval.evaluate.configs.CacheConfig() is not None
+    assert deepeval.evaluate.configs.ErrorConfig() is not None
+
+    assert callable(deepeval.evaluate)
+
+
 def test_dataset_imports():
     """Test that dataset classes can be imported."""
     from deepeval.dataset import (
