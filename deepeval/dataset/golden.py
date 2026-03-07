@@ -1,8 +1,8 @@
 import re
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from typing import Optional, Dict, List
-from deepeval.test_case import ToolCall, Turn, MLLMImage
-from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from deepeval.test_case import ToolCall, Turn, MLLMImage, MLLMDocument
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY, _MLLM_DOCUMENT_REGISTRY
 
 
 class Golden(BaseModel):
@@ -49,7 +49,7 @@ class Golden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         auto_detect = (
             any(
                 [
@@ -76,7 +76,7 @@ class Golden(BaseModel):
         return self
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
@@ -101,6 +101,9 @@ class Golden(BaseModel):
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
+        for doc_id in image_ids:
+            if doc_id in _MLLM_DOCUMENT_REGISTRY:
+                images_mapping[doc_id] = _MLLM_DOCUMENT_REGISTRY[doc_id]       
 
         return images_mapping if len(images_mapping) > 0 else None
 
@@ -138,7 +141,7 @@ class ConversationalGolden(BaseModel):
         if self.multimodal is True:
             return self
 
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         if self.scenario:
             if re.search(pattern, self.scenario) is not None:
                 self.multimodal = True
@@ -165,7 +168,7 @@ class ConversationalGolden(BaseModel):
         return self
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
-        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+        pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
         image_ids = set()
 
         def extract_ids_from_string(s: Optional[str]) -> None:
@@ -193,5 +196,8 @@ class ConversationalGolden(BaseModel):
         for img_id in image_ids:
             if img_id in _MLLM_IMAGE_REGISTRY:
                 images_mapping[img_id] = _MLLM_IMAGE_REGISTRY[img_id]
+        for doc_id in image_ids:
+            if doc_id in _MLLM_DOCUMENT_REGISTRY:
+                images_mapping[doc_id] = _MLLM_DOCUMENT_REGISTRY[doc_id]        
 
         return images_mapping if len(images_mapping) > 0 else None

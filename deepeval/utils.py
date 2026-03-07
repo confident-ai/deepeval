@@ -566,19 +566,43 @@ def shorten(
 
 def convert_to_multi_modal_array(input: Union[str, List[str]]):
     from deepeval.test_case import MLLMImage
+    from deepeval.test_case.llm_test_case import _MLLM_DOCUMENT_REGISTRY
+
+    def parse_with_documents(s: str):
+        result = MLLMImage.parse_multimodal_string(s)
+        doc_pattern = r"\[DEEPEVAL:DOCUMENT:(.*?)\]"
+        final = []
+        for item in result:
+            if isinstance(item, str):
+                matches = list(re.finditer(doc_pattern, item))
+                if not matches:
+                    final.append(item)
+                    continue
+                last_end = 0
+                for m in matches:
+                    if m.start() > last_end:
+                        final.append(item[last_end:m.start()])
+                    doc_id = m.group(1)
+                    if doc_id in _MLLM_DOCUMENT_REGISTRY:
+                        final.append(_MLLM_DOCUMENT_REGISTRY[doc_id])
+                    last_end = m.end()
+                if last_end < len(item):
+                    final.append(item[last_end:])
+            else:
+                final.append(item)
+        return final
 
     if isinstance(input, str):
-        return MLLMImage.parse_multimodal_string(input)
+        return parse_with_documents(input)
     elif isinstance(input, list):
         new_list = []
         for context in input:
-            parsed_array = MLLMImage.parse_multimodal_string(context)
-            new_list.extend(parsed_array)
+            new_list.extend(parse_with_documents(context))
         return new_list
 
 
 def check_if_multimodal(input: str):
-    pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]"
+    pattern = r"\[DEEPEVAL:IMAGE:(.*?)\]|\[DEEPEVAL:DOCUMENT:(.*?)\]"
     matches = list(re.finditer(pattern, input))
     return bool(matches)
 
