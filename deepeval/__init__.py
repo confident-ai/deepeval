@@ -15,12 +15,11 @@ autoload_dotenv()
 def _expose_public_api() -> None:
     # All other imports must happen after env is loaded
     # Do not do this at module level or ruff will complain with E402
-    global __version__, evaluate, assert_test, compare
+    global __version__, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
 
     from ._version import __version__ as _version
     from deepeval.evaluate import (
-        evaluate as _evaluate,
         assert_test as _assert_test,
     )
     from deepeval.evaluate.compare import compare as _compare
@@ -32,7 +31,6 @@ def _expose_public_api() -> None:
     import deepeval.telemetry as _telemetry
 
     __version__ = _version
-    evaluate = _evaluate
     assert_test = _assert_test
     compare = _compare
     on_test_run_end = _on_end
