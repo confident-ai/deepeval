@@ -16,6 +16,21 @@ from .winogrande.winogrande import Winogrande
 from .equity_med_qa.equity_med_qa import EquityMedQA
 from .ifeval.ifeval import IFEval
 
+from .big_bench_hard.task import BigBenchHardTask
+from .mmlu.task import MMLUTask
+from .hellaswag.task import HellaSwagTask
+from .drop.task import DROPTask
+from .truthful_qa.task import TruthfulQATask
+from .human_eval.task import HumanEvalTask
+from .squad.task import SQuADTask
+from .math_qa.task import MathQATask
+from .logi_qa.task import LogiQATask
+from .bbq.task import BBQTask
+from .equity_med_qa.task import EquityMedQATask
+
+from .arc.mode import ARCMode
+from .truthful_qa.mode import TruthfulQAMode
+
 __all__ = [
     "BigBenchHard",
     "MMLU",
@@ -34,4 +49,17 @@ __all__ = [
     "Winogrande",
     "EquityMedQA",
     "IFEval",
+    "BigBenchHardTask",
+    "MMLUTask",
+    "HellaSwagTask",
+    "DROPTask",
+    "TruthfulQATask",
+    "HumanEvalTask",
+    "SQuADTask",
+    "MathQATask",
+    "LogiQATask",
+    "BBQTask",
+    "EquityMedQATask",
+    "ARCMode",
+    "TruthfulQAMode",
 ]

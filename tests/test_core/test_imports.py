@@ -319,6 +319,7 @@ def test_benchmarks_imports():
     from deepeval.benchmarks import (
         MMLU,
         BigBenchHard,
+        HellaSwag,
         ARC,
         BBQ,
         DROP,
@@ -337,6 +338,7 @@ def test_benchmarks_imports():
 
     assert MMLU is not None
     assert BigBenchHard is not None
+    assert HellaSwag is not None
     assert ARC is not None
     assert BBQ is not None
     assert DROP is not None
@@ -351,6 +353,51 @@ def test_benchmarks_imports():
     assert GSM8K is not None
     assert BoolQ is not None
     assert EquityMedQA is not None
+
+
+def test_benchmark_tasks_imports():
+    """Test that benchmark task enums can be imported from deepeval.benchmarks."""
+    from deepeval.benchmarks import (
+        BigBenchHardTask,
+        MMLUTask,
+        HellaSwagTask,
+        DROPTask,
+        TruthfulQATask,
+        HumanEvalTask,
+        SQuADTask,
+        MathQATask,
+        LogiQATask,
+        BBQTask,
+        EquityMedQATask,
+    )
+
+    all_tasks = [
+        BigBenchHardTask,
+        MMLUTask,
+        HellaSwagTask,
+        DROPTask,
+        TruthfulQATask,
+        HumanEvalTask,
+        SQuADTask,
+        MathQATask,
+        LogiQATask,
+        BBQTask,
+        EquityMedQATask,
+    ]
+
+    for task in all_tasks:
+        assert task is not None
+
+
+def test_benchmark_modes_imports():
+    """Test that benchmark mode enums can be imported from deepeval.benchmarks."""
+    from deepeval.benchmarks import (
+        ARCMode,
+        TruthfulQAMode,
+    )
+
+    assert ARCMode is not None
+    assert TruthfulQAMode is not None
 
 
 def test_tracing_imports():
