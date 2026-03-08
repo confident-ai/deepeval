@@ -136,7 +136,7 @@ class GEval(BaseMetric):
                 self.score = (
                     (float(g_score) - self.score_range[0])
                     / self.score_range_span
-                    if not self.strict_mode
+                    if not self.strict_mode and self.score_range_span != 0
                     else int(g_score)
                 )
                 self.success = self.score >= self.threshold
@@ -197,7 +197,7 @@ class GEval(BaseMetric):
             )
             self.score = (
                 (float(g_score) - self.score_range[0]) / self.score_range_span
-                if not self.strict_mode
+                if not self.strict_mode and self.score_range_span != 0
                 else int(g_score)
             )
             self.success = self.score >= self.threshold
