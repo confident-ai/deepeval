@@ -528,12 +528,12 @@ class AgentCoreSpanInterceptor(SpanProcessor):
 
         if input_text:
             span._attributes["confident.span.input"] = input_text
-            if span.parent is None or span_type == "agent":
+            if span_type == "agent":
                 span._attributes["confident.trace.input"] = input_text
 
         if output_text:
             span._attributes["confident.span.output"] = output_text
-            if span.parent is None or span_type == "agent":
+            if span_type == "agent":
                 span._attributes["confident.trace.output"] = output_text
 
         input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
