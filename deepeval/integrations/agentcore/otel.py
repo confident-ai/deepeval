@@ -57,6 +57,9 @@ def instrument_agentcore(
     confident_prompt: Optional[Prompt] = None,
     is_test_mode: bool = False,
     agent_metrics: Optional[List[BaseMetric]] = None,
+    schedule_delay_millis: float | None = None,
+    max_export_batch_size: int | None = None,
+    export_timeout_millis: float | None = None,
 ) -> None:
     with capture_tracing_integration("agentcore"):
         _require_opentelemetry()
@@ -127,7 +130,10 @@ def instrument_agentcore(
                     OTLPSpanExporter(
                         endpoint=OTLP_ENDPOINT,
                         headers={"x-confident-api-key": api_key},
-                    )
+                    ),
+                    schedule_delay_millis=schedule_delay_millis,
+                    max_export_batch_size=max_export_batch_size,
+                    export_timeout_millis=export_timeout_millis,
                 )
             )
 

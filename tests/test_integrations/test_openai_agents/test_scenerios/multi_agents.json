@@ -28,6 +28,7 @@
           "call_id": "call_zJl6tUdnwPMMhRxrzPqlXH0I",
           "name": "transfer_to_spanish_agent",
           "type": "function_call",
+          "namespace": null,
           "id": "fc_0f84975e4a1ffd6b0068dfce3e1568819393767e22059901f3",
           "status": "completed"
         },

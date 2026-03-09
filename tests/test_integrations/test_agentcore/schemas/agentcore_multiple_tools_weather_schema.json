@@ -1,0 +1,50 @@
+{
+  "uuid": "cdad4fe4985f45e873a2546b9cc282b1",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "08f94c796835a832",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:02.087Z",
+      "endTime": "2026-03-09T09:41:04.517Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "The weather in Tokyo is currently sunny with a temperature of 72 degrees Fahrenheit.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "08f94c796835a832",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:02.087Z",
+      "endTime": "2026-03-09T09:41:04.517Z",
+      "input": [],
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T09:41:02.087Z",
+  "endTime": "2026-03-09T09:41:04.517Z",
+  "name": "agentcore-multiple-tools-weather",
+  "metadata": {
+    "test_type": "multiple_tools_weather"
+  },
+  "tags": [
+    "agentcore",
+    "multiple-tools",
+    "weather"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-weather-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+  "output": "The weather in Tokyo is currently sunny with a temperature of 72 degrees Fahrenheit.\n",
+  "status": "SUCCESS"
+}

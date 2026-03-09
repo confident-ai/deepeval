@@ -263,7 +263,8 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             span,
             "gen_ai.input.messages",
             "gen_ai.prompt",
-            "traceloop.entity.input",  # Crucial for CrewAI/LangChain
+            "traceloop.entity.input",
+            "crewai.task.description", # Crewai inputs
         )
         if raw:
             input_text = _parse_genai_content(raw)
@@ -273,7 +274,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             span,
             "gen_ai.output.messages",
             "gen_ai.completion",
-            "traceloop.entity.output",  # Crucial for CrewAI/LangChain
+            "traceloop.entity.output",
         )
         if raw:
             output_text = _parse_genai_content(raw)
@@ -528,12 +529,12 @@ class AgentCoreSpanInterceptor(SpanProcessor):
 
         if input_text:
             span._attributes["confident.span.input"] = input_text
-            if span.parent is None or span_type == "agent":
+            if span_type == "agent":
                 span._attributes["confident.trace.input"] = input_text
 
         if output_text:
             span._attributes["confident.span.output"] = output_text
-            if span.parent is None or span_type == "agent":
+            if span_type == "agent":
                 span._attributes["confident.trace.output"] = output_text
 
         input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
@@ -603,11 +604,10 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 span._attributes["confident.span.name"] = agent_name
 
         if self.settings.is_test_mode and span_type == "agent":
-            if span.parent is None:
-                self._handle_test_mode(span, tools_called)
+            self._handle_test_mode(span, tools_called)
 
     def _handle_test_mode(
-        self, span: ReadableSpan, tools_called: List[ToolCall]
+        self, span: ReadableSpan, tools_called: List[ToolCall] = None
     ) -> None:
         """Build an AgentSpan for evaluation and register it with trace_manager."""
         try:

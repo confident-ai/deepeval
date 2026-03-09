@@ -1,0 +1,50 @@
+{
+  "uuid": "d4ea72f2279d151c09d81aef60d7f2b9",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "3c76d4a1b0e296d4",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:38:59.377Z",
+      "endTime": "2026-03-09T09:39:02.294Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>I have used the get_weather and get_time tools to get the weather and time for Tokyo. I will now share these results with the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F and the current time is 3:00 PM JST.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "3c76d4a1b0e296d4",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:38:59.377Z",
+      "endTime": "2026-03-09T09:39:02.294Z",
+      "input": [],
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T09:38:59.377Z",
+  "endTime": "2026-03-09T09:39:02.294Z",
+  "name": "agentcore-async-parallel-tools",
+  "metadata": {
+    "test_type": "async_parallel_tools"
+  },
+  "tags": [
+    "agentcore",
+    "parallel-tools",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-parallel-tools-123",
+  "userId": "test-user-async",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+  "output": "<thinking>I have used the get_weather and get_time tools to get the weather and time for Tokyo. I will now share these results with the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F and the current time is 3:00 PM JST.\n",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,49 @@
+{
+  "uuid": "dbcac925a9d00633f3334990c0b93ebd",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "3d3bf81d202ff4e6",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:07.138Z",
+      "endTime": "2026-03-09T09:41:09.636Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+      "output": "<thinking>I have received the weather and time for Paris. I can now provide this information to the User.</thinking>\n\nThe weather in Paris is currently cloudy with a temperature of 62F. The time in Paris is 8:00 AM CET.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "3d3bf81d202ff4e6",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:07.138Z",
+      "endTime": "2026-03-09T09:41:09.636Z",
+      "input": [],
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T09:41:07.138Z",
+  "endTime": "2026-03-09T09:41:09.636Z",
+  "name": "agentcore-parallel-tools",
+  "metadata": {
+    "test_type": "parallel_tools"
+  },
+  "tags": [
+    "agentcore",
+    "parallel-tools"
+  ],
+  "environment": "development",
+  "threadId": "parallel-tools-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
+  "output": "<thinking>I have received the weather and time for Paris. I can now provide this information to the User.</thinking>\n\nThe weather in Paris is currently cloudy with a temperature of 62F. The time in Paris is 8:00 AM CET.\n",
+  "status": "SUCCESS"
+}

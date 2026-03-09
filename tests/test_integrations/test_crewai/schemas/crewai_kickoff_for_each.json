@@ -122,6 +122,5 @@
     "input": "User B"
   },
   "output": "Hello, User B! How are you today?",
-  "status": "SUCCESS",
-  "metricCollection": "metric_collection_1"
+  "status": "SUCCESS"
 }

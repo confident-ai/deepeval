@@ -33,6 +33,7 @@
           "call_id": "call_mPmlPbHjEYwuzs4zc4Fq6PnJ",
           "name": "transfer_to_spanishagent",
           "type": "function_call",
+          "namespace": null,
           "id": "fc_0b46f205cab8e99100697b70eff4bc819591f4df0d8ef51e39",
           "status": "completed"
         },

@@ -1,0 +1,62 @@
+{
+  "uuid": "6c80447bcb76e444bc5f272b3cc2852f",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "4da8f90db5944dc4",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:09.712Z",
+      "endTime": "2026-03-09T09:41:12.135Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+      "output": "The query 'Sync Data' has been processed successfully. If you need further assistance or have more tasks, feel free to ask.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1"
+    },
+    {
+      "uuid": "4da8f90db5944dc4",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T09:41:09.712Z",
+      "endTime": "2026-03-09T09:41:12.135Z",
+      "input": [],
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T09:41:09.712Z",
+  "endTime": "2026-03-09T09:41:12.135Z",
+  "name": "agentcore-full-features-sync",
+  "metadata": {
+    "env": "testing",
+    "priority": "high"
+  },
+  "tags": [
+    "agentcore",
+    "features",
+    "sync"
+  ],
+  "environment": "development",
+  "threadId": "thread-sync-features-001",
+  "userId": "user-sync-001",
+  "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
+  "output": "The query 'Sync Data' has been processed successfully. If you need further assistance or have more tasks, feel free to ask.\n",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_v1"
+}

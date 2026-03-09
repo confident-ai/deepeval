@@ -33,6 +33,7 @@
           "call_id": "call_TcGFTO45nB3IDzdHwTAVLZyb",
           "name": "transfer_to_englishagent",
           "type": "function_call",
+          "namespace": null,
           "id": "fc_0e365b104066eae100697b7105c560819180a0a5f87047f639",
           "status": "completed"
         },

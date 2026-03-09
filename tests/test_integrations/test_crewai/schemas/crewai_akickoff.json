@@ -64,6 +64,5 @@
     "input": "Testing Alias"
   },
   "output": "Hello, Testing Alias! How can I assist you today?",
-  "status": "SUCCESS",
-  "metricCollection": "metric_collection_1"
+  "status": "SUCCESS"
 }
