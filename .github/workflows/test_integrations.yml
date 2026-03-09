@@ -281,7 +281,7 @@ jobs:
         run: |
           poetry install --no-interaction --no-root --only main
           poetry install --with integrations
-          poetry run pip install -U bedrock-agentcore strands
+          poetry run pip install -U bedrock-agentcore strands-agents strands-agents-tools
 
       - name: Install Project
         run: poetry install --no-interaction --only main
