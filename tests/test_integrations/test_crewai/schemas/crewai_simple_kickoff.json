@@ -64,6 +64,5 @@
     "input": "Hello World"
   },
   "output": "Hello World! How are you today?",
-  "status": "SUCCESS",
-  "metricCollection": "metric_collection_1"
+  "status": "SUCCESS"
 }
