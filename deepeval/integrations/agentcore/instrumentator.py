@@ -607,7 +607,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             self._handle_test_mode(span, tools_called)
 
     def _handle_test_mode(
-        self, span: ReadableSpan, tools_called: List[ToolCall]
+        self, span: ReadableSpan, tools_called: List[ToolCall] = None
     ) -> None:
         """Build an AgentSpan for evaluation and register it with trace_manager."""
         try:
