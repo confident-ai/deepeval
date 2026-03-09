@@ -24,6 +24,11 @@ from tests.test_integrations.test_agentcore.apps.agentcore_eval_app import (
     ainvoke_evals_agent,
 )
 
+pytestmark = pytest.mark.skipif(
+    not os.getenv("AWS_ACCESS_KEY_ID"),
+    reason="AWS credentials are required to run Bedrock AgentCore tests."
+)
+
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
 

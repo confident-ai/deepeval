@@ -1,4 +1,5 @@
 import os
+import pytest
 from tests.test_integrations.utils import (
     assert_trace_json,
     generate_trace_json,
@@ -21,6 +22,11 @@ from tests.test_integrations.test_agentcore.apps.agentcore_multiple_tools_app im
 from tests.test_integrations.test_agentcore.apps.agentcore_eval_app import (
     init_evals_agentcore,
     invoke_evals_agent,
+)
+
+pytestmark = pytest.mark.skipif(
+    not os.getenv("AWS_ACCESS_KEY_ID"),
+    reason="AWS credentials are required to run Bedrock AgentCore tests."
 )
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
