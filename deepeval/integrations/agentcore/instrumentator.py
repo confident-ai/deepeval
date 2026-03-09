@@ -263,7 +263,8 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             span,
             "gen_ai.input.messages",
             "gen_ai.prompt",
-            "traceloop.entity.input",  # Crucial for CrewAI/LangChain
+            "traceloop.entity.input",
+            "crewai.task.description", # Crewai inputs
         )
         if raw:
             input_text = _parse_genai_content(raw)
@@ -273,7 +274,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             span,
             "gen_ai.output.messages",
             "gen_ai.completion",
-            "traceloop.entity.output",  # Crucial for CrewAI/LangChain
+            "traceloop.entity.output",
         )
         if raw:
             output_text = _parse_genai_content(raw)
