@@ -261,10 +261,11 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
     if not input_text:
         raw = _get_attr(
             span,
+            "gen_ai.user.message",
             "gen_ai.input.messages",
             "gen_ai.prompt",
             "traceloop.entity.input",
-            "crewai.task.description", # Crewai inputs
+            "crewai.task.description",
         )
         if raw:
             input_text = _parse_genai_content(raw)
@@ -272,6 +273,7 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
     if not output_text:
         raw = _get_attr(
             span,
+            "gen_ai.choice",
             "gen_ai.output.messages",
             "gen_ai.completion",
             "traceloop.entity.output",
@@ -621,16 +623,39 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         if not agent_span:
             return
 
+        attrs = dict(span.attributes or {})
+        input = attrs.get("confident.span.input") or span._attributes.get("confident.span.input")
+        output = attrs.get("confident.span.output") or span._attributes.get("confident.span.output")
+        
+        if input and not getattr(agent_span, 'input', None):
+            agent_span.input = input
+        if output and not getattr(agent_span, 'output', None):
+            agent_span.output = output
+
         agent_span.tools_called = tools_called
         agent_span.metrics = self.settings.agent_metrics
 
-        trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
-        if not trace:
-            trace = trace_manager.start_new_trace(
-                trace_uuid=agent_span.trace_uuid
-            )
+        active_trace = current_trace_context.get()
+
+        if active_trace and isinstance(active_trace, Trace):
+            trace = active_trace
+            if not trace.uuid:
+                trace.uuid = agent_span.trace_uuid
+        else:
+            trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
+            if not trace:
+                trace = trace_manager.start_new_trace(
+                    trace_uuid=agent_span.trace_uuid
+                )
+
+        if agent_span.input and not getattr(trace, "input", None):
+            trace.input = agent_span.input
+        if agent_span.output and not getattr(trace, "output", None):
+            trace.output = agent_span.output
 
         trace.root_spans.append(agent_span)
         trace.status = TraceSpanStatus.SUCCESS
         trace.end_time = perf_counter()
-        trace_manager.traces_to_evaluate.append(trace)
+        
+        if trace not in trace_manager.traces_to_evaluate:
+            trace_manager.traces_to_evaluate.append(trace)

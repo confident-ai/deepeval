@@ -1,27 +1,28 @@
 {
-  "uuid": "6eea8433f69c75d1e47971e8d7541da6",
+  "uuid": "c7a5d4aacc6fbaf5b565fa92d055d72f",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "4f173e0e5c7029be",
+      "uuid": "57b3ba377c436bb9",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:40:56.659Z",
-      "endTime": "2026-03-09T09:40:57.688Z",
+      "startTime": "2026-03-09T11:17:42.386Z",
+      "endTime": "2026-03-09T11:17:43.487Z",
       "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-      "output": "Hello, wonderful, friend.\n",
+      "output": "Hello, there, friend.\n",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "4f173e0e5c7029be",
+      "uuid": "57b3ba377c436bb9",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:40:56.659Z",
-      "endTime": "2026-03-09T09:40:57.688Z",
-      "input": [],
+      "startTime": "2026-03-09T11:17:42.386Z",
+      "endTime": "2026-03-09T11:17:43.487Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, there, friend.\n",
       "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
@@ -30,8 +31,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-03-09T09:40:56.659Z",
-  "endTime": "2026-03-09T09:40:57.688Z",
+  "startTime": "2026-03-09T11:17:42.386Z",
+  "endTime": "2026-03-09T11:17:43.487Z",
   "name": "agentcore-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -44,6 +45,6 @@
   "threadId": "simple-123",
   "userId": "test-user",
   "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-  "output": "Hello, wonderful, friend.\n",
+  "output": "Hello, there, friend.\n",
   "status": "SUCCESS"
 }
