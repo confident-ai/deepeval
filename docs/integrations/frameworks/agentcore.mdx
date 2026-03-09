@@ -1,0 +1,107 @@
+---
+id: agentcore
+title: AWS AgentCore
+sidebar_label: AgentCore
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
+
+[Amazon AgentCore](https://aws.amazon.com/bedrock/agentcore/) is AWS's managed runtime for deploying and scaling AI agents.
+
+:::tip
+We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your AgentCore evaluations.
+
+```bash
+deepeval login
+```
+
+For users in the EU region, please set your OTEL endpoint in the env as following:
+
+```bash
+export CONFIDENT_OTEL_URL="https://eu.otel.confident-ai.com"
+```
+
+Or if you're in the AU region, please set your OTEL endpoint in the env as following:
+
+```bash
+export CONFIDENT_OTEL_URL="https://au.otel.confident-ai.com"
+```
+
+:::
+
+## Production Evals
+
+`deepeval` allows you to evaluate strands agents using agentcore in **under a minute**.
+
+<Timeline>
+
+<TimelineItem title="Configure AgentCore">
+
+Pass your metric collections to the `instrument_agentcore` method for different span levels.
+
+```python title="main.py" showLineNumbers
+from bedrock_agentcore import BedrockAgentCoreApp
+from strands import Agent
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.metrics import AnswerRelevancyMetric
+
+instrument_agentcore(
+    name="AgentCore Tracing",
+    environment="development",
+    trace_metric_collection="my-trace-collection",
+    agent_metric_collection="my-agent-collection",
+    llm_metric_collection="my-llm-collection",
+    tool_metric_collection_map={
+        "get_weather": "my-tool-collection",
+    },
+)
+
+app = BedrockAgentCoreApp()
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+@app.entrypoint
+def invoke(payload):
+    user_message = payload.get("prompt")
+    result = agent(user_message)
+    return {"result": result.message}
+
+response = invoke({"prompt": "Make a funny joke"})
+```
+
+:::info
+Online evaluations are supported for agentcore traces at different levels of spans like Trace, LLM, Agent, Tools.
+:::
+
+</TimelineItem>
+<TimelineItem title="Run evaluations">
+
+Create an `EvaluationDataset` and invoke your agentcore application for each golden using a for loop to run online evaluations.
+
+<Tabs>
+<TabItem value="asynchronous" label="Asynchronous">
+
+```python title="main.py" showLineNumbers
+import asyncio
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="What's the weather in Paris?"),
+        Golden(input="What's the weather in London?"),
+    ]
+)
+
+for golden in dataset.goldens:
+    invoke({"prompt": golden.input})
+```
+
+</TabItem>
+</Tabs>
+
+✅ Done. This will now automatically run evaluations for your traces for each golden.
+
+</TimelineItem>
+
+</Timeline>
