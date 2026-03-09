@@ -22,6 +22,7 @@ try:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         BatchSpanProcessor,
+        SimpleSpanProcessor,
     )
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
@@ -121,7 +122,7 @@ def instrument_agentcore(
 
         if is_test_mode:
             current_provider.add_span_processor(
-                BatchSpanProcessor(ConfidentSpanExporter())
+                SimpleSpanProcessor(ConfidentSpanExporter())
             )
         else:
             current_provider.add_span_processor(

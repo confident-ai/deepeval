@@ -604,8 +604,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 span._attributes["confident.span.name"] = agent_name
 
         if self.settings.is_test_mode and span_type == "agent":
-            if span.parent is None:
-                self._handle_test_mode(span, tools_called)
+            self._handle_test_mode(span, tools_called)
 
     def _handle_test_mode(
         self, span: ReadableSpan, tools_called: List[ToolCall]
