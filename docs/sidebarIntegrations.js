@@ -7,6 +7,7 @@ module.exports = {
       items: [
         'frameworks/openai',
         'frameworks/anthropic',
+        'frameworks/agentcore',
         'frameworks/langchain',
         'frameworks/langgraph',
         'frameworks/llamaindex',
