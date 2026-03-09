@@ -561,10 +561,18 @@ class EvaluationDataset:
                 df, additional_metadata_col_name, default=""
             )
         ]
-        tags_list = [
-            json.loads(t) if t else None
-            for t in get_column_data(df, tags_col_name, default="")
-        ]
+        tags_list = []
+        for t in get_column_data(df, tags_col_name, default=""):
+            if t:
+                try:
+                    tags_list.append(json.loads(t))
+                except json.JSONDecodeError:
+                    raise ValueError(
+                        f"Invalid JSON in '{tags_col_name}' column: {t}. "
+                        f"Expected a JSON array like [\"tag1\", \"tag2\"]."
+                    )
+            else:
+                tags_list.append(None)
         scenarios = get_column_data(df, scenario_col_name)
         turns_raw = get_column_data(df, turns_col_name)
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
@@ -1158,7 +1166,7 @@ class EvaluationDataset:
                             json.dumps(
                                 golden.tags, ensure_ascii=False
                             )
-                            if golden.tags
+                            if golden.tags is not None
                             else None
                         )
                         writer.writerow(
@@ -1244,7 +1252,7 @@ class EvaluationDataset:
                             json.dumps(
                                 golden.tags, ensure_ascii=False
                             )
-                            if golden.tags
+                            if golden.tags is not None
                             else None
                         )
                         writer.writerow(
