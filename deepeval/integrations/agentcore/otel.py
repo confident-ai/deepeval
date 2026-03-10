@@ -56,7 +56,7 @@ def instrument_agentcore(
     tool_metric_collection_map: Optional[dict] = None,
     confident_prompt: Optional[Prompt] = None,
     is_test_mode: bool = False,
-    agent_metrics: Optional[List[BaseMetric]] = None
+    agent_metrics: Optional[List[BaseMetric]] = None,
 ) -> None:
     with capture_tracing_integration("agentcore"):
         _require_opentelemetry()

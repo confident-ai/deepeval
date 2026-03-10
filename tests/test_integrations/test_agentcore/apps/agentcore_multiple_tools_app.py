@@ -11,7 +11,9 @@ def get_weather(city: str) -> str:
         "london": "Rainy, 55F",
         "paris": "Cloudy, 62F",
     }
-    return weather_data.get(city.lower(), f"Weather data not available for {city}")
+    return weather_data.get(
+        city.lower(), f"Weather data not available for {city}"
+    )
 
 
 @tool
@@ -42,10 +44,7 @@ def init_multiple_tools_agentcore(
     )
 
     app = BedrockAgentCoreApp()
-    agent = Agent(
-        model="amazon.nova-lite-v1:0", 
-        tools=[get_weather, get_time]
-    )
+    agent = Agent(model="amazon.nova-lite-v1:0", tools=[get_weather, get_time])
 
     @app.entrypoint
     def invoke(payload: dict):
@@ -56,8 +55,8 @@ def init_multiple_tools_agentcore(
             "When asked about time, use get_time. Be concise. "
         )
         result = agent(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     async def ainvoke(payload: dict):
@@ -68,8 +67,8 @@ def init_multiple_tools_agentcore(
             "When asked about time, use get_time. Be concise. "
         )
         result = await agent.invoke_async(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     invoke.ainvoke = ainvoke

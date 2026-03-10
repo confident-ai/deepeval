@@ -26,11 +26,12 @@ from tests.test_integrations.test_agentcore.apps.agentcore_eval_app import (
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("AWS_ACCESS_KEY_ID"),
-    reason="AWS credentials are required to run Bedrock AgentCore tests."
+    reason="AWS credentials are required to run Bedrock AgentCore tests.",
 )
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
+
 
 def trace_test(schema_name: str):
     schema_path = os.path.join(_schemas_dir, schema_name)
@@ -38,6 +39,7 @@ def trace_test(schema_name: str):
         return generate_trace_json(schema_path)
     else:
         return assert_trace_json(schema_path)
+
 
 class TestSimpleApp:
 
@@ -58,6 +60,7 @@ class TestSimpleApp:
 
         assert result is not None
         assert len(result) > 0
+
 
 class TestToolApp:
 
@@ -97,6 +100,7 @@ class TestToolApp:
 
         assert result is not None
         assert "40" in result
+
 
 class TestMultipleToolsApp:
 
@@ -155,6 +159,7 @@ class TestMultipleToolsApp:
         assert result is not None
         assert "62" in result or "cloudy" in result.lower()
         assert "8:00" in result or "CET" in result
+
 
 class TestDeepEvalFeatures:
 

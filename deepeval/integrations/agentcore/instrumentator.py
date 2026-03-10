@@ -624,12 +624,16 @@ class AgentCoreSpanInterceptor(SpanProcessor):
             return
 
         attrs = dict(span.attributes or {})
-        input = attrs.get("confident.span.input") or span._attributes.get("confident.span.input")
-        output = attrs.get("confident.span.output") or span._attributes.get("confident.span.output")
-        
-        if input and not getattr(agent_span, 'input', None):
+        input = attrs.get("confident.span.input") or span._attributes.get(
+            "confident.span.input"
+        )
+        output = attrs.get("confident.span.output") or span._attributes.get(
+            "confident.span.output"
+        )
+
+        if input and not getattr(agent_span, "input", None):
             agent_span.input = input
-        if output and not getattr(agent_span, 'output', None):
+        if output and not getattr(agent_span, "output", None):
             agent_span.output = output
 
         agent_span.tools_called = tools_called
@@ -656,6 +660,6 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         trace.root_spans.append(agent_span)
         trace.status = TraceSpanStatus.SUCCESS
         trace.end_time = perf_counter()
-        
+
         if trace not in trace_manager.traces_to_evaluate:
             trace_manager.traces_to_evaluate.append(trace)

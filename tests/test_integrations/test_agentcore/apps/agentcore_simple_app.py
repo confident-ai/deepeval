@@ -27,16 +27,16 @@ def init_simple_agentcore(
         user_message = payload.get("prompt", "Hello!")
         instruction = "Be concise, reply with one short sentence only. "
         result = agent(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     async def ainvoke(payload: dict):
         user_message = payload.get("prompt", "Hello!")
         instruction = "Be concise, reply with one short sentence only. "
         result = await agent.invoke_async(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     invoke.ainvoke = ainvoke

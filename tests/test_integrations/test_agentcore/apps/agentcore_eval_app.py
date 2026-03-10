@@ -43,26 +43,23 @@ def init_evals_agentcore(
     )
 
     app = BedrockAgentCoreApp()
-    agent = Agent(
-        model="amazon.nova-lite-v1:0",
-        tools=[special_tool]
-    )
+    agent = Agent(model="amazon.nova-lite-v1:0", tools=[special_tool])
 
     @app.entrypoint
     def invoke(payload: dict):
         user_message = payload.get("prompt", "")
         instruction = "You are a helpful assistant. Be concise. "
         result = agent(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     async def ainvoke(payload: dict):
         user_message = payload.get("prompt", "")
         instruction = "You are a helpful assistant. Be concise. "
         result = await agent.invoke_async(instruction + user_message)
-        
-        text_output = result.message.get('content', [{}])[0].get('text', '')
+
+        text_output = result.message.get("content", [{}])[0].get("text", "")
         return {"result": text_output}
 
     invoke.ainvoke = ainvoke
