@@ -160,9 +160,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 # 🔌 Integrations
 
-DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more.
-
-To scale evals across your team — or let anyone run them without writing code — **Confident AI** gives you a native platform integration.
+DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more. To scale evals across your team — or let anyone run them without writing code — **Confident AI** gives you a native platform integration.
 
 ## Frameworks
 
@@ -181,7 +179,7 @@ To scale evals across your team — or let anyone run them without writing code 
 [Confident AI](https://confident-ai.com?utm_source=GitHub) is an all-in-one platform that integrates natively with DeepEval.
 
 - Manage datasets, trace LLM applications, run evaluations, and monitor responses in production — all from one platform.
-- Don't need a UI? Use DeepEval via [MCP](https://confident-ai.com?utm_source=GitHub) with Confident AI as the persistent layer — run evals, pull datasets, and inspect traces straight from your IDE.
+- Don't need a UI? Confident AI can also be your data persistant layer - run evals, pull datasets, and inspect traces straight from claude code, cursor, via Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
 
 <p align="center">
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="600">
