@@ -153,20 +153,18 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 - 🔮 Generate synthetic datasets for evaluation.
 - 🔗 Integrates seamlessly with **ANY** CI/CD environment.
 - 🏆 Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://deepeval.com/docs/benchmarks-introduction?utm_source=GitHub), including MMLU, HellaSwag, DROP, BIG-Bench Hard, TruthfulQA, HumanEval, GSM8K.
-- ☁️ [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation & observability lifecycle:
-  - Curate/annotate evaluation datasets on the cloud
-  - Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
-  - Fine-tune metrics for custom results
-  - Debug evaluation results via LLM traces
-  - Monitor & evaluate LLM responses in product to improve datasets with real-world data
-  - Repeat until perfection
-
-> [!NOTE]
-> DeepEval is available on Confident AI, an LLM evals platform for AI observability and quality. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
+  > [!NOTE]
+  > DeepEval is available on Confident AI, an LLM evals platform for AI observability and quality. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
 
 # 🔌 Integrations
+
+DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more.
+
+To scale evals across your team — or let anyone run them without writing code — **Confident AI** gives you a native platform integration.
+
+## Frameworks
 
 - [OpenAI](https://www.deepeval.com/integrations/frameworks/openai?utm_source=GitHub) — evaluate and trace OpenAI applications via a client wrapper
 - [OpenAI Agents](https://www.deepeval.com/integrations/frameworks/openai-agents?utm_source=GitHub) — evaluate OpenAI Agents end-to-end in under a minute
@@ -177,7 +175,17 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 - [Anthropic](https://www.deepeval.com/integrations/frameworks/anthropic?utm_source=GitHub) — evaluate and trace Claude applications via a client wrapper
 - [AWS AgentCore](https://www.deepeval.com/integrations/frameworks/agentcore?utm_source=GitHub) — evaluate agents deployed on Amazon AgentCore
 - [LlamaIndex](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub) — evaluate RAG applications built with LlamaIndex
-- [Hugging Face](https://www.deepeval.com/integrations/frameworks/huggingface?utm_source=GitHub) — enable real-time evaluations during LLM fine-tuning
+
+## ☁️ Platform + Ecosystem
+
+[Confident AI](https://confident-ai.com?utm_source=GitHub) is an all-in-one platform that integrates natively with DeepEval.
+
+- Manage datasets, trace LLM applications, run evaluations, and monitor responses in production — all from one platform.
+- Don't need a UI? Use DeepEval via [MCP](https://confident-ai.com?utm_source=GitHub) with Confident AI as the persistent layer — run evals, pull datasets, and inspect traces straight from your IDE.
+
+<p align="center">
+  <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="600">
+</p>
 
 <br />
 
