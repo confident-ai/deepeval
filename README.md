@@ -72,6 +72,13 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 - Large variety of ready-to-use LLM eval metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine** covering all use cases:
 
+  - **Custom, All-Purpose Metrics:**
+
+    - [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — a research-backed LLM-as-a-judge metric for evaluating on any custom criteria with human-like accuracy
+    - [DAG](https://deepeval.com/docs/metrics-dag) — DeepEval's graph-based deterministic LLM-as-a-judge metric builder
+
+  - <details>
+
   - <details>
     <summary><b>Agentic Metrics</b></summary>
 
@@ -89,57 +96,54 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
   - <details>
     <summary><b>RAG Metrics</b></summary>
 
-    - [Answer Relevancy](https://deepeval.com/docs/metrics-answer-relevancy)
-    - [Faithfulness](https://deepeval.com/docs/metrics-faithfulness)
-    - [Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall)
-    - [Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision)
-    - [Contextual Relevancy](https://deepeval.com/docs/metrics-contextual-relevancy)
-    - [RAGAS](https://deepeval.com/docs/metrics-ragas)
+    - [Answer Relevancy](https://deepeval.com/docs/metrics-answer-relevancy) — measure how relevant the RAG pipeline's output is to the input
+    - [Faithfulness](https://deepeval.com/docs/metrics-faithfulness) — evaluate whether the RAG pipeline's output factually aligns with the retrieval context
+    - [Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall) — measure how well the RAG pipeline's retrieval context aligns with the expected output
+    - [Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision) — evaluate whether relevant nodes in the RAG pipeline's retrieval context are ranked higher
+    - [Contextual Relevancy](https://deepeval.com/docs/metrics-contextual-relevancy) — measure the overall relevance of the RAG pipeline's retrieval context to the input
+    - [RAGAS](https://deepeval.com/docs/metrics-ragas) — average of answer relevancy, faithfulness, contextual precision, and contextual recall
 
     </details>
 
   - <details>
     <summary><b>Multi-Turn Metrics</b></summary>
 
-    - [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention)
-    - [Conversation Completeness](https://deepeval.com/docs/metrics-conversation-completeness)
-    - [Turn Relevancy](https://deepeval.com/docs/metrics-turn-relevancy)
-    - [Turn Faithfulness](https://deepeval.com/docs/metrics-turn-faithfulness)
-    - [Role Adherence](https://deepeval.com/docs/metrics-role-adherence)
+    - [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention) — evaluate whether the chatbot retains factual information throughout a conversation
+    - [Conversation Completeness](https://deepeval.com/docs/metrics-conversation-completeness) — measure whether the chatbot satisfies user needs throughout a conversation
+    - [Turn Relevancy](https://deepeval.com/docs/metrics-turn-relevancy) — evaluate whether the chatbot generates consistently relevant responses throughout a conversation
+    - [Turn Faithfulness](https://deepeval.com/docs/metrics-turn-faithfulness) — check if the chatbot's responses are factually grounded in retrieval context across turns
+    - [Role Adherence](https://deepeval.com/docs/metrics-role-adherence) — evaluate whether the chatbot adheres to its assigned role throughout a conversation
 
     </details>
 
   - <details>
     <summary><b>MCP Metrics</b></summary>
 
-    - [MCP Task Completion](https://deepeval.com/docs/metrics-mcp-task-completion) — evaluate MCP server task completion
-    - [MCP Use](https://deepeval.com/docs/metrics-mcp-use) — measure quality of MCP tool usage
-    - [Multi-Turn MCP Use](https://deepeval.com/docs/metrics-multi-turn-mcp-use) — evaluate MCP usage across conversation turns
+    - [MCP Task Completion](https://deepeval.com/docs/metrics-mcp-task-completion) — evaluate how effectively an MCP-based agent accomplishes a task
+    - [MCP Use](https://deepeval.com/docs/metrics-mcp-use) — measure how effectively an agent uses its available MCP servers
+    - [Multi-Turn MCP Use](https://deepeval.com/docs/metrics-multi-turn-mcp-use) — evaluate MCP server usage across conversation turns
 
     </details>
 
   - <details>
     <summary><b>Multimodal Metrics</b></summary>
 
-    - [Text to Image](https://deepeval.com/docs/metrics-text-to-image)
-    - [Image Editing](https://deepeval.com/docs/metrics-image-editing)
-    - [Image Coherence](https://deepeval.com/docs/metrics-image-coherence)
-    - [Image Helpfulness](https://deepeval.com/docs/metrics-image-helpfulness)
-    - [Image Reference](https://deepeval.com/docs/metrics-image-reference)
+    - [Text to Image](https://deepeval.com/docs/multimodal-metrics-text-to-image) — evaluate image generation quality based on semantic consistency and perceptual quality
+    - [Image Editing](https://deepeval.com/docs/multimodal-metrics-image-editing) — evaluate image editing quality based on semantic consistency and perceptual quality
+    - [Image Coherence](https://deepeval.com/docs/multimodal-metrics-image-coherence) — measure how well images align with their accompanying text
+    - [Image Helpfulness](https://deepeval.com/docs/multimodal-metrics-image-helpfulness) — evaluate how effectively images contribute to user comprehension of the text
+    - [Image Reference](https://deepeval.com/docs/multimodal-metrics-image-reference) — evaluate how accurately images are referred to or explained by accompanying text
 
     </details>
 
-  - <details>
-    <summary><b>General Metrics</b></summary>
+    <summary><b>Other Metrics</b></summary>
 
-    - [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — evaluate on any custom criteria with human-like accuracy
-    - [DAG](https://deepeval.com/docs/metrics-dag) — deep acyclic graph metrics
-    - [Hallucination](https://deepeval.com/docs/metrics-hallucination)
-    - [Summarization](https://deepeval.com/docs/metrics-summarization)
-    - [Bias](https://deepeval.com/docs/metrics-bias)
-    - [Toxicity](https://deepeval.com/docs/metrics-toxicity)
-    - [JSON Correctness](https://deepeval.com/docs/metrics-json-correctness)
-    - [Prompt Alignment](https://deepeval.com/docs/metrics-prompt-alignment)
+    - [Hallucination](https://deepeval.com/docs/metrics-hallucination) — check whether the LLM generates factually correct information against provided context
+    - [Summarization](https://deepeval.com/docs/metrics-summarization) — evaluate whether summaries are factually correct and include necessary details
+    - [Bias](https://deepeval.com/docs/metrics-bias) — detect gender, racial, or political bias in LLM outputs
+    - [Toxicity](https://deepeval.com/docs/metrics-toxicity) — evaluate toxicity in LLM outputs
+    - [JSON Correctness](https://deepeval.com/docs/metrics-json-correctness) — check whether the output matches an expected JSON schema
+    - [Prompt Alignment](https://deepeval.com/docs/metrics-prompt-alignment) — measure whether the output aligns with instructions in the prompt template
 
     </details>
 
@@ -472,3 +476,4 @@ Built by the founders of Confident AI. Contact jeffreyip@confident-ai.com for al
 # License
 
 DeepEval is licensed under Apache 2.0 - see the [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md) file for details.
+
