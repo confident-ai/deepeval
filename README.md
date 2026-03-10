@@ -136,6 +136,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
     </details>
 
+  - <details>
     <summary><b>Other Metrics</b></summary>
 
     - [Hallucination](https://deepeval.com/docs/metrics-hallucination) — check whether the LLM generates factually correct information against provided context
