@@ -1,27 +1,28 @@
 {
-  "uuid": "39731881f812fd53a6662e78e98b56d3",
+  "uuid": "1c829e3172aaa21eba134af3324dcaaa",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "4b38d4fae12d0444",
+      "uuid": "a77cd5e504685bbf",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:38:57.012Z",
-      "endTime": "2026-03-09T09:38:59.305Z",
+      "startTime": "2026-03-09T11:17:28.508Z",
+      "endTime": "2026-03-09T11:17:30.630Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
-      "output": "<thinking>The 'calculate' tool has returned the result for the multiplication of 9 and 6.</thinking>\n<toolResult>The result of 9 multiplied by 6 is 54.</toolResult>\n",
+      "output": "<thinking>The 'calculate' tool has returned the result of 9 multiplied by 6.</thinking>\nThe result of 9 multiplied by 6 is 54.\n",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "4b38d4fae12d0444",
+      "uuid": "a77cd5e504685bbf",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:38:57.012Z",
-      "endTime": "2026-03-09T09:38:59.305Z",
-      "input": [],
+      "startTime": "2026-03-09T11:17:28.508Z",
+      "endTime": "2026-03-09T11:17:30.630Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
+      "output": "<thinking>The 'calculate' tool has returned the result of 9 multiplied by 6.</thinking>\nThe result of 9 multiplied by 6 is 54.\n",
       "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
@@ -30,8 +31,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-03-09T09:38:57.012Z",
-  "endTime": "2026-03-09T09:38:59.305Z",
+  "startTime": "2026-03-09T11:17:28.508Z",
+  "endTime": "2026-03-09T11:17:30.630Z",
   "name": "agentcore-async-tool-test",
   "metadata": {
     "test_type": "async_tool"
@@ -45,6 +46,6 @@
   "threadId": "async-tool-123",
   "userId": "test-user-async",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
-  "output": "<thinking>The 'calculate' tool has returned the result for the multiplication of 9 and 6.</thinking>\n<toolResult>The result of 9 multiplied by 6 is 54.</toolResult>\n",
+  "output": "<thinking>The 'calculate' tool has returned the result of 9 multiplied by 6.</thinking>\nThe result of 9 multiplied by 6 is 54.\n",
   "status": "SUCCESS"
 }

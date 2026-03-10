@@ -32,17 +32,83 @@ export CONFIDENT_OTEL_URL="https://au.otel.confident-ai.com"
 
 :::
 
-## Production Evals
+## End-to-End Evals
 
-`deepeval` allows you to evaluate strands agents using agentcore in **under a minute**.
+`deepeval` allows you to evaluate Strands agents using agentcore in **under a minute**.
 
 <Timeline>
 
 <TimelineItem title="Configure AgentCore">
 
-Pass your metric collections to the `instrument_agentcore` method for different span levels.
+Pass `agent_metrics` to the `instrument_agentcore` method.
 
 ```python title="main.py" showLineNumbers
+import nest_asyncio
+nest_asyncio.apply()
+
+from bedrock_agentcore import BedrockAgentCoreApp
+from strands import Agent
+from deepeval.integrations.agentcore import instrument_agentcore
+from deepeval.metrics import AnswerRelevancyMetric
+
+instrument_agentcore(
+    name="AgentCore Tracing",
+    environment="development",
+    agent_metrics=[AnswerRelevancyMetric()],
+)
+
+app = BedrockAgentCoreApp()
+agent = Agent(model="amazon.nova-lite-v1:0")
+
+@app.entrypoint
+def invoke(payload):
+    user_message = payload.get("prompt")
+    result = agent(user_message)
+    return {"result": result.message}
+
+response = invoke({"prompt": "Make a funny joke"})
+```
+
+:::info
+Evaluations are supported for Strands `Agent`. Only metrics with parameters `input`, `output` and `tools_called` are eligible for evaluation.
+:::
+
+</TimelineItem>
+<TimelineItem title="Run evaluations">
+
+Create an `EvaluationDataset` and invoke your agentcore application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
+
+<Tabs groupId="pydantic_ai">
+<TabItem value="asynchronous" label="Asynchronous">
+
+```python title="main.py" showLineNumbers
+from deepeval.evaluate.configs import AsyncConfig
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="What's the weather in Paris?"),
+        Golden(input="What's the weather in London?"),
+    ]
+)
+
+for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=False)):
+    response = invoke({"prompt": golden.input})
+```
+
+</TabItem>
+</Tabs>
+
+✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
+
+</TimelineItem>
+
+</Timeline>
+
+## Evals in Production
+
+To run online evaluations in production, replace `metrics` with a [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections) string from Confident AI, and run your Strands agent as usual with agentcore:
+
+```python filename="main.py" showLineNumbers
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent
 from deepeval.integrations.agentcore import instrument_agentcore
@@ -71,37 +137,4 @@ def invoke(payload):
 response = invoke({"prompt": "Make a funny joke"})
 ```
 
-:::info
-Online evaluations are supported for agentcore traces at different levels of spans like Trace, LLM, Agent, Tools.
-:::
-
-</TimelineItem>
-<TimelineItem title="Run evaluations">
-
-Create an `EvaluationDataset` and invoke your agentcore application for each golden using a for loop to run online evaluations.
-
-<Tabs>
-<TabItem value="asynchronous" label="Asynchronous">
-
-```python title="main.py" showLineNumbers
-import asyncio
-
-dataset = EvaluationDataset(
-    goldens=[
-        Golden(input="What's the weather in Paris?"),
-        Golden(input="What's the weather in London?"),
-    ]
-)
-
-for golden in dataset.goldens:
-    invoke({"prompt": golden.input})
-```
-
-</TabItem>
-</Tabs>
-
-✅ Done. This will now automatically run evaluations for your traces for each golden.
-
-</TimelineItem>
-
-</Timeline>
+`deepeval` allows you to run component evals at different levels of like Trace, Agent, LLM and Tool spans. You can pass your metric collection for any spans using the `instrument_agentcore` method.

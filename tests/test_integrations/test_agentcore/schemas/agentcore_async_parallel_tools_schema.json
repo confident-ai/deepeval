@@ -1,27 +1,28 @@
 {
-  "uuid": "d4ea72f2279d151c09d81aef60d7f2b9",
+  "uuid": "87530d01b19a83dcc47d3f1f56b2ddd7",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "3c76d4a1b0e296d4",
+      "uuid": "aba501d135cd334c",
       "name": "invoke_agent Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:38:59.377Z",
-      "endTime": "2026-03-09T09:39:02.294Z",
+      "startTime": "2026-03-09T11:17:30.707Z",
+      "endTime": "2026-03-09T11:17:33.089Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-      "output": "<thinking>I have used the get_weather and get_time tools to get the weather and time for Tokyo. I will now share these results with the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F and the current time is 3:00 PM JST.\n",
+      "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "3c76d4a1b0e296d4",
+      "uuid": "aba501d135cd334c",
       "name": "",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-09T09:38:59.377Z",
-      "endTime": "2026-03-09T09:39:02.294Z",
-      "input": [],
+      "startTime": "2026-03-09T11:17:30.707Z",
+      "endTime": "2026-03-09T11:17:33.089Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
+      "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
       "toolsCalled": [],
       "availableTools": [],
       "agentHandoffs": []
@@ -30,8 +31,8 @@
   "llmSpans": [],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-03-09T09:38:59.377Z",
-  "endTime": "2026-03-09T09:39:02.294Z",
+  "startTime": "2026-03-09T11:17:30.707Z",
+  "endTime": "2026-03-09T11:17:33.089Z",
   "name": "agentcore-async-parallel-tools",
   "metadata": {
     "test_type": "async_parallel_tools"
@@ -45,6 +46,6 @@
   "threadId": "async-parallel-tools-123",
   "userId": "test-user-async",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
-  "output": "<thinking>I have used the get_weather and get_time tools to get the weather and time for Tokyo. I will now share these results with the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F and the current time is 3:00 PM JST.\n",
+  "output": "<thinking>I have received the results from both tools. I will now present the information to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72 degrees Fahrenheit. The current time in Tokyo is 3:00 PM JST.\n",
   "status": "SUCCESS"
 }
