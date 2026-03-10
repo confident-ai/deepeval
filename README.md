@@ -148,11 +148,10 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
 
 - 🎯 Supports both end-to-end and component-level LLM evaluation.
 - 🧩 Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
-- 🔮 Generate synthetic datasets for evaluation.
+- 🔮 Generate both single and multi-turn synthetic datasets for evaluation.
 - 🔗 Integrates seamlessly with **ANY** CI/CD environment.
+- 🧬 Optimize prompts automatically based on evaluation results.
 - 🏆 Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://deepeval.com/docs/benchmarks-introduction?utm_source=GitHub), including MMLU, HellaSwag, DROP, BIG-Bench Hard, TruthfulQA, HumanEval, GSM8K.
-  > [!NOTE]
-  > DeepEval is available on Confident AI, an LLM evals platform for AI observability and quality. Create an account [here.](https://app.confident-ai.com?utm_source=GitHub)
 
 <br />
 
