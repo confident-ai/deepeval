@@ -70,7 +70,7 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 > 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)
 
-- Large variety of ready-to-use LLM eval metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine** covering all use cases:
+- 📐 Large variety of ready-to-use LLM eval metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine** covering all use cases:
 
   - **Custom, All-Purpose Metrics:**
 
@@ -148,24 +148,12 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
     </details>
 
-- Supports both end-to-end and component-level LLM evaluation.
-- Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
-- Generate synthetic datasets for evaluation.
-- Integrates seamlessly with **ANY** CI/CD environment.
-- [Red team your LLM application](https://deepeval.com/docs/red-teaming-introduction) for 40+ safety vulnerabilities in a few lines of code, including:
-  - Toxicity
-  - Bias
-  - SQL Injection
-  - etc., using advanced 10+ attack enhancement strategies such as prompt injections.
-- Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://deepeval.com/docs/benchmarks-introduction?utm_source=GitHub), which includes:
-  - MMLU
-  - HellaSwag
-  - DROP
-  - BIG-Bench Hard
-  - TruthfulQA
-  - HumanEval
-  - GSM8K
-- [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation & observability lifecycle:
+- 🎯 Supports both end-to-end and component-level LLM evaluation.
+- 🧩 Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
+- 🔮 Generate synthetic datasets for evaluation.
+- 🔗 Integrates seamlessly with **ANY** CI/CD environment.
+- 🏆 Easily benchmark **ANY** LLM on popular LLM benchmarks in [under 10 lines of code.](https://deepeval.com/docs/benchmarks-introduction?utm_source=GitHub), including MMLU, HellaSwag, DROP, BIG-Bench Hard, TruthfulQA, HumanEval, GSM8K.
+- ☁️ [100% integrated with Confident AI](https://confident-ai.com?utm_source=GitHub) for the full evaluation & observability lifecycle:
   - Curate/annotate evaluation datasets on the cloud
   - Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
   - Fine-tune metrics for custom results
@@ -180,8 +168,16 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 # 🔌 Integrations
 
-- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub)
-- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://www.deepeval.com/integrations/frameworks/huggingface?utm_source=GitHub)
+- [OpenAI](https://www.deepeval.com/integrations/frameworks/openai?utm_source=GitHub) — evaluate and trace OpenAI applications via a client wrapper
+- [OpenAI Agents](https://www.deepeval.com/integrations/frameworks/openai-agents?utm_source=GitHub) — evaluate OpenAI Agents end-to-end in under a minute
+- [LangChain](https://www.deepeval.com/integrations/frameworks/langchain?utm_source=GitHub) — evaluate LangChain applications with a callback handler
+- [LangGraph](https://www.deepeval.com/integrations/frameworks/langgraph?utm_source=GitHub) — evaluate LangGraph agents with a callback handler
+- [Pydantic AI](https://www.deepeval.com/integrations/frameworks/pydanticai?utm_source=GitHub) — evaluate Pydantic AI agents with type-safe validation
+- [CrewAI](https://www.deepeval.com/integrations/frameworks/crewai?utm_source=GitHub) — evaluate CrewAI multi-agent systems
+- [Anthropic](https://www.deepeval.com/integrations/frameworks/anthropic?utm_source=GitHub) — evaluate and trace Claude applications via a client wrapper
+- [AWS AgentCore](https://www.deepeval.com/integrations/frameworks/agentcore?utm_source=GitHub) — evaluate agents deployed on Amazon AgentCore
+- [LlamaIndex](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub) — evaluate RAG applications built with LlamaIndex
+- [Hugging Face](https://www.deepeval.com/integrations/frameworks/huggingface?utm_source=GitHub) — enable real-time evaluations during LLM fine-tuning
 
 <br />
 
@@ -477,4 +473,3 @@ Built by the founders of Confident AI. Contact jeffreyip@confident-ai.com for al
 # License
 
 DeepEval is licensed under Apache 2.0 - see the [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md) file for details.
-
