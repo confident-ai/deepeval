@@ -57,6 +57,11 @@
 
 Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
+> [!IMPORTANT]
+> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
+>
+> ![Demo GIF](assets/demo.gif)
+
 > Want to talk LLM evaluation, need help picking metrics, or just to say hi? [Come join our discord.](https://discord.com/invite/3SEyvpgu2f)
 
 <br />
@@ -257,11 +262,6 @@ deepeval test run test_chatbot.py
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 [Read our documentation](https://deepeval.com/docs/getting-started?utm_source=GitHub) for more information!
-
-> [!IMPORTANT]
-> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
->
-> ![Demo GIF](assets/demo.gif)
 
 <br />
 
