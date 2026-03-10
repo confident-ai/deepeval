@@ -180,7 +180,7 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 - Don't need a UI? Confident AI can also be your data persistant layer - run evals, pull datasets, and inspect traces straight from claude code, cursor, via Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
 
 <p align="center">
-  <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="600">
+  <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
 </p>
 
 <br />
@@ -400,49 +400,27 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-DeepEval is available on [Confident AI](https://confident-ai.com?utm_source=Github), an evals & observability platform that allows you to:
-
-1. Curate/annotate evaluation datasets on the cloud
-2. Benchmark LLM app using dataset, and compare with previous iterations to experiment which models/prompts works best
-3. Fine-tune metrics for custom results
-4. Debug evaluation results via LLM traces
-5. Monitor & evaluate LLM responses in product to improve datasets with real-world data
-6. Repeat until perfection
-
-Everything on Confident AI, including how to use Confident is available [here](https://www.confident-ai.com/docs?utm_source=GitHub).
-
-To begin, login from the CLI:
+[Confident AI](https://confident-ai.com?utm_source=GitHub) is an all-in-one platform to manage datasets, trace LLM applications, and run evaluations in production. Log in from the CLI to get started:
 
 ```bash
 deepeval login
 ```
 
-Follow the instructions to log in, create your account, and paste your API key into the CLI.
-
-Now, run your test file again:
+Then run your tests as usual — results are automatically synced to the platform:
 
 ```bash
 deepeval test run test_chatbot.py
 ```
 
-You should see a link displayed in the CLI once the test has finished running. Paste it into your browser to view the results!
-
 ![Demo GIF](assets/demo.gif)
 
-<br />
+Prefer to stay in your IDE? Use DeepEval via [Confident AI's MCP server](https://github.com/confident-ai/confident-mcp-server) as the persistent layer to run evals, pull datasets, and inspect traces without leaving your editor.
 
-## Configuration
+<p align="center">
+  <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
+</p>
 
-### Environment variables via .env files
-
-Using `.env.local` or `.env` is optional. If they are missing, DeepEval uses your existing environment variables. When present, dotenv environment variables are auto-loaded at import time (unless you set `DEEPEVAL_DISABLE_DOTENV=1`).
-
-**Precedence:** process env -> `.env.local` -> `.env`
-
-```bash
-cp .env.example .env.local
-# then edit .env.local (ignored by git)
-```
+Everything on Confident AI is available [here](https://www.confident-ai.com/docs?utm_source=GitHub).
 
 <br />
 
