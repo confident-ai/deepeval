@@ -70,31 +70,80 @@ Whether your LLM applications are AI agents, RAG pipelines, or chatbots, impleme
 
 > 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)
 
+- Large variety of ready-to-use LLM eval metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine** covering all use cases:
+
+  - <details>
+    <summary><b>Agentic Metrics</b></summary>
+
+    - [Task Completion](https://deepeval.com/docs/metrics-task-completion) — evaluate whether an agent accomplished its goal
+    - [Tool Correctness](https://deepeval.com/docs/metrics-tool-correctness) — check if the right tools were called with the right arguments
+    - [Goal Accuracy](https://deepeval.com/docs/metrics-goal-accuracy) — measure how accurately the agent achieved the intended goal
+    - [Step Efficiency](https://deepeval.com/docs/metrics-step-efficiency) — evaluate whether the agent took unnecessary steps
+    - [Plan Adherence](https://deepeval.com/docs/metrics-plan-adherence) — check if the agent followed the expected plan
+    - [Plan Quality](https://deepeval.com/docs/metrics-plan-quality) — evaluate the quality of the agent's plan
+    - [Tool Use](https://deepeval.com/docs/metrics-tool-use) — measure quality of tool usage
+    - [Argument Correctness](https://deepeval.com/docs/metrics-argument-correctness) — validate tool call arguments
+
+    </details>
+
+  - <details>
+    <summary><b>RAG Metrics</b></summary>
+
+    - [Answer Relevancy](https://deepeval.com/docs/metrics-answer-relevancy)
+    - [Faithfulness](https://deepeval.com/docs/metrics-faithfulness)
+    - [Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall)
+    - [Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision)
+    - [Contextual Relevancy](https://deepeval.com/docs/metrics-contextual-relevancy)
+    - [RAGAS](https://deepeval.com/docs/metrics-ragas)
+
+    </details>
+
+  - <details>
+    <summary><b>Multi-Turn Metrics</b></summary>
+
+    - [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention)
+    - [Conversation Completeness](https://deepeval.com/docs/metrics-conversation-completeness)
+    - [Turn Relevancy](https://deepeval.com/docs/metrics-turn-relevancy)
+    - [Turn Faithfulness](https://deepeval.com/docs/metrics-turn-faithfulness)
+    - [Role Adherence](https://deepeval.com/docs/metrics-role-adherence)
+
+    </details>
+
+  - <details>
+    <summary><b>MCP Metrics</b></summary>
+
+    - [MCP Task Completion](https://deepeval.com/docs/metrics-mcp-task-completion) — evaluate MCP server task completion
+    - [MCP Use](https://deepeval.com/docs/metrics-mcp-use) — measure quality of MCP tool usage
+    - [Multi-Turn MCP Use](https://deepeval.com/docs/metrics-multi-turn-mcp-use) — evaluate MCP usage across conversation turns
+
+    </details>
+
+  - <details>
+    <summary><b>Multimodal Metrics</b></summary>
+
+    - [Text to Image](https://deepeval.com/docs/metrics-text-to-image)
+    - [Image Editing](https://deepeval.com/docs/metrics-image-editing)
+    - [Image Coherence](https://deepeval.com/docs/metrics-image-coherence)
+    - [Image Helpfulness](https://deepeval.com/docs/metrics-image-helpfulness)
+    - [Image Reference](https://deepeval.com/docs/metrics-image-reference)
+
+    </details>
+
+  - <details>
+    <summary><b>General Metrics</b></summary>
+
+    - [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — evaluate on any custom criteria with human-like accuracy
+    - [DAG](https://deepeval.com/docs/metrics-dag) — deep acyclic graph metrics
+    - [Hallucination](https://deepeval.com/docs/metrics-hallucination)
+    - [Summarization](https://deepeval.com/docs/metrics-summarization)
+    - [Bias](https://deepeval.com/docs/metrics-bias)
+    - [Toxicity](https://deepeval.com/docs/metrics-toxicity)
+    - [JSON Correctness](https://deepeval.com/docs/metrics-json-correctness)
+    - [Prompt Alignment](https://deepeval.com/docs/metrics-prompt-alignment)
+
+    </details>
+
 - Supports both end-to-end and component-level LLM evaluation.
-- Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that run **locally on your machine**:
-  - G-Eval
-  - DAG ([deep acyclic graph](https://deepeval.com/docs/metrics-dag))
-  - **RAG metrics:**
-    - Answer Relevancy
-    - Faithfulness
-    - Contextual Recall
-    - Contextual Precision
-    - Contextual Relevancy
-    - RAGAS
-  - **Agentic metrics:**
-    - Task Completion
-    - Tool Correctness
-  - **Others:**
-    - Hallucination
-    - Summarization
-    - Bias
-    - Toxicity
-  - **Conversational metrics:**
-    - Knowledge Retention
-    - Conversation Completeness
-    - Conversation Relevancy
-    - Role Adherence
-  - etc.
 - Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
 - Generate synthetic datasets for evaluation.
 - Integrates seamlessly with **ANY** CI/CD environment.
