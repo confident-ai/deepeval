@@ -48,6 +48,7 @@ class ConversationalGEval(BaseConversationalMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        top_logprobs: int = 20,
         rubric: Optional[List[Rubric]] = None,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -82,6 +83,7 @@ class ConversationalGEval(BaseConversationalMetric):
             else None
         )
         self.threshold = 1 if strict_mode else threshold
+        self.top_logprobs = top_logprobs
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
@@ -269,7 +271,7 @@ class ConversationalGEval(BaseConversationalMetric):
             )
         try:
             res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=20
+                prompt, top_logprobs=self.top_logprobs
             )
 
             self._accrue_cost(cost)
@@ -331,7 +333,7 @@ class ConversationalGEval(BaseConversationalMetric):
             )
         try:
             res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=20
+                prompt, top_logprobs=self.top_logprobs
             )
             self._accrue_cost(cost)
             data = trimAndLoadJson(res.choices[0].message.content, self)
