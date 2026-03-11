@@ -76,8 +76,6 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
     - [DAG](https://deepeval.com/docs/metrics-dag) — DeepEval's graph-based deterministic LLM-as-a-judge metric builder
 
   - <details>
-
-  - <details>
     <summary><b>Agentic Metrics</b></summary>
 
     - [Task Completion](https://deepeval.com/docs/metrics-task-completion) — evaluate whether an agent accomplished its goal
