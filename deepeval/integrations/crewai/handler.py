@@ -9,7 +9,8 @@ from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer, trace_manager
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus, LlmSpan
 from deepeval.config.settings import get_settings
-
+from deepeval.tracing.utils import perf_counter_to_datetime
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -342,9 +343,16 @@ class CrewAIEventsListener(BaseEventListener):
             if span:
                 span.input = tool_input
                 span.output = output
+                now_wall = time.time()
+                now_perf = perf_counter()
+                span.start_time = now_perf - (now_wall - event.started_at.timestamp())
+                span.end_time = now_perf - (now_wall - event.finished_at.timestamp())
 
             observer.result = output
             observer.__exit__(None, None, None)
+
+            if span:
+                span.end_time = now_perf - (now_wall - event.finished_at.timestamp())
 
             # Propagate tools_called to parent span
             if span and span.parent_uuid:
