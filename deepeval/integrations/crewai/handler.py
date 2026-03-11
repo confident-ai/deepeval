@@ -1,3 +1,4 @@
+import copy
 import logging
 import deepeval
 from collections import defaultdict
@@ -389,6 +390,8 @@ class CrewAIEventsListener(BaseEventListener):
                     span_to_close.output = getattr(
                         event, "output", getattr(event, "result", None)
                     )
+                    if span_to_close.input is None:
+                        span_to_close.input = observer.function_kwargs
                     if not current_span or current_span.uuid != observer.uuid:
                         token = current_span_context.set(span_to_close)
 
