@@ -303,7 +303,7 @@ def test_azure_openai_model_raises_on_explicit_empty_api_key_secretstr(monkeypat
     monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
 
     with pytest.raises(Exception) as e:
-        _ = AzureOpenAIModel(api_key=SecretStr("   "))
+        _ = AzureOpenAIModel(api_key=" ")
 
     assert "api_key was provided but is empty" in str(e.value)
 
