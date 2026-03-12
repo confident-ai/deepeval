@@ -271,7 +271,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 schema_cls=Knowledge,
                 extract_schema=lambda s: s,
-                extract_json=lambda data: Knowledge(data=data),
+                extract_json=lambda data: Knowledge(**data),
             )
 
         return knowledges
@@ -300,7 +300,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 schema_cls=Knowledge,
                 extract_schema=lambda s: s,
-                extract_json=lambda data: Knowledge(data=data),
+                extract_json=lambda data: Knowledge(**data),
             )
 
         return knowledges

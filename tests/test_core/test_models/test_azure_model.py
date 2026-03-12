@@ -221,6 +221,146 @@ class TestAzureOpenAIModelGenerationKwargs:
 # Test Secret Management #
 ##########################
 
+def test_azure_openai_model_defers_auth_when_no_key_token_or_provider(monkeypatch, settings):
+    """
+    Keyless / Managed Identity scenarios may have key-based auth disabled.
+    DeepEval should NOT fail fast when api_key / azure_ad_token / provider are all unset.
+    It should defer auth validation to the OpenAI SDK.
+    """
+    # Ensure Settings has the non-auth Azure config required for client construction
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None  # critical: no key
+        settings.AZURE_OPENAI_AD_TOKEN = None  # critical: no token (if present in settings)
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    # Stub SDK clients so no real network calls happen
+    monkeypatch.setattr(azure_mod, "AzureOpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
+
+    # This should NOT raise DeepEvalError anymore (it should defer to SDK)
+    model = AzureOpenAIModel()
+
+    client = model.model
+    kw = client.kwargs
+
+    # We expect credentials to be None (SDK can attempt keyless auth internally)
+    assert kw.get("api_key") is None
+    assert kw.get("azure_ad_token") is None
+    assert kw.get("azure_ad_token_provider") is None
+
+
+@pytest.mark.parametrize("bad_key", ["", "   ", "\n\t"])
+def test_azure_openai_model_raises_on_explicit_empty_api_key(monkeypatch, settings, bad_key):
+    """
+    If the user explicitly provides api_key but it's empty/whitespace,
+    DeepEval should fail fast with a helpful error message.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(azure_mod, "AzureOpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(api_key=bad_key)
+
+    # match your new error text (keeps test stable & intentional)
+    assert "api_key was provided but is empty" in str(e.value)
+
+
+def test_azure_openai_model_raises_on_explicit_empty_api_key_secretstr(monkeypatch, settings):
+    """
+    Same as above, but ensures SecretStr is unwrapped via get_secret_value().
+    This directly validates the new SecretStr handling logic.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(azure_mod, "AzureOpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(api_key=SecretStr("   "))
+
+    assert "api_key was provided but is empty" in str(e.value)
+
+
+@pytest.mark.parametrize("bad_token", ["", "   ", "\n\t"])
+def test_azure_openai_model_raises_on_explicit_empty_ad_token(monkeypatch, settings, bad_token):
+    """
+    If the user explicitly provides azure_ad_token but it's empty/whitespace,
+    DeepEval should fail fast with a helpful error message.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(azure_mod, "AzureOpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
+
+    with pytest.raises(Exception) as e:
+        _ = AzureOpenAIModel(azure_ad_token=bad_token)
+
+    assert "azure_ad_token was provided but is empty" in str(e.value)
+
+
+def test_azure_openai_model_does_not_fail_fast_when_token_provider_present(monkeypatch, settings):
+    """
+    If a token provider is supplied, we should not block early on missing key/token.
+    Provider controls auth.
+    """
+    with settings.edit(persist=False):
+        settings.AZURE_OPENAI_API_KEY = None
+        settings.AZURE_OPENAI_ENDPOINT = "https://azure.example.com"
+        settings.AZURE_DEPLOYMENT_NAME = "settings-deployment"
+        settings.AZURE_MODEL_NAME = "gpt-4.1"
+        settings.OPENAI_API_VERSION = "2024-02-15-preview"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 1e-6
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    reset_settings(reload_dotenv=False)
+
+    monkeypatch.setattr(azure_mod, "AzureOpenAI", _RecordingClient, raising=True)
+    monkeypatch.setattr(azure_mod, "AsyncAzureOpenAI", _RecordingClient, raising=True)
+
+    def provider():
+        return "token"
+
+    model = AzureOpenAIModel(azure_ad_token_provider=provider)
+
+    client = model.model
+    kw = client.kwargs
+    assert kw.get("azure_ad_token_provider") is provider
 
 def test_azure_openai_model_uses_explicit_key_over_settings_and_strips_secret(
     monkeypatch, settings
