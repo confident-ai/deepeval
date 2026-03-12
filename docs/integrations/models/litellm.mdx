@@ -4,6 +4,9 @@ title: LiteLLM
 sidebar_label: LiteLLM
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 DeepEval allows you to use any model supported by LiteLLM to run evals, either through the CLI or directly in Python.
 
 :::note
@@ -63,6 +66,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 When using LiteLLM in Python, you must always specify the provider in the model name. Here's how to use `LiteLLMModel` from DeepEval's model collection:
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import LiteLLMModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -77,6 +83,24 @@ model = LiteLLMModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any LiteLLM model directly in `deepeval`, set the `USE_LITELLM=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="openai/gpt-3.5-turbo",
+)
+```
+
+You should also set the other necessary vars like `LITELLM_API_KEY` to be able to use the LiteLLM models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **FIVE** optional parameters when creating a `LiteLLMModel`:
 

@@ -4,6 +4,9 @@ title: DeepSeek
 sidebar_label: DeepSeek
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 `deepeval` allows you to use `deepseek-chat` and `deepseek-reasoner` directly from DeepSeek to run all of `deepeval`'s metrics, which can be set through the CLI or in python.
 
 ### Command Line
@@ -30,6 +33,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 You can also specify your model directly in code using `DeepSeekModel`.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import DeepSeekModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -42,6 +48,24 @@ model = DeepSeekModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any DeepSeek model directly in `deepeval`, set the `USE_DEEPSEEK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="deepseek-chat",
+)
+```
+
+You should also set the other necessary vars like `DEEPSEEK_API_KEY` to be able to use the Deepseek models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **SIX** optional parameters when creating a `DeepSeekModel`:
 

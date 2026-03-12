@@ -4,6 +4,9 @@ title: OpenAI
 sidebar_label: OpenAI
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
 
 ### Setting Up Your API Key
@@ -64,6 +67,9 @@ You may use OpenAI models other than `gpt-4.1`, which can be configured directly
 You may want to use stronger reasoning models like `gpt-4.1` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 :::
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -76,6 +82,22 @@ model = GPTModel(
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+`deepeval` by default uses OpenAI models for evaluations, you can simply pass the name of your desired model in metric initialization and set the `OPENAI_API_KEY` to use OpenAI models:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="gpt-4.1",
+)
+```
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GPTModel`:
 

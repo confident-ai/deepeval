@@ -4,6 +4,9 @@ title: Azure OpenAI
 sidebar_label: Azure OpenAI
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 `deepeval` allows you to directly integrate Azure OpenAI models into all available LLM-based metrics. You can easily configure the model through the command line or directly within your python code.
 
 ### Command Line
@@ -40,6 +43,9 @@ Alternatively, you can specify your model directly in code using `AzureOpenAIMod
 This approach is ideal when you need to use separate models for specific metrics.
 :::
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import AzureOpenAIModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -55,6 +61,24 @@ model = AzureOpenAIModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Azure OpenAI model directly in `deepeval`, set the `USE_AZURE_OPENAI=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="gpt-4.1",
+)
+```
+
+You should also set the other necessary vars like `AZURE_OPENAI_API_KEY` to be able to use the Azure OpenAI models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
 
