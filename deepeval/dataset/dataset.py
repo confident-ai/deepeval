@@ -489,6 +489,7 @@ class EvaluationDataset:
         turns_col_name: Optional[str] = "turns",
         expected_outcome_col_name: Optional[str] = "expected_outcome",
         user_description_col_name: Optional[str] = "user_description",
+        tags_col_name: Optional[str] = "tags",
     ):
         try:
             import pandas as pd
@@ -560,6 +561,18 @@ class EvaluationDataset:
                 df, additional_metadata_col_name, default=""
             )
         ]
+        tags_list = []
+        for t in get_column_data(df, tags_col_name, default=""):
+            if t:
+                try:
+                    tags_list.append(json.loads(t))
+                except json.JSONDecodeError:
+                    raise ValueError(
+                        f"Invalid JSON in '{tags_col_name}' column: {t}. "
+                        f"Expected a JSON array like [\"tag1\", \"tag2\"]."
+                    )
+            else:
+                tags_list.append(None)
         scenarios = get_column_data(df, scenario_col_name)
         turns_raw = get_column_data(df, turns_col_name)
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
@@ -577,6 +590,7 @@ class EvaluationDataset:
             name,
             source_file,
             additional_metadata,
+            tags,
             scenario,
             turns,
             expected_outcome,
@@ -593,6 +607,7 @@ class EvaluationDataset:
             name,
             source_files,
             additional_metadatas,
+            tags_list,
             scenarios,
             turns_raw,
             expected_outcomes,
@@ -611,6 +626,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=additional_metadata,
+                        tags=tags,
                     )
                 )
             else:
@@ -628,6 +644,7 @@ class EvaluationDataset:
                         source_file=source_file,
                         comments=comments,
                         name=name,
+                        tags=tags,
                     )
                 )
 
@@ -649,6 +666,7 @@ class EvaluationDataset:
         turns_key_name: Optional[str] = "turns",
         expected_outcome_key_name: Optional[str] = "expected_outcome",
         user_description_key_name: Optional[str] = "user_description",
+        tags_key_name: Optional[str] = "tags",
         encoding_type: str = "utf-8",
     ):
         try:
@@ -670,6 +688,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
                 additional_metadata = json_obj.get(additional_metadata_key_name)
+                tags = json_obj.get(tags_key_name)
 
                 self._multi_turn = True
                 self.goldens.append(
@@ -682,6 +701,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         additional_metadata=additional_metadata,
+                        tags=tags,
                     )
                 )
             else:
@@ -696,6 +716,7 @@ class EvaluationDataset:
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
                 additional_metadata = json_obj.get(additional_metadata_key_name)
+                tags = json_obj.get(tags_key_name)
 
                 self._multi_turn = False
                 self.goldens.append(
@@ -711,6 +732,7 @@ class EvaluationDataset:
                         comments=comments,
                         name=name,
                         source_file=source_file,
+                        tags=tags,
                     )
                 )
 
@@ -979,6 +1001,7 @@ class EvaluationDataset:
                     comments=golden.comments,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
+                    tags=golden.tags,
                 )
                 for golden in self.goldens
             ]
@@ -997,6 +1020,7 @@ class EvaluationDataset:
                     expected_tools=golden.expected_tools,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
+                    tags=golden.tags,
                 )
                 for golden in self.goldens
             ]
@@ -1046,6 +1070,7 @@ class EvaluationDataset:
                                 "comments": golden.comments,
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
+                                "tags": golden.tags,
                             }
                         )
                 else:
@@ -1087,6 +1112,7 @@ class EvaluationDataset:
                                 ),
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
+                                "tags": golden.tags,
                             }
                         )
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
@@ -1107,6 +1133,7 @@ class EvaluationDataset:
                             "comments",
                             "additional_metadata",
                             "custom_column_key_values",
+                            "tags",
                         ]
                     )
                     for golden in goldens:
@@ -1135,6 +1162,13 @@ class EvaluationDataset:
                             if golden.custom_column_key_values
                             else None
                         )
+                        tags = (
+                            json.dumps(
+                                golden.tags, ensure_ascii=False
+                            )
+                            if golden.tags is not None
+                            else None
+                        )
                         writer.writerow(
                             [
                                 golden.scenario,
@@ -1146,6 +1180,7 @@ class EvaluationDataset:
                                 golden.comments,
                                 additional_metadata,
                                 custom_cols,
+                                tags,
                             ]
                         )
                 else:
@@ -1163,6 +1198,7 @@ class EvaluationDataset:
                             "expected_tools",
                             "additional_metadata",
                             "custom_column_key_values",
+                            "tags",
                         ]
                     )
                     for golden in goldens:
@@ -1212,6 +1248,13 @@ class EvaluationDataset:
                             if golden.custom_column_key_values
                             else None
                         )
+                        tags = (
+                            json.dumps(
+                                golden.tags, ensure_ascii=False
+                            )
+                            if golden.tags is not None
+                            else None
+                        )
                         writer.writerow(
                             [
                                 golden.input,
@@ -1226,6 +1269,7 @@ class EvaluationDataset:
                                 expected_tools,
                                 additional_metadata,
                                 custom_cols,
+                                tags,
                             ]
                         )
         elif file_type == "jsonl":
@@ -1247,6 +1291,7 @@ class EvaluationDataset:
                             "comments": golden.comments,
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
+                            "tags": golden.tags,
                         }
                     else:
                         retrieval_context = (
@@ -1290,6 +1335,7 @@ class EvaluationDataset:
                             ),
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
+                            "tags": golden.tags,
                         }
 
                     file.write(json.dumps(record, ensure_ascii=False) + "\n")

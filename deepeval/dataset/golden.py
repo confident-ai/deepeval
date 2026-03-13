@@ -34,6 +34,7 @@ class Golden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
+    tags: Optional[List[str]] = Field(default=None)
     multimodal: bool = Field(False, exclude=True)
     images_mapping: Dict[str, MLLMImage] = Field(
         default=None, alias="imagesMapping"
@@ -122,6 +123,7 @@ class ConversationalGolden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
+    tags: Optional[List[str]] = Field(default=None)
     turns: Optional[List[Turn]] = Field(default=None)
     multimodal: bool = Field(False, exclude=True)
     images_mapping: Dict[str, MLLMImage] = Field(

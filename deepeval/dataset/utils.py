@@ -25,6 +25,7 @@ def convert_test_cases_to_goldens(
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
             "additional_metadata": test_case.additional_metadata,
+            "tags": test_case.tags,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -48,6 +49,7 @@ def convert_goldens_to_test_cases(
             name=golden.name,
             comments=golden.comments,
             additional_metadata=golden.additional_metadata,
+            tags=golden.tags,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
@@ -72,6 +74,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "user_description": test_case.user_description,
             "context": test_case.context,
             "additional_metadata": test_case.additional_metadata,
+            "tags": test_case.tags,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
@@ -92,6 +95,7 @@ def convert_convo_goldens_to_convo_test_cases(
             name=golden.name,
             additional_metadata=golden.additional_metadata,
             comments=golden.comments,
+            tags=golden.tags,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
