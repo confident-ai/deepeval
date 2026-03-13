@@ -230,6 +230,7 @@ class KeyFileHandler:
     ):
         """Fetches the data from the hidden file.
         NOTE: secrets in this file are deprecated; prefer env/.env."""
+
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:

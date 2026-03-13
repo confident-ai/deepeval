@@ -11,8 +11,8 @@ sidebar_label: From Documents
   />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**.
 
@@ -20,18 +20,18 @@ By simply providing these documents, `deepeval`'s Synthesizer will automatically
 
 <div
   style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }}
 >
   <img
     src="https://deepeval-docs.s3.amazonaws.com/synthesize-from-docs.svg"
     style={{
-      marginTop: "20px",
-      marginBottom: "50px",
-      height: "auto",
-      maxHeight: "800px",
+      marginTop: '20px',
+      marginBottom: '50px',
+      height: 'auto',
+      maxHeight: '800px',
     }}
   />
 </div>
@@ -127,7 +127,7 @@ synthesizer.generate_goldens_from_docs(
 
 There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
 
-- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4.1` when initialized as a standalone instance.
+- [Optional] `critic_model`: a string specifying which of Anthropic's Claude models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4.1` when initialized as a standalone instance.
 - [Optional] `encoding`: the encoding to use to decode plain text–based files (`.txt`, `.md`, `.markdown`, `.mdx`). Defaulted to autodetecting the encoding.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `min_contexts_per_document`: the minimum number of contexts to be generated per document. Defaulted to 1.
@@ -197,18 +197,18 @@ Similar to the context selection step, if the cosine similarity is still lower t
 
 <div
   style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "start",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'start',
   }}
 >
   <img
     src="https://deepeval-docs.s3.amazonaws.com/filtering_context.svg"
     style={{
-      marginTop: "20px",
-      marginBottom: "20px",
-      height: "auto",
-      maxHeight: "800px",
+      marginTop: '20px',
+      marginBottom: '20px',
+      height: 'auto',
+      maxHeight: '800px',
     }}
   />
 </div>

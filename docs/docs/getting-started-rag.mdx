@@ -4,11 +4,11 @@ title: RAG Evaluation Quickstart
 sidebar_label: RAG
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import CodeBlock from "@theme/CodeBlock";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 Learn to evaluate retrieval-augmented-generation (RAG) pipelines and systems using `deepeval`, such as RAG QA, summarizaters, and customer support chatbots.
 
@@ -55,7 +55,7 @@ The `retrieval_context` in the diagram above is cruical, as it represents the te
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
 
-task_completion_metric = AnswerRelevancyMetric(model="gpt-4.1")
+task_completion_metric = AnswerRelevancyMetric(model="claude-3-7-sonnet-latest")
 ```
 
 </TabItem>

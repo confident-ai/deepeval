@@ -4,11 +4,11 @@ title: Chatbot Evaluation Quickstart
 sidebar_label: Chatbots
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import CodeBlock from "@theme/CodeBlock";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 
 Learn to evaluate any multi-turn chatbot using `deepeval` - including QA agents, customer support chatbots, and even chatrooms.
 
@@ -63,7 +63,7 @@ In `deepeval`, chatbots are evaluated as multi-turn **interactions**. In code, y
 ```python
 from deepeval.metrics import TurnRelevancyMetric
 
-task_completion_metric = TurnRelevancyMetric(model="gpt-4.1")
+task_completion_metric = TurnRelevancyMetric(model="claude-3-7-sonnet-latest")
 ```
 
 </TabItem>

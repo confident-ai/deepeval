@@ -53,7 +53,7 @@ def travel_agent(user_input):
     return f"Found cheapest flight: {cheapest['id']} for ${cheapest['price']}"
 
 # Initialize metric
-plan_quality = PlanQualityMetric(threshold=0.7, model="gpt-4o")
+plan_quality = PlanQualityMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Evaluate agent with plan quality metric
 dataset = EvaluationDataset(goldens=[Golden(input="Find me the cheapest flight to Paris")])
@@ -101,7 +101,7 @@ def travel_agent(user_input):
     return f"Booked flight {cheapest['id']}. Confirmation: {booking['confirmation']}"
 
 # Initialize metric
-plan_adherence = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
+plan_adherence = PlanAdherenceMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Evaluate whether agent followed its plan
 dataset = EvaluationDataset(goldens=[Golden(input="Book the cheapest flight to Paris")])
@@ -199,7 +199,7 @@ from deepeval.metrics import ArgumentCorrectnessMetric
 from deepeval.test_case import LLMTestCase, ToolCall
 
 # Initialize metric
-argument_correctness = ArgumentCorrectnessMetric(threshold=0.7, model="gpt-4o")
+argument_correctness = ArgumentCorrectnessMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 @observe(type="tool")
 def search_flights(origin, destination, date):
@@ -274,7 +274,7 @@ def travel_agent(user_input):
     return f"Booked flight {cheapest['id']} for ${cheapest['price']}. Confirmation: {booking['confirmation']}"
 
 # Initialize metric - task can be auto-inferred or explicitly provided
-task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
+task_completion = TaskCompletionMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Evaluate whether agent completed the task
 dataset = EvaluationDataset(goldens=[
@@ -321,7 +321,7 @@ def inefficient_agent(user_input):
     return f"Booked: {booking['confirmation']}"
 
 # Initialize metric
-step_efficiency = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
+step_efficiency = StepEfficiencyMetric(threshold=0.7, model="claude-3-7-sonnet-latest")
 
 # Evaluate - metric will penalize the redundant search_flights call
 dataset = EvaluationDataset(goldens=[
