@@ -534,6 +534,11 @@ def should_use_grok_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_amazon_bedrock_model():
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AWS_BEDROCK_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 ###############################################
 # LLM
 ###############################################
@@ -573,6 +578,8 @@ def initialize_model(
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
         return AnthropicModel(), True
+    elif should_use_amazon_bedrock_model():
+        return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
