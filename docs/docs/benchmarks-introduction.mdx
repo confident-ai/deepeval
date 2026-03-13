@@ -204,7 +204,7 @@ A task for an LLM benchmark is a challenge or problem is designed to assess an L
 
 ```python
 from deepeval.benchmarks import MMLU
-from deepeval.benchmarks.task import MMLUTask
+from deepeval.benchmarks.tasks import MMLUTask
 
 tasks = [MMLUTask.HIGH_SCHOOL_COMPUTER_SCIENCE, MMLUTask.ASTRONOMY]
 benchmark = MMLU(tasks=tasks)
