@@ -18,6 +18,7 @@ from deepeval.errors import (
     MissingTestCaseParamsError,
 )
 from deepeval.utils import convert_to_multi_modal_array
+from deepeval.config.settings import get_settings
 from deepeval.models import (
     DeepEvalBaseLLM,
     GPTModel,
@@ -76,6 +77,8 @@ MULTIMODAL_SUPPORTED_MODELS = {
     AnthropicModel: ANTHROPIC_MODELS_DATA,
     GrokModel: GROK_MODELS_DATA,
 }
+
+SETTINGS = get_settings()
 
 
 def copy_metrics(
@@ -480,56 +483,78 @@ async def a_generate_with_schema_and_extract(
 
 
 def should_use_anthropic_model():
+    if SETTINGS.USE_ANTHROPIC_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ANTHROPIC_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_azure_openai():
+    if SETTINGS.USE_AZURE_OPENAI:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_local_model():
+    if SETTINGS.USE_LOCAL_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LOCAL_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_ollama_model():
+    if SETTINGS.LOCAL_MODEL_API_KEY:
+        return SETTINGS.LOCAL_MODEL_API_KEY == "ollama"
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
     return value == "ollama"
 
 
 def should_use_gemini_model():
+    if SETTINGS.USE_GEMINI_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_openai_model():
+    if SETTINGS.USE_OPENAI_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENAI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_litellm():
+    if SETTINGS.USE_LITELLM:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_portkey():
+    if SETTINGS.USE_PORTKEY_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_PORTKEY_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_deepseek_model():
+    if SETTINGS.USE_DEEPSEEK_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_moonshot_model():
+    if SETTINGS.USE_MOONSHOT_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_MOONSHOT_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_grok_model():
+    if SETTINGS.USE_GROK_MODEL:
+        return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GROK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
@@ -552,27 +577,27 @@ def initialize_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return GPTModel(), True
+        return GPTModel(model=model), True
     if should_use_gemini_model():
-        return GeminiModel(), True
+        return GeminiModel(model=model), True
     if should_use_litellm():
-        return LiteLLMModel(), True
+        return LiteLLMModel(model=model), True
     if should_use_portkey():
-        return PortkeyModel(), True
+        return PortkeyModel(model=model), True
     if should_use_ollama_model():
-        return OllamaModel(), True
+        return OllamaModel(model=model), True
     elif should_use_local_model():
-        return LocalModel(), True
+        return LocalModel(model=model), True
     elif should_use_azure_openai():
         return AzureOpenAIModel(model=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
-        return GrokModel(), True
+        return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
     elif should_use_anthropic_model():
-        return AnthropicModel(), True
+        return AnthropicModel(model=model), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 

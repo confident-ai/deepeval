@@ -4,6 +4,9 @@ title: Anthropic
 sidebar_label: Anthropic
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 `deepeval` supports using any Anthropic model for all evaluation metrics. To get started, you'll need to set up your Anthropic API key.
 
 ### Setting Up Your API Key
@@ -24,6 +27,9 @@ Alternatively, if you're working in a notebook environment (e.g., Jupyter or Col
 
 To use Anthropic models for `deepeval` metrics, define an `AnthropicModel` and specify the model you want to use. By default, the `model` is set to `claude-3-7-sonnet-latest`.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import AnthropicModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -34,6 +40,24 @@ model = AnthropicModel(
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Anthropic model directly in `deepeval`, set the `USE_ANTHROPIC_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="claude-3-7-sonnet-latest",
+)
+```
+
+You should also set the other necessary vars like `ANTHROPIC_API_KEY` to be able to use the Anthropic models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **SIX** optional parameters when creating an `AnthropicModel`:
 

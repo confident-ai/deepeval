@@ -4,6 +4,9 @@ title: Ollama
 sidebar_label: Ollama
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 DeepEval allows you to use any model served by Ollama to run evals, either through the CLI or directly in Python. Some capabilities, such as multimodal support, are detected from a known-model list.
 
 :::note
@@ -57,6 +60,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 Alternatively, you can specify your model directly in code using `OllamaModel` from DeepEval's model collection.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import OllamaModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -69,6 +75,22 @@ model = OllamaModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Ollama model directly in `deepeval`, set the `LOCAL_MODEL_API_KEY` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="deepseek-r1:1.5b",
+)
+```
+
+</TabItem>
+</Tabs>
 
 There is **ONE** mandatory parameter and **THREE** optional parameters when creating an `OllamaModel`:
 

@@ -4,6 +4,9 @@ title: Grok
 sidebar_label: Grok
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 DeepEval allows you to run evals with Grok models via xAI’s SDK, either through the CLI or directly in Python. DeepEval currently validates model names against a supported list—see [Available Grok Models](#available-grok-models).
 
 :::info
@@ -39,6 +42,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 Alternatively, you can specify your model directly in code using `GrokModel` from DeepEval's model collection.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import GrokModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -51,6 +57,24 @@ model = GrokModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Grok model directly in `deepeval`, set the `USE_GROK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="grok-4.1",
+)
+```
+
+You should also set the other necessary vars like `GROK_API_KEY` to be able to use the Grok models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **SIX** optional parameters when creating a `GrokModel`:
 

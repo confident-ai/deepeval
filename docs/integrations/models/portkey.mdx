@@ -4,6 +4,9 @@ title: Portkey
 sidebar_label: Portkey
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 `deepeval`'s integration with Portkey AI allows you to use the portkey gateway to connect to any model to power all of `deepeval`'s metrics.
 
 ### Command Line
@@ -36,6 +39,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 Alternatively, you can define `PortkeyModel` directly in python code:
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import PortkeyModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -49,6 +55,24 @@ model = PortkeyModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Portkey model directly in `deepeval`, set the `USE_PORTKEY_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="gpt-4.1",
+)
+```
+
+You should also set the other necessary vars like `PORTKEY_API_KEY` to be able to use the Portkey models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **FIVE** optional parameters when creating a `PortkeyModel`:
 

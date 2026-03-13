@@ -4,6 +4,9 @@ title: Moonshot
 sidebar_label: Moonshot
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 DeepEval's integration with Moonshot AI allows you to use any Moonshot models to power all of DeepEval's metrics.
 
 ### Command Line
@@ -34,6 +37,9 @@ See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-co
 
 Alternatively, you can define `KimiModel` directly in python code:
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python
 from deepeval.models import KimiModel
 from deepeval.metrics import AnswerRelevancyMetric
@@ -46,6 +52,24 @@ model = KimiModel(
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+</TabItem>
+<TabItem value="env" label="ENV">
+
+To use any Moonshot model directly in `deepeval`, set the `USE_MOONSHOT_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="kimi-k2-0711-preview",
+)
+```
+
+You should also set the other necessary vars like `MOONSHOT_API_KEY` to be able to use the Moonshot models as shown above.
+
+</TabItem>
+</Tabs>
 
 There are **ZERO** mandatory and **SIX** optional parameters when creating an `KimiModel`:
 

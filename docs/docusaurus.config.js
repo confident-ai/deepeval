@@ -115,6 +115,23 @@ module.exports = {
       defer: true,
       'data-domain': 'deepeval.com',
     },
+    {
+      src: "https://widget.kapa.ai/kapa-widget.bundle.js",
+      "data-website-id": "a3177869-c654-4b86-9c92-e4b4416f66e0",
+      "data-project-name": "DeepEval",
+      "data-button-position-bottom": "2rem",
+      "data-button-position-right": "2rem",
+      "data-project-color": "#fff",
+      "data-button-text-color": "#000",
+      "data-project-logo": "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g_400x400.png",
+      "data-modal-title": "Ask DeepEval",
+      "data-modal-disclaimer": "All the following results are AI generated, if you can't find the solution you're looking for, ping us in [Discord](https://discord.gg/a3K9c8GRGt) we'd be happy to have you!",
+      "data-modal-example-questions": "Can I create a dataset using my knowledge base?, Can I create a custom metrics for my use-case?",
+      "data-uncertain-answer-callout": "It would be better to ask this question directly in DeepEval's [Discord](https://discord.gg/a3K9c8GRGt) channel.",
+      // "data-mcp-enabled": "true",
+      // "data-mcp-server-url": "https://mcp.confident-ai.com/mcp",
+      async: true,
+    },
   ],
   stylesheets: [
     {
