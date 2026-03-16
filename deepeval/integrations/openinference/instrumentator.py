@@ -48,7 +48,6 @@ except ImportError as e:
         pass
 
 
-
 def is_dependency_installed() -> bool:
     if not dependency_installed:
         raise ImportError(
@@ -70,13 +69,14 @@ init_clock_bridge()
 # OpenInference Extraction Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_span_kind(span) -> Optional[str]:
     attrs = span.attributes if hasattr(span, "attributes") else span._attributes
     kind = str(attrs.get("openinference.span.kind", "")).upper()
-    
+
     if not kind:
-        return None 
-        
+        return None
+
     if kind == "AGENT" or kind == "CHAIN":
         return "agent"
     elif kind == "LLM":
@@ -85,16 +85,20 @@ def _get_span_kind(span) -> Optional[str]:
         return "tool"
     elif kind == "RETRIEVER":
         return "retriever"
-    
+
     return "custom"
 
 
 def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
-    attrs = getattr(span, "attributes", None) or getattr(span, "_attributes", None) or {}
-    
+    attrs = (
+        getattr(span, "attributes", None)
+        or getattr(span, "_attributes", None)
+        or {}
+    )
+
     input_text = None
     output_text = None
-    
+
     # 1. EXTRACT INPUTS following the OpenInference semantic conventions for LLMs
     idx = 0
     last_content = None
@@ -108,20 +112,26 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             idx += 1
         else:
             break
-            
+
     if last_content is not None:
         input_text = last_content
-        
+
     elif "llm.input_messages" in attrs:
         try:
             raw_msgs = attrs["llm.input_messages"]
-            data = json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            data = (
+                json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            )
             if isinstance(data, list) and len(data) > 0:
                 last_msg = data[-1]
-                input_text = last_msg.get("content") or last_msg.get("message", {}).get("content") or str(last_msg)
+                input_text = (
+                    last_msg.get("content")
+                    or last_msg.get("message", {}).get("content")
+                    or str(last_msg)
+                )
         except Exception:
             input_text = str(attrs["llm.input_messages"])
-            
+
     # Pure generic fallback for Agents/Tools
     if not input_text:
         input_text = attrs.get("input.value")
@@ -139,77 +149,100 @@ def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
             idx += 1
         else:
             break
-            
+
     if last_content is not None:
         output_text = last_content
-        
+
     elif "llm.output_messages" in attrs:
         try:
             raw_msgs = attrs["llm.output_messages"]
-            data = json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            data = (
+                json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            )
             if isinstance(data, list) and len(data) > 0:
                 last_msg = data[-1]
-                output_text = last_msg.get("content") or last_msg.get("message", {}).get("content") or str(last_msg)
+                output_text = (
+                    last_msg.get("content")
+                    or last_msg.get("message", {}).get("content")
+                    or str(last_msg)
+                )
         except Exception:
             output_text = str(attrs["llm.output_messages"])
-            
+
     # Pure generic fallback for Agents/Tools
     if not output_text:
         output_text = attrs.get("output.value")
-            
+
     return (
-        str(input_text) if input_text is not None else None, 
-        str(output_text) if output_text is not None else None
+        str(input_text) if input_text is not None else None,
+        str(output_text) if output_text is not None else None,
     )
 
 
 def _extract_tool_calls(span) -> List[ToolCall]:
-    attrs = span._attributes if hasattr(span, "_attributes") else span.attributes
+    attrs = (
+        span._attributes if hasattr(span, "_attributes") else span.attributes
+    )
     tools: List[ToolCall] = []
-    
+
     # Scenario A: The span itself is a Tool
     if "tool.name" in attrs:
         tool_name = attrs.get("tool.name")
         tool_args = attrs.get("tool.parameters") or "{}"
         try:
-            params = json.loads(tool_args) if isinstance(tool_args, str) else tool_args
+            params = (
+                json.loads(tool_args)
+                if isinstance(tool_args, str)
+                else tool_args
+            )
         except Exception:
             params = {}
         tools.append(ToolCall(name=str(tool_name), input_parameters=params))
         return tools
-        
+
     # Scenario B: The span is an LLM span with tool calls in output_messages
     msg_idx = 0
     while True:
         # Check if an output message exists at this index
-        if f"llm.output_messages.{msg_idx}.message.role" not in attrs and f"llm.output_messages.{msg_idx}.message.content" not in attrs:
+        if (
+            f"llm.output_messages.{msg_idx}.message.role" not in attrs
+            and f"llm.output_messages.{msg_idx}.message.content" not in attrs
+        ):
             break
-            
+
         tc_idx = 0
         while True:
             # Flattened convention for nested tool calls
             base_key = f"llm.output_messages.{msg_idx}.message.tool_calls.{tc_idx}.tool_call.function"
             name_key = f"{base_key}.name"
-            
+
             if name_key in attrs:
                 t_name = attrs[name_key]
                 t_args = attrs.get(f"{base_key}.arguments", "{}")
                 try:
-                    t_params = json.loads(t_args) if isinstance(t_args, str) else t_args
+                    t_params = (
+                        json.loads(t_args)
+                        if isinstance(t_args, str)
+                        else t_args
+                    )
                 except Exception:
                     t_params = {}
-                tools.append(ToolCall(name=str(t_name), input_parameters=t_params))
+                tools.append(
+                    ToolCall(name=str(t_name), input_parameters=t_params)
+                )
                 tc_idx += 1
             else:
                 break
-                
+
         msg_idx += 1
-            
+
     # Fallback to unflattened output_messages if tools wasn't populated
     if not tools and "llm.output_messages" in attrs:
         try:
             raw_msgs = attrs["llm.output_messages"]
-            data = json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            data = (
+                json.loads(raw_msgs) if isinstance(raw_msgs, str) else raw_msgs
+            )
             if isinstance(data, list):
                 for msg in data:
                     for tc in msg.get("tool_calls", []):
@@ -218,13 +251,21 @@ def _extract_tool_calls(span) -> List[ToolCall]:
                         t_args = func.get("arguments", "{}")
                         if t_name:
                             try:
-                                t_params = json.loads(t_args) if isinstance(t_args, str) else t_args
+                                t_params = (
+                                    json.loads(t_args)
+                                    if isinstance(t_args, str)
+                                    else t_args
+                                )
                             except Exception:
                                 t_params = {}
-                            tools.append(ToolCall(name=str(t_name), input_parameters=t_params))
+                            tools.append(
+                                ToolCall(
+                                    name=str(t_name), input_parameters=t_params
+                                )
+                            )
         except Exception:
             pass
-            
+
     return tools
 
 
@@ -388,13 +429,17 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
         # Standard Token usage keys
         input_tokens = attrs.get("llm.token_count.prompt")
         output_tokens = attrs.get("llm.token_count.completion")
-        
-        if input_tokens is not None:
-            span._attributes["confident.llm.input_token_count"] = int(input_tokens)
-        if output_tokens is not None:
-            span._attributes["confident.llm.output_token_count"] = int(output_tokens)
 
-        model = attrs.get("llm.model_name") # Capture the exact model string
+        if input_tokens is not None:
+            span._attributes["confident.llm.input_token_count"] = int(
+                input_tokens
+            )
+        if output_tokens is not None:
+            span._attributes["confident.llm.output_token_count"] = int(
+                output_tokens
+            )
+
+        model = attrs.get("llm.model_name")  # Capture the exact model string
         if model:
             span._attributes["confident.llm.model"] = str(model)
 
@@ -405,7 +450,11 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
 
         if tools_called:
             span._attributes["confident.span.tools_called"] = [
-                t.model_dump_json() if hasattr(t, "model_dump_json") else json.dumps(t)
+                (
+                    t.model_dump_json()
+                    if hasattr(t, "model_dump_json")
+                    else json.dumps(t)
+                )
                 for t in tools_called
             ]
 
@@ -427,8 +476,12 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
             return
 
         attrs = span._attributes
-        input_val = attrs.get("confident.span.input") or span._attributes.get("confident.span.input")
-        output_val = attrs.get("confident.span.output") or span._attributes.get("confident.span.output")
+        input_val = attrs.get("confident.span.input") or span._attributes.get(
+            "confident.span.input"
+        )
+        output_val = attrs.get("confident.span.output") or span._attributes.get(
+            "confident.span.output"
+        )
 
         if input_val and not getattr(agent_span, "input", None):
             agent_span.input = input_val
