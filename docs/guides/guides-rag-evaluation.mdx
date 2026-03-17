@@ -21,10 +21,10 @@ Since a satisfactory LLM output depends entirely on the quality of the retriever
 
 <div
   style={{
-    marginTop: "30px",
-    marginBottom: "60px",
-    display: "flex",
-    justifyContent: "center",
+    marginTop: '30px',
+    marginBottom: '60px',
+    display: 'flex',
+    justifyContent: 'center',
   }}
 >
   <img
@@ -350,6 +350,101 @@ jobs:
 
 For those interested, here is another nice article on [Unit Testing RAG Applications in CI/CD.](https://www.confident-ai.com/blog/how-to-evaluate-rag-applications-in-ci-cd-pipelines-with-deepeval)
 
+:::
+
+## Multi-Turn RAG Evaluation
+
+Everything above covers single-turn RAG—one query, one retrieval, one generation. But many RAG applications are conversational: a customer support chatbot that retrieves order details, a research assistant that fetches documents across a multi-step investigation, or a coding copilot that pulls relevant code snippets as the conversation evolves.
+
+In multi-turn RAG, retrieval happens **on every turn**. The user's third question may depend on what was discussed in turn one, meaning the retrieval query itself is shaped by conversation history. This creates unique failure modes that single-turn metrics can't detect:
+
+- **Context drift** — The retriever fetches increasingly irrelevant documents as the conversation moves away from the original topic
+- **Redundant retrieval** — The same chunks are fetched repeatedly across turns instead of retrieving new, relevant information
+- **Cross-turn hallucination** — The generator mixes information from retrieval contexts of different turns, producing claims not supported by any single context
+
+### Multi-Turn RAG Metrics
+
+`deepeval` provides multi-turn equivalents of every single-turn RAG metric. They use a sliding window approach to evaluate retrieval quality in the context of the surrounding conversation:
+
+| Single-Turn Metric          | Multi-Turn Equivalent           | What It Evaluates Per Turn                                            |
+| --------------------------- | ------------------------------- | --------------------------------------------------------------------- |
+| `ContextualPrecisionMetric` | `TurnContextualPrecisionMetric` | Whether relevant context is ranked higher in retrieved results        |
+| `ContextualRecallMetric`    | `TurnContextualRecallMetric`    | Whether all relevant information is captured in the retrieved context |
+| `ContextualRelevancyMetric` | `TurnContextualRelevancyMetric` | Whether retrieved context is relevant to the user's input             |
+| `FaithfulnessMetric`        | `TurnFaithfulnessMetric`        | Whether the assistant's response is grounded in the retrieved context |
+
+### Setting Up Multi-Turn RAG Evaluation
+
+Multi-turn RAG evaluation uses `ConversationalTestCase` instead of `LLMTestCase`. The key difference is that `retrieval_context` lives on each individual `Turn`, not on the test case itself—because each turn has its own retrieval step.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import (
+    TurnFaithfulnessMetric,
+    TurnContextualRelevancyMetric,
+    TurnContextualPrecisionMetric,
+    TurnContextualRecallMetric,
+)
+
+convo_test_case = ConversationalTestCase(
+    expected_outcome="User understands the visa policy and OPT options",
+    turns=[
+        Turn(role="user", content="I'm on an F-1 visa, how long can I stay after graduation?"),
+        Turn(
+            role="assistant",
+            content="You can stay up to 60 days after completing your degree.",
+            retrieval_context=[
+                "F-1 visa holders are allowed to stay for 60 days after completing their degree, unless approved for OPT."
+            ]
+        ),
+        Turn(role="user", content="What is OPT and how do I apply?"),
+        Turn(
+            role="assistant",
+            content="OPT is Optional Practical Training. You can apply through your school's international office up to 90 days before graduation.",
+            retrieval_context=[
+                "Optional Practical Training (OPT) allows F-1 students to work in their field of study for up to 12 months.",
+                "Students must apply for OPT through their designated school official (DSO) up to 90 days before their program end date."
+            ]
+        ),
+    ]
+)
+
+evaluate(
+    test_cases=[convo_test_case],
+    metrics=[
+        TurnFaithfulnessMetric(),
+        TurnContextualRelevancyMetric(),
+        TurnContextualPrecisionMetric(),
+        TurnContextualRecallMetric(),
+    ]
+)
+```
+
+### Using Simulation for Multi-Turn RAG
+
+For automated benchmarking, use the `ConversationSimulator` and return `retrieval_context` from your model callback so the metrics have the data they need:
+
+```python
+from deepeval.test_case import Turn
+from deepeval.simulator import ConversationSimulator
+
+async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
+    result = await your_rag_app(input, turns)
+    return Turn(
+        role="assistant",
+        content=result["response"],
+        retrieval_context=result["retrieved_chunks"],
+    )
+
+simulator = ConversationSimulator(model_callback=model_callback)
+test_cases = simulator.simulate(conversational_goldens=[...])
+```
+
+Because the callback returns a `Turn` with `retrieval_context`, the simulated `ConversationalTestCase`s are immediately ready for multi-turn RAG metrics—no extra wiring needed.
+
+:::info
+For a deeper dive into simulation and callback patterns, see the [Multi-Turn Simulation guide](/guides/guides-multi-turn-simulation). For all available multi-turn metrics, see the [Multi-Turn Evaluation Metrics guide](/guides/guides-multi-turn-evaluation-metrics).
 :::
 
 ## Optimizing On Hyperparameters

@@ -571,3 +571,15 @@ html[data-theme='dark'] .prism-code {
 [class^='navbarSearchContainer'] {
   display: none !important;
 }
+
+// Center all mermaid diagrams, cap height, and add breathing room
+.docusaurus-mermaid-container {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+
+  svg {
+    max-height: 65vh;
+    width: auto;
+  }
+}

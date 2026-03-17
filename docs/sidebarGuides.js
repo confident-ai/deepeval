@@ -12,6 +12,17 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Multi-Turn (chatbots)',
+      className: 'sidebar-item-icon-chatbot',
+      items: [
+        'guides-multi-turn-evaluation',
+        'guides-multi-turn-evaluation-metrics',
+        'guides-multi-turn-simulation',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
       label: 'Retrieval Augmented Generation',
       className: 'sidebar-item-icon-rag',
       items: [
