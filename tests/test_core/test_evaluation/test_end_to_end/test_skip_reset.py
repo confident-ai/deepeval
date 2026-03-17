@@ -224,9 +224,9 @@ class TestAccumulatedOrdersAreUnique:
 
         test_run.sort_test_cases()
         after_orders = [tc.order for tc in test_run.test_cases]
-        assert after_orders == original_orders, (
-            f"Single-evaluate orders should be preserved: {original_orders} -> {after_orders}"
-        )
+        assert (
+            after_orders == original_orders
+        ), f"Single-evaluate orders should be preserved: {original_orders} -> {after_orders}"
 
     def test_sort_assigns_unique_orders_after_accumulation(self):
         """Multiple evaluate() calls start their order counters from 0.
@@ -249,7 +249,9 @@ class TestAccumulatedOrdersAreUnique:
 
         test_run.sort_test_cases()
         orders = [tc.order for tc in test_run.test_cases]
-        assert len(set(orders)) == len(orders), f"Orders must be unique, got {orders}"
+        assert len(set(orders)) == len(
+            orders
+        ), f"Orders must be unique, got {orders}"
 
     @patch(
         "deepeval.evaluate.evaluate.get_is_running_deepeval", return_value=True
@@ -257,13 +259,21 @@ class TestAccumulatedOrdersAreUnique:
     def test_cli_mode_orders_unique_across_files(self, _mock):
         """Simulates two test files run via 'deepeval test run'."""
         evaluate(
-            test_cases=[_make_case("file1_a"), _make_case("file1_b"), _make_case("file1_c")],
+            test_cases=[
+                _make_case("file1_a"),
+                _make_case("file1_b"),
+                _make_case("file1_c"),
+            ],
             metrics=[_AlwaysPassMetric()],
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
         evaluate(
-            test_cases=[_make_case("file2_a"), _make_case("file2_b"), _make_case("file2_c")],
+            test_cases=[
+                _make_case("file2_a"),
+                _make_case("file2_b"),
+                _make_case("file2_c"),
+            ],
             metrics=[_AlwaysPassMetric()],
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
@@ -273,7 +283,9 @@ class TestAccumulatedOrdersAreUnique:
 
         test_run.sort_test_cases()
         orders = [tc.order for tc in test_run.test_cases]
-        assert len(set(orders)) == len(orders), f"Orders must be unique, got {orders}"
+        assert len(set(orders)) == len(
+            orders
+        ), f"Orders must be unique, got {orders}"
 
 
 class TestCLIModeAutoSkipsReset:
