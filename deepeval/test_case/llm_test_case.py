@@ -26,7 +26,9 @@ from deepeval.test_case.mcp import (
     validate_mcp_servers,
 )
 
-_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[str, "MLLMImage"] = weakref.WeakValueDictionary()
+_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[str, "MLLMImage"] = (
+    weakref.WeakValueDictionary()
+)
 
 
 @dataclass

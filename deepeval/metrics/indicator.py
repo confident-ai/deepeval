@@ -203,7 +203,10 @@ async def measure_metrics_with_indicator(
                 cached_metric_data = Cache.get_metric_data(
                     metric, cached_test_case
                 )
-                if cached_metric_data and cached_metric_data.metric_data.score is not None:
+                if (
+                    cached_metric_data
+                    and cached_metric_data.metric_data.score is not None
+                ):
                     metric_data = cached_metric_data.metric_data
 
             if metric_data:
