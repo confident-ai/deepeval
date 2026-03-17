@@ -280,6 +280,7 @@ module.exports = {
         'command-line-interface',
         'environment-variables',
         'troubleshooting',
+        'faq',
         'data-privacy',
         'miscellaneous',
       ],
