@@ -13,6 +13,7 @@ sidebar_label: From Contexts
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { ASSETS } from "@site/src/assets";
 
 If you already have prepared contexts, you can skip document processing. Simply provide these contexts to `deepeval`'s `Synthesizer`, and it will generate goldens directly without processing documents.
 
@@ -24,7 +25,7 @@ If you already have prepared contexts, you can skip document processing. Simply 
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/synthesize-from-contexts.svg"
+    src={ASSETS.synthesizeFromContexts}
     alt="LangChain"
     style={{
       marginTop: "20px",

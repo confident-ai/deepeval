@@ -13,6 +13,7 @@ sidebar_label: Introduction
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import { ASSETS } from "@site/src/assets";
 
 `deepeval`'s `Synthesizer` offers a fast and easy way to generate high-quality **single and multi-turn goldens** for your evaluation datasets in just a few lines of code. This is especially helpful if:
 
@@ -415,7 +416,7 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/generation-filtration.svg"
+    src={ASSETS.generationFiltration}
     style={{
       marginBottom: '10px',
       height: 'auto',
@@ -446,7 +447,7 @@ As an example, a golden might take the following evolutionary route when `num_ev
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/evolutions.svg"
+    src={ASSETS.evolutions}
     style={{
       marginTop: "20px",
       marginBottom: "50px",

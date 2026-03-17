@@ -4,6 +4,8 @@ title: Multi-Turn Test Case
 sidebar_label: Multi-Turn
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 ## Quick Summary
 
 A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **SIX** parameters:
@@ -38,7 +40,7 @@ test_case = ConversationalTestCase(
 
 Different from a [single-turn LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), a multi-turn LLM interaction encapsulates exchanges between a user and a conversational agent/chatbot, which is represented by a `ConversationalTestCase` in `deepeval`.
 
-![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+<img src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
 
 The `turns` parameter in a conversational test case is vital to specifying the roles and content of a conversation (in OpenAI API format), and allows you to supply any optional `tools_called` and `retrieval_context`. Additional optional parameters such as `scenario` and `expected outcome` is best suited for users converting [`ConversationalGolden`s](/docs/evaluation-datasets#goldens-data-model) to test cases at evaluation time.
 

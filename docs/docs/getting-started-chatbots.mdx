@@ -9,6 +9,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 Learn to evaluate any multi-turn chatbot using `deepeval` - including QA agents, customer support chatbots, and even chatrooms.
 
@@ -42,7 +43,7 @@ Multi-turn evals are tricky because of the ad-hoc nature of conversations. The n
 
 Hence, when running evals for the purpose of benchmarking we cannot compare different conversations by looking at their turns. In `deepeval`, multi-turn interactions are grouped by **scenarios** instead. If two conversations occur under the same scenario, we consider those the same.
 
-![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+<img src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
 
 :::note
 Scenarios are optional in the diagram because not all users start with conversations with labelled scenarios.
@@ -223,7 +224,7 @@ This creates a test run, which is a "snapshot"/benchmark of your multi-turn chat
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+<VideoDisplayer src={ASSETS.conversationTestReport} />
 
 :::tip
 If you haven't logged in, you can still upload the test run to Confident AI from local cache:
@@ -254,7 +255,7 @@ dataset = EvaluationDataset(
 
 A dataset is a collection of goldens in `deepeval`, and in a multi-turn context this these are represented by `ConversationalGolden`s.
 
-![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
+<img src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
 
 The idea is simple - we start with a list of standardized `scenario`s for each golden, and we'll simulate turns during evaluation time for more robust evaluation.
 
@@ -290,7 +291,7 @@ If you've set your `CONFIDENT_API_KEY` correctly, you can save them on the platf
 dataset.push(alias="A new multi-turn dataset")
 ```
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Amultiturn-dataset.mp4" />
+<VideoDisplayer src={ASSETS.gettingStartedChatbotEvalsMultiturnDataset} />
 
 </TimelineItem>
 <TimelineItem title="Wrap chatbot in callback">
@@ -467,7 +468,7 @@ evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric()])
 
 ✅ Done. You've successfully learnt how to benchmark your chatbot.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+<VideoDisplayer src={ASSETS.conversationTestReport} />
 
 </TimelineItem>
 
@@ -484,7 +485,7 @@ Now that you have run your first chatbot evals, you should:
 You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:threads.mp4"
+  src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
   label="Chatbot Evals in Production"
 />

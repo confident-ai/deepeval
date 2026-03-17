@@ -7,6 +7,7 @@ sidebar_label: Datasets
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { ASSETS } from "@site/src/assets";
 
 <head>
   <link rel="canonical" href="https://deepeval.com/docs/evaluation-datasets" />
@@ -40,7 +41,7 @@ Depending on the type of goldens you supply, datasets are either **single-turn**
 If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on Confident AI, which integrates 100% with `deepeval`:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/datasets:create-4k.mp4"
+  src={ASSETS.datasetsCreate}
   confidentUrl="/docs/dataset-editor/annotate-datasets"
   label="Learn Dataset Annotation on Confident AI"
 />
@@ -130,7 +131,7 @@ dataset.add_golden(
 
 You run evals on test cases in datasets, which you'll create at evaluation time using the goldens in the same dataset.
 
-![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
+<img src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
 
 First step is to load in the goldens to your dataset. This example will load datasets from Confident AI, but you can also explore [other options below.](#load-dataset)
 

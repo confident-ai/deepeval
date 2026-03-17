@@ -8,6 +8,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 # LangChain
 
@@ -124,7 +125,7 @@ for golden in dataset.evals_iterator():
 <TimelineItem title="View on Confident AI (optional)">
 
 <VideoDisplayer
-  src="https://confident-bucket.s3.us-east-1.amazonaws.com/end-to-end%3Alangchain.mp4"
+  src={ASSETS.integrationLangchain}
 />
 
 </TimelineItem>

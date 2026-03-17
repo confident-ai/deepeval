@@ -10,6 +10,7 @@ sidebar_label: DAG
 
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 <MetricTagsDisplayer singleTurn={true} custom={true} />
 
@@ -20,7 +21,7 @@ The `DAGMetric` gives you more **deterministic control** over [`GEval`.](/docs/m
 <div style={{ display: "flex", justifyContent: "center" }}>
   <img
     style={{ width: "75%" }}
-    src="https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png"
+    src={ASSETS.dagSummarization}
   />
 </div>
 
@@ -131,7 +132,7 @@ The team aligned on next steps: engineering finalizing fixes, marketing preparin
 
 The `DAGMetric` requires you to first construct a decision tree that **has direct edges and acyclic in nature.** Let's take this decision tree for example:
 
-![ok](https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png)
+<img src={ASSETS.dagSummarization} alt="DAG Summarization" />
 
 We can see that the `actual_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
 

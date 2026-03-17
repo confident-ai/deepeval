@@ -6,6 +6,7 @@ sidebar_label: Introduction
 
 import LinkCards from "@site/src/components/LinkCards"
 import TechStackCards from "@site/src/components/TechStackCards"
+import { ASSETS } from "@site/src/assets";
 
 This tutorial walks you through the entire process of building a reliable **RAG (_Retrieval-Augmented Generation_) QA Agent**, 
 from initial development to iterative improvement through `deepeval`'s evaluations.  We'll build this RAG QA Agent using **OpenAI**, **LangChain** and **DeepEval**.
@@ -99,7 +100,7 @@ In this tutorial, you'll create a **RAG QA agent** that answers questions about 
 Below is an example of what **Theranos**'s internal RAG QA agent might look like:.
 
 
-![MadeUpCompany's RAG QA Agent](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agent-overview.png)
+<img src={ASSETS.tutorialQaAgentOverview} alt="MadeUpCompany's RAG QA Agent" />
 
 In the following sections of this tutorial, you'll learn how to build a reliable RAG QA Agent that retrieves correct data and generates an 
 accurate answer based on the retrieved context.

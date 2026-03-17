@@ -8,10 +8,11 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box.
 
-![end-to-end evals](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:end-to-end-llm-evals.png)
+<img src={ASSETS.endToEndLlmEvals} alt="end-to-end evals" />
 
 <details>
 <summary><strong>When should you run End-to-End evaluations?</strong></summary>
@@ -266,7 +267,7 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 We recommend logging your `hyperparameters` during your evauations as they allow you find the best model configuration for your application.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:parameter-insights.mp4"
+  src={ASSETS.evaluationParameterInsights}
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/model-and-prompt-insights"
   label="Parameter Insights To Find Best Model"
 />
@@ -525,7 +526,7 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:multi-turn-e2e-report.mp4"
+  src={ASSETS.evaluationMultiTurnE2eReport}
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
   label="Test Reports After Running Evals on Confident AI"
 />
@@ -658,7 +659,7 @@ There are **SIX** optional parameters when using the `evals_iterator()`:
 This is all it takes to run end-to-end evaluations, with the added benefit of a full testing report with tracing included on Confident AI.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:single-turn-e2e-report-tracing.mp4"
+  src={ASSETS.evaluationSingleTurnE2eReportTracing}
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
   label="Test Reports For Evals and Traces on Confident AI"
 />

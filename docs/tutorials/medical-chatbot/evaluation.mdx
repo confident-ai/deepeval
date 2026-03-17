@@ -4,6 +4,8 @@ title: Evaluate Multi-Turn Convos
 sidebar_label: Evaluate Multi-Turn Convos
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 In the previous section, we built a chatbot that:
 
 - Diagnosis patients
@@ -12,7 +14,7 @@ In the previous section, we built a chatbot that:
 
 To evaluate a multi-turn chatbot that does all the above, we first have to model conversations as [multi-turn interactions](/docs/evaluation-multiturn-test-cases#multi-turn-llm-interaction) in `deepeval`:
 
-![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+<img src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
 
 A multi-turn "interaction" is composed of `turns`, which is the conversation itself, and any other optional parameters such as scenario, expected outcome, etc. which we will learn about later in this section. In code, a multi-turn interaction is represented by a `ConversationalTestCase`:
 

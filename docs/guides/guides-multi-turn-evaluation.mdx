@@ -6,6 +6,7 @@ sidebar_label: Multi-Turn Evaluation
 
 import { Timeline, TimelineItem } from '@site/src/components/Timeline';
 import VideoDisplayer from '@site/src/components/VideoDisplayer';
+import { ASSETS } from '@site/src/assets';
 
 **Multi-turn evaluation** is the process of measuring how well an LLM system maintains context, generates relevant responses, and satisfies user intentions across multiple turns of dialogue. But first, what exactly makes multi-turn evaluation different?
 
@@ -54,7 +55,7 @@ This creates two key challenges:
 
 2. **Quality must be sustained.** An LLM that gives five perfect responses and then one terrible one has still failed. Multi-turn metrics need to evaluate consistency across the entire conversation, not just individual turns.
 
-![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+<img src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
 
 In `deepeval`, multi-turn interactions are grouped by **scenarios** defined as [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation). If two conversations occur under the same scenario (e.g., "Angry user asking for a refund"), we consider those comparable—even if the exact messages differ.
 
@@ -270,7 +271,7 @@ evaluate(
 
 This creates a **test run**—a snapshot of your LLM application's conversational performance at a point in time. Each test case is evaluated against all specified metrics, producing scores, reasons, and pass/fail results.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+<VideoDisplayer src={ASSETS.conversationTestReport} />
 
 After each test run, analyze which scenarios consistently fail and which metrics score lowest. Use these insights to improve your system prompt, context management, or retrieval pipeline, then re-run the evaluation to measure impact.
 
@@ -330,7 +331,7 @@ flowchart LR
 Log in to Confident AI and create a metric collection containing the conversational metrics you want to run in production:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/metrics:create-collection-4k.mp4"
+  src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Create a Metric Collection on Confident AI"
 />
@@ -341,7 +342,7 @@ Log in to Confident AI and create a metric collection containing the conversatio
 Confident AI groups multi-turn conversations into **threads**—the production equivalent of `ConversationalTestCase`s. Each thread captures the full conversation history and can be evaluated against your metric collection.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:threads.mp4"
+  src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
   label="Monitor conversations on Confident AI"
 />

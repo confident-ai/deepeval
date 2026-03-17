@@ -6,6 +6,7 @@ sidebar_label: Building the Summarizer
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { ASSETS } from "@site/src/assets";
 
 In this section, we're going to create our **meeting summarization agent** using the OpenAI API. Our summarization agent should be able to take an entire meeting transcript as `input` and returns
 
@@ -293,7 +294,7 @@ The best we can do with the output given by the LLM for now is shown below along
 
 <TabItem id="ui" value="UI">
 
-![UI Image](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-demo-1.png)
+<img src={ASSETS.tutorialSummarizationDemo1} alt="UI Image" />
 
 </TabItem>
 
@@ -452,7 +453,7 @@ Here is an example of a nice looking UI that shows how we can manipulate our new
 
 <TabItem id="summary-action_items-ui" value="UI">
 
-![UI Image](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-demo-2.png)
+<img src={ASSETS.tutorialSummarizationDemo2} alt="UI Image" />
 
 </TabItem>
 

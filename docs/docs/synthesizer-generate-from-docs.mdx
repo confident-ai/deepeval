@@ -13,6 +13,7 @@ sidebar_label: From Documents
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { ASSETS } from "@site/src/assets";
 
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**.
 
@@ -26,7 +27,7 @@ By simply providing these documents, `deepeval`'s Synthesizer will automatically
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/synthesize-from-docs.svg"
+    src={ASSETS.synthesizeFromDocs}
     style={{
       marginTop: "20px",
       marginBottom: "50px",
@@ -203,7 +204,7 @@ Similar to the context selection step, if the cosine similarity is still lower t
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/filtering_context.svg"
+    src={ASSETS.filteringContext}
     style={{
       marginTop: "20px",
       marginBottom: "20px",

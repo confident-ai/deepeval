@@ -4,11 +4,12 @@ title: RAG Evaluation Quickstart
 sidebar_label: RAG
 ---
 
-import { Timeline, TimelineItem } from "@site/src/components/Timeline";
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import CodeBlock from "@theme/CodeBlock";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from '@site/src/components/Timeline';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
+import { ASSETS } from '@site/src/assets';
 
 Learn to evaluate retrieval-augmented-generation (RAG) pipelines and systems using `deepeval`, such as RAG QA, summarizaters, and customer support chatbots.
 
@@ -40,7 +41,7 @@ CONFIDENT_API_KEY="confident_us..."
 
 End-to-end RAG evaluation treats your entire LLM app as a standalone RAG pipeline. In `deepeval`, a single-turn interaction with your RAG pipeline is modelled as an LLM test case:
 
-![LLM Test Case](https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png)
+<img src={ASSETS.llmTestCase} alt="LLM Test Case" />
 
 The `retrieval_context` in the diagram above is cruical, as it represents the text chunks that were retrieved at evaluation time.
 
@@ -331,7 +332,7 @@ This creates a test run, which is a "snapshot"/benchmark of your RAG pipeline at
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag.mp4" />
+<VideoDisplayer src={ASSETS.gettingStartedRag} />
 
 :::tip
 
@@ -530,7 +531,7 @@ for golden in dataset.evals_iterator():
     rag_pipeline(golden.input)
 ```
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag-evals%3Acomponent.mp4" />
+<VideoDisplayer src={ASSETS.gettingStartedRagEvalsComponent} />
 
 :::
 
@@ -608,7 +609,7 @@ python main.py
 
 ✅ Done. There are lots of details we left out from this multi-turn section, such as how to simulate user interactions instead, which you can find more [here.](/docs/getting-started-chatbots)
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag-evals%3Aconversation.mp4" />
+<VideoDisplayer src={ASSETS.gettingStartedRagEvalsConversation} />
 
 </TimelineItem>
 </Timeline>
@@ -624,7 +625,7 @@ Now that you have run your first RAG evals, you should:
 You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
+  src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="RAG Evaluation in Production"
 />

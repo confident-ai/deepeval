@@ -11,6 +11,7 @@ sidebar_label: Introduction
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import VideoDisplayer from '@site/src/components/VideoDisplayer';
+import { ASSETS } from "@site/src/assets";
 
 `deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measur, the metric acts as the ruler based on a specific criteria of interest.
 
@@ -142,7 +143,7 @@ evaluate(
 If you're logged into [Confident AI](https://confident-ai.com) before running an evaluation (`deepeval login` or `deepeval view` in the CLI), you'll also get entire testing reports on the platform:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:single-turn-e2e-report.mp4"
+  src={ASSETS.evaluationSingleTurnE2eReport}
   confidentUrl="/docs/llm-evaluation/dashboards/testing-reports"
   label="Run Evaluations on Confident AI"
 />

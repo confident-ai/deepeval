@@ -9,6 +9,7 @@ import NavigationCards from '@site/src/components/NavigationCards';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import VideoDisplayer from '@site/src/components/VideoDisplayer';
+import { ASSETS } from "@site/src/assets";
 
 Learn how to evaluate different versions of your LLM app using LLM Arena-as-a-Judge in `deepeval`, a comparison-based LLM eval.
 
@@ -304,7 +305,7 @@ Unlike single-output LLM-as-a-Judge (which is everything but LLM arena evals), t
 If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automatically appear as an experiment on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aexperiment.mp4"
+  src={ASSETS.arenaEvalsExperiment}
   label="Experiments on Confident AI"
 />
 
@@ -322,7 +323,7 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
 Compare model outputs directly using arena evaluations.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Aquick-run.mp4"
+  src={ASSETS.arenaEvalsQuickRun}
   label="Quick Comparisons"
 />
 
@@ -333,7 +334,7 @@ Compare model outputs directly using arena evaluations.
 Create an experiment to run comprehensive comparisons on an evaluation dataset and set of metrics.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Arun-experiment.mp4"
+  src={ASSETS.arenaEvalsRunExperiment}
   label="Experiments on Confident AI"
 />
 
@@ -343,7 +344,7 @@ Create an experiment to run comprehensive comparisons on an evaluation dataset a
 View detailed traces of LLM and tool calls during model comparisons.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Atraced-comparisons.mp4"
+  src={ASSETS.arenaEvalsTracedComparisons}
   label="Traced Comparisons"
 />
 
@@ -353,7 +354,7 @@ View detailed traces of LLM and tool calls during model comparisons.
 Apply custom evaluation metrics to determine winning models in head-to-head comparisons.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Ametric-comparisons.mp4"
+  src={ASSETS.arenaEvalsMetricComparisons}
   label="Metric Comparisons"
 />
 </TabItem>
@@ -363,7 +364,7 @@ Apply custom evaluation metrics to determine winning models in head-to-head comp
 Track prompts and model configurations to understand which hyperparameters lead to better performance.
 
 <VideoDisplayer
-  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aarena-evals%3Alog-prompts.mp4"
+  src={ASSETS.arenaEvalsLogPrompts}
   label="Log Prompts and Models"
 />
 
