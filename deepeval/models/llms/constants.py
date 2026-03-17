@@ -2,7 +2,6 @@ from typing import Any, Callable, Union
 
 from deepeval.models.base_model import DeepEvalModelData
 
-
 DEFAULT_GPT_MODEL = "gpt-4.1"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
@@ -2050,6 +2049,35 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=None,
             output_price=None,
+        ),
+    }
+)
+
+GROQ_MODELS_DATA = ModelDataRegistry(
+    {
+        "llama3-8b-8192": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.05 / 1e6,
+            output_price=0.08 / 1e6,
+        ),
+        "llama3-70b-8192": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.59 / 1e6,
+            output_price=0.79 / 1e6,
+        ),
+        "mixtral-8x7b-32768": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.24 / 1e6,
+            output_price=0.24 / 1e6,
         ),
     }
 )
