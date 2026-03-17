@@ -195,7 +195,7 @@ def evaluate(
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
     identifier: Optional[str] = None,
-    skip_reset: bool = False,
+    _skip_reset: bool = False,
     # Configs
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -211,7 +211,7 @@ def evaluate(
 
     if metrics:
 
-        if not skip_reset and not get_is_running_deepeval():
+        if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()
         start_time = time.perf_counter()
 
@@ -267,7 +267,7 @@ def evaluate(
             test_run.hyperparameters = process_hyperparameters(hyperparameters)
             test_run.prompts = process_prompts(hyperparameters)
 
-        if skip_reset:
+        if _skip_reset:
             test_run.run_duration += run_duration
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
             return EvaluationResult(

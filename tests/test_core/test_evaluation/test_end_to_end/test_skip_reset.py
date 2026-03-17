@@ -1,4 +1,4 @@
-"""Tests for the skip_reset parameter of evaluate()."""
+"""Tests for the _skip_reset parameter of evaluate()."""
 
 import pytest
 from unittest.mock import patch
@@ -51,7 +51,7 @@ def _reset_test_run_manager():
 
 
 class TestSkipResetDefault:
-    """skip_reset=False (default) -- each call resets state."""
+    """_skip_reset=False (default) -- each call resets state."""
 
     def test_second_call_does_not_accumulate(self):
         evaluate(
@@ -81,7 +81,7 @@ class TestSkipResetDefault:
 
 
 class TestSkipResetTrue:
-    """skip_reset=True -- results accumulate across calls."""
+    """_skip_reset=True -- results accumulate across calls."""
 
     def test_accumulates_test_cases(self):
         result1 = evaluate(
@@ -93,7 +93,7 @@ class TestSkipResetTrue:
         result2 = evaluate(
             test_cases=[_make_case("2")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
@@ -108,7 +108,7 @@ class TestSkipResetTrue:
             evaluate(
                 test_cases=[_make_case(str(i))],
                 metrics=[_AlwaysPassMetric()],
-                skip_reset=(i > 0),
+                _skip_reset=(i > 0),
                 display_config=_QUIET_DISPLAY,
                 async_config=_QUIET_ASYNC,
             )
@@ -122,7 +122,7 @@ class TestSkipResetTrue:
             evaluate(
                 test_cases=[_make_case("a")],
                 metrics=[_AlwaysPassMetric()],
-                skip_reset=True,
+                _skip_reset=True,
                 display_config=_QUIET_DISPLAY,
                 async_config=_QUIET_ASYNC,
             )
@@ -146,7 +146,7 @@ class TestSkipResetTrue:
         result = evaluate(
             test_cases=[_make_case("a")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
@@ -164,7 +164,7 @@ class TestSkipResetTrue:
         evaluate(
             test_cases=[_make_case("2")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
@@ -184,7 +184,7 @@ class TestSkipResetTrue:
         evaluate(
             test_cases=[_make_case("2")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
@@ -198,7 +198,7 @@ class TestSkipResetTrue:
         result = evaluate(
             test_cases=[_make_case("first")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
@@ -240,7 +240,7 @@ class TestAccumulatedOrdersAreUnique:
         evaluate(
             test_cases=[_make_case("b1"), _make_case("b2")],
             metrics=[_AlwaysPassMetric()],
-            skip_reset=True,
+            _skip_reset=True,
             display_config=_QUIET_DISPLAY,
             async_config=_QUIET_ASYNC,
         )
