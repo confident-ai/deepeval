@@ -288,23 +288,30 @@ class CrewAIEventsListener(BaseEventListener):
                 agent = getattr(source, "agent", source)
                 metric_collection, metrics = _get_metrics_data(agent)
 
-            # ToolUsageFinishedEvent can be dispatched and handled before 
+            # ToolUsageFinishedEvent can be dispatched and handled before
             # ToolUsageStartedEvent due to thread pool scheduling.
-            self.tool_observers_stack[key].append({
-                "metric_collection": metric_collection,
-                "metrics": metrics,
-            })
+            self.tool_observers_stack[key].append(
+                {
+                    "metric_collection": metric_collection,
+                    "metrics": metrics,
+                }
+            )
 
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_completed(source, event: ToolUsageFinishedEvent):
-            from deepeval.tracing.utils import prepare_tool_call_input_parameters
+            from deepeval.tracing.utils import (
+                prepare_tool_call_input_parameters,
+            )
             from deepeval.test_case.llm_test_case import ToolCall
 
             key = self.get_tool_stack_key(source, event.tool_name)
             metadata = None
 
             # Retrieve stored metadata from on_tool_started
-            if key in self.tool_observers_stack and self.tool_observers_stack[key]:
+            if (
+                key in self.tool_observers_stack
+                and self.tool_observers_stack[key]
+            ):
                 item = self.tool_observers_stack[key].pop()
                 if isinstance(item, dict):
                     metadata = item
@@ -318,7 +325,9 @@ class CrewAIEventsListener(BaseEventListener):
                             metadata = item
                             break
 
-            metric_collection = metadata["metric_collection"] if metadata else None
+            metric_collection = (
+                metadata["metric_collection"] if metadata else None
+            )
             metrics = metadata["metrics"] if metadata else None
 
             # Resolve tool_args — prefer finished event's args as they are
@@ -345,14 +354,20 @@ class CrewAIEventsListener(BaseEventListener):
                 span.output = output
                 now_wall = time.time()
                 now_perf = perf_counter()
-                span.start_time = now_perf - (now_wall - event.started_at.timestamp())
-                span.end_time = now_perf - (now_wall - event.finished_at.timestamp())
+                span.start_time = now_perf - (
+                    now_wall - event.started_at.timestamp()
+                )
+                span.end_time = now_perf - (
+                    now_wall - event.finished_at.timestamp()
+                )
 
             observer.result = output
             observer.__exit__(None, None, None)
 
             if span:
-                span.end_time = now_perf - (now_wall - event.finished_at.timestamp())
+                span.end_time = now_perf - (
+                    now_wall - event.finished_at.timestamp()
+                )
 
             # Propagate tools_called to parent span
             if span and span.parent_uuid:

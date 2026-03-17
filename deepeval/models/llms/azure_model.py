@@ -479,10 +479,10 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
-        
+
         # Defer authentication validation to the OpenAI SDK.
         # Only fail fast if the user explicitly provided an empty credential.
-        
+
         api_key_value = None
         if self.api_key is not None:
             try:
@@ -518,7 +518,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             # else: neither key nor token nor provider set -> defer to SDK
 
         # Enforce precedence: provider > token > api_key
-        
+
         if self.azure_ad_token_provider is not None:
             azure_ad_token_value = None
             api_key_value = None
