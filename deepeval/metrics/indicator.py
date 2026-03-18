@@ -19,7 +19,6 @@ from deepeval.telemetry import capture_metric_type
 from deepeval.utils import update_pbar
 from deepeval.config.settings import get_settings
 
-
 logger = logging.getLogger(__name__)
 
 

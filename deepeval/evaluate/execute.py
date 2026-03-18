@@ -2990,6 +2990,9 @@ async def _a_evaluate_traces(
                     trace.uuid,
                 )
             continue
+        copied_trace_metrics: Optional[List[BaseMetric]] = None
+        if trace_metrics:
+            copied_trace_metrics = copy_metrics(trace_metrics)
         with capture_evaluation_run("golden"):
             task = execute_evals_with_semaphore(
                 func=_a_execute_agentic_test_case,
@@ -3006,7 +3009,7 @@ async def _a_evaluate_traces(
                 _is_assert_test=_is_assert_test,
                 progress=progress,
                 pbar_id=pbar_id,
-                trace_metrics=trace_metrics,
+                trace_metrics=copied_trace_metrics,
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
