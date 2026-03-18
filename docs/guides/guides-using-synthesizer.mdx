@@ -12,6 +12,7 @@ sidebar_label: Generating Synthetic Test Data
 </head>
 
 import Equation from "@site/src/components/Equation";
+import { ASSETS } from "@site/src/assets";
 
 Manually curating test data can be time-consuming and often causes critical edge cases to be overlooked. With DeepEval's Synthesizer, you can quickly generate thousands of **high-quality synthetic goldens** in just minutes.
 
@@ -54,7 +55,7 @@ The `generate_goldens_from_docs` function follows several key steps to transform
   }}
 >
   <img
-    src="https://deepeval-docs.s3.amazonaws.com/synthesizer.png"
+    src={ASSETS.synthesizerOverview}
     alt="LangChain"
     style={{
       marginTop: "20px",

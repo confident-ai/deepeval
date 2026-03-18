@@ -9,6 +9,7 @@ import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import NavigationCards from "@site/src/components/NavigationCards";
+import { ASSETS } from "@site/src/assets";
 
 Tracing your LLM application helps you monitor its full execution from start to finish. With `deepeval`'s `@observe` decorator, you can trace and evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) at any point in your app no matter how complex they may be.
 
@@ -16,7 +17,7 @@ Tracing your LLM application helps you monitor its full execution from start to 
 
 An LLM trace is made up of multiple individual spans. A **span** is a flexible, user-defined scope for evaluation or debugging. A full **trace** of your application contains one or more spans.
 
-![LLM Trace](https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png)
+<img src={ASSETS.llmTrace} alt="LLM Trace" />
 
 Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component-level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in this guide.
 
@@ -141,7 +142,7 @@ get_res(query)
 We highly recommend setting up Confident AI to look at your traces in an intuitive UI like this:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
+  src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Learn how to setup LLM tracing for Confident AI"
 />

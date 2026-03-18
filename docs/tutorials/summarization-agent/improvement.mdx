@@ -4,6 +4,8 @@ title: Improving Your Summarizer
 sidebar_label: Testing Prompts and Models
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. We'll create a full evaluation suite that allows us to iterate on our summarization agent to find the best hyperparameters that help improve it.
 
 Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence the performance of our application. In our case, the key hyperparameters for the `MeetingSummarizer` that can improve our agent are:
@@ -200,7 +202,7 @@ Here's an example of how you can set up [**Confident AI**](https://deepeval.com/
 >
   <video width="100%" autoPlay loop muted playsInlines>
     <source
-      src="https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorial-legal-document-summarizer-hyperparameters.mp4"
+      src={ASSETS.tutorialSummarizationHyperparameters}
       type="video/mp4"
     />
   </video>

@@ -4,6 +4,8 @@ title: Evaluating Your Summarizer
 sidebar_label: Evaluate Your Summarizer
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 In the previous section, we built a meeting summarization agent that:
 
 - Generates summaries
@@ -11,7 +13,7 @@ In the previous section, we built a meeting summarization agent that:
 
 To evaluate an LLM application like a summarization agent, we'll use single-turn [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases)s from `deepeval`
 
-![Single-turn LLM Test Case](https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png)
+<img src={ASSETS.llmTestCase} alt="Single-turn LLM Test Case" />
 
 Our summarization agent is a single-turn LLM application. That means we supply a transcript as `input`, the agent generates a summary and a list of action items as output. In code, such unit interactions are represented by an `LLMTestCase`:
 
@@ -44,7 +46,7 @@ For evaluating a summarization agent like ours, there is one main approach we ca
 Having to maintain a database to store meeting transcripts might not be feasible and accessing them everytime may also prove to be hard. In such cases, we can use `deepeval`'s [datasets](https://deepeval.com/docs/evaluation-datasets).
 They are simply a collection of `Golden`s that can be stored in cloud and pulled anytime with just a few lines of code. They allow you to create test cases during run time by calling your LLM.
 
-![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
+<img src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
 
 <details>
 <summary><strong>Click here to learn about <code>Golden</code> in DeepEval</strong></summary>
@@ -222,7 +224,7 @@ evaluate(
 
 You can also run `deepeval view` to see the results of evals on Confident AI:
 
-![Eval results for summarizer](https://deepeval-docs.s3.amazonaws.com/tutorials:summarization-agent:eval-results.png)
+<img src={ASSETS.tutorialSummarizationEvalResults} alt="Eval results for summarizer" />
 
 ### Evaluation Results
 

@@ -8,6 +8,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions and ensure reliable performance. You can use `deepeval` with your CI/CD pipelines to run both end-to-end and component level evaluations.
 
@@ -485,7 +486,7 @@ jobs:
 We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
+  src={ASSETS.tracingSpans}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Span-Level Evals in Production"
 />

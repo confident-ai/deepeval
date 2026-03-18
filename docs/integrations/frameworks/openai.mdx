@@ -8,6 +8,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ColabButton from "@site/src/components/ColabButton";
+import { ASSETS } from "@site/src/assets";
 
 # OpenAI
 
@@ -369,7 +370,7 @@ When used inside `@observe` components, `deepeval`'s OpenAI client automatically
 
 <div style={{ margin: "2rem 0" }}>
   <VideoDisplayer
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/integrations:frameworks:openai.mp4"
+    src={ASSETS.integrationOpenai}
     label="OpenAI Integration"
     confidentUrl="/llm-tracing/integrations/openai"
   />

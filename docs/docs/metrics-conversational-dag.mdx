@@ -8,6 +8,7 @@ import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import ColabButton from "@site/src/components/ColabButton";
+import { ASSETS } from "@site/src/assets";
 
 <ColabButton
   notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/dag-examples/conversational_dag.ipynb"
@@ -28,7 +29,7 @@ This makes DAGs not only more powerful but also more reliable for complex and hi
 
 </details>
 
-![DAG Image for Multi-Turn](https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:conversational-dag.png)
+<img src={ASSETS.dagConversational} alt="DAG Image for Multi-Turn" />
 
 ## Required Arguments
 
@@ -77,7 +78,7 @@ The `ConversationalTaskNode` is designed specifically for processing either the 
 :::note
 The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
 
-![DAG with turns window](https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:turn-windows.png)
+<img src={ASSETS.dagTurnWindows} alt="DAG with turns window" />
 :::
 
 You can also break down a conversation into atomic units by choosing a specific window of conversation turns. Here's how to create a `ConversationalTaskNode`:

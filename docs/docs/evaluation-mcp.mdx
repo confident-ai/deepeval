@@ -4,6 +4,8 @@ title: Model Context Protocol (MCP)
 sidebar_label: MCP
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 **Model Context Protocol (MCP)** is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
 
 ## Architecture
@@ -14,7 +16,7 @@ The MCP architecture is composed of three main components:
 - **Client** – Maintains a one-to-one connection with a server and retrieves context from it for the host to use.
 - **Server** – Paired with a single client, providing the context the client passes to the host.
 
-![MCP Architecture Image](https://deepeval-docs.s3.amazonaws.com/mcp-architecture.png)
+<img src={ASSETS.mcpArchitecture} alt="MCP Architecture Image" />
 
 For example, Claude acts as the MCP host. When Claude connects to an MCP server such as Google Sheets, the Claude runtime instantiates an MCP client that maintains a dedicated connection to that server. When Claude subsequently connects to another MCP server, such as Google Docs, it instantiates an additional MCP client to maintain that second connection. This preserves a one-to-one relationship between MCP clients and MCP servers, with the host (Claude) orchestrating multiple clients.
 

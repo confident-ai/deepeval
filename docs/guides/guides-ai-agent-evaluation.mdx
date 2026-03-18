@@ -5,6 +5,7 @@ sidebar_label: AI Agent Evaluation
 ---
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { ASSETS } from "@site/src/assets";
 
 **AI agent evaluation** is the process of measuring how well an agent reasons, selects and calls tools, and completes tasks—separately at each layer—so you can pinpoint exactly what's broken. But first, what is an AI agent?
 
@@ -109,7 +110,7 @@ Development evals help answer questions like:
 
 But first, you'll have to tell `deepeval` what components are within your AI agent in order for metrics to operate. You can do this via [LLM tracing.](/docs/evaluation-llm-tracing) LLM tracing is a great way to help `deepeval` map out the entire execution trace of AI agents, and involves adding an `@observe` decorator to functions within your AI agent, and adds no latency to your AI agent.
 
-![component level evals](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-level-evals.png)
+<img src={ASSETS.componentLevelEvals} alt="component level evals" />
 
 Let's look at the example below to see how we can setup tracing on an example flight booking agent that uses OpenAI as the LLM:
 
@@ -217,7 +218,7 @@ The `type` parameter is optional but recommended—it helps `deepeval` understan
 
 Another thing that is recommended is logging into Confident AI, the `deepeval` platform. If you've set your `CONFIDENT_API_KEY` or run `deepeval login`, test runs will appear automatically on the platform whenever you run an evaluation as you will quickly learn,
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started:ai-agent-evals:end-to-end.mp4" />
+<VideoDisplayer src={ASSETS.gettingStartedAgentEvalsEndToEnd} />
 
 ### Evaluating the Reasoning Layer
 
@@ -383,7 +384,7 @@ While you could spin up a separate evaluation server, [Confident AI](https://con
 Log in to Confident AI and create a metric collection containing the metrics you want to run in production:
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/metrics:create-collection-4k.mp4"
+  src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Run Online Evals on Confident AI"
 />
@@ -402,7 +403,7 @@ def call_openai(messages):
 That's it. Whenever your agent runs, `deepeval` automatically exports traces to Confident AI in an OpenTelemetry-like fashion—no additional code required. Confident AI then evaluates these traces asynchronously using your metric collection and stores the results for you to analyze.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
+  src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Track agent performance overtime on Confident AI"
 />

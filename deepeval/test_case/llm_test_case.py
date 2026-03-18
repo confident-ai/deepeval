@@ -13,6 +13,7 @@ import re
 import os
 import mimetypes
 import base64
+import weakref
 from dataclasses import dataclass, field
 from urllib.parse import urlparse, unquote
 from deepeval.utils import make_model_config
@@ -25,7 +26,9 @@ from deepeval.test_case.mcp import (
     validate_mcp_servers,
 )
 
-_MLLM_IMAGE_REGISTRY: Dict[str, "MLLMImage"] = {}
+_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[str, "MLLMImage"] = (
+    weakref.WeakValueDictionary()
+)
 
 
 @dataclass
