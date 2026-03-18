@@ -13,6 +13,8 @@ from tests.test_integrations.utils import (
     is_generate_mode,
 )
 
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=2)
+
 # App imports
 from tests.test_integrations.test_langchain.apps.langchain_simple_app import (
     ainvoke_simple_app,

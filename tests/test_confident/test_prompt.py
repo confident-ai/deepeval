@@ -18,6 +18,7 @@ from deepeval.prompt.api import (
 from deepeval.confident.api import Api
 from deepeval.metrics.faithfulness.schema import FaithfulnessVerdict
 
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=10)
 
 class NestedObject(BaseModel):
     nested_field: str
