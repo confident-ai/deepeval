@@ -478,9 +478,7 @@ class EvaluationDataset:
         retrieval_context_col_name: Optional[str] = "retrieval_context",
         retrieval_context_col_delimiter: str = "|",
         tools_called_col_name: Optional[str] = "tools_called",
-        tools_called_col_delimiter: str = ";",
         expected_tools_col_name: Optional[str] = "expected_tools",
-        expected_tools_col_delimiter: str = ";",
         comments_key_name: str = "comments",
         name_key_name: str = "name",
         source_file_col_name: Optional[str] = "source_file",
@@ -532,21 +530,13 @@ class EvaluationDataset:
             )
         ]
         tools_called = [
-            (
-                tool_called.split(tools_called_col_delimiter)
-                if tool_called
-                else []
-            )
+            (json.loads(tool_called) if tool_called else [])
             for tool_called in get_column_data(
                 df, tools_called_col_name, default=""
             )
         ]
         expected_tools = [
-            (
-                expected_tool.split(expected_tools_col_delimiter)
-                if expected_tool
-                else []
-            )
+            (json.loads(expected_tool) if expected_tool else [])
             for expected_tool in get_column_data(
                 df, expected_tools_col_name, default=""
             )
