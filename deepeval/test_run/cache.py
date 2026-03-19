@@ -18,7 +18,6 @@ from deepeval.utils import (
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -66,6 +65,54 @@ class CachedTestCase(BaseModel):
         default_factory=lambda: []
     )
     hyperparameters: Optional[str] = Field(None)
+
+    @staticmethod
+    def create_cache_key(
+        test_case: LLMTestCase, hyperparameters: Union[Dict, None] = None
+    ) -> str:
+        def normalize_cache_value(value):
+            if isinstance(value, BaseModel):
+                return {
+                    key: normalize_cache_value(val)
+                    for key, val in value.model_dump(
+                        by_alias=True, exclude_none=True
+                    ).items()
+                }
+            if isinstance(value, Enum):
+                return value.value
+            if isinstance(value, dict):
+                return {
+                    key: normalize_cache_value(val)
+                    for key, val in value.items()
+                }
+            if isinstance(value, list):
+                return [normalize_cache_value(item) for item in value]
+            if isinstance(value, tuple):
+                return tuple(normalize_cache_value(item) for item in value)
+            return value
+
+        cache_dict = {
+            LLMTestCaseParams.INPUT.value: test_case.input,
+            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+            LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
+            LLMTestCaseParams.CONTEXT.value: test_case.context,
+            LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
+            LLMTestCaseParams.TOOLS_CALLED.value: test_case.tools_called,
+            LLMTestCaseParams.EXPECTED_TOOLS.value: test_case.expected_tools,
+            LLMTestCaseParams.MCP_SERVERS.value: test_case.mcp_servers,
+            LLMTestCaseParams.MCP_TOOLS_CALLED.value: (
+                test_case.mcp_tools_called
+            ),
+            LLMTestCaseParams.MCP_RESOURCES_CALLED.value: (
+                test_case.mcp_resources_called
+            ),
+            LLMTestCaseParams.MCP_PROMPTS_CALLED.value: (
+                test_case.mcp_prompts_called
+            ),
+            "_trace_dict": getattr(test_case, "_trace_dict", None),
+            "hyperparameters": hyperparameters,
+        }
+        return serialize(normalize_cache_value(cache_dict))
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -118,15 +165,9 @@ class TestRunCacheManager:
             return None
 
         cached_test_run = self.get_cached_test_run()
-        cache_dict = {
-            LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            LLMTestCaseParams.CONTEXT.value: test_case.context,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
-            "hyperparameters": hyperparameters,
-        }
-        test_case_cache_key = serialize(cache_dict)
+        test_case_cache_key = CachedTestCase.create_cache_key(
+            test_case, hyperparameters
+        )
         cached_test_case = cached_test_run.get_cached_api_test_case(
             test_case_cache_key
         )
@@ -141,15 +182,9 @@ class TestRunCacheManager:
     ):
         if self.disable_write_cache or portalocker is None:
             return
-        cache_dict = {
-            LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            LLMTestCaseParams.CONTEXT.value: test_case.context,
-            LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
-            "hyperparameters": hyperparameters,
-        }
-        test_case_cache_key = serialize(cache_dict)
+        test_case_cache_key = CachedTestCase.create_cache_key(
+            test_case, hyperparameters
+        )
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (
             new_cache_test_case
