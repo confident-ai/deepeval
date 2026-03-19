@@ -145,13 +145,23 @@ def prepare_dict(**kwargs: Any) -> dict[str, Any]:
 
 
 def safe_extract_token_usage(
-    response_metadata: dict[str, Any],
+    message: Any,
 ) -> tuple[int, int]:
     prompt_tokens, completion_tokens = 0, 0
-    token_usage = response_metadata.get("token_usage")
-    if token_usage and isinstance(token_usage, dict):
-        prompt_tokens = token_usage.get("prompt_tokens", 0)
-        completion_tokens = token_usage.get("completion_tokens", 0)
+    
+    # New usage_metadata extraction
+    usage_metadata = getattr(message, "usage_metadata", None)
+    if usage_metadata:
+        prompt_tokens = usage_metadata.get("input_tokens", 0)
+        completion_tokens = usage_metadata.get("output_tokens", 0)
+    
+    # Legacy response_metadata extraction
+    if prompt_tokens == 0 and completion_tokens == 0:
+        response_metadata = getattr(message, "response_metadata", {})
+        token_usage = response_metadata.get("token_usage")
+        if token_usage and isinstance(token_usage, dict):
+            prompt_tokens = token_usage.get("prompt_tokens", 0)
+            completion_tokens = token_usage.get("completion_tokens", 0)
 
     return prompt_tokens, completion_tokens
 
