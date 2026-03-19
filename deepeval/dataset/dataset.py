@@ -529,18 +529,37 @@ class EvaluationDataset:
                 df, retrieval_context_col_name, default=""
             )
         ]
-        tools_called = [
-            (json.loads(tool_called) if tool_called else [])
-            for tool_called in get_column_data(
-                df, tools_called_col_name, default=""
-            )
-        ]
-        expected_tools = [
-            (json.loads(expected_tool) if expected_tool else [])
-            for expected_tool in get_column_data(
-                df, expected_tools_col_name, default=""
-            )
-        ]
+        tools_called = []
+        for tools_called_json in get_column_data(
+            df, tools_called_col_name, default="[]"
+        ):
+            if tools_called_json:
+                try:
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(tools_called_json)
+                    ]
+                    tools_called.append(parsed_tools)
+                except ValueError as e:
+                    raise ValueError(f"Error processing tools_called: {e}")
+            else:
+                tools_called.append([])
+
+        expected_tools = []
+        for expected_tools_json in get_column_data(
+            df, expected_tools_col_name, default="[]"
+        ):
+            if expected_tools_json:
+                try:
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(expected_tools_json)
+                    ]
+                    expected_tools.append(parsed_tools)
+                except ValueError as e:
+                    raise ValueError(f"Error processing expected_tools: {e}")
+            else:
+                expected_tools.append([])
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
