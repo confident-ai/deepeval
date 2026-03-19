@@ -208,16 +208,33 @@ class SpanInterceptor(SpanProcessor):
             _otel_trace_id = span.get_span_context().trace_id
             _current_trace_context.uuid = to_hex_string(_otel_trace_id, 32)
 
+        # per-request values from current_trace_context override settings for
+        # scalars; metadata is merged (settings as base, context on top)
+        _thread_id = (
+            _current_trace_context.thread_id if _current_trace_context else None
+        ) or self.settings.thread_id
+
+        _name = (
+            _current_trace_context.name if _current_trace_context else None
+        ) or self.settings.name
+
+        _metadata = {
+            **(self.settings.metadata or {}),
+            **(
+                _current_trace_context.metadata or {}
+                if _current_trace_context
+                else {}
+            ),
+        }
+
         # set trace attributes
-        if self.settings.thread_id:
-            span.set_attribute(
-                "confident.trace.thread_id", self.settings.thread_id
-            )
+        if _thread_id:
+            span.set_attribute("confident.trace.thread_id", _thread_id)
         if self.settings.user_id:
             span.set_attribute("confident.trace.user_id", self.settings.user_id)
-        if self.settings.metadata:
+        if _metadata:
             span.set_attribute(
-                "confident.trace.metadata", json.dumps(self.settings.metadata)
+                "confident.trace.metadata", json.dumps(_metadata)
             )
         if self.settings.tags:
             span.set_attribute("confident.trace.tags", self.settings.tags)
@@ -230,8 +247,8 @@ class SpanInterceptor(SpanProcessor):
             span.set_attribute(
                 "confident.trace.environment", self.settings.environment
             )
-        if self.settings.name:
-            span.set_attribute("confident.trace.name", self.settings.name)
+        if _name:
+            span.set_attribute("confident.trace.name", _name)
         if self.settings.confident_prompt:
             span.set_attribute(
                 "confident.span.prompt_alias",
