@@ -44,7 +44,7 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with langchain
+          poetry run pip install -U langgraph langchain langchain-openai
 
       - name: Install Project
         run: poetry install --no-interaction --only main
