@@ -1,13 +1,13 @@
 {
-  "uuid": "5609a48f-c4fd-444b-b607-441e1e6d8e86",
+  "uuid": "ceadb669-6317-46c5-83dd-130c382443ca",
   "baseSpans": [
     {
-      "uuid": "019bf9a1-a199-76f0-9727-7f77bcfe4eb4",
+      "uuid": "019d050e-9f45-7790-bee3-d27219ce6427",
       "name": "general_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:27:58.106Z",
-      "endTime": "2026-01-26T09:28:00.434Z",
+      "startTime": "2026-03-19T07:45:37.605Z",
+      "endTime": "2026-03-19T07:45:41.810Z",
       "input": {
         "messages": [
           {
@@ -33,13 +33,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 75,
+                "completion_tokens": 139,
                 "prompt_tokens": 13,
-                "total_tokens": 88,
+                "total_tokens": 152,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 128,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -50,26 +50,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DB036ZN49DTcXmSiqZrsrSWlSRG",
+              "id": "chatcmpl-DL2MU3ibVQEVNYhKhMig21YxeKEP4",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-a19b-7711-9219-327226dce626-0",
+            "id": "lc_run--019d050e-9f46-7eb2-a041-077e913a2190-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 13,
-              "output_tokens": 75,
-              "total_tokens": 88,
+              "output_tokens": 139,
+              "total_tokens": 152,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 128
               }
             }
           }
@@ -80,13 +80,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a1-a19b-7711-9219-327226dce626",
+      "uuid": "019d050e-9f46-7eb2-a041-077e913a2190",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-a199-76f0-9727-7f77bcfe4eb4",
-      "startTime": "2026-01-26T09:27:58.108Z",
-      "endTime": "2026-01-26T09:28:00.433Z",
+      "parentUuid": "019d050e-9f45-7790-bee3-d27219ce6427",
+      "startTime": "2026-03-19T07:45:37.608Z",
+      "endTime": "2026-03-19T07:45:41.810Z",
       "input": [
         {
           "role": "human",
@@ -100,13 +100,13 @@
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 13.0,
-      "outputTokenCount": 75.0
+      "outputTokenCount": 139.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-26T09:27:58.106Z",
-  "endTime": "2026-01-26T09:28:00.434Z",
+  "startTime": "2026-03-19T07:45:37.605Z",
+  "endTime": "2026-03-19T07:45:41.810Z",
   "name": "langchain-async-conditional-general",
   "tags": [
     "langchain",
@@ -140,13 +140,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 75,
+            "completion_tokens": 139,
             "prompt_tokens": 13,
-            "total_tokens": 88,
+            "total_tokens": 152,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 64,
+              "reasoning_tokens": 128,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -157,26 +157,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DB036ZN49DTcXmSiqZrsrSWlSRG",
+          "id": "chatcmpl-DL2MU3ibVQEVNYhKhMig21YxeKEP4",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-a19b-7711-9219-327226dce626-0",
+        "id": "lc_run--019d050e-9f46-7eb2-a041-077e913a2190-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 13,
-          "output_tokens": 75,
-          "total_tokens": 88,
+          "output_tokens": 139,
+          "total_tokens": 152,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 64
+            "reasoning": 128
           }
         }
       }

@@ -1,13 +1,13 @@
 {
-  "uuid": "a5d4dff9-7042-4a9b-954a-83084adae4b8",
+  "uuid": "554b955e-d9f5-445e-b921-5c0d75d4af52",
   "baseSpans": [
     {
-      "uuid": "019bfc0a-7eaf-78a3-9342-2ae5d233ddaf",
+      "uuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T20:41:44.879Z",
-      "endTime": "2026-01-26T20:41:50.617Z",
+      "startTime": "2026-03-19T07:55:33.354Z",
+      "endTime": "2026-03-19T07:55:37.871Z",
       "input": {
         "messages": [
           {
@@ -15,7 +15,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           }
         ]
       },
@@ -26,7 +26,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -35,13 +35,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -52,35 +52,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -90,20 +90,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           },
           {
-            "content": "Verdict: UNVERIFIED \u2014 the fact_check tool returned \u201cUnable to confirm this claim.\u201d",
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 220,
+                "completion_tokens": 224,
                 "prompt_tokens": 264,
-                "total_tokens": 484,
+                "total_tokens": 488,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -118,19 +118,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh45lkUciw1ZbXNw9jpmv8t9Sbp",
+              "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-85fa-7b71-b4b1-6b460d8a8c75-0",
+            "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 264,
-              "output_tokens": 220,
-              "total_tokens": 484,
+              "output_tokens": 224,
+              "total_tokens": 488,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -146,13 +146,13 @@
       }
     },
     {
-      "uuid": "019bfc0a-85f9-7df2-9f4b-7b9186e9db20",
+      "uuid": "019d0517-bbd0-7690-a238-1813f4096258",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eaf-78a3-9342-2ae5d233ddaf",
-      "startTime": "2026-01-26T20:41:46.745Z",
-      "endTime": "2026-01-26T20:41:50.617Z",
+      "parentUuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
+      "startTime": "2026-03-19T07:55:34.736Z",
+      "endTime": "2026-03-19T07:55:37.871Z",
       "input": {
         "messages": [
           {
@@ -160,7 +160,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -169,13 +169,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -186,35 +186,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -224,8 +224,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           }
         ],
@@ -234,15 +234,15 @@
       "output": {
         "messages": [
           {
-            "content": "Verdict: UNVERIFIED \u2014 the fact_check tool returned \u201cUnable to confirm this claim.\u201d",
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 220,
+                "completion_tokens": 224,
                 "prompt_tokens": 264,
-                "total_tokens": 484,
+                "total_tokens": 488,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -257,19 +257,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh45lkUciw1ZbXNw9jpmv8t9Sbp",
+              "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-85fa-7b71-b4b1-6b460d8a8c75-0",
+            "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 264,
-              "output_tokens": 220,
-              "total_tokens": 484,
+              "output_tokens": 224,
+              "total_tokens": 488,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -284,13 +284,13 @@
       }
     },
     {
-      "uuid": "019bfc0a-9519-70d3-bc0b-af086b4004e6",
+      "uuid": "019d0517-c80f-74a1-92ca-71d5a62894b4",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-85f9-7df2-9f4b-7b9186e9db20",
-      "startTime": "2026-01-26T20:41:50.617Z",
-      "endTime": "2026-01-26T20:41:50.617Z",
+      "parentUuid": "019d0517-bbd0-7690-a238-1813f4096258",
+      "startTime": "2026-03-19T07:55:37.871Z",
+      "endTime": "2026-03-19T07:55:37.871Z",
       "input": {
         "messages": [
           {
@@ -298,7 +298,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -307,13 +307,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -324,35 +324,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -362,20 +362,20 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           },
           {
-            "content": "Verdict: UNVERIFIED \u2014 the fact_check tool returned \u201cUnable to confirm this claim.\u201d",
+            "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 220,
+                "completion_tokens": 224,
                 "prompt_tokens": 264,
-                "total_tokens": 484,
+                "total_tokens": 488,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -390,19 +390,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh45lkUciw1ZbXNw9jpmv8t9Sbp",
+              "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-85fa-7b71-b4b1-6b460d8a8c75-0",
+            "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 264,
-              "output_tokens": 220,
-              "total_tokens": 484,
+              "output_tokens": 224,
+              "total_tokens": 488,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -419,13 +419,13 @@
       "output": "__end__"
     },
     {
-      "uuid": "019bfc0a-85f7-73e2-acf4-570df40c927d",
+      "uuid": "019d0517-bbcf-7d02-a5f7-456e9122b9ce",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eaf-78a3-9342-2ae5d233ddaf",
-      "startTime": "2026-01-26T20:41:46.743Z",
-      "endTime": "2026-01-26T20:41:46.745Z",
+      "parentUuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
+      "startTime": "2026-03-19T07:55:34.735Z",
+      "endTime": "2026-03-19T07:55:34.736Z",
       "input": {
         "messages": [
           {
@@ -433,7 +433,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -442,13 +442,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -459,35 +459,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           }
@@ -502,8 +502,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           }
         ]
@@ -517,8 +517,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           },
           "inputParameters": {
@@ -528,13 +528,13 @@
       ]
     },
     {
-      "uuid": "019bfc0a-85f9-7df2-9f4b-7b8cd1c1db7d",
+      "uuid": "019d0517-bbd0-7690-a238-1806073ef3d2",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-85f7-73e2-acf4-570df40c927d",
-      "startTime": "2026-01-26T20:41:46.745Z",
-      "endTime": "2026-01-26T20:41:46.745Z",
+      "parentUuid": "019d0517-bbcf-7d02-a5f7-456e9122b9ce",
+      "startTime": "2026-03-19T07:55:34.736Z",
+      "endTime": "2026-03-19T07:55:34.736Z",
       "input": {
         "messages": [
           {
@@ -542,7 +542,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -551,13 +551,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -568,35 +568,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           },
@@ -606,8 +606,8 @@
             "response_metadata": {},
             "type": "tool",
             "name": "fact_check",
-            "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-            "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+            "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "status": "success"
           }
         ],
@@ -616,13 +616,13 @@
       "output": "fact_check"
     },
     {
-      "uuid": "019bfc0a-7eb1-7701-8ad5-ac66639cdbb5",
+      "uuid": "019d0517-b66b-7491-b057-2918b2c168e0",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eaf-78a3-9342-2ae5d233ddaf",
-      "startTime": "2026-01-26T20:41:44.881Z",
-      "endTime": "2026-01-26T20:41:46.743Z",
+      "parentUuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
+      "startTime": "2026-03-19T07:55:33.355Z",
+      "endTime": "2026-03-19T07:55:34.735Z",
       "input": {
         "messages": [
           {
@@ -630,7 +630,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           }
         ],
         "intent": "fact_check"
@@ -644,13 +644,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -661,35 +661,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           }
@@ -697,13 +697,13 @@
       }
     },
     {
-      "uuid": "019bfc0a-85f7-73e2-acf4-56fd6ae12380",
+      "uuid": "019d0517-bbcf-7d02-a5f7-455bcf384347",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eb1-7701-8ad5-ac66639cdbb5",
-      "startTime": "2026-01-26T20:41:46.743Z",
-      "endTime": "2026-01-26T20:41:46.743Z",
+      "parentUuid": "019d0517-b66b-7491-b057-2918b2c168e0",
+      "startTime": "2026-03-19T07:55:34.735Z",
+      "endTime": "2026-03-19T07:55:34.735Z",
       "input": {
         "messages": [
           {
@@ -711,7 +711,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           },
           {
             "content": "",
@@ -720,13 +720,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 91,
+                "completion_tokens": 27,
                 "prompt_tokens": 219,
-                "total_tokens": 310,
+                "total_tokens": 246,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 64,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -737,35 +737,35 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+              "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+            "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
             "tool_calls": [
               {
                 "name": "fact_check",
                 "args": {
                   "claim": "The earth is round."
                 },
-                "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+                "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 219,
-              "output_tokens": 91,
-              "total_tokens": 310,
+              "output_tokens": 27,
+              "total_tokens": 246,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 64
+                "reasoning": 0
               }
             }
           }
@@ -775,13 +775,13 @@
       "output": "tools"
     },
     {
-      "uuid": "019bfc0a-7eb0-7390-bd43-6d33277854ab",
+      "uuid": "019d0517-b66b-7491-b057-28ff780f4d1a",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eaf-78a3-9342-2ae5d233ddaf",
-      "startTime": "2026-01-26T20:41:44.880Z",
-      "endTime": "2026-01-26T20:41:44.880Z",
+      "parentUuid": "019d0517-b66a-7e23-9509-243bbd9f3797",
+      "startTime": "2026-03-19T07:55:33.355Z",
+      "endTime": "2026-03-19T07:55:33.355Z",
       "input": {
         "messages": [
           {
@@ -789,7 +789,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           }
         ]
       },
@@ -800,20 +800,20 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           }
         ],
         "intent": "fact_check"
       }
     },
     {
-      "uuid": "019bfc0a-7eb0-7390-bd43-6d4a059f6f6b",
+      "uuid": "019d0517-b66b-7491-b057-29013e089c60",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019bfc0a-7eb0-7390-bd43-6d33277854ab",
-      "startTime": "2026-01-26T20:41:44.880Z",
-      "endTime": "2026-01-26T20:41:44.880Z",
+      "parentUuid": "019d0517-b66b-7491-b057-28ff780f4d1a",
+      "startTime": "2026-03-19T07:55:33.355Z",
+      "endTime": "2026-03-19T07:55:33.355Z",
       "input": {
         "messages": [
           {
@@ -821,7 +821,7 @@
             "additional_kwargs": {},
             "response_metadata": {},
             "type": "human",
-            "id": "93702862-8dbd-4feb-b811-450f21360f12"
+            "id": "69e8032b-f964-4a2d-be47-6d9372194437"
           }
         ],
         "intent": "fact_check"
@@ -832,13 +832,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bfc0a-85fa-7b71-b4b1-6b460d8a8c75",
+      "uuid": "019d0517-bbd1-7160-bb03-0f9a8048156b",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfc0a-85f9-7df2-9f4b-7b9186e9db20",
-      "startTime": "2026-01-26T20:41:46.746Z",
-      "endTime": "2026-01-26T20:41:50.616Z",
+      "parentUuid": "019d0517-bbd0-7690-a238-1813f4096258",
+      "startTime": "2026-03-19T07:55:34.737Z",
+      "endTime": "2026-03-19T07:55:37.871Z",
       "input": [
         {
           "role": "human",
@@ -871,21 +871,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Verdict: UNVERIFIED \u2014 the fact_check tool returned \u201cUnable to confirm this claim.\u201d",
+        "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 264.0,
-      "outputTokenCount": 220.0
+      "outputTokenCount": 224.0
     },
     {
-      "uuid": "019bfc0a-7eb1-7701-8ad5-ac7c14c174e3",
+      "uuid": "019d0517-b66b-7491-b057-292d7134c72d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bfc0a-7eb1-7701-8ad5-ac66639cdbb5",
-      "startTime": "2026-01-26T20:41:44.881Z",
-      "endTime": "2026-01-26T20:41:46.742Z",
+      "parentUuid": "019d0517-b66b-7491-b057-2918b2c168e0",
+      "startTime": "2026-03-19T07:55:33.355Z",
+      "endTime": "2026-03-19T07:55:34.735Z",
       "input": [
         {
           "role": "human",
@@ -917,25 +917,25 @@
             "args": {
               "claim": "The earth is round."
             },
-            "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM"
+            "id": "call_1rgSdOsGYsqUVhrEwBB4n76H"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 219.0,
-      "outputTokenCount": 91.0
+      "outputTokenCount": 27.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bfc0a-85f8-78f2-97b6-2dd17d55ad1f",
+      "uuid": "019d0517-bbd0-7690-a238-17f9241fbe69",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bfc0a-85f7-73e2-acf4-570df40c927d",
-      "startTime": "2026-01-26T20:41:46.744Z",
-      "endTime": "2026-01-26T20:41:46.744Z",
+      "parentUuid": "019d0517-bbcf-7d02-a5f7-456e9122b9ce",
+      "startTime": "2026-03-19T07:55:34.736Z",
+      "endTime": "2026-03-19T07:55:34.736Z",
       "input": {
         "claim": "The earth is round."
       },
@@ -945,14 +945,14 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-        "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+        "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+        "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T20:41:44.879Z",
-  "endTime": "2026-01-26T20:41:50.617Z",
+  "startTime": "2026-03-19T07:55:33.354Z",
+  "endTime": "2026-03-19T07:55:37.871Z",
   "name": "langgraph-conditional-factcheck",
   "tags": [
     "langgraph",
@@ -967,7 +967,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "93702862-8dbd-4feb-b811-450f21360f12"
+        "id": "69e8032b-f964-4a2d-be47-6d9372194437"
       }
     ]
   },
@@ -978,7 +978,7 @@
         "additional_kwargs": {},
         "response_metadata": {},
         "type": "human",
-        "id": "93702862-8dbd-4feb-b811-450f21360f12"
+        "id": "69e8032b-f964-4a2d-be47-6d9372194437"
       },
       {
         "content": "",
@@ -987,13 +987,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 91,
+            "completion_tokens": 27,
             "prompt_tokens": 219,
-            "total_tokens": 310,
+            "total_tokens": 246,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 64,
+              "reasoning_tokens": 0,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -1004,35 +1004,35 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2Nh3k7PM4XRsjtWvExKuN2kcyQk7",
+          "id": "chatcmpl-DL2W5mNk92UcOgk3VJC852vNS8pUg",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfc0a-7eb1-7701-8ad5-ac7c14c174e3-0",
+        "id": "lc_run--019d0517-b66b-7491-b057-292d7134c72d-0",
         "tool_calls": [
           {
             "name": "fact_check",
             "args": {
               "claim": "The earth is round."
             },
-            "id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+            "id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 219,
-          "output_tokens": 91,
-          "total_tokens": 310,
+          "output_tokens": 27,
+          "total_tokens": 246,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 64
+            "reasoning": 0
           }
         }
       },
@@ -1042,20 +1042,20 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-        "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+        "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+        "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
         "status": "success"
       },
       {
-        "content": "Verdict: UNVERIFIED \u2014 the fact_check tool returned \u201cUnable to confirm this claim.\u201d",
+        "content": "Verdict: UNVERIFIED \u2014 the fact-check tool was unable to confirm the claim \"The earth is round.\"",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 220,
+            "completion_tokens": 224,
             "prompt_tokens": 264,
-            "total_tokens": 484,
+            "total_tokens": 488,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1070,19 +1070,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2Nh45lkUciw1ZbXNw9jpmv8t9Sbp",
+          "id": "chatcmpl-DL2W75zlffSvMZ1UZIOU6Fxlvb2k2",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bfc0a-85fa-7b71-b4b1-6b460d8a8c75-0",
+        "id": "lc_run--019d0517-bbd1-7160-bb03-0f9a8048156b-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 264,
-          "output_tokens": 220,
-          "total_tokens": 484,
+          "output_tokens": 224,
+          "total_tokens": 488,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -1106,8 +1106,8 @@
         "response_metadata": {},
         "type": "tool",
         "name": "fact_check",
-        "id": "aa21f1a7-b1bf-453b-a8fb-b6c4af0c19ee",
-        "tool_call_id": "call_L7nhtMEAEYbcRiSkzk4Y2TyM",
+        "id": "ae34b5c9-3fd2-475f-bec7-41ae52c2370c",
+        "tool_call_id": "call_1rgSdOsGYsqUVhrEwBB4n76H",
         "status": "success"
       },
       "inputParameters": {

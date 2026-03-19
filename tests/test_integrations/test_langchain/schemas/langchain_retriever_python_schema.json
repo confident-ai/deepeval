@@ -1,13 +1,13 @@
 {
-  "uuid": "1e9e9677-9b85-4878-b08e-edfd49e088e6",
+  "uuid": "a63d22a2-b49d-4336-8e12-ca166e568d6d",
   "baseSpans": [
     {
-      "uuid": "019bf9a3-0bf9-7080-9e84-471d52f63539",
+      "uuid": "019d0510-25e7-7d32-83f6-bc1e2d1e7359",
       "name": "rag_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:29:30.873Z",
-      "endTime": "2026-01-26T09:29:33.711Z",
+      "startTime": "2026-03-19T07:47:17.608Z",
+      "endTime": "2026-03-19T07:47:20.567Z",
       "input": {
         "messages": [
           {
@@ -27,15 +27,15 @@
             "type": "human"
           },
           {
-            "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+            "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural and object-oriented programming (OOP).",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 167,
+                "completion_tokens": 166,
                 "prompt_tokens": 76,
-                "total_tokens": 243,
+                "total_tokens": 242,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -50,19 +50,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DCVzdCMzh8VYuw3LLp3cy40r69U",
+              "id": "chatcmpl-DL2O5QBMUvWmNcXvD1l1Vv2QXuRXs",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a3-0bfa-7532-a9ca-9e604fb12726-0",
+            "id": "lc_run--019d0510-25e8-74a3-a9d4-c3bd2da21ee1-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 76,
-              "output_tokens": 167,
-              "total_tokens": 243,
+              "output_tokens": 166,
+              "total_tokens": 242,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -97,13 +97,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a3-0bfa-7532-a9ca-9e604fb12726",
+      "uuid": "019d0510-25e8-74a3-a9d4-c3bd2da21ee1",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a3-0bf9-7080-9e84-471d52f63539",
-      "startTime": "2026-01-26T09:29:30.874Z",
-      "endTime": "2026-01-26T09:29:33.710Z",
+      "parentUuid": "019d0510-25e7-7d32-83f6-bc1e2d1e7359",
+      "startTime": "2026-03-19T07:47:17.608Z",
+      "endTime": "2026-03-19T07:47:20.567Z",
       "input": [
         {
           "role": "system",
@@ -120,23 +120,23 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural and object-oriented programming (OOP).",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 76.0,
-      "outputTokenCount": 167.0
+      "outputTokenCount": 166.0
     }
   ],
   "retrieverSpans": [
     {
-      "uuid": "019bf9a3-0bf9-7080-9e84-472da581e218",
+      "uuid": "019d0510-25e8-74a3-a9d4-c3aaae325d54",
       "name": "DeterministicRetriever",
       "status": "SUCCESS",
       "type": "retriever",
-      "parentUuid": "019bf9a3-0bf9-7080-9e84-471d52f63539",
-      "startTime": "2026-01-26T09:29:30.873Z",
-      "endTime": "2026-01-26T09:29:30.873Z",
+      "parentUuid": "019d0510-25e7-7d32-83f6-bc1e2d1e7359",
+      "startTime": "2026-03-19T07:47:17.608Z",
+      "endTime": "2026-03-19T07:47:17.608Z",
       "input": "Tell me about Python programming language.",
       "output": [
         "page_content='Python is a high-level programming language known for its simplicity.' metadata={'source': 'doc1'}",
@@ -146,8 +146,8 @@
     }
   ],
   "toolSpans": [],
-  "startTime": "2026-01-26T09:29:30.873Z",
-  "endTime": "2026-01-26T09:29:33.711Z",
+  "startTime": "2026-03-19T07:47:17.608Z",
+  "endTime": "2026-03-19T07:47:20.567Z",
   "name": "langchain-retriever-python",
   "metadata": {
     "test_type": "retriever"
@@ -177,15 +177,15 @@
         "type": "human"
       },
       {
-        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural programming and object-oriented programming (OOP).",
+        "content": "Python is a high-level programming language known for its simplicity. It supports multiple programming paradigms, including procedural and object-oriented programming (OOP).",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 167,
+            "completion_tokens": 166,
             "prompt_tokens": 76,
-            "total_tokens": 243,
+            "total_tokens": 242,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -200,19 +200,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DCVzdCMzh8VYuw3LLp3cy40r69U",
+          "id": "chatcmpl-DL2O5QBMUvWmNcXvD1l1Vv2QXuRXs",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a3-0bfa-7532-a9ca-9e604fb12726-0",
+        "id": "lc_run--019d0510-25e8-74a3-a9d4-c3bd2da21ee1-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 76,
-          "output_tokens": 167,
-          "total_tokens": 243,
+          "output_tokens": 166,
+          "total_tokens": 242,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
