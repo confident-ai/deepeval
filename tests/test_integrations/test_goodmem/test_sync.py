@@ -16,7 +16,6 @@ from deepeval.tracing.types import RetrieverSpan, TraceSpanStatus
 
 from deepeval.integrations.goodmem import GoodMemRetriever, GoodMemConfig
 
-
 # --- Fixtures ----------------------------------------------------------------
 
 MOCK_NDJSON = "\n".join(
