@@ -1,22 +1,9 @@
-"""
-Unit tests for SpanInterceptor.on_start — verifies that per-request trace
-attributes (thread_id, name, metadata) are read from current_trace_context
-when set, with fallback to self.settings, and that metadata is merged.
-
-No real LLM, OTEL exporter, or Confident AI key required.
-"""
-
 import json
 from unittest.mock import MagicMock
 
 from deepeval.integrations.pydantic_ai.instrumentator import SpanInterceptor
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.trace_context import trace
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 
 def _make_mock_span():
     """Return a mock span that records set_attribute calls."""
@@ -55,14 +42,7 @@ def _make_settings(**kwargs):
     return settings
 
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
-
-
 class TestSpanInterceptorOnStart:
-    """Unit tests for SpanInterceptor.on_start attribute resolution."""
-
     def test_uses_settings_when_no_trace_context(self):
         """Falls back to self.settings when current_trace_context is None."""
         token = current_trace_context.set(None)
