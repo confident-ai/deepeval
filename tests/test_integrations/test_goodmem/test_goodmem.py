@@ -93,8 +93,14 @@ class TestParseNdjsonResponse:
     def test_parses_chunks(self):
         result = _parse_ndjson_response(SAMPLE_NDJSON_RESPONSE)
         assert len(result["chunks"]) == 2
-        assert result["chunks"][0]["content"] == "Python is a programming language."
-        assert result["chunks"][1]["content"] == "Python was created by Guido van Rossum."
+        assert (
+            result["chunks"][0]["content"]
+            == "Python is a programming language."
+        )
+        assert (
+            result["chunks"][1]["content"]
+            == "Python was created by Guido van Rossum."
+        )
 
     def test_extracts_chunk_ids(self):
         result = _parse_ndjson_response(SAMPLE_NDJSON_RESPONSE)

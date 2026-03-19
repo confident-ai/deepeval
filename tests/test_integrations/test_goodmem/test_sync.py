@@ -79,7 +79,10 @@ def retriever():
 class TestRetrieverSpanCreation:
     """Verify that calling retrieve() creates a proper RetrieverSpan."""
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_creates_retriever_span(self, mock_post, retriever):
         """A single retrieve() call should produce exactly one RetrieverSpan."""
         with trace(name="goodmem-test"):
@@ -92,7 +95,10 @@ class TestRetrieverSpanCreation:
         assert len(root_spans) == 1
         assert isinstance(root_spans[0], RetrieverSpan)
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_span_has_correct_name(self, mock_post, retriever):
         with trace(name="goodmem-test"):
             retriever.retrieve("test query")
@@ -100,7 +106,10 @@ class TestRetrieverSpanCreation:
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.name == "GoodMem Retriever"
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_span_captures_input(self, mock_post, retriever):
         with trace(name="goodmem-test"):
             retriever.retrieve("What is Python?")
@@ -111,7 +120,10 @@ class TestRetrieverSpanCreation:
         input_str = str(span.input)
         assert "What is Python?" in input_str
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_span_captures_output(self, mock_post, retriever):
         with trace(name="goodmem-test"):
             result = retriever.retrieve("test")
@@ -124,7 +136,10 @@ class TestRetrieverSpanCreation:
             "Python was created by Guido van Rossum.",
         ]
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_span_has_success_status(self, mock_post, retriever):
         with trace(name="goodmem-test"):
             retriever.retrieve("test")
@@ -132,7 +147,10 @@ class TestRetrieverSpanCreation:
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.status == TraceSpanStatus.SUCCESS
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_span_has_retriever_metadata(self, mock_post, retriever):
         """RetrieverSpan should have embedder and top_k set via update_retriever_span."""
         with trace(name="goodmem-test"):
@@ -147,7 +165,10 @@ class TestRetrieverSpanCreation:
 class TestTraceMetadata:
     """Verify trace-level metadata propagation."""
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_trace_tags(self, mock_post, retriever):
         with trace(
             name="goodmem-tagged",
@@ -168,7 +189,10 @@ class TestTraceMetadata:
 class TestSpanNesting:
     """Verify that GoodMem retriever spans nest correctly inside parent spans."""
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     def test_nested_inside_agent_span(self, mock_post, retriever):
         """When called inside an @observe(type='agent'), retriever should be a child span."""
 
@@ -191,17 +215,20 @@ class TestSpanNesting:
         assert isinstance(retriever_span, RetrieverSpan)
         assert retriever_span.name == "GoodMem Retriever"
 
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
-    def test_multiple_retrieves_create_separate_traces(self, mock_post, retriever):
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
+    def test_multiple_retrieves_create_separate_traces(
+        self, mock_post, retriever
+    ):
         """Two sequential retrieve() calls should each produce a traced span."""
         retriever.retrieve("query 1")
         retriever.retrieve("query 2")
 
         traces = trace_manager.get_all_traces()
         assert len(traces) == 2
-        assert all(
-            isinstance(t.root_spans[0], RetrieverSpan) for t in traces
-        )
+        assert all(isinstance(t.root_spans[0], RetrieverSpan) for t in traces)
 
 
 class TestErrorHandling:

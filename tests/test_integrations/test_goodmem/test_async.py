@@ -80,7 +80,10 @@ class TestAsyncRetrieverSpan:
     """Verify retriever spans work when called from async code."""
 
     @pytest.mark.asyncio
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     async def test_async_context_creates_span(self, mock_post, retriever):
         """Calling retrieve() from an async function should still create a span."""
 
@@ -106,7 +109,10 @@ class TestAsyncRetrieverSpan:
         assert retriever_span.status == TraceSpanStatus.SUCCESS
 
     @pytest.mark.asyncio
-    @patch("deepeval.integrations.goodmem.utils.requests.post", side_effect=_mock_post)
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
     async def test_sequential_async_retrieves(self, mock_post, retriever):
         """Sequential retrieve() calls from async should each create a traced span."""
 
