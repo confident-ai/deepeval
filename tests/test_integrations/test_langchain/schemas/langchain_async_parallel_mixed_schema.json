@@ -1,13 +1,13 @@
 {
-  "uuid": "5b106e6d-923e-4c1a-8d1a-214a4ce9dc6e",
+  "uuid": "df5fe060-0594-44e3-ade5-8a9d9dca2ac4",
   "baseSpans": [
     {
-      "uuid": "019bf9a1-c06b-7420-95fb-e23fafe68965",
+      "uuid": "019d050e-c539-7751-9b3f-e899adc26031",
       "name": "parallel_mixed_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:28:05.995Z",
-      "endTime": "2026-01-26T09:28:11.008Z",
+      "startTime": "2026-03-19T07:45:47.321Z",
+      "endTime": "2026-03-19T07:45:50.157Z",
       "input": {
         "messages": [
           {
@@ -50,20 +50,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DB8yU1XkuDZOkPl52ucFuncVCX4",
+              "id": "chatcmpl-DL2Melq1gVkXw2J3gyywRC1OLTELi",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-c06c-74d0-b075-94d667a69af3-0",
+            "id": "lc_run--019d050e-c53a-7f20-a383-023ee5a8443d-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Paris"
                 },
-                "id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+                "id": "call_mXRWamI9i9GWdHekWwVjUltl",
                 "type": "tool_call"
               }
             ],
@@ -88,23 +88,23 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+            "tool_call_id": "call_mXRWamI9i9GWdHekWwVjUltl",
             "status": "success"
           },
           {
-            "content": "Current weather in Paris: Partly cloudy, 65\u00b0F (\u224818\u00b0C).",
+            "content": "Partly cloudy, 65\u00b0F.",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 154,
+                "completion_tokens": 11,
                 "prompt_tokens": 244,
-                "total_tokens": 398,
+                "total_tokens": 255,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 0,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -115,26 +115,26 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DBAhBrRyBVwyozL0W8zxXqqVCSB",
+              "id": "chatcmpl-DL2MfhvUuABOIq1bGe5WYPMpqb4sZ",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-c971-7921-af1e-f2e9035947b6-0",
+            "id": "lc_run--019d050e-cc40-7261-8186-0c01b9aa5dc5-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 244,
-              "output_tokens": 154,
-              "total_tokens": 398,
+              "output_tokens": 11,
+              "total_tokens": 255,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 0
               }
             }
           }
@@ -149,7 +149,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+            "tool_call_id": "call_mXRWamI9i9GWdHekWwVjUltl",
             "status": "success"
           },
           "inputParameters": {
@@ -162,13 +162,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a1-c971-7921-af1e-f2e9035947b6",
+      "uuid": "019d050e-cc40-7261-8186-0c01b9aa5dc5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-c06b-7420-95fb-e23fafe68965",
-      "startTime": "2026-01-26T09:28:08.306Z",
-      "endTime": "2026-01-26T09:28:11.008Z",
+      "parentUuid": "019d050e-c539-7751-9b3f-e899adc26031",
+      "startTime": "2026-03-19T07:45:49.120Z",
+      "endTime": "2026-03-19T07:45:50.157Z",
       "input": [
         {
           "role": "human",
@@ -201,21 +201,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Current weather in Paris: Partly cloudy, 65\u00b0F (\u224818\u00b0C).",
+        "content": "Partly cloudy, 65\u00b0F.",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 244.0,
-      "outputTokenCount": 154.0
+      "outputTokenCount": 11.0
     },
     {
-      "uuid": "019bf9a1-c06c-74d0-b075-94d667a69af3",
+      "uuid": "019d050e-c53a-7f20-a383-023ee5a8443d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-c06b-7420-95fb-e23fafe68965",
-      "startTime": "2026-01-26T09:28:05.996Z",
-      "endTime": "2026-01-26T09:28:08.303Z",
+      "parentUuid": "019d050e-c539-7751-9b3f-e899adc26031",
+      "startTime": "2026-03-19T07:45:47.322Z",
+      "endTime": "2026-03-19T07:45:49.119Z",
       "input": [
         {
           "role": "human",
@@ -247,7 +247,7 @@
             "args": {
               "city": "Paris"
             },
-            "id": "call_IGdw4DRY2rrA50qomDV1DSBM"
+            "id": "call_mXRWamI9i9GWdHekWwVjUltl"
           }
         ]
       },
@@ -259,13 +259,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf9a1-c970-7fa2-9560-634a73c1854e",
+      "uuid": "019d050e-cc3f-76c0-b05d-dd22d2446fd7",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a1-c06b-7420-95fb-e23fafe68965",
-      "startTime": "2026-01-26T09:28:08.304Z",
-      "endTime": "2026-01-26T09:28:08.305Z",
+      "parentUuid": "019d050e-c539-7751-9b3f-e899adc26031",
+      "startTime": "2026-03-19T07:45:49.120Z",
+      "endTime": "2026-03-19T07:45:49.120Z",
       "input": {
         "city": "Paris"
       },
@@ -275,13 +275,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+        "tool_call_id": "call_mXRWamI9i9GWdHekWwVjUltl",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T09:28:05.995Z",
-  "endTime": "2026-01-26T09:28:11.008Z",
+  "startTime": "2026-03-19T07:45:47.321Z",
+  "endTime": "2026-03-19T07:45:50.157Z",
   "name": "langchain-async-parallel-mixed",
   "tags": [
     "langchain",
@@ -332,20 +332,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DB8yU1XkuDZOkPl52ucFuncVCX4",
+          "id": "chatcmpl-DL2Melq1gVkXw2J3gyywRC1OLTELi",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-c06c-74d0-b075-94d667a69af3-0",
+        "id": "lc_run--019d050e-c53a-7f20-a383-023ee5a8443d-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Paris"
             },
-            "id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+            "id": "call_mXRWamI9i9GWdHekWwVjUltl",
             "type": "tool_call"
           }
         ],
@@ -370,23 +370,23 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+        "tool_call_id": "call_mXRWamI9i9GWdHekWwVjUltl",
         "status": "success"
       },
       {
-        "content": "Current weather in Paris: Partly cloudy, 65\u00b0F (\u224818\u00b0C).",
+        "content": "Partly cloudy, 65\u00b0F.",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 154,
+            "completion_tokens": 11,
             "prompt_tokens": 244,
-            "total_tokens": 398,
+            "total_tokens": 255,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 128,
+              "reasoning_tokens": 0,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -397,26 +397,26 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DBAhBrRyBVwyozL0W8zxXqqVCSB",
+          "id": "chatcmpl-DL2MfhvUuABOIq1bGe5WYPMpqb4sZ",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-c971-7921-af1e-f2e9035947b6-0",
+        "id": "lc_run--019d050e-cc40-7261-8186-0c01b9aa5dc5-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 244,
-          "output_tokens": 154,
-          "total_tokens": 398,
+          "output_tokens": 11,
+          "total_tokens": 255,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 128
+            "reasoning": 0
           }
         }
       }
@@ -432,7 +432,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_IGdw4DRY2rrA50qomDV1DSBM",
+        "tool_call_id": "call_mXRWamI9i9GWdHekWwVjUltl",
         "status": "success"
       },
       "inputParameters": {

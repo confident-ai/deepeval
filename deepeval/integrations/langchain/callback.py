@@ -483,7 +483,7 @@ class CallbackHandler(BaseCallbackHandler):
                             # extract input and output token
                             input_tokens, output_tokens = (
                                 safe_extract_token_usage(
-                                    gen.message.response_metadata
+                                    gen.message
                                 )
                             )
                             total_input_tokens += input_tokens
@@ -564,7 +564,7 @@ class CallbackHandler(BaseCallbackHandler):
                                 )
                                 input_tokens, output_tokens = (
                                     safe_extract_token_usage(
-                                        gen.message.response_metadata
+                                        gen.message
                                     )
                                 )
                                 total_input_tokens += input_tokens

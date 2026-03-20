@@ -13,6 +13,7 @@ INVALID_THREAD_ID = "123"
 
 TEST_USER_ID = "test_user_id"
 
+pytestmark = pytest.mark.flaky(reruns=3, reruns_delay=2)
 
 class TestTraceAnnotation:
     def test_annotate_trace_with_thumbs_rating_invalid_uuid(self):

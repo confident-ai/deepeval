@@ -1,13 +1,13 @@
 {
-  "uuid": "68837a48-d51b-4b6b-9015-3161f78775a7",
+  "uuid": "d888439c-557e-422d-a9d4-62832cc95ffc",
   "baseSpans": [
     {
-      "uuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
+      "uuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
       "name": "parallel_weather_chain",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-01-26T09:28:00.442Z",
-      "endTime": "2026-01-26T09:28:05.981Z",
+      "startTime": "2026-03-19T07:45:41.819Z",
+      "endTime": "2026-03-19T07:45:47.314Z",
       "input": {
         "messages": [
           {
@@ -33,13 +33,13 @@
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 196,
+                "completion_tokens": 260,
                 "prompt_tokens": 152,
-                "total_tokens": 348,
+                "total_tokens": 412,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
-                  "reasoning_tokens": 128,
+                  "reasoning_tokens": 192,
                   "rejected_prediction_tokens": 0
                 },
                 "prompt_tokens_details": {
@@ -50,20 +50,20 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DB3Sq7IhLYjAQ4ADl7POronueNn",
+              "id": "chatcmpl-DL2MYFaZfA1OWGUUClVIW01gNxK3b",
               "service_tier": "default",
               "finish_reason": "tool_calls",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-aabc-7f20-86f8-d3739b5e0cbd-0",
+            "id": "lc_run--019d050e-afbc-7842-8e2d-d8bd12d15d9a-0",
             "tool_calls": [
               {
                 "name": "get_weather",
                 "args": {
                   "city": "Tokyo"
                 },
-                "id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+                "id": "call_sX82jp0qvkXg94OxQGurDBHJ",
                 "type": "tool_call"
               },
               {
@@ -71,7 +71,7 @@
                 "args": {
                   "city": "New York"
                 },
-                "id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+                "id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
                 "type": "tool_call"
               },
               {
@@ -79,22 +79,22 @@
                 "args": {
                   "city": "London"
                 },
-                "id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+                "id": "call_hte01RuC9DrzleZl9kPl3toW",
                 "type": "tool_call"
               }
             ],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 152,
-              "output_tokens": 196,
-              "total_tokens": 348,
+              "output_tokens": 260,
+              "total_tokens": 412,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
               },
               "output_token_details": {
                 "audio": 0,
-                "reasoning": 128
+                "reasoning": 192
               }
             }
           },
@@ -104,7 +104,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+            "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
             "status": "success"
           },
           {
@@ -113,7 +113,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+            "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
             "status": "success"
           },
           {
@@ -122,19 +122,19 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+            "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
             "status": "success"
           },
           {
-            "content": "Here are the weather results you requested:\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
+            "content": "Here are the results:\n\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
             "additional_kwargs": {
               "refusal": null
             },
             "response_metadata": {
               "token_usage": {
-                "completion_tokens": 40,
+                "completion_tokens": 37,
                 "prompt_tokens": 250,
-                "total_tokens": 290,
+                "total_tokens": 287,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -149,19 +149,19 @@
               "model_provider": "openai",
               "model_name": "gpt-5-mini-2025-08-07",
               "system_fingerprint": null,
-              "id": "chatcmpl-D2DB7LstF7bq5569QNN4G0m4D8yO2",
+              "id": "chatcmpl-DL2McgrrnelH9FBFhEZBXtWnrczUD",
               "service_tier": "default",
               "finish_reason": "stop",
               "logprobs": null
             },
             "type": "ai",
-            "id": "lc_run--019bf9a1-bc9c-7672-9f82-5ddcb5016ad0-0",
+            "id": "lc_run--019d050e-c118-7bd3-9a20-47f3ed387265-0",
             "tool_calls": [],
             "invalid_tool_calls": [],
             "usage_metadata": {
               "input_tokens": 250,
-              "output_tokens": 40,
-              "total_tokens": 290,
+              "output_tokens": 37,
+              "total_tokens": 287,
               "input_token_details": {
                 "audio": 0,
                 "cache_read": 0
@@ -183,7 +183,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+            "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
             "status": "success"
           },
           "inputParameters": {
@@ -198,7 +198,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+            "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
             "status": "success"
           },
           "inputParameters": {
@@ -213,7 +213,7 @@
             "response_metadata": {},
             "type": "tool",
             "name": "get_weather",
-            "tool_call_id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+            "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
             "status": "success"
           },
           "inputParameters": {
@@ -226,13 +226,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "019bf9a1-bc9c-7672-9f82-5ddcb5016ad0",
+      "uuid": "019d050e-c118-7bd3-9a20-47f3ed387265",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
-      "startTime": "2026-01-26T09:28:05.020Z",
-      "endTime": "2026-01-26T09:28:05.979Z",
+      "parentUuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
+      "startTime": "2026-03-19T07:45:46.264Z",
+      "endTime": "2026-03-19T07:45:47.314Z",
       "input": [
         {
           "role": "human",
@@ -261,21 +261,21 @@
       ],
       "output": {
         "role": "AI",
-        "content": "Here are the weather results you requested:\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
+        "content": "Here are the results:\n\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
         "tool_calls": []
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 250.0,
-      "outputTokenCount": 40.0
+      "outputTokenCount": 37.0
     },
     {
-      "uuid": "019bf9a1-aabc-7f20-86f8-d3739b5e0cbd",
+      "uuid": "019d050e-afbc-7842-8e2d-d8bd12d15d9a",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
-      "startTime": "2026-01-26T09:28:00.444Z",
-      "endTime": "2026-01-26T09:28:05.015Z",
+      "parentUuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
+      "startTime": "2026-03-19T07:45:41.820Z",
+      "endTime": "2026-03-19T07:45:46.256Z",
       "input": [
         {
           "role": "human",
@@ -295,39 +295,39 @@
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_0jTQOPrgai9mucgHNvP3Nu0m"
+            "id": "call_sX82jp0qvkXg94OxQGurDBHJ"
           },
           {
             "name": "get_weather",
             "args": {
               "city": "New York"
             },
-            "id": "call_kC09o3Ypd5yLa5mETEbW0TPZ"
+            "id": "call_1u8e4JKBc8HlIdfUNmW8eK1O"
           },
           {
             "name": "get_weather",
             "args": {
               "city": "London"
             },
-            "id": "call_wdIIjwASlMLIv0ah3NFYW30k"
+            "id": "call_hte01RuC9DrzleZl9kPl3toW"
           }
         ]
       },
       "model": "gpt-5-mini-2025-08-07",
       "inputTokenCount": 152.0,
-      "outputTokenCount": 196.0
+      "outputTokenCount": 260.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019bf9a1-bc9a-78b0-91d3-ad4b637683f3",
+      "uuid": "019d050e-c117-7ff3-8268-889e462e26d2",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
-      "startTime": "2026-01-26T09:28:05.018Z",
-      "endTime": "2026-01-26T09:28:05.019Z",
+      "parentUuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
+      "startTime": "2026-03-19T07:45:46.263Z",
+      "endTime": "2026-03-19T07:45:46.264Z",
       "input": {
         "city": "London"
       },
@@ -337,18 +337,18 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+        "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf9a1-bc99-7292-a2f7-ba2679663abf",
+      "uuid": "019d050e-c117-7ff3-8268-888d345f855b",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
-      "startTime": "2026-01-26T09:28:05.017Z",
-      "endTime": "2026-01-26T09:28:05.018Z",
+      "parentUuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
+      "startTime": "2026-03-19T07:45:46.263Z",
+      "endTime": "2026-03-19T07:45:46.263Z",
       "input": {
         "city": "New York"
       },
@@ -358,18 +358,18 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+        "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
         "status": "success"
       }
     },
     {
-      "uuid": "019bf9a1-bc98-7592-ac53-52b551ea9a05",
+      "uuid": "019d050e-c111-7cb1-8dbc-6267657045f9",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019bf9a1-aaba-7f43-9b79-23e5f57fd304",
-      "startTime": "2026-01-26T09:28:05.016Z",
-      "endTime": "2026-01-26T09:28:05.017Z",
+      "parentUuid": "019d050e-afbb-7bf0-90be-759f6b768b75",
+      "startTime": "2026-03-19T07:45:46.258Z",
+      "endTime": "2026-03-19T07:45:46.262Z",
       "input": {
         "city": "Tokyo"
       },
@@ -379,13 +379,13 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+        "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
         "status": "success"
       }
     }
   ],
-  "startTime": "2026-01-26T09:28:00.442Z",
-  "endTime": "2026-01-26T09:28:05.981Z",
+  "startTime": "2026-03-19T07:45:41.819Z",
+  "endTime": "2026-03-19T07:45:47.314Z",
   "name": "langchain-async-parallel-weather",
   "metadata": {
     "test_type": "async_parallel_weather"
@@ -422,13 +422,13 @@
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 196,
+            "completion_tokens": 260,
             "prompt_tokens": 152,
-            "total_tokens": 348,
+            "total_tokens": 412,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
-              "reasoning_tokens": 128,
+              "reasoning_tokens": 192,
               "rejected_prediction_tokens": 0
             },
             "prompt_tokens_details": {
@@ -439,20 +439,20 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DB3Sq7IhLYjAQ4ADl7POronueNn",
+          "id": "chatcmpl-DL2MYFaZfA1OWGUUClVIW01gNxK3b",
           "service_tier": "default",
           "finish_reason": "tool_calls",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-aabc-7f20-86f8-d3739b5e0cbd-0",
+        "id": "lc_run--019d050e-afbc-7842-8e2d-d8bd12d15d9a-0",
         "tool_calls": [
           {
             "name": "get_weather",
             "args": {
               "city": "Tokyo"
             },
-            "id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+            "id": "call_sX82jp0qvkXg94OxQGurDBHJ",
             "type": "tool_call"
           },
           {
@@ -460,7 +460,7 @@
             "args": {
               "city": "New York"
             },
-            "id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+            "id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
             "type": "tool_call"
           },
           {
@@ -468,22 +468,22 @@
             "args": {
               "city": "London"
             },
-            "id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+            "id": "call_hte01RuC9DrzleZl9kPl3toW",
             "type": "tool_call"
           }
         ],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 152,
-          "output_tokens": 196,
-          "total_tokens": 348,
+          "output_tokens": 260,
+          "total_tokens": 412,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
           },
           "output_token_details": {
             "audio": 0,
-            "reasoning": 128
+            "reasoning": 192
           }
         }
       },
@@ -493,7 +493,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+        "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
         "status": "success"
       },
       {
@@ -502,7 +502,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+        "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
         "status": "success"
       },
       {
@@ -511,19 +511,19 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+        "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
         "status": "success"
       },
       {
-        "content": "Here are the weather results you requested:\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
+        "content": "Here are the results:\n\n- Tokyo: Sunny, 72F\n- New York: Cloudy, 58F\n- London: Rainy, 52F",
         "additional_kwargs": {
           "refusal": null
         },
         "response_metadata": {
           "token_usage": {
-            "completion_tokens": 40,
+            "completion_tokens": 37,
             "prompt_tokens": 250,
-            "total_tokens": 290,
+            "total_tokens": 287,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -538,19 +538,19 @@
           "model_provider": "openai",
           "model_name": "gpt-5-mini-2025-08-07",
           "system_fingerprint": null,
-          "id": "chatcmpl-D2DB7LstF7bq5569QNN4G0m4D8yO2",
+          "id": "chatcmpl-DL2McgrrnelH9FBFhEZBXtWnrczUD",
           "service_tier": "default",
           "finish_reason": "stop",
           "logprobs": null
         },
         "type": "ai",
-        "id": "lc_run--019bf9a1-bc9c-7672-9f82-5ddcb5016ad0-0",
+        "id": "lc_run--019d050e-c118-7bd3-9a20-47f3ed387265-0",
         "tool_calls": [],
         "invalid_tool_calls": [],
         "usage_metadata": {
           "input_tokens": 250,
-          "output_tokens": 40,
-          "total_tokens": 290,
+          "output_tokens": 37,
+          "total_tokens": 287,
           "input_token_details": {
             "audio": 0,
             "cache_read": 0
@@ -573,7 +573,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_0jTQOPrgai9mucgHNvP3Nu0m",
+        "tool_call_id": "call_sX82jp0qvkXg94OxQGurDBHJ",
         "status": "success"
       },
       "inputParameters": {
@@ -588,7 +588,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_kC09o3Ypd5yLa5mETEbW0TPZ",
+        "tool_call_id": "call_1u8e4JKBc8HlIdfUNmW8eK1O",
         "status": "success"
       },
       "inputParameters": {
@@ -603,7 +603,7 @@
         "response_metadata": {},
         "type": "tool",
         "name": "get_weather",
-        "tool_call_id": "call_wdIIjwASlMLIv0ah3NFYW30k",
+        "tool_call_id": "call_hte01RuC9DrzleZl9kPl3toW",
         "status": "success"
       },
       "inputParameters": {
