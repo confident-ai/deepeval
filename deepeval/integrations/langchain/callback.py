@@ -482,9 +482,7 @@ class CallbackHandler(BaseCallbackHandler):
 
                             # extract input and output token
                             input_tokens, output_tokens = (
-                                safe_extract_token_usage(
-                                    gen.message
-                                )
+                                safe_extract_token_usage(gen.message)
                             )
                             total_input_tokens += input_tokens
                             total_output_tokens += output_tokens
@@ -563,9 +561,7 @@ class CallbackHandler(BaseCallbackHandler):
                                     "model_name"
                                 )
                                 input_tokens, output_tokens = (
-                                    safe_extract_token_usage(
-                                        gen.message
-                                    )
+                                    safe_extract_token_usage(gen.message)
                                 )
                                 total_input_tokens += input_tokens
                                 total_output_tokens += output_tokens
