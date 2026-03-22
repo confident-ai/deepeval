@@ -82,7 +82,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
 
         with capture_metric_type(
-            self.__name__, _track=self._track, async_mode=False
+            self.__name__, _track=self._track, async_mode=False, in_component=False
         ):
             # Evaluate the dataset using Ragas
             scores = evaluate(
@@ -162,7 +162,7 @@ class RAGASContextualRecallMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
         with capture_metric_type(
-            self.__name__, _track=self._track, async_mode=False
+            self.__name__, _track=self._track, async_mode=False, in_component=False
         ):
             scores = evaluate(dataset, [context_recall], llm=chat_model)
             context_recall_score = scores["context_recall"][0]
@@ -233,7 +233,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
         dataset = Dataset.from_dict(data)
 
         with capture_metric_type(
-            self.__name__, _track=self._track, async_mode=False
+            self.__name__, _track=self._track, async_mode=False, in_component=False
         ):
             scores = evaluate(
                 dataset,
@@ -383,7 +383,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
         dataset = Dataset.from_dict(data)
 
         with capture_metric_type(
-            self.__name__, _track=self._track, async_mode=False
+            self.__name__, _track=self._track, async_mode=False, in_component=False
         ):
             scores = evaluate(
                 dataset,
@@ -457,7 +457,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
         }
         dataset = Dataset.from_dict(data)
         with capture_metric_type(
-            self.__name__, _track=self._track, async_mode=False
+            self.__name__, _track=self._track, async_mode=False, in_component=False
         ):
             scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
             faithfulness_score = scores["faithfulness"][0]
@@ -526,7 +526,7 @@ class RagasMetric(BaseMetric):
             RAGASFaithfulnessMetric(model=self.model, _track=False),
         ]
 
-        with capture_metric_type(self.__name__, async_mode=False):
+        with capture_metric_type(self.__name__, async_mode=False, in_component=False):
             for metric in metrics:
                 score = metric.measure(test_case)
                 score_breakdown[metric.__name__] = score
