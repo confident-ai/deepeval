@@ -64,6 +64,7 @@ class BaseSpanWrapper:
     trace_expected_tools: Optional[List[ToolCall]] = None
     trace_metric_collection: Optional[str] = None
     trace_environment: Optional[str] = None
+    trace_test_case_id: Optional[str] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -242,6 +243,12 @@ class ConfidentSpanExporter(SpanExporter):
                 base_span_wrapper.trace_expected_tools
             )
 
+        # set the trace test case id
+        if base_span_wrapper.trace_test_case_id and isinstance(
+            base_span_wrapper.trace_test_case_id, str
+        ):
+            current_trace.test_case_id = base_span_wrapper.trace_test_case_id
+
         # set the trace metric collection
         if base_span_wrapper.trace_metric_collection:
             current_trace.metric_collection = (
@@ -340,6 +347,9 @@ class ConfidentSpanExporter(SpanExporter):
         ):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
+        trace_test_case_id = span.attributes.get(
+            "confident.trace.test_case_id"
+        )
         raw_trace_metric_collection = span.attributes.get(
             "confident.trace.metric_collection"
         )
@@ -372,6 +382,7 @@ class ConfidentSpanExporter(SpanExporter):
         base_span_wrapper.trace_expected_tools = trace_expected_tools
         base_span_wrapper.trace_metric_collection = trace_metric_collection
         base_span_wrapper.trace_environment = trace_environment
+        base_span_wrapper.trace_test_case_id = trace_test_case_id
 
         # Resource attributes
         resource_attributes = span.resource.attributes
