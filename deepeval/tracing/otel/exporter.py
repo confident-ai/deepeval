@@ -347,9 +347,7 @@ class ConfidentSpanExporter(SpanExporter):
         ):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
-        trace_test_case_id = span.attributes.get(
-            "confident.trace.test_case_id"
-        )
+        trace_test_case_id = span.attributes.get("confident.trace.test_case_id")
         raw_trace_metric_collection = span.attributes.get(
             "confident.trace.metric_collection"
         )
