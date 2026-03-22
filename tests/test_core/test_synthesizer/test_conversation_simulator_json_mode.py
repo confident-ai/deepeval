@@ -5,7 +5,6 @@ from deepeval.dataset.golden import ConversationalGolden
 from deepeval.test_case.conversational_test_case import Turn
 from tests.test_core.stubs import AlwaysJsonModel
 
-
 extractor = AlwaysJsonModel.balanced_json_after_anchor("Example JSON Output:")
 model = AlwaysJsonModel(extractor)
 

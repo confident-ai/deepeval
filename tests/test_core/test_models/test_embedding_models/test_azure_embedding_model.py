@@ -8,7 +8,6 @@ from deepeval.models.embedding_models.azure_embedding_model import (
 )
 from tests.test_core.stubs import _RecordingClient
 
-
 ##########################
 # Test Secret Management #
 ##########################

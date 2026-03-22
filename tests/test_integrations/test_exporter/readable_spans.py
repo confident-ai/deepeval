@@ -2,7 +2,6 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace import SpanContext, TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
 
-
 # Create a simple span context
 span_context = SpanContext(
     trace_id=1,  # Simple trace ID

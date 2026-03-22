@@ -11,7 +11,6 @@ from typing import get_args, get_origin, Union
 
 from .constants import KEY_FILE, HIDDEN_DIR
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -29,7 +29,6 @@ from deepeval.config.utils import (
     set_env_bool,
 )
 
-
 #####################
 # Pydantic Compat   #
 #####################

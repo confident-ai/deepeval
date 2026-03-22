@@ -28,7 +28,6 @@ from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
 )
 
-
 retry_openai = create_retry_decorator(PS.OPENAI)
 
 

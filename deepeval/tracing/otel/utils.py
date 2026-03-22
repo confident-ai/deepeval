@@ -10,7 +10,6 @@ from deepeval.tracing.types import Trace, LLMTestCase, ToolCall
 from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 
-
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
 
 

@@ -18,7 +18,6 @@ from tests.test_core.stubs import (
 )
 from tests.test_core.helpers import make_trace_api
 
-
 # module under test
 exec_mod = import_module("deepeval.evaluate.execute")
 

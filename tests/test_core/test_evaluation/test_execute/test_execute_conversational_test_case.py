@@ -14,7 +14,6 @@ from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
 )
 from deepeval.models.llms.openai_model import GPTModel
 
-
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None

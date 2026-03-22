@@ -1,7 +1,6 @@
 from typing import List
 from textwrap import dedent
 
-
 multimodal_rules = """
     --- MULTIMODAL INPUT RULES ---
     - Treat image content as factual evidence.
@@ -74,8 +73,7 @@ class ConversationalTaskNodeTemplate:
 class ConversationalBinaryJudgementTemplate:
     @staticmethod
     def generate_binary_verdict(criteria: str, text: str):
-        return dedent(
-            f"""{criteria}
+        return dedent(f"""{criteria}
 
                 Below is the full conversation you should evaluate. Consider dialogue context, speaker roles, and how responses were handled.
 
@@ -96,8 +94,7 @@ class ConversationalBinaryJudgementTemplate:
                 }}
                 **
                 JSON:
-            """
-        )
+            """)
 
 
 class ConversationalNonBinaryJudgementTemplate:
@@ -105,8 +102,7 @@ class ConversationalNonBinaryJudgementTemplate:
     def generate_non_binary_verdict(
         criteria: str, text: str, options: List[str]
     ):
-        return dedent(
-            f"""{criteria}
+        return dedent(f"""{criteria}
 
                 You are evaluating the following conversation. Choose one of the options that best reflects the assistant's behavior.
 
@@ -129,5 +125,4 @@ class ConversationalNonBinaryJudgementTemplate:
                 }}
                 **
                 JSON:
-            """
-        )
+            """)

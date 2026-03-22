@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.portkey_model import PortkeyModel
 
-
 #####################################
 # __init__ / configuration behavior #
 #####################################

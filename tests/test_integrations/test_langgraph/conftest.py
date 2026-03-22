@@ -34,7 +34,6 @@ from dateutil import parser as dateutil_parser
 
 from deepeval.test_case import ToolCall
 
-
 _logger = logging.getLogger(__name__)
 
 # Module-level state for TestRun

@@ -5,7 +5,6 @@ from pydantic import SecretStr
 from deepeval.models.llms.gemini_model import GeminiModel
 from tests.test_core.stubs import _make_fake_genai_module
 
-
 ##########################
 # Test Secret Management #
 ##########################
