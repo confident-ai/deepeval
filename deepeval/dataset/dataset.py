@@ -546,7 +546,9 @@ class EvaluationDataset:
                     tools_called.append(parsed_tools)
                 except ValueError or json.JSONDecodeError:
                     # Fallback to simple split on delimiter
-                    tools_called_str.split(tools_called_col_delimiter)
+                    tools_called.append(
+                        tools_called_str.split(tools_called_col_delimiter)
+                    )
             else:
                 tools_called.append([])
 
@@ -564,7 +566,9 @@ class EvaluationDataset:
                     expected_tools.append(parsed_tools)
                 except ValueError or json.JSONDecodeError:
                     # Fallback to simple split on delimiter
-                    expected_tools_str.split(expected_tools_col_delimiter)
+                    expected_tools.append(
+                        expected_tools_str.split(expected_tools_col_delimiter)
+                    )
             else:
                 expected_tools.append([])
 
