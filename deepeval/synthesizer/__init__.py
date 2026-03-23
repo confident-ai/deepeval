@@ -4,5 +4,4 @@ from .synthesizer import (
     PromptEvolution,
 )
 
-
 __all__ = ["Synthesizer", "Evolution", "PromptEvolution"]

@@ -18,7 +18,6 @@ from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.config.settings import get_settings
 
-
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"

@@ -42,7 +42,6 @@ from deepeval.prompt import (
 from rich.panel import Panel
 from rich.columns import Columns
 
-
 portalocker = None
 if not is_read_only_env():
     try:

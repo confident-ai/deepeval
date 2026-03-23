@@ -18,7 +18,6 @@ from deepeval.utils import (
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
 
-
 logger = logging.getLogger(__name__)
 
 

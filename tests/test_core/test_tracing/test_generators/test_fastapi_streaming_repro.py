@@ -27,7 +27,6 @@ from deepeval.tracing import (
 from deepeval.tracing.tracing import trace_manager
 from tests.test_core.test_tracing.conftest import trace_test
 
-
 # ── leaf spans (retriever + LLM) ──────────────────────────────────────
 
 

@@ -21,7 +21,6 @@ from deepeval.benchmarks.schema import (
 )
 from deepeval.telemetry import capture_benchmark_run
 
-
 logger = logging.getLogger(__name__)
 DELIMITER = ","
 

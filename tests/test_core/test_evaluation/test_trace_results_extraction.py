@@ -8,7 +8,6 @@ from deepeval.tracing.api import TraceApi, TraceSpanApiStatus
 from tests.test_core.stubs import make_span_api_like
 from tests.test_core.helpers import ts_iso8601_utc
 
-
 exec_mod = import_module("deepeval.evaluate.execute")
 
 

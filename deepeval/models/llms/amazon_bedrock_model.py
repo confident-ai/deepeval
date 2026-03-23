@@ -25,7 +25,6 @@ from deepeval.models.utils import (
     normalize_kwargs_and_extract_aliases,
 )
 
-
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
 _ALIAS_MAP = {

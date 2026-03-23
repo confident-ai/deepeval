@@ -8,7 +8,6 @@ from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import LlmSpan
 
-
 if TYPE_CHECKING:
     from anthropic import Anthropic
 

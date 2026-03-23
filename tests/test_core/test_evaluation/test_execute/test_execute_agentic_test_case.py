@@ -10,7 +10,6 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.models.llms.openai_model import GPTModel
 from deepeval.dataset.golden import Golden
 
-
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
 
 

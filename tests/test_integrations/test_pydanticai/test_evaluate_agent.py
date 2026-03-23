@@ -9,7 +9,6 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.evaluate.configs import AsyncConfig
 
-
 dataset = EvaluationDataset(goldens=[Golden(input="What's 7 * 8?")])
 
 answer_relavancy_metric = AnswerRelevancyMetric()

@@ -70,7 +70,6 @@ from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 
-
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden
     from anthropic import Anthropic

@@ -17,7 +17,6 @@ from pathlib import Path
 from deepeval.tracing.tracing import trace_manager
 from deepeval.config.settings import get_settings, reset_settings, Settings
 
-
 if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
 

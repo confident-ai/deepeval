@@ -30,7 +30,6 @@ from deepeval.optimizer.types import (
     OptimizationReport,
 )
 
-
 if TYPE_CHECKING:
     from deepeval.dataset.golden import Golden, ConversationalGolden
     from deepeval.prompt.api import PromptMessage

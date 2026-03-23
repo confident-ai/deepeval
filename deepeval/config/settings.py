@@ -51,7 +51,6 @@ from deepeval.config.utils import (
 )
 from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
-
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 

@@ -34,7 +34,6 @@ from deepeval.test_run.test_run import (
 from deepeval.confident.api import get_confident_api_key, set_confident_api_key
 from deepeval.cli.dotenv_handler import DotenvHandler
 
-
 StrOrEnum = Union[str, "Enum"]
 PROD = "https://app.confident-ai.com"
 # List all mutually exclusive USE_* keys

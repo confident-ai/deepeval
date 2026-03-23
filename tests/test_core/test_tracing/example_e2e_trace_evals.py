@@ -4,7 +4,6 @@ from deepeval.test_case import LLMTestCaseParams
 from deepeval.test_case import ToolCall
 from deepeval.dataset import EvaluationDataset
 
-
 relevnacy = GEval(
     name="Relevancy",
     criteria="For the given input, the output should be relevant to the input.",

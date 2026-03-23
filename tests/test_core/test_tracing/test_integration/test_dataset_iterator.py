@@ -16,7 +16,6 @@ from deepeval.evaluate.configs import (
 from deepeval.evaluate import execute as exec_mod
 from deepeval.dataset import EvaluationDataset, Golden
 
-
 # Define golden inputs
 goldens = [
     Golden(input="What's the weather like in SF?"),

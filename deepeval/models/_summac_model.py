@@ -9,7 +9,6 @@ import json
 import torch
 from deepeval import utils as utils_misc
 
-
 model_map = {
     "snli-base": {
         "model_card": "boychaboy/SNLI_roberta-base",

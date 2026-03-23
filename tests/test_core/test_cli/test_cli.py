@@ -13,7 +13,6 @@ from deepeval.cli.utils import USE_EMBED_KEYS, USE_LLM_KEYS
 from deepeval.config.settings import Settings, reset_settings  # noqa: E402
 from deepeval.config.utils import parse_bool
 
-
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 # Box drawing block used by rich panels (┌─┐│└─┘ etc.)
 _BOX_RE = re.compile(r"[\u2500-\u257F]")

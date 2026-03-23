@@ -13,7 +13,6 @@ from deepeval.test_run.test_run import TestRun, TestRunManager
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.models import GPTModel
 
-
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None

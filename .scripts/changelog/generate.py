@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
 from pydantic import BaseModel, Field, field_validator
 
-
 #################
 # Configuration #
 #################

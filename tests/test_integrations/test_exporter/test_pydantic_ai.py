@@ -6,7 +6,6 @@ from tests.test_integrations.test_exporter.readable_spans import (
 )
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 
-
 exporter = ConfidentSpanExporter()
 
 
