@@ -534,7 +534,7 @@ class EvaluationDataset:
 
         tools_called = []
         for tools_called_str in get_column_data(
-            df, tools_called_col_name, default="[]"
+            df, tools_called_col_name, default=""
         ):
             if tools_called_str:
                 try:
@@ -554,7 +554,7 @@ class EvaluationDataset:
 
         expected_tools = []
         for expected_tools_str in get_column_data(
-            df, expected_tools_col_name, default="[]"
+            df, expected_tools_col_name, default=""
         ):
             if expected_tools_str:
                 try:
