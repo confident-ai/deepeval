@@ -5,6 +5,7 @@ from tenacity.wait import wait_base
 from tenacity.stop import stop_after_attempt, stop_base
 from deepeval.utils import read_env_int, read_env_float, shorten, update_pbar
 from deepeval.evaluate.utils import _is_metric_successful
+from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.models.retry_policy import dynamic_wait, dynamic_stop
 from tests.test_core.stubs import DummyProgress
 
@@ -220,3 +221,30 @@ def test_update_pbar_noops_when_task_removed_between_callbacks():
     n = len(progress.records)
     update_pbar(progress, pbar_id=123, remove=True)  # should no-op after fix
     assert len(progress.records) == n
+
+
+#####################
+# trimAndLoadJson   #
+#####################
+
+
+def test_trimAndLoadJson_none_raises():
+    with pytest.raises(ValueError, match="returned None"):
+        trimAndLoadJson(None)
+
+
+def test_trimAndLoadJson_none_sets_metric_error():
+    metric = SimpleNamespace(error=None, __name__="test")
+    with pytest.raises(ValueError):
+        trimAndLoadJson(None, metric=metric)
+    assert "None" in metric.error
+
+
+def test_trimAndLoadJson_valid():
+    result = trimAndLoadJson('some prefix {"key": "value"} suffix')
+    assert result == {"key": "value"}
+
+
+def test_trimAndLoadJson_invalid_json_raises():
+    with pytest.raises(ValueError, match="invalid JSON"):
+        trimAndLoadJson("not json at all")

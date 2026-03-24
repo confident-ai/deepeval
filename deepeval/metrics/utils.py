@@ -391,6 +391,12 @@ def trimAndLoadJson(
     input_string: str,
     metric: Optional[BaseMetric] = None,
 ) -> Any:
+    if input_string is None:
+        error_str = "Evaluation LLM returned None. Please use a better evaluation model."
+        if metric is not None:
+            metric.error = error_str
+        raise ValueError(error_str)
+
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
 
