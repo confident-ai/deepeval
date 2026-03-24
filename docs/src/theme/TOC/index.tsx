@@ -1,17 +1,16 @@
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import clsx from 'clsx';
 import TOCItems from '@theme/TOCItems';
+import type {Props} from '@theme/TOC';
+
 import styles from './styles.module.scss';
 
-// Using a custom className
-// This prevents TOCInline/TOCCollapsible getting highlighted by mistake
 const LINK_CLASS_NAME = 'table-of-contents__link toc-highlight';
 const LINK_ACTIVE_CLASS_NAME = 'table-of-contents__link--active';
 
-export default function TOC({ className, ...props }) {
+export default function TOC({className, ...props}: Props): ReactNode {
   return (
     <div className={clsx(styles.tableOfContents, className)}>
-      {/* Scrollable container for TOC items */}
       <div className={clsx(styles.tocItemsContainer, 'thin-scrollbar')}>
         <TOCItems
           {...props}
@@ -19,7 +18,6 @@ export default function TOC({ className, ...props }) {
           linkActiveClassName={LINK_ACTIVE_CLASS_NAME}
         />
       </div>
-      {/* PromoCard always visible at the bottom */}
       <div className={styles.promoCard}>
         <img src="/icons/logo.svg" alt="Confident AI" className={styles.logo} />
         <div className={styles.heading}>
