@@ -36,9 +36,13 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.2",
+    "@docusaurus/tsconfig": "^3.9.2",
+    "@types/react": "^19.2.14",
+    "@types/react-router-dom": "^5.3.3",
     "css-loader": "^7.1.2",
     "prettier": "^3.5.3",
-    "style-loader": "^4.0.0"
+    "style-loader": "^4.0.0",
+    "typescript": "^6.0.2"
   },
   "browserslist": {
     "production": [
