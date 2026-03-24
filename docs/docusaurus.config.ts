@@ -55,6 +55,15 @@ const config: Config = {
         showLastUpdateTime: true,
       },
     ],
+    [
+      "@docusaurus/plugin-content-blog",
+      {
+        id: "blogs",
+        path: "blog",
+        routeBasePath: "blog",
+        blogSidebarCount: 0, 
+      },
+    ],
   ],
 
   title: 'DeepEval by Confident AI - The LLM Evaluation Framework',
@@ -76,11 +85,12 @@ const config: Config = {
     [
       '@docusaurus/preset-classic',
       {
-        blog: {
-          blogTitle: 'DeepEval Blog',
-          blogDescription: 'The official LLM evaluation blog',
-          blogSidebarCount: 'ALL',
-        },
+        // blog: {
+        //   blogTitle: 'DeepEval Blog',
+        //   blogDescription: 'The official LLM evaluation blog',
+        //   blogSidebarCount: 'ALL',
+        // },
+        blog: false,
         docs: {
           path: 'docs',
           editUrl: 'https://github.com/confident-ai/deepeval/edit/main/docs/',
