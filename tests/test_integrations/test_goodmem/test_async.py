@@ -14,7 +14,7 @@ from deepeval.tracing import trace, observe
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import RetrieverSpan, TraceSpanStatus
 
-from deepeval.integrations.goodmem import GoodMemRetriever, GoodMemConfig
+from deepeval.integrations.goodmem import GoodMemRetriever, GoodMemConfig, GoodMemChunk
 
 # --- Fixtures ----------------------------------------------------------------
 
@@ -132,3 +132,31 @@ class TestAsyncRetrieverSpan:
             s for s in agent_span.children if isinstance(s, RetrieverSpan)
         ]
         assert len(retriever_spans) == 2
+
+
+class TestAsyncRetrieveChunks:
+    """Verify retrieve_chunks() works in async contexts."""
+
+    @pytest.mark.asyncio
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
+    async def test_async_retrieve_chunks(self, mock_post, retriever):
+        @observe(type="agent", name="Async Chunks Agent")
+        async def async_chunks(query):
+            return retriever.retrieve_chunks(query)
+
+        with trace(name="async-chunks-test"):
+            result = await async_chunks("test query")
+
+        assert len(result) == 2
+        assert isinstance(result[0], GoodMemChunk)
+        assert result[0].content == "Async chunk one."
+        assert result[0].score == -0.20
+
+        t = trace_manager.get_all_traces()[0]
+        agent_span = t.root_spans[0]
+        retriever_span = agent_span.children[0]
+        assert isinstance(retriever_span, RetrieverSpan)
+        assert retriever_span.status == TraceSpanStatus.SUCCESS

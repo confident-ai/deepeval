@@ -3,31 +3,36 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
+from deepeval.integrations.goodmem.types import GoodMemChunk
+
 
 def goodmem_retrieve(
     base_url: str,
     api_key: str,
-    space_id: str,
+    space_ids: List[str],
     query: str,
     top_k: int = 5,
     reranker: Optional[str] = None,
     relevance_threshold: Optional[float] = None,
     metadata_filter: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> List[GoodMemChunk]:
     """Execute a semantic retrieval against GoodMem via raw HTTP.
 
-    Returns the parsed response dict with retrieved chunks.
+    Returns a list of ``GoodMemChunk`` objects with content, scores, and IDs.
     """
 
     url = f"{base_url.rstrip('/')}/v1/memories:retrieve"
 
-    space_key: Dict[str, Any] = {"spaceId": space_id}
-    if metadata_filter:
-        space_key["filter"] = metadata_filter
+    space_keys: List[Dict[str, Any]] = []
+    for sid in space_ids:
+        key: Dict[str, Any] = {"spaceId": sid}
+        if metadata_filter:
+            key["filter"] = metadata_filter
+        space_keys.append(key)
 
     body: Dict[str, Any] = {
         "message": query,
-        "spaceKeys": [space_key],
+        "spaceKeys": space_keys,
         "requestedSize": top_k,
         "fetchMemory": True,
     }
@@ -55,9 +60,9 @@ def goodmem_retrieve(
     return _parse_ndjson_response(response.text)
 
 
-def _parse_ndjson_response(text: str) -> Dict[str, Any]:
-    """Parse GoodMem's NDJSON streaming response into a structured dict."""
-    chunks: List[Dict[str, Any]] = []
+def _parse_ndjson_response(text: str) -> List[GoodMemChunk]:
+    """Parse GoodMem's NDJSON streaming response into GoodMemChunk objects."""
+    chunks: List[GoodMemChunk] = []
 
     for line in text.strip().split("\n"):
         line = line.strip()
@@ -77,25 +82,18 @@ def _parse_ndjson_response(text: str) -> Dict[str, Any]:
             chunk_text = inner_chunk.get("chunkText", "")
             chunk_id = inner_chunk.get("chunkId", "")
             memory_id = inner_chunk.get("memoryId", "")
+            space_id = inner_chunk.get("spaceId", "")
 
             chunks.append(
-                {
-                    "chunk_id": chunk_id,
-                    "memory_id": memory_id,
-                    "content": chunk_text,
-                    "relevance_score": chunk_data.get(
+                GoodMemChunk(
+                    content=chunk_text,
+                    score=chunk_data.get(
                         "relevanceScore", item.get("relevanceScore")
                     ),
-                }
+                    chunk_id=chunk_id,
+                    memory_id=memory_id,
+                    space_id=space_id,
+                )
             )
 
-    return {"chunks": chunks}
-
-
-def parse_chunks_to_texts(response: Dict[str, Any]) -> List[str]:
-    """Extract plain text strings from a parsed retrieval response."""
-    return [
-        chunk["content"]
-        for chunk in response.get("chunks", [])
-        if chunk.get("content")
-    ]
+    return chunks

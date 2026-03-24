@@ -14,7 +14,7 @@ from deepeval.tracing import trace, observe
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import RetrieverSpan, TraceSpanStatus
 
-from deepeval.integrations.goodmem import GoodMemRetriever, GoodMemConfig
+from deepeval.integrations.goodmem import GoodMemRetriever, GoodMemConfig, GoodMemChunk
 
 # --- Fixtures ----------------------------------------------------------------
 
@@ -76,16 +76,16 @@ def retriever():
 
 
 class TestRetrieverSpanCreation:
-    """Verify that calling retrieve() creates a proper RetrieverSpan."""
+    """Verify that calling retrieve_chunks() creates a proper RetrieverSpan."""
 
     @patch(
         "deepeval.integrations.goodmem.utils.requests.post",
         side_effect=_mock_post,
     )
     def test_creates_retriever_span(self, mock_post, retriever):
-        """A single retrieve() call should produce exactly one RetrieverSpan."""
+        """A single retrieve_chunks() call should produce exactly one RetrieverSpan."""
         with trace(name="goodmem-test"):
-            retriever.retrieve("What is Python?")
+            retriever.retrieve_chunks("What is Python?")
 
         traces = trace_manager.get_all_traces()
         assert len(traces) == 1
@@ -100,7 +100,7 @@ class TestRetrieverSpanCreation:
     )
     def test_span_has_correct_name(self, mock_post, retriever):
         with trace(name="goodmem-test"):
-            retriever.retrieve("test query")
+            retriever.retrieve_chunks("test query")
 
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.name == "GoodMem Retriever"
@@ -111,11 +111,10 @@ class TestRetrieverSpanCreation:
     )
     def test_span_captures_input(self, mock_post, retriever):
         with trace(name="goodmem-test"):
-            retriever.retrieve("What is Python?")
+            retriever.retrieve_chunks("What is Python?")
 
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.input is not None
-        # The input should contain the query
         input_str = str(span.input)
         assert "What is Python?" in input_str
 
@@ -125,15 +124,12 @@ class TestRetrieverSpanCreation:
     )
     def test_span_captures_output(self, mock_post, retriever):
         with trace(name="goodmem-test"):
-            result = retriever.retrieve("test")
+            result = retriever.retrieve_chunks("test")
 
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.output is not None
-        # Output should be the list of chunk texts
-        assert result == [
-            "Python is a programming language.",
-            "Python was created by Guido van Rossum.",
-        ]
+        assert len(result) == 2
+        assert isinstance(result[0], GoodMemChunk)
 
     @patch(
         "deepeval.integrations.goodmem.utils.requests.post",
@@ -141,7 +137,7 @@ class TestRetrieverSpanCreation:
     )
     def test_span_has_success_status(self, mock_post, retriever):
         with trace(name="goodmem-test"):
-            retriever.retrieve("test")
+            retriever.retrieve_chunks("test")
 
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert span.status == TraceSpanStatus.SUCCESS
@@ -153,12 +149,26 @@ class TestRetrieverSpanCreation:
     def test_span_has_retriever_metadata(self, mock_post, retriever):
         """RetrieverSpan should have embedder and top_k set via update_retriever_span."""
         with trace(name="goodmem-test"):
-            retriever.retrieve("test")
+            retriever.retrieve_chunks("test")
 
         span = trace_manager.get_all_traces()[0].root_spans[0]
         assert isinstance(span, RetrieverSpan)
         assert span.embedder == "text-embedding-3-small"
         assert span.top_k == 3
+
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
+    def test_retrieve_returns_text_list(self, mock_post, retriever):
+        """retrieve() should return plain text strings via retrieve_chunks()."""
+        with trace(name="text-test"):
+            result = retriever.retrieve("test")
+
+        assert result == [
+            "Python is a programming language.",
+            "Python was created by Guido van Rossum.",
+        ]
 
 
 class TestTraceMetadata:
@@ -228,6 +238,42 @@ class TestSpanNesting:
         traces = trace_manager.get_all_traces()
         assert len(traces) == 2
         assert all(isinstance(t.root_spans[0], RetrieverSpan) for t in traces)
+
+
+class TestRetrieveChunksSpan:
+    """Verify that retrieve_chunks() also creates proper traced spans."""
+
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
+    def test_retrieve_chunks_creates_span(self, mock_post, retriever):
+        with trace(name="chunks-test"):
+            result = retriever.retrieve_chunks("What is Python?")
+
+        assert len(result) == 2
+        assert isinstance(result[0], GoodMemChunk)
+        assert result[0].score == -0.25
+
+        traces = trace_manager.get_all_traces()
+        assert len(traces) == 1
+        span = traces[0].root_spans[0]
+        assert isinstance(span, RetrieverSpan)
+        assert span.name == "GoodMem Retriever"
+        assert span.status == TraceSpanStatus.SUCCESS
+
+    @patch(
+        "deepeval.integrations.goodmem.utils.requests.post",
+        side_effect=_mock_post,
+    )
+    def test_retrieve_chunks_has_metadata(self, mock_post, retriever):
+        with trace(name="chunks-meta-test"):
+            retriever.retrieve_chunks("test")
+
+        span = trace_manager.get_all_traces()[0].root_spans[0]
+        assert isinstance(span, RetrieverSpan)
+        assert span.embedder == "text-embedding-3-small"
+        assert span.top_k == 3
 
 
 class TestErrorHandling:
