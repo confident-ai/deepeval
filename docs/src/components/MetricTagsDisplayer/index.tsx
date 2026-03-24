@@ -1,6 +1,20 @@
 import React from 'react';
 import styles from './MetricTagsDisplayer.module.css';
 
+interface MetricTagsDisplayerProps {
+  usesLLMs?: boolean;
+  singleTurn?: boolean;
+  multiTurn?: boolean;
+  referenceless?: boolean;
+  referenceBased?: boolean;
+  rag?: boolean;
+  agent?: boolean;
+  chatbot?: boolean;
+  custom?: boolean;
+  safety?: boolean;
+  multimodal?: boolean;
+}
+
 const MetricTagsDisplayer = ({
   usesLLMs = true,
   singleTurn = false,
@@ -13,7 +27,7 @@ const MetricTagsDisplayer = ({
   custom = false,
   safety = false,
   multimodal = true,
-}) => {
+}: MetricTagsDisplayerProps) => {
   if (!usesLLMs) multimodal = false;
 
   return (

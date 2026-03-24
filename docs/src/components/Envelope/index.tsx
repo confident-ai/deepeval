@@ -1,7 +1,8 @@
 import React from "react";
 import styles from "./Envelope.module.css";
 
-function Envelope(props) {
+
+function Envelope<T>(props: T) {
   return (
     <div
       className={styles.letterContainer}

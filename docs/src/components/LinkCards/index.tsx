@@ -3,7 +3,20 @@ import Link from '@docusaurus/Link';
 import styles from './LinkCards.module.css';
 import * as LucideIcons from 'lucide-react';
 
-const LinkCards = ({ tutorials }) => {
+export interface LinkCardProps {
+  title: string;
+  to: string;
+  description?: string;
+  number?: string | number;
+  objectives?: string[];
+  icon?: keyof typeof LucideIcons;
+}
+
+interface LinkCardsProps {
+  tutorials: LinkCardProps[];
+}
+
+const LinkCards = ({ tutorials }: LinkCardsProps) => {
   return (
     <div className={styles.section}>
       <div className={styles.grid}>
@@ -15,8 +28,16 @@ const LinkCards = ({ tutorials }) => {
   );
 }
 
-const LinkCard = ({ title, description, to, number, objectives, icon }) => {
-  const IconComponent = icon && LucideIcons[icon];
+const LinkCard = ({ 
+  title, 
+  description, 
+  to, 
+  number, 
+  objectives, 
+  icon 
+}: LinkCardProps) => {
+  
+  const IconComponent = icon ? (LucideIcons[icon] as React.ElementType) : null;
   
   return (
     <Link to={to} className={styles.card}>
