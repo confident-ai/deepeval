@@ -61,7 +61,8 @@ class ConversationSimulatorTemplate:
             indent=4,
             ensure_ascii=False,
         )
-        prompt = textwrap.dedent(f"""
+        prompt = textwrap.dedent(
+            f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
             based on the provided scenario, user profile, and the previous conversation.
 
@@ -96,14 +97,16 @@ class ConversationSimulatorTemplate:
             {previous_conversation}
 
             JSON Output:
-        """)
+        """
+        )
         return prompt
 
     @staticmethod
     def stop_simulation(
         previous_conversation: str, expected_outcome: str
     ) -> str:
-        prompt = textwrap.dedent(f"""You are a Conversation Completion Checker.
+        prompt = textwrap.dedent(
+            f"""You are a Conversation Completion Checker.
             Your task is to determine whether the conversation has achieved the expected outcome and should be terminated.
 
             Guidelines:
@@ -132,5 +135,6 @@ class ConversationSimulatorTemplate:
             Conversation History:
             {previous_conversation}
             JSON Output:
-            """)
+            """
+        )
         return prompt

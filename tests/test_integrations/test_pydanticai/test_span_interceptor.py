@@ -5,6 +5,7 @@ from deepeval.integrations.pydantic_ai.instrumentator import SpanInterceptor
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.trace_context import trace
 
+
 def _make_mock_span():
     """Return a mock span that records set_attribute calls."""
     span = MagicMock()
