@@ -158,8 +158,8 @@ const config: Config = {
       innerHTML: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "Confident AI Inc.",
-        "alternateName": "DeepEval",
+        "name": "DeepEval by Confident AI",
+        "alternateName": "DeepEval - The LLM Evaluation Framework",
         "url": "https://deepeval.com",
         "logo": "https://deepeval.com/icons/DeepEval.svg",
         "sameAs": [
