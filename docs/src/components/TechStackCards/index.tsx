@@ -2,7 +2,17 @@ import React from 'react';
 import Link from '@docusaurus/Link';
 import styles from './TechStackCards.module.css';
 
-const TechStackCards = ({ techStack }) => {
+interface TechStackCardProps {
+  name: string;
+  logo: string;
+  website?: string;
+}
+
+interface TectStackCardsProps {
+  techStack: TechStackCardProps[];
+}
+
+const TechStackCards = ({ techStack }: TectStackCardsProps) => {
   return (
     <div className={styles.section}>
       <div className={styles.list}>
@@ -14,7 +24,7 @@ const TechStackCards = ({ techStack }) => {
   );
 };
 
-const TechStackCard = ({ name, logo, website }) => {
+const TechStackCard = ({ name, logo, website }: TechStackCardProps) => {
   return (
     <div className={styles.card}>
       <div className={styles.cardContent}>

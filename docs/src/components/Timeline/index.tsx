@@ -1,12 +1,21 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import MDXContent from "@theme/MDXContent";
 import styles from "./index.module.css";
 
-export function Timeline({ children }) {
+interface TimelineProps {
+  children: ReactNode;
+}
+
+export function Timeline({ children }: TimelineProps) {
   return <div className={styles.timeline}>{children}</div>;
 }
 
-export function TimelineItem({ title, children }) {
+interface TimelineItemProps {
+  title: string;
+  children: ReactNode;
+}
+
+export function TimelineItem({ title, children }: TimelineItemProps) {
   return (
     <div className={styles.timelineItem}>
       <div className={styles.timelineStep}>

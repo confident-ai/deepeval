@@ -17,6 +17,8 @@ import {
   Network,
   MessageCircleQuestion,
 } from 'lucide-react';
+import SchemaInjector from '../components/SchemaInjector/SchemaInjector';
+import { buildWebSiteSchema } from '@site/src/utils/schema-helpers';
 
 const integrationCards = [
   {
@@ -47,7 +49,6 @@ const integrationCards = [
     description:
       'Framework that makes it easy to build knowledge agents from complex data.',
   },
-  // Center cell is index 4 - reserved for logo
   {
     name: 'LangGraph',
     logo: 'https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/langgraph.png',
@@ -147,6 +148,8 @@ const sotaCards = [
   },
 ];
 
+const websiteSchema = buildWebSiteSchema();
+
 function Corners() {
   return (
     <>
@@ -158,27 +161,40 @@ function Corners() {
   );
 }
 
-function DashboardStack({ images }) {
+interface DashboardStackProps {
+  images: string[];
+}
+
+function DashboardStack({ images }: DashboardStackProps) {
   const count = images.length;
   return (
-    <div className={styles.dashboardStack} style={{ '--stack-count': count }}>
+    <div className={styles.dashboardStack} style={{ '--stack-count': count } as React.CSSProperties}>
       {images.map((src, index) => (
         <img
           key={index}
           src={src}
           alt={`Dashboard screenshot ${index + 1}`}
           className={styles.dashboardImage}
-          style={{
-            '--i': index,
-            zIndex: index + 1,
-          }}
+          style={
+            {
+              '--i': index,
+              zIndex: index + 1,
+            } as React.CSSProperties
+          }
         />
       ))}
     </div>
   );
 }
 
-function FeatureCard({ title, link, description, icon: Icon }) {
+interface FeatureCardProps {
+  title: string;
+  link: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+function FeatureCard({ title, link, description, icon: Icon }: FeatureCardProps) {
   return (
     <Link to={link} className={styles.featureCard}>
       <span className={styles.iconWrapper}>
@@ -187,7 +203,7 @@ function FeatureCard({ title, link, description, icon: Icon }) {
       <div className={styles.featureCardContainer}>
         <span className={styles.title}>
           {title}
-          <img src="icons/right-arrow.svg" />
+          <img src="icons/right-arrow.svg" alt="Right Arrow" />
         </span>
       </div>
       <p className={styles.description}>{description}</p>
@@ -195,7 +211,16 @@ function FeatureCard({ title, link, description, icon: Icon }) {
   );
 }
 
-function IntegrationCard({ name, logo, link, isLastColumn, isLastRow }) {
+interface IntegrationCardProps {
+  name: string;
+  logo: string;
+  link: string;
+  isLastColumn?: boolean;
+  isLastRow?: boolean;
+  description?: string;
+}
+
+function IntegrationCard({ name, logo, link, isLastColumn, isLastRow }: IntegrationCardProps) {
   const classes = [
     styles.integrationCard,
     isLastColumn && styles.noRightBorder,
@@ -214,7 +239,7 @@ function IntegrationCard({ name, logo, link, isLastColumn, isLastRow }) {
   );
 }
 
-class Index extends React.Component {
+class Index extends React.Component<any> {
   handleConfident = () => {
     window.open('https://confident-ai.com', '_blank');
   };
@@ -375,7 +400,6 @@ class Index extends React.Component {
                 const isLastColumn = col === 2;
                 const isLastRow = row === 2;
 
-                // Map grid index to integration card index (skip center)
                 const cardIndex = index < 4 ? index : index - 1;
                 const integration = integrationCards[cardIndex];
 
@@ -432,7 +456,7 @@ class Index extends React.Component {
   }
 }
 
-function HomePageContent(props) {
+function HomePageContent(props: any) {
   const { colorMode, setColorMode } = useColorMode();
   const originalColorMode = useRef(colorMode);
 
@@ -452,9 +476,10 @@ function HomePageContent(props) {
   );
 }
 
-export default function (props) {
+export default function Home(props: any) {
   return (
     <LayoutProvider>
+      <SchemaInjector schema={websiteSchema} />
       <HomePageContent {...props} />
     </LayoutProvider>
   );

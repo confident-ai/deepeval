@@ -1,7 +1,28 @@
 import React from "react";
 import styles from "./FeatureComparisonTable.module.css";
 
-const datasets = {
+interface DatasetItem {
+  feature: string;
+  description: string;
+  deepeval: boolean | string;
+  competitor: boolean | string;
+}
+
+interface DatasetCategories {
+  summary?: DatasetItem[];
+  metrics?: DatasetItem[];
+  synthesizer?: DatasetItem[];
+  redTeaming?: DatasetItem[];
+  benchmarks?: DatasetItem[];
+  integrations?: DatasetItem[];
+  platform?: DatasetItem[];
+}
+
+interface Datasets {
+  [key: string]: DatasetCategories;
+}
+
+const datasets: Datasets = {
     ragas: {
       summary: [
         {
@@ -2277,12 +2298,19 @@ const datasets = {
       ],
     },
   };
-  
-export default function FeatureComparisonTable({ type, competitor }) {
-  const [topKey, subKey] = type.split("::");
-  const data = datasets?.[topKey]?.[subKey] || [];
 
-  const renderValue = (value) => {
+type TopLevel = keyof typeof datasets;
+
+interface FeatureComparisonTableProps {
+  type: `${TopLevel}::${string}`; 
+  competitor: string;
+}
+  
+export default function FeatureComparisonTable({ type, competitor }: FeatureComparisonTableProps) {
+  const [topKey, subKey] = type.split("::");
+  const data = datasets[topKey]?.[subKey as keyof (typeof datasets)[typeof topKey]] || [];
+
+  const renderValue = (value: string | boolean) => {
     if (typeof value === "string") {
       return <span className={styles.cellText}>{value}</span>;
     }
@@ -2303,7 +2331,7 @@ export default function FeatureComparisonTable({ type, competitor }) {
           <div className={styles.centeredCell}>{competitor}</div>
         </div>
         <div>
-          {data.map((item, idx) => (
+          {data.map((item: DatasetItem, idx: number) => (
             <div key={idx} className={styles.featureRow}>
               <div className={styles.featureCell}>
                 <span className={styles.featureTitle}>{item.feature}</span>
