@@ -84,32 +84,54 @@ def patch_openai_classes():
     except ImportError:
         pass
 
+    try:
+        from openai.resources.embeddings import Embeddings, AsyncEmbeddings
+
+        if hasattr(Embeddings, "create"):
+            _ORIGINAL_METHODS["Embeddings.create"] = Embeddings.create
+            Embeddings.create = _create_sync_wrapper(
+                Embeddings.create, is_completion_method=False, is_embedding_method=True
+            )
+
+        if hasattr(AsyncEmbeddings, "create"):
+            _ORIGINAL_METHODS["AsyncEmbeddings.create"] = AsyncEmbeddings.create
+            AsyncEmbeddings.create = _create_async_wrapper(
+                AsyncEmbeddings.create, is_completion_method=False, is_embedding_method=True
+            )
+
+    except ImportError:
+        pass
+
     # Set flag at the END after successful patching
     _OPENAI_PATCHED = True
 
 
-def _create_sync_wrapper(original_method, is_completion_method: bool):
+def _create_sync_wrapper(original_method, is_completion_method: bool, is_embedding_method: bool = False):
     """Create a wrapper for sync methods - called ONCE during patching."""
 
     @wraps(original_method)
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
         patched = _patch_sync_openai_client_method(
-            orig_method=bound_method, is_completion_method=is_completion_method
+            orig_method=bound_method, 
+            is_completion_method=is_completion_method,
+            is_embedding_method=is_embedding_method
         )
         return patched(*args, **kwargs)
 
     return method_wrapper
 
 
-def _create_async_wrapper(original_method, is_completion_method: bool):
+def _create_async_wrapper(original_method, is_completion_method: bool, is_embedding_method: bool = False):
     """Create a wrapper for async methods - called ONCE during patching."""
 
     @wraps(original_method)
     async def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
         patched = _patch_async_openai_client_method(
-            orig_method=bound_method, is_completion_method=is_completion_method
+            orig_method=bound_method, 
+            is_completion_method=is_completion_method,
+            is_embedding_method=is_embedding_method
         )
         return await patched(*args, **kwargs)
 
@@ -119,11 +141,12 @@ def _create_async_wrapper(original_method, is_completion_method: bool):
 def _patch_async_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
+    is_embedding_method: bool = False,
 ):
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
         input_parameters: InputParameters = safe_extract_input_parameters(
-            is_completion_method, kwargs
+            is_completion_method, is_embedding_method, kwargs
         )
 
         llm_context = current_llm_context.get()
@@ -137,7 +160,7 @@ def _patch_async_openai_client_method(
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
             output_parameters = safe_extract_output_parameters(
-                is_completion_method, response, input_parameters
+                is_completion_method, is_embedding_method, response, input_parameters
             )
             _update_all_attributes(
                 input_parameters,
@@ -146,6 +169,7 @@ def _patch_async_openai_client_method(
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                is_embedding_method
             )
 
             return response
@@ -158,11 +182,12 @@ def _patch_async_openai_client_method(
 def _patch_sync_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
+    is_embedding_method: bool = False,
 ):
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
         input_parameters: InputParameters = safe_extract_input_parameters(
-            is_completion_method, kwargs
+            is_completion_method, is_embedding_method, kwargs
         )
 
         llm_context = current_llm_context.get()
@@ -176,7 +201,7 @@ def _patch_sync_openai_client_method(
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
             output_parameters = safe_extract_output_parameters(
-                is_completion_method, response, input_parameters
+                is_completion_method, is_embedding_method, response, input_parameters
             )
             _update_all_attributes(
                 input_parameters,
@@ -185,6 +210,7 @@ def _patch_sync_openai_client_method(
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                is_embedding_method
             )
 
             return response
@@ -201,10 +227,11 @@ def _update_all_attributes(
     expected_output: str,
     context: List[str],
     retrieval_context: List[str],
+    is_embedding_method: bool = None
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
-        input=input_parameters.messages,
+        input=input_parameters.messages or input_parameters.input,
         output=output_parameters.output or output_parameters.tools_called,
         tools_called=output_parameters.tools_called,
         # attributes to be added
@@ -212,6 +239,7 @@ def _update_all_attributes(
         expected_tools=expected_tools,
         context=context,
         retrieval_context=retrieval_context,
+        name="embedding" if is_embedding_method else None
     )
 
     llm_context = current_llm_context.get()
@@ -287,6 +315,18 @@ def unpatch_openai_classes():
         # Restore original methods for AsyncResponses
         if "AsyncResponses.create" in _ORIGINAL_METHODS:
             AsyncResponses.create = _ORIGINAL_METHODS["AsyncResponses.create"]
+
+    except ImportError:
+        pass
+
+    try:
+        from openai.resources.embeddings import Embeddings, AsyncEmbeddings
+
+        if "Embeddings.create" in _ORIGINAL_METHODS:
+            Embeddings.create = _ORIGINAL_METHODS["Embeddings.create"]
+
+        if "AsyncEmbeddings.create" in _ORIGINAL_METHODS:
+            AsyncEmbeddings.create = _ORIGINAL_METHODS["AsyncEmbeddings.create"]
 
     except ImportError:
         pass

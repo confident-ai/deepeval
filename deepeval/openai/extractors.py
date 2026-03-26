@@ -15,15 +15,28 @@ from deepeval.openai.utils import (
 
 # guarding against errors to be compatible with legacy APIs
 def safe_extract_input_parameters(
-    is_completion: bool, kwargs: Dict[str, Any]
+    is_completion: bool, is_embedding: bool, kwargs: Dict[str, Any]
 ) -> InputParameters:
     try:
-        if is_completion:
+        if is_embedding:
+            return extract_input_parameters_from_embedding(kwargs)
+        elif is_completion:
             return extract_input_parameters_from_completion(kwargs)
         else:
             return extract_input_parameters_from_response(kwargs)
     except:
         return InputParameters(model="NA")
+    
+def extract_input_parameters_from_embedding(
+    kwargs: Dict[str, Any],
+) -> InputParameters:
+    model = kwargs.get("model")
+    input_payload = kwargs.get("input")
+    
+    return InputParameters(
+        model=model,
+        input=stringify_multimodal_content(input_payload),
+    )
 
 
 def extract_input_parameters_from_completion(
@@ -106,13 +119,16 @@ def extract_input_parameters_from_response(
 
 def safe_extract_output_parameters(
     is_completion: bool,
-    response: Union[ChatCompletion, ParsedChatCompletion, Response],
+    is_embedding: bool,
+    response: Any,
     input_parameters: InputParameters,
 ) -> OutputParameters:
 
     # guarding against errors to be compatible with legacy APIs
     try:
-        if is_completion:
+        if is_embedding:
+            return extract_output_parameters_from_embedding(response)
+        elif is_completion:
             return extract_output_parameters_from_completion(
                 response, input_parameters
             )
@@ -123,6 +139,21 @@ def safe_extract_output_parameters(
     except:
         return OutputParameters()
 
+def extract_output_parameters_from_embedding(
+    response: Any,
+) -> OutputParameters:
+    prompt_tokens = response.usage.prompt_tokens
+
+    output_data = []
+    for item in response.data:
+        dimensions = len(item.embedding) if hasattr(item, "embedding") and item.embedding else 0
+        output_data.append(f"Embedding vector: {dimensions} dimensions")
+
+    return OutputParameters(
+        output=output_data,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=0,
+    )
 
 def extract_output_parameters_from_completion(
     completion: Union[ChatCompletion, ParsedChatCompletion],
