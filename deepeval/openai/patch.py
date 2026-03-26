@@ -13,9 +13,13 @@ from deepeval.tracing.context import (
     current_trace_context,
     update_current_span,
     update_llm_span,
+    update_retriever_span
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
+from deepeval.config.settings import get_settings
+
+SETTINGS = get_settings()
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -150,9 +154,10 @@ def _patch_async_openai_client_method(
         )
 
         llm_context = current_llm_context.get()
+        span_type = "retriever" if is_embedding_method else "llm"
 
         @observe(
-            type="llm",
+            type=span_type,
             model=input_parameters.model,
             metrics=llm_context.metrics,
             metric_collection=llm_context.metric_collection,
@@ -191,9 +196,10 @@ def _patch_sync_openai_client_method(
         )
 
         llm_context = current_llm_context.get()
+        span_type = "retriever" if is_embedding_method else "llm"
 
         @observe(
-            type="llm",
+            type=span_type,
             model=input_parameters.model,
             metrics=llm_context.metrics,
             metric_collection=llm_context.metric_collection,
@@ -230,25 +236,38 @@ def _update_all_attributes(
     is_embedding_method: bool = None
 ):
     """Update span and trace attributes with input/output parameters."""
-    update_current_span(
-        input=input_parameters.messages or input_parameters.input,
-        output=output_parameters.output or output_parameters.tools_called,
-        tools_called=output_parameters.tools_called,
-        # attributes to be added
-        expected_output=expected_output,
-        expected_tools=expected_tools,
-        context=context,
-        retrieval_context=retrieval_context,
-        name="embedding" if is_embedding_method else None
-    )
+    if is_embedding_method:
+        update_current_span(
+            input=input_parameters.input,
+            output=f"Embedded and generated vector with dimensions: {output_parameters.output}",
+            name="embedding" if is_embedding_method else None
+        )
+        
+        update_retriever_span(
+            embedder=input_parameters.model,
+            input_token_count=output_parameters.prompt_tokens,
+            output_token_count=output_parameters.completion_tokens,
+        )
+    else:
+        update_current_span(
+            input=input_parameters.messages or input_parameters.input,
+            output=output_parameters.output or output_parameters.tools_called,
+            tools_called=output_parameters.tools_called,
+            # attributes to be added
+            expected_output=expected_output,
+            expected_tools=expected_tools,
+            context=context,
+            retrieval_context=retrieval_context,
+            name="embedding" if is_embedding_method else None
+        )
 
-    llm_context = current_llm_context.get()
+        llm_context = current_llm_context.get()
 
-    update_llm_span(
-        input_token_count=output_parameters.prompt_tokens,
-        output_token_count=output_parameters.completion_tokens,
-        prompt=llm_context.prompt,
-    )
+        update_llm_span(
+            input_token_count=output_parameters.prompt_tokens,
+            output_token_count=output_parameters.completion_tokens,
+            prompt=llm_context.prompt,
+        )
 
     __update_input_and_output_of_current_trace(
         input_parameters, output_parameters

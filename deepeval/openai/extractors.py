@@ -144,13 +144,10 @@ def extract_output_parameters_from_embedding(
 ) -> OutputParameters:
     prompt_tokens = response.usage.prompt_tokens
 
-    output_data = []
-    for item in response.data:
-        dimensions = len(item.embedding) if hasattr(item, "embedding") and item.embedding else 0
-        output_data.append(f"Embedding vector: {dimensions} dimensions")
+    dimensions = len(response.data[0].embedding) if response.data and hasattr(response.data[0], "embedding") else 0
 
     return OutputParameters(
-        output=output_data,
+        output=dimensions,
         prompt_tokens=prompt_tokens,
         completion_tokens=0,
     )
