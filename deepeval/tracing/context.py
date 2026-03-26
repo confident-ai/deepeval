@@ -137,9 +137,9 @@ def update_llm_span(
         return
     if model:
         current_span.model = model
-    if input_token_count:
+    if input_token_count is not None:
         current_span.input_token_count = input_token_count
-    if output_token_count:
+    if output_token_count is not None:
         current_span.output_token_count = output_token_count
     if cost_per_input_token:
         current_span.cost_per_input_token = cost_per_input_token
