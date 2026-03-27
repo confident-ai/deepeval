@@ -154,29 +154,3 @@ export function buildBlogHomeSchema(posts: BlogPost[]): object {
     })),
   };
 }
-
-export function buildProductSchema({
-  name,
-  description,
-  url,
-  image,
-}: ProductSchemaProps): object {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name,
-    description,
-    url: `${BASE_URL}${url}`,
-    image: image ? image : `${BASE_URL}/icons/DeepEval.svg`,
-    brand: {
-      "@type": "Organization",
-      name: "Confident AI Inc.",
-    },
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-  };
-}
