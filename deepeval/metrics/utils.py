@@ -392,7 +392,7 @@ def trimAndLoadJson(
     metric: Optional[BaseMetric] = None,
 ) -> Any:
     if input_string is None:
-        error_str = "Evaluation LLM returned None instead of valid JSON. Please use a better evaluation model."
+        error_str = "Evaluation model returned None instead of valid JSON. Please use a better evaluation model."
         if metric is not None:
             metric.error = error_str
         raise ValueError(error_str)
@@ -411,7 +411,7 @@ def trimAndLoadJson(
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+        error_str = "Evaluation model outputted an invalid JSON. Please use a better evaluation model."
         if metric is not None:
             metric.error = error_str
         raise ValueError(error_str)

@@ -102,7 +102,7 @@ def convert_convo_goldens_to_convo_test_cases(
 
 def trimAndLoadJson(input_string: str) -> Any:
     if input_string is None:
-        raise ValueError("Evaluation LLM returned None instead of valid JSON.")
+        raise ValueError("Evaluation model returned None instead of valid JSON.")
 
     try:
         cleaned_string = re.sub(r",\s*([\]}])", r"\1", input_string.strip())
