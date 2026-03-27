@@ -395,6 +395,8 @@ class AgentCoreInstrumentationSettings:
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        test_case_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
         is_test_mode: Optional[bool] = False,
         agent_metrics: Optional[List[BaseMetric]] = None,
         environment: Optional[str] = None,
@@ -433,6 +435,8 @@ class AgentCoreInstrumentationSettings:
         self.agent_metric_collection = agent_metric_collection
         self.tool_metric_collection_map = tool_metric_collection_map or {}
         self.trace_metric_collection = trace_metric_collection
+        self.test_case_id = test_case_id
+        self.turn_id = turn_id
         self.is_test_mode = is_test_mode
         self.agent_metrics = agent_metrics
 
@@ -455,6 +459,8 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         _safe_set("confident.trace.thread_id", settings.thread_id)
         _safe_set("confident.trace.user_id", settings.user_id)
         _safe_set("confident.trace.environment", settings.environment)
+        _safe_set("confident.trace.test_case_id", settings.test_case_id)
+        _safe_set("confident.trace.turn_id", settings.turn_id)
 
         if settings.metadata:
             span.set_attribute(
