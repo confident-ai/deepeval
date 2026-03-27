@@ -136,6 +136,7 @@ class TraceApi(BaseModel):
     output: Optional[Any] = Field(None)
     status: Optional[TraceSpanApiStatus] = Field(TraceSpanApiStatus.SUCCESS)
     test_case_id: Optional[str] = Field(None, alias="testCaseId")
+    turn_id: Optional[str] = Field(None, alias="turnId")
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(

@@ -54,6 +54,8 @@ def instrument_openinference(
     agent_metric_collection: Optional[str] = None,
     tool_metric_collection_map: Optional[dict] = None,
     confident_prompt: Optional[Prompt] = None,
+    test_case_id: Optional[str] = None,
+    turn_id: Optional[str] = None,
     is_test_mode: bool = False,
     agent_metrics: Optional[List[BaseMetric]] = None,
 ) -> None:
@@ -87,6 +89,8 @@ def instrument_openinference(
             agent_metric_collection=agent_metric_collection,
             tool_metric_collection_map=tool_metric_collection_map,
             confident_prompt=confident_prompt,
+            test_case_id=test_case_id,
+            turn_id=turn_id,
             is_test_mode=is_test_mode,
             agent_metrics=agent_metrics,
         )
