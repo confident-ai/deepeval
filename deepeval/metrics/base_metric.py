@@ -27,8 +27,8 @@ class BaseMetric:
     verbose_logs: Optional[str] = None
     skipped = False
     requires_trace: bool = False
-    model = Optional[DeepEvalBaseLLM]
-    using_native_model = Optional[bool]
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -111,8 +111,8 @@ class BaseArenaMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
-    model = Optional[DeepEvalBaseLLM]
-    using_native_model = Optional[bool]
+    model: Optional[DeepEvalBaseLLM] = None
+    using_native_model: Optional[bool] = None
 
     @abstractmethod
     def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
