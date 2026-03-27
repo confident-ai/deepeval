@@ -166,6 +166,7 @@ class Trace(BaseModel):
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
     test_case_id: Optional[str] = Field(None, serialization_alias="testCaseId")
+    turn_id: Optional[str] = Field(None, serialization_alias="turnId")
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)

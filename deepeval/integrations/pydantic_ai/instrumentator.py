@@ -130,6 +130,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        test_case_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
         is_test_mode: Optional[bool] = False,
         agent_metrics: Optional[List[BaseMetric]] = None,
     ):
@@ -160,6 +162,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         self.llm_metric_collection = llm_metric_collection
         self.agent_metric_collection = agent_metric_collection
         self.trace_metric_collection = trace_metric_collection
+        self.test_case_id = test_case_id
+        self.turn_id = turn_id
         self.is_test_mode = is_test_mode
         self.agent_metrics = agent_metrics
 
@@ -249,6 +253,14 @@ class SpanInterceptor(SpanProcessor):
             )
         if _name:
             span.set_attribute("confident.trace.name", _name)
+        if self.settings.test_case_id:
+            span.set_attribute(
+                "confident.trace.test_case_id", self.settings.test_case_id
+            )
+        if self.settings.turn_id:
+            span.set_attribute(
+                "confident.trace.turn_id", self.settings.turn_id
+            )
         if self.settings.confident_prompt:
             span.set_attribute(
                 "confident.span.prompt_alias",
