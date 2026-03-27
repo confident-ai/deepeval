@@ -5,7 +5,7 @@ import type {Props} from '@theme/DocItem/Layout';
 import type {WrapperProps} from '@docusaurus/types';
 import { useDoc } from '@docusaurus/plugin-content-docs/client';
 import SchemaInjector from '../../../components/SchemaInjector/SchemaInjector';
-import { buildArticleSchema, buildProductSchema } from '@site/src/utils/schema-helpers';
+import { buildArticleSchema } from '@site/src/utils/schema-helpers';
 
 export default function LayoutWrapper(props: Props): ReactNode {
   const { metadata, frontMatter } = useDoc();
@@ -18,23 +18,15 @@ export default function LayoutWrapper(props: Props): ReactNode {
   const authors = (frontMatter as any).authors as string[] | undefined;
   const image = frontMatter.image as string | undefined;
 
-  const isMetricPage = metadata.permalink.includes('/docs/metrics-');
-
-  const schema = isMetricPage 
-    ? buildProductSchema({
-        name: metadata.title,
-        description: frontMatter.description || metadata.description,
-        url: metadata.permalink
-      })
-    : buildArticleSchema({
-      title,
-      description,
-      url,
-      datePublished,
-      dateModified,
-      authors,
-      image,
-    });
+  const schema = buildArticleSchema({
+    title,
+    description,
+    url,
+    datePublished,
+    dateModified,
+    authors,
+    image,
+  });
 
   return (
     <>
