@@ -2052,3 +2052,32 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         ),
     }
 )
+
+GROQ_MODELS_DATA = ModelDataRegistry(
+    {
+        "llama3-8b-8192": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.05 / 1e6,
+            output_price=0.08 / 1e6,
+        ),
+        "llama3-70b-8192": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.59 / 1e6,
+            output_price=0.79 / 1e6,
+        ),
+        "mixtral-8x7b-32768": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.24 / 1e6,
+            output_price=0.24 / 1e6,
+        ),
+    }
+)
