@@ -664,6 +664,10 @@ class Settings(BaseSettings):
     # Embedding Keys
     #
 
+    EMBEDDING_MODEL_COST: Optional[float] = Field(
+        None, description="Your embedding model's token cost (used for cost reporting)."
+    )
+
     # Azure OpenAI
     USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = Field(
         None, description="Use Azure OpenAI for embeddings."
@@ -1047,6 +1051,7 @@ class Settings(BaseSettings):
         "OPENAI_COST_PER_OUTPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_INPUT_TOKEN",
         "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
+        "EMBEDDING_MODEL_COST",
         "TEMPERATURE",
         "CONFIDENT_TRACE_SAMPLE_RATE",
         "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
