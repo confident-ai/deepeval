@@ -247,6 +247,8 @@ def _update_all_attributes(
             embedder=input_parameters.model,
             input_token_count=output_parameters.prompt_tokens,
             output_token_count=output_parameters.completion_tokens,
+            cost_per_input_token=SETTINGS.EMBEDDING_MODEL_COST,
+            cost_per_output_token=0
         )
     else:
         update_current_span(
