@@ -531,26 +531,47 @@ class EvaluationDataset:
                 df, retrieval_context_col_name, default=""
             )
         ]
-        tools_called = [
-            (
-                tool_called.split(tools_called_col_delimiter)
-                if tool_called
-                else []
-            )
-            for tool_called in get_column_data(
-                df, tools_called_col_name, default=""
-            )
-        ]
-        expected_tools = [
-            (
-                expected_tool.split(expected_tools_col_delimiter)
-                if expected_tool
-                else []
-            )
-            for expected_tool in get_column_data(
-                df, expected_tools_col_name, default=""
-            )
-        ]
+
+        tools_called = []
+        for tools_called_str in get_column_data(
+            df, tools_called_col_name, default=""
+        ):
+            if tools_called_str:
+                try:
+                    # Try loading JSON-serialized ToolCall objects
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(tools_called_str)
+                    ]
+                    tools_called.append(parsed_tools)
+                except ValueError or json.JSONDecodeError:
+                    # Fallback to simple split on delimiter
+                    tools_called.append(
+                        tools_called_str.split(tools_called_col_delimiter)
+                    )
+            else:
+                tools_called.append([])
+
+        expected_tools = []
+        for expected_tools_str in get_column_data(
+            df, expected_tools_col_name, default=""
+        ):
+            if expected_tools_str:
+                try:
+                    # Try loading JSON-serialized ToolCall objects
+                    parsed_tools = [
+                        ToolCall(**tool)
+                        for tool in trimAndLoadJson(expected_tools_str)
+                    ]
+                    expected_tools.append(parsed_tools)
+                except ValueError or json.JSONDecodeError:
+                    # Fallback to simple split on delimiter
+                    expected_tools.append(
+                        expected_tools_str.split(expected_tools_col_delimiter)
+                    )
+            else:
+                expected_tools.append([])
+
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
