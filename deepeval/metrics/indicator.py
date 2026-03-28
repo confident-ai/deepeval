@@ -165,6 +165,12 @@ async def measure_metrics_with_indicator(
     pbar_eval_id: Optional[int] = None,
     _in_component: bool = False,
 ):
+    async def wait_for_metric_tasks(tasks):
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+
     if show_indicator:
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
@@ -192,7 +198,7 @@ async def measure_metrics_with_indicator(
                         _in_component=_in_component,
                     )
                 )
-            await asyncio.gather(*tasks)
+            await wait_for_metric_tasks(tasks)
     else:
         tasks = []
         for metric in metrics:
@@ -235,7 +241,7 @@ async def measure_metrics_with_indicator(
                     )
                 )
 
-        await asyncio.gather(*tasks)
+        await wait_for_metric_tasks(tasks)
 
 
 async def safe_a_measure(
