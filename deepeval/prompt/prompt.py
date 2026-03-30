@@ -27,6 +27,10 @@ from deepeval.prompt.api import (
     OutputSchema,
     OutputType,
     Tool,
+    PromptBranch,
+    PromptBranchesHttpResponse,
+    PromptCreateBranchRequest,
+    PromptUpdateBranchRequest,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -120,6 +124,7 @@ class Prompt:
         output_schema: Optional[Type[BaseModel]] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
         confident_api_key: Optional[str] = None,
+        branch: Optional[str] = "main",
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -137,6 +142,7 @@ class Prompt:
         )
         self.confident_api_key = confident_api_key
         self.tools: Optional[List[Tool]] = None
+        self.branch = branch
 
         self._version = None
         self._hash = None
@@ -489,6 +495,7 @@ class Prompt:
         write_to_cache: bool = True,
         default_to_cache: bool = True,
         refresh: Optional[int] = 60,
+        branch: Optional[str] = None,
     ):
         should_write_on_first_fetch = False
         if refresh:
@@ -564,7 +571,7 @@ class Prompt:
             elif version:
                 HINT_TEXT = f"version={version}"
             else:
-                HINT_TEXT = f"hash={hash or 'latest'}"
+                HINT_TEXT = f"hash={hash or 'latest'}, branch={branch or self.branch}"
 
             task_id = progress.add_task(
                 f"Pulling [rgb(106,0,255)]'{self.alias}' ({HINT_TEXT})[/rgb(106,0,255)] from Confident AI...",
@@ -599,6 +606,7 @@ class Prompt:
                             "alias": self.alias,
                             "hash": hash or "latest",
                         },
+                        params={"branch": branch or self.branch}
                     )
 
                 response = PromptHttpResponse(
@@ -724,6 +732,7 @@ class Prompt:
         output_schema: Optional[Type[BaseModel]] = None,
         tools: Optional[List[Tool]] = None,
         _verbose: Optional[bool] = True,
+        branch: Optional[str] = None,
     ):
         if not self.alias or not self.alias.strip():
             raise ValueError(
@@ -746,6 +755,7 @@ class Prompt:
             output_schema=construct_output_schema(output_schema)
             or construct_output_schema(self.output_schema),
             tools=tools or self.tools,
+            branch=branch or self.branch,
         )
         try:
             body = body.model_dump(
@@ -821,6 +831,114 @@ class Prompt:
             tools=tools,
             _verbose=True,
         )
+
+    ############################################
+    ### Branching
+    ############################################
+
+    def get_branches(self) -> List[Dict[str, str]]:
+        if not self.alias:
+            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
+        
+        api = Api(api_key=self.confident_api_key)
+        
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_BRANCHES_ENDPOINT,
+            url_params={"alias": self.alias}
+        )
+        
+        response = PromptBranchesHttpResponse(**data)
+        return [{"id": b.id, "name": b.name} for b in response.branches]
+
+    def create_branch(self, branch: str, _verbose: Optional[bool] = True):
+        if not self.alias:
+            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
+            
+        api = Api(api_key=self.confident_api_key)
+        
+        body = PromptCreateBranchRequest(branch=branch)
+        try:
+            body_dict = body.model_dump(by_alias=True, exclude_none=True, mode="json")
+        except AttributeError:
+            body_dict = body.dict(by_alias=True, exclude_none=True)
+
+        data, link = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.PROMPTS_BRANCHES_ENDPOINT,
+            url_params={"alias": self.alias},
+            body=body_dict,
+        )
+        
+        self.branch = branch
+
+        if _verbose:
+            console = Console()
+            console.print(
+                f"✅ Prompt branch '{branch}' successfully created! View at "
+                f"[link={link}]{link}[/link]"
+            )
+
+    def update_branch(self, name: str, target_branch: Optional[str] = None, _verbose: Optional[bool] = True):
+        if not self.alias:
+            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
+            
+        branch_to_update = target_branch or self.branch
+        if branch_to_update == "main":
+            raise ValueError("Cannot update the name of the main branch.")
+
+        api = Api(api_key=self.confident_api_key)
+        
+        body = PromptUpdateBranchRequest(name=name)
+        try:
+            body_dict = body.model_dump(by_alias=True, exclude_none=True, mode="json")
+        except AttributeError:
+            body_dict = body.dict(by_alias=True, exclude_none=True)
+
+        api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
+            url_params={
+                "alias": self.alias, 
+                "branch": branch_to_update
+            },
+            body=body_dict,
+        )
+
+        # If we just renamed the branch this instance is tracking, update the instance state
+        if branch_to_update == self.branch:
+            self.branch = name
+
+        if _verbose:
+            console = Console()
+            console.print(f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'.")
+
+    def delete_branch(self, target_branch: Optional[str] = None, _verbose: Optional[bool] = True):
+        if not self.alias:
+            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
+            
+        branch_to_delete = target_branch or self.branch
+        if branch_to_delete == "main":
+            raise ValueError("Cannot delete the main branch.")
+
+        api = Api(api_key=self.confident_api_key)
+
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
+            url_params={
+                "alias": self.alias, 
+                "branch": branch_to_delete
+            },
+        )
+
+        # If we deleted the branch this instance is currently tracking, safely fall back to tracking "main"
+        if branch_to_delete == self.branch:
+            self.branch = "main"
+
+        if _verbose:
+            console = Console()
+            console.print(f"✅ Successfully deleted branch '{branch_to_delete}'.")
 
     ############################################
     ### Polling
