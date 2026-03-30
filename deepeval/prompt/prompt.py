@@ -879,11 +879,11 @@ class Prompt:
                 f"[link={link}]{link}[/link]"
             )
 
-    def update_branch(self, name: str, target_branch: Optional[str] = None, _verbose: Optional[bool] = True):
+    def update_branch(self, name: str, branch: Optional[str] = None, _verbose: Optional[bool] = True):
         if not self.alias:
             raise ValueError("Prompt alias is not set. Please set an alias to continue.")
             
-        branch_to_update = target_branch or self.branch
+        branch_to_update = branch or self.branch
         if branch_to_update == "main":
             raise ValueError("Cannot update the name of the main branch.")
 
@@ -913,11 +913,11 @@ class Prompt:
             console = Console()
             console.print(f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'.")
 
-    def delete_branch(self, target_branch: Optional[str] = None, _verbose: Optional[bool] = True):
+    def delete_branch(self, branch: Optional[str] = None, _verbose: Optional[bool] = True):
         if not self.alias:
             raise ValueError("Prompt alias is not set. Please set an alias to continue.")
             
-        branch_to_delete = target_branch or self.branch
+        branch_to_delete = branch or self.branch
         if branch_to_delete == "main":
             raise ValueError("Cannot delete the main branch.")
 
