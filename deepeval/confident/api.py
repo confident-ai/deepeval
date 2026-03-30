@@ -140,6 +140,8 @@ class Endpoints(Enum):
     PROMPTS_VERSIONS_ENDPOINT = "/v1/prompts/:alias/versions"
     PROMPTS_COMMITS_ENDPOINT = "/v1/prompts/:alias/commits"
     PROMPTS_COMMIT_HASH_ENDPOINT = "/v1/prompts/:alias/commits/:hash"
+    PROMPTS_BRANCHES_ENDPOINT = "/v1/prompts/:alias/branches"
+    PROMPTS_BRANCH_ENDPOINT = "/v1/prompts/:alias/branches/:branch"
     SIMULATE_ENDPOINT = "/v1/simulate"
     EVALUATE_ENDPOINT = "/v1/evaluate"
 
