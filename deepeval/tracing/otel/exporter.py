@@ -245,9 +245,13 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
         # set the trace test case id and turn id
-        if base_span_wrapper.trace_test_case_id:
+        if base_span_wrapper.trace_test_case_id and isinstance(
+            base_span_wrapper.trace_test_case_id, str
+        ):
             current_trace.test_case_id = base_span_wrapper.trace_test_case_id
-        if base_span_wrapper.trace_turn_id:
+        if base_span_wrapper.trace_turn_id and isinstance(
+            base_span_wrapper.trace_turn_id, str
+        ):
             current_trace.turn_id = base_span_wrapper.trace_turn_id
 
         # set the trace metric collection
