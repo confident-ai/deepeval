@@ -921,7 +921,7 @@ class Prompt:
             endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
             url_params={
                 "alias": self.alias, 
-                "branch": branch_to_update
+                "name": branch_to_update
             },
             body=body_dict,
         )
@@ -949,7 +949,7 @@ class Prompt:
             endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
             url_params={
                 "alias": self.alias, 
-                "branch": branch_to_delete
+                "name": branch_to_delete
             },
         )
 
