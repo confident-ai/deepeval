@@ -241,6 +241,7 @@ class PromptHttpResponse(BaseModel):
         validation_alias=AliasChoices("output_schema", "outputSchema"),
     )
     tools: Optional[List[Tool]] = None
+    branch: Optional[str] = None
 
 
 class PromptPushRequest(BaseModel):
@@ -264,7 +265,7 @@ class PromptPushRequest(BaseModel):
     output_type: Optional[OutputType] = Field(
         default=None, serialization_alias="outputType"
     )
-    branch: Optional[str] = "main"
+    branch: Optional[str] = None
 
 
 class PromptApi(BaseModel):
