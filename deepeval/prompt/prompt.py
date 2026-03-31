@@ -27,6 +27,7 @@ from deepeval.prompt.api import (
     OutputSchema,
     OutputType,
     Tool,
+    PromptCommit,
     PromptBranch,
     PromptBranchesHttpResponse,
     PromptCreateBranchRequest,
@@ -281,7 +282,7 @@ class Prompt:
         versions = PromptVersionsHttpResponse(**data)
         return versions.text_versions or versions.messages_versions or []
 
-    def _get_commits(self, branch: Optional[str] = None) -> List:
+    def _get_commits(self, branch: Optional[str] = None) -> List[PromptCommit]:
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
@@ -858,7 +859,7 @@ class Prompt:
     ### Branching
     ############################################
 
-    def get_branches(self) -> List[Dict[str, str]]:
+    def get_branches(self) -> List[PromptBranch]:
         if not self.alias:
             raise ValueError("Prompt alias is not set. Please set an alias to continue.")
         
@@ -871,7 +872,7 @@ class Prompt:
         )
         
         response = PromptBranchesHttpResponse(**data)
-        return [{"id": b.id, "name": b.name} for b in response.branches]
+        return response.branches or []
 
     def create_branch(self, branch: str, _verbose: Optional[bool] = True):
         if not self.alias:
