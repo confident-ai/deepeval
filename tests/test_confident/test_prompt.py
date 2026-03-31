@@ -619,14 +619,14 @@ class TestPromptText:
         branch_names = [branch.name for branch in branches]
 
         assert new_branch_name in branch_names
-    
+
     def test_update_branch(self):
         UUID = str(uuid.uuid4())
         old_branch_name = f"old-branch-{UUID}"
         new_branch_name = f"new-branch-{UUID}"
 
         prompt = Prompt(alias=self.BRANCH_ALIAS)
-        
+
         prompt.create_branch(branch=old_branch_name)
 
         # Pull all branches
@@ -661,7 +661,6 @@ class TestPromptText:
 
         assert new_branch_name in old_branch_names
         assert new_branch_name not in new_branch_names
-
 
 
 class TestPromptList:
@@ -1231,11 +1230,16 @@ class TestPromptList:
         """Test pushing to a new branch and main branch by default"""
         prompt = Prompt(alias=self.BRANCH_ALIAS)
         # Push to main branch
-        prompt.push(messages=[PromptMessage(role="user", content="New branch push")])
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")]
+        )
         first_branch_hash = prompt._hash
 
         # Push to different branch
-        prompt.push(messages=[PromptMessage(role="user", content="New branch push")], branch=self.BRANCH_NAME)
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")],
+            branch=self.BRANCH_NAME,
+        )
         second_branch_hash = prompt._hash
 
         main_commits = prompt._get_commits(branch="main")
@@ -1259,14 +1263,14 @@ class TestPromptList:
         branch_names = [branch.name for branch in branches]
 
         assert new_branch_name in branch_names
-    
+
     def test_update_branch(self):
         UUID = str(uuid.uuid4())
         old_branch_name = f"old-branch-{UUID}"
         new_branch_name = f"new-branch-{UUID}"
 
         prompt = Prompt(alias=self.BRANCH_ALIAS)
-        
+
         prompt.create_branch(branch=old_branch_name)
 
         # Pull all branches

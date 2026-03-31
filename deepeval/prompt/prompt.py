@@ -357,7 +357,9 @@ class Prompt:
 
     def _write_to_cache(
         self,
-        cache_key: Literal[VERSION_CACHE_KEY, LABEL_CACHE_KEY, HASH_CACHE_KEY, BRANCH_CACHE_KEY],
+        cache_key: Literal[
+            VERSION_CACHE_KEY, LABEL_CACHE_KEY, HASH_CACHE_KEY, BRANCH_CACHE_KEY
+        ],
         hash: str,
         version: Optional[str] = None,
         label: Optional[str] = None,
@@ -459,11 +461,7 @@ class Prompt:
         Raises if unable to load from cache.
         """
         cached_prompt = self._read_from_cache(
-            self.alias,
-            version=version,
-            label=label,
-            hash=hash,
-            branch=branch
+            self.alias, version=version, label=label, hash=hash, branch=branch
         )
         if not cached_prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
@@ -521,7 +519,11 @@ class Prompt:
         if refresh:
             # Check if we need to bootstrap the cache
             cached_prompt = self._read_from_cache(
-                self.alias, version=version, label=label, hash=hash, branch=branch
+                self.alias,
+                version=version,
+                label=label,
+                hash=hash,
+                branch=branch,
             )
             if cached_prompt is None:
                 # No cache exists, so we should write after fetching to bootstrap
@@ -537,13 +539,18 @@ class Prompt:
         if refresh:
             loop = _get_or_create_polling_loop()
             asyncio.run_coroutine_threadsafe(
-                self.create_polling_task(version, label, hash, branch, refresh), loop
+                self.create_polling_task(version, label, hash, branch, refresh),
+                loop,
             )
 
         if default_to_cache:
             try:
                 cached_prompt = self._read_from_cache(
-                    self.alias, version=version, label=label, hash=hash, branch=branch
+                    self.alias,
+                    version=version,
+                    label=label,
+                    hash=hash,
+                    branch=branch,
                 )
                 if cached_prompt:
                     with self._lock:
@@ -592,7 +599,9 @@ class Prompt:
                 HINT_TEXT = f"version={version}"
             else:
                 branch_name = branch or self.branch
-                HINT_TEXT = f"hash={hash or 'latest'}, branch={branch_name or 'main'}"
+                HINT_TEXT = (
+                    f"hash={hash or 'latest'}, branch={branch_name or 'main'}"
+                )
 
             task_id = progress.add_task(
                 f"Pulling [rgb(106,0,255)]'{self.alias}' ({HINT_TEXT})[/rgb(106,0,255)] from Confident AI...",
@@ -627,7 +636,7 @@ class Prompt:
                             "alias": self.alias,
                             "hash": hash or "latest",
                         },
-                        params={"branch": branch or self.branch}
+                        params={"branch": branch or self.branch},
                     )
 
                 response = PromptHttpResponse(
@@ -653,7 +662,7 @@ class Prompt:
                         version=version,
                         label=label,
                         hash=hash,
-                        branch=branch
+                        branch=branch,
                     )
                     return
                 raise
@@ -861,28 +870,34 @@ class Prompt:
 
     def get_branches(self) -> List[PromptBranch]:
         if not self.alias:
-            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
-        
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
         api = Api(api_key=self.confident_api_key)
-        
+
         data, _ = api.send_request(
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPTS_BRANCHES_ENDPOINT,
-            url_params={"alias": self.alias}
+            url_params={"alias": self.alias},
         )
-        
+
         response = PromptBranchesHttpResponse(**data)
         return response.branches or []
 
     def create_branch(self, branch: str, _verbose: Optional[bool] = True):
         if not self.alias:
-            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
-            
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
         api = Api(api_key=self.confident_api_key)
-        
+
         body = PromptCreateBranchRequest(branch=branch)
         try:
-            body_dict = body.model_dump(by_alias=True, exclude_none=True, mode="json")
+            body_dict = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         except AttributeError:
             body_dict = body.dict(by_alias=True, exclude_none=True)
 
@@ -892,7 +907,7 @@ class Prompt:
             url_params={"alias": self.alias},
             body=body_dict,
         )
-        
+
         self.branch = branch
 
         if _verbose:
@@ -902,29 +917,35 @@ class Prompt:
                 f"[link={link}]{link}[/link]"
             )
 
-    def update_branch(self, name: str, branch: Optional[str] = None, _verbose: Optional[bool] = True):
+    def update_branch(
+        self,
+        name: str,
+        branch: Optional[str] = None,
+        _verbose: Optional[bool] = True,
+    ):
         if not self.alias:
-            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
-            
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
         branch_to_update = branch or self.branch
         if branch_to_update == "main":
             raise ValueError("Cannot update the name of the main branch.")
 
         api = Api(api_key=self.confident_api_key)
-        
+
         body = PromptUpdateBranchRequest(name=name)
         try:
-            body_dict = body.model_dump(by_alias=True, exclude_none=True, mode="json")
+            body_dict = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         except AttributeError:
             body_dict = body.dict(by_alias=True, exclude_none=True)
 
         api.send_request(
             method=HttpMethods.PUT,
             endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
-            url_params={
-                "alias": self.alias, 
-                "name": branch_to_update
-            },
+            url_params={"alias": self.alias, "name": branch_to_update},
             body=body_dict,
         )
 
@@ -934,12 +955,18 @@ class Prompt:
 
         if _verbose:
             console = Console()
-            console.print(f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'.")
+            console.print(
+                f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'."
+            )
 
-    def delete_branch(self, branch: Optional[str] = None, _verbose: Optional[bool] = True):
+    def delete_branch(
+        self, branch: Optional[str] = None, _verbose: Optional[bool] = True
+    ):
         if not self.alias:
-            raise ValueError("Prompt alias is not set. Please set an alias to continue.")
-            
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
         branch_to_delete = branch or self.branch
         if branch_to_delete == "main":
             raise ValueError("Cannot delete the main branch.")
@@ -949,10 +976,7 @@ class Prompt:
         api.send_request(
             method=HttpMethods.DELETE,
             endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
-            url_params={
-                "alias": self.alias, 
-                "name": branch_to_delete
-            },
+            url_params={"alias": self.alias, "name": branch_to_delete},
         )
 
         # If we deleted the branch this instance is currently tracking, safely fall back to tracking "main"
@@ -961,7 +985,9 @@ class Prompt:
 
         if _verbose:
             console = Console()
-            console.print(f"✅ Successfully deleted branch '{branch_to_delete}'.")
+            console.print(
+                f"✅ Successfully deleted branch '{branch_to_delete}'."
+            )
 
     ############################################
     ### Polling
@@ -1063,7 +1089,7 @@ class Prompt:
                             "alias": self.alias,
                             "hash": hash or "latest",
                         },
-                        params={"branch": branch or self.branch}
+                        params={"branch": branch or self.branch},
                     )
 
                 response = PromptHttpResponse(
@@ -1079,7 +1105,7 @@ class Prompt:
                     output_type=data.get("outputType", None),
                     output_schema=data.get("outputSchema", None),
                     tools=data.get("tools", None),
-                    branch=data.get("branch", None)
+                    branch=data.get("branch", None),
                 )
 
                 # Update the cache with fresh data from server

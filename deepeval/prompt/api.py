@@ -272,15 +272,19 @@ class PromptApi(BaseModel):
     id: str
     type: PromptType
 
+
 class PromptBranch(BaseModel):
     id: str
     name: str
 
+
 class PromptBranchesHttpResponse(BaseModel):
     branches: List[PromptBranch]
 
+
 class PromptCreateBranchRequest(BaseModel):
     branch: str
+
 
 class PromptUpdateBranchRequest(BaseModel):
     name: str
