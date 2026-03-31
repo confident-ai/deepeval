@@ -520,7 +520,7 @@ class Prompt:
         if refresh:
             # Check if we need to bootstrap the cache
             cached_prompt = self._read_from_cache(
-                self.alias, version=version, label=label, hash=hash
+                self.alias, version=version, label=label, hash=hash, branch=branch
             )
             if cached_prompt is None:
                 # No cache exists, so we should write after fetching to bootstrap
@@ -542,7 +542,7 @@ class Prompt:
         if default_to_cache:
             try:
                 cached_prompt = self._read_from_cache(
-                    self.alias, version=version, label=label, hash=hash
+                    self.alias, version=version, label=label, hash=hash, branch=branch
                 )
                 if cached_prompt:
                     with self._lock:
@@ -651,6 +651,7 @@ class Prompt:
                         version=version,
                         label=label,
                         hash=hash,
+                        branch=branch
                     )
                     return
                 raise
@@ -690,6 +691,7 @@ class Prompt:
                     version=response.version,
                     label=response.label,
                     hash=response.hash,
+                    branch=branch,
                     text_template=response.text,
                     messages_template=response.messages,
                     prompt_id=response.id,
