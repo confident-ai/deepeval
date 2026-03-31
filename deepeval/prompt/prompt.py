@@ -279,7 +279,7 @@ class Prompt:
         versions = PromptVersionsHttpResponse(**data)
         return versions.text_versions or versions.messages_versions or []
 
-    def _get_commits(self) -> List:
+    def _get_commits(self, branch: Optional[str] = None) -> List:
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
@@ -289,6 +289,7 @@ class Prompt:
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPTS_COMMITS_ENDPOINT,
             url_params={"alias": self.alias},
+            params={"branch": branch} if branch else None,
         )
         commits = PromptCommitsHttpResponse(**data)
         return commits.commits or []
