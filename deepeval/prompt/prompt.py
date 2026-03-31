@@ -590,7 +590,8 @@ class Prompt:
             elif version:
                 HINT_TEXT = f"version={version}"
             else:
-                HINT_TEXT = f"hash={hash or 'latest'}, branch={branch or 'main'}"
+                branch_name = branch or self.branch
+                HINT_TEXT = f"hash={hash or 'latest'}, branch={branch_name or 'main'}"
 
             task_id = progress.add_task(
                 f"Pulling [rgb(106,0,255)]'{self.alias}' ({HINT_TEXT})[/rgb(106,0,255)] from Confident AI...",
