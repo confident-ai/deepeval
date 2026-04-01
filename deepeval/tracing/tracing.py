@@ -1176,11 +1176,10 @@ def observe(
     Decorator to trace a function as a span.
 
     Args:
-        span_type: The type of span to create (AGENT, LLM, RETRIEVER, TOOL, or custom string)
-        **observe_kwargs: Additional arguments to pass to the Observer
-
-    Returns:
-        A decorator function that wraps the original function with a Observer
+        type: The type of span to create (agent, llm, retriever, tool, or custom string).
+        _drop_if_root: If True, skip observation when there is no active parent span.
+        _internal: If True, only observe when CONFIDENT_TRACE_INTERNAL is enabled.
+        **observe_kwargs: Additional arguments to pass to the Observer.
     """
 
     def decorator(func):
