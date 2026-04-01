@@ -6,6 +6,7 @@ from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
 from deepeval.prompt.prompt import Prompt
 
+
 class SpanContext:
     def __init__(self):
         self.current_span: ContextVar[Optional[BaseSpan]] = ContextVar(

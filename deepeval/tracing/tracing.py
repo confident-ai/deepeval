@@ -1168,27 +1168,37 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
+    _drop_if_root: bool = False,
+    _internal: bool = False,
     **observe_kwargs,
 ):
     """
     Decorator to trace a function as a span.
 
     Args:
-        span_type: The type of span to create (AGENT, LLM, RETRIEVER, TOOL, or custom string)
-        **observe_kwargs: Additional arguments to pass to the Observer
-
-    Returns:
-        A decorator function that wraps the original function with a Observer
+        type: The type of span to create (agent, llm, retriever, tool, or custom string).
+        _drop_if_root: If True, skip observation when there is no active parent span.
+        _internal: If True, only observe when CONFIDENT_TRACE_INTERNAL is enabled.
+        **observe_kwargs: Additional arguments to pass to the Observer.
     """
 
     def decorator(func):
         func_name = func.__name__  # Get func_name outside wrappers
+
+        def _should_skip_observe():
+            if _drop_if_root and current_span_context.get() is None:
+                return True
+            if _internal and not get_settings().CONFIDENT_TRACE_INTERNAL:
+                return True
+            return False
 
         # Async generator function
         if inspect.isasyncgenfunction(func):
 
             @functools.wraps(func)
             def asyncgen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1223,6 +1233,8 @@ def observe(
 
             @functools.wraps(func)
             def gen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1299,7 +1311,8 @@ def observe(
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return await func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
@@ -1330,7 +1343,8 @@ def observe(
 
             @functools.wraps(func)
             def wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()

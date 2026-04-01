@@ -47,6 +47,23 @@ class DeepEvalBaseLLM(ABC):
         self.name = parse_model_name(model)
         self.model = self.load_model()
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+
+        observe_methods(
+            cls,
+            span_type="llm",
+            allowed_methods=[
+                "generate",
+                "a_generate",
+                "generate_raw_response",
+                "a_generate_raw_response",
+                "batch_generate",
+                "generate_samples",
+            ],
+        )
+
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
         """Loads a model, that will be responsible for scoring.

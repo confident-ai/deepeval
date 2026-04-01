@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Optional, Dict, List
+from typing import TYPE_CHECKING, Optional, Dict, List
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -7,7 +9,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ArenaTestCase,
 )
-from deepeval.models import DeepEvalBaseLLM
+
+if TYPE_CHECKING:
+    from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
@@ -29,6 +33,11 @@ class BaseMetric:
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -73,6 +82,11 @@ class BaseConversationalMetric:
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+        observe_methods(cls)
+
     @abstractmethod
     def measure(
         self, test_case: ConversationalTestCase, *args, **kwargs
@@ -113,6 +127,11 @@ class BaseArenaMetric:
     verbose_logs: Optional[str] = None
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
