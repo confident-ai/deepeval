@@ -1168,6 +1168,8 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
+    _drop_if_root: bool = False,
+    _internal: bool = False,
     **observe_kwargs,
 ):
     """
@@ -1184,11 +1186,20 @@ def observe(
     def decorator(func):
         func_name = func.__name__  # Get func_name outside wrappers
 
+        def _should_skip_observe():
+            if _drop_if_root and current_span_context.get() is None:
+                return True
+            if _internal and not get_settings().CONFIDENT_TRACE_INTERNAL:
+                return True
+            return False
+
         # Async generator function
         if inspect.isasyncgenfunction(func):
 
             @functools.wraps(func)
             def asyncgen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1223,6 +1234,8 @@ def observe(
 
             @functools.wraps(func)
             def gen_wrapper(*args, **func_kwargs):
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
@@ -1299,7 +1312,8 @@ def observe(
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return await func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
@@ -1330,7 +1344,8 @@ def observe(
 
             @functools.wraps(func)
             def wrapper(*args, **func_kwargs):
-                # func_name = func.__name__ # Removed from here
+                if _should_skip_observe():
+                    return func(*args, **func_kwargs)
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()

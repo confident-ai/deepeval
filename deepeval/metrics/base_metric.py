@@ -8,6 +8,7 @@ from deepeval.test_case import (
     ArenaTestCase,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.tracing.internal import observe_methods
 
 
 class BaseMetric:
@@ -29,6 +30,10 @@ class BaseMetric:
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -73,6 +78,10 @@ class BaseConversationalMetric:
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        observe_methods(cls)
+
     @abstractmethod
     def measure(
         self, test_case: ConversationalTestCase, *args, **kwargs
@@ -113,6 +122,10 @@ class BaseArenaMetric:
     verbose_logs: Optional[str] = None
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        observe_methods(cls)
 
     @abstractmethod
     def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
