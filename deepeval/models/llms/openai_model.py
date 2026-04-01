@@ -1,5 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Any, Optional, Tuple, Union, Dict, List
 from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
 from openai import (
@@ -9,7 +9,7 @@ from openai import (
 
 from deepeval.errors import DeepEvalError
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
-from deepeval.tracing.context import current_span_context, update_llm_span
+from deepeval.tracing.context import update_llm_span, update_current_span
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
@@ -524,6 +524,8 @@ class GPTModel(DeepEvalBaseLLM):
                 output_token_count=usage.completion_tokens if usage else None,
                 cost_per_input_token=self.model_data.input_price,
                 cost_per_output_token=self.model_data.output_price,
+            )
+            update_current_span(
                 input=messages,
                 output=output,
             )
