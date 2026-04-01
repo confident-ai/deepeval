@@ -313,7 +313,8 @@ class TraceManager:
                 trace_testing_manager.test_dict = make_json_serializable(body)
             #  Post the trace to the server before removing it
             elif not self.evaluating:
-                self.post_trace(trace)
+                if not trace.drop:
+                    self.post_trace(trace)
             else:
                 if self.evaluation_loop:
                     if self.integration_traces_to_evaluate:

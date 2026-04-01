@@ -79,6 +79,7 @@ def update_current_trace(
     confident_api_key: Optional[str] = None,
     test_case_id: Optional[str] = None,
     turn_id: Optional[str] = None,
+    drop: Optional[bool] = None,
     metric_collection: Optional[str] = None,
 ):
     current_trace = current_trace_context.get()
@@ -122,6 +123,8 @@ def update_current_trace(
         current_trace.test_case_id = test_case_id
     if turn_id:
         current_trace.turn_id = turn_id
+    if drop is not None:
+        current_trace.drop = drop
     if metric_collection:
         current_trace.metric_collection = metric_collection
 

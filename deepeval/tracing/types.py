@@ -171,6 +171,7 @@ class Trace(BaseModel):
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
     environment: str = Field(None, exclude=True)
+    drop: bool = Field(False, exclude=True)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
