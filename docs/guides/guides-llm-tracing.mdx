@@ -24,7 +24,7 @@ A **trace** represents the entire lifecycle of a single request (from user input
 ```mermaid
 flowchart TD
     T["Trace<br/>(one complete request)"]
-    T --> R["Root Span<br/>answer_user_query()<br/>type: base"]
+    T --> R["Root Span<br/>answer_user_query()<br/>type: agent"]
     R --> S1["Child Span<br/>retrieve_context()<br/>type: retriever"]
     R --> S2["Child Span<br/>generate_response()<br/>type: llm"]
 
@@ -90,10 +90,10 @@ trace_manager.configure(
 ```
 
 :::note
-If you do not auto-patch your client, you will need to manually log token counts and model names using `update_llm_span()` to capture cost and usage metrics.
+For unsupported clients, you can manually log token counts and model names using `update_llm_span()` to capture cost and usage metrics.
 :::
 
-### Connecting to Confident AI
+### Connecting to Confident AI (Optional)
 
 To export your traces for visualizing execution graphs and running asynchronous evaluations, you must provide a Confident AI API key. Without this, traces are only collected locally. Run `deepeval login` in your terminal to authenticate, or pass the key directly.
 
@@ -218,6 +218,23 @@ By calling `update_current_span()` from *within* the decorated function, you inj
 
 These parameters allow you to set attributes to your spans inside any trace manually. This is especially useful for capturing data inside special functions of your application.
 
+### Trace-Level Metadata
+
+You can also use `update_current_trace()` to append metadata to the entire execution graph, rather than just the active span. This is highly useful for tracking user sessions, application versions, or A/B testing flags.
+
+```python title="rag_pipeline.py"
+from deepeval.tracing import observe, update_current_trace
+
+@observe
+def answer_user_query(user_query: str, user_plan: str) -> str:
+    update_current_trace(
+        tags=["rag-v2"],
+        metadata={"user_plan": user_plan}
+    )
+    context = retrieve_context(user_query)
+    return generate_response(user_query, context)
+```
+
 ### `update_current_trace()` Parameters
 
 The `update_current_trace()` function allows you to set attributes on the trace level, which applies to the top level execution of your application.
@@ -241,23 +258,6 @@ The `update_current_trace()` function allows you to set attributes on the trace 
 | `test_case_id`      | `Optional[str]`            | Identifier for the associated test case                              |
 | `turn_id`           | `Optional[str]`            | Identifier for the specific interaction turn                         |
 | `metric_collection` | `Optional[str]`            | Attach a predefined Confident AI metric collection                   |
-
-### Trace-Level Metadata
-
-You can also use `update_current_trace()` to append metadata to the entire execution graph, rather than just the active span. This is highly useful for tracking user sessions, application versions, or A/B testing flags.
-
-```python title="rag_pipeline.py"
-from deepeval.tracing import observe, update_current_trace
-
-@observe
-def answer_user_query(user_query: str, user_plan: str) -> str:
-    update_current_trace(
-        tags=["rag-v2"],
-        metadata={"user_plan": user_plan}
-    )
-    context = retrieve_context(user_query)
-    return generate_response(user_query, context)
-```
 
 ## Evaluating Your Pipeline with Traces
 
@@ -283,6 +283,20 @@ def generate_response(query: str, context: list) -> str:
     return response.choices[0].message.content
 ```
 
+Now call your function using the `evals_iterator` of `EvaluationDataset` to run component evals on pre-defined inputs
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="..."),
+    ...
+])
+
+for golden in dataset.evals_iterator():
+    generate_response(golden.input)
+```
+
 When `generate_response()` runs, `deepeval` automatically extracts the function's `input` (the query), `output` (the response), and any `retrieval_context` attached to the span, and feeds them into both metrics. If a metric fails its threshold, it is highlighted in your local trace output immediately — before you ever push code.
 
 :::note
@@ -295,6 +309,17 @@ Component-level metrics evaluate individual spans in isolation, but sometimes yo
 
 ```python title="rag_pipeline.py"
 from deepeval.tracing import observe
+
+@observe
+def answer_user_query(user_query: str) -> str:
+    context = retrieve_context(user_query)
+    return generate_response(user_query, context)
+```
+
+Now call your function using the `evals_iterator` of `EvaluationDataset` with metrics to run end-to-end evals
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCaseParams
 
@@ -305,14 +330,17 @@ correctness_metric = GEval(
     threshold=0.7,
 )
 
-@observe(metrics=[correctness_metric])  # Root span — evaluates the full pipeline output
-def answer_user_query(user_query: str) -> str:
-    context = retrieve_context(user_query)
-    return generate_response(user_query, context)
+dataset = EvaluationDataset(goldens=[
+    Golden(input="..."),
+    ...
+])
+
+for golden in dataset.evals_iterator(metrics=[correctness_metric]):
+    generate_response(golden.input)
 ```
 
 :::tip
-Use component-level metrics (on `retriever` and `llm` spans) to diagnose *where* your pipeline is failing. Use end-to-end metrics (on the root span) to measure whether the pipeline is succeeding for the user. Both are most useful together.
+Use component-level metrics (on `retriever` and `llm` spans) to diagnose *where* your pipeline is failing. Use end-to-end metrics to measure whether the pipeline is succeeding for the user. Both are most useful together.
 :::
 
 ## Accessing Raw Traces Locally
