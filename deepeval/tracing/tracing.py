@@ -715,6 +715,10 @@ class TraceManager:
             span = span_stack.pop()
 
             if span.drop:
+                if span.children:
+                    for child in span.children:
+                        child.parent_uuid = span.parent_uuid
+                    span_stack.extend(span.children)
                 continue
 
             # Convert BaseSpan to BaseApiSpan
