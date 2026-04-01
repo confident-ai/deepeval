@@ -509,9 +509,9 @@ class GPTModel(DeepEvalBaseLLM):
         return f"{self.name}"
 
     def _update_llm_span_from_completion(
-        self, 
+        self,
         completion: ChatCompletion,
-        messages: Optional[List[Dict[str, Any]]] = None
+        messages: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         try:
             usage = completion.usage

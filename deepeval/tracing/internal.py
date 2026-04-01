@@ -23,6 +23,8 @@ def observe_methods(
         methods = {k: v for k, v in methods.items() if k in allowed_methods}
 
     for name, method in methods.items():
+        if getattr(method, "_is_deepeval_observed", False):
+            continue
         setattr(
             cls,
             name,
