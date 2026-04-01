@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from abc import abstractmethod
-from typing import Optional, Dict, List
+from typing import TYPE_CHECKING, Optional, Dict, List
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -7,8 +9,9 @@ from deepeval.test_case import (
     LLMTestCaseParams,
     ArenaTestCase,
 )
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.tracing.internal import observe_methods
+
+if TYPE_CHECKING:
+    from deepeval.models import DeepEvalBaseLLM
 
 
 class BaseMetric:
@@ -33,6 +36,7 @@ class BaseMetric:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
         observe_methods(cls)
 
     @abstractmethod
@@ -80,6 +84,7 @@ class BaseConversationalMetric:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
         observe_methods(cls)
 
     @abstractmethod
@@ -125,6 +130,7 @@ class BaseArenaMetric:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        from deepeval.tracing.internal import observe_methods
         observe_methods(cls)
 
     @abstractmethod

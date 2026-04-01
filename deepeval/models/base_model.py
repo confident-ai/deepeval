@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, List, Union
 from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
-from deepeval.tracing.internal import observe_methods
-
 
 @dataclass
 class DeepEvalModelData:
@@ -50,7 +48,15 @@ class DeepEvalBaseLLM(ABC):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        observe_methods(cls)
+        from deepeval.tracing.internal import observe_methods
+        observe_methods(cls, span_type="llm", allowed_methods=[
+            "generate",
+            "a_generate",
+            "generate_raw_response",
+            "a_generate_raw_response",
+            "batch_generate",
+            "generate_samples",
+        ])
 
     @abstractmethod
     def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
