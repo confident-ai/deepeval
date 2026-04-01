@@ -714,6 +714,9 @@ class TraceManager:
         while span_stack:
             span = span_stack.pop()
 
+            if span.drop:
+                continue
+
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
 
