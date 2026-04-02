@@ -45,6 +45,17 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Tracing + Evals',
+      className: 'sidebar-item-icon-tracing',
+      items: [
+        'guides-multi-turn-tracing',
+        'guides-tracing-ai-agents',
+        'guides-tracing-rag',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
       label: 'Others',
       className: 'sidebar-item-icon-others',
       items: [
