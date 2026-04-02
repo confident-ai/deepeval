@@ -78,6 +78,7 @@ class BaseSpan(BaseModel):
     # Don't serialize these
     progress: Optional[Progress] = Field(None, exclude=True)
     pbar_callback_id: Optional[int] = Field(None, exclude=True)
+    drop: bool = Field(False, exclude=True)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -171,6 +172,7 @@ class Trace(BaseModel):
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
     environment: str = Field(None, exclude=True)
+    drop: bool = Field(False, exclude=True)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(

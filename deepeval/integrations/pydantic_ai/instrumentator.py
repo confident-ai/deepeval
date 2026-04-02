@@ -258,9 +258,7 @@ class SpanInterceptor(SpanProcessor):
                 "confident.trace.test_case_id", self.settings.test_case_id
             )
         if self.settings.turn_id:
-            span.set_attribute(
-                "confident.trace.turn_id", self.settings.turn_id
-            )
+            span.set_attribute("confident.trace.turn_id", self.settings.turn_id)
         if self.settings.confident_prompt:
             span.set_attribute(
                 "confident.span.prompt_alias",

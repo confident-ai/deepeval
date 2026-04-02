@@ -6,13 +6,45 @@ from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
 from deepeval.prompt.prompt import Prompt
 
-current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
-    "current_span", default=None
-)
 
-current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
-    "current_trace", default=None
-)
+class SpanContext:
+    def __init__(self):
+        self.current_span: ContextVar[Optional[BaseSpan]] = ContextVar(
+            "current_span", default=None
+        )
+
+    def get(self):
+        return self.current_span.get()
+
+    def set(self, value):
+        return self.current_span.set(value)
+
+    def drop(self):
+        span = self.current_span.get()
+        if span:
+            span.drop = True
+
+
+class TraceContext:
+    def __init__(self):
+        self.current_trace: ContextVar[Optional[Trace]] = ContextVar(
+            "current_trace", default=None
+        )
+
+    def get(self):
+        return self.current_trace.get()
+
+    def set(self, value):
+        return self.current_trace.set(value)
+
+    def drop(self):
+        trace = self.current_trace.get()
+        if trace:
+            trace.drop = True
+
+
+current_span_context = SpanContext()
+current_trace_context = TraceContext()
 
 
 def update_current_span(

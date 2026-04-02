@@ -75,6 +75,8 @@ class TestPromptText:
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_text_interpolation_type"
     LABEL = "STAGING"
     LABEL_VERSION = "00.17.93"
+    BRANCH_ALIAS = "test_branch"
+    BRANCH_NAME = "test_branch_name"
 
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
@@ -585,12 +587,89 @@ class TestPromptText:
         assert prompt2.tools[0].name == prompt1.tools[0].name
         assert prompt2.tools[0].mode == prompt1.tools[0].mode
 
+    def test_branch_push(self):
+        """Test pushing to a new branch and main branch by default"""
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        # Push to main branch
+        prompt.push(text="Main branch push")
+        first_branch_hash = prompt._hash
+
+        # Push to different branch
+        prompt.push(text="Different branch push", branch=self.BRANCH_NAME)
+        second_branch_hash = prompt._hash
+
+        main_commits = prompt._get_commits(branch="main")
+        main_branch_hashes = [commit.hash for commit in main_commits]
+
+        branch_commits = prompt._get_commits(branch=self.BRANCH_NAME)
+        branch_hashes = [commit.hash for commit in branch_commits]
+
+        assert first_branch_hash in main_branch_hashes
+        assert second_branch_hash in branch_hashes
+
+    def test_create_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        branches = prompt.get_branches()
+        branch_names = [branch.name for branch in branches]
+
+        assert new_branch_name in branch_names
+
+    def test_update_branch(self):
+        UUID = str(uuid.uuid4())
+        old_branch_name = f"old-branch-{UUID}"
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+
+        prompt.create_branch(branch=old_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.update_branch(name=new_branch_name, branch=old_branch_name)
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert old_branch_name in old_branch_names
+        assert new_branch_name not in old_branch_names
+        assert new_branch_name in new_branch_names
+        assert old_branch_name not in new_branch_names
+
+    def test_delete_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.delete_branch(branch=new_branch_name)
+
+        # Pull branches again
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert new_branch_name in old_branch_names
+        assert new_branch_name not in new_branch_names
+
 
 class TestPromptList:
     ALIAS = "test_prompt_list"
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_list_interpolation_type"
     LABEL = "STAGING"
     LABEL_VERSION = "00.07.01"
+    BRANCH_ALIAS = "test_branch_messages"
+    BRANCH_NAME = "test_branch_name"
 
     def test_push(self):
         prompt = Prompt(alias=self.ALIAS)
@@ -1146,3 +1225,83 @@ class TestPromptList:
         assert len(prompt2.tools) == len(prompt1.tools)
         assert prompt2.tools[0].name == prompt1.tools[0].name
         assert prompt2.tools[0].mode == prompt1.tools[0].mode
+
+    def test_branch_push(self):
+        """Test pushing to a new branch and main branch by default"""
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        # Push to main branch
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")]
+        )
+        first_branch_hash = prompt._hash
+
+        # Push to different branch
+        prompt.push(
+            messages=[PromptMessage(role="user", content="New branch push")],
+            branch=self.BRANCH_NAME,
+        )
+        second_branch_hash = prompt._hash
+
+        main_commits = prompt._get_commits(branch="main")
+        main_branch_hashes = [commit.hash for commit in main_commits]
+
+        branch_commits = prompt._get_commits(branch=self.BRANCH_NAME)
+        branch_hashes = [commit.hash for commit in branch_commits]
+
+        assert first_branch_hash in main_branch_hashes
+        assert second_branch_hash in branch_hashes
+
+    def test_create_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        branches = prompt.get_branches()
+        branch_names = [branch.name for branch in branches]
+
+        assert new_branch_name in branch_names
+
+    def test_update_branch(self):
+        UUID = str(uuid.uuid4())
+        old_branch_name = f"old-branch-{UUID}"
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+
+        prompt.create_branch(branch=old_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.update_branch(name=new_branch_name, branch=old_branch_name)
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert old_branch_name in old_branch_names
+        assert new_branch_name not in old_branch_names
+        assert new_branch_name in new_branch_names
+        assert old_branch_name not in new_branch_names
+
+    def test_delete_branch(self):
+        UUID = str(uuid.uuid4())
+        new_branch_name = f"new-branch-{UUID}"
+
+        prompt = Prompt(alias=self.BRANCH_ALIAS)
+        prompt.create_branch(branch=new_branch_name)
+
+        # Pull all branches
+        old_branches = prompt.get_branches()
+        old_branch_names = [branch.name for branch in old_branches]
+
+        prompt.delete_branch(branch=new_branch_name)
+
+        # Pull branches again
+        new_branches = prompt.get_branches()
+        new_branch_names = [branch.name for branch in new_branches]
+
+        assert new_branch_name in old_branch_names
+        assert new_branch_name not in new_branch_names
