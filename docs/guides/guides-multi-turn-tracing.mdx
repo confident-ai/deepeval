@@ -23,10 +23,6 @@ import { Timeline, TimelineItem } from '@site/src/components/Timeline';
 A **trace** represents a single back-and-forth interaction (one user message and one assistant response). A **thread** (or session) is the historical sequence of those traces grouped together by a shared `thread_id`.
 :::
 
-:::note
-This guide assumes you have already configured the global trace manager. If you haven't, start with the [Tracing RAG Applications guide](/guides/guides-tracing-rag) to set up `trace_manager.configure()` before continuing.
-:::
-
 ## Common Pitfalls in Multi-Turn Systems
 
 Multi-turn systems fail in ways that single-turn systems do not. An LLM might provide a perfect response in isolation but fail entirely when viewed in the context of a five-turn conversation. Without thread-level observability, these gradual failures are invisible.

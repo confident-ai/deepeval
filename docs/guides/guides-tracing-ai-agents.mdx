@@ -23,10 +23,6 @@ import { Timeline, TimelineItem } from '@site/src/components/Timeline';
 To accurately map an agent's execution tree, `deepeval` utilizes four specialized span types: `"agent"` (for the orchestration layer), `"llm"` (for inference and decision making), `"tool"` (for external API or function executions), and `"retriever"` (for any context fetching steps).
 :::
 
-:::note
-This guide assumes you have already configured the global trace manager. If you haven't, start with the [Tracing RAG Applications guide](/guides/guides-tracing-rag) to set up `trace_manager.configure()` before continuing.
-:::
-
 ```mermaid
 flowchart TD
     A["🤖 Agent Span<br/>travel_agent()<br/>type: agent<br/>available_tools: search_flights, book_flight"]
