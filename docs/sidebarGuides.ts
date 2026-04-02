@@ -49,7 +49,7 @@ module.exports = {
       className: 'sidebar-item-icon-tracing',
       items: [
         'guides-multi-turn-tracing',
-        'guides-agentic-tracing',
+        'guides-tracing-ai-agents',
         'guides-tracing-rag',
       ],
       collapsed: false,
