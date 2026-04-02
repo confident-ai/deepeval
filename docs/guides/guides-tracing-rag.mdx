@@ -1,7 +1,7 @@
 ---
-id: guides-llm-tracing
-title: Tracing LLM Applications
-sidebar_label: Tracing LLM Applications
+id: guides-tracing-rag
+title: Tracing RAG Applications
+sidebar_label: Tracing RAG Applications
 ---
 
 <head>
@@ -11,6 +11,8 @@ sidebar_label: Tracing LLM Applications
   />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { ASSETS } from "@site/src/assets";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import { Timeline, TimelineItem } from '@site/src/components/Timeline';
@@ -366,6 +368,79 @@ Each dictionary in the returned list represents one complete trace — including
 
 :::tip
 `trace_manager.get_all_traces_dict()` returns every trace collected since the process started. For long-running servers, call `trace_manager.clear_traces()` periodically to free memory if you are not sending traces to Confident AI.
+:::
+
+## Framework Integrations
+
+If you're already using **LlamaIndex** or **LangChain** to build your RAG pipeline, deepeval provides native integrations that automatically instrument your application — capturing retriever spans, LLM spans, and retrieval context — with just a couple of lines of setup code. No manual `@observe` decorators are needed.
+
+<Tabs>
+<TabItem value="llamaindex" label="LlamaIndex">
+
+Call `instrument_llama_index` once before building your index. deepeval then hooks into LlamaIndex's internal event system and automatically records every retrieval operation (the retrieved nodes are stored as `retrieval_context` on the retriever span) alongside all LLM calls.
+
+```python title="main.py" showLineNumbers
+import llama_index.core.instrumentation as instrument
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+from deepeval.integrations.llama_index import instrument_llama_index
+
+# One-line setup: auto-instruments all retrieval and LLM spans
+instrument_llama_index(instrument.get_dispatcher())
+
+documents = SimpleDirectoryReader("data/").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+# Retrieval context is automatically captured in the retriever span
+response = query_engine.query("What are the visa requirements for Japan?")
+print(response)
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+Pass a `CallbackHandler` instance in the `config` when invoking your chain. deepeval intercepts the retriever's start and end events, creating a `RetrieverSpan` with the query and the retrieved documents automatically.
+
+```python title="main.py" showLineNumbers
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+from deepeval.integrations.langchain import CallbackHandler
+
+vectorstore = Chroma.from_texts(
+    ["Japan requires a valid passport and tourist visa for many nationalities."],
+    OpenAIEmbeddings(),
+)
+retriever = vectorstore.as_retriever()
+
+prompt = ChatPromptTemplate.from_template(
+    "Answer the question based on the following context:\n{context}\n\nQuestion: {question}"
+)
+
+chain = (
+    {"context": retriever, "question": RunnablePassthrough()}
+    | prompt
+    | ChatOpenAI(model="gpt-4o-mini")
+    | StrOutputParser()
+)
+
+# Pass CallbackHandler as config — retriever spans are captured automatically
+result = chain.invoke(
+    "What are the visa requirements for Japan?",
+    config={"callbacks": [CallbackHandler()]},
+)
+print(result)
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+The integrations shown here are minimal tracing examples. For full options — including attaching evaluation metrics to specific spans, running component-level evals, and setting up production `metric_collection`s — see the [LlamaIndex integration docs](/integrations/llamaindex) and [LangChain integration docs](/integrations/langchain).
 :::
 
 ## LLM Observability In Production

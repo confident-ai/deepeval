@@ -1,7 +1,7 @@
 ---
 id: guides-agentic-tracing
-title: Tracing Agentic Applications
-sidebar_label: Tracing Agentic Applications
+title: Tracing AI Agents
+sidebar_label: Tracing AI Agents
 ---
 
 <head>
@@ -11,6 +11,8 @@ sidebar_label: Tracing Agentic Applications
   />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import { ASSETS } from "@site/src/assets";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import { Timeline, TimelineItem } from '@site/src/components/Timeline';
@@ -330,6 +332,167 @@ Both scopes can be active on the same trace simultaneously. A single agent execu
 
 :::tip
 For a comprehensive breakdown of the formulas and use cases for these metrics, read the [AI Agent Evaluation Metrics guide](/docs/guides/guides-ai-agent-evaluation-metrics).
+:::
+
+## Framework Integrations
+
+If you're building your agent with an existing framework — LlamaIndex, LangGraph, CrewAI, Pydantic AI, or the OpenAI Agents SDK — deepeval provides native integrations that automatically instrument your pipeline with agent, LLM, and tool spans. No manual `@observe` decorators are needed.
+
+<Tabs>
+<TabItem value="llamaindex" label="LlamaIndex">
+
+Call `instrument_llama_index` once before creating your agent. deepeval hooks into LlamaIndex's event system and automatically captures every LLM reasoning step and tool execution as structured spans.
+
+```python title="main.py" showLineNumbers
+import asyncio
+import llama_index.core.instrumentation as instrument
+from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
+
+from deepeval.integrations.llama_index import instrument_llama_index
+
+# One-line setup: auto-instruments all agent, LLM, and tool spans
+instrument_llama_index(instrument.get_dispatcher())
+
+
+def get_weather(city: str) -> str:
+    """Get the current weather in a city."""
+    return f"It's always sunny in {city}!"
+
+
+agent = FunctionAgent(
+    tools=[get_weather],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant.",
+)
+
+
+async def run():
+    return await agent.run("What's the weather in Paris?")
+
+
+asyncio.run(run())
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph">
+
+Pass a `CallbackHandler` instance in the `config` when invoking your graph. deepeval intercepts chain, LLM, and tool events, building the full agent span tree automatically.
+
+```python title="main.py" showLineNumbers
+from langgraph.prebuilt import create_react_agent
+
+from deepeval.integrations.langchain import CallbackHandler
+
+
+def get_weather(city: str) -> str:
+    """Returns the weather in a city."""
+    return f"It's always sunny in {city}!"
+
+
+agent = create_react_agent(
+    model="openai:gpt-4o-mini",
+    tools=[get_weather],
+    prompt="You are a helpful assistant",
+)
+
+# Pass CallbackHandler as config — all agent, LLM, and tool spans are captured automatically
+result = agent.invoke(
+    input={"messages": [{"role": "user", "content": "What's the weather in Paris?"}]},
+    config={"callbacks": [CallbackHandler()]},
+)
+print(result)
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+
+Call `instrument_crewai` once before defining your crew. deepeval registers a CrewAI event listener that captures crew orchestration, agent execution, LLM calls, and tool invocations as a nested span tree.
+
+```python title="main.py" showLineNumbers
+from crewai import Task, Crew, Agent
+from crewai.tools import tool
+
+from deepeval.integrations.crewai import instrument_crewai
+
+# One-line setup: auto-instruments all CrewAI spans
+instrument_crewai()
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city."""
+    return f"It's always sunny in {city}!"
+
+
+agent = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate weather information.",
+    backstory="An experienced meteorologist.",
+    tools=[get_weather],
+)
+
+task = Task(
+    description="Get the current weather for {city}.",
+    expected_output="A brief weather report.",
+    agent=agent,
+)
+
+crew = Crew(agents=[agent], tasks=[task])
+
+# All execution spans are captured automatically
+crew.kickoff({"city": "Paris"})
+```
+
+</TabItem>
+<TabItem value="pydanticai" label="Pydantic AI">
+
+Pass a `ConfidentInstrumentationSettings` instance to your agent's `instrument` parameter. deepeval exports all spans via OpenTelemetry to Confident AI automatically on every agent run.
+
+```python title="main.py" showLineNumbers
+from pydantic_ai import Agent
+
+from deepeval.integrations.pydantic_ai import ConfidentInstrumentationSettings
+
+agent = Agent(
+    "openai:gpt-4o-mini",
+    instructions="You are a helpful travel assistant.",
+    instrument=ConfidentInstrumentationSettings(),
+)
+
+# All agent, LLM, and tool spans are exported automatically
+result = agent.run_sync("Book me a flight from JFK to LAX.")
+print(result.output)
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+Register `DeepEvalTracingProcessor` once globally. deepeval then intercepts every trace emitted by the OpenAI Agents SDK, mapping agent runs, LLM calls, and function tool calls into deepeval spans.
+
+```python title="main.py" showLineNumbers
+from agents import Runner, add_trace_processor
+
+from deepeval.openai_agents import Agent, DeepEvalTracingProcessor
+
+# One-line setup: register the tracing processor globally
+add_trace_processor(DeepEvalTracingProcessor())
+
+travel_agent = Agent(
+    name="Travel Agent",
+    instructions="You are a helpful travel assistant.",
+)
+
+# All agent spans are captured automatically
+result = Runner.run_sync(travel_agent, "Book me a flight from JFK to LAX.")
+print(result.final_output)
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+The integrations shown here are minimal tracing examples. For full options — including attaching evaluation metrics to specific spans, running component-level evals, and setting up production `metric_collection`s — see the dedicated integration docs for [LlamaIndex](/integrations/llamaindex), [LangGraph](/integrations/langgraph), [CrewAI](/integrations/crewai), [Pydantic AI](/integrations/pydanticai), and [OpenAI Agents](/integrations/openai-agents).
 :::
 
 ## Agentic Observability In Production
