@@ -1,4 +1,10 @@
-from typing import List, Optional, Dict
+import ast
+import logging
+import os
+import subprocess
+import sys
+import tempfile
+from typing import Dict, List, Optional
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import (
@@ -9,6 +15,127 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.telemetry import capture_benchmark_run
+
+
+logger = logging.getLogger(__name__)
+
+SAFE_IMPORT_MODULES = {
+    "math",
+    "collections",
+    "itertools",
+    "string",
+    "re",
+    "functools",
+    "typing",
+    "heapq",
+    "bisect",
+    "copy",
+    "operator",
+}
+
+
+def _is_code_safe_for_humaneval(code_str: str) -> bool:
+    try:
+        parsed = ast.parse(code_str)
+    except SyntaxError:
+        return False
+
+    for node in ast.walk(parsed):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                module = alias.name.split(".")[0]
+                if module not in SAFE_IMPORT_MODULES:
+                    return False
+
+        if isinstance(node, ast.ImportFrom):
+            if node.level > 0 or not node.module:
+                return False
+            module = node.module.split(".")[0]
+            if module not in SAFE_IMPORT_MODULES:
+                return False
+
+        if (
+            isinstance(node, ast.Attribute)
+            and node.attr.startswith("__")
+            and node.attr.endswith("__")
+        ):
+            return False
+
+    return True
+
+
+def _build_posix_resource_limiter():
+    if sys.platform == "win32":
+        return None
+
+    try:
+        import resource
+    except Exception:
+        return None
+
+    def _limit_resources():
+        # Limit CPU time, memory, file descriptors, and child processes.
+        resource.setrlimit(resource.RLIMIT_CPU, (5, 5))
+        if hasattr(resource, "RLIMIT_AS"):
+            resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))
+        elif hasattr(resource, "RLIMIT_DATA"):
+            resource.setrlimit(resource.RLIMIT_DATA, (256 * 1024 * 1024, 256 * 1024 * 1024))
+        resource.setrlimit(resource.RLIMIT_NOFILE, (32, 32))
+        if hasattr(resource, "RLIMIT_NPROC"):
+            resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))
+
+    return _limit_resources
+
+
+def _run_code_in_subprocess(code_str: str, timeout_seconds: int = 10) -> bool:
+    if not _is_code_safe_for_humaneval(code_str):
+        return False
+
+    tmp_file_path = None
+    preexec_fn = _build_posix_resource_limiter()
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False, encoding="utf-8"
+        ) as tmp_file:
+            tmp_file.write(code_str)
+            tmp_file_path = tmp_file.name
+
+        process = subprocess.Popen(
+            [sys.executable, tmp_file_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env={},
+            cwd=tempfile.gettempdir(),
+            preexec_fn=preexec_fn,
+        )
+
+        try:
+            process.communicate(timeout=timeout_seconds)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.communicate()
+            logger.warning(
+                "HumanEval candidate timed out after %s seconds",
+                timeout_seconds,
+            )
+            return False
+
+        return process.returncode == 0
+    except OSError:
+        logger.warning(
+            "Subprocess execution failed; falling back to restricted exec"
+        )
+        try:
+            secure_exec(code_str)
+            return True
+        except Exception:
+            return False
+    except Exception:
+        return False
+    finally:
+        if tmp_file_path and os.path.exists(tmp_file_path):
+            os.remove(tmp_file_path)
 
 
 def secure_exec(code_str, global_vars=None, local_vars=None):
@@ -58,12 +185,8 @@ def secure_exec(code_str, global_vars=None, local_vars=None):
             "AssertionError": AssertionError,
             "StopIteration": StopIteration,
             "isinstance": isinstance,
-            "hasattr": hasattr,
-            "getattr": getattr,
-            "type": type,
             "hash": hash,
             "frozenset": frozenset,
-            "repr": repr,
             "print": print,
             "True": True,
             "False": False,
@@ -201,14 +324,9 @@ class HumanEval(DeepEvalBaseBenchmark):
             )
             c = 0
             for function in functions:
-                try:
-                    full_code = function + "\n" + golden.expected_output
-                    secure_exec(full_code)
+                full_code = function + "\n" + golden.expected_output
+                if _run_code_in_subprocess(full_code):
                     c += 1
-                except AssertionError:
-                    pass
-                except Exception:
-                    pass
             self.c[task.value] = c
             self.functions[task.value] = functions
 
