@@ -716,12 +716,10 @@ class ConversationSimulator:
             body = new_golden.model_dump(
                 by_alias=True,
                 exclude_none=True,
-                exclude={"turns": {"__all__": {"_mcp_interaction"}}},
             )
         except AttributeError:
             body = new_golden.dict(
                 by_alias=True,
                 exclude_none=True,
-                exclude={"turns": {"__all__": {"_mcp_interaction"}}},
             )
         return {"conversationalGolden": body}

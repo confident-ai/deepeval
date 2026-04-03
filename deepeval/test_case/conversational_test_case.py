@@ -60,7 +60,13 @@ class Turn(BaseModel):
             "additionalMetadata", "additional_metadata"
         ),
     )
-    _mcp_interaction: bool = PrivateAttr(default=False)
+    @property
+    def _mcp_interaction(self) -> bool:
+        return (
+            self.mcp_tools_called is not None
+            or self.mcp_resources_called is not None
+            or self.mcp_prompts_called is not None
+        )
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
@@ -97,7 +103,6 @@ class Turn(BaseModel):
                 GetPromptResult,
             )
 
-            data["_mcp_interaction"] = True
             if mcp_tools_called is not None:
                 if not isinstance(mcp_tools_called, list) or not all(
                     isinstance(tool_called, MCPToolCall)
