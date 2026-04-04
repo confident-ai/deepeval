@@ -205,7 +205,7 @@ class PlanQualityMetric(BaseMetric):
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
         prompt = PlanAdherenceTemplate.extract_plan_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -219,7 +219,7 @@ class PlanQualityMetric(BaseMetric):
         self, test_case: LLMTestCase
     ) -> AgentPlan:
         prompt = PlanAdherenceTemplate.extract_plan_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -231,7 +231,7 @@ class PlanQualityMetric(BaseMetric):
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -243,7 +243,7 @@ class PlanQualityMetric(BaseMetric):
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return await a_generate_with_schema_and_extract(
             metric=self,

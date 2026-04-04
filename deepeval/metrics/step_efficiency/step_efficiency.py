@@ -156,9 +156,9 @@ class StepEfficiencyMetric(BaseMetric):
     def _get_score(
         self, task: str, test_case: LLMTestCase
     ) -> EfficiencyVerdict:
-        if test_case._trace_dict is not None:
+        if test_case.trace_dict is not None:
             prompt = StepEfficiencyTemplate.get_execution_efficiency(
-                task, test_case._trace_dict
+                task, test_case.trace_dict
             )
 
         return generate_with_schema_and_extract(
@@ -172,9 +172,9 @@ class StepEfficiencyMetric(BaseMetric):
     async def _a_get_score(
         self, task: str, test_case: LLMTestCase
     ) -> EfficiencyVerdict:
-        if test_case._trace_dict is not None:
+        if test_case.trace_dict is not None:
             prompt = StepEfficiencyTemplate.get_execution_efficiency(
-                task, test_case._trace_dict
+                task, test_case.trace_dict
             )
 
         return await a_generate_with_schema_and_extract(
@@ -187,7 +187,7 @@ class StepEfficiencyMetric(BaseMetric):
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -199,7 +199,7 @@ class StepEfficiencyMetric(BaseMetric):
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
         prompt = StepEfficiencyTemplate.extract_task_from_trace(
-            test_case._trace_dict
+            test_case.trace_dict
         )
         return await a_generate_with_schema_and_extract(
             metric=self,
