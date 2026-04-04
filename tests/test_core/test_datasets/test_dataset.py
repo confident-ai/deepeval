@@ -4,6 +4,7 @@ import tempfile
 import json
 import csv
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
+from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
 from deepeval.test_case import (
     Turn,
     LLMTestCase,
@@ -337,3 +338,25 @@ class TestSaveAndLoad:
                 assert any(
                     item["scenario"] == "test case scenario" for item in data
                 )
+
+    def test_convert_convo_goldens_to_test_cases_preserves_expected_outcome(
+        self,
+    ):
+        goldens = [
+            ConversationalGolden(
+                scenario="Book a flight to Tokyo",
+                expected_outcome="User gets flight options",
+                turns=[
+                    Turn(role="user", content="Find me a flight to Tokyo"),
+                    Turn(
+                        role="assistant",
+                        content="Here are some flight options to Tokyo",
+                    ),
+                ],
+            )
+        ]
+
+        test_cases = convert_convo_goldens_to_convo_test_cases(goldens)
+
+        assert len(test_cases) == 1
+        assert test_cases[0].expected_outcome == "User gets flight options"
