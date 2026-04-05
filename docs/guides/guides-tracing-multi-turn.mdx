@@ -1,7 +1,7 @@
 ---
-id: guides-multi-turn-tracing
+id: guides-tracing-multi-turn
 title: Tracing Multi-Turn Applications
-sidebar_label: Tracing Chatbots
+sidebar_label: Tracing Multi-Turn Systems
 ---
 
 <head>
@@ -11,10 +11,10 @@ sidebar_label: Tracing Chatbots
   />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import { ASSETS } from "@site/src/assets";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ASSETS } from '@site/src/assets';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
 import { Timeline, TimelineItem } from '@site/src/components/Timeline';
 
 **Multi-turn tracing** is the practice of tracking user state, context retention, and conversational drift across multiple interactions over time. Unlike single-turn applications where each request is isolated and independent, conversational agents (like chatbots or support assistants) consist of multiple related turns that must be stitched together to form a complete narrative. By linking individual executions, you can monitor how your application handles long-term memory and behavioral consistency.
@@ -88,7 +88,7 @@ The `thread_id` is a user-defined string. You can use a database primary key, a 
 
 ## Instrumenting Conversation Turns
 
-To track a session, you must pass a `thread_id` to the `update_current_trace()` function inside the root function of your conversational turn. 
+To track a session, you must pass a `thread_id` to the `update_current_trace()` function inside the root function of your conversational turn.
 
 Because `deepeval` does not manage conversational state, your application must continue to handle retrieving and storing the chat history. Tracing simply records the execution—you manage the logic. You pass that history into your decorated functions as normal.
 
@@ -138,10 +138,10 @@ from deepeval.tracing import observe, update_current_span
 async def retrieve_context(user_message: str) -> list:
     # Simulated database search
     docs = ["DeepEval threads group traces by thread_id."]
-    
+
     # Attach the context to this specific turn's retriever span
     update_current_span(retrieval_context=docs)
-    
+
     return docs
 ```
 
@@ -150,6 +150,7 @@ async def retrieve_context(user_message: str) -> list:
 In production, you will accumulate thousands of conversational threads. To efficiently identify failing sessions or compare specific cohorts of users, you should attach `tags` and `metadata` to each trace.
 
 `tags` appear as filterable labels in Confident AI's Thread Explorer. `metadata` is a free-form dictionary useful for versioning, A/B test flags, or any dimension you want to slice by later.
+
 ```python title="chatbot.py"
 @observe
 async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
@@ -325,6 +326,7 @@ Log in to Confident AI and create a metric collection containing your desired mu
 <TimelineItem title="Attach the collection to your trace">
 
 In your application code, reference the metric collection by name in `update_current_trace()`. When each trace is exported, Confident AI identifies the `thread_id`, reconstructs the full thread, and evaluates it against your specified metrics asynchronously.
+
 ```python
 @observe
 async def handle_turn(user_message: str, thread_id: str) -> str:
@@ -354,6 +356,7 @@ Use the Thread Explorer on Confident AI to review the aggregated multi-turn scor
 ### Triggering Evaluation On-Demand
 
 In addition to attaching a `metric_collection` that runs automatically on every new trace, you can also trigger evaluation for a specific thread at any point using `evaluate_thread()`. This is useful when you want to evaluate a thread after it has fully completed rather than evaluating incrementally turn by turn.
+
 ```python title="chatbot.py"
 from deepeval.tracing import evaluate_thread
 

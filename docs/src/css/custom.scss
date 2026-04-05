@@ -20,8 +20,16 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
   .theme-doc-markdown {
+    > header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
     h1 {
       font-size: 2.5rem;
+      min-width: 0;
     }
 
     h2 {
