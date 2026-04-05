@@ -6,6 +6,7 @@ import type {WrapperProps} from '@docusaurus/types';
 import { useDoc } from '@docusaurus/plugin-content-docs/client';
 import SchemaInjector from '../../../components/SchemaInjector/SchemaInjector';
 import { buildArticleSchema } from '@site/src/utils/schema-helpers';
+import CopyPageButton from '@site/src/components/CopyPageButton';
 
 export default function LayoutWrapper(props: Props): ReactNode {
   const { metadata, frontMatter } = useDoc();
@@ -32,6 +33,7 @@ export default function LayoutWrapper(props: Props): ReactNode {
     <>
       <SchemaInjector schema={schema} />
       <Layout {...props} />
+      <CopyPageButton />
     </>
   );
 }
