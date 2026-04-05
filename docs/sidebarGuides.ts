@@ -48,8 +48,8 @@ module.exports = {
       label: 'Tracing + Evals',
       className: 'sidebar-item-icon-tracing',
       items: [
-        'guides-tracing-multi-turn',
         'guides-tracing-ai-agents',
+        'guides-tracing-multi-turn',
         'guides-tracing-rag',
       ],
       collapsed: false,
