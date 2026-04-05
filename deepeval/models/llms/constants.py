@@ -1,5 +1,5 @@
 from typing import Any, Callable, Union
-from deepeval.config import get_settings
+from deepeval.config.settings import get_settings
 from deepeval.models.base_model import DeepEvalModelData
 
 SETTINGS = get_settings()
