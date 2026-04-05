@@ -1,6 +1,11 @@
 {
   "redirects": [
     {
+      "source": "/guides/guides-multi-turn-tracing",
+      "destination": "/guides/guides-tracing-multi-turn",
+      "statusCode": 301
+    },
+    {
       "source": "/docs/getting-started-agents",
       "destination": "/guides/guides-ai-agent-evaluation",
       "statusCode": 301
