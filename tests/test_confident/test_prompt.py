@@ -603,14 +603,14 @@ class TestPromptText:
             assert tool.structured_schema is not None
             assert tool.input_schema is not None
 
-    def test_exiting_tool_throws_error(self):
-        """Test updating a tool with the same name (now succeeds instead of throwing)"""
+    def test_push_tool_with_same_name_different_definition(self):
+        """Test pushing a tool with the same name but different definition creates a new tool"""
         ALIAS = f"test_prompt_text_update_tool_{uuid.uuid4().hex[:8]}"
         prompt = Prompt(alias=ALIAS)
 
         UUID = uuid.uuid4()
 
-        original_tool = Tool(
+        tool_v1 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.STRICT,
@@ -619,21 +619,27 @@ class TestPromptText:
 
         prompt.push(
             text=f"Initial tool push {UUID}",
-            tools=[original_tool],
+            tools=[tool_v1],
         )
 
-        original_tool = Tool(
+        tool_v2 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.NO_ADDITIONAL,
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(Exception):
-            prompt.push(
-                text=f"Initial tool push {UUID}",
-                tools=[original_tool],
-            )
+        prompt.push(
+            text=f"Updated tool push {UUID}",
+            tools=[tool_v2],
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+
+        assert pulled_prompt.tools is not None
+        assert len(pulled_prompt.tools) == 1
+        assert pulled_prompt.tools[0].name == "SearchTool"
 
     def test_push_output_schema_and_tools(self):
         """Test pushing both output schema and tools together"""
@@ -1231,9 +1237,9 @@ class TestPromptList:
             assert tool.structured_schema is not None
             assert tool.input_schema is not None
 
-    def test_exiting_tool_throws_error(self):
-        """Test updating a tool with the same name (should replace it)"""
-        ALIAS = "test_prompt_list_update_tool"
+    def test_push_tool_with_same_name_different_definition(self):
+        """Test pushing a tool with the same name but different definition creates a new tool"""
+        ALIAS = f"test_prompt_list_update_tool_{uuid.uuid4().hex[:8]}"
         prompt = Prompt(alias=ALIAS)
 
         UUID = uuid.uuid4()
@@ -1241,8 +1247,7 @@ class TestPromptList:
             PromptMessage(role="user", content=f"Initial tool push {UUID}")
         ]
 
-        # Push initial tool
-        original_tool = Tool(
+        tool_v1 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.STRICT,
@@ -1251,21 +1256,27 @@ class TestPromptList:
 
         prompt.push(
             messages=MESSAGES,
-            tools=[original_tool],
+            tools=[tool_v1],
         )
 
-        original_tool = Tool(
+        tool_v2 = Tool(
             name="SearchTool",
             description="Original search tool",
             mode=ToolMode.ALLOW_ADDITIONAL,
             structured_schema=ToolInputSchema,
         )
 
-        with pytest.raises(Exception):
-            prompt.push(
-                messages=MESSAGES,
-                tools=[original_tool],
-            )
+        prompt.push(
+            messages=MESSAGES,
+            tools=[tool_v2],
+        )
+
+        pulled_prompt = Prompt(alias=ALIAS)
+        pulled_prompt.pull(refresh=0)
+
+        assert pulled_prompt.tools is not None
+        assert len(pulled_prompt.tools) == 1
+        assert pulled_prompt.tools[0].name == "SearchTool"
 
     def test_push_output_schema_and_tools(self):
         """Test pushing both output schema and tools together"""
