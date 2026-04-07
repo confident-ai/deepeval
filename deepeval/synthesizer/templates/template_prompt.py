@@ -116,9 +116,7 @@ class PromptEvolutionTemplate:
 
     @staticmethod
     def reasoning_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. If `Input` can be solved with just a few simple thinking processes, you can rewrite it to explicitly request multiple-step reasoning.
             2. `Rewritten Input` should require readers to make multiple logical connections or inferences.
             3. `Rewritten Input` should be concise and understandable by humans.
@@ -151,13 +149,10 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:            
             """
-        )
 
     @staticmethod
     def concretizing_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Input` by replacing general concepts/inquiries with more specific ones.
             2. `Rewritten Input` should be concise and understandable by humans.
             3. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
@@ -189,13 +184,10 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:
             """
-        )
 
     @staticmethod
     def constrained_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Input` by adding at least one more constraints/requirements.
             2. `Rewritten Input` should not contain more than 15 words. Use abbreviation wherever possible.
 
@@ -226,13 +218,10 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:
             """
-        )
 
     @staticmethod
     def comparative_question_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Input` to focus on comparing two or more entities, concepts, or processes.
             2. `Rewritten Input` should encourage a detailed comparison that highlights similarities and differences.
             3. `Rewritten Input` should be concise and understandable by humans.
@@ -266,13 +255,10 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:
             """
-        )
 
     @staticmethod
     def hypothetical_scenario_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Input` to include a hypothetical or speculative scenario.
             2. `Rewritten Input` should encourage the reader to apply knowledge to imagine or deduce outcomes.
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
@@ -305,13 +291,10 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:
             """
-        )
 
     @staticmethod
     def in_breadth_evolution(input):
-        return (
-            PromptEvolutionTemplate.base_instruction
-            + f"""
+        return PromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Input` to create a create a brand new prompt.
             2. `Rewritten Input` should belong to the same domain as the `input` but be even more rare.
             3. `Rewritten Input` should be concise, clear, and understandable by humans.
@@ -344,7 +327,6 @@ class PromptEvolutionTemplate:
             {input}
             Rewritten Input:
             """
-        )
 
 
 class ConversationalPromptEvolutionTemplate:
@@ -354,9 +336,7 @@ class ConversationalPromptEvolutionTemplate:
 
     @staticmethod
     def reasoning_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Scenario` to force participants into multi-step conversational reasoning.
             2. Add layered inferences or analytical leaps required in dialogue.
             3. `Rewritten Scenario` must stay concise, human-readable, and remain a conversation setup.
@@ -383,13 +363,10 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
 
     @staticmethod
     def concretizing_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Replace broad conversation setup with a **more specific, concrete** conversational scene.
             2. Add real-world detail (location, constraint, specific topic).
             3. Keep under **15 words**, concise, and still a dialogue setup.
@@ -415,13 +392,10 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
 
     @staticmethod
     def constrained_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Add at least one new constraint shaping the conversation.
             2. Constraint must significantly affect the dialogue.
             3. Keep under **15 words**, concise, conversational.
@@ -447,13 +421,10 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
 
     @staticmethod
     def comparative_question_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Scenario` so the conversation centers on comparing two+ items.
             2. Must highlight similarities/differences through dialogue.
             3. Keep under **15 words**, concise, conversational.
@@ -479,13 +450,10 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
 
     @staticmethod
     def hypothetical_scenario_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Scenario` to introduce a hypothetical twist derived from the setup.
             2. The hypothetical MUST drive the conversation.
             3. Keep under **15 words**, concise, conversational.
@@ -511,13 +479,10 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
 
     @staticmethod
     def in_breadth_evolution(scenario):
-        return (
-            ConversationalPromptEvolutionTemplate.base_instruction
-            + f"""
+        return ConversationalPromptEvolutionTemplate.base_instruction + f"""
             1. Rewrite `Scenario` into a new conversation within the same domain.
             2. The new conversation must explore a rarer, niche angle.
             3. Keep under **15 words**, concise, conversational.
@@ -543,4 +508,3 @@ class ConversationalPromptEvolutionTemplate:
             {scenario}
             Rewritten Scenario:
             """
-        )
