@@ -388,6 +388,15 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=1.75 / 1e6,
             output_price=14.00 / 1e6,
         ),
+        "gpt-5.4-mini": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=False,
+            supports_temperature=False,
+            input_price=0.75 / 1e6,
+            output_price=4.50 / 1e6,
+        ),
     }
 )
 

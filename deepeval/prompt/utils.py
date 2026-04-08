@@ -1,7 +1,7 @@
 import re
 import uuid
 from jinja2 import Template
-from typing import Any, Dict, Type, Optional, List, Match
+from typing import Any, Dict, Type, Optional, List, Match, get_origin, get_args
 from pydantic import BaseModel, create_model
 
 from deepeval.prompt.api import (
@@ -100,7 +100,27 @@ schema_type_map: Dict[str, Any] = {
     SchemaDataType.BOOLEAN.value: bool,
     SchemaDataType.NULL.value: type(None),
     SchemaDataType.OBJECT.value: dict,
+    SchemaDataType.ARRAY.value: list,
 }
+
+
+def _resolve_field_type(
+    field: OutputSchemaField,
+    parent_id_map: Dict[Optional[str], List[OutputSchemaField]],
+) -> Any:
+    field_type = (
+        field.type.value if hasattr(field.type, "value") else field.type
+    )
+    if field_type == SchemaDataType.OBJECT.value:
+        return construct_nested_base_model(field, parent_id_map, field.name)
+    elif field_type == SchemaDataType.ARRAY.value:
+        children = parent_id_map.get(field.id, [])
+        if children:
+            item_type = _resolve_field_type(children[0], parent_id_map)
+            return List[item_type]
+        return List[Any]
+    else:
+        return schema_type_map.get(field_type, Any)
 
 
 def construct_nested_base_model(
@@ -110,15 +130,7 @@ def construct_nested_base_model(
 ) -> Type[BaseModel]:
     child_fields: Dict[str, tuple] = {}
     for child in parent_id_map.get(parent.id, []):
-        child_type = (
-            child.type.value if hasattr(child.type, "value") else child.type
-        )
-        if child_type == SchemaDataType.OBJECT.value:
-            python_type = construct_nested_base_model(
-                child, parent_id_map, child.name
-            )
-        else:
-            python_type = schema_type_map.get(child_type, Any)
+        python_type = _resolve_field_type(child, parent_id_map)
         default = ... if child.required else None
         child_fields[child.name or child.id] = (python_type, default)
     return create_model(model_name, **child_fields)
@@ -141,15 +153,7 @@ def construct_base_model(
 
     root_fields: Dict[str, tuple] = {}
     for field in parent_id_map.get(None, []):
-        field_type = (
-            field.type.value if hasattr(field.type, "value") else field.type
-        )
-        if field_type == SchemaDataType.OBJECT.value:
-            python_type = construct_nested_base_model(
-                field, parent_id_map, field.name
-            )
-        else:
-            python_type = schema_type_map.get(field_type, Any)
+        python_type = _resolve_field_type(field, parent_id_map)
         default = ... if field.required else None
         root_fields[field.name] = (python_type, default)
 
@@ -171,6 +175,7 @@ def _process_model(
         field_id = str(uuid.uuid4())
         annotation = field_info.annotation
         field_type = "STRING"
+        origin = get_origin(annotation)
         if annotation == str:
             field_type = "STRING"
         elif annotation == int:
@@ -180,9 +185,55 @@ def _process_model(
         elif annotation == bool:
             field_type = "BOOLEAN"
         elif annotation == list:
-            raise ValueError("Unsupported structured output: list")
+            raise ValueError(
+                "Unsupported structured output: bare list. "
+                "Use List[str], List[int], or List[YourModel] instead."
+            )
         elif annotation == dict:
             raise ValueError("Unsupported structured output: dict")
+        elif origin is list:
+            args = get_args(annotation)
+            item_type = args[0] if args else str
+            array_field = OutputSchemaField(
+                id=field_id,
+                name=field_name,
+                type="ARRAY",
+                required=field_info.is_required(),
+                parent_id=parent_id,
+            )
+            fields.append(array_field)
+            item_field_id = str(uuid.uuid4())
+            if (
+                hasattr(item_type, "__bases__")
+                and BaseModel in item_type.__mro__
+            ):
+                item_field = OutputSchemaField(
+                    id=item_field_id,
+                    name=item_type.__name__,
+                    type="OBJECT",
+                    required=True,
+                    parent_id=field_id,
+                )
+                fields.append(item_field)
+                nested_fields = _process_model(item_type, item_field_id)
+                fields.extend(nested_fields)
+            else:
+                primitive_map = {
+                    str: "STRING",
+                    int: "INTEGER",
+                    float: "FLOAT",
+                    bool: "BOOLEAN",
+                }
+                item_schema_type = primitive_map.get(item_type, "STRING")
+                item_field = OutputSchemaField(
+                    id=item_field_id,
+                    name=field_name,
+                    type=item_schema_type,
+                    required=True,
+                    parent_id=field_id,
+                )
+                fields.append(item_field)
+            continue
         elif (
             hasattr(annotation, "__bases__")
             and BaseModel in annotation.__bases__
@@ -192,14 +243,14 @@ def _process_model(
                 id=field_id,
                 name=field_name,
                 type=field_type,
-                required=field_info.default is ...,
+                required=field_info.is_required(),
                 parent_id=parent_id,
             )
             fields.append(parent_field)
             nested_fields = _process_model(annotation, field_id)
             fields.extend(nested_fields)
             continue
-        required = field_info.default is ...
+        required = field_info.is_required()
         fields.append(
             OutputSchemaField(
                 id=field_id,
@@ -245,6 +296,7 @@ def output_schema_to_json_schema(
             SchemaDataType.FLOAT: "number",
             SchemaDataType.BOOLEAN: "boolean",
             SchemaDataType.OBJECT: "object",
+            SchemaDataType.ARRAY: "array",
             SchemaDataType.NULL: "null",
         }.get(dtype, "string")
 
@@ -268,8 +320,34 @@ def output_schema_to_json_schema(
             if field.description:
                 field_schema["description"] = field.description
 
-            # Handle nested objects
-            if field_type == SchemaDataType.OBJECT.value:
+            if field_type == SchemaDataType.ARRAY.value:
+                children = children_map.get(field.id, [])
+                if children:
+                    item_field = children[0]
+                    item_type = (
+                        item_field.type.value
+                        if hasattr(item_field.type, "value")
+                        else item_field.type
+                    )
+                    item_normalized = (
+                        SchemaDataType(item_type)
+                        if not isinstance(item_type, SchemaDataType)
+                        else item_type
+                    )
+                    item_schema = {"type": map_type(item_normalized)}
+                    if item_type == SchemaDataType.OBJECT.value:
+                        obj_children = children_map.get(item_field.id, [])
+                        if obj_children:
+                            nested = build_node(obj_children)
+                            item_schema.update(nested)
+                        else:
+                            item_schema["properties"] = {}
+                            item_schema["additionalProperties"] = False
+                    field_schema["items"] = item_schema
+                else:
+                    field_schema["items"] = {}
+
+            elif field_type == SchemaDataType.OBJECT.value:
                 children = children_map.get(field.id, [])
                 if children:
                     nested = build_node(children)

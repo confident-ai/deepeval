@@ -10,6 +10,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
+    no_log_prob_support,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
@@ -270,6 +271,9 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
             )
         try:
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
+
             res, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
@@ -332,6 +336,9 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
             )
         try:
+            if no_log_prob_support(self.model):
+                raise AttributeError("log_probs unsupported.")
+
             res, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
