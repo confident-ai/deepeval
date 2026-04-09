@@ -1,8 +1,10 @@
 from typing import Any, Callable, Union
-
+from deepeval.config.settings import get_settings
 from deepeval.models.base_model import DeepEvalModelData
 
-DEFAULT_GPT_MODEL = "gpt-4.1"
+SETTINGS = get_settings()
+
+DEFAULT_GPT_MODEL = SETTINGS.OPENAI_MODEL_NAME or "gpt-4.1"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
