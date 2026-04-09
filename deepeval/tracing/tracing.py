@@ -332,12 +332,11 @@ class TraceManager:
                     # print(f"Ending trace: {trace.root_spans}")
                     self.environment = Environment.TESTING
                     if (
-                        trace.root_spans
-                        and len(trace.root_spans) > 0
+                        len(trace.root_spans) == 1
+                        and trace.root_spans[0].name == EVAL_DUMMY_SPAN_NAME
                         and trace.root_spans[0].children
-                        and len(trace.root_spans[0].children) > 0
                     ):
-                        trace.root_spans = [trace.root_spans[0].children[0]]
+                        trace.root_spans = list(trace.root_spans[0].children)
                     for root_span in trace.root_spans:
                         root_span.parent_uuid = None
 
@@ -697,6 +696,37 @@ class TraceManager:
         for child in span.children or []:
             child_api_span = self.create_nested_spans_dict(child)
             trace_dict["children"].append(child_api_span)
+
+        return trace_dict
+
+    def create_nested_trace_dict(self, trace: Trace) -> Dict[str, Any]:
+        root_spans = trace.root_spans or []
+
+        if len(root_spans) == 1:
+            return self.create_nested_spans_dict(root_spans[0])
+
+        trace_dict = {
+            "type": "trace",
+            "children": [
+                self.create_nested_spans_dict(root_span)
+                for root_span in root_spans
+            ],
+        }
+
+        optional_fields = {
+            "name": trace.name,
+            "input": trace.input,
+            "output": trace.output,
+            "expected_output": trace.expected_output,
+            "context": trace.context,
+            "retrieval_context": trace.retrieval_context,
+            "tools_called": trace.tools_called,
+            "expected_tools": trace.expected_tools,
+        }
+
+        for key, value in optional_fields.items():
+            if value is not None:
+                trace_dict[key] = value
 
         return trace_dict
 

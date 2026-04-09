@@ -194,6 +194,12 @@ def _trace_error(current_trace: Trace) -> Optional[str]:
     return None
 
 
+def _mark_trace_roots_errored(trace: Trace, error_text: str) -> None:
+    for root_span in getattr(trace, "root_spans", []) or []:
+        root_span.status = TraceSpanStatus.ERRORED
+        root_span.error = error_text
+
+
 def _get_trace_by_uuid_anywhere(trace_uuid: str):
     """
     Resolver for a trace UUID across the manager's state.
@@ -1292,8 +1298,8 @@ def execute_agentic_test_cases(
                                 if llm_test_case is None:
                                     llm_test_case = LLMTestCase(input="None")
                                 llm_test_case._trace_dict = (
-                                    trace_manager.create_nested_spans_dict(
-                                        current_trace.root_spans[0]
+                                    trace_manager.create_nested_trace_dict(
+                                        current_trace
                                     )
                                 )
                             else:
@@ -1305,16 +1311,14 @@ def execute_agentic_test_cases(
                                         TraceSpanApiStatus.ERRORED
                                     )
                                     if current_trace.root_spans:
-                                        current_trace.root_spans[0].status = (
-                                            TraceSpanStatus.ERRORED
-                                        )
-                                        current_trace.root_spans[0].error = (
+                                        _mark_trace_roots_errored(
+                                            current_trace,
                                             format_error_text(
                                                 DeepEvalError(
                                                     "Trace has metrics but no LLMTestCase (missing input/output). "
                                                     "Are you sure you called `update_current_trace()`?"
                                                 )
-                                            )
+                                            ),
                                         )
                                     if progress and pbar_eval_id is not None:
                                         update_pbar(
@@ -1362,11 +1366,8 @@ def execute_agentic_test_cases(
                                         update_pbar(progress, pbar_eval_id)
 
                             # handle span metrics
-                            dfs(
-                                current_trace.root_spans[0],
-                                progress,
-                                pbar_eval_id,
-                            )
+                            for root_span in current_trace.root_spans or []:
+                                dfs(root_span, progress, pbar_eval_id)
 
                     # TODO: Do I need this block, or is it duplicated in finally?
                     end_time = time.perf_counter()
@@ -1805,7 +1806,8 @@ async def _a_execute_agentic_test_case(
 
         if not _skip_metrics_for_error(trace=current_trace):
             if current_trace and current_trace.root_spans:
-                await dfs(current_trace, current_trace.root_spans[0])
+                for root_span in current_trace.root_spans:
+                    await dfs(current_trace, root_span)
             else:
                 if (
                     logger.isEnabledFor(logging.DEBUG)
@@ -2074,12 +2076,14 @@ async def _a_execute_trace_test_case(
             trace.status = TraceSpanStatus.ERRORED
             trace_api.status = TraceSpanApiStatus.ERRORED
             if trace.root_spans:
-                trace.root_spans[0].status = TraceSpanStatus.ERRORED
-                trace.root_spans[0].error = format_error_text(
-                    DeepEvalError(
-                        "Trace has metrics but no LLMTestCase (missing input/output). "
-                        "Are you sure you called `update_current_trace()`?"
-                    )
+                _mark_trace_roots_errored(
+                    trace,
+                    format_error_text(
+                        DeepEvalError(
+                            "Trace has metrics but no LLMTestCase (missing input/output). "
+                            "Are you sure you called `update_current_trace()`?"
+                        )
+                    ),
                 )
             if progress and pbar_eval_id is not None:
                 update_pbar(
@@ -2096,9 +2100,7 @@ async def _a_execute_trace_test_case(
     if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
-        test_case._trace_dict = trace_manager.create_nested_spans_dict(
-            trace.root_spans[0]
-        )
+        test_case._trace_dict = trace_manager.create_nested_trace_dict(trace)
 
     for metric in metrics:
         metric.skipped = False
@@ -2384,8 +2386,8 @@ def execute_agentic_test_cases_from_loop(
                             if llm_test_case is None:
                                 llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
-                                trace_manager.create_nested_spans_dict(
-                                    current_trace.root_spans[0]
+                                trace_manager.create_nested_trace_dict(
+                                    current_trace
                                 )
                             )
                         else:
@@ -2393,16 +2395,14 @@ def execute_agentic_test_cases_from_loop(
                                 current_trace.status = TraceSpanStatus.ERRORED
                                 trace_api.status = TraceSpanApiStatus.ERRORED
                                 if current_trace.root_spans:
-                                    current_trace.root_spans[0].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    current_trace.root_spans[0].error = (
+                                    _mark_trace_roots_errored(
+                                        current_trace,
                                         format_error_text(
                                             DeepEvalError(
                                                 "Trace has metrics but no LLMTestCase (missing input/output). "
                                                 "Are you sure you called `update_current_trace()`?"
                                             )
-                                        )
+                                        ),
                                     )
                                 if progress and pbar_eval_id is not None:
                                     update_pbar(
@@ -2447,7 +2447,8 @@ def execute_agentic_test_cases_from_loop(
                                     update_pbar(progress, pbar_eval_id)
 
                     # Then handle span-level metrics
-                    dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+                    for root_span in current_trace.root_spans or []:
+                        dfs(root_span, progress, pbar_eval_id)
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
