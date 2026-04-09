@@ -201,6 +201,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
 
 
 class SpanInterceptor(SpanProcessor):
+    LLM_OPERATION_NAMES = {"chat", "generate_content", "text_completion"}
+
     def __init__(self, settings_instance: ConfidentInstrumentationSettings):
         # Keep a reference to the settings instance instead of copying values
         self.settings = settings_instance
@@ -286,22 +288,23 @@ class SpanInterceptor(SpanProcessor):
                 self.settings.trace_metric_collection,
             )
 
-        # set agent name and metric collection
+        operation_name = span.attributes.get("gen_ai.operation.name")
+
+        # set agent name and metric collection (only for agent-run spans)
         agent_name = (
             span.attributes.get("gen_ai.agent.name")
             or span.attributes.get("pydantic_ai.agent.name")
             or span.attributes.get("agent_name")
         )
 
-        if agent_name:
+        if agent_name and self._is_agent_span(operation_name):
             self._add_agent_span(span, agent_name)
 
         # set llm metric collection
-        if span.attributes.get("gen_ai.operation.name") in [
-            "chat",
-            "generate_content",
-            "text_completion",
-        ]:
+        if operation_name in self.LLM_OPERATION_NAMES:
+            # Explicitly classify model request spans as LLM spans so they are
+            # not mislabeled as agent spans when gen_ai.agent.name is present.
+            span.set_attribute("confident.span.type", "llm")
             if self.settings.llm_metric_collection:
                 span.set_attribute(
                     "confident.span.metric_collection",
@@ -322,16 +325,19 @@ class SpanInterceptor(SpanProcessor):
 
     def on_end(self, span):
 
-        already_processed = (
-            span.attributes.get("confident.span.type") == "agent"
-        )
+        already_processed = span.attributes.get("confident.span.type") in {
+            "agent",
+            "llm",
+            "tool",
+        }
         if not already_processed:
+            operation_name = span.attributes.get("gen_ai.operation.name")
             agent_name = (
                 span.attributes.get("gen_ai.agent.name")
                 or span.attributes.get("pydantic_ai.agent.name")
                 or span.attributes.get("agent_name")
             )
-            if agent_name:
+            if agent_name and self._is_agent_span(operation_name):
                 self._add_agent_span(span, agent_name)
 
         if self.settings.is_test_mode:
@@ -395,3 +401,6 @@ class SpanInterceptor(SpanProcessor):
                 "confident.span.metric_collection",
                 self.settings.agent_metric_collection,
             )
+
+    def _is_agent_span(self, operation_name: Optional[str]) -> bool:
+        return operation_name == "invoke_agent"
