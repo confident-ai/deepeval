@@ -81,7 +81,7 @@ def trace(
     if metric_collection:
         current_trace.metric_collection = metric_collection
 
-    current_trace_context.set(current_trace)
+    trace_ctx_token = current_trace_context.set(current_trace)
 
     update_current_trace(
         name=name,
@@ -107,6 +107,8 @@ def trace(
     finally:
         if started_new_trace:
             trace_manager.end_trace(current_trace.uuid)
+
+        current_trace_context.reset(trace_ctx_token)
 
         current_llm_context.set(LlmSpanContext())
         current_agent_context.set(AgentSpanContext())
