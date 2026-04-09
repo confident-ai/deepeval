@@ -416,32 +416,47 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
 
-def normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
+def normalize_pydantic_ai_messages(span: ReadableSpan) -> list:
+    """Normalize PydanticAI message attributes across instrumentation versions."""
+
+    def _normalize_messages(raw_messages: Any) -> list:
+        if isinstance(raw_messages, str):
+            try:
+                raw_messages = json.loads(raw_messages)
+            except Exception:
+                return []
+        elif isinstance(raw_messages, tuple):
+            raw_messages = list(raw_messages)
+
+        if not isinstance(raw_messages, list):
+            return []
+
+        normalized = []
+        for message in raw_messages:
+            if isinstance(message, str):
+                try:
+                    message = json.loads(message)
+                except Exception:
+                    pass
+            normalized.append(message)
+        return normalized
+
     try:
-        raw = span.attributes.get("pydantic_ai.all_messages")
-        if not raw:
-            return None
+        all_messages = _normalize_messages(
+            span.attributes.get("pydantic_ai.all_messages")
+        )
+        if all_messages:
+            return all_messages
 
-        messages = raw
-        if isinstance(messages, str):
-            messages = json.loads(messages)
-        elif isinstance(messages, tuple):
-            messages = list(messages)
-
-        if isinstance(messages, list):
-            normalized = []
-            for m in messages:
-                if isinstance(m, str):
-                    try:
-                        m = json.loads(m)
-                    except Exception:
-                        pass
-                normalized.append(m)
-            return normalized
+        input_messages = _normalize_messages(
+            span.attributes.get("gen_ai.input.messages")
+        )
+        output_messages = _normalize_messages(
+            span.attributes.get("gen_ai.output.messages")
+        )
+        return input_messages + output_messages
     except Exception:
-        pass
-
-    return []
+        return []
 
 
 def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
