@@ -101,6 +101,7 @@ class OutputType(Enum):
 
 class SchemaDataType(Enum):
     OBJECT = "OBJECT"
+    ARRAY = "ARRAY"
     STRING = "STRING"
     FLOAT = "FLOAT"
     INTEGER = "INTEGER"

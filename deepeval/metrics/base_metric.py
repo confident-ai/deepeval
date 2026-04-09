@@ -37,6 +37,7 @@ class BaseMetric:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
+
         observe_methods(cls)
 
     @abstractmethod
@@ -85,6 +86,7 @@ class BaseConversationalMetric:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
+
         observe_methods(cls)
 
     @abstractmethod
@@ -131,6 +133,7 @@ class BaseArenaMetric:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
+
         observe_methods(cls)
 
     @abstractmethod
