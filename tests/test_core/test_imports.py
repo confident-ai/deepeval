@@ -249,6 +249,25 @@ def test_evaluate_imports():
     assert CacheConfig is not None
     assert ErrorConfig is not None
 
+    # Test that config classes can also be imported directly from deepeval (Issue #2216)
+    from deepeval import (
+        AsyncConfig as AsyncConfig2,
+        DisplayConfig as DisplayConfig2,
+        CacheConfig as CacheConfig2,
+        ErrorConfig as ErrorConfig2,
+    )
+
+    assert AsyncConfig2 is not None
+    assert DisplayConfig2 is not None
+    assert CacheConfig2 is not None
+    assert ErrorConfig2 is not None
+
+    # Verify they are the same classes
+    assert AsyncConfig is AsyncConfig2
+    assert DisplayConfig is DisplayConfig2
+    assert CacheConfig is CacheConfig2
+    assert ErrorConfig is ErrorConfig2
+
 
 def test_dataset_imports():
     """Test that dataset classes can be imported."""
