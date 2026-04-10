@@ -27,7 +27,7 @@ _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
 }
 
-default_model = "claude-3-7-sonnet-latest"
+default_model = "claude-sonnet-4-6-20250514"
 
 
 class AnthropicModel(DeepEvalBaseLLM):
