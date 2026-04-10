@@ -15,6 +15,22 @@ import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
+def _make_bias_metrics():
+    """Lazily create BiasMetric to avoid requiring API keys at import time."""
+    try:
+        return [BiasMetric()]
+    except Exception:
+        return []
+
+
+def _make_answer_relevancy_metrics():
+    """Lazily create AnswerRelevancyMetric to avoid requiring API keys at import time."""
+    try:
+        return [AnswerRelevancyMetric()]
+    except Exception:
+        return []
+
+
 @observe(type="llm", model="gpt-4o")
 def generate_text(prompt: str):
     try:
@@ -163,7 +179,7 @@ def custom_research_agent(query: str):
 @observe(
     type="agent",
     available_tools=["get_weather", "get_location"],
-    metrics=[BiasMetric()],
+    metrics=_make_bias_metrics(),
 )
 def weather_agent(query: str):
     try:
@@ -233,7 +249,7 @@ def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[AnswerRelevancyMetric()],
+    metrics=_make_answer_relevancy_metrics(),
 )
 def meta_agent(input: str):
     try:
