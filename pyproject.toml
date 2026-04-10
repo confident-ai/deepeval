@@ -39,7 +39,12 @@ tenacity = ">=8.0.0,<=10.0.0"
 opentelemetry-api = "^1.24.0"
 opentelemetry-sdk = "^1.24.0"
 grpcio = "^1.67.1"
-posthog = "^5.4.0, <7.0.0"
+
+posthog = [
+    { version = ">=5.4.0, <7.0.0", python = "<3.10" },
+    { version = ">=7.0.0, <8.0.0", python = ">=3.10" }
+]
+
 pyfiglet = "*"
 python-dotenv = "^1.1.1"
 pydantic = "^2.11.7"
