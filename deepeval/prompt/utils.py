@@ -1,7 +1,17 @@
 import re
 import uuid
 from jinja2 import Template
-from typing import Any, Dict, Type, Optional, List, Match, Union, get_origin, get_args
+from typing import (
+    Any,
+    Dict,
+    Type,
+    Optional,
+    List,
+    Match,
+    Union,
+    get_origin,
+    get_args,
+)
 from pydantic import BaseModel, create_model
 
 from deepeval.prompt.api import (
@@ -242,10 +252,7 @@ def _process_model(
                 )
                 fields.append(item_field)
             continue
-        elif (
-            hasattr(annotation, "__mro__")
-            and BaseModel in annotation.__mro__
-        ):
+        elif hasattr(annotation, "__mro__") and BaseModel in annotation.__mro__:
             field_type = "OBJECT"
             parent_field = OutputSchemaField(
                 id=field_id,
