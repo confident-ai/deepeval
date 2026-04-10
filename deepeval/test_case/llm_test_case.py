@@ -26,9 +26,9 @@ from deepeval.test_case.mcp import (
     validate_mcp_servers,
 )
 
-_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[str, "MLLMImage"] = (
-    weakref.WeakValueDictionary()
-)
+_MLLM_IMAGE_REGISTRY: weakref.WeakValueDictionary[
+    str, "MLLMImage"
+] = weakref.WeakValueDictionary()
 
 
 @dataclass
@@ -374,7 +374,16 @@ class LLMTestCase(BaseModel):
             "customColumnKeyValues", "custom_column_key_values"
         ),
     )
-    _trace_dict: Optional[Dict] = PrivateAttr(default=None)
+    trace_dict: Optional[Dict] = Field(
+        default=None,
+        description=(
+            "Nested span tree from tracing (same shape as TraceManager."
+            "create_nested_spans_dict). Pass a pre-recorded trace for "
+            "post-hoc evaluation with metrics that require_trace=True."
+        ),
+        serialization_alias="traceDict",
+        validation_alias=AliasChoices("traceDict", "trace_dict"),
+    )
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
