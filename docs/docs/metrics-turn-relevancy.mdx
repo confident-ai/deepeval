@@ -21,6 +21,20 @@ import MetricTagsDisplayer from '@site/src/components/MetricTagsDisplayer';
   rag={true}
 />
 
+:::note Migration from v3.6.x
+If you're upgrading from DeepEval v3.6.x or earlier, note that `ConversationRelevancyMetric` has been renamed to `TurnRelevancyMetric`. Simply update your imports:
+
+```python
+# Before (v3.6.x and earlier)
+from deepeval.metrics import ConversationRelevancyMetric
+
+# After (v3.7.x+)
+from deepeval.metrics import TurnRelevancyMetric
+```
+
+The API and functionality remain the same.
+:::
+
 The turn relevancy metric is a conversational metric that determines whether your LLM chatbot is able to consistently generate relevant responses **throughout a conversation**.
 
 ## Required Arguments
