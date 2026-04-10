@@ -60,6 +60,7 @@ class Turn(BaseModel):
             "additionalMetadata", "additional_metadata"
         ),
     )
+
     @property
     def _mcp_interaction(self) -> bool:
         """Whether this turn involves any MCP interactions."""
