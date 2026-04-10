@@ -67,7 +67,7 @@ class GPTModel(DeepEvalBaseLLM):
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 
-        model = model or settings.OPENAI_MODEL_NAME
+        model = model or settings.OPENAI_MODEL_NAME or settings.DEEPEVAL_DEFAULT_MODEL
         if model is None:
             model = DEFAULT_GPT_MODEL
 

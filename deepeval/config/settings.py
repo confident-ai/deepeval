@@ -303,6 +303,10 @@ class Settings(BaseSettings):
         None,
         description="Identifier/tag to help identify your test run on Confident AI.",
     )
+    DEEPEVAL_DEFAULT_MODEL: Optional[str] = Field(
+        None,
+        description="Default model name used across all providers when no provider-specific model is set (e.g. 'gpt-4.1', 'claude-3-7-sonnet-latest').",
+    )
 
     #
     # Storage & Output

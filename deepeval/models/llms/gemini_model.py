@@ -72,7 +72,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
         settings = get_settings()
 
-        model = model or settings.GEMINI_MODEL_NAME or default_gemini_model
+        model = model or settings.GEMINI_MODEL_NAME or settings.DEEPEVAL_DEFAULT_MODEL or default_gemini_model
         self.model_data = GEMINI_MODELS_DATA.get(model)
 
         # Get API key from settings if not provided
