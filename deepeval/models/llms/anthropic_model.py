@@ -58,7 +58,12 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.ANTHROPIC_API_KEY
 
-        model = model or settings.ANTHROPIC_MODEL_NAME or settings.DEEPEVAL_DEFAULT_MODEL or default_model
+        model = (
+            model
+            or settings.ANTHROPIC_MODEL_NAME
+            or settings.DEEPEVAL_DEFAULT_MODEL
+            or default_model
+        )
 
         if temperature is not None:
             temperature = float(temperature)

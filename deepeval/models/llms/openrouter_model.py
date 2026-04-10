@@ -80,7 +80,11 @@ class OpenRouterModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         settings = get_settings()
-        model = model or settings.OPENROUTER_MODEL_NAME or settings.DEEPEVAL_DEFAULT_MODEL
+        model = (
+            model
+            or settings.OPENROUTER_MODEL_NAME
+            or settings.DEEPEVAL_DEFAULT_MODEL
+        )
         if model is None:
             model = DEFAULT_OPENROUTER_MODEL
 
