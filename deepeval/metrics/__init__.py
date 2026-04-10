@@ -58,6 +58,7 @@ from .role_adherence.role_adherence import (
     RoleAdherenceMetric,
 )
 from .conversational_g_eval.conversational_g_eval import ConversationalGEval
+from .pollux.pollux import PolluxJudgeMetric
 from .multimodal_metrics import (
     TextToImageMetric,
     ImageEditingMetric,
@@ -78,6 +79,7 @@ __all__ = [
     "GEval",
     "ArenaGEval",
     "ConversationalGEval",
+    "PolluxJudgeMetric",
     "DAGMetric",
     "DeepAcyclicGraph",
     "ConversationalDAGMetric",

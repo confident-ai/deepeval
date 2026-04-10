@@ -71,6 +71,7 @@ module.exports = {
             'metrics-conversational-dag',
             'metrics-arena-g-eval',
             'metrics-custom',
+            'metrics-pollux-judge',
           ],
           collapsed: false,
         },
