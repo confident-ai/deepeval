@@ -1,7 +1,17 @@
 import re
 import uuid
 from jinja2 import Template
-from typing import Any, Dict, Type, Optional, List, Match, get_origin, get_args
+from typing import (
+    Any,
+    Dict,
+    Type,
+    Optional,
+    List,
+    Match,
+    Union,
+    get_origin,
+    get_args,
+)
 from pydantic import BaseModel, create_model
 
 from deepeval.prompt.api import (
@@ -175,7 +185,15 @@ def _process_model(
         field_id = str(uuid.uuid4())
         annotation = field_info.annotation
         field_type = "STRING"
+
+        # Unwrap Optional[X] (Union[X, None]) to its inner type
         origin = get_origin(annotation)
+        if origin is Union:
+            args = [a for a in get_args(annotation) if a is not type(None)]
+            if len(args) == 1:
+                annotation = args[0]
+                origin = get_origin(annotation)
+
         if annotation == str:
             field_type = "STRING"
         elif annotation == int:
@@ -234,10 +252,7 @@ def _process_model(
                 )
                 fields.append(item_field)
             continue
-        elif (
-            hasattr(annotation, "__bases__")
-            and BaseModel in annotation.__bases__
-        ):
+        elif hasattr(annotation, "__mro__") and BaseModel in annotation.__mro__:
             field_type = "OBJECT"
             parent_field = OutputSchemaField(
                 id=field_id,
