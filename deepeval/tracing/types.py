@@ -142,6 +142,18 @@ class RetrieverSpan(BaseSpan):
     embedder: Optional[str] = None
     top_k: Optional[int] = Field(None, serialization_alias="topK")
     chunk_size: Optional[int] = Field(None, serialization_alias="chunkSize")
+    input_token_count: Optional[float] = Field(
+        None, serialization_alias="inputTokenCount"
+    )
+    output_token_count: Optional[float] = Field(
+        None, serialization_alias="outputTokenCount"
+    )
+    cost_per_input_token: Optional[float] = Field(
+        None, serialization_alias="costPerInputToken"
+    )
+    cost_per_output_token: Optional[float] = Field(
+        None, serialization_alias="costPerOutputToken"
+    )
 
 
 class ToolSpan(BaseSpan):

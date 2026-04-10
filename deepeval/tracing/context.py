@@ -172,9 +172,9 @@ def update_llm_span(
         return
     if model:
         current_span.model = model
-    if input_token_count:
+    if input_token_count is not None:
         current_span.input_token_count = input_token_count
-    if output_token_count:
+    if output_token_count is not None:
         current_span.output_token_count = output_token_count
     if cost_per_input_token:
         current_span.cost_per_input_token = cost_per_input_token
@@ -195,6 +195,10 @@ def update_retriever_span(
     embedder: Optional[str] = None,
     top_k: Optional[int] = None,
     chunk_size: Optional[int] = None,
+    input_token_count: Optional[float] = None,
+    output_token_count: Optional[float] = None,
+    cost_per_input_token: Optional[float] = None,
+    cost_per_output_token: Optional[float] = None,
 ):
     current_span = current_span_context.get()
     if not current_span or not isinstance(current_span, RetrieverSpan):
@@ -205,3 +209,11 @@ def update_retriever_span(
         current_span.top_k = top_k
     if chunk_size:
         current_span.chunk_size = chunk_size
+    if input_token_count is not None:
+        current_span.input_token_count = input_token_count
+    if output_token_count is not None:
+        current_span.output_token_count = output_token_count
+    if cost_per_input_token is not None:
+        current_span.cost_per_input_token = cost_per_input_token
+    if cost_per_output_token is not None:
+        current_span.cost_per_output_token = cost_per_output_token

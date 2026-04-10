@@ -857,6 +857,10 @@ class TraceManager:
             api_span.embedder = span.embedder
             api_span.top_k = span.top_k
             api_span.chunk_size = span.chunk_size
+            api_span.cost_per_input_token = span.cost_per_input_token
+            api_span.cost_per_output_token = span.cost_per_output_token
+            api_span.input_token_count = span.input_token_count
+            api_span.output_token_count = span.output_token_count
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
             # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
