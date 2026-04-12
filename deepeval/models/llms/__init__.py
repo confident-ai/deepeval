@@ -11,6 +11,7 @@ from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
 from .portkey_model import PortkeyModel
 from .openrouter_model import OpenRouterModel
+from .groq_model import GroqModel
 
 __all__ = [
     "AzureOpenAIModel",
@@ -26,4 +27,5 @@ __all__ = [
     "DeepSeekModel",
     "PortkeyModel",
     "OpenRouterModel",
+    "GroqModel",
 ]

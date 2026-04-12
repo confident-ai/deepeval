@@ -533,6 +533,12 @@ class Settings(BaseSettings):
     GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None, description="Grok output token cost (used for cost reporting)."
     )
+    # Groq
+    USE_GROQ_MODEL: Optional[bool] = Field(
+        None, description="Select Groq as the active LLM provider."
+    )
+    GROQ_API_KEY: Optional[SecretStr] = Field(None, description="Groq API key.")
+    GROQ_MODEL_NAME: Optional[str] = Field(None, description="Groq model name.")
     # LiteLLM
     USE_LITELLM: Optional[bool] = Field(
         None, description="Select LiteLLM as the active LLM provider."
@@ -1018,6 +1024,7 @@ class Settings(BaseSettings):
         "USE_GEMINI_MODEL",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
+        "USE_GROQ_MODEL",
         "USE_DEEPSEEK_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
