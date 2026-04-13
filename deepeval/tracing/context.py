@@ -19,6 +19,9 @@ class SpanContext:
     def set(self, value):
         return self.current_span.set(value)
 
+    def reset(self, value):
+        return self.current_span.reset(value)
+
     def drop(self):
         span = self.current_span.get()
         if span:
@@ -36,6 +39,9 @@ class TraceContext:
 
     def set(self, value):
         return self.current_trace.set(value)
+
+    def reset(self, value):
+        return self.current_trace.reset(value)
 
     def drop(self):
         trace = self.current_trace.get()
