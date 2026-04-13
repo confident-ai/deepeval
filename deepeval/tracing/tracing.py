@@ -344,6 +344,19 @@ class TraceManager:
             # Remove from active traces
             del self.active_traces[trace_uuid]
 
+            # Evict finished traces to bound memory usage.
+            # Skipped when tracing is off (keeps traces for test
+            # assertions) or during evaluation (pipeline reads them).
+            if (
+                tracing_enabled()
+                and self.tracing_enabled
+                and not self.evaluating
+            ):
+                try:
+                    self.traces.remove(trace)
+                except ValueError:
+                    pass
+
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
         if trace_uuid in self.active_traces:
