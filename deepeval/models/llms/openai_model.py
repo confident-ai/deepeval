@@ -43,7 +43,6 @@ _ALIAS_MAP = {
 
 
 class GPTModel(DeepEvalBaseLLM):
-
     def __init__(
         self,
         model: Optional[str] = None,
@@ -518,10 +517,22 @@ class GPTModel(DeepEvalBaseLLM):
             output = None
             if completion.choices:
                 output = completion.choices[0].message.content
+            # chat completions API uses prompt_tokens/completion_tokens;
+            # the newer Responses API (and some gpt-5.x models) uses
+            # input_tokens/output_tokens — fall back to the newer names.
+            input_token_count = None
+            output_token_count = None
+            if usage is not None:
+                input_token_count = getattr(
+                    usage, "prompt_tokens", None
+                ) or getattr(usage, "input_tokens", None)
+                output_token_count = getattr(
+                    usage, "completion_tokens", None
+                ) or getattr(usage, "output_tokens", None)
             update_llm_span(
                 model=self.name,
-                input_token_count=usage.prompt_tokens if usage else None,
-                output_token_count=usage.completion_tokens if usage else None,
+                input_token_count=input_token_count,
+                output_token_count=output_token_count,
                 cost_per_input_token=self.model_data.input_price,
                 cost_per_output_token=self.model_data.output_price,
             )

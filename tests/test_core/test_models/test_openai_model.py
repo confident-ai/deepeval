@@ -1,12 +1,38 @@
 """Tests for GPTModel generation_kwargs parameter"""
 
+import uuid as _uuid
+import time as _time
 import deepeval.models.llms.openai_model as openai_mod
 
+from types import SimpleNamespace
 from unittest.mock import Mock, patch, MagicMock
 from pydantic import BaseModel, SecretStr
 from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.llms.openai_model import GPTModel
+from deepeval.tracing.patchers import patch_openai_client
+from deepeval.tracing.types import LlmSpan, TraceSpanStatus
+from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 from tests.test_core.stubs import _RecordingClient
+
+
+# ── shared helpers ────────────────────────────────────────────────────────────
+
+def _make_llm_span() -> LlmSpan:
+    return LlmSpan(
+        uuid=str(_uuid.uuid4()),
+        status=TraceSpanStatus.IN_PROGRESS,
+        trace_uuid=str(_uuid.uuid4()),
+        start_time=_time.time(),
+    )
+
+
+def _make_usage(**fields):
+    return SimpleNamespace(**fields)
+
+
+def _make_completion(usage, content="hello"):
+    choices = [SimpleNamespace(message=SimpleNamespace(content=content))]
+    return SimpleNamespace(choices=choices, usage=usage)
 
 
 class SampleSchema(BaseModel):
@@ -546,3 +572,148 @@ def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     assert model.name == "model-not-yet-in-our-registry"
     assert model.model_data.input_price == 0.123
     assert model.model_data.output_price == 0.456
+
+
+#############################################################
+# Tests for fix: token counts and cost for gpt-5.x in LLM  #
+# spans (fixes #2531)                                        #
+#############################################################
+
+
+class TestGPTModelUpdateLlmSpanTokenFields:
+    """
+    Unit-tests for GPTModel._update_llm_span_from_completion.
+
+    Verifies that both the classic (prompt_tokens/completion_tokens) and
+    the newer Responses-API (input_tokens/output_tokens) field names are read
+    correctly, and that cost fields are populated for known models like gpt-5.2.
+    No real OpenAI calls are made — update_llm_span is patched at the module level.
+    """
+
+    @patch("deepeval.models.llms.openai_model.update_llm_span")
+    @patch("deepeval.models.llms.openai_model.update_current_span")
+    def test_classic_prompt_tokens_read(self, _mock_span, mock_llm, settings):
+        """prompt_tokens / completion_tokens (classic chat-completions style) must be read."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4.1")
+        completion = _make_completion(_make_usage(prompt_tokens=10, completion_tokens=20))
+        model._update_llm_span_from_completion(completion)
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 10
+        assert kw["output_token_count"] == 20
+
+    @patch("deepeval.models.llms.openai_model.update_llm_span")
+    @patch("deepeval.models.llms.openai_model.update_current_span")
+    def test_new_input_tokens_read_for_gpt52(self, _mock_span, mock_llm, settings):
+        """input_tokens / output_tokens (Responses API / gpt-5.x style) must be read."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-5.2")
+        completion = _make_completion(_make_usage(input_tokens=15, output_tokens=30))
+        model._update_llm_span_from_completion(completion)
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 15
+        assert kw["output_token_count"] == 30
+
+    @patch("deepeval.models.llms.openai_model.update_llm_span")
+    @patch("deepeval.models.llms.openai_model.update_current_span")
+    def test_cost_fields_non_none_for_gpt52(self, _mock_span, mock_llm, settings):
+        """cost_per_input_token and cost_per_output_token must be non-None for gpt-5.2."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-5.2")
+        completion = _make_completion(_make_usage(input_tokens=5, output_tokens=10))
+        model._update_llm_span_from_completion(completion)
+        kw = mock_llm.call_args.kwargs
+        assert kw["cost_per_input_token"] is not None
+        assert kw["cost_per_output_token"] is not None
+
+    @patch("deepeval.models.llms.openai_model.update_llm_span")
+    @patch("deepeval.models.llms.openai_model.update_current_span")
+    def test_gpt41_no_regression(self, _mock_span, mock_llm, settings):
+        """gpt-4.1 with classic field names must still produce correct counts and costs."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4.1")
+        completion = _make_completion(_make_usage(prompt_tokens=7, completion_tokens=14))
+        model._update_llm_span_from_completion(completion)
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 7
+        assert kw["output_token_count"] == 14
+        assert kw["cost_per_input_token"] is not None
+        assert kw["cost_per_output_token"] is not None
+
+
+class TestPatchOpenaiClientTokenCounts:
+    """
+    Unit-tests for the patch_openai_client() patcher.
+
+    Verifies that the wrapped chat.completions.create method reads both
+    token-field naming conventions and populates cost fields from
+    OPENAI_MODELS_DATA for all known models, including gpt-5.2.
+    """
+
+    def _make_fake_client(self, completion):
+        chat_completions = SimpleNamespace(create=Mock(return_value=completion))
+        chat = SimpleNamespace(completions=chat_completions)
+        beta_completions = SimpleNamespace(parse=Mock(return_value=completion))
+        beta_chat = SimpleNamespace(completions=beta_completions)
+        return SimpleNamespace(chat=chat, beta=SimpleNamespace(chat=beta_chat))
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_new_field_names_in_patcher_for_gpt52(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        """input_tokens / output_tokens must be read by the patcher for gpt-5.2."""
+        mock_ctx.get.return_value = _make_llm_span()
+        completion = _make_completion(_make_usage(input_tokens=12, output_tokens=24))
+        client = self._make_fake_client(completion)
+        patch_openai_client(client)
+        client.chat.completions.create(
+            model="gpt-5.2", messages=[{"role": "user", "content": "hi"}]
+        )
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 12
+        assert kw["output_token_count"] == 24
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_cost_populated_in_patcher_for_gpt52(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        """patch_openai_client must populate cost fields from OPENAI_MODELS_DATA for gpt-5.2."""
+        mock_ctx.get.return_value = _make_llm_span()
+        completion = _make_completion(_make_usage(input_tokens=5, output_tokens=10))
+        client = self._make_fake_client(completion)
+        patch_openai_client(client)
+        client.chat.completions.create(
+            model="gpt-5.2", messages=[{"role": "user", "content": "hi"}]
+        )
+        kw = mock_llm.call_args.kwargs
+        expected = OPENAI_MODELS_DATA.get("gpt-5.2")
+        assert kw["cost_per_input_token"] == expected.input_price
+        assert kw["cost_per_output_token"] == expected.output_price
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_classic_field_names_no_regression_in_patcher(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        """gpt-4.1 with prompt_tokens/completion_tokens must still work via patcher."""
+        mock_ctx.get.return_value = _make_llm_span()
+        completion = _make_completion(_make_usage(prompt_tokens=8, completion_tokens=16))
+        client = self._make_fake_client(completion)
+        patch_openai_client(client)
+        client.chat.completions.create(
+            model="gpt-4.1", messages=[{"role": "user", "content": "hi"}]
+        )
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 8
+        assert kw["output_token_count"] == 16
+        assert kw["cost_per_input_token"] is not None
+        assert kw["cost_per_output_token"] is not None
