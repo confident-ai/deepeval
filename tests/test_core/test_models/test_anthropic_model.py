@@ -265,6 +265,8 @@ def test_anthropic_calculate_cost_returns_correct_value(
     mock_require_dep.return_value = fake_anthropic_module
 
     model = AnthropicModel(model="claude-3-7-sonnet-latest")
+    model.model_data.input_price = 0.003
+    model.model_data.output_price = 0.012
     cost = model.calculate_cost(input_tokens=500, output_tokens=200)
     expected = 500 * 0.003 + 200 * 0.012
     assert cost == expected
