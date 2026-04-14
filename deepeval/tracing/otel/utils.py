@@ -472,6 +472,17 @@ def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
     return None
 
 
+def _is_user_text_message(m: dict) -> bool:
+    """Check if a user message contains actual text content (not tool responses)."""
+    parts = m.get("parts")
+    if parts and isinstance(parts, list):
+        return any(
+            isinstance(p, dict) and p.get("type") == "text" for p in parts
+        )
+    content = m.get("content")
+    return isinstance(content, str)
+
+
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
 ) -> Tuple[Optional[Any], Optional[Any]]:
@@ -481,22 +492,20 @@ def check_pydantic_ai_agent_input_output(
     # Get normalized messages once
     normalized = normalize_pydantic_ai_messages(span)
 
-    # Input (pydantic_ai.all_messages) - slice up to and including the first 'user' message
+    # Input (pydantic_ai.all_messages) - find the last user message with text content
     if normalized:
         try:
-            first_user_idx = None
+            last_user_text_idx = None
             for i, m in enumerate(normalized):
-                role = None
                 if isinstance(m, dict):
                     role = m.get("role") or m.get("author")
-                if role == "user":
-                    first_user_idx = i
-                    break
+                    if role == "user" and _is_user_text_message(m):
+                        last_user_text_idx = i
 
             input_val = (
                 normalized
-                if first_user_idx is None
-                else normalized[: first_user_idx + 1]
+                if last_user_text_idx is None
+                else [normalized[last_user_text_idx]]
             )
         except Exception:
             pass
