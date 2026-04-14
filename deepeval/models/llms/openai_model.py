@@ -525,10 +525,18 @@ class GPTModel(DeepEvalBaseLLM):
             if usage is not None:
                 input_token_count = getattr(
                     usage, "prompt_tokens", None
-                ) or getattr(usage, "input_tokens", None)
+                )
+                if input_token_count is None:
+                    input_token_count = getattr(
+                        usage, "input_tokens", None
+                    )
                 output_token_count = getattr(
                     usage, "completion_tokens", None
-                ) or getattr(usage, "output_tokens", None)
+                )
+                if output_token_count is None:
+                    output_token_count = getattr(
+                        usage, "output_tokens", None
+                    )
             update_llm_span(
                 model=self.name,
                 input_token_count=input_token_count,

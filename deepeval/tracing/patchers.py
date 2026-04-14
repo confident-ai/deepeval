@@ -80,10 +80,18 @@ def patch_openai_client(client: OpenAI):
                         if usage is not None:
                             input_token_count = getattr(
                                 usage, "prompt_tokens", None
-                            ) or getattr(usage, "input_tokens", None)
+                            )
+                            if input_token_count is None:
+                                input_token_count = getattr(
+                                    usage, "input_tokens", None
+                                )
                             output_token_count = getattr(
                                 usage, "completion_tokens", None
-                            ) or getattr(usage, "output_tokens", None)
+                            )
+                            if output_token_count is None:
+                                output_token_count = getattr(
+                                    usage, "output_tokens", None
+                                )
                     except Exception:
                         pass
 
@@ -92,8 +100,12 @@ def patch_openai_client(client: OpenAI):
                     # even when the caller uses patch_openai_client directly
                     # rather than GPTModel.
                     model_data = OPENAI_MODELS_DATA.get(model)
-                    cost_per_input_token = model_data.input_price
-                    cost_per_output_token = model_data.output_price
+                    cost_per_input_token = (
+                        model_data.input_price if model_data else None
+                    )
+                    cost_per_output_token = (
+                        model_data.output_price if model_data else None
+                    )
 
                     update_current_span(
                         input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
