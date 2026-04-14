@@ -204,9 +204,9 @@ async def _call_then_iterate(endpoint_fn, prompt):
 # ── helpers ────────────────────────────────────────────────────────────
 
 
-def _assert_all_traces_valid():
+def _assert_all_traces_valid(traces):
     """Every trace and span must have end_time set and serialize OK."""
-    for i, t in enumerate(trace_manager.traces):
+    for i, t in enumerate(traces):
         assert t.end_time is not None, f"trace[{i}] end_time is None"
         for root_span in t.root_spans:
             _assert_all_spans_closed(root_span, trace_idx=i)
@@ -286,7 +286,7 @@ class TestFastAPIStreamingMultiTrace:
     so they use manual assertions instead.
     """
 
-    def test_observe_on_both_endpoint_and_generator(self):
+    def test_observe_on_both_endpoint_and_generator(self, completed_traces):
         """
         @observe on both the endpoint and the inner generator.
         The endpoint span finishes immediately (returns generator object),
@@ -294,10 +294,10 @@ class TestFastAPIStreamingMultiTrace:
         """
         chunks = asyncio.run(_call_then_iterate(observed_endpoint, "hello"))
         assert chunks == EXPECTED_RAG_CHUNKS
-        assert len(trace_manager.traces) >= 1
-        _assert_all_traces_valid()
+        assert len(completed_traces) >= 1
+        _assert_all_traces_valid(completed_traces)
 
-    def test_trace_context_wrapping_observed_generator(self):
+    def test_trace_context_wrapping_observed_generator(self, completed_traces):
         """
         with trace() wraps the call site + @observe on the generator.
         The trace context ends immediately; the generator creates a
@@ -307,10 +307,10 @@ class TestFastAPIStreamingMultiTrace:
             _call_then_iterate(trace_wrapped_endpoint, "hello")
         )
         assert chunks == EXPECTED_RAG_CHUNKS
-        assert len(trace_manager.traces) >= 1
-        _assert_all_traces_valid()
+        assert len(completed_traces) >= 1
+        _assert_all_traces_valid(completed_traces)
 
-    def test_trace_context_with_plain_generator(self):
+    def test_trace_context_with_plain_generator(self, completed_traces):
         """
         with trace() at the call site, but the generator has no @observe.
         The trace context ends immediately; child spans inside the
@@ -320,10 +320,10 @@ class TestFastAPIStreamingMultiTrace:
             _call_then_iterate(trace_wrapped_plain_endpoint, "hello")
         )
         assert chunks == EXPECTED_RAG_CHUNKS
-        assert len(trace_manager.traces) >= 1
-        _assert_all_traces_valid()
+        assert len(completed_traces) >= 1
+        _assert_all_traces_valid(completed_traces)
 
-    def test_single_trace_with_nested_hierarchy(self):
+    def test_single_trace_with_nested_hierarchy(self, completed_traces):
         """
         A single @observe'd RAG pipeline generator must produce exactly
         1 trace with correct parent-child hierarchy preserved across
@@ -333,12 +333,12 @@ class TestFastAPIStreamingMultiTrace:
         chunks = run_in_threadpool(gen)
 
         assert chunks == EXPECTED_RAG_CHUNKS
-        assert len(trace_manager.traces) == 1, (
-            f"Expected 1 trace but got {len(trace_manager.traces)} — "
+        assert len(completed_traces) == 1, (
+            f"Expected 1 trace but got {len(completed_traces)} — "
             "child spans should be nested, not in separate traces"
         )
 
-        t = trace_manager.traces[0]
+        t = completed_traces[0]
         root = t.root_spans[0]
         assert root.name == "streaming_rag_pipeline"
         assert len(root.children) == 2, (
@@ -347,4 +347,4 @@ class TestFastAPIStreamingMultiTrace:
         )
         child_names = {c.name for c in root.children}
         assert child_names == {"retrieve_documents", "stream_llm_tokens"}
-        _assert_all_traces_valid()
+        _assert_all_traces_valid(completed_traces)

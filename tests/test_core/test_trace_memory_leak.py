@@ -32,16 +32,8 @@ def clean_state():
     current_trace_context.set(None)
 
 
-class TestTraceCleanupWhenTracingEnabled:
-    """Completed traces are evicted from trace_manager.traces when tracing
-    is enabled."""
-
-    @pytest.fixture(autouse=True)
-    def _enable_tracing(self, monkeypatch):
-        monkeypatch.setenv("CONFIDENT_TRACING_ENABLED", "YES")
-        trace_manager.tracing_enabled = True
-        yield
-        trace_manager.tracing_enabled = True
+class TestTraceCleanup:
+    """Completed traces are evicted from trace_manager.traces."""
 
     def test_single_trace_removed_after_completion(self):
         simple_agent()
@@ -72,61 +64,16 @@ class TestTraceCleanupWhenTracingEnabled:
         assert len(trace_manager.active_spans) == 0
 
 
-class TestTraceRetentionWhenTracingDisabled:
-    """Completed traces remain in trace_manager.traces when tracing is
-    disabled so they can be inspected."""
-
-    @pytest.fixture(autouse=True)
-    def _disable_tracing(self):
-        trace_manager.tracing_enabled = False
-        yield
-        trace_manager.tracing_enabled = True
-
-    def test_traces_retained_when_tracing_disabled(self):
-        simple_agent()
-
-        assert len(trace_manager.traces) == 1
-
-    def test_multiple_traces_retained_when_tracing_disabled(self):
-        for _ in range(5):
-            simple_agent()
-
-        assert len(trace_manager.traces) == 5
-
-
 class TestTraceRetentionDuringEvaluation:
     """Traces remain in trace_manager.traces during evaluation mode."""
 
     @pytest.fixture(autouse=True)
-    def _evaluation_mode(self, monkeypatch):
-        monkeypatch.setenv("CONFIDENT_TRACING_ENABLED", "YES")
-        trace_manager.tracing_enabled = True
+    def _evaluation_mode(self):
         trace_manager.evaluating = True
         yield
         trace_manager.evaluating = False
-        trace_manager.tracing_enabled = True
 
     def test_traces_retained_during_evaluation(self):
         simple_agent()
 
         assert len(trace_manager.traces) == 1
-
-
-class TestTraceCleanupWithEnvVar:
-    """Verify the CONFIDENT_TRACING_ENABLED env var is respected."""
-
-    def test_traces_retained_when_env_disabled(self, monkeypatch):
-        monkeypatch.setenv("CONFIDENT_TRACING_ENABLED", "NO")
-        trace_manager.tracing_enabled = True
-
-        simple_agent()
-
-        assert len(trace_manager.traces) == 1
-
-    def test_traces_removed_when_env_enabled(self, monkeypatch):
-        monkeypatch.setenv("CONFIDENT_TRACING_ENABLED", "YES")
-        trace_manager.tracing_enabled = True
-
-        simple_agent()
-
-        assert len(trace_manager.traces) == 0

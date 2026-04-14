@@ -194,3 +194,18 @@ def _reset_tracing_state():
     trace_manager.evaluating = False
     trace_manager.evaluation_loop = False
     yield
+
+
+@pytest.fixture
+def completed_traces(monkeypatch):
+    """Capture completed traces before they are evicted from trace_manager.traces."""
+    captured = []
+    _original = trace_manager.end_trace
+
+    def _capturing(trace_uuid):
+        if trace_uuid in trace_manager.active_traces:
+            captured.append(trace_manager.active_traces[trace_uuid])
+        _original(trace_uuid)
+
+    monkeypatch.setattr(trace_manager, "end_trace", _capturing)
+    return captured

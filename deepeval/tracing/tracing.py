@@ -345,13 +345,8 @@ class TraceManager:
             del self.active_traces[trace_uuid]
 
             # Evict finished traces to bound memory usage.
-            # Skipped when tracing is off (keeps traces for test
-            # assertions) or during evaluation (pipeline reads them).
-            if (
-                tracing_enabled()
-                and self.tracing_enabled
-                and not self.evaluating
-            ):
+            # Skipped during evaluation (pipeline reads them after completion).
+            if not self.evaluating:
                 try:
                     self.traces.remove(trace)
                 except ValueError:

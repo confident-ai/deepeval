@@ -43,28 +43,28 @@ def clean_trace_state():
     current_trace_context.set(None)
 
 
-def test_threadpool_without_copy_context_creates_two_traces():
+def test_threadpool_without_copy_context_creates_two_traces(completed_traces):
     """Without copy_context, the child @observe function in a ThreadPoolExecutor
     creates a separate trace because ContextVar values don't propagate to
     new threads."""
     parent_with_plain_executor()
 
     assert (
-        len(trace_manager.traces) == 2
-    ), f"Expected 2 traces (parent + orphaned child), got {len(trace_manager.traces)}"
+        len(completed_traces) == 2
+    ), f"Expected 2 traces (parent + orphaned child), got {len(completed_traces)}"
 
 
-def test_threadpool_with_copy_context_creates_one_trace():
+def test_threadpool_with_copy_context_creates_one_trace(completed_traces):
     """With copy_context, the child @observe function in a ThreadPoolExecutor
     correctly attaches to the parent trace because ContextVar values are
     propagated."""
     parent_with_copy_context()
 
     assert (
-        len(trace_manager.traces) == 1
-    ), f"Expected 1 trace (child nested under parent), got {len(trace_manager.traces)}"
+        len(completed_traces) == 1
+    ), f"Expected 1 trace (child nested under parent), got {len(completed_traces)}"
 
-    the_trace = trace_manager.traces[0]
+    the_trace = completed_traces[0]
     assert len(the_trace.root_spans) == 1, "Expected exactly 1 root span"
 
     root_span = the_trace.root_spans[0]

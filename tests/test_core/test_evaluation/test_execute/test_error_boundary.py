@@ -488,11 +488,11 @@ def test_task_cancel_after_observe_marks_existing_trace(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_caught_child_error_trace_success():
+async def test_caught_child_error_trace_success(completed_traces):
     trace_manager.clear_traces()
 
     await parent_catches()
-    tr = trace_manager.traces[-1]
+    tr = completed_traces[-1]
 
     assert tr.status == TraceSpanStatus.SUCCESS
     # Child span should be ERRORED and parent should be SUCCESS
@@ -502,17 +502,17 @@ async def test_caught_child_error_trace_success():
 
 
 @pytest.mark.asyncio
-async def test_uncaught_error_trace_error():
+async def test_uncaught_error_trace_error(completed_traces):
     trace_manager.clear_traces()
     with pytest.raises(RuntimeError):
         await parent_uncaught()
-    tr = trace_manager.traces[-1]
+    tr = completed_traces[-1]
     assert tr.status == TraceSpanStatus.ERRORED
     assert tr.root_spans[0].status == TraceSpanStatus.ERRORED
 
 
 @pytest.mark.asyncio
-async def test_cancelled_task_marks_trace_error():
+async def test_cancelled_task_marks_trace_error(completed_traces):
     event_loop = asyncio.get_running_loop()
     trace_manager.clear_traces()
 
@@ -529,7 +529,7 @@ async def test_cancelled_task_marks_trace_error():
         pass
 
     # Find the most recent trace
-    tr = trace_manager.traces[-1]
+    tr = completed_traces[-1]
     assert tr.status == TraceSpanStatus.ERRORED
     assert tr.root_spans, "root span should exist"
     assert tr.root_spans[0].status == TraceSpanStatus.ERRORED
