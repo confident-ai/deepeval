@@ -87,6 +87,7 @@ def convert_convo_goldens_to_convo_test_cases(
         test_case = ConversationalTestCase(
             turns=golden.turns or [],
             scenario=golden.scenario,
+            expected_outcome=golden.expected_outcome,
             user_description=golden.user_description,
             context=golden.context,
             name=golden.name,
