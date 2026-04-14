@@ -294,9 +294,7 @@ def test_anthropic_calculate_cost_returns_none_when_prices_missing(
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
-def test_anthropic_calculate_cost_with_zero_tokens(
-    mock_require_dep, settings
-):
+def test_anthropic_calculate_cost_with_zero_tokens(mock_require_dep, settings):
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "test-key"
         settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 0.003

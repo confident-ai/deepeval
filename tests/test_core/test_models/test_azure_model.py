@@ -638,6 +638,7 @@ class TestAzureModelTemperature:
 # calculate_cost unit tests  #
 ##############################
 
+
 def test_azure_calculate_cost_returns_correct_value():
     model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
     model.model_data.input_price = 0.005
