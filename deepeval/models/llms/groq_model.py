@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, Tuple, Union
 
 from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key
+from deepeval.models.utils import require_secret_api_key, require_costs
 from deepeval.models.retry_policy import create_retry_decorator
 from deepeval.utils import require_dependency
 from deepeval.models.base_model import DeepEvalBaseLLM
@@ -57,6 +57,9 @@ class GroqModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         temperature: Optional[float] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
+        generation_kwargs: Optional[dict] = None,
         **kwargs,
     ):
         settings = get_settings()
@@ -89,6 +92,23 @@ class GroqModel(DeepEvalBaseLLM):
 
         if self.temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
+
+        # Cost handling
+        if cost_per_input_token is not None:
+            self.cost_per_input_token = float(cost_per_input_token)
+        else:
+            self.cost_per_input_token = getattr(
+                settings, "GROQ_COST_PER_INPUT_TOKEN", None
+            )
+
+        if cost_per_output_token is not None:
+            self.cost_per_output_token = float(cost_per_output_token)
+        else:
+            self.cost_per_output_token = getattr(
+                settings, "GROQ_COST_PER_OUTPUT_TOKEN", None
+            )
+
+        self.generation_kwargs = generation_kwargs or {}
 
         self.kwargs = kwargs
         self.model_data = GROQ_MODELS_DATA.get(
@@ -145,6 +165,16 @@ class GroqModel(DeepEvalBaseLLM):
             self._client = self._module.Groq(api_key=api_key, **self.kwargs)
             return self._client
 
+    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        return require_costs(
+            self.model_data,
+            self.model_name,
+            input_tokens,
+            output_tokens,
+            cost_per_input_token=self.cost_per_input_token,
+            cost_per_output_token=self.cost_per_output_token,
+        )
+
     # -------------------------------------------------------------------------
     # Generation Methods
     # -------------------------------------------------------------------------
@@ -159,6 +189,7 @@ class GroqModel(DeepEvalBaseLLM):
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
+            **self.generation_kwargs,
         }
 
         if schema is not None:
@@ -167,10 +198,16 @@ class GroqModel(DeepEvalBaseLLM):
         response = client.chat.completions.create(**chat_args)
         content = response.choices[0].message.content
 
-        if schema is not None:
-            return schema.model_validate_json(content), 0.0
+        # Calculate actual cost
+        cost = 0.0
+        if hasattr(response, "usage") and response.usage is not None:
+            cost = self.calculate_cost(
+                response.usage.prompt_tokens, response.usage.completion_tokens
+            )
 
-        return content, 0.0
+        if schema is not None:
+            return schema.model_validate_json(content), cost
+        return content, cost
 
     @retry_groq
     async def a_generate(
@@ -183,6 +220,7 @@ class GroqModel(DeepEvalBaseLLM):
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": self.temperature,
+            **self.generation_kwargs,
         }
 
         if schema is not None:
@@ -191,10 +229,16 @@ class GroqModel(DeepEvalBaseLLM):
         response = await async_client.chat.completions.create(**chat_args)
         content = response.choices[0].message.content
 
-        if schema is not None:
-            return schema.model_validate_json(content), 0.0
+        # Calculate actual cost
+        cost = 0.0
+        if hasattr(response, "usage") and response.usage is not None:
+            cost = self.calculate_cost(
+                response.usage.prompt_tokens, response.usage.completion_tokens
+            )
 
-        return content, 0.0
+        if schema is not None:
+            return schema.model_validate_json(content), cost
+        return content, cost
 
     # -------------------------------------------------------------------------
     # Capabilities
