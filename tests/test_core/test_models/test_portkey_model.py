@@ -217,3 +217,32 @@ async def test_portkey_a_generate_sends_request_and_returns_content(
     assert headers["x-portkey-api-key"] == "portkey-secret"
     assert headers["x-portkey-provider"] == "openai"
     assert headers["Content-Type"] == "application/json"
+
+
+##################################################
+# Cost behavior: Portkey returns str, not a tuple
+##################################################
+
+
+@patch("deepeval.models.llms.portkey_model.requests.post")
+def test_portkey_generate_returns_str_not_cost_tuple(mock_post, settings):
+    with settings.edit(persist=False):
+        settings.PORTKEY_MODEL_NAME = "gpt-4o-mini"
+        settings.PORTKEY_BASE_URL = "https://api.portkey.ai/v1"
+        settings.PORTKEY_PROVIDER_NAME = "openai"
+        settings.PORTKEY_API_KEY = "portkey-secret"
+
+    model = PortkeyModel()
+
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = {
+        "choices": [{"message": {"content": "response text"}}]
+    }
+    mock_post.return_value = mock_response
+
+    result = model.generate("test prompt")
+
+    assert isinstance(result, str)
+    assert not isinstance(result, tuple)
+    assert result == "response text"

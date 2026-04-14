@@ -125,3 +125,52 @@ def test_kimi_model_ctor_args_override_settings(monkeypatch):
     # And the temperature should respect the ctor argument (assuming no
     # TEMPERATURE override from Settings)
     assert model.temperature == 0.5
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def test_kimi_calculate_cost_returns_correct_value(monkeypatch):
+    monkeypatch.setenv("MOONSHOT_API_KEY", "test-key")
+    monkeypatch.setenv("MOONSHOT_MODEL_NAME", "moonshot-v1-8k")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = KimiModel(model="moonshot-v1-8k")
+    model.model_data.input_price = 0.004
+    model.model_data.output_price = 0.008
+    cost = model.calculate_cost(input_tokens=250, output_tokens=100)
+    expected = 250 * 0.004 + 100 * 0.008
+    assert cost == expected
+
+
+def test_kimi_calculate_cost_returns_none_when_prices_missing(monkeypatch):
+    monkeypatch.setenv("MOONSHOT_API_KEY", "test-key")
+    monkeypatch.setenv("MOONSHOT_MODEL_NAME", "moonshot-v1-8k")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = KimiModel(model="moonshot-v1-8k")
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+
+    cost = model.calculate_cost(input_tokens=250, output_tokens=100)
+    assert cost is None
+
+
+def test_kimi_calculate_cost_with_zero_tokens(monkeypatch):
+    monkeypatch.setenv("MOONSHOT_API_KEY", "test-key")
+    monkeypatch.setenv("MOONSHOT_MODEL_NAME", "moonshot-v1-8k")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = KimiModel(model="moonshot-v1-8k")
+    model.model_data.input_price = 0.004
+    model.model_data.output_price = 0.008
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

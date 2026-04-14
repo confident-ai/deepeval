@@ -85,3 +85,54 @@ def test_grok_model_defaults_from_settings(monkeypatch, settings):
     # Client sees the env/Settings value
     assert kw.get("api_key") == "env-secret-key"
     # Model name from Settings
+    assert model.name == "grok-3"
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def test_grok_calculate_cost_returns_correct_value(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "test-key"
+        settings.GROK_COST_PER_INPUT_TOKEN = 0.005
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 0.015
+
+    _stub_load_model(monkeypatch)
+
+    model = GrokModel(model="grok-3")
+    cost = model.calculate_cost(input_tokens=400, output_tokens=200)
+    expected = 400 * 0.005 + 200 * 0.015
+    assert cost == expected
+
+
+def test_grok_calculate_cost_returns_none_when_prices_missing(
+    monkeypatch, settings
+):
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "test-key"
+        settings.GROK_COST_PER_INPUT_TOKEN = 1e-6
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    _stub_load_model(monkeypatch)
+
+    model = GrokModel(model="grok-3")
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+
+    cost = model.calculate_cost(input_tokens=400, output_tokens=200)
+    assert cost is None
+
+
+def test_grok_calculate_cost_with_zero_tokens(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.GROK_API_KEY = "test-key"
+        settings.GROK_COST_PER_INPUT_TOKEN = 0.005
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 0.015
+
+    _stub_load_model(monkeypatch)
+
+    model = GrokModel(model="grok-3")
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

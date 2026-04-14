@@ -177,3 +177,38 @@ def test_gemini_model_use_vertexai_param_overrides_settings(
     assert client.kwargs.get("project") == "test-project"
     assert client.kwargs.get("location") == "us-central1"
     assert client.kwargs.get("credentials") is None
+
+
+########################################
+# Cost behavior: Gemini always returns 0
+########################################
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_generate_returns_zero_cost(mock_require_dep, settings):
+    from unittest.mock import MagicMock
+
+    fake_genai = _make_fake_genai_module()
+    fake_genai.types.GenerateContentConfig = lambda **kwargs: kwargs
+
+    fake_client = MagicMock()
+    fake_client.models.generate_content.return_value = MagicMock(
+        text="Hello world"
+    )
+
+    def _fake_require_dependency(name, *args, **kwargs):
+        if name == "google.genai":
+            return fake_genai
+        raise AssertionError(f"Unexpected dependency: {name}")
+
+    mock_require_dep.side_effect = _fake_require_dependency
+
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+
+    model = GeminiModel(model="gemini-1.5-pro")
+    model.load_model = lambda *a, **kw: fake_client
+
+    output, cost = model.generate("test prompt")
+    assert cost == 0
+    assert output == "Hello world"

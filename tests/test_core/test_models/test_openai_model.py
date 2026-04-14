@@ -644,6 +644,23 @@ class TestGPTModelUpdateLlmSpanTokenFields:
         assert kw["cost_per_input_token"] is not None
         assert kw["cost_per_output_token"] is not None
 
+    @patch("deepeval.models.llms.openai_model.update_llm_span")
+    @patch("deepeval.models.llms.openai_model.update_current_span")
+    def test_zero_prompt_tokens_not_overwritten_by_fallback(
+        self, _mock_span, mock_llm, settings
+    ):
+        """prompt_tokens=0 must be preserved, not replaced by input_tokens fallback."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4.1")
+        completion = _make_completion(
+            _make_usage(prompt_tokens=0, completion_tokens=0, input_tokens=99, output_tokens=99)
+        )
+        model._update_llm_span_from_completion(completion)
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 0
+        assert kw["output_token_count"] == 0
+
 
 class TestPatchOpenaiClientTokenCounts:
     """
@@ -717,3 +734,85 @@ class TestPatchOpenaiClientTokenCounts:
         assert kw["output_token_count"] == 16
         assert kw["cost_per_input_token"] is not None
         assert kw["cost_per_output_token"] is not None
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_patcher_unknown_model_does_not_crash(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        """Unknown model must not crash -- cost fields should be None."""
+        mock_ctx.get.return_value = _make_llm_span()
+        completion = _make_completion(_make_usage(prompt_tokens=5, completion_tokens=10))
+        client = self._make_fake_client(completion)
+        patch_openai_client(client)
+        client.chat.completions.create(
+            model="ft:gpt-4o:my-org:custom:id", messages=[{"role": "user", "content": "hi"}]
+        )
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 5
+        assert kw["output_token_count"] == 10
+        assert kw["cost_per_input_token"] is None
+        assert kw["cost_per_output_token"] is None
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_patcher_zero_prompt_tokens_not_overwritten(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        """prompt_tokens=0 must be preserved, not replaced by input_tokens fallback."""
+        mock_ctx.get.return_value = _make_llm_span()
+        completion = _make_completion(
+            _make_usage(prompt_tokens=0, completion_tokens=0, input_tokens=99, output_tokens=99)
+        )
+        client = self._make_fake_client(completion)
+        patch_openai_client(client)
+        client.chat.completions.create(
+            model="gpt-4.1", messages=[{"role": "user", "content": "hi"}]
+        )
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 0
+        assert kw["output_token_count"] == 0
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def test_openai_calculate_cost_returns_correct_value(settings):
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 0.005
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.015
+
+    model = GPTModel(model="model-not-in-registry")
+
+    cost = model.calculate_cost(input_tokens=100, output_tokens=50)
+    expected = 100 * 0.005 + 50 * 0.015
+    assert cost == expected
+
+
+def test_openai_calculate_cost_returns_none_when_prices_missing(settings):
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+
+    model = GPTModel(model="model-not-in-registry")
+    assert model.model_data.input_price is None
+    assert model.model_data.output_price is None
+
+    cost = model.calculate_cost(input_tokens=100, output_tokens=50)
+    assert cost is None
+
+
+def test_openai_calculate_cost_with_zero_tokens(settings):
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_COST_PER_INPUT_TOKEN = 0.005
+        settings.OPENAI_COST_PER_OUTPUT_TOKEN = 0.015
+
+    model = GPTModel(model="model-not-in-registry")
+
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

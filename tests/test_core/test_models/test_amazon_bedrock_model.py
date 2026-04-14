@@ -169,3 +169,43 @@ async def test_bedrock_a_generate_reads_text_block_when_first(monkeypatch):
     out, cost = await m.a_generate("prompt", schema=None)
     assert out == '{"statements":["hello"]}'
     assert cost is None
+
+
+##############################
+# calculate_cost unit tests  #
+##############################
+
+
+def _mk_model_with_prices(input_price, output_price):
+    from deepeval.models.base_model import DeepEvalModelData
+
+    m = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    m.model_data = DeepEvalModelData(
+        input_price=input_price, output_price=output_price
+    )
+    return m
+
+
+def test_bedrock_calculate_cost_returns_correct_value():
+    model = _mk_model_with_prices(0.003, 0.006)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    expected = 1000 * 0.003 + 500 * 0.006
+    assert cost == expected
+
+
+def test_bedrock_calculate_cost_returns_none_when_prices_missing():
+    model = _mk_model_with_prices(None, None)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    assert cost is None
+
+
+def test_bedrock_calculate_cost_returns_none_when_only_input_price_set():
+    model = _mk_model_with_prices(0.003, None)
+    cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+    assert cost is None
+
+
+def test_bedrock_calculate_cost_with_zero_tokens():
+    model = _mk_model_with_prices(0.003, 0.006)
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0

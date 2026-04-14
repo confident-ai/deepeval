@@ -634,5 +634,34 @@ class TestAzureModelTemperature:
         assert model.temperature is None
 
 
+##############################
+# calculate_cost unit tests  #
+##############################
+
+def test_azure_calculate_cost_returns_correct_value():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = 0.005
+    model.model_data.output_price = 0.015
+    cost = model.calculate_cost(input_tokens=200, output_tokens=100)
+    expected = 200 * 0.005 + 100 * 0.015
+    assert cost == expected
+
+
+def test_azure_calculate_cost_returns_none_when_prices_missing():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = None
+    model.model_data.output_price = None
+    cost = model.calculate_cost(input_tokens=200, output_tokens=100)
+    assert cost is None
+
+
+def test_azure_calculate_cost_with_zero_tokens():
+    model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
+    model.model_data.input_price = 0.005
+    model.model_data.output_price = 0.015
+    cost = model.calculate_cost(input_tokens=0, output_tokens=0)
+    assert cost == 0.0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
