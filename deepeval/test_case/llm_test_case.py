@@ -148,10 +148,11 @@ class MLLMImage:
 
             img_id = m.group(1)
 
-            if img_id not in _MLLM_IMAGE_REGISTRY:
-                MLLMImage(url=img_id, _id=img_id)
+            img = _MLLM_IMAGE_REGISTRY.get(img_id)
+            if img is None:
+                img = MLLMImage(url=img_id, _id=img_id)
 
-            result.append(_MLLM_IMAGE_REGISTRY[img_id])
+            result.append(img)
             last_end = end
 
         if last_end < len(s):
