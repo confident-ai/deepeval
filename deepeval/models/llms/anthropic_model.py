@@ -138,7 +138,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         # Get max_tokens from kwargs, default to 1024 if not provided
         max_tokens = self._max_tokens
         chat_model = self.load_model()
-        message = chat_model.messages.create(
+        create_kwargs = dict(
             max_tokens=max_tokens,
             messages=[
                 {
@@ -147,9 +147,13 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.name,
-            temperature=self.temperature,
             **self.generation_kwargs,
         )
+        if self.model_data and self.model_data.supports_temperature is False:
+            pass
+        else:
+            create_kwargs["temperature"] = self.temperature
+        message = chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
@@ -172,7 +176,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         # Get max_tokens from kwargs, default to 1024 if not provided
         max_tokens = self._max_tokens
         chat_model = self.load_model(async_mode=True)
-        message = await chat_model.messages.create(
+        create_kwargs = dict(
             max_tokens=max_tokens,
             messages=[
                 {
@@ -181,9 +185,13 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.name,
-            temperature=self.temperature,
             **self.generation_kwargs,
         )
+        if self.model_data and self.model_data.supports_temperature is False:
+            pass
+        else:
+            create_kwargs["temperature"] = self.temperature
+        message = await chat_model.messages.create(**create_kwargs)
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
