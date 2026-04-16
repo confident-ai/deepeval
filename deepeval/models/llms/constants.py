@@ -608,6 +608,7 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             supports_multimodal=True,
             supports_structured_outputs=True,
             supports_json=True,
+            supports_temperature=False,
             input_price=5.00 / 1e6,
             output_price=25.00 / 1e6,
         ),
