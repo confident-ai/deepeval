@@ -22,13 +22,14 @@ import pytest
 from deepeval.test_run.api import LLMApiTestCase, ConversationalApiTestCase
 from deepeval.test_run.test_run import TestRun
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _llm(name: str, success: bool, cost: Optional[float] = None) -> LLMApiTestCase:
+def _llm(
+    name: str, success: bool, cost: Optional[float] = None
+) -> LLMApiTestCase:
     # LLMApiTestCase uses pydantic Field(alias=...) for several fields.
     # Without populate_by_name=True in the model config, aliases must be
     # used at construction time — not the Python attribute names.
@@ -122,7 +123,9 @@ class TestLLMRetryOverwrite:
         run = _fresh_run()
         run.add_test_case(_llm("test_a", success=False, cost=0.01))  # attempt 1
         run.add_test_case(_llm("test_b", success=True, cost=0.05))  # unique
-        run.add_test_case(_llm("test_a", success=True, cost=0.02))  # attempt 2 (retry)
+        run.add_test_case(
+            _llm("test_a", success=True, cost=0.02)
+        )  # attempt 2 (retry)
 
         assert len(run.test_cases) == 2
         assert run.evaluation_cost == pytest.approx(0.07)  # 0.02 + 0.05

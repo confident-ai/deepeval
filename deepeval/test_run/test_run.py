@@ -169,7 +169,7 @@ class TestRun(BaseModel):
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
     ):
-        
+
         target_list = (
             self.conversational_test_cases
             if isinstance(api_test_case, ConversationalApiTestCase)
