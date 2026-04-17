@@ -169,10 +169,26 @@ class TestRun(BaseModel):
     def add_test_case(
         self, api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase]
     ):
-        if isinstance(api_test_case, ConversationalApiTestCase):
-            self.conversational_test_cases.append(api_test_case)
+        
+        target_list = (
+            self.conversational_test_cases
+            if isinstance(api_test_case, ConversationalApiTestCase)
+            else self.test_cases
+        )
+
+        replaced_cost: Union[float, None] = None
+        for i, existing in enumerate(target_list):
+            if existing.name == api_test_case.name:
+                replaced_cost = existing.evaluation_cost
+                target_list[i] = api_test_case
+                break
         else:
-            self.test_cases.append(api_test_case)
+            target_list.append(api_test_case)
+
+        # Back out the replaced attempt's cost before adding the new one,
+        # so a retry doesn't double-count its evaluation_cost on the run total.
+        if replaced_cost is not None and self.evaluation_cost is not None:
+            self.evaluation_cost -= replaced_cost
 
         if api_test_case.evaluation_cost is not None:
             if self.evaluation_cost is None:
