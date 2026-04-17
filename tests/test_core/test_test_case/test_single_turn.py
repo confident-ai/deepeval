@@ -13,7 +13,6 @@ from deepeval.test_case.mcp import MCPServer
 
 
 class TestLLMTestCaseInitialization:
-
     def test_minimal_initialization(self):
         test_case = LLMTestCase(input="What is the capital of France?")
 
@@ -35,12 +34,35 @@ class TestLLMTestCaseInitialization:
         assert test_case.mcp_resources_called is None
         assert test_case.mcp_prompts_called is None
 
-        # Test private attributes have defaults
-        assert test_case._trace_dict is None
+        # trace_dict is public (optional nested span tree for post-hoc eval)
+        assert test_case.trace_dict is None
+        # Other private attributes have defaults
         assert test_case._dataset_rank is None
         assert test_case._dataset_alias is None
         assert test_case._dataset_id is None
         assert isinstance(test_case._identifier, str)
+
+    def test_trace_dict_constructor_and_alias(self):
+        nested = {
+            "name": "root_agent",
+            "type": "agent",
+            "input": {"input": "Book a flight to NYC"},
+            "output": {"summary": "done"},
+            "children": [],
+        }
+        tc = LLMTestCase(
+            input="Book a flight to NYC",
+            actual_output="Flight options listed.",
+            trace_dict=nested,
+        )
+        assert tc.trace_dict == nested
+        tc2 = LLMTestCase.model_validate(
+            {
+                "input": "hi",
+                "traceDict": {"name": "a", "type": "agent", "children": []},
+            }
+        )
+        assert tc2.trace_dict["name"] == "a"
 
     def test_full_initialization(self):
         tool_call = ToolCall(
@@ -96,7 +118,6 @@ class TestLLMTestCaseInitialization:
 
 
 class TestLLMTestCaseCamelCaseInitialization:
-
     def test_camelcase_field_initialization(self):
         input_text = "What is artificial intelligence?"
         actual_output_text = "AI is a branch of computer science..."
@@ -235,7 +256,6 @@ class TestLLMTestCaseCamelCaseInitialization:
 
 
 class TestLLMTestCaseTypeValidation:
-
     def test_input_must_be_string(self):
         with pytest.raises(TypeError, match="'input' must be a string"):
             LLMTestCase(input=123)
@@ -477,7 +497,6 @@ class TestToolCallFunctionality:
 
 
 class TestEdgeCases:
-
     def test_empty_strings(self):
         test_case = LLMTestCase(
             input="", actual_output="", expected_output="", comments=""
@@ -580,7 +599,6 @@ class TestEdgeCases:
 
 
 class TestSerialization:
-
     def test_serialization_aliases(self):
         test_case = LLMTestCase(
             input="test",
@@ -655,7 +673,8 @@ class TestPrivateAttributes:
 
         model_dict = test_case.model_dump()
 
-        assert "_trace_dict" not in model_dict
+        assert "trace_dict" in model_dict
+        assert model_dict["trace_dict"] is None
         assert "_dataset_rank" not in model_dict
         assert "_dataset_alias" not in model_dict
         assert "_dataset_id" not in model_dict
@@ -664,18 +683,18 @@ class TestPrivateAttributes:
     def test_private_attributes_accessible(self):
         test_case = LLMTestCase(input="test")
 
-        assert test_case._trace_dict is None
+        assert test_case.trace_dict is None
         assert test_case._dataset_rank is None
         assert test_case._dataset_alias is None
         assert test_case._dataset_id is None
         assert isinstance(test_case._identifier, str)
 
-        test_case._trace_dict = {"key": "value"}
+        test_case.trace_dict = {"key": "value"}
         test_case._dataset_rank = 1
         test_case._dataset_alias = "test_alias"
         test_case._dataset_id = "test_id"
 
-        assert test_case._trace_dict == {"key": "value"}
+        assert test_case.trace_dict == {"key": "value"}
         assert test_case._dataset_rank == 1
         assert test_case._dataset_alias == "test_alias"
         assert test_case._dataset_id == "test_id"

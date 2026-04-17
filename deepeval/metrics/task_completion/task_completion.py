@@ -187,10 +187,10 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        has_trace: bool = isinstance(test_case.trace_dict, Dict)
         if has_trace:
             prompt = TaskCompletionTemplate.extract_task_and_outcome_from_trace(
-                trace=test_case._trace_dict
+                trace=test_case.trace_dict
             )
         else:
             # TODO: Deprecate this soon
@@ -211,10 +211,10 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        has_trace: bool = isinstance(test_case.trace_dict, Dict)
         if has_trace:
             prompt = TaskCompletionTemplate.extract_task_and_outcome_from_trace(
-                trace=test_case._trace_dict
+                trace=test_case.trace_dict
             )
         else:
             # TODO: Deprecate this soon
