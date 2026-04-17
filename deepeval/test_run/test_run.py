@@ -862,108 +862,121 @@ class TestRunManager:
                 "Sending a large test run to Confident, this might take a bit longer than usual..."
             )
 
-        ####################
-        ### POST REQUEST ###
-        ####################
-        if is_conversational_run:
-            test_run.conversational_test_cases = initial_batch
-        else:
-            test_run.test_cases = initial_batch
+        original_test_cases = test_run.test_cases
+        original_conversational_test_cases = test_run.conversational_test_cases
+        original_prompts = test_run.prompts
 
         try:
-            test_run.prompts = None
-            body = test_run.model_dump(by_alias=True, exclude_none=True)
-        except AttributeError:
-            # Pydantic version below 2.0
-            body = test_run.dict(by_alias=True, exclude_none=True)
-
-        json_str = json.dumps(body, cls=TestRunEncoder)
-        body = json.loads(json_str)
-
-        data, link = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.TEST_RUN_ENDPOINT,
-            body=body,
-        )
-
-        if not isinstance(data, dict) or "id" not in data:
-            # try to show helpful details
-            detail = None
-            if isinstance(data, dict):
-                detail = (
-                    data.get("detail")
-                    or data.get("message")
-                    or data.get("error")
-                )
-            # fall back to repr for visibility
-            raise RuntimeError(
-                f"Confident API response missing 'id'. "
-                f"detail={detail!r} raw={type(data).__name__}:{repr(data)[:500]}"
-            )
-
-        res = TestRunHttpResponse(
-            id=data["id"],
-        )
-
-        ################################################
-        ### Send the remaining test cases in batches ###
-        ################################################
-        total_remaining = len(remaining_test_cases_to_process)
-        num_remaining_batches = (
-            (total_remaining + BATCH_SIZE - 1) // BATCH_SIZE
-            if total_remaining > 0
-            else 0
-        )
-
-        for i in range(num_remaining_batches):
-            start_index = i * BATCH_SIZE
-            batch = remaining_test_cases_to_process[
-                start_index : start_index + BATCH_SIZE
-            ]
-
-            if len(batch) == 0:
-                break  # Should not happen with correct num_remaining_batches, but as a safeguard
-
-            # Create RemainingTestRun with the correct list populated
+            ####################
+            ### POST REQUEST ###
+            ####################
             if is_conversational_run:
-                remaining_test_run = RemainingTestRun(
-                    testRunId=res.id,
-                    testCases=[],  # This will be empty
-                    conversationalTestCases=batch,
-                )
+                test_run.conversational_test_cases = initial_batch
             else:
-                remaining_test_run = RemainingTestRun(
-                    testRunId=res.id,
-                    testCases=batch,
-                    conversationalTestCases=[],  # This will be empty
-                )
+                test_run.test_cases = initial_batch
 
-            body = None
             try:
-                body = remaining_test_run.model_dump(
-                    by_alias=True, exclude_none=True
-                )
+                test_run.prompts = None
+                body = test_run.model_dump(by_alias=True, exclude_none=True)
             except AttributeError:
                 # Pydantic version below 2.0
-                body = remaining_test_run.dict(by_alias=True, exclude_none=True)
+                body = test_run.dict(by_alias=True, exclude_none=True)
 
-            try:
-                _, _ = api.send_request(
-                    method=HttpMethods.PUT,
-                    endpoint=Endpoints.TEST_RUN_ENDPOINT,
-                    body=body,
+            json_str = json.dumps(body, cls=TestRunEncoder)
+            body = json.loads(json_str)
+
+            data, link = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT,
+                body=body,
+            )
+
+            if not isinstance(data, dict) or "id" not in data:
+                # try to show helpful details
+                detail = None
+                if isinstance(data, dict):
+                    detail = (
+                        data.get("detail")
+                        or data.get("message")
+                        or data.get("error")
+                    )
+                # fall back to repr for visibility
+                raise RuntimeError(
+                    f"Confident API response missing 'id'. "
+                    f"detail={detail!r} raw={type(data).__name__}:{repr(data)[:500]}"
                 )
-            except Exception as e:
-                message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
-                raise Exception(message) from e
 
-        console.print(
-            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
-            f"[link={link}]{link}[/link]"
-        )
-        self.save_final_test_run_link(link)
-        open_browser(link)
-        return link, res.id
+            res = TestRunHttpResponse(
+                id=data["id"],
+            )
+
+            ################################################
+            ### Send the remaining test cases in batches ###
+            ################################################
+            total_remaining = len(remaining_test_cases_to_process)
+            num_remaining_batches = (
+                (total_remaining + BATCH_SIZE - 1) // BATCH_SIZE
+                if total_remaining > 0
+                else 0
+            )
+
+            for i in range(num_remaining_batches):
+                start_index = i * BATCH_SIZE
+                batch = remaining_test_cases_to_process[
+                    start_index : start_index + BATCH_SIZE
+                ]
+
+                if len(batch) == 0:
+                    break  # Should not happen with correct num_remaining_batches, but as a safeguard
+
+                # Create RemainingTestRun with the correct list populated
+                if is_conversational_run:
+                    remaining_test_run = RemainingTestRun(
+                        testRunId=res.id,
+                        testCases=[],  # This will be empty
+                        conversationalTestCases=batch,
+                    )
+                else:
+                    remaining_test_run = RemainingTestRun(
+                        testRunId=res.id,
+                        testCases=batch,
+                        conversationalTestCases=[],  # This will be empty
+                    )
+
+                body = None
+                try:
+                    body = remaining_test_run.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = remaining_test_run.dict(
+                        by_alias=True, exclude_none=True
+                    )
+
+                try:
+                    _, _ = api.send_request(
+                        method=HttpMethods.PUT,
+                        endpoint=Endpoints.TEST_RUN_ENDPOINT,
+                        body=body,
+                    )
+                except Exception as e:
+                    message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
+                    raise Exception(message) from e
+
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
+                f"[link={link}]{link}[/link]"
+            )
+            self.save_final_test_run_link(link)
+            open_browser(link)
+            return link, res.id
+        finally:
+            test_run.test_cases = original_test_cases
+            test_run.conversational_test_cases = (
+                original_conversational_test_cases
+            )
+            test_run.prompts = original_prompts
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
