@@ -8,13 +8,13 @@ sidebar_label: Quick Introduction
   <link rel="canonical" href="https://deepeval.com/docs/getting-started" />
 </head>
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Envelope from "@site/src/components/Envelope";
-import VideoDisplayer from "@site/src/components/VideoDisplayer";
-import NavigationCards from "@site/src/components/NavigationCards";
-import FAQs from "@site/src/components/FAQ";
-import { ASSETS } from "@site/src/assets";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Envelope from '@site/src/components/Envelope';
+import VideoDisplayer from '@site/src/components/VideoDisplayer';
+import NavigationCards from '@site/src/components/NavigationCards';
+import FAQs from '@site/src/components/FAQ';
+import { ASSETS } from '@site/src/assets';
 
 **DeepEval** is an open-source evaluation framework for LLMs. DeepEval makes it extremely easy to build
 and iterate on LLM (applications) and was built with the following principles in mind:
@@ -350,34 +350,34 @@ Tell us what you're building for more tailored onboarding:
   columns={3}
   items={[
     {
-      title: "AI Agents",
-      icon: "Bot",
+      title: 'AI Agents',
+      icon: 'Bot',
       listDescription: [
-        "Setup LLM tracing",
-        "Test end-to-end task completion",
-        "Evaluate individual components",
+        'Setup LLM tracing',
+        'Test end-to-end task completion',
+        'Evaluate individual components',
       ],
-      to: "/docs/getting-started-agents",
+      to: '/docs/getting-started-agents',
     },
     {
-      title: "RAG",
-      icon: "FileSearch",
+      title: 'RAG',
+      icon: 'FileSearch',
       listDescription: [
-        "Evaluate RAG end-to-end",
-        "Test retriever and generator separately",
-        "Multi-turn RAG evals",
+        'Evaluate RAG end-to-end',
+        'Test retriever and generator separately',
+        'Multi-turn RAG evals',
       ],
-      to: "/docs/getting-started-rag",
+      to: '/docs/getting-started-rag',
     },
     {
-      title: "Chatbots",
-      icon: "MessagesSquare",
+      title: 'Chatbots',
+      icon: 'MessagesSquare',
       listDescription: [
-        "Setup multi-turn test cases",
-        "Evaluate turns in a conversation",
-        "Simulate user interactions",
+        'Setup multi-turn test cases',
+        'Evaluate turns in a conversation',
+        'Simulate user interactions',
       ],
-      to: "/docs/getting-started-chatbots",
+      to: '/docs/getting-started-chatbots',
     },
   ]}
 />
@@ -391,30 +391,30 @@ _\*All quickstarts include a guide on how to bring evals to production near the 
 <NavigationCards
   items={[
     {
-      title: "End-to-End LLM Evals",
+      title: 'End-to-End LLM Evals',
       description:
-        "Best for: Raw LLM APIs, simple apps (no agents), chatbots, and occasionally RAG.",
-      icon: "Route",
+        'Best for: Raw LLM APIs, simple apps (no agents), chatbots, and occasionally RAG.',
+      icon: 'Route',
       listDescription: [
-        "Treats your LLM app as a black-box",
-        "Minimal setup, unopinionated",
-        "Can be included in CI/CD",
-        "For single and multi-turn",
+        'Treats your LLM app as a black-box',
+        'Minimal setup, unopinionated',
+        'Can be included in CI/CD',
+        'For single and multi-turn',
       ],
-      to: "/docs/evaluation-end-to-end-llm-evals",
+      to: '/docs/evaluation-end-to-end-llm-evals',
     },
     {
-      title: "Component-Level LLM Evals",
+      title: 'Component-Level LLM Evals',
       description:
-        "Best for: AI agents, complex workflows, MCP evals, component-based RAG.",
-      icon: "GitMerge",
+        'Best for: AI agents, complex workflows, MCP evals, component-based RAG.',
+      icon: 'GitMerge',
       listDescription: [
-        "Full visibility into your LLM app, white-box testing",
-        "Setup non-instrusive LLM tracing",
-        "Can be included in CI/CD",
-        "Best for single-turn",
+        'Full visibility into your LLM app, white-box testing',
+        'Setup non-instrusive LLM tracing',
+        'Can be included in CI/CD',
+        'Best for single-turn',
       ],
-      to: "/docs/evaluation-component-level-llm-evals",
+      to: '/docs/evaluation-component-level-llm-evals',
     },
   ]}
 />
@@ -426,25 +426,25 @@ These are things you should definitely learn about:
 <NavigationCards
   items={[
     {
-      title: "Metrics",
+      title: 'Metrics',
       description:
-        "Learn about the 50+ metrics available, how to choose, and how to customize them.",
-      icon: "Gauge",
-      to: "/docs/metrics-introduction",
+        'Learn about the 50+ metrics available, how to choose, and how to customize them.',
+      icon: 'Gauge',
+      to: '/docs/metrics-introduction',
     },
     {
-      title: "Datasets",
+      title: 'Datasets',
       description:
-        "Learn how they are used within DeepEval, the concept of goldens, and how to use them for evals.",
-      icon: "FileText",
-      to: "/docs/evaluation-datasets",
+        'Learn how they are used within DeepEval, the concept of goldens, and how to use them for evals.',
+      icon: 'FileText',
+      to: '/docs/evaluation-datasets',
     },
     {
-      title: "Tracing",
+      title: 'Tracing',
       description:
-        "Learn how to trace your LLM applications, evaluate on a component-level, and monitor in production.",
-      icon: "GitMerge",
-      to: "/docs/evaluation-llm-tracing",
+        'Learn how to trace your LLM applications, evaluate on a component-level, and monitor in production.',
+      icon: 'GitMerge',
+      to: '/docs/evaluation-llm-tracing',
     },
   ]}
 />
@@ -456,18 +456,18 @@ Learn more offerings available in `deepeval`'s ecosystem:
 <NavigationCards
   items={[
     {
-      title: "Confident AI",
+      title: 'Confident AI',
       description:
-        "An AI quality platform with observability, evals, and monitoring. DeepEval integrates with it natively, letting technical and non-technical teams collaborate on testing AI from /dev to /prod.",
-      icon: "Cloud",
-      to: "https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=other_products_card&ref_page=/docs/getting-started",
+        'An AI quality platform with observability, evals, and monitoring. DeepEval integrates with it natively, letting technical and non-technical teams collaborate on testing AI from /dev to /prod.',
+      icon: 'Cloud',
+      to: 'https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=other_products_card&ref_page=/docs/getting-started',
     },
     {
-      title: "DeepTeam",
+      title: 'DeepTeam',
       description:
-        "DeepTeam is DeepEval for AI safety and security testing. Expose 50+ vulnerabilities, with 20+ attack methods such as tree jailbreaking all automated.",
-      icon: "ShieldCheck",
-      to: "https://trydeepteam.com",
+        'DeepTeam is DeepEval for AI safety and security testing. Expose 50+ vulnerabilities, with 20+ attack methods such as tree jailbreaking all automated.',
+      icon: 'ShieldCheck',
+      to: 'https://trydeepteam.com',
     },
   ]}
 />
@@ -477,12 +477,12 @@ Learn more offerings available in `deepeval`'s ecosystem:
 <FAQs
   qas={[
     {
-      question: "What is DeepEval?",
+      question: 'What is DeepEval?',
       answer:
-        "DeepEval is an open-source LLM evaluation framework. It lets you unit-test LLM outputs, run end-to-end and component-level evals, generate synthetic datasets, and red-team your LLM applications — all from Python, without depending on any external service.",
+        'DeepEval is an open-source LLM evaluation framework. It lets you unit-test LLM outputs, run end-to-end and component-level evals, generate synthetic datasets, and red-team your LLM applications — all from Python, without depending on any external service.',
     },
     {
-      question: "Do I need an account or API key to use DeepEval?",
+      question: 'Do I need an account or API key to use DeepEval?',
       answer: (
         <>
           No. DeepEval runs fully locally. You only need an LLM provider key
@@ -492,11 +492,11 @@ Learn more offerings available in `deepeval`'s ecosystem:
       ),
     },
     {
-      question: "How is DeepEval related to Confident AI?",
+      question: 'How is DeepEval related to Confident AI?',
       answer: (
         <>
           DeepEval is a standalone open-source framework. It integrates natively
-          with{" "}
+          with{' '}
           <a href="https://app.confident-ai.com" target="_blank" rel="noopener">
             Confident AI
           </a>
@@ -506,12 +506,12 @@ Learn more offerings available in `deepeval`'s ecosystem:
       ),
     },
     {
-      question: "What can I evaluate with DeepEval?",
+      question: 'What can I evaluate with DeepEval?',
       answer:
-        "RAG pipelines, agents, chatbots, summarization, structured outputs, multi-modal apps — and virtually any other LLM use case. DeepEval ships 50+ research-backed metrics and lets you define fully custom ones.",
+        'AI agents, chatbots, RAG, summarization, structured outputs, multi-modal apps — and virtually any other LLM use case. DeepEval ships 50+ research-backed metrics and lets you define fully custom ones.',
     },
     {
-      question: "Can I use DeepEval in CI/CD?",
+      question: 'Can I use DeepEval in CI/CD?',
       answer: (
         <>
           Yes. DeepEval is built to run in <code>pytest</code> and any CI
