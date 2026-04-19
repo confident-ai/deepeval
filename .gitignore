@@ -173,3 +173,6 @@ secrets
 # Mac OS system files
 **/.DS_Store
 
+# Cursor IDE local config (rules, etc.)
+.cursor/
+

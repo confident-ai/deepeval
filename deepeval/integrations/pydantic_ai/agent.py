@@ -1,6 +1,8 @@
 import warnings
 from typing import TYPE_CHECKING, Any
 
+from deepeval.cli.utils import WWW, with_utm
+
 try:
     from pydantic_ai.agent import Agent as _BaseAgent
 
@@ -28,9 +30,14 @@ else:
 class DeepEvalPydanticAIAgent(Agent):
 
     def __init__(self, *args, **kwargs):
+        docs_url = with_utm(
+            f"{WWW}/docs/integrations/third-party/pydantic-ai",
+            medium="python_sdk",
+            content="pydantic_ai_agent_deprecation",
+        )
         warnings.warn(
             "instrument_pydantic_ai is deprecated and will be removed in a future version. "
-            "Please use the new ConfidentInstrumentationSettings instead. Docs: https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai",
+            f"Please use the new ConfidentInstrumentationSettings instead. Docs: {docs_url}",
             DeprecationWarning,
             stacklevel=2,
         )

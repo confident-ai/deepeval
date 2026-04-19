@@ -97,7 +97,7 @@
     },
     {
       "source": "/confident-ai/:path*",
-      "destination": "https://www.confident-ai.com/docs",
+      "destination": "https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=vercel_redirect&ref_page=/confident-ai/:path*",
       "statusCode": 301
     },    
     {

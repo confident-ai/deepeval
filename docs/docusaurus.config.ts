@@ -4,7 +4,12 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { themes as prismThemes } from 'prism-react-renderer';
 
+const confidentRefPagePath = require.resolve(
+  './src/clientModules/confident-ref-page'
+);
+
 const config: Config = {
+  clientModules: [confidentRefPagePath],
   plugins: [
     'docusaurus-plugin-sass',
     [
@@ -56,12 +61,12 @@ const config: Config = {
       },
     ],
     [
-      "@docusaurus/plugin-content-blog",
+      '@docusaurus/plugin-content-blog',
       {
-        id: "blogs",
-        path: "blog",
-        routeBasePath: "blog",
-        blogSidebarCount: 0, 
+        id: 'blogs',
+        path: 'blog',
+        routeBasePath: 'blog',
+        blogSidebarCount: 0,
       },
     ],
   ],
@@ -121,18 +126,22 @@ const config: Config = {
       'data-domain': 'deepeval.com',
     },
     {
-      src: "https://widget.kapa.ai/kapa-widget.bundle.js",
-      "data-website-id": "a3177869-c654-4b86-9c92-e4b4416f66e0",
-      "data-project-name": "DeepEval",
-      "data-button-position-bottom": "2rem",
-      "data-button-position-right": "2rem",
-      "data-project-color": "#fff",
-      "data-button-text-color": "#000",
-      "data-project-logo": "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g_400x400.png",
-      "data-modal-title": "Ask DeepEval",
-      "data-modal-disclaimer": "All the following results are AI generated, if you can't find the solution you're looking for, ping us in [Discord](https://discord.gg/a3K9c8GRGt) we'd be happy to have you!",
-      "data-modal-example-questions": "Can I create a dataset using my knowledge base?, Can I create a custom metrics for my use-case?",
-      "data-uncertain-answer-callout": "It would be better to ask this question directly in DeepEval's [Discord](https://discord.gg/a3K9c8GRGt) channel.",
+      src: 'https://widget.kapa.ai/kapa-widget.bundle.js',
+      'data-website-id': 'a3177869-c654-4b86-9c92-e4b4416f66e0',
+      'data-project-name': 'DeepEval',
+      'data-button-position-bottom': '2rem',
+      'data-button-position-right': '2rem',
+      'data-project-color': '#fff',
+      'data-button-text-color': '#000',
+      'data-project-logo':
+        'https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g_400x400.png',
+      'data-modal-title': 'Ask DeepEval',
+      'data-modal-disclaimer':
+        "All the following results are AI generated, if you can't find the solution you're looking for, ping us in [Discord](https://discord.gg/a3K9c8GRGt) we'd be happy to have you!",
+      'data-modal-example-questions':
+        'Can I create a dataset using my knowledge base?, Can I create a custom metrics for my use-case?',
+      'data-uncertain-answer-callout':
+        "It would be better to ask this question directly in DeepEval's [Discord](https://discord.gg/a3K9c8GRGt) channel.",
       async: true,
     },
   ],
@@ -156,17 +165,17 @@ const config: Config = {
         type: 'application/ld+json',
       },
       innerHTML: JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "DeepEval by Confident AI",
-        "alternateName": "DeepEval - The LLM Evaluation Framework",
-        "url": "https://deepeval.com",
-        "logo": "https://deepeval.com/icons/DeepEval.svg",
-        "sameAs": [
-          "https://github.com/confident-ai/deepeval",
-          "https://x.com/deepeval",
-          "https://discord.gg/a3K9c8GRGt",
-        ]
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'DeepEval by Confident AI',
+        alternateName: 'DeepEval - The LLM Evaluation Framework',
+        url: 'https://deepeval.com',
+        logo: 'https://deepeval.com/icons/DeepEval.svg',
+        sameAs: [
+          'https://github.com/confident-ai/deepeval',
+          'https://x.com/deepeval',
+          'https://discord.gg/a3K9c8GRGt',
+        ],
       }),
     },
   ],
@@ -210,11 +219,6 @@ const config: Config = {
           activeBasePath: 'changelog',
         },
         {
-          href: 'https://www.confident-ai.com/docs',
-          position: 'left',
-          label: 'Cloud Docs',
-        },
-        {
           href: 'https://discord.gg/a3K9c8GRGt',
           className: 'header-discord-link',
           position: 'right',
@@ -256,7 +260,11 @@ const config: Config = {
           title: 'Documentation',
           items: [
             { label: 'Introduction', to: '/docs/getting-started' },
-            { label: 'Confident AI', to: 'https://www.confident-ai.com/docs' },
+            {
+              label: 'Confident AI',
+              to: 'https://www.confident-ai.com/docs',
+              className: 'utm--footer_documentation',
+            },
             { label: 'Tutorials', to: '/tutorials/tutorial-introduction' },
             { label: 'Guides', to: '/guides/guides-ai-agent-evaluation' },
           ],
@@ -267,18 +275,22 @@ const config: Config = {
             {
               label: 'LLM evaluation metrics',
               to: 'https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation',
+              className: 'utm--footer_articles',
             },
             {
               label: 'LLM-as-a-judge',
               to: 'https://www.confident-ai.com/blog/why-llm-as-a-judge-is-the-best-llm-evaluation-method',
+              className: 'utm--footer_articles',
             },
             {
               label: 'LLM testing',
               to: 'https://www.confident-ai.com/blog/llm-testing-in-2024-top-methods-and-strategies',
+              className: 'utm--footer_articles',
             },
             {
               label: 'LLM chatbot evaluation',
               to: 'https://www.confident-ai.com/blog/llm-chatbot-evaluation-explained-top-chatbot-evaluation-metrics-and-testing-techniques',
+              className: 'utm--footer_articles',
             },
           ],
         },
@@ -287,7 +299,11 @@ const config: Config = {
           items: [
             { label: 'GitHub', to: 'https://github.com/confident-ai/deepeval' },
             { label: 'Discord', to: 'https://discord.gg/a3K9c8GRGt' },
-            { label: 'Newsletter', to: 'https://confident-ai.com/blog' },
+            {
+              label: 'Newsletter',
+              to: 'https://confident-ai.com/blog',
+              className: 'utm--footer_newsletter',
+            },
           ],
         },
       ],

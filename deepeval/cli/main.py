@@ -53,7 +53,9 @@ from deepeval.cli.utils import (
     render_login_message,
     resolve_field_names,
     upload_and_open_link,
+    with_utm,
     PROD,
+    WWW,
 )
 from deepeval.confident.api import (
     is_confident,
@@ -203,7 +205,7 @@ def set_confident_region_command(
 @app.command(
     help=(
         "Login will prompt you for your Confident AI API key (input hidden). "
-        "Get it from https://app.confident-ai.com. "
+        f"Get it from {with_utm(PROD, medium='cli', content='login_help_text')}. "
         "Required to log events to the server. "
         "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
     )
@@ -239,11 +241,17 @@ def login(
                 )
                 pairing_thread.start()
 
-                # Open web url
-                login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
+                login_url = with_utm(
+                    f"{PROD}/pair?code={pairing_code}&port={port}",
+                    medium="cli",
+                    content="login_pair_browser_open",
+                )
                 webbrowser.open(login_url)
+                fallback_url = with_utm(
+                    PROD, medium="cli", content="login_pair_fallback_link"
+                )
                 print(
-                    f"(open this link if your browser did not open: [link={PROD}]{PROD}[/link])"
+                    f"(open this link if your browser did not open: [link={fallback_url}]{fallback_url}[/link])"
                 )
 
                 # Manual fallback if still empty
@@ -281,11 +289,15 @@ def login(
             print(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
             )
+            quickstart_url = with_utm(
+                f"{WWW}/docs/llm-evaluation/quickstart",
+                medium="cli",
+                content="login_success_quickstart",
+            )
             print(
                 "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. "
                 "Follow our quickstart tutorial here: "
-                "[bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]"
-                "https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
+                f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
             )
         except Exception as e:
             completed = False

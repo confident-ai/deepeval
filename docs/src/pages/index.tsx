@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import SchemaInjector from '../components/SchemaInjector/SchemaInjector';
 import { buildWebSiteSchema } from '@site/src/utils/schema-helpers';
+import {
+  CONFIDENT_HOSTS_BY_NAME,
+  appendDeepEvalAttribution,
+} from '@site/src/utils/utm';
 
 const integrationCards = [
   {
@@ -241,7 +245,12 @@ function IntegrationCard({ name, logo, link, isLastColumn, isLastRow }: Integrat
 
 class Index extends React.Component<any> {
   handleConfident = () => {
-    window.open('https://confident-ai.com', '_blank');
+    window.open(
+      appendDeepEvalAttribution(CONFIDENT_HOSTS_BY_NAME.ROOT, {
+        content: 'homepage_cta',
+      }),
+      '_blank',
+    );
   };
 
   render() {

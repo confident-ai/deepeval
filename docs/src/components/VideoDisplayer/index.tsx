@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./VideoDisplayer.module.css";
+import { appendDeepEvalAttribution } from "@site/src/utils/utm";
 
 interface VideoDisplayerProps {
   src: string;
@@ -18,7 +19,7 @@ const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
       </video>
       {confidentUrl &&       
         <div className={styles.overlay}>
-          <div className={styles.playButton} onClick={() => window.open("https://www.confident-ai.com" + confidentUrl, '_blank')}>
+          <div className={styles.playButton} onClick={() => window.open(appendDeepEvalAttribution(confidentUrl, { content: 'video_overlay' }), '_blank')}>
             {label}
             <svg 
               xmlns="http://www.w3.org/2000/svg" 

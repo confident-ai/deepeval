@@ -1,13 +1,21 @@
-import React from "react";
-import styles from "./Envelope.module.css";
-
+import React from 'react';
+import styles from './Envelope.module.css';
+import {
+  CONFIDENT_HOSTS_BY_NAME,
+  appendDeepEvalAttribution,
+} from '@site/src/utils/utm';
 
 function Envelope<T>(props: T) {
   return (
     <div
       className={styles.letterContainer}
       onClick={() => {
-        window.open("https://confident-ai.com", "_blank");
+        window.open(
+          appendDeepEvalAttribution(CONFIDENT_HOSTS_BY_NAME.ROOT, {
+            content: 'envelope',
+          }),
+          '_blank'
+        );
       }}
     >
       <div className={styles.letterImage}>
@@ -19,10 +27,10 @@ function Envelope<T>(props: T) {
             <div className={styles.letterContentContainer}>
               <img
                 src="/icons/logo.svg"
-                style={{ width: "30px", height: "30px" }}
+                style={{ width: '30px', height: '30px' }}
               />
               <div className={styles.letterContext}>
-                <span className="lexend-deca" style={{ fontSize: "16px" }}>
+                <span className="lexend-deca" style={{ fontSize: '16px' }}>
                   Confident AI
                 </span>
               </div>
@@ -41,4 +49,4 @@ function Envelope<T>(props: T) {
   );
 }
 
-export default Envelope; 
+export default Envelope;

@@ -4,6 +4,10 @@ import TOCItems from '@theme/TOCItems';
 import type { Props } from '@theme/TOC';
 
 import styles from './styles.module.scss';
+import {
+  CONFIDENT_HOSTS_BY_NAME,
+  appendDeepEvalAttribution,
+} from '@site/src/utils/utm';
 
 const LINK_CLASS_NAME = 'table-of-contents__link toc-highlight';
 const LINK_ACTIVE_CLASS_NAME = 'table-of-contents__link--active';
@@ -31,7 +35,10 @@ export default function TOC({ className, ...props }: Props): ReactNode {
         <div
           className={styles.button}
           onClick={() =>
-            (window.location.href = 'https://app.confident-ai.com')
+            (window.location.href = appendDeepEvalAttribution(
+              CONFIDENT_HOSTS_BY_NAME.APP,
+              { content: 'sidebar_promo' }
+            ))
           }
         >
           Try for free
