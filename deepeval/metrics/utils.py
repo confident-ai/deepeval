@@ -388,9 +388,15 @@ def check_arena_test_case_params(
 
 
 def trimAndLoadJson(
-    input_string: str,
+    input_string: Optional[str],
     metric: Optional[BaseMetric] = None,
 ) -> Any:
+    if input_string is None:
+        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+        if metric is not None:
+            metric.error = error_str
+        raise ValueError(error_str)
+
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
 
