@@ -8,6 +8,8 @@
 }
 
 :root {
+  // Infima leaves --ifm-background-color: transparent in light mode by default — give it a real value so --bg-primary works
+  --ifm-background-color: #ffffff;
   --ifm-color-primary: #6d28d9;
   --ifm-color-primary-dark: #6223c5;
   --ifm-color-primary-darker: #5c21ba;
