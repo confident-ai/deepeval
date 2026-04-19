@@ -167,6 +167,6 @@ The platform is closed-source, making it difficult to customize evaluation metri
 
 DeepEval is purpose-built for the ideal LLM evaluation workflow with support for prompt, RAG, agents, and chatbot testing. It offers full customizability, reliable and reproducible results like no one else, and allow users to trust fully for pre-deployment regressions testing and A|B experimentation for prompts and models.
 
-Its enterprise-ready cloud platform [Confident AI](https://confident-ai.com) takes no extra lines of code to integration, and allows you to take LLM evaluation to your organization once you see value with DeepEval. It is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
+DeepEval also integrates natively with [Confident AI](https://confident-ai.com), an enterprise-ready AI quality platform with observability, evals, and monitoring built by the same team. The integration takes no extra lines of code, and lets you take LLM evaluation to your organization once you see value with DeepEval. Confident AI is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
 
 It includes additional toolkits such as synthetic dataset generation and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.

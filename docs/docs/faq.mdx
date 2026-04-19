@@ -29,7 +29,7 @@ See the [custom LLM guide](/guides/guides-using-custom-llms) for full details.
 
 ### Is DeepEval the same as Confident AI?
 
-No. Think of it like Next.js and Vercel — related, but separate. DeepEval is an open-source LLM evaluation framework that runs locally. Confident AI is the umbrella cloud platform for LLM evaluation, red teaming, observability, and monitoring. DeepEval and [DeepTeam](https://trydeepteam.com) are both open-source frameworks that double as SDKs for Confident AI, but the platform is **not limited to them** — it also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs.
+No. Think of it like Next.js and Vercel — related, but separate. DeepEval is an open-source LLM evaluation framework that runs locally. Confident AI is an AI quality platform with observability, evals, and monitoring. DeepEval and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that integrate natively with Confident AI, but the platform is **not limited to them** — it also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs.
 
 Confident AI is free to get started:
 
@@ -332,9 +332,9 @@ This is especially valuable when using custom LLMs that need more explicit instr
 
 ### What is Confident AI and how does it relate to DeepEval?
 
-[Confident AI](https://confident-ai.com) is the umbrella cloud platform for LLM evaluation, red teaming, observability, and monitoring. Both DeepEval and [DeepTeam](https://trydeepteam.com) are open-source frameworks that also serve as **SDKs for Confident AI** — they integrate via APIs so that evaluation results, red teaming assessments, and traces all flow into the same platform.
+[Confident AI](https://confident-ai.com) is an AI quality platform with observability, evals, and monitoring. DeepEval and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that **integrate natively with Confident AI** via APIs, so that evaluation results, red teaming assessments, and traces can flow into the platform if you want them to.
 
-But Confident AI is **not limited to these open-source packages**. It also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and standalone APIs. You can use Confident AI entirely without `deepeval` or `deepteam` if you want.
+But Confident AI is **not limited to these open-source packages**. It also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and standalone APIs. You can use Confident AI entirely without `deepeval` or `deepteam` if you want, and you can use `deepeval` or `deepteam` entirely without Confident AI.
 
 Confident AI provides:
 
@@ -381,9 +381,9 @@ It is **extremely common to use both DeepEval and DeepTeam** together — DeepEv
 
 Think of it this way:
 
-- **[Confident AI](https://confident-ai.com)** is the cloud platform — evaluation, red teaming, observability, monitoring, and collaboration all live here.
-- **[DeepEval](https://github.com/confident-ai/deepeval)** is the open-source LLM evaluation framework and one of the SDKs for Confident AI.
-- **[DeepTeam](https://trydeepteam.com)** is the open-source LLM red teaming framework and another SDK for Confident AI.
+- **[Confident AI](https://confident-ai.com)** is the AI quality platform — observability, evals, monitoring, red teaming, and collaboration all live here.
+- **[DeepEval](https://github.com/confident-ai/deepeval)** is a standalone open-source LLM evaluation framework that integrates natively with Confident AI.
+- **[DeepTeam](https://trydeepteam.com)** is a standalone open-source LLM red teaming framework that also integrates natively with Confident AI.
 
 Each works independently — you can use DeepEval or DeepTeam purely locally without ever touching Confident AI. But when you connect them, everything flows into one platform. You can also use Confident AI on its own via its TypeScript SDK, OpenTelemetry, or direct API integrations, without either open-source package.
 

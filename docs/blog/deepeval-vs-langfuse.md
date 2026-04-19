@@ -117,7 +117,7 @@ DeepEval also integrates directly with LLM providers to power its metrics, from 
 
 ### Platform
 
-Both DeepEval and Langfuse has their own platforms. DeepEval's platform is called Confident AI, and Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking. Langfuse, on the other hand, is more focused on observability.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking on top of full observability. Langfuse, on the other hand, is more narrowly focused on observability.
 
 <FeatureComparisonTable type="langfuse::platform" competitor="Langfuse" />
 

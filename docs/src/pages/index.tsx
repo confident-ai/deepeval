@@ -362,8 +362,8 @@ class Index extends React.Component<any> {
             style={{ alignItems: 'flex-start' }}
           >
             <div className={styles.title}>
-              <strong>An All-in-One Eval Ecosystem</strong> Use DeepEval on
-              Confident AI
+              <strong>Pair DeepEval with Confident AI</strong> An AI quality
+              platform DeepEval integrates with natively
             </div>
             <div className={styles.pillsContainer}>
               <div className={styles.pill}>Regression Testing</div>
@@ -376,12 +376,13 @@ class Index extends React.Component<any> {
             <div className={styles.productionizeContent}>
               <div>
                 <p className={styles.description}>
-                  By the authors of DeepEval, Confident AI is a cloud LLM
-                  evaluation platform. It allows you to use DeepEval for
-                  team-wide, collaborative AI testing.
+                  Confident AI is an AI quality platform with observability,
+                  evals, and monitoring built by the team behind DeepEval.
+                  DeepEval integrates with it natively for team-wide,
+                  collaborative AI testing.
                 </p>
                 <button className={styles.button}>
-                  Try DeepEval Free on Confident AI
+                  Try Confident AI Free
                 </button>
               </div>
               <DashboardStack

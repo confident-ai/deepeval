@@ -26,7 +26,7 @@ and iterate on LLM (applications) and was built with the following principles in
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
 
-Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident-ai.com), which allow teams to use DeepEval to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
+DeepEval also integrates natively with [Confident AI](https://app.confident-ai.com), an AI quality platform with observability, evals, and monitoring for LLM applications.
 
 <Envelope />
 
@@ -38,7 +38,7 @@ In a newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), the native evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI quality platform with observability, evals, and monitoring that DeepEval integrates with natively:
 
 ```bash
 deepeval login
@@ -195,12 +195,12 @@ You can tune these via environment flags (no code changes). See [environment var
 
 ### Save Results
 
-It is recommended that you manage your evaluation suite on Confident AI, the `deepeval` platform.
+It is recommended that you push your test runs to Confident AI — an AI quality platform `deepeval` integrates with natively for observability, evals, and monitoring.
 
 <Tabs>
 <TabItem value="confident-ai" label="Confident AI">
 
-Confident AI is the `deepeval` cloud, and helps you build the best LLM evals pipeline. Run `deepeval view` to view your newly ran test run on the platform:
+Confident AI is an AI quality platform with observability, evals, and monitoring that `deepeval` integrates with natively, and helps you build the best LLM evals pipeline. Run `deepeval view` to view your newly ran test run on the platform:
 
 ```bash
 deepeval view
@@ -457,7 +457,7 @@ Learn more offerings available in `deepeval`'s ecosystem:
     {
       title: "Confident AI",
       description:
-        "The cloud platform for DeepEval. Allow both technical and non-technical teams to collaborate on testing AI, from evaluation in /dev to /prod.",
+        "An AI quality platform with observability, evals, and monitoring. DeepEval integrates with it natively, letting technical and non-technical teams collaborate on testing AI from /dev to /prod.",
       icon: "Cloud",
       to: "https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=other_products_card&ref_page=/docs/getting-started",
     },

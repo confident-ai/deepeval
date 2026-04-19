@@ -17,7 +17,7 @@
 
 # $ the open-source LLM evaluation framework
 
-[Get Started](https://deepeval.com/docs/getting-started) [Try the DeepEval Platform![](https://deepeval.com/icons/new-tab.svg)](https://confident-ai.com/)
+[Get Started](https://deepeval.com/docs/getting-started) [Try Confident AI![](https://deepeval.com/icons/new-tab.svg)](https://confident-ai.com/)
 
 Delivered by
 
@@ -2411,7 +2411,7 @@ and iterate on LLM (applications) and was built with the following principles in
 - Metrics are simple to customize and covers all use cases.
 - Red team, safety scan LLM applications for security vulnerabilities.
 
-Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident-ai.com/), which allow teams to use DeepEval to **evaluate, regression test, red team, and monitor** LLM applications on the cloud.
+DeepEval also integrates natively with [Confident AI](https://app.confident-ai.com/), an AI quality platform with observability, evals, and monitoring for LLM applications.
 
 Delivered by
 
@@ -2438,7 +2438,7 @@ pip install -U deepeval
 
 ```
 
-`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com/docs/), the native evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com/docs/), an AI quality platform with observability, evals, and monitoring that DeepEval integrates with natively:
 
 ```codeBlockLines_e6Vv
 deepeval login
@@ -2503,7 +2503,7 @@ You'll need to set your `OPENAI_API_KEY` as an environment variable before runni
 
 ### Save Results On Cloud [​](https://deepeval.com/docs/getting-started\#save-results-on-cloud "Direct link to Save Results On Cloud")
 
-It is **highly recommended** to save results on Confident AI, the `deepeval` cloud, to make your evaluation life easier. Run `deepeval login` (or [click here](https://app.confident-ai.com/)) in the CLI to get your API key.
+It is **highly recommended** to save results on Confident AI — an AI quality platform `deepeval` integrates with natively — to make your evaluation life easier. Run `deepeval login` (or [click here](https://app.confident-ai.com/)) in the CLI to get your API key.
 
 ```codeBlockLines_e6Vv
 deepeval login
@@ -2871,7 +2871,7 @@ For more in-depth red teaming, go to [DeepTeam's documentation.](https://www.try
 
 ## Using Confident AI [​](https://deepeval.com/docs/getting-started\#using-confident-ai "Direct link to Using Confident AI")
 
-[Confident AI](https://confident-ai.com/) is the `deepeval` cloud platform. While `deepeval` runs locally and all testing data are lost afterwards, Confident AI offers data persistence, regression testing, sharable testing reports, monitoring, collecting human feedback, and so much more.
+[Confident AI](https://confident-ai.com/) is an AI quality platform with observability, evals, and monitoring that `deepeval` integrates with natively. While `deepeval` runs locally and all testing data are lost afterwards, Confident AI offers data persistence, regression testing, sharable testing reports, monitoring, collecting human feedback, and so much more.
 
 note
 
@@ -4383,7 +4383,7 @@ Integrated with Confident AI
 
 ### Platform [​](https://deepeval.com/blog/deepeval-vs-trulens\#platform "Direct link to Platform")
 
-DeepEval's platform is called Confident AI, and Trulen's platform is hidden and minimal.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. TruLens's platform is hidden and minimal.
 
 DeepEval
 
@@ -5261,7 +5261,7 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform [​](https://deepeval.com/blog/deepeval-vs-arize\#platform "Direct link to Platform")
 
-Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is called Phoenix.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Arize's platform is called Phoenix.
 
 Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
 
@@ -6266,7 +6266,7 @@ You'll notice that Ragas does not own their platform integrations such as LangSm
 
 ### Platform [​](https://deepeval.com/blog/deepeval-vs-ragas\#platform "Direct link to Platform")
 
-Both DeepEval and Ragas has their own platforms. DeepEval's platform is called Confident AI, and Ragas's platform is also called Ragas.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Ragas's platform is also called Ragas.
 
 Both have varying degrees of capabilities, and you can draw your own conclusions from the table below.
 
@@ -7034,7 +7034,7 @@ DeepEval also integrates directly with LLM providers to power its metrics, from 
 
 ### Platform [​](https://deepeval.com/blog/deepeval-vs-langfuse\#platform "Direct link to Platform")
 
-Both DeepEval and Langfuse has their own platforms. DeepEval's platform is called Confident AI, and Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking. Langfuse, on the other hand, is more focused on observability.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking on top of full observability. Langfuse, on the other hand, is more narrowly focused on observability.
 
 DeepEval
 
@@ -8541,7 +8541,7 @@ The platform is closed-source, making it difficult to customize evaluation metri
 
 DeepEval is purpose-built for the ideal LLM evaluation workflow with support for prompt, RAG, agents, and chatbot testing. It offers full customizability, reliable and reproducible results like no one else, and allow users to trust fully for pre-deployment regressions testing and A\|B experimentation for prompts and models.
 
-Its enterprise-ready cloud platform [Confident AI](https://confident-ai.com/) takes no extra lines of code to integration, and allows you to take LLM evaluation to your organization once you see value with DeepEval. It is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
+DeepEval also integrates natively with [Confident AI](https://confident-ai.com/), an enterprise-ready AI quality platform with observability, evals, and monitoring built by the same team. The integration takes no extra lines of code, and lets you take LLM evaluation to your organization once you see value with DeepEval. Confident AI is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
 
 It includes additional toolkits such as synthetic dataset generation and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.
 
@@ -9674,9 +9674,9 @@ Confident AI is [free to try](https://app.confident-ai.com/auth/signup). No cred
 
 Welcome
 
-# Confident AI - The DeepEval Platform
+# Confident AI - The AI Quality Platform
 
-Confident AI is the cloud platform for DeepEval, the most widely adopted _open-source_ framework to evaluate LLM applications such as RAG pipielines, agentics, chatbots, or even just an LLM itself.
+Confident AI is an AI quality platform with observability, evals, and monitoring. DeepEval — the most widely adopted _open-source_ framework to evaluate LLM applications such as RAG pipielines, agentics, chatbots, or even just an LLM itself — integrates with it natively.
 
 ### How does Confident AI work?
 
@@ -10712,7 +10712,7 @@ The platform is closed-source, making it difficult to customize evaluation metri
 
 DeepEval is purpose-built for the ideal LLM evaluation workflow with support for prompt, RAG, agents, and chatbot testing. It offers full customizability, reliable and reproducible results like no one else, and allow users to trust fully for pre-deployment regressions testing and A\|B experimentation for prompts and models.
 
-Its enterprise-ready cloud platform [Confident AI](https://confident-ai.com/) takes no extra lines of code to integration, and allows you to take LLM evaluation to your organization once you see value with DeepEval. It is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
+DeepEval also integrates natively with [Confident AI](https://confident-ai.com/), an enterprise-ready AI quality platform with observability, evals, and monitoring built by the same team. The integration takes no extra lines of code, and lets you take LLM evaluation to your organization once you see value with DeepEval. Confident AI is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
 
 It includes additional toolkits such as synthetic dataset generation and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.
 
@@ -11277,7 +11277,7 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform [​](https://deepeval.com/blog/tags/comparisons\#platform "Direct link to Platform")
 
-Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is called Phoenix.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Arize's platform is called Phoenix.
 
 Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
 
@@ -12028,7 +12028,7 @@ DeepEval also integrates directly with LLM providers to power its metrics, from 
 
 ### Platform [​](https://deepeval.com/blog/tags/comparisons\#platform "Direct link to Platform")
 
-Both DeepEval and Langfuse has their own platforms. DeepEval's platform is called Confident AI, and Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking. Langfuse, on the other hand, is more focused on observability.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Langfuse's platform is also called Langfuse. Confident AI is built for powerful, customizable evaluation and benchmarking on top of full observability. Langfuse, on the other hand, is more narrowly focused on observability.
 
 DeepEval
 
@@ -12788,7 +12788,7 @@ You'll notice that Ragas does not own their platform integrations such as LangSm
 
 ### Platform [​](https://deepeval.com/blog/tags/comparisons\#platform "Direct link to Platform")
 
-Both DeepEval and Ragas has their own platforms. DeepEval's platform is called Confident AI, and Ragas's platform is also called Ragas.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Ragas's platform is also called Ragas.
 
 Both have varying degrees of capabilities, and you can draw your own conclusions from the table below.
 
@@ -13517,7 +13517,7 @@ Integrated with Confident AI
 
 ### Platform [​](https://deepeval.com/blog/tags/comparisons\#platform "Direct link to Platform")
 
-DeepEval's platform is called Confident AI, and Trulen's platform is hidden and minimal.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. TruLens's platform is hidden and minimal.
 
 DeepEval
 
@@ -13899,7 +13899,7 @@ evaluate(test_cases=[...], metrics=[AnswerRelevancyMetric()])
 
 ```
 
-You should also login to the `deepeval` cloud platform, [Confident AI](https://confident-ai.com/), before running `evaluate()`:
+You should also login to [Confident AI](https://confident-ai.com/) — an AI quality platform `deepeval` integrates with natively — before running `evaluate()`:
 
 ```codeBlockLines_e6Vv
 deepeval login

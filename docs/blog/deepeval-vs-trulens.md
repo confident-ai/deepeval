@@ -107,7 +107,7 @@ DeepEval offers countless integrations with the tools you are likely already bui
 
 ### Platform
 
-DeepEval's platform is called Confident AI, and Trulen's platform is hidden and minimal.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. TruLens's platform is hidden and minimal.
 
 <FeatureComparisonTable type="trulens::platform" competitor="Trulens" />
 

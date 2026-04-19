@@ -132,7 +132,7 @@ You'll notice that Ragas does not own their platform integrations such as LangSm
 
 ### Platform
 
-Both DeepEval and Ragas has their own platforms. DeepEval's platform is called Confident AI, and Ragas's platform is also called Ragas.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Ragas's platform is also called Ragas.
 
 Both have varying degrees of capabilities, and you can draw your own conclusions from the table below.
 

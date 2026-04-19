@@ -137,7 +137,7 @@ DeepEval also integrates directly with LLM providers to power its metrics—sinc
 
 ### Platform
 
-Both DeepEval and Arize has their own platforms. DeepEval's platform is called Confident AI, and Arize's platform is called Phoenix.
+DeepEval integrates natively with Confident AI, a separate AI quality platform with observability, evals, and monitoring built by the same team. Arize's platform is called Phoenix.
 
 Confident AI is built for powerful, customizable evaluation and benchmarking. Phoenix, on the other hand, is more focused on observability.
 
