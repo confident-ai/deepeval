@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./BlogImageDisplayer.module.css";
+import styles from "./BlogImageDisplayer.module.scss";
 
 interface BlogImageDisplayerProps {
   src: string;

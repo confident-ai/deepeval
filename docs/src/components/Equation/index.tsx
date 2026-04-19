@@ -1,6 +1,6 @@
 import React from "react";
 import katex from "katex";
-import styles from "./Equation.module.css";
+import styles from "./Equation.module.scss";
 
 interface EquationProps {
   formula: string;

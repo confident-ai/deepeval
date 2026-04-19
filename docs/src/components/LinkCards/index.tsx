@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
-import styles from './LinkCards.module.css';
+import styles from './LinkCards.module.scss';
 import * as LucideIcons from 'lucide-react';
 
 export interface LinkCardProps {
@@ -41,13 +41,13 @@ const LinkCard = ({
   
   return (
     <Link to={to} className={styles.card}>
-      <div className={styles.cardContent}>
+      <div className={styles.content}>
         {number && <h4 className={styles.number}>{number}</h4>}
         <div className={styles.titleRow}>
           {IconComponent && <IconComponent className={styles.icon} size={20} />}
-          <h3 className={styles.cardTitle}>{title}</h3>
+          <h3 className={styles.title}>{title}</h3>
         </div>
-        {description && <p className={styles.cardDescription}>{description}</p>}
+        {description && <p className={styles.description}>{description}</p>}
         {objectives && <ul className={styles.objectives}>
           {objectives.map((objective) => (
             <li key={objective}>{objective}</li>

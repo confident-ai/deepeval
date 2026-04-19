@@ -16,8 +16,59 @@
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 85%;
-  --ifm-menu-color: #747680 !important;
+  --ifm-menu-color: var(--text-secondary);
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  // Metric pill tokens (light)
+  --pill-uses-llm-bg: #fefceb;
+  --pill-uses-llm-border: #eeda83;
+  --pill-uses-llm-fg: #4a3900;
+  --pill-rag-bg: #fff1fe;
+  --pill-rag-border: #ffb4ff;
+  --pill-rag-fg: #96107b;
+  --pill-agent-bg: #e9f5fe;
+  --pill-agent-border: #badbff;
+  --pill-agent-fg: #002a70;
+  --pill-chatbot-bg: #e9fefa;
+  --pill-chatbot-border: #70e2d3;
+  --pill-chatbot-fg: #17554d;
+  --pill-custom-bg: #f8f2ff;
+  --pill-custom-border: #9774e3;
+  --pill-custom-fg: #440092;
+  --pill-multimodal-bg: #fef2e9;
+  --pill-multimodal-border: #fcc092;
+  --pill-multimodal-fg: #924000;
+  --pill-safety-bg: #000;
+  --pill-safety-border: #fff;
+  --pill-safety-fg: #fff;
+  --pill-neutral-bg: var(--bg-primary);
+  --pill-neutral-border: var(--border-strong);
+  --pill-neutral-fg: var(--text-primary);
+
+  // Backgrounds
+  --bg-primary: var(--ifm-background-color);
+  --bg-secondary: var(--ifm-background-surface-color);
+  --bg-overlay: rgba(0, 0, 0, 0.06);
+  --bg-brand-soft: rgba(109, 40, 217, 0.083);
+
+  // Text
+  --text-primary: var(--ifm-color-content);
+  --text-secondary: var(--ifm-color-emphasis-700);
+  --text-inverse: #fff;
+
+  // Borders
+  --border-subtle: var(--ifm-color-emphasis-200);
+  --border-strong: var(--ifm-color-emphasis-300);
+
+  // Brand
+  --brand: var(--ifm-color-primary);
+
+  // Bind Docusaurus chrome borders (TOC, sidebar right edge) to our token
+  --ifm-toc-border-color: var(--border-subtle);
+
+  // Shadows
+  --shadow-sm: 0 1px 6px 0 rgba(213, 215, 223, 0.41);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
 
   .theme-doc-markdown {
     > header {
@@ -92,9 +143,45 @@ html[data-theme='dark'] {
   --ifm-color-primary-light: #8e55ef;
   --ifm-color-primary-lighter: #9763f1;
   --ifm-color-primary-lightest: #b28bf4;
-  --ifm-background-color: #090b0e;
-  --ifm-background-surface-color: #13171e;
+  --ifm-background-color: #0b0b0d;
+  --ifm-background-surface-color: #17181c;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  // Metric pill tokens (dark)
+  --pill-uses-llm-bg: #2a2200;
+  --pill-uses-llm-border: #6b5b1f;
+  --pill-uses-llm-fg: #fde68a;
+  --pill-rag-bg: #2e0828;
+  --pill-rag-border: #6b1c5a;
+  --pill-rag-fg: #f9a8d4;
+  --pill-agent-bg: #061f3a;
+  --pill-agent-border: #1d4ed8;
+  --pill-agent-fg: #bfdbfe;
+  --pill-chatbot-bg: #022f2e;
+  --pill-chatbot-border: #007467;
+  --pill-chatbot-fg: #6ee7b7;
+  --pill-custom-bg: #1e0a3a;
+  --pill-custom-border: #6d28d9;
+  --pill-custom-fg: #c4b5fd;
+  --pill-multimodal-bg: #2a1402;
+  --pill-multimodal-border: #c2410c;
+  --pill-multimodal-fg: #fed7aa;
+  --pill-safety-bg: #fff;
+  --pill-safety-border: #000;
+  --pill-safety-fg: #000;
+
+  // Generalized tokens (dark overrides — Infima-backed tokens flip automatically)
+  --bg-overlay: rgba(255, 255, 255, 0.06);
+  --bg-brand-soft: rgba(124, 58, 237, 0.18);
+  --text-inverse: #000;
+  --shadow-sm: 0 1px 6px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  // Custom border tokens — Infima's emphasis-100 (#1c1e21) is invisible on our bg, emphasis-200 (#444950) is too hot. Sit between them.
+  --border-subtle: #2a2d33;
+  --border-strong: #3a3e45;
+
+  // Re-bind here too — Infima's dark-mode block sets --ifm-toc-border-color to emphasis-200, which beats our :root declaration on specificity
+  --ifm-toc-border-color: var(--border-subtle);
 
   .alert--info {
     --ifm-alert-background-color: #1e293b !important; /* deep navy */
@@ -113,7 +200,7 @@ html[data-theme='dark'] {
   }
 
   .alert--danger {
-    --ifm-alert-background-color: #ffeff5 !important;
+    --ifm-alert-background-color: #3b0a17 !important;
     --ifm-alert-border-color: #f30065 !important;
   }
 
@@ -123,56 +210,51 @@ html[data-theme='dark'] {
   }
 }
 
-html[data-theme='dark'] details {
-  background-color: #23272f !important;
-  color: #e5e7eb !important;
-  border: 1px solid #374151 !important;
-  box-shadow: 0 1px 6px 0 rgba(30, 41, 59, 0.3) !important;
-}
-
-html[data-theme='dark'] details summary {
-  color: #f3f4f6 !important;
-}
-
-html[data-theme='dark'] details [class*='collapsibleContent'] {
-  border-top: 1px solid #374151 !important;
-}
-
 // COLLAPSIBLE STYLING
 
 details {
-  color: #1d232e;
-  background-color: white !important;
-  border: 1px solid #e9eef2 !important;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-subtle) !important;
   border-radius: 4px !important;
-  padding: 0.75rem 0.75rem !important;
+  padding: 0.75rem !important;
   margin-bottom: 1rem !important;
   margin-top: 2rem !important;
-  box-shadow: 0 1px 6px 0 rgba(213, 215, 223, 0.409) !important;
-}
+  box-shadow: var(--shadow-sm) !important;
 
-details summary {
-  font-weight: 600 !important;
-}
+  summary {
+    font-weight: 600 !important;
+    color: var(--ifm-heading-color);
 
-details summary::before {
-  border-color: transparent transparent transparent rgb(49, 53, 62) !important;
-}
+    &::before {
+      border-color: transparent transparent transparent var(--text-primary) !important;
+    }
+  }
 
-details [class*='collapsibleContent'] {
-  border-top: 1px solid #e2e8f0 !important;
+  [class*='collapsibleContent'] {
+    border-top: 1px solid var(--border-subtle) !important;
 
-  p,
-  ul {
-    font-size: 13px !important;
-    line-height: 1.75;
+    p,
+    ul {
+      font-size: 13px !important;
+      line-height: 1.75;
+    }
   }
 }
 
 .tabs-container > div {
   padding: 1rem;
-  border: 1px solid #cbd4de8d;
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
+}
+
+// Pagination (next/prev page nav) — Infima defaults to emphasis-300 which reads too hot
+.pagination-nav__link {
+  border-color: var(--border-subtle) !important;
+
+  &:hover {
+    border-color: var(--brand) !important;
+  }
 }
 
 /* Remove styling from nested tabs containers */
@@ -183,7 +265,7 @@ details [class*='collapsibleContent'] {
 }
 
 ul.tabs {
-  border-bottom: 1px solid #cbd4de !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
   column-gap: 0.5rem !important;
 }
 
@@ -195,18 +277,18 @@ li.tabs__item {
 }
 
 li.tabs__item--active {
-  border-bottom: 1px solid #6d28d9 !important;
+  border-bottom: 1px solid var(--brand) !important;
 }
 
 // TOP NAV STYLING
 
 html[data-theme='dark'] .navbar {
-  background-color: var(--ifm-background-color);
-  border-bottom: 1px solid #171e28;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .avatar__name > a {
-  color: black !important;
+  color: var(--text-primary) !important;
 }
 
 .navbar__link {
@@ -217,7 +299,7 @@ html[data-theme='dark'] .navbar {
 
 .navbar__link--active {
   font-weight: 500 !important;
-  border-bottom: 2px solid #710bee !important;
+  border-bottom: 2px solid var(--brand) !important;
 }
 
 @media (max-width: 1330px) {
@@ -227,7 +309,7 @@ html[data-theme='dark'] .navbar {
 }
 
 html[data-theme='light'] .navbar {
-  background-color: white;
+  background-color: var(--bg-primary);
 }
 
 .navbar__logo {
@@ -241,27 +323,27 @@ html[data-theme='light'] .navbar__logo {
 // Announcement bar
 div[role='banner'][class*='announcementBar'] {
   font-weight: 600;
-  background-color: #710bee !important;
-  color: white !important;
+  background-color: var(--brand) !important;
+  color: #fff !important;
 }
 
 html[data-theme='light'] div[role='banner'][class*='announcementBar'] {
-  background-color: #710bee !important;
-  color: white !important;
+  background-color: var(--brand) !important;
+  color: #fff !important;
 }
 
 // Also style the content and close button
 div[class*='announcementBarContent'] {
-  color: white !important;
+  color: #fff !important;
 }
 
 div[class*='announcementBar'] a {
-  color: white !important;
+  color: #fff !important;
   text-decoration: underline;
 }
 
 div[class*='announcementBar'] button {
-  color: white !important;
+  color: #fff !important;
 }
 
 .header-github-link:hover {
@@ -385,11 +467,7 @@ video {
 /* Sidebar nested ul styling */
 [class*='sidebar-item-'] ul:not(:first-child) {
   margin-left: 18px !important;
-  border-left: 1px solid #e0e0e0;
-}
-
-html[data-theme='dark'] [class*='sidebar-item-'] ul:not(:first-child) {
-  border-left-color: #374151;
+  border-left: 1px solid var(--border-subtle);
 }
 
 /* Base styles for sidebar icons via CSS ::before */
@@ -458,25 +536,9 @@ html[data-theme='dark'] {
   }
 }
 
-.theme-code-block-highlighted-line {
-  background-color: #233144 !important;
-}
-
-.theme-code-block-highlighted-line > span {
-  background-color: #233144 !important;
-}
-
 .menu {
   font-weight: 400;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px);
-  background-size: 25px 25px;
-}
-
-html[data-theme='dark'] .menu {
-  background-image: radial-gradient(
-    rgba(30, 29, 32, 0.14) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(var(--bg-overlay) 1px, transparent 1px);
   background-size: 25px 25px;
 }
 
@@ -492,7 +554,7 @@ html[data-theme='dark'] .menu {
 
 .menu__link--active {
   font-weight: 600 !important;
-  background-color: rgba(115, 0, 255, 0.083) !important;
+  background-color: var(--bg-brand-soft) !important;
 }
 
 .menu__link--sublist-caret:after {
@@ -505,17 +567,7 @@ html[data-theme='dark'] .menu {
 .theme-doc-sidebar-item-category-level-1
   > .menu__list-item-collapsible
   > .menu__link:first-of-type {
-  color: black; // Example: orange text
-  font-weight: 600 !important;
-  font-size: 14px;
-}
-
-/* Dark mode */
-[data-theme='dark']
-  .theme-doc-sidebar-item-category-level-1
-  > .menu__list-item-collapsible
-  > .menu__link:first-of-type {
-  color: white; // or any high-contrast color
+  color: var(--ifm-heading-color);
   font-weight: 600 !important;
   font-size: 14px;
 }
@@ -541,25 +593,34 @@ html[data-theme='dark'] .menu {
   font-size: 14px !important;
   font-weight: 400 !important;
   padding: 0.5rem 1rem !important;
-  border-bottom: 1px solid #51565d !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
 }
 
-.theme-code-block-highlighted-line {
-  background-color: #293344 !important;
-}
-
+.theme-code-block-highlighted-line,
 .theme-code-block-highlighted-line > span {
-  background-color: #293344 !important;
+  background-color: var(--docusaurus-highlighted-code-line-bg) !important;
 }
 
-/* Add border to code blocks */
-.prism-code {
+/* Border + radius on the wrapping container so it frames title + body as one block */
+.theme-code-block {
   border-radius: 6px;
-  font-size: 12px !important;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
 }
 
-html[data-theme='dark'] .prism-code {
-  border: 1px solid #334155;
+.prism-code {
+  font-size: 12px !important;
+  border-radius: 0 !important;
+}
+
+/* Match title + body backgrounds in dark mode (replaces nightOwl's navy) */
+html[data-theme='dark'] {
+  --prism-background-color: var(--bg-secondary);
+
+  [class*='codeBlockTitle'],
+  .prism-code {
+    background-color: var(--bg-secondary) !important;
+  }
 }
 
 .header-colab-button {

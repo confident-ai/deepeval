@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./VideoDisplayer.module.css";
+import styles from "./VideoDisplayer.module.scss";
 import { appendDeepEvalAttribution } from "@site/src/utils/utm";
 
 interface VideoDisplayerProps {

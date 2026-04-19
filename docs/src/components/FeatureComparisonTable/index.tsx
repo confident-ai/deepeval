@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./FeatureComparisonTable.module.css";
+import styles from "./FeatureComparisonTable.module.scss";
 
 interface DatasetItem {
   feature: string;
@@ -2312,7 +2312,7 @@ export default function FeatureComparisonTable({ type, competitor }: FeatureComp
 
   const renderValue = (value: string | boolean) => {
     if (typeof value === "string") {
-      return <span className={styles.cellText}>{value}</span>;
+      return <span className={styles.text}>{value}</span>;
     }
 
     return value ? (
@@ -2324,25 +2324,25 @@ export default function FeatureComparisonTable({ type, competitor }: FeatureComp
 
   return (
     <div className={styles.tableContainer}>
-      <div className={styles.featureTable}>
-        <div className={styles.featureHeader}>
-          <div className={styles.featureCell}></div>
-          <div className={styles.centeredCell}>DeepEval</div>
-          <div className={styles.centeredCell}>{competitor}</div>
+      <div className={styles.table}>
+        <div className={styles.header}>
+          <div className={styles.cell}></div>
+          <div className={styles.centered}>DeepEval</div>
+          <div className={styles.centered}>{competitor}</div>
         </div>
         <div>
           {data.map((item: DatasetItem, idx: number) => (
-            <div key={idx} className={styles.featureRow}>
-              <div className={styles.featureCell}>
-                <span className={styles.featureTitle}>{item.feature}</span>
-                <div className={styles.featureDescription}>
+            <div key={idx} className={styles.row}>
+              <div className={styles.cell}>
+                <span className={styles.title}>{item.feature}</span>
+                <div className={styles.description}>
                   {item.description}
                 </div>
               </div>
-              <div className={styles.centeredCell}>
+              <div className={styles.centered}>
                 {renderValue(item.deepeval)}
               </div>
-              <div className={styles.centeredCell}>
+              <div className={styles.centered}>
                 {renderValue(item.competitor)}
               </div>
             </div>

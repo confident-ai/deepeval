@@ -13,6 +13,7 @@ import TabItem from "@theme/TabItem";
 import Envelope from "@site/src/components/Envelope";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import NavigationCards from "@site/src/components/NavigationCards";
+import FAQs from "@site/src/components/FAQ";
 import { ASSETS } from "@site/src/assets";
 
 **DeepEval** is an open-source evaluation framework for LLMs. DeepEval makes it extremely easy to build
@@ -467,6 +468,57 @@ Learn more offerings available in `deepeval`'s ecosystem:
         "DeepTeam is DeepEval for AI safety and security testing. Expose 50+ vulnerabilities, with 20+ attack methods such as tree jailbreaking all automated.",
       icon: "ShieldCheck",
       to: "https://trydeepteam.com",
+    },
+  ]}
+/>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is DeepEval?",
+      answer:
+        "DeepEval is an open-source LLM evaluation framework. It lets you unit-test LLM outputs, run end-to-end and component-level evals, generate synthetic datasets, and red-team your LLM applications — all from Python, without depending on any external service.",
+    },
+    {
+      question: "Do I need an account or API key to use DeepEval?",
+      answer: (
+        <>
+          No. DeepEval runs fully locally. You only need an LLM provider key
+          (e.g. <code>OPENAI_API_KEY</code>) for metrics that judge with an LLM,
+          and you can also plug in any custom or local model.
+        </>
+      ),
+    },
+    {
+      question: "How is DeepEval related to Confident AI?",
+      answer: (
+        <>
+          DeepEval is a standalone open-source framework. It integrates natively
+          with{" "}
+          <a href="https://app.confident-ai.com" target="_blank" rel="noopener">
+            Confident AI
+          </a>
+          , an AI quality platform with observability, evals, and monitoring,
+          but using DeepEval does not require Confident AI.
+        </>
+      ),
+    },
+    {
+      question: "What can I evaluate with DeepEval?",
+      answer:
+        "RAG pipelines, agents, chatbots, summarization, structured outputs, multi-modal apps — and virtually any other LLM use case. DeepEval ships 50+ research-backed metrics and lets you define fully custom ones.",
+    },
+    {
+      question: "Can I use DeepEval in CI/CD?",
+      answer: (
+        <>
+          Yes. DeepEval is built to run in <code>pytest</code> and any CI
+          provider (GitHub Actions, GitLab CI, etc.), so you can gate
+          deployments on regression tests for your LLM application.
+        </>
+      ),
     },
   ]}
 />

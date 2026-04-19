@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './ColabButton.module.css';
+import styles from './ColabButton.module.scss';
 
 interface ColabButtonProps {
   notebookUrl: string;

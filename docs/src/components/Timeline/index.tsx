@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import MDXContent from "@theme/MDXContent";
-import styles from "./index.module.css";
+import styles from "./index.module.scss";
 
 interface TimelineProps {
   children: ReactNode;
@@ -17,13 +17,13 @@ interface TimelineItemProps {
 
 export function TimelineItem({ title, children }: TimelineItemProps) {
   return (
-    <div className={styles.timelineItem}>
-      <div className={styles.timelineStep}>
-        <div className={styles.timelineNumber}></div>
-        <div className={styles.timelineLine}></div>
+    <div className={styles.item}>
+      <div className={styles.step}>
+        <div className={styles.number}></div>
+        <div className={styles.line}></div>
       </div>
-      <div className={styles.timelineContent}>
-        <h3 className={styles.timelineTitle}>{title}</h3>
+      <div className={styles.content}>
+        <h3 className={styles.title}>{title}</h3>
         <MDXContent>{children}</MDXContent>
       </div>
     </div>

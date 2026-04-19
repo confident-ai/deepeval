@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
-import styles from './NavigationCards.module.css';
+import styles from './NavigationCards.module.scss';
 import * as LucideIcons from 'lucide-react';
 
 export interface NavigationCardProps {
@@ -30,7 +30,7 @@ const NavigationCard = ({ title, description, to, listDescription, icon }: Navig
   
   return (
     <Link to={to} className={styles.card}>
-      <div className={styles.cardContent}>
+      <div className={styles.content}>
         <div className={styles.titleRow}>
           <IconComponent className={styles.icon} size={35} />
           <span className={styles.title}>{title}</span>

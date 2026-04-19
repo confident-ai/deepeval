@@ -22,7 +22,8 @@
   flex-shrink: 0;
   margin-top: 1.5rem;
   padding: 1rem;
-  border: 1px solid #00000028;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
 
   .logo {
     width: 32px;
@@ -33,22 +34,22 @@
     font-size: 14px;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    color: var(--text-primary);
   }
 
   .description {
     font-size: 12px;
     margin-bottom: 1rem;
+    color: var(--text-secondary);
   }
 
   .button {
     display: inline-block;
-    background-color: #000;
-    color: #fff;
-    padding: 0.25rem 0.5rem;
+    background-color: var(--text-primary);
+    color: var(--text-inverse);
+    padding: 0.25rem 0.75rem;
     font-size: 12px;
-
-    &:hover {
-      cursor: pointer;
-    }
+    border-radius: 4px;
+    cursor: pointer;
   }
 }

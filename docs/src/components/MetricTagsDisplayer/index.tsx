@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './MetricTagsDisplayer.module.css';
+import styles from './MetricTagsDisplayer.module.scss';
 
 interface MetricTagsDisplayerProps {
   usesLLMs?: boolean;
