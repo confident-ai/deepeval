@@ -5,7 +5,8 @@ class ImageCoherenceTemplate:
 
     @staticmethod
     def evaluate_image_coherence(context_above, context_below):
-        return textwrap.dedent(f"""
+        return textwrap.dedent(
+            f"""
             # Task Description
             You are a multi-modal document evaluation assistant. You will receive an image and its textual context. 
             Your task is to evaluate the coherence between the image and the text (context above and below) it accompanies.
@@ -39,4 +40,5 @@ class ImageCoherenceTemplate:
             
             # Image
             [Insert Image Here]
-            """)
+            """
+        )
