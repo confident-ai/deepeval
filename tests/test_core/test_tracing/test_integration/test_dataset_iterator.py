@@ -285,8 +285,7 @@ def test_no_metrics_error_async_iterator():
 
     msg = str(exc_info.value)
     assert "no metrics were declared" in msg.lower()
-    assert "evals_iterator(metrics=" in msg
-    assert "@observe" in msg
+    assert "zero metric sources" in msg.lower()
 
 
 def test_no_metrics_error_sync_iterator():
