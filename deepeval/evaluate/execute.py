@@ -2156,12 +2156,18 @@ def _has_any_evaluable_metrics(
     Metrics can be declared in any of the following places, and we accept a
     run as long as at least one of them is non-empty:
       1. ``trace_metrics`` arg passed to ``evals_iterator(metrics=[...])``
-      2. ``trace.metrics`` or ``trace.metric_collection`` (set via
-         ``update_current_trace(metrics=...)`` or via a root-level ``@observe``)
-      3. ``span.metrics`` or ``span.metric_collection`` for any span in any
-         trace's subtree (set via ``@observe(metrics=..., metric_collection=...)``)
+      2. ``trace.metrics`` (set via ``update_current_trace(metrics=...)``
+         or via a root-level ``@observe``)
+      3. ``span.metrics`` for any span in any trace's subtree (set via
+         ``@observe(metrics=...)``)
       4. ``test_case_metrics`` (the legacy LLMTestCase + metrics pair path,
          currently only populated by external SDK extensions)
+
+    Note: ``metric_collection`` is intentionally NOT checked here. It's a
+    server-side reference (a string name), not a local metric source, and
+    its contents can't be verified client-side without a round trip. If a
+    user declares only ``metric_collection`` with no local metrics, the
+    run is treated as having no evaluable metrics at this layer.
 
     The check is intentionally lazy (i.e. run after iteration finishes)
     because span-level metrics are runtime state — they only exist after

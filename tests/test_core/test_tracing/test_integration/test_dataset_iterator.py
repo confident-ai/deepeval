@@ -335,12 +335,14 @@ def test_no_metrics_error_not_raised_when_top_level_metrics_provided(
         _bare_agent(golden.input)
 
 
-def test_no_metrics_error_not_raised_when_span_has_metric_collection():
-    """A span-level ``metric_collection`` alone satisfies the guard.
+def test_no_metrics_error_raised_when_span_has_only_metric_collection():
+    """A span-level ``metric_collection`` alone does NOT satisfy the guard.
 
-    This proves the post-iteration walk descends into spans correctly:
-    ``metric_collection`` is a string, not a metrics list, so the helper
-    must explicitly check it (not just span.metrics) for this to pass.
+    ``metric_collection`` is a server-side reference (a string name), not
+    a local metric source, and its contents can't be verified client-side.
+    The guard deliberately ignores it — if it's the only "metric" declared
+    anywhere, the run is treated as having no local metrics to evaluate
+    and NoMetricsError fires.
     """
 
     @observe(
@@ -353,12 +355,7 @@ def test_no_metrics_error_not_raised_when_span_has_metric_collection():
 
     dataset = EvaluationDataset(goldens=[Golden(input="q1")])
 
-    # Even though we never actually run the named collection (it doesn't
-    # exist remotely), the guard itself should be satisfied — the run will
-    # then fail later inside _a_evaluate_traces for unrelated reasons.
-    # We only care that NoMetricsError is NOT raised here.
-    raised: NoMetricsError | None = None
-    try:
+    with pytest.raises(NoMetricsError):
         for golden in dataset.evals_iterator(
             async_config=AsyncConfig(run_async=True),
             display_config=DisplayConfig(
@@ -366,14 +363,3 @@ def test_no_metrics_error_not_raised_when_span_has_metric_collection():
             ),
         ):
             _agent_with_collection(golden.input)
-    except NoMetricsError as e:
-        raised = e
-    except Exception:
-        # Any other exception (e.g. unknown collection) is acceptable;
-        # we're only asserting NoMetricsError doesn't fire.
-        pass
-
-    assert raised is None, (
-        "NoMetricsError should not fire when a span declares "
-        "metric_collection, even without an explicit metrics= list"
-    )
