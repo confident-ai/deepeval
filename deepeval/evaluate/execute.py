@@ -100,7 +100,12 @@ from deepeval.evaluate.utils import (
     extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.tracing.types import TestCaseMetricPair, TraceSpanStatus
+from deepeval.tracing.types import (
+    EvalMode,
+    EvalSession,
+    TestCaseMetricPair,
+    TraceSpanStatus,
+)
 from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
 from deepeval.test_run import TEMP_FILE_PATH
@@ -1004,7 +1009,7 @@ def execute_agentic_test_cases(
         test_run = test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
-    local_trace_manager.evaluating = True
+    local_trace_manager.eval_session = EvalSession(mode=EvalMode.EVALUATE)
     test_results: List[TestResult] = []
 
     def evaluate_test_cases(
@@ -1546,7 +1551,7 @@ def execute_agentic_test_cases(
     else:
         evaluate_test_cases()
 
-    local_trace_manager.evaluating = False
+    local_trace_manager.eval_session = EvalSession()
     return test_results
 
 
@@ -1575,7 +1580,7 @@ async def a_execute_agentic_test_cases(
     test_run_manager.save_to_disk = cache_config.write_cache
     test_run_manager.get_test_run(identifier=identifier)
     local_trace_manager = trace_manager
-    local_trace_manager.evaluating = True
+    local_trace_manager.eval_session = EvalSession(mode=EvalMode.EVALUATE)
     test_results: List[TestResult] = []
     tasks = []
     count = 0
@@ -1650,7 +1655,7 @@ async def a_execute_agentic_test_cases(
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(async_config.throttle_value)
         await asyncio.gather(*tasks)
-    local_trace_manager.evaluating = False
+    local_trace_manager.eval_session = EvalSession()
     return test_results
 
 
@@ -2134,6 +2139,66 @@ async def _a_execute_trace_test_case(
 ###########################################
 
 
+def _span_subtree_has_metrics(span: BaseSpan) -> bool:
+    """True if ``span`` or any of its descendants declares a metric source."""
+    if span.metrics:
+        return True
+    return any(_span_subtree_has_metrics(c) for c in span.children)
+
+
+def _has_any_evaluable_metrics(
+    trace_metrics: Optional[List[BaseMetric]],
+    traces: List[Trace],
+    test_case_metrics: List[TestCaseMetricPair],
+) -> bool:
+    """Return True if at least one metric source exists for this eval run.
+
+    Metrics can be declared in any of the following places, and we accept a
+    run as long as at least one of them is non-empty:
+      1. ``trace_metrics`` arg passed to ``evals_iterator(metrics=[...])``
+      2. ``trace.metrics`` or ``trace.metric_collection`` (set via
+         ``update_current_trace(metrics=...)`` or via a root-level ``@observe``)
+      3. ``span.metrics`` or ``span.metric_collection`` for any span in any
+         trace's subtree (set via ``@observe(metrics=..., metric_collection=...)``)
+      4. ``test_case_metrics`` (the legacy LLMTestCase + metrics pair path,
+         currently only populated by external SDK extensions)
+
+    The check is intentionally lazy (i.e. run after iteration finishes)
+    because span-level metrics are runtime state — they only exist after
+    the user's ``@observe``-decorated functions have actually executed.
+    """
+    if trace_metrics:
+        return True
+    if test_case_metrics:
+        return True
+    for trace in traces:
+        # Defensive: ``traces`` can include ``None`` in the sync path when
+        # user code never sets a current trace for a yielded golden, and
+        # plumbing tests sometimes seed it with sentinel ``object()`` values
+        # — in either case there's nothing to inspect, so just skip.
+        if not isinstance(trace, Trace):
+            continue
+        if trace.metrics:
+            return True
+        if any(_span_subtree_has_metrics(s) for s in trace.root_spans):
+            return True
+    return False
+
+
+def _raise_no_metrics_error() -> None:
+    """Raise a uniform NoMetricsError with actionable guidance.
+
+    Centralized so the sync and async iterator paths produce identical
+    user-facing error text.
+    """
+    from deepeval.errors import NoMetricsError
+
+    raise NoMetricsError(
+        "evals_iterator was started but no metrics were declared anywhere. "
+        "An evaluation run with zero metric sources cannot produce results.\n"
+    )
+
+
 def execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
     trace_metrics: Optional[List[BaseMetric]],
@@ -2151,7 +2216,7 @@ def execute_agentic_test_cases_from_loop(
     test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
-    local_trace_manager.evaluating = True
+    local_trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_SYNC)
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
@@ -2161,6 +2226,11 @@ def execute_agentic_test_cases_from_loop(
         show_metric_indicator = (
             display_config.show_indicator and not _use_bar_indicator
         )
+        # Per-run buffer of traces produced by user code. We accumulate these
+        # locally (rather than reading trace_manager.traces, which is global
+        # and persistent) so the post-iteration "any metrics?" guard only
+        # inspects what THIS run produced.
+        processed_traces: List[Trace] = []
 
         for golden in goldens:
             token = set_current_golden(golden)
@@ -2181,6 +2251,7 @@ def execute_agentic_test_cases_from_loop(
                         yield golden
                         # control has returned from user code without error, capture trace now
                         current_trace: Trace = current_trace_context.get()
+                        processed_traces.append(current_trace)
                     finally:
                         # after user code returns control, always reset the context
                         reset_current_golden(token)
@@ -2364,55 +2435,31 @@ def execute_agentic_test_cases_from_loop(
                             for metric in current_trace.metrics
                         )
 
-                        llm_test_case = None
-                        if current_trace.input:
-                            llm_test_case = LLMTestCase(
-                                input=str(current_trace.input),
-                                actual_output=(
-                                    str(current_trace.output)
-                                    if current_trace.output is not None
-                                    else None
-                                ),
-                                expected_output=current_trace.expected_output,
-                                context=current_trace.context,
-                                retrieval_context=current_trace.retrieval_context,
-                                tools_called=current_trace.tools_called,
-                                expected_tools=current_trace.expected_tools,
-                            )
+                        # Build the trace-level LLMTestCase from the golden
+                        # directly, the same way the async iterator does
+                        # (see `_a_evaluate_trace`). This makes top-level
+                        # `metrics=[...]` work out of the box even when the
+                        # user never calls `update_current_trace(input=...)`.
+                        llm_test_case = LLMTestCase(
+                            input=golden.input,
+                            actual_output=(
+                                str(current_trace.output)
+                                if current_trace.output is not None
+                                else golden.actual_output
+                            ),
+                            expected_output=current_trace.expected_output,
+                            context=current_trace.context,
+                            retrieval_context=current_trace.retrieval_context,
+                            tools_called=current_trace.tools_called,
+                            expected_tools=current_trace.expected_tools,
+                        )
 
                         if requires_trace:
-                            if llm_test_case is None:
-                                llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
                                 trace_manager.create_nested_spans_dict(
                                     current_trace.root_spans[0]
                                 )
                             )
-                        else:
-                            if llm_test_case is None:
-                                current_trace.status = TraceSpanStatus.ERRORED
-                                trace_api.status = TraceSpanApiStatus.ERRORED
-                                if current_trace.root_spans:
-                                    current_trace.root_spans[0].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    current_trace.root_spans[0].error = (
-                                        format_error_text(
-                                            DeepEvalError(
-                                                "Trace has metrics but no LLMTestCase (missing input/output). "
-                                                "Are you sure you called `update_current_trace()`?"
-                                            )
-                                        )
-                                    )
-                                if progress and pbar_eval_id is not None:
-                                    update_pbar(
-                                        progress,
-                                        pbar_eval_id,
-                                        advance=count_total_metrics_for_trace(
-                                            current_trace
-                                        ),
-                                    )
-                                skip_metrics_for_this_golden = True
 
                         if not skip_metrics_for_this_golden:
                             for metric in current_trace.metrics:
@@ -2464,6 +2511,19 @@ def execute_agentic_test_cases_from_loop(
 
             update_pbar(progress, pbar_id)
 
+        # Post-iteration guard: refuse a run that ran with no metric source
+        # at any level. This mirrors the async iterator's check; placing it
+        # after the for-loop is the only correct option since span-level
+        # @observe metrics only become visible after the user's app code
+        # has actually executed. Without this, the run would otherwise hit
+        # a misleading "All metrics errored for all test cases" message.
+        if not _has_any_evaluable_metrics(
+            trace_metrics=trace_metrics,
+            traces=processed_traces,
+            test_case_metrics=trace_manager.eval_session.test_case_metrics,
+        ):
+            _raise_no_metrics_error()
+
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -2487,10 +2547,11 @@ def execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
-        local_trace_manager.evaluating = False
-        local_trace_manager.traces_to_evaluate_order.clear()
-        local_trace_manager.traces_to_evaluate.clear()
-        local_trace_manager.trace_uuid_to_golden.clear()
+        # Atomic exit cleanup: dropping the session resets mode + every
+        # per-run collection (pending_traces, traces_to_evaluate,
+        # trace_uuid_to_golden, test_case_metrics) in a single assignment,
+        # so it is impossible to half-clean and leak state into the next run.
+        local_trace_manager.eval_session = EvalSession()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -2515,8 +2576,7 @@ def a_execute_agentic_test_cases_from_loop(
     test_run = test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
-    local_trace_manager.evaluating = True
-    local_trace_manager.evaluation_loop = True
+    local_trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_ASYNC)
 
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
@@ -2607,9 +2667,9 @@ def a_execute_agentic_test_cases_from_loop(
                         else:
                             for (
                                 trace
-                            ) in trace_manager.integration_traces_to_evaluate:
+                            ) in trace_manager.eval_session.traces_to_evaluate:
                                 if (
-                                    trace_manager.trace_uuid_to_golden.get(
+                                    trace_manager.eval_session.trace_uuid_to_golden.get(
                                         trace.uuid
                                     )
                                     is golden
@@ -2631,9 +2691,9 @@ def a_execute_agentic_test_cases_from_loop(
                         else:
                             for (
                                 trace
-                            ) in trace_manager.integration_traces_to_evaluate:
+                            ) in trace_manager.eval_session.traces_to_evaluate:
                                 if (
-                                    trace_manager.trace_uuid_to_golden.get(
+                                    trace_manager.eval_session.trace_uuid_to_golden.get(
                                         trace.uuid
                                     )
                                     is golden
@@ -2847,11 +2907,25 @@ def a_execute_agentic_test_cases_from_loop(
                                 "[deepeval] failed to drain stray tasks because loop is closing"
                             )
 
+        # Pre-evaluation guard: refuse a run that has no metric source.
+        # Doing this lazily (after iteration finishes) is the only correct
+        # option because span-level metrics on @observe-decorated functions
+        # only become visible after the user's app code has run. Without
+        # this, the run would limp through to a misleading
+        # "All metrics errored for all test cases" print and silently exit.
+        session = trace_manager.eval_session
+        if not _has_any_evaluable_metrics(
+            trace_metrics=trace_metrics,
+            traces=session.traces_to_evaluate,
+            test_case_metrics=session.test_case_metrics,
+        ):
+            _raise_no_metrics_error()
+
         # Evaluate traces
-        if trace_manager.traces_to_evaluate:
+        if trace_manager.eval_session.traces_to_evaluate:
             loop.run_until_complete(
                 _a_evaluate_traces(
-                    traces_to_evaluate=trace_manager.traces_to_evaluate,
+                    traces_to_evaluate=trace_manager.eval_session.traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
@@ -2868,30 +2942,10 @@ def a_execute_agentic_test_cases_from_loop(
                     pbar_id=pbar_id,
                 )
             )
-        elif trace_manager.integration_traces_to_evaluate:
-            loop.run_until_complete(
-                _a_evaluate_traces(
-                    traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
-                    goldens=goldens,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    trace_metrics=trace_metrics,
-                    verbose_mode=display_config.verbose_mode,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                )
-            )
-        elif trace_manager.test_case_metrics:
+        elif trace_manager.eval_session.test_case_metrics:
             loop.run_until_complete(
                 _evaluate_test_case_pairs(
-                    test_case_pairs=trace_manager.test_case_metrics,
+                    test_case_pairs=trace_manager.eval_session.test_case_metrics,
                     test_run=test_run,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
@@ -2938,10 +2992,11 @@ def a_execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
-        local_trace_manager.evaluating = False
-        local_trace_manager.traces_to_evaluate_order.clear()
-        local_trace_manager.traces_to_evaluate.clear()
-        local_trace_manager.trace_uuid_to_golden.clear()
+        # Atomic exit cleanup: dropping the session resets mode + every
+        # per-run collection (pending_traces, traces_to_evaluate,
+        # trace_uuid_to_golden, test_case_metrics) in a single assignment,
+        # so it is impossible to half-clean and leak state into the next run.
+        local_trace_manager.eval_session = EvalSession()
 
 
 async def _a_evaluate_traces(
@@ -2976,7 +3031,7 @@ async def _a_evaluate_traces(
 
     for count, trace in enumerate(traces_snapshot):
         # Prefer the explicit mapping from trace -> golden captured at trace creation.
-        golden = trace_manager.trace_uuid_to_golden.get(trace.uuid)
+        golden = trace_manager.eval_session.trace_uuid_to_golden.get(trace.uuid)
         if not golden:
             # trace started during evaluation_loop but the CURRENT_GOLDEN was
             # not set for some reason. We can’t map it to a golden, so the best

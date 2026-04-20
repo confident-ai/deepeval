@@ -391,7 +391,7 @@ class SpanInterceptor(SpanProcessor):
                 trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
-                trace_manager.traces_to_evaluate.append(trace)
+                trace_manager.eval_session.traces_to_evaluate.append(trace)
 
     def _add_agent_span(self, span, name):
         span.set_attribute("confident.span.type", "agent")

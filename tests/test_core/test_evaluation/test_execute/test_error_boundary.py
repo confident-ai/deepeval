@@ -22,6 +22,20 @@ from tests.test_core.helpers import make_trace_api
 exec_mod = import_module("deepeval.evaluate.execute")
 
 
+@pytest.fixture(autouse=True)
+def _bypass_no_metrics_guard(monkeypatch):
+    """Every test in this file drives the executor directly with synthetic
+    fake spans/traces that have no metric source. The post-iteration
+    ``_has_any_evaluable_metrics`` guard would otherwise raise
+    ``NoMetricsError`` and shadow the error-handling behavior these tests
+    are designed to verify. Bypass it for the whole file — its semantics
+    are covered separately in test_dataset_iterator.py.
+    """
+    monkeypatch.setattr(
+        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+    )
+
+
 @pytest.fixture
 def patched_api_layer(monkeypatch):
     """
@@ -312,8 +326,7 @@ def test_task_exception_logs_error_when_debug_enabled(
         assert calls["measurements"] == 0
         assert isinstance(results, list)
 
-        assert not trace_manager.traces_to_evaluate
-        assert not trace_manager.integration_traces_to_evaluate
+        assert not trace_manager.eval_session.traces_to_evaluate
 
         # An error log should have been emitted by on_task_done
         assert any("task ERROR" in r.message for r in caplog.records)
@@ -373,9 +386,11 @@ def test_task_error_after_observe_marks_existing_trace(monkeypatch):
             with Observer("custom", func_name="unit-test"):
                 trace = current_trace_context.get()
                 # make sure on_task_done can find and mark this trace
-                trace_manager.trace_uuid_to_golden[trace.uuid] = golden
-                if trace not in trace_manager.integration_traces_to_evaluate:
-                    trace_manager.integration_traces_to_evaluate.append(trace)
+                trace_manager.eval_session.trace_uuid_to_golden[trace.uuid] = (
+                    golden
+                )
+                if trace not in trace_manager.eval_session.traces_to_evaluate:
+                    trace_manager.eval_session.traces_to_evaluate.append(trace)
                 captured["trace"] = trace
                 # fail after observe
                 await asyncio.sleep(0)
@@ -457,9 +472,11 @@ def test_task_cancel_after_observe_marks_existing_trace(monkeypatch):
                         pass
                 tr = current_trace_context.get()
                 captured["trace"] = tr
-                trace_manager.trace_uuid_to_golden[tr.uuid] = golden
-                if tr not in trace_manager.integration_traces_to_evaluate:
-                    trace_manager.integration_traces_to_evaluate.append(tr)
+                trace_manager.eval_session.trace_uuid_to_golden[tr.uuid] = (
+                    golden
+                )
+                if tr not in trace_manager.eval_session.traces_to_evaluate:
+                    trace_manager.eval_session.traces_to_evaluate.append(tr)
 
                 # yield once so the task actually starts and mapping is in place
                 await asyncio.sleep(0)
@@ -591,8 +608,7 @@ def test_task_cancelled_without_observe_logs_and_marks_nothing(
             pass
 
         # no traces should be enqueued when no @observe ran
-        assert not trace_manager.traces_to_evaluate
-        assert not trace_manager.integration_traces_to_evaluate
+        assert not trace_manager.eval_session.traces_to_evaluate
 
         # breadcrumb that a cancel happened
         assert any("task CANCELLED" in r.message for r in caplog.records)
@@ -647,10 +663,8 @@ def test_fallback_marks_open_root_when_multiple_roots(monkeypatch):
     )
     tr.root_spans = [s1, s2]
 
-    # There is a fallback path that uses integration_traces_to_evaluate and golden mapping
+    # There is a fallback path that uses traces_to_evaluate and golden mapping
     g = Golden(input="g")
-    trace_manager.integration_traces_to_evaluate.append(tr)
-    trace_manager.trace_uuid_to_golden[tr.uuid] = g
 
     # Simulate on_task_done fallback. Call the inner helper directly
     # or run iterator with a failing task but don't enter observe.
@@ -670,6 +684,13 @@ def test_fallback_marks_open_root_when_multiple_roots(monkeypatch):
             ),
         )
         next(it)
+
+        # Populate AFTER the iterator has started, mirroring how real
+        # integrations append traces during user app code (between yields).
+        # The executor swaps in a fresh EvalSession on entry, so populating
+        # before next(it) would be wiped out.
+        trace_manager.eval_session.traces_to_evaluate.append(tr)
+        trace_manager.eval_session.trace_uuid_to_golden[tr.uuid] = g
 
         async def failing(_):
             raise RuntimeError("x")
@@ -692,8 +713,8 @@ def test_fallback_marks_open_root_when_multiple_roots(monkeypatch):
         # closed root remains SUCCESS
         assert s1.status == TraceSpanStatus.SUCCESS
     finally:
-        trace_manager.integration_traces_to_evaluate.clear()
-        trace_manager.trace_uuid_to_golden.clear()
+        trace_manager.eval_session.traces_to_evaluate.clear()
+        trace_manager.eval_session.trace_uuid_to_golden.clear()
         asyncio.set_event_loop(None)
         loop.close()
 
@@ -724,9 +745,9 @@ def test_error_after_observe_does_not_overwrite_root_end_time(monkeypatch):
         async def app(_):
             with Observer("custom", func_name="unit"):
                 tr = current_trace_context.get()
-                trace_manager.trace_uuid_to_golden[tr.uuid] = g
-                if tr not in trace_manager.integration_traces_to_evaluate:
-                    trace_manager.integration_traces_to_evaluate.append(tr)
+                trace_manager.eval_session.trace_uuid_to_golden[tr.uuid] = g
+                if tr not in trace_manager.eval_session.traces_to_evaluate:
+                    trace_manager.eval_session.traces_to_evaluate.append(tr)
             # root is now closed, so capture its end_time
             rs = tr.root_spans[-1]
             before_after["before"] = rs.end_time

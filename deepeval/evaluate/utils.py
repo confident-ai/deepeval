@@ -156,6 +156,15 @@ def create_test_result(
 
 
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
+    # Fall back to the golden's input when the trace didn't capture a
+    # meaningful one of its own. This concern lives here at the
+    # evaluation/rendering boundary, NOT in the tracer: `@observe`
+    # faithfully records whatever kwargs were passed (including `{}` for
+    # positional-only calls), and we shouldn't rewrite general tracing
+    # behavior to paper over an evaluation-specific rendering/dedupe
+    # problem. The truthiness check cleanly covers the "absent" cases
+    # (`None`, `{}`, `""`) that would otherwise show as garbage in the
+    # trace-level Metrics Summary and break `filter_duplicate_results`.
     return TraceApi(
         uuid=trace.uuid,
         baseSpans=[],
@@ -173,7 +182,7 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
             if trace.end_time
             else None
         ),
-        input=trace.input,
+        input=trace.input or golden.input,
         output=trace.output,
         expected_output=trace.expected_output,
         context=trace.context,

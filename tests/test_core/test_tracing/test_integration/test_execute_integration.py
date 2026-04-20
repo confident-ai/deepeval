@@ -22,6 +22,20 @@ from deepeval.evaluate import execute as exec_mod
 from tests.test_core.test_tracing.conftest import get_active_trace_and_span
 
 
+@pytest.fixture
+def _bypass_no_metrics_guard(monkeypatch):
+    """Opt-in fixture for plumbing tests that intentionally drive the
+    executor with no metric source (e.g. dummy traces, sentinel objects).
+
+    The post-iteration ``_has_any_evaluable_metrics`` guard would
+    otherwise raise ``NoMetricsError`` and mask the executor-flow
+    behavior these tests exist to verify.
+    """
+    monkeypatch.setattr(
+        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+    )
+
+
 @pytest.fixture(autouse=True)
 def _silence_confident_trace(monkeypatch):
     # don’t try to flush leftover traces at process end
@@ -35,15 +49,15 @@ def _silence_confident_trace(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _reset_eval_state():
+    from deepeval.tracing.types import EvalSession
+
     yield
-    trace_manager.traces_to_evaluate_order.clear()
-    trace_manager.traces_to_evaluate.clear()
-    trace_manager.integration_traces_to_evaluate.clear()
-    trace_manager.test_case_metrics.clear()
-    trace_manager.trace_uuid_to_golden.clear()
+    trace_manager.eval_session = EvalSession()
 
 
-def test_execute_propagates_expected_output(monkeypatch):
+def test_execute_propagates_expected_output(
+    monkeypatch, _bypass_no_metrics_guard
+):
     received_test_cases = []
 
     # patch the symbol that execute.py calls
@@ -184,7 +198,9 @@ def test_noop_when_no_active_trace_or_span():
     # nothing to assert! success == no exception
 
 
-def test_async_evaluator_skips_empty_traces_without_crash():
+def test_async_evaluator_skips_empty_traces_without_crash(
+    _bypass_no_metrics_guard,
+):
     goldens = [Golden(input="x")]
     loop = asyncio.new_event_loop()
 
@@ -225,7 +241,9 @@ def test_async_evaluator_skips_empty_traces_without_crash():
         loop.close()
 
 
-def test_async_evaluator_handles_extra_traces_with_spans():
+def test_async_evaluator_handles_extra_traces_with_spans(
+    _bypass_no_metrics_guard,
+):
     goldens = [Golden(input="x")]
     loop = asyncio.new_event_loop()
 
