@@ -52,6 +52,7 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.errors import DeepEvalError
 from deepeval.optimizer.utils import Aggregator, mean_of_all
 from deepeval.optimizer.types import (
+    AcceptedIteration,
     PromptConfiguration,
     PromptConfigurationId,
     ModuleId,
@@ -726,10 +727,21 @@ class MIPROV2(BaseAlgorithm):
             self.prompt_configurations_by_id
         )
 
+        accepted_iterations = [
+            AcceptedIteration(
+                parent=self._instruction_candidates[0].id,
+                child=best.id,
+                module=self.SINGLE_MODULE_ID,
+                before=0.0,
+                after=trial.get("score", 0.0),
+            )
+            for trial in self._trial_history
+        ]
+
         report = OptimizationReport(
             optimization_id=self.optimization_id,
             best_id=best.id,
-            accepted_iterations=self._trial_history,
+            accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
             prompt_configurations=prompt_config_snapshots,
