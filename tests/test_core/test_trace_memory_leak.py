@@ -69,9 +69,11 @@ class TestTraceRetentionDuringEvaluation:
 
     @pytest.fixture(autouse=True)
     def _evaluation_mode(self):
-        trace_manager.evaluating = True
+        from deepeval.tracing.types import EvalMode, EvalSession
+
+        trace_manager.eval_session = EvalSession(mode=EvalMode.EVALUATE)
         yield
-        trace_manager.evaluating = False
+        trace_manager.eval_session = EvalSession()
 
     def test_traces_retained_during_evaluation(self):
         simple_agent()

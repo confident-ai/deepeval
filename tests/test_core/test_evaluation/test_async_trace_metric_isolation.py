@@ -92,7 +92,7 @@ async def test_async_trace_metrics_are_copied_per_trace(monkeypatch):
         raising=True,
     )
 
-    exec_mod.trace_manager.trace_uuid_to_golden.clear()
+    exec_mod.trace_manager.eval_session.trace_uuid_to_golden.clear()
 
     golden_one = Golden(input="golden-1")
     golden_two = Golden(input="golden-2")
@@ -100,10 +100,14 @@ async def test_async_trace_metrics_are_copied_per_trace(monkeypatch):
     trace_two = _make_trace("trace-2", "trace-input-2", "trace-output-2")
 
     monkeypatch.setitem(
-        exec_mod.trace_manager.trace_uuid_to_golden, trace_one.uuid, golden_one
+        exec_mod.trace_manager.eval_session.trace_uuid_to_golden,
+        trace_one.uuid,
+        golden_one,
     )
     monkeypatch.setitem(
-        exec_mod.trace_manager.trace_uuid_to_golden, trace_two.uuid, golden_two
+        exec_mod.trace_manager.eval_session.trace_uuid_to_golden,
+        trace_two.uuid,
+        golden_two,
     )
 
     test_results = []
