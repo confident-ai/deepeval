@@ -22,9 +22,7 @@ from tests.test_core.helpers import make_trace_api
 exec_mod = import_module("deepeval.evaluate.execute")
 # after the execute.py split, monkeypatches for names looked up inside
 # function bodies must target the submodule that owns the binding.
-_common_mod = import_module("deepeval.evaluate.execute._common")
 _agentic_mod = import_module("deepeval.evaluate.execute.agentic")
-_loop_mod = import_module("deepeval.evaluate.execute.loop")
 
 
 @pytest.fixture
@@ -94,7 +92,7 @@ def record_measure_calls(monkeypatch):
             m.measure(test_case)
 
     monkeypatch.setattr(
-        _common_mod, "measure_metrics_with_indicator", _stub, raising=True
+        _agentic_mod, "measure_metrics_with_indicator", _stub, raising=True
     )
     return calls
 
@@ -280,7 +278,7 @@ def test_task_exception_logs_error_when_debug_enabled(
         calls["measurements"] += 1
 
     monkeypatch.setattr(
-        _common_mod,
+        _agentic_mod,
         "measure_metrics_with_indicator",
         _noop_measure,
         raising=True,
@@ -350,7 +348,7 @@ def test_task_error_after_observe_marks_existing_trace(monkeypatch):
 
     # Don’t execute real metrics
     monkeypatch.setattr(
-        _common_mod,
+        _agentic_mod,
         "measure_metrics_with_indicator",
         lambda *a, **k: None,
         raising=True,
@@ -430,7 +428,7 @@ def test_task_cancel_after_observe_marks_existing_trace(monkeypatch):
 
     # no real metrics
     monkeypatch.setattr(
-        _common_mod,
+        _agentic_mod,
         "measure_metrics_with_indicator",
         lambda *a, **k: None,
         raising=True,
