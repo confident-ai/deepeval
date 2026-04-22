@@ -46,9 +46,10 @@ def pytest_runtest_call(item: pytest.Item):
         return
 
     from deepeval.tracing.tracing import Observer, trace_manager
+    from deepeval.tracing.types import EvalMode, EvalSession
 
-    prev_evaluating = trace_manager.evaluating
-    trace_manager.evaluating = True
+    prev_session = trace_manager.eval_session
+    trace_manager.eval_session = EvalSession(mode=EvalMode.EVALUATE)
     observer = Observer("custom", func_name="Test Wrapper")
     observer.__enter__()
     try:
@@ -57,7 +58,7 @@ def pytest_runtest_call(item: pytest.Item):
         try:
             observer.__exit__(None, None, None)
         finally:
-            trace_manager.evaluating = prev_evaluating
+            trace_manager.eval_session = prev_session
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

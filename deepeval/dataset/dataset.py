@@ -1356,7 +1356,6 @@ class EvaluationDataset:
 
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
-        trace_manager.integration_traces_to_evaluate.clear()
         goldens = self.goldens
         with capture_evaluation_run("traceable evaluate()"):
             global_test_run_manager.reset()

@@ -97,11 +97,9 @@ def reset_trace_state():
     # Reset AFTER each test
     current_trace_context.set(None)
     current_span_context.set(None)
-    trace_manager.traces_to_evaluate_order.clear()
-    trace_manager.traces_to_evaluate.clear()
-    trace_manager.integration_traces_to_evaluate.clear()
-    trace_manager.test_case_metrics.clear()
-    trace_manager.trace_uuid_to_golden.clear()
+    from deepeval.tracing.types import EvalSession
+
+    trace_manager.eval_session = EvalSession()
     trace_manager.clear_traces()
 
 

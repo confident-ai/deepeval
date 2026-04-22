@@ -667,5 +667,6 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         trace.status = TraceSpanStatus.SUCCESS
         trace.end_time = perf_counter()
 
-        if trace not in trace_manager.traces_to_evaluate:
-            trace_manager.traces_to_evaluate.append(trace)
+        session = trace_manager.eval_session
+        if trace not in session.traces_to_evaluate:
+            session.traces_to_evaluate.append(trace)
