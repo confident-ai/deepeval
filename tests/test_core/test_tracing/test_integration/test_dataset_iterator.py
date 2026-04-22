@@ -14,6 +14,7 @@ from deepeval.evaluate.configs import (
     ErrorConfig,
 )
 from deepeval.evaluate import execute as exec_mod
+from deepeval.evaluate.execute import loop as _loop_mod
 from deepeval.dataset import EvaluationDataset, Golden
 
 # Define golden inputs
@@ -60,10 +61,10 @@ def test_no_leftovers_runs_trace_eval(monkeypatch):
         return set()
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _fake_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _fake_snapshot_tasks, raising=False
     )
 
     # build the iterator that uses evaluate_test_cases
@@ -125,10 +126,10 @@ def test_snapshot_tasks_runtimeerror_still_runs_trace_eval(monkeypatch):
         raise RuntimeError("loop is closing")
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _flaky_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _flaky_snapshot_tasks, raising=False
     )
 
     ds = EvaluationDataset(goldens=[Golden(input="x")])
@@ -183,10 +184,10 @@ def test_closed_loop_skips_trace_eval(monkeypatch):
         return set()
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _safe_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _safe_snapshot_tasks, raising=False
     )
 
     ds = EvaluationDataset(goldens=[Golden(input="x")])

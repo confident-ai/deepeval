@@ -36,6 +36,30 @@ def pytest_runtest_protocol(
     return None
 
 
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_call(item: pytest.Item):
+    """Wrap each test in a deepeval evaluation scope so `@observe` spans get
+    attached to the in-flight test run via `assert_test(golden=..., metrics=...)`.
+    """
+    if not get_is_running_deepeval():
+        yield
+        return
+
+    from deepeval.tracing.tracing import Observer, trace_manager
+
+    prev_evaluating = trace_manager.evaluating
+    trace_manager.evaluating = True
+    observer = Observer("custom", func_name="Test Wrapper")
+    observer.__enter__()
+    try:
+        yield
+    finally:
+        try:
+            observer.__exit__(None, None, None)
+        finally:
+            trace_manager.evaluating = prev_evaluating
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_sessionfinish(session: pytest.Session, exitstatus):
     print("Running teardown with pytest sessionfinish...")

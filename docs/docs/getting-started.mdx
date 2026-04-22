@@ -290,6 +290,24 @@ python main.py
 
 Once the for loop has ended, `deepeval` will aggregate all metrics, test cases in each component, and run evals across them all, before generating the final testing report.
 
+:::tip Persisting runs locally for AI tools
+Pass `DisplayConfig(results_folder="./evals/prompt-v3")` into `evals_iterator()` to save each run as `test_run_<YYYYMMDD_HHMMSS>.json`, then sweep hyperparameters in a plain `for` loop:
+
+```python
+from deepeval.evaluate import DisplayConfig
+
+for temp in [0.0, 0.4, 0.8]:
+    for golden in dataset.evals_iterator(
+        metrics=[AnswerRelevancyMetric()],
+        hyperparameters={"model": "gpt-4o-mini", "temperature": temp},
+        display_config=DisplayConfig(results_folder="./evals/prompt-v3"),
+    ):
+        llm_app(golden.input)
+```
+
+The folder then holds one file per run — hyperparameters, metric reasons, and scores all live inside each file — so Cursor or Claude Code can `ls` the folder and read the runs directly. See [Saving test runs locally](/docs/evaluation-flags-and-configs#saving-test-runs-locally) for the full layout options.
+:::
+
 :::info
 
 When you do LLM tracing using `deepeval`, you can automatically evals on **traces, spans, and threads (conversations) in production**. Simply get an [API key from Confident AI](https://app.confident-ai.com) and set it in the CLI:

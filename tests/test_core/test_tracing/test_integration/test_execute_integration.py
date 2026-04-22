@@ -46,8 +46,10 @@ def _reset_eval_state():
 def test_execute_propagates_expected_output(monkeypatch):
     received_test_cases = []
 
-    # patch the symbol that execute.py calls
-    orig_create_api_test_case = exec_mod.create_api_test_case
+    # patch the symbol that the agentic submodule looks up
+    from deepeval.evaluate.execute import agentic as _agentic_mod
+
+    orig_create_api_test_case = _agentic_mod.create_api_test_case
 
     def spy_create_api_test_case(*, test_case, trace, index=None):
         received_test_cases.append(test_case)
@@ -56,7 +58,7 @@ def test_execute_propagates_expected_output(monkeypatch):
         )
 
     monkeypatch.setattr(
-        exec_mod, "create_api_test_case", spy_create_api_test_case
+        _agentic_mod, "create_api_test_case", spy_create_api_test_case
     )
 
     goldens = [Golden(input="china", expected_output="beijing, 1000")]

@@ -42,13 +42,64 @@ from deepeval import evaluate
 evaluate(display_config=DisplayConfig(), ...)
 ```
 
-There are **FOUR** optional parameters when creating an `DisplayConfig`:
+There are **SIX** optional parameters when creating a `DisplayConfig`:
 
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
-- [Optional] `file_output_dir`: a string which when set, will write the results of the evaluation to the specified directory. Defaulted to `None`.
+- [Optional] `results_folder`: a string path to a directory where each call to `evaluate()` (or `evals_iterator()`) will be persisted as a `test_run_<YYYYMMDD_HHMMSS>.json` file. Defaulted to `None` (no local save). See [Saving test runs locally](#saving-test-runs-locally) below.
+- [Optional] `results_subfolder`: an optional string that, when set together with `results_folder`, nests the `test_run_*.json` files under `results_folder/results_subfolder/`. Defaulted to `None` (flat layout).
+- [Optional, deprecated] `file_output_dir`: a string which when set, writes a legacy `.log` per test result to the specified directory. Prefer `results_folder`, which saves the full `TestRun` as a single structured JSON file that AI tools can read directly.
+
+#### Saving test runs locally
+
+Set `results_folder` to persist each `evaluate()` call to disk as a structured `TestRun` JSON. Hyperparameters, per-test-case scores, and metric reasons are all serialized into each file via the same schema that Confident AI uses — no extra setup required.
+
+```python
+from deepeval import evaluate
+from deepeval.evaluate import DisplayConfig
+
+for temp in [0.0, 0.4, 0.8]:
+    evaluate(
+        test_cases=test_cases,
+        metrics=metrics,
+        hyperparameters={"model": "gpt-4o-mini", "temperature": temp},
+        display_config=DisplayConfig(results_folder="./evals/prompt-v3"),
+    )
+```
+
+After the loop, the folder is flat — just the raw test runs:
+
+```
+./evals/prompt-v3/
+  test_run_20260421_140114.json
+  test_run_20260421_140132.json
+  test_run_20260421_140151.json
+```
+
+The timestamp prefix makes `ls` order match chronological order, so an AI agent (Cursor, Claude Code) can iterate over the folder in the order runs happened. If two runs finish within the same second, the writer appends `_2`, `_3`, … to the filename so nothing is ever overwritten.
+
+Set `results_subfolder` to nest the runs under an extra directory — useful when the parent folder already holds other artifacts:
+
+```python
+DisplayConfig(results_folder="./evals/prompt-v3", results_subfolder="test_runs")
+```
+
+```
+./evals/prompt-v3/
+  test_runs/
+    test_run_20260421_140114.json
+    test_run_20260421_140132.json
+```
+
+:::info Reading results with Cursor / Claude Code
+Point the agent at the folder and ask it to `ls` and open the `test_run_*.json` files directly. Everything an agent needs — hyperparameters, prompts, metric scores, and failure reasons — is inside each file, so no extra index or summary is required.
+
+Note that a **test run** is a single `evaluate()` call. An [Experiment](/docs/evaluation-introduction) is formed later by _comparing_ multiple test runs, e.g. across different prompts or models.
+:::
+
+If `results_folder` is unset but the `DEEPEVAL_RESULTS_FOLDER` environment variable is present, `deepeval` falls back to that path for backwards compatibility.
 
 ### Error Configs
 
