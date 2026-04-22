@@ -3,13 +3,17 @@
   "pages": [
     "index",
 
-    "---[Megaphone]Announcements---",
-    "hello-world",
-
     "---[Users]Community---",
-    "tutorial-g-eval-use-cases",
+    "medical-chatbot-deepeval-guide",
+    "rag-contract-assistant-deepeval-guide",
+    "use-case-cognee-ai-memory",
+    "top-5-geval-use-cases",
 
     "---[Scale]Comparisons---",
-    "deepeval-vs-ragas"
+    "deepeval-alternatives-compared",
+    "deepeval-vs-arize",
+    "deepeval-vs-langfuse",
+    "deepeval-vs-ragas",
+    "deepeval-vs-trulens"
   ]
 }

@@ -182,15 +182,27 @@
  * aside is `text-sm` (14px). We drop to ~13px, zero the viewport's
  * inline padding so section separator rules span the full width,
  * and let each item / heading own its own inline padding.           */
-#nd-sidebar {
+#nd-sidebar,
+#nd-sidebar-mobile {
   font-size: 13px;
 
-  /* Sidebar header wrapper — Fumadocs renders it with `p-4 pb-2` and
-   * a mobile-only tab dropdown inside. With nav.mode='top' +
-   * tabMode='navbar' there's nothing to show on desktop, so the
-   * padding leaves an awkward empty box above the first section.    */
+  /* Fumadocs' banner wrapper (`> div:first-child`) previously sat
+   * empty (tabs are hidden on desktop, nav title lives in the top
+   * nav) and took up `p-4 pb-2` of dead space. It now hosts the
+   * search trigger (see `SidebarSearch` + `sidebar.banner` in
+   * `lib/section.tsx`). A hairline underneath separates it from
+   * the first section heading ("Getting Started"), mirroring the
+   * `p ~ p` rule that already divides subsequent sections.
+   *
+   * Padding is forced to a uniform 0.5rem (overriding Fumadocs'
+   * `p-4 pb-2`) so the search trigger sits tight against the
+   * sidebar's vertical rules on both sides and hugs the divider
+   * above/below — matches the visual density of the section
+   * headings directly below, which also use 0.5rem horizontal
+   * padding. */
   > div:first-child {
-    display: none;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-fd-border);
   }
 
   [data-radix-scroll-area-viewport] {
@@ -234,15 +246,41 @@
   }
 }
 
+/* Mobile sidebar drawer.
+ *
+ * Fumadocs renders the drawer as `fixed ... inset-y-0`, which starts it
+ * at the top of the viewport. Our custom notebook header is also sticky
+ * and defines `--fd-header-height`, so anchor the drawer below that
+ * header instead of letting its search field and first section slide
+ * underneath the nav bar. */
+#nd-sidebar-mobile {
+  top: var(--fd-docs-row-2);
+}
+
 /* TOC — shrink to match sidebar's 13px, make the "On this page"
  * heading use the dark foreground color, and add a little inline
- * padding so items don't hug the left border.                        */
+ * padding so items don't hug the left border.
+ *
+ * The heading rule also applies to any sibling heading we render into
+ * `tableOfContent.footer` (e.g. Contributors) via `data-toc-heading`,
+ * so custom footer content stays visually aligned with fumadocs' own
+ * `#toc-title`. */
 #nd-toc {
   font-size: 13px;
   padding-top: 1rem;
-  padding-left: 0.75rem;
+  padding-right: 0;
+  /* No horizontal padding on the container itself — each direct child
+   * owns its own inline padding. That way full-bleed children (e.g. the
+   * tocFooter with its `border-top` separator) can span edge-to-edge,
+   * while normal sections (title, scroll area) still get the 0.75rem
+   * indent via the rule below. Opt out with `data-toc-full-bleed`. */
+  > :not([data-toc-full-bleed]) {
+    padding: 0.75rem;
+    padding-top: 0.5rem;
+  }
 
-  #toc-title {
+  #toc-title,
+  [data-toc-heading] {
     color: var(--color-fd-foreground);
     font-size: 13px;
   }
@@ -259,13 +297,203 @@
  * So borders on the aside itself land in the wrong place — we target
  * its direct child (the actual 268px column) instead.               */
 #nd-sidebar > *,
+#nd-sidebar-mobile > *,
 #nd-toc {
   border-inline: 1px solid var(--color-fd-border);
 }
 
+/* ==================================================================
+ * Blueprint callout — one treatment, many hooks.
+ *
+ * A diagonal-hatched "poché" fill framed by four outward-facing L
+ * brackets at the corners — camera-viewfinder / crop-mark style.
+ * Reads as a labelled region on an engineering schematic: the 45°
+ * stripes contrast the orthogonal MDX grid background, and the
+ * corner marks reference construction drawings where the box is
+ * implied by its corners rather than drawn as a closed rectangle.
+ *
+ * One source of truth so every hook picks up the same look:
+ *   - top-nav text items      (#nd-subnav a/button[data-active])
+ *   - prose inline link hover (.prose a:hover)
+ *   - ad-hoc use              (.fd-blueprint-callout)
+ *
+ * Per-context tweaks (outward gap, arm length, ink/rule strength)
+ * go via the `--fd-callout-*` custom properties below — override
+ * them in the context's own block without redeclaring the whole
+ * rule. That's the only way to keep the treatment genuinely
+ * consistent across contexts.
+ * ================================================================== */
+/* NB: selector list is intentionally NOT wrapped in `:where()` — we
+ * need each hook to keep its own specificity so it can beat the
+ * base prose-link rule further down the file. `:where()` zeros
+ * specificity, which would let `color: LinkText` / underline from
+ * `.prose a:not([data-card]…)` win on hover. */
+.fd-blueprint-callout,
+/* Top-nav text items — same callout for "I'm here" (active),
+ * "I'm thinking about going here" (hover), and the moment-of-click
+ * pressed state (`:active`). `[data-active]` (attribute presence,
+ * no value check) scopes this to opted-in affordances: NavLinks
+ * always carry it with "true"/"false", and the GitHub button opts
+ * in with "false". The icon-only utility buttons (theme switch,
+ * sidebar toggle) don't carry the attribute and keep their
+ * Fumadocs hover styles. */
+#nd-subnav :where(a, button)[data-active="true"],
+#nd-subnav :where(a, button)[data-active]:hover,
+#nd-subnav :where(a, button)[data-active]:active,
+/* Fumadocs Cards — on hover, the same callout treatment as
+ * everywhere else. Cards are block-level `<a>`s with their own
+ * border + rounded background, so the hatch tints the card body
+ * and the corner marks frame it from outside. Kept out of the
+ * prose-link selector above (via `:not([data-card], [data-card] *)`)
+ * so card descendants don't also pick up link styling. */
+.prose [data-card]:hover,
+.prose a:not([data-card], [data-card] *):hover {
+  /* Tokens — local `--_*` copies with `--fd-callout-*` fallbacks so
+   * each context can override just the knob it cares about.
+   *
+   *   --fd-callout-offset  outward gap from host edge to corner
+   *                        marks (px). 0 = marks hug the edge.
+   *   --fd-callout-arm     length of each L arm (px).
+   *   --fd-callout-ink     hatch stripe colour (translucent).
+   *   --fd-callout-rule    corner-mark stroke colour.                 */
+  --_callout-offset: var(--fd-callout-offset, 4px);
+  --_callout-arm: var(--fd-callout-arm, 6px);
+  --_callout-ink: var(
+    --fd-callout-ink,
+    color-mix(in oklch, var(--color-fd-primary) 10%, transparent)
+  );
+  --_callout-rule: var(
+    --fd-callout-rule,
+    color-mix(in oklch, var(--color-fd-primary) 55%, transparent)
+  );
+
+  /* `position: relative` anchors the `::before` that paints the
+   * corner marks. On inline hosts (prose links) this is harmless —
+   * inline elements accept `position: relative` without becoming
+   * block-level, and the pseudo-element positions against the
+   * first line box. Multi-line wrapped inline links therefore
+   * show marks around the first line only; acceptable trade-off
+   * vs. adding per-line SVG which would be heavier. */
+  position: relative;
+  color: var(--color-fd-foreground);
+  text-decoration-line: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--_callout-ink) 0 1px,
+    transparent 1px 6px
+  );
+  /* Tiny radius on the hatch fill only — corner marks sit outside
+   * and don't round. Keeps the ink from looking stamped-out. */
+  border-radius: 2px;
+  /* When an inline link wraps across lines, repeat the hatch per
+   * line-box instead of drawing one awkward rectangle around the
+   * multi-line bounding box. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Corner marks — four outward-facing L brackets, one per corner.
+ *
+ * Implementation: a single ::before pseudo extended `--_callout-
+ * offset` pixels beyond the host on all four sides, painted with
+ * 8 `linear-gradient` layers (one horizontal + one vertical arm
+ * per corner). No extra markup required on the host, no SVG
+ * asset, no JS. Pseudo is inert (`pointer-events: none`) so it
+ * never intercepts clicks on the real link/button underneath.
+ *
+ * Why 8 gradients instead of 4 SVGs: `background-position` lets
+ * us anchor each stroke to a named corner (`top left`, `top
+ * right`, …) so the marks stay pinned regardless of host size.
+ * A single SVG would need `background-size: 100% 100%` and
+ * viewBox math to keep arm length from scaling with width. */
+.fd-blueprint-callout::before,
+#nd-subnav :where(a, button)[data-active="true"]::before,
+#nd-subnav :where(a, button)[data-active]:hover::before,
+#nd-subnav :where(a, button)[data-active]:active::before,
+.prose [data-card]:hover::before,
+.prose a:not([data-card], [data-card] *):hover::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--_callout-offset));
+  pointer-events: none;
+  background:
+    /* top-left:    horizontal arm, then vertical arm */
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top left /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top left /
+      1px var(--_callout-arm) no-repeat,
+    /* top-right */
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top right /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top right /
+      1px var(--_callout-arm) no-repeat,
+    /* bottom-left */
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom left /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom left /
+      1px var(--_callout-arm) no-repeat,
+    /* bottom-right */
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom right /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom right /
+      1px var(--_callout-arm) no-repeat;
+}
+
 #nd-subnav {
-  border: 1px solid var(--color-fd-border);
-  border-bottom: none;
+  /* Only a top rule — the left/right edges sit at the viewport's
+   * vertical gutters (no visible border below them), and the bottom
+   * rule lives on `[data-header-body]` itself. Adding `border-left`
+   * here shifts the entire header grid 1px right under border-box
+   * sizing, knocking the col 1 / col 2 seam out of alignment with
+   * the sidebar's right border below. */
+  border-top: 1px solid var(--color-fd-border);
+
+  /* Fumadocs notebook layout stacks the sidebar at z-20 and the header
+   * at z-10, so by default the sidebar's top edge paints over the nav.
+   * Bump the header above the sidebar and force a fully opaque bg so
+   * content behind it (sidebar items, grid lines) can't bleed through
+   * the default `bg-fd-background/80` + backdrop-blur. */
+  z-index: 100;
+  background-color: var(--color-fd-background);
+
+  /* `[data-header-body]` padding is intentionally handled inline by
+   * our NavHeader component — the body is a 3-column grid whose
+   * seams must line up pixel-for-pixel with the sidebar right border
+   * and the TOC left border below. Any container padding here would
+   * shift the whole grid and break the alignment. Per-cell padding
+   * (see `NavHeader/index.tsx`) is the right place to tune inset. */
+
+  /* Active-state weight bump for links / buttons in the top nav.
+   * The visual (hatch + corner marks) comes from the shared
+   * blueprint callout at the top of the file; here we only bump
+   * `font-weight` so the active label reads heavier than its
+   * hovered-but-not-active siblings. `px-2` padding on the link
+   * absorbs any glyph-metric shift, so the row doesn't reflow.
+   *
+   * Scoped to `#nd-subnav` on purpose: sidebar keeps its own pill
+   * active state from Fumadocs since nav links (jump) and sidebar
+   * items (drill-down) play different navigational roles. */
+  :where(a, button)[data-active="true"] {
+    font-weight: 500;
+  }
+
+  /* Square corners on everything inside the right-hand utility cell
+   * (GitHub button, theme switch, sidebar toggle). Fumadocs'
+   * ThemeSwitch renders a pill wrapper + inner buttons, each with
+   * their own `rounded-full` classes that a single parent
+   * `className` prop can't reach. Flattening the whole subtree
+   * here is both simpler than case-by-case overrides and
+   * future-proof against upstream tweaks.
+   *
+   * Scoped to `[data-header-body] > *:last-child` specifically so
+   * it doesn't leak to col 1 (logo) or col 2 (nav links) and
+   * doesn't fight with the blueprint callout's own `border-radius`
+   * in the middle cell. Specificity is (1,1,1), comfortably above
+   * Tailwind's single-class `.rounded-full` (0,1,0) — no
+   * `!important` required. */
+  [data-header-body] > *:last-child :is(button, a, div, span) {
+    border-radius: 0;
+  }
 }
 
 /* MDX prose — use muted foreground for paragraphs/lists so the
@@ -309,6 +537,13 @@
   text-underline-offset: 3px;
 }
 
+/* Hover state — visual comes from the shared blueprint callout
+ * at the top of the file. No per-context overrides needed here:
+ * prose links are inline with no padding, so the default 1px
+ * `--fd-callout-offset` is exactly the breathing room we want
+ * around glyphs. Left as a comment so the next reader knows
+ * where to look (and doesn't re-add a duplicate rule). */
+
 /* <details>/<summary> — ensure pointer cursor on hover. Tailwind
  * Preflight doesn't set this, and some browsers default to text.    */
 summary {
@@ -320,6 +555,30 @@ summary {
 .prose :where(h1, h2, h3, h4, h5, h6) a {
   color: inherit;
   text-decoration: none;
+}
+
+/* …and don't let the blueprint callout fire on heading anchors.
+ * The shared `.prose a:not([data-card]…):hover` rule at the top of
+ * the file would otherwise paint hatch + corner marks around every
+ * heading when the cursor passes over it, which reads as noise
+ * rather than affordance (users don't typically click heading
+ * self-links, they copy the URL via the hash icon).
+ *
+ * `:not([data-card])` on the anchor raises specificity to (0,3,1),
+ * matching the shared hover rule, so source order (this rule
+ * comes later) lets the reset win. Without it the heading
+ * carve-out is (0,2,1) and the callout leaks through.
+ *
+ * The `::before` reset neutralises the pseudo-element that paints
+ * the four corner marks — `background: none` clears all 8 gradient
+ * layers at once; `content: none` makes the pseudo not generate
+ * at all so it can't catch layout either. */
+.prose :where(h1, h2, h3, h4, h5, h6) a:not([data-card]):hover {
+  color: inherit;
+  background-image: none;
+}
+.prose :where(h1, h2, h3, h4, h5, h6) a:not([data-card]):hover::before {
+  content: none;
 }
 
 /* Force regular weight on links regardless of wrapping <strong>/<b>:
@@ -358,6 +617,32 @@ summary {
 [data-card] > div:last-child,
 [data-card] > div:last-child * {
   font-size: 12px;
+}
+
+/* Blueprint callout tuning for cards. Default 4px offset already
+ * matches what cards want (standardised across every hook — the
+ * framing marks should always sit ~4px off the component edge,
+ * regardless of whether the component is a nav pill or a big
+ * block card), so we only override the tokens that actually need
+ * to differ on cards:
+ *
+ *   --fd-callout-arm:    12px       longer arms so the L shapes
+ *                                   read as deliberate framing
+ *                                   rather than tiny dots against
+ *                                   the card's larger rectangle.
+ *   --fd-callout-ink:    transparent kills the diagonal hatch; on
+ *                                   a card-sized surface the 6px
+ *                                   stripe cycle reads as dense
+ *                                   wallpaper and competes with
+ *                                   the title/body copy. The card
+ *                                   keeps its plain background
+ *                                   (plus Fumadocs' own accent
+ *                                   tint on hover) and only the
+ *                                   corner marks signal "you're
+ *                                   here." */
+.prose [data-card]:hover {
+  --fd-callout-arm: 12px;
+  --fd-callout-ink: transparent;
 }
 
 /* ------------------------------------------------------------------ */

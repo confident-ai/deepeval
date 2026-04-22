@@ -74,10 +74,7 @@ const FooterLinkItem = ({ link }: { link: FooterLink }) => {
     <>
       {link.label}
       {external ? (
-        <ExternalLink
-          className={styles.externalIcon}
-          aria-hidden="true"
-        />
+        <ExternalLink className={styles.externalIcon} aria-hidden="true" />
       ) : null}
     </>
   );
@@ -100,11 +97,15 @@ const Footer = () => {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <div className={styles.brand}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icons/DeepEval.svg"
-            alt="DeepEval"
+          {/* Rendered as a masked <span> (see `.logo` in the module)
+           *  so `background-color: var(--color-fd-foreground)` drives
+           *  the fill — keeps the mark legible in both light and dark
+           *  modes without forking the SVG asset. `role="img"` + aria
+           *  label preserves the <img>'s accessibility semantics. */}
+          <span
             className={styles.logo}
+            role="img"
+            aria-label="DeepEval"
           />
           <p className={styles.tagline}>
             Open-source LLM evaluation framework. Apache 2.0 licensed.
@@ -118,6 +119,13 @@ const Footer = () => {
             <GithubMark className={styles.starIcon} />
             <span>Star us on GitHub</span>
           </a>
+          <span>
+            &copy; {new Date().getFullYear()} Confident AI Inc. Made with{" "}
+            <span className={styles.heart} aria-hidden="true">
+              💜
+            </span>{" "}
+            and confidence.
+          </span>
         </div>
 
         <nav className={styles.columns} aria-label="Footer">
@@ -132,16 +140,6 @@ const Footer = () => {
             </div>
           ))}
         </nav>
-      </div>
-
-      <div className={styles.bottom}>
-        <span>
-          &copy; {new Date().getFullYear()} Confident AI Inc. Made with{" "}
-          <span className={styles.heart} aria-hidden="true">
-            💜
-          </span>{" "}
-          and confidence.
-        </span>
       </div>
     </footer>
   );

@@ -1,6 +1,6 @@
 .footer {
   border-top: 1px solid var(--color-fd-border);
-  background: var(--color-fd-card);
+  background: var(--color-fd-background);
   font-size: 13px;
   color: var(--color-fd-muted-foreground);
 }
@@ -11,7 +11,7 @@
   gap: 48px;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 48px 32px 32px;
+  padding: 48px 32px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -28,13 +28,18 @@
 }
 
 .logo {
-  height: 24px;
-  width: auto;
+  // DeepEval.svg ships with a hardcoded `fill="white"` (inherited from
+  // the old purple Docusaurus footer). Rather than invert it with a
+  // filter — which freezes the color in one mode — we load it as a
+  // CSS mask and paint it with `--color-fd-foreground`, so the glyph
+  // naturally flips between dark (light mode) and light (dark mode).
+  display: block;
+  height: 32px;
+  width: 150px; // Locked to the SVG's 117:25 aspect ratio.
   margin: 0;
-  // DeepEval.svg ships with a hardcoded white fill (for the purple
-  // Docusaurus footer). Invert to solid black so it's legible on our
-  // off-white footer.
-  filter: brightness(0);
+  background-color: var(--color-fd-foreground);
+  mask: url("/icons/DeepEval.svg") no-repeat center / contain;
+  -webkit-mask: url("/icons/DeepEval.svg") no-repeat center / contain;
 }
 
 .tagline {
@@ -118,18 +123,6 @@
   height: 12px;
   flex-shrink: 0;
   opacity: 0.7;
-}
-
-.bottom {
-  border-top: 1px solid var(--color-fd-border);
-  padding: 16px 32px;
-  font-size: 12px;
-  max-width: 1400px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: 16px 20px;
-  }
 }
 
 .heart {

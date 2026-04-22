@@ -7,9 +7,12 @@
     "dev": "next dev",
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "contributors": "node scripts/generate-contributors.mjs",
+    "prebuild": "npm run contributors",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
+    "@radix-ui/react-popover": "1.1.15",
     "fumadocs-core": "16.8.1",
     "fumadocs-mdx": "14.3.1",
     "fumadocs-ui": "16.8.1",

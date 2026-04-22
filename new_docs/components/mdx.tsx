@@ -14,7 +14,6 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 import LinkCards from "@site/src/components/LinkCards";
 import TechStackCards from "@site/src/components/TechStackCards";
-import CopyMarkdownButton from "@site/src/components/CopyMarkdownButton";
 import { FAQs } from "@site/src/components/FAQ";
 import BlogPostMeta from "@site/src/components/BlogPostMeta";
 
@@ -37,7 +36,6 @@ export function getMDXComponents(components?: MDXComponents) {
     FeatureComparisonTable,
     LinkCards,
     TechStackCards,
-    CopyMarkdownButton,
     FAQs,
     BlogPostMeta,
     ...components,
