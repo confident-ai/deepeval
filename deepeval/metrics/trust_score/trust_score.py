@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+
 
 class TrustScoreMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
@@ -42,7 +43,10 @@ class TrustScoreMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            if not test_case.retrieval_context or len(test_case.retrieval_context) == 0:
+            if (
+                not test_case.retrieval_context
+                or len(test_case.retrieval_context) == 0
+            ):
                 self.score = 1.0
                 self.reason = "No retrieval context provided."
                 self.success = self.score >= self.threshold
@@ -77,7 +81,9 @@ class TrustScoreMetric(BaseMetric):
                     matched_tier = "None"
 
                 total_score += chunk_score
-                reasons.append(f"'{matched_source}' mapped to tier {matched_tier}")
+                reasons.append(
+                    f"'{matched_source}' mapped to tier {matched_tier}"
+                )
 
             self.score = total_score / len(test_case.retrieval_context)
             self.reason = "Sources found: " + ", ".join(reasons)
@@ -85,6 +91,7 @@ class TrustScoreMetric(BaseMetric):
 
             if _log_metric_to_confident:
                 from deepeval.metrics.api import metric_data_manager
+
                 metric_data_manager.post_metric_if_enabled(
                     self, test_case=test_case
                 )
