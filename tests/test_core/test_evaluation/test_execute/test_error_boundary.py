@@ -23,6 +23,7 @@ exec_mod = import_module("deepeval.evaluate.execute")
 # after the execute.py split, monkeypatches for names looked up inside
 # function bodies must target the submodule that owns the binding.
 _agentic_mod = import_module("deepeval.evaluate.execute.agentic")
+_loop_mod = import_module("deepeval.evaluate.execute.loop")
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +36,7 @@ def _bypass_no_metrics_guard(monkeypatch):
     are covered separately in test_dataset_iterator.py.
     """
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
 
