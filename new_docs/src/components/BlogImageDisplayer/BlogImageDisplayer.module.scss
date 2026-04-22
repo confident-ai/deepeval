@@ -1,0 +1,20 @@
+.imageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+
+  .image {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    padding: 1rem;
+  }
+
+  .caption {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+  }
+}

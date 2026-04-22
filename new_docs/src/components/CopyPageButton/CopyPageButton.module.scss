@@ -1,0 +1,135 @@
+.container {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 100;
+  font-family: inherit;
+  margin-top: 6px;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--bg-overlay);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 280px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: fadeIn 0.12s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: background 0.1s ease;
+
+  &:hover {
+    background: var(--bg-overlay);
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  > svg {
+    flex-shrink: 0;
+    color: var(--text-secondary);
+  }
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemLabel {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.itemDescription {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+.externalIcon {
+  flex-shrink: 0;
+  color: var(--text-secondary) !important;
+  opacity: 0.6;
+  margin-left: auto;
+}
+
+.aiIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--text-primary);
+  color: var(--text-inverse);
+  font-size: 8px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    display: none;
+  }
+}

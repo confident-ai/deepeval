@@ -1,0 +1,15 @@
+{
+  "title": "Blog",
+  "pages": [
+    "index",
+
+    "---[Megaphone]Announcements---",
+    "hello-world",
+
+    "---[Users]Community---",
+    "tutorial-g-eval-use-cases",
+
+    "---[Scale]Comparisons---",
+    "deepeval-vs-ragas"
+  ]
+}

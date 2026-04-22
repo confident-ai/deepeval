@@ -1,0 +1,10 @@
+{
+  "title": "Images",
+  "pages": [
+    "multimodal-metrics-image-coherence",
+    "multimodal-metrics-image-helpfulness",
+    "multimodal-metrics-image-reference",
+    "multimodal-metrics-text-to-image",
+    "multimodal-metrics-image-editing"
+  ]
+}

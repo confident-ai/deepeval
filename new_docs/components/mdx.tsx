@@ -1,0 +1,51 @@
+import defaultMdxComponents from "fumadocs-ui/mdx";
+import { Tabs, Tab } from "fumadocs-ui/components/tabs";
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Steps, Step } from "fumadocs-ui/components/steps";
+import type { MDXComponents } from "mdx/types";
+
+// Site-specific MDX components — globally registered so MDX authors
+// don't have to `import` them in every file.
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import ImageDisplayer from "@site/src/components/ImageDisplayer";
+import Callout from "@site/src/components/Callout";
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
+import LinkCards from "@site/src/components/LinkCards";
+import TechStackCards from "@site/src/components/TechStackCards";
+import CopyMarkdownButton from "@site/src/components/CopyMarkdownButton";
+import { FAQs } from "@site/src/components/FAQ";
+import BlogPostMeta from "@site/src/components/BlogPostMeta";
+
+export function getMDXComponents(components?: MDXComponents) {
+  return {
+    ...defaultMdxComponents,
+    // Fumadocs primitives
+    Tabs,
+    Tab,
+    Card,
+    Cards,
+    Steps,
+    Step,
+    // Site components
+    VideoDisplayer,
+    ImageDisplayer,
+    Callout,
+    Equation,
+    MetricTagsDisplayer,
+    FeatureComparisonTable,
+    LinkCards,
+    TechStackCards,
+    CopyMarkdownButton,
+    FAQs,
+    BlogPostMeta,
+    ...components,
+  } satisfies MDXComponents;
+}
+
+export const useMDXComponents = getMDXComponents;
+
+declare global {
+  type MDXProvidedComponents = ReturnType<typeof getMDXComponents>;
+}

@@ -1,0 +1,58 @@
+.metricTagsDisplayer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  .pill {
+    padding: 2px 10px;
+    font-size: 12px;
+    border-radius: 0.5rem;
+    background-color: var(--pill-neutral-bg);
+    border: 1px solid var(--pill-neutral-border);
+    color: var(--pill-neutral-fg);
+
+    &.usesLLM {
+      background-color: var(--pill-uses-llm-bg);
+      border-color: var(--pill-uses-llm-border);
+      color: var(--pill-uses-llm-fg);
+    }
+
+    &.rag {
+      background-color: var(--pill-rag-bg);
+      border-color: var(--pill-rag-border);
+      color: var(--pill-rag-fg);
+    }
+
+    &.agent {
+      background-color: var(--pill-agent-bg);
+      border-color: var(--pill-agent-border);
+      color: var(--pill-agent-fg);
+    }
+
+    &.chatbot {
+      background-color: var(--pill-chatbot-bg);
+      border-color: var(--pill-chatbot-border);
+      color: var(--pill-chatbot-fg);
+    }
+
+    &.custom {
+      background-color: var(--pill-custom-bg);
+      border-color: var(--pill-custom-border);
+      color: var(--pill-custom-fg);
+    }
+
+    &.safety {
+      background-color: var(--pill-safety-bg);
+      border-color: var(--pill-safety-border);
+      color: var(--pill-safety-fg);
+    }
+
+    &.multimodal {
+      background-color: var(--pill-multimodal-bg);
+      border-color: var(--pill-multimodal-border);
+      color: var(--pill-multimodal-fg);
+    }
+  }
+}

@@ -1,0 +1,417 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* ------------------------------------------------------------------ */
+/* Theme tokens                                                        */
+/* - Fonts: Inter (UI/body) + Instrument Serif (display).              */
+/* - Layout width.                                                     */
+/* - Zero out every Tailwind radius token → square corners everywhere. */
+/* - Light-mode color tokens (full Fumadocs set).                      */
+/* ------------------------------------------------------------------ */
+@theme {
+  --font-sans: var(--font-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-heading), "Geist Mono", ui-monospace,
+    SFMono-Regular, Menlo, monospace;
+
+  --fd-layout-width: 90rem;
+
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
+  /* Foundation — warm off-white */
+  --color-fd-background: hsl(40, 25%, 97%);
+  --color-fd-foreground: hsl(0, 0%, 9%);
+  --color-fd-muted: hsl(40, 15%, 94%);
+  --color-fd-muted-foreground: hsl(0, 0%, 52%);
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(0, 0%, 12%);
+  --color-fd-card: hsl(0, 0%, 100%);
+  --color-fd-card-foreground: hsl(0, 0%, 9%);
+  --color-fd-border: hsla(35, 12%, 65%, 0.4);
+  --color-fd-secondary: hsl(40, 15%, 92%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 9%);
+  --color-fd-accent: hsla(35, 12%, 80%, 0.45);
+  --color-fd-accent-foreground: hsl(0, 0%, 9%);
+
+  /* Primary = neutral foreground. Violet is gone entirely. */
+  --color-fd-primary: hsl(0, 0%, 9%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-ring: hsl(0, 0%, 9%);
+
+  /* Prose body copy — in between foreground (9%) and muted (52%). */
+  --color-prose: hsl(0, 0%, 30%);
+
+  /* Prose surface — slightly whiter than the page off-white so the
+   * MDX article reads as a distinct "paper" on top of the canvas.   */
+  --color-prose-bg: hsl(40, 30%, 99%);
+}
+
+/* Dark mode — neutral foundation, no accent color */
+.dark {
+  --color-fd-background: hsl(0, 0%, 7%);
+  --color-fd-foreground: hsl(0, 0%, 92%);
+  --color-fd-muted: hsl(0, 0%, 13%);
+  --color-fd-muted-foreground: hsla(0, 0%, 78%, 0.8);
+  --color-fd-popover: hsl(0, 0%, 11%);
+  --color-fd-popover-foreground: hsl(0, 0%, 87%);
+  --color-fd-card: hsl(0, 0%, 10%);
+  --color-fd-card-foreground: hsl(0, 0%, 98%);
+  --color-fd-border: hsla(0, 0%, 40%, 0.2);
+  --color-fd-secondary: hsl(0, 0%, 13%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 92%);
+  --color-fd-accent: hsla(0, 0%, 41%, 0.3);
+  --color-fd-accent-foreground: hsl(0, 0%, 90%);
+
+  --color-fd-primary: hsl(0, 0%, 92%);
+  --color-fd-primary-foreground: hsl(0, 0%, 9%);
+  --color-fd-ring: hsl(0, 0%, 92%);
+
+  /* Prose body copy — in between foreground (92%) and muted (78%). */
+  --color-prose: hsl(0, 0%, 84%);
+
+  /* Prose surface — one notch brighter than the page background so the
+   * article still reads as a lifted "paper" in dark mode.            */
+  --color-prose-bg: hsl(0, 0%, 12%);
+}
+
+/* MDX content — cap each child block and center it inside the page
+ * column. Notebook's container uses flex-col + `*:max-w` which
+ * left-aligns by default; `margin-inline: auto` centers it.         */
+#nd-page > * {
+  max-width: 650px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reusable utility: engineering grid background                       */
+/*                                                                     */
+/* Apply the `.bg-grid` class to any element to paint a layered grid   */
+/* behind its content — large cells framing smaller subcells, like     */
+/* engineering graph paper. Override the locally-scoped CSS variables  */
+/* to change cell size / line color / strength per instance, e.g.:     */
+/*                                                                     */
+/*   <section class="bg-grid" style="--grid-cell: 120px">...</section> */
+/*                                                                     */
+/* Defaults are deliberately strong-ish so the utility looks right     */
+/* when used on standalone blocks (hero, cards). The MDX article       */
+/* column turns the strength way down below — see `#nd-page`.          */
+/* ------------------------------------------------------------------ */
+.bg-grid {
+  --grid-cell: 80px;
+  --grid-subcell: 16px;
+  --grid-line: var(--color-fd-border);
+  --grid-subline: color-mix(in oklab, var(--color-fd-border) 40%, transparent);
+  --grid-line-width: 1px;
+
+  background-image: linear-gradient(
+      to right,
+      var(--grid-line) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to bottom,
+      var(--grid-line) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to right,
+      var(--grid-subline) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to bottom,
+      var(--grid-subline) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    );
+  background-size: var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell), var(--grid-subcell) var(--grid-subcell),
+    var(--grid-subcell) var(--grid-subcell);
+  background-position: 0 0;
+}
+
+/* MDX article — lifted off-white "paper" surface.
+ *
+ * The grid sits on a ::before layer (not #nd-page directly) so we can
+ * inset it away from the container edges. The inset leaves a clean
+ * gutter of prose-bg between the grid and the sidebar/TOC vertical
+ * borders — no more doubled lines where they would otherwise collide. */
+#nd-page {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-prose-bg);
+}
+
+#nd-page::before {
+  content: "";
+  position: absolute;
+  /* Gutter on left/right only — tops/bottoms don't collide with anything,
+   * so letting the grid run edge-to-edge vertically is fine.          */
+  inset: 0 2px;
+  z-index: -1;
+  pointer-events: none;
+
+  /* Note: --color-fd-border is already translucent (~0.4 alpha), so the
+   * color-mix percentage multiplies into that. Anything under ~15%
+   * falls below the visible threshold on the off-white surface.       */
+  --grid-line: color-mix(in oklab, var(--color-fd-border) 20%, transparent);
+  --grid-subline: color-mix(in oklab, var(--color-fd-border) 10%, transparent);
+
+  background-image: linear-gradient(
+      to right,
+      var(--grid-line) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-subline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-subline) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: 0 0;
+}
+
+/* Sidebar — smaller font + tight row padding.
+ * Fumadocs items render as <a>/<button> with `p-2` (0.5rem) and the
+ * aside is `text-sm` (14px). We drop to ~13px, zero the viewport's
+ * inline padding so section separator rules span the full width,
+ * and let each item / heading own its own inline padding.           */
+#nd-sidebar {
+  font-size: 13px;
+
+  /* Sidebar header wrapper — Fumadocs renders it with `p-4 pb-2` and
+   * a mobile-only tab dropdown inside. With nav.mode='top' +
+   * tabMode='navbar' there's nothing to show on desktop, so the
+   * padding leaves an awkward empty box above the first section.    */
+  > div:first-child {
+    display: none;
+  }
+
+  [data-radix-scroll-area-viewport] {
+    padding: 0.25rem 0;
+  }
+
+  a,
+  button {
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Section headings (rendered as <p>) — tighter top/bottom rhythm.
+   * All sections get 1rem of top breathing room above their text
+   * (first via padding; subsequent via margin + padding with the
+   * separator line in between).                                      */
+  p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    padding-top: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-top: none;
+    font-size: 13px;
+  }
+
+  p ~ p {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-fd-border);
+  }
+
+  /* Section-heading icons (Lucide SVGs rendered inside the <p>).
+   * Match the 13px heading text, use a slightly thinner stroke so
+   * they don't feel heavier than the label next to them.            */
+  p svg {
+    width: 13px;
+    height: 13px;
+    stroke-width: 1.75;
+  }
+}
+
+/* TOC — shrink to match sidebar's 13px, make the "On this page"
+ * heading use the dark foreground color, and add a little inline
+ * padding so items don't hug the left border.                        */
+#nd-toc {
+  font-size: 13px;
+  padding-top: 1rem;
+  padding-left: 0.75rem;
+
+  #toc-title {
+    color: var(--color-fd-foreground);
+    font-size: 13px;
+  }
+
+  a {
+    font-size: 13px;
+  }
+}
+
+/* Vertical rules framing the three columns + the top nav.
+ *
+ * Note: #nd-sidebar's <aside> is `w-full` of a wider grid track and
+ * uses `items-end` to align the visible 268px nav to the right edge.
+ * So borders on the aside itself land in the wrong place — we target
+ * its direct child (the actual 268px column) instead.               */
+#nd-sidebar > *,
+#nd-toc {
+  border-inline: 1px solid var(--color-fd-border);
+}
+
+#nd-subnav {
+  border: 1px solid var(--color-fd-border);
+  border-bottom: none;
+}
+
+/* MDX prose — use muted foreground for paragraphs/lists so the
+ * reading copy feels airier. Headings, links, and inline code each
+ * get their own color overrides below.                              */
+.prose {
+  color: var(--color-prose);
+  font-weight: 300;
+  font-size: 15px;
+}
+
+/* Lists — squares instead of discs/circles at every nesting level. */
+.prose :where(ul, ul ul, ul ul ul) {
+  list-style-type: square;
+}
+
+/* Headings — Geist Mono for a light/technical notebook feel.
+ * Kept dark (foreground) so they pop against the muted body copy.
+ * Scoped to #nd-page so it covers both <DocsTitle> (rendered outside
+ * .prose) and any headings written in MDX (inside .prose).          */
+#nd-page :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-heading);
+  color: var(--color-fd-foreground);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+/* Body links — native browser blue, always regular weight (even when
+ * the author wraps them in **bold**). `LinkText` is the CSS system
+ * color that resolves to the UA's default link blue and adapts in
+ * dark mode.
+ *
+ * `:not([data-card], [data-card] *)` excludes Fumadocs Cards (and
+ * their descendants) so card-as-link doesn't pick up link styling —
+ * Fumadocs' own card theme classes win there.                       */
+.prose a:not([data-card], [data-card] *) {
+  color: LinkText;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+/* <details>/<summary> — ensure pointer cursor on hover. Tailwind
+ * Preflight doesn't set this, and some browsers default to text.    */
+summary {
+  cursor: pointer;
+}
+
+/* Headings are auto-wrapped in <a href="#anchor"> by Fumadocs — we
+ * don't want those to turn blue. Reset them back to inheriting.     */
+.prose :where(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Force regular weight on links regardless of wrapping <strong>/<b>:
+ *   [**bold text**](url) → <a><strong>...</strong></a>   (strong inside a)
+ *   **[link](url)**      → <strong><a>...</a></strong>   (a inside strong)
+ *
+ * Same carve-out: skip cards so their title/body retain designed weights.
+ */
+.prose a:not([data-card], [data-card] *),
+.prose a:not([data-card], [data-card] *) *,
+.prose :is(strong, b) a:not([data-card], [data-card] *) {
+  font-weight: 400 !important;
+}
+
+/* ...but don't force 400 on heading links — headings should stay bold. */
+.prose :where(h1, h2, h3, h4, h5, h6) a,
+.prose :where(h1, h2, h3, h4, h5, h6) a * {
+  font-weight: inherit !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fumadocs Cards — tweak default sizing to feel more like our notebook
+ * aesthetic: icons + title a hair bigger, description/body a hair
+ * smaller. The link-bleed carve-outs above already keep card text
+ * black and un-underlined.                                           */
+[data-card] svg {
+  width: 18px;
+  height: 18px;
+}
+
+[data-card] h3 {
+  font-size: 15px;
+}
+
+[data-card] p,
+[data-card] > div:last-child,
+[data-card] > div:last-child * {
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fumadocs Steps — the <Steps>/<Step> components ship without any CSS,
+ * so we own the styling: numbered square badges (no border-radius),
+ * a subtle left rail, and consistent vertical rhythm between steps.  */
+.fd-steps {
+  counter-reset: fd-step;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  margin-block: 1.5em;
+  padding-left: 28px;
+  border-left: 1px solid var(--color-fd-border);
+}
+
+.fd-step {
+  counter-increment: fd-step;
+  position: relative;
+
+  &::before {
+    content: counter(fd-step);
+    position: absolute;
+    top: 0;
+    left: calc(-28px - 12px);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-fd-card);
+    border: 1px solid var(--color-fd-border);
+    color: var(--color-fd-foreground);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 0;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
