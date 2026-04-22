@@ -1426,6 +1426,10 @@ class EvaluationDataset:
                         display_config.file_output_dir,
                     )
 
+            global_test_run_manager.configure_local_store(
+                results_folder=display_config.results_folder,
+                results_subfolder=display_config.results_subfolder,
+            )
             # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 

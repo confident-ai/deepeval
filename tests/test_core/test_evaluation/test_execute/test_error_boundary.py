@@ -20,6 +20,10 @@ from tests.test_core.helpers import make_trace_api
 
 # module under test
 exec_mod = import_module("deepeval.evaluate.execute")
+# after the execute.py split, monkeypatches for names looked up inside
+# function bodies must target the submodule that owns the binding.
+_agentic_mod = import_module("deepeval.evaluate.execute.agentic")
+_loop_mod = import_module("deepeval.evaluate.execute.loop")
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +36,7 @@ def _bypass_no_metrics_guard(monkeypatch):
     are covered separately in test_dataset_iterator.py.
     """
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
 
@@ -48,7 +52,10 @@ def patched_api_layer(monkeypatch):
 
     trace_api = make_trace_api()
     monkeypatch.setattr(
-        exec_mod, "create_api_trace", lambda **_kwargs: trace_api, raising=True
+        _agentic_mod,
+        "create_api_trace",
+        lambda **_kwargs: trace_api,
+        raising=True,
     )
     monkeypatch.setattr(
         trace_manager,
@@ -73,7 +80,10 @@ def patched_api_layer(monkeypatch):
 
     # extract_trace_test_results empty by default for these tests
     monkeypatch.setattr(
-        exec_mod, "extract_trace_test_results", lambda _api: [], raising=True
+        _agentic_mod,
+        "extract_trace_test_results",
+        lambda _api: [],
+        raising=True,
     )
 
 
@@ -97,7 +107,7 @@ def record_measure_calls(monkeypatch):
             m.measure(test_case)
 
     monkeypatch.setattr(
-        exec_mod, "measure_metrics_with_indicator", _stub, raising=True
+        _agentic_mod, "measure_metrics_with_indicator", _stub, raising=True
     )
     return calls
 
@@ -154,7 +164,6 @@ async def test_no_llmtestcase_skips_trace_and_span_metrics(
         show_indicator=False,
         _use_bar_indicator=False,
         _is_assert_test=False,
-        observed_callback=None,
         trace=fake_trace,
         trace_metrics=None,  # use the ones on our fake trace
         progress=None,
@@ -202,7 +211,6 @@ async def test_trace_error_boundary_no_actual_output_still_evaluates_span_metric
         show_indicator=False,
         _use_bar_indicator=False,
         _is_assert_test=False,
-        observed_callback=None,
         trace=fake_trace,
         trace_metrics=None,
         progress=None,
@@ -252,7 +260,6 @@ async def test_task_completion_path_sets_trace_case_and_evaluates_metrics(
         show_indicator=False,
         _use_bar_indicator=False,
         _is_assert_test=False,
-        observed_callback=None,
         trace=fake_trace,
         trace_metrics=None,
         progress=None,
@@ -286,7 +293,10 @@ def test_task_exception_logs_error_when_debug_enabled(
         calls["measurements"] += 1
 
     monkeypatch.setattr(
-        exec_mod, "measure_metrics_with_indicator", _noop_measure, raising=True
+        _agentic_mod,
+        "measure_metrics_with_indicator",
+        _noop_measure,
+        raising=True,
     )
 
     loop = asyncio.new_event_loop()
@@ -352,7 +362,7 @@ def test_task_error_after_observe_marks_existing_trace(monkeypatch):
 
     # Don’t execute real metrics
     monkeypatch.setattr(
-        exec_mod,
+        _agentic_mod,
         "measure_metrics_with_indicator",
         lambda *a, **k: None,
         raising=True,
@@ -434,7 +444,7 @@ def test_task_cancel_after_observe_marks_existing_trace(monkeypatch):
 
     # no real metrics
     monkeypatch.setattr(
-        exec_mod,
+        _agentic_mod,
         "measure_metrics_with_indicator",
         lambda *a, **k: None,
         raising=True,
@@ -801,7 +811,6 @@ async def test_span_errored_skips_span_metrics(
         show_indicator=False,
         _use_bar_indicator=False,
         _is_assert_test=False,
-        observed_callback=None,
         trace=fake_trace,
         trace_metrics=None,
         progress=None,
@@ -842,7 +851,6 @@ async def test_trace_errored_skips_trace_metrics(
         show_indicator=False,
         _use_bar_indicator=False,
         _is_assert_test=False,
-        observed_callback=None,
         trace=fake_trace,
         trace_metrics=None,
         progress=None,

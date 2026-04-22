@@ -19,6 +19,7 @@ from deepeval.evaluate.configs import (
     ErrorConfig,
 )
 from deepeval.evaluate import execute as exec_mod
+from deepeval.evaluate.execute import loop as _loop_mod
 from tests.test_core.test_tracing.conftest import get_active_trace_and_span
 
 
@@ -32,7 +33,7 @@ def _bypass_no_metrics_guard(monkeypatch):
     behavior these tests exist to verify.
     """
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
 
@@ -60,8 +61,8 @@ def test_execute_propagates_expected_output(
 ):
     received_test_cases = []
 
-    # patch the symbol that execute.py calls
-    orig_create_api_test_case = exec_mod.create_api_test_case
+    # patch the symbol that the (sync) loop submodule looks up
+    orig_create_api_test_case = _loop_mod.create_api_test_case
 
     def spy_create_api_test_case(*, test_case, trace, index=None):
         received_test_cases.append(test_case)
@@ -70,7 +71,7 @@ def test_execute_propagates_expected_output(
         )
 
     monkeypatch.setattr(
-        exec_mod, "create_api_test_case", spy_create_api_test_case
+        _loop_mod, "create_api_test_case", spy_create_api_test_case
     )
 
     goldens = [Golden(input="china", expected_output="beijing, 1000")]

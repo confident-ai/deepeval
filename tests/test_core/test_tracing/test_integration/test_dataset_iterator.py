@@ -15,6 +15,7 @@ from deepeval.evaluate.configs import (
     ErrorConfig,
 )
 from deepeval.evaluate import execute as exec_mod
+from deepeval.evaluate.execute import loop as _loop_mod
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.tracing import observe
 
@@ -62,10 +63,10 @@ def test_no_leftovers_runs_trace_eval(monkeypatch):
         return set()
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _fake_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _fake_snapshot_tasks, raising=False
     )
     # This is a pure plumbing test: it never runs an @observe-decorated
     # agent and instead seeds traces_to_evaluate with a sentinel object().
@@ -73,7 +74,7 @@ def test_no_leftovers_runs_trace_eval(monkeypatch):
     # post-iteration "any metrics?" guard here — its semantics are tested
     # separately in test_no_metrics_error.
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
     # build the iterator that uses evaluate_test_cases
@@ -135,15 +136,15 @@ def test_snapshot_tasks_runtimeerror_still_runs_trace_eval(monkeypatch):
         raise RuntimeError("loop is closing")
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _flaky_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _flaky_snapshot_tasks, raising=False
     )
     # Same rationale as test_no_leftovers_runs_trace_eval: this is a
     # plumbing test using an object() sentinel, so bypass the metric guard.
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
     ds = EvaluationDataset(goldens=[Golden(input="x")])
@@ -198,15 +199,15 @@ def test_closed_loop_skips_trace_eval(monkeypatch):
         return set()
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
     monkeypatch.setattr(
-        exec_mod, "_snapshot_tasks", _safe_snapshot_tasks, raising=False
+        _loop_mod, "_snapshot_tasks", _safe_snapshot_tasks, raising=False
     )
     # Same rationale as the other plumbing tests: object() sentinel has no
     # metric source by design, so bypass the post-iter metric guard here.
     monkeypatch.setattr(
-        exec_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
+        _loop_mod, "_has_any_evaluable_metrics", lambda **_: True, raising=False
     )
 
     ds = EvaluationDataset(goldens=[Golden(input="x")])
@@ -319,7 +320,7 @@ def test_no_metrics_error_not_raised_when_top_level_metrics_provided(
         pass
 
     monkeypatch.setattr(
-        exec_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
+        _loop_mod, "_a_evaluate_traces", _fake_a_evaluate_traces, raising=False
     )
 
     dataset = EvaluationDataset(goldens=[Golden(input="q1")])

@@ -273,6 +273,24 @@ We recommend logging your `hyperparameters` during your evauations as they allow
 />
 :::
 
+:::info Sweep hyperparameters in a `for` loop
+Pass `DisplayConfig(results_folder="./evals/prompt-v3")` to persist each call to `evaluate()` as `test_run_<YYYYMMDD_HHMMSS>.json`:
+
+```python
+from deepeval.evaluate import DisplayConfig
+
+for temp in [0.0, 0.4, 0.8]:
+    evaluate(
+        test_cases=test_cases,
+        metrics=metrics,
+        hyperparameters={"model": "gpt-4o-mini", "temperature": temp},
+        display_config=DisplayConfig(results_folder="./evals/prompt-v3"),
+    )
+```
+
+The folder is the set of test runs; an [Experiment](/docs/evaluation-introduction) is formed later by comparing multiple test runs. See [Saving test runs locally](/docs/evaluation-flags-and-configs#saving-test-runs-locally) for the full layout and how AI tools like Cursor / Claude Code read the files.
+:::
+
 ## Multi-Turn E2E Evals
 
 <Timeline>
