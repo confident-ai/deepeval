@@ -1,6 +1,7 @@
 import copy
 import os
 import json
+import subprocess
 import time
 import webbrowser
 import tqdm
@@ -663,25 +664,71 @@ def format_turn(
 # GPU-related business
 
 
+def _get_gpu_memory_free_mib():
+    try:
+        completed = subprocess.run(
+            ["nvidia-smi", "-q", "-d", "Memory"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=True,
+        )
+    except FileNotFoundError as error:
+        raise RuntimeError("nvidia-smi is not installed or not on PATH") from error
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError("nvidia-smi timed out after 30 seconds") from error
+    except subprocess.CalledProcessError as error:
+        raise RuntimeError("nvidia-smi failed to query GPU memory") from error
+
+    lines = completed.stdout.splitlines()
+    free_memory_values = []
+    index = 0
+
+    while index < len(lines):
+        if "GPU" not in lines[index]:
+            index += 1
+            continue
+
+        for offset in range(1, 5):
+            line_index = index + offset
+            if line_index >= len(lines):
+                break
+
+            line = lines[line_index].strip()
+            if "Free" not in line:
+                continue
+
+            parts = line.split()
+            if len(parts) < 3:
+                continue
+
+            try:
+                free_memory_values.append(int(parts[2]))
+            except ValueError as error:
+                raise RuntimeError(
+                    f"Unexpected nvidia-smi output line: {line}"
+                ) from error
+
+        index += 1
+
+    return free_memory_values
+
+
 def get_freer_gpu():
     import numpy as np
 
-    os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
     memory_available = [
-        int(x.split()[2]) + 5 * i
-        for i, x in enumerate(open("tmp_smi", "r").readlines())
+        value + 5 * i
+        for i, value in enumerate(_get_gpu_memory_free_mib())
     ]
-    os.remove("tmp_smi")
     return np.argmax(memory_available)
 
 
 def any_gpu_with_space(gb_needed):
-    os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
     memory_available = [
-        float(x.split()[2]) / 1024.0
-        for i, x in enumerate(open("tmp_smi", "r").readlines())
+        float(value) / 1024.0
+        for value in _get_gpu_memory_free_mib()
     ]
-    os.remove("tmp_smi")
     return any([mem >= gb_needed for mem in memory_available])
 
 
