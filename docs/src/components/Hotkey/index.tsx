@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Command } from "lucide-react";
+import { Command, CornerDownLeft } from "lucide-react";
 import styles from "./Hotkey.module.scss";
 
 export type HotkeyConfig = {
@@ -13,6 +13,14 @@ type HotkeyProps = {
   hotkey: HotkeyConfig;
   ariaLabel?: string;
 };
+
+function renderHotkeyLabel(key: string) {
+  if (key.toLowerCase() === "enter") {
+    return <CornerDownLeft aria-hidden="true" />;
+  }
+
+  return key;
+}
 
 const Hotkey: React.FC<HotkeyProps> = ({ hotkey, ariaLabel }) => {
   useEffect(() => {
@@ -50,7 +58,7 @@ const Hotkey: React.FC<HotkeyProps> = ({ hotkey, ariaLabel }) => {
       <span className={styles.icon} aria-hidden="true">
         <Command />
       </span>
-      <span className={styles.key}>{hotkey.key}</span>
+      <span className={styles.key}>{renderHotkeyLabel(hotkey.key)}</span>
     </kbd>
   );
 };

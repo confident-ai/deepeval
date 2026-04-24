@@ -173,21 +173,38 @@
 }
 
 .runButton {
+  --fd-callout-color: var(--color-fd-primary-foreground);
+  --fd-callout-ink: color-mix(
+    in oklch,
+    var(--color-fd-primary-foreground) 14%,
+    transparent
+  );
+  --fd-callout-rule: color-mix(
+    in oklch,
+    var(--color-fd-foreground) 55%,
+    transparent
+  );
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
-  padding: 0.45rem 0.7rem;
-  border: 1px solid var(--demo-foreground);
-  background: var(--demo-foreground);
-  color: var(--demo-surface);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 150ms ease, background-color 150ms ease;
   align-self: flex-start;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-fd-primary);
+  border-radius: 0;
+  background: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease,
+    border-color 160ms ease;
 
   &:hover:not(:disabled) {
-    opacity: 0.92;
+    background: color-mix(in oklch, var(--color-fd-primary) 88%, transparent);
   }
 
   &:disabled {

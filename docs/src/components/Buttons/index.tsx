@@ -96,6 +96,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = (props) => {
       ref={buttonRef}
       type={type}
       className={styles.primary}
+      data-button
       data-callout
     >
       {renderContent({
@@ -138,6 +139,7 @@ export const SecondaryButton: React.FC<ButtonProps> = (props) => {
       {...buttonProps}
       type={type}
       className={styles.secondary}
+      data-button
       data-callout
     >
       {renderContent({ children, startIcon, endIcon })}

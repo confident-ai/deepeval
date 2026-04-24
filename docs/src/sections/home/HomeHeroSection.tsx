@@ -64,6 +64,7 @@ const HomeHeroSection: React.FC = () => {
         <div className={styles.actions}>
           <PrimaryButton
             href="/docs/getting-started"
+            shortkey="Enter"
             endIcon={<ArrowUpRight aria-hidden />}
           >
             Get Started

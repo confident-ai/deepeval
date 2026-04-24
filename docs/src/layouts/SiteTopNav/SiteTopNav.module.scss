@@ -7,6 +7,7 @@ $toc-visible-min: 1280px;
   position: sticky;
   top: var(--fd-docs-row-1);
   z-index: 10;
+  --nd-header-logo-width: 268px;
   backdrop-filter: blur(12px);
   transition: colors;
 }
@@ -62,7 +63,7 @@ $toc-visible-min: 1280px;
   @media (min-width: $grid-min) {
     display: grid;
     grid-template-columns:
-      var(--fd-sidebar-col)
+      var(--nd-header-logo-width, var(--fd-sidebar-col))
       minmax(0, 1fr)
       var(--nd-header-utils-width);
   }

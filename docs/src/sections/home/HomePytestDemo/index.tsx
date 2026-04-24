@@ -340,11 +340,13 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
           className={styles.runButton}
           onClick={runDemo}
           disabled={status === "running"}
+          data-button
+          data-callout
         >
           {status === "running" ? (
-            <LoaderCircle size={14} className={styles.spinner} />
+            <LoaderCircle size={14} className={styles.spinner} aria-hidden="true" />
           ) : (
-            <Play size={14} />
+            <Play size={14} aria-hidden="true" />
           )}
           {status === "running" ? "Evaluating" : "Evaluate"}
         </button>

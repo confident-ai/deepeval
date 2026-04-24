@@ -318,10 +318,20 @@
  * uses `items-end` to align the visible 268px nav to the right edge.
  * So borders on the aside itself land in the wrong place — we target
  * its direct child (the actual 268px column) instead.               */
-#nd-sidebar > *,
+#nd-sidebar > * {
+  border-inline-start: 1px solid var(--color-fd-border);
+}
+
 #nd-sidebar-mobile > *,
 #nd-toc {
   border-inline: 1px solid var(--color-fd-border);
+}
+
+/* The seam between sidebar and prose should belong to the main docs
+ * surface, not the collapsible sidebar rail. That keeps the vertical
+ * divider visible even when the sidebar is collapsed away. */
+#nd-page {
+  border-inline-start: 1px solid var(--color-fd-border);
 }
 
 /* ==================================================================

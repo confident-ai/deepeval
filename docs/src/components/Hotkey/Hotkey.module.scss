@@ -31,3 +31,9 @@
 .key {
   letter-spacing: 0.02em;
 }
+
+.key :global(svg) {
+  width: 0.72rem;
+  height: 0.72rem;
+  flex-shrink: 0;
+}
