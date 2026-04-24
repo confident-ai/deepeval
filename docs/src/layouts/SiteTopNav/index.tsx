@@ -139,7 +139,9 @@ const SiteTopNav: React.FC<SiteTopNavProps> = ({
               <div className={styles.homeDiscordCta}>
                 <DiscordButton layout="inline" />
               </div>
-              <GithubCtaButton layout="inline" tone="secondary" />
+              <div className={styles.homeGithubCta}>
+                <GithubCtaButton layout="inline" tone="secondary" />
+              </div>
               <SiteThemeSwitch />
               <NavMenu items={navLinks} />
             </div>

@@ -1,19 +1,36 @@
 // Paths tagged with this class keep their original dark fill in light mode
-// (SVG presentation attributes have lower specificity than any CSS `fill`
-// rule, so light mode is byte-identical to the original asset). In dark mode
-// the CSS rule below wins and flips them to the theme foreground so they
-// remain visible against the dark background.
-:global(.dark) .themedDark {
-  fill: var(--color-fd-foreground);
+// and flip to the theme foreground in dark mode. Older Safari versions can be
+// finicky about SVG presentation-attribute inheritance, so we also give the
+// class itself an explicit base fill and a prefers-color-scheme fallback.
+.themedDark {
+  fill: #000000;
 }
 
 // Companion class for the rare case where a dark-themed path sits *behind*
 // a light-colored element that needs to invert alongside it (e.g. Uber's
-// white wordmark that sits on top of a black rounded rectangle). In light
-// mode the original white stays; in dark mode the light path flips to the
-// theme background so it contrasts against the now-light themedDark path.
-:global(.dark) .themedLight {
+// white wordmark that sits on top of a black rounded rectangle).
+.themedLight {
+  fill: #ffffff;
+}
+
+:global(.dark) .themedDark,
+:global(html.dark) .themedDark {
+  fill: var(--color-fd-foreground);
+}
+
+:global(.dark) .themedLight,
+:global(html.dark) .themedLight {
   fill: var(--color-fd-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not(.light)) .themedDark {
+    fill: var(--color-fd-foreground);
+  }
+
+  :global(html:not(.light)) .themedLight {
+    fill: var(--color-fd-background);
+  }
 }
 
 // Mercedes-Benz is too gradient-heavy (~305k chars of mesh stops) to inline
@@ -23,6 +40,14 @@
 .benzRoot {
   --benz-wordmark: #131822;
 }
-:global(.dark) .benzRoot {
+
+:global(.dark) .benzRoot,
+:global(html.dark) .benzRoot {
   --benz-wordmark: var(--color-fd-foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not(.light)) .benzRoot {
+    --benz-wordmark: var(--color-fd-foreground);
+  }
 }

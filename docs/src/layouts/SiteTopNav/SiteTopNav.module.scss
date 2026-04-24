@@ -83,10 +83,13 @@ $toc-visible-min: 1280px;
   display: flex;
   align-items: center;
   padding-inline: $gutter;
-  width: 268px;
-  flex: 0 0 268px;
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
 
   @media (min-width: $grid-min) {
+    width: 268px;
+    flex: 0 0 268px;
     border-left: 1px solid var(--color-fd-border);
     border-right: 1px solid var(--color-fd-border);
   }
@@ -209,6 +212,10 @@ $toc-visible-min: 1280px;
   flex-shrink: 0;
 }
 
+.homeGithubCta {
+  flex-shrink: 0;
+}
+
 .mainNavLinks {
   display: none;
 
@@ -287,6 +294,12 @@ $toc-visible-min: 1280px;
   }
 
   .homeDiscordCta {
+    display: none;
+  }
+}
+
+@media (max-width: 429.98px) {
+  .homeGithubCta {
     display: none;
   }
 }

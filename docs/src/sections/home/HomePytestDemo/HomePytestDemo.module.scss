@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+  min-width: 0;
   --demo-surface: var(--color-fd-background);
   --demo-surface-muted: color-mix(
     in oklab,
@@ -32,9 +33,14 @@
 
 .codePanel {
   min-height: 12rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .fusedBlock {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--demo-border);
   background: linear-gradient(
     180deg,
@@ -50,6 +56,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
   height: 2rem;
   padding: 0 0.875rem;
   border-bottom: 1px solid var(--demo-border);
@@ -62,6 +69,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .windowDots {
@@ -105,15 +113,23 @@
 }
 
 .blockBody {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.85rem 0.9rem 0.95rem;
 }
 
 .codeBlock {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem;
 
   pre {
+    display: block;
     margin: 0;
-    overflow-x: auto;
+    min-width: 100%;
+    width: max-content;
     font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo,
       "JetBrains Mono", Consolas, monospace;
     font-size: 12px;
@@ -176,6 +192,7 @@
   align-items: stretch;
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
 }
 
 .runButton {
@@ -223,6 +240,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: var(--demo-surface);
   color: var(--demo-foreground);
   box-shadow: 0 12px 28px var(--demo-shadow);
@@ -233,9 +252,16 @@
 }
 
 .terminalBody {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 0.24rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 0.85rem 0.9rem 0.95rem;
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo,
     "JetBrains Mono", Consolas, monospace;
@@ -245,7 +271,9 @@
 }
 
 .terminalLine {
-  white-space: pre-wrap;
+  min-width: 100%;
+  width: max-content;
+  white-space: pre;
   animation: line-in 220ms ease-out;
 }
 
@@ -291,6 +319,7 @@
 .tableWrap {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   margin-top: 0.75rem;
   margin-bottom: 0.35rem;
   border: 1px solid var(--demo-border-strong);
@@ -403,6 +432,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  min-width: 100%;
   margin-top: 0.1rem;
   padding-top: 0.2rem;
   padding-left: 1.1rem;

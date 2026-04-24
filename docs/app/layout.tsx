@@ -57,6 +57,13 @@ export const metadata: Metadata = {
     url: siteUrl,
     title: siteTitle,
     description: siteDescription,
+    // Site-wide fallback preview image. Every section/page inherits
+    // this unless it overrides `openGraph.images` (the docs section
+    // does, swapping in a per-page `/og/docs/.../image.png`). Mirrors
+    // the old Docusaurus `themeConfig.image = 'img/social_card.png'`
+    // default so guides/tutorials/integrations/blog/changelog/home
+    // never end up with a blank link preview on social shares.
+    images: '/img/social_card.png',
   },
   twitter: {
     card: 'summary_large_image',
@@ -64,6 +71,16 @@ export const metadata: Metadata = {
     creator: '@deepeval',
     title: siteTitle,
     description: siteDescription,
+    // Deliberately no `images:` here — we rely on X's documented
+    // fallback to `og:image` when `twitter:image` is absent. Setting
+    // it explicitly would stick the generic social card even on
+    // docs pages whose `og:image` is overridden per-page (Next
+    // replaces the whole `twitter` block across nested
+    // `generateMetadata` calls instead of deep-merging, so a section
+    // override of just `twitter.images` would clobber the `card` /
+    // `site` / `creator` fields here). LinkedIn / Slack / Discord /
+    // Facebook read `og:image` directly, so the single `og:image`
+    // source-of-truth covers every surface.
   },
 };
 
