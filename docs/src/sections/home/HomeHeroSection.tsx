@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "@site/src/components/Buttons";
 import HeroAnnouncement from "@site/src/components/HeroAnnouncement";
+import { DYNAMIC_LOGOS } from "./CompanyLogos";
 import styles from "./HomeSection.module.scss";
 
 type Brand = {
@@ -86,17 +87,28 @@ const HomeHeroSection: React.FC = () => {
         </div>
       </div>
       <div className={styles.logoGrid} aria-label="Companies using DeepEval">
-        {BRANDS.map((brand) => (
-          <div key={brand.slug} className={styles.cell}>
-            <Image
-              src={`/icons/companies/${brand.slug}.svg`}
-              alt={brand.name}
-              width={120}
-              height={40}
-              className={styles.logo}
-            />
-          </div>
-        ))}
+        {BRANDS.map((brand) => {
+          const DynamicLogo = DYNAMIC_LOGOS[brand.slug];
+          return (
+            <div key={brand.slug} className={styles.cell}>
+              {DynamicLogo ? (
+                <DynamicLogo
+                  role="img"
+                  aria-label={brand.name}
+                  className={styles.logo}
+                />
+              ) : (
+                <Image
+                  src={`/icons/companies/${brand.slug}.svg`}
+                  alt={brand.name}
+                  width={120}
+                  height={40}
+                  className={styles.logo}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );

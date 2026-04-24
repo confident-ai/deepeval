@@ -1,0 +1,28 @@
+// Paths tagged with this class keep their original dark fill in light mode
+// (SVG presentation attributes have lower specificity than any CSS `fill`
+// rule, so light mode is byte-identical to the original asset). In dark mode
+// the CSS rule below wins and flips them to the theme foreground so they
+// remain visible against the dark background.
+:global(.dark) .themedDark {
+  fill: var(--color-fd-foreground);
+}
+
+// Companion class for the rare case where a dark-themed path sits *behind*
+// a light-colored element that needs to invert alongside it (e.g. Uber's
+// white wordmark that sits on top of a black rounded rectangle). In light
+// mode the original white stays; in dark mode the light path flips to the
+// theme background so it contrasts against the now-light themedDark path.
+:global(.dark) .themedLight {
+  fill: var(--color-fd-background);
+}
+
+// Mercedes-Benz is too gradient-heavy (~305k chars of mesh stops) to inline
+// by hand. We read the raw SVG at server-render time and swap its inline
+// `fill:#131822` wordmark declaration to a CSS variable so it can flip with
+// the theme without touching the silver medallion gradient stack.
+.benzRoot {
+  --benz-wordmark: #131822;
+}
+:global(.dark) .benzRoot {
+  --benz-wordmark: var(--color-fd-foreground);
+}
