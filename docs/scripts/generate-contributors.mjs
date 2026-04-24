@@ -23,9 +23,10 @@
  * resolve to a GitHub user are dropped — no point showing a ghost.
  *
  * Failure modes handled gracefully (all exit 0 so builds don't break):
- *   - Not in a git repo, or no commits touch content/docs: writes an
- *     empty `{}` and warns. The runtime component renders nothing for
- *     pages with no entry, so the UI silently no-ops.
+ *   - Not in a git repo, or no commits touch content/docs: keeps the
+ *     previous JSON file if one exists, otherwise writes `{}`. This
+ *     matters for hosted builds that may not expose `.git` inside the
+ *     app root even though a checked-in manifest is present.
  *   - GitHub API 403 / rate-limited: keeps existing cache entries,
  *     skips the uncached emails, warns.
  *
@@ -130,6 +131,14 @@ function saveJson(path, obj) {
   writeFileSync(path, JSON.stringify(obj, null, 2) + '\n');
 }
 
+function keepExistingOrWriteEmpty(path) {
+  if (existsSync(path)) {
+    console.warn(`[contributors] keeping existing ${path}.`);
+    return;
+  }
+  saveJson(path, {});
+}
+
 function findCommitMetaForEmail(perFile, email) {
   for (const byEmail of perFile.values()) {
     const entry = byEmail.get(email);
@@ -164,8 +173,8 @@ function isBot(author) {
 
 async function main() {
   if (!inGitRepo()) {
-    console.warn('[contributors] not inside a git repo; writing empty manifest.');
-    saveJson(OUTPUT, {});
+    console.warn('[contributors] not inside a git repo; cannot regenerate contributors manifest.');
+    keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
 
@@ -177,7 +186,7 @@ async function main() {
   const files = CONTENT_DIRS.flatMap((d) => walkMdx(d));
   if (files.length === 0) {
     console.warn(`[contributors] no MDX files found under ${CONTENT_DIRS.join(', ')}.`);
-    saveJson(OUTPUT, {});
+    keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
 
