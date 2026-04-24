@@ -202,6 +202,9 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({
     setVisibleLineCount(0);
     setStatus("running");
   }
+
+  return null;
+
   return (
     <section className={styles.demo}>
       <ColabTerminalBlock
