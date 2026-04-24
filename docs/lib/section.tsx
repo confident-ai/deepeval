@@ -148,6 +148,7 @@ export function createSection(config: SectionConfig) {
     // page. Passed to both `tableOfContent.footer` and
     // `tableOfContentPopover.footer` so the mobile/condensed TOC (which
     // Fumadocs renders as a popover, not the sidebar) gets parity.
+    const contributorKey = `${contentDir}/${page.path}`;
     const contributors = showContributors
       ? getPageContributors(contentDir, page.path)
       : [];
@@ -191,6 +192,11 @@ export function createSection(config: SectionConfig) {
           </div>
         ) : null}
         {renderBeforeBody?.(page)}
+        {showContributors ? (
+          <p className="mb-4 text-xs text-red-600">
+            debug contributors: key={contributorKey} count={contributors.length}
+          </p>
+        ) : null}
         <DocsBody>
           <MDX
             components={getMDXComponents({
