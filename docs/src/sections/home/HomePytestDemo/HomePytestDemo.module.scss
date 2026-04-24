@@ -160,7 +160,13 @@
   color: var(--demo-accent-red);
 }
 
+.codeComment {
+  color: var(--demo-muted);
+}
+
 .codeIndent {
+  display: inline-block;
+  width: 4ch;
   color: transparent;
 }
 

@@ -8,57 +8,84 @@ import styles from "./HomePytestDemo.module.scss";
 const codeLines = [
   <>
     <span className={styles.codeKeyword}>from</span>{" "}
-    <span className={styles.codeModule}>deepeval.tracing</span>{" "}
+    <span className={styles.codeModule}>deepeval.metrics</span>{" "}
     <span className={styles.codeKeyword}>import</span>{" "}
-    <span className={styles.codeFunction}>observe</span>
-  </>,
-  <></>,
-  <>
-    <span className={styles.codeDecorator}>@observe()</span>
+    <span className={styles.codeFunction}>TaskCompletenessMetric</span>
   </>,
   <>
-    <span className={styles.codeKeyword}>def</span>{" "}
-    <span className={styles.codeFunction}>test_checkout_agent</span>
-    <span className={styles.codePunctuation}>():</span>
+    <span className={styles.codeKeyword}>from</span>{" "}
+    <span className={styles.codeModule}>deepeval.test_case</span>{" "}
+    <span className={styles.codeKeyword}>import</span>{" "}
+    <span className={styles.codeFunction}>LLMTestCase</span>
   </>,
   <>
-    <span className={styles.codeIndent}>    </span>
-    <span className={styles.codeVariable}>result</span>{" "}
-    <span className={styles.codeOperator}>=</span>{" "}
-    <span className={styles.codeFunction}>checkout_agent</span>
+    <span className={styles.codeKeyword}>from</span>{" "}
+    <span className={styles.codeModule}>deepeval</span>{" "}
+    <span className={styles.codeKeyword}>import</span>{" "}
+    <span className={styles.codeFunction}>assert_test</span>
+  </>,
+  <span aria-hidden="true">&nbsp;</span>,
+  <>
+    <span className={styles.codeDecorator}>@pytest.mark.parametrize</span>
     <span className={styles.codePunctuation}>(</span>
-    <span className={styles.codeString}>"refund duplicate charge"</span>
+    <span className={styles.codeString}>"test_case"</span>
+    <span className={styles.codePunctuation}>, </span>
+    <span className={styles.codeFunction}>LLMTestCase</span>
     <span className={styles.codePunctuation}>)</span>
   </>,
   <>
-    <span className={styles.codeIndent}>    </span>
-    <span className={styles.codeKeyword}>assert</span>{" "}
-    <span className={styles.codeVariable}>result.status</span>{" "}
-    <span className={styles.codeOperator}>==</span>{" "}
-    <span className={styles.codeString}>"resolved"</span>
+    <span className={styles.codeKeyword}>def</span>{" "}
+    <span className={styles.codeFunction}>test_agent</span>
+    <span className={styles.codePunctuation}>(</span>
+    <span className={styles.codeVariable}>test_case</span>
+    <span className={styles.codePunctuation}>: </span>
+    <span className={styles.codeFunction}>LLMTestCase</span>
+    <span className={styles.codePunctuation}>):</span>
   </>,
   <>
-    <span className={styles.codeIndent}>    </span>
-    <span className={styles.codeKeyword}>assert</span>{" "}
-    <span className={styles.codeVariable}>result.metrics</span>
+    <span className={styles.codeIndent}> </span>
+    <span className={styles.codeFunction}>my_ai_agent</span>
+    <span className={styles.codePunctuation}>(</span>
+    <span className={styles.codeVariable}>test_case.input</span>
+    <span className={styles.codePunctuation}>)</span>{" "}
+    <span className={styles.codeComment}># Captures full execution trace</span>
+  </>,
+  <>
+    <span className={styles.codeIndent}> </span>
+    <span className={styles.codeFunction}>assert_test</span>
+    <span className={styles.codePunctuation}>(</span>
+    <span className={styles.codeVariable}>metrics</span>
+    <span className={styles.codeOperator}>=</span>
     <span className={styles.codePunctuation}>[</span>
-    <span className={styles.codeString}>"task_completion"</span>
-    <span className={styles.codePunctuation}>]</span>{" "}
-    <span className={styles.codeOperator}>&gt;=</span>{" "}
-    <span className={styles.codeNumber}>0.92</span>
+    <span className={styles.codeFunction}>TaskCompletenessMetric</span>
+    <span className={styles.codePunctuation}>()]</span>
+    <span className={styles.codePunctuation}>)</span>{" "}
+    <span className={styles.codeComment}># Assert on custom criteria</span>
   </>,
 ];
 
-const command = "deepeval test run tests/test_checkout_agent.py";
+const command = "deepeval test run tests/test_agent.py";
 
 const timeline = [
   { delayMs: 350, line: command, tone: "command" as const },
-  { delayMs: 950, line: "Calling checkout_agent() with traced inputs...", tone: "deepeval" as const },
-  { delayMs: 2150, line: "Agent response captured. Starting evaluation suite...", tone: "muted" as const },
+  {
+    delayMs: 950,
+    line: "Calling my_ai_agent() with traced test case input...",
+    tone: "deepeval" as const,
+  },
+  {
+    delayMs: 2150,
+    line: "Execution trace captured. Starting evaluation suite...",
+    tone: "muted" as const,
+  },
   { delayMs: 5200, line: "SUMMARY_LINE", tone: "summary" as const },
   { delayMs: 5600, line: "", tone: "muted" as const },
   { delayMs: 5900, line: "TABLE_START", tone: "table" as const },
-  { delayMs: 6200, line: "goldens: 38 · traces: 38 · tools: 4 · p95 latency: 2.1s", tone: "muted" as const },
+  {
+    delayMs: 6200,
+    line: "goldens: 38 · traces: 38 · tools: 4 · p95 latency: 2.1s",
+    tone: "muted" as const,
+  },
 ];
 
 type HomePytestDemoProps = {
@@ -98,7 +125,11 @@ const ColabTerminalBlock: React.FC<ColabTerminalBlockProps> = ({
     : styles.blockBody;
   const effectiveLogo =
     headerLogo ??
-    (language === "python" ? <FileCode2 size={13} /> : <TerminalSquare size={13} />);
+    (language === "python" ? (
+      <FileCode2 size={13} />
+    ) : (
+      <TerminalSquare size={13} />
+    ));
 
   return (
     <div className={rootClass}>
@@ -125,7 +156,9 @@ const ColabTerminalBlock: React.FC<ColabTerminalBlockProps> = ({
   );
 };
 
-const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) => {
+const HomePytestDemo: React.FC<HomePytestDemoProps> = ({
+  hideHeader = false,
+}) => {
   const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
   const [visibleLineCount, setVisibleLineCount] = useState(0);
 
@@ -135,7 +168,7 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
     const timers = timeline.map((step, index) =>
       window.setTimeout(() => {
         setVisibleLineCount(index + 1);
-      }, step.delayMs),
+      }, step.delayMs)
     );
 
     const finishTimer = window.setTimeout(() => {
@@ -150,15 +183,20 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
 
   const terminalLines = useMemo(
     () => timeline.slice(0, visibleLineCount),
-    [visibleLineCount],
+    [visibleLineCount]
   );
 
   const appProgress =
-    status === "idle" ? 0 : Math.min(100, Math.round((visibleLineCount / 2) * 100));
+    status === "idle"
+      ? 0
+      : Math.min(100, Math.round((visibleLineCount / 2) * 100));
   const metricsProgress =
     status === "idle"
       ? 0
-      : Math.min(100, Math.max(0, Math.round(((visibleLineCount - 1) / 3) * 100)));
+      : Math.min(
+          100,
+          Math.max(0, Math.round(((visibleLineCount - 1) / 3) * 100))
+        );
 
   function runDemo() {
     setVisibleLineCount(0);
@@ -179,7 +217,7 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
             className={styles.headerLogoImage}
           />
         }
-        title="tests/test_checkout_agent.py"
+        title="tests/test_agent.py"
         bodyClassName={styles.codeBlock}
         rootClassName={styles.codePanel}
         content={
@@ -214,9 +252,16 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
               {terminalLines.map((step) => {
                 if (step.tone === "table") {
                   return (
-                    <div key={`${step.delayMs}-${step.line}`} className={styles.tableWrap}>
-                      <div className={`${styles.tableRow} ${styles.tableTitleRow}`}>
-                        <span className={styles.tableTitle}>Test Run Summary</span>
+                    <div
+                      key={`${step.delayMs}-${step.line}`}
+                      className={styles.tableWrap}
+                    >
+                      <div
+                        className={`${styles.tableRow} ${styles.tableTitleRow}`}
+                      >
+                        <span className={styles.tableTitle}>
+                          Test Run Summary
+                        </span>
                       </div>
                       <div className={styles.tableRow}>
                         <span className={styles.tableCellHead}>metric</span>
@@ -228,40 +273,118 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
                         <span className={styles.tableCellHead}>notes</span>
                       </div>
                       <div className={styles.tableRow}>
-                        <span className={styles.tableCell}>Task completion</span>
-                        <span className={`${styles.tableCell} ${styles.tableScore}`}>0.94</span>
-                        <span className={`${styles.tableCell} ${styles.tablePass}`}>34</span>
-                        <span className={`${styles.tableCell} ${styles.tableFail}`}>2</span>
-                        <span className={`${styles.tableCell} ${styles.tableSkip}`}>2</span>
+                        <span className={styles.tableCell}>
+                          Task completion
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableScore}`}
+                        >
+                          0.94
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tablePass}`}
+                        >
+                          34
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableFail}`}
+                        >
+                          2
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableSkip}`}
+                        >
+                          2
+                        </span>
                         <span className={styles.tableCell}>1.8s</span>
-                        <span className={styles.tableCell}>2 unresolved refund flows</span>
+                        <span className={styles.tableCell}>
+                          2 unresolved refund flows
+                        </span>
                       </div>
                       <div className={styles.tableRow}>
-                        <span className={styles.tableCell}>Tool correctness</span>
-                        <span className={`${styles.tableCell} ${styles.tableWarn}`}>0.72  ⚠️</span>
-                        <span className={`${styles.tableCell} ${styles.tablePass}`}>27</span>
-                        <span className={`${styles.tableCell} ${styles.tableFail}`}>9</span>
-                        <span className={`${styles.tableCell} ${styles.tableSkip}`}>2</span>
+                        <span className={styles.tableCell}>
+                          Tool correctness
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableWarn}`}
+                        >
+                          0.72 ⚠️
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tablePass}`}
+                        >
+                          27
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableFail}`}
+                        >
+                          9
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableSkip}`}
+                        >
+                          2
+                        </span>
                         <span className={styles.tableCell}>1.1s</span>
-                        <span className={styles.tableCell}>refund.lookup arg mismatch</span>
+                        <span className={styles.tableCell}>
+                          refund.lookup arg mismatch
+                        </span>
                       </div>
                       <div className={styles.tableRow}>
                         <span className={styles.tableCell}>Faithfulness</span>
-                        <span className={`${styles.tableCell} ${styles.tableWarn}`}>0.64  ⚠️</span>
-                        <span className={`${styles.tableCell} ${styles.tablePass}`}>24</span>
-                        <span className={`${styles.tableCell} ${styles.tableFail}`}>11</span>
-                        <span className={`${styles.tableCell} ${styles.tableSkip}`}>3</span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableWarn}`}
+                        >
+                          0.64 ⚠️
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tablePass}`}
+                        >
+                          24
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableFail}`}
+                        >
+                          11
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableSkip}`}
+                        >
+                          3
+                        </span>
                         <span className={styles.tableCell}>1.6s</span>
-                        <span className={styles.tableCell}>unsupported refund claims</span>
+                        <span className={styles.tableCell}>
+                          unsupported refund claims
+                        </span>
                       </div>
-                      <div className={`${styles.tableRow} ${styles.tableRowSummary}`}>
+                      <div
+                        className={`${styles.tableRow} ${styles.tableRowSummary}`}
+                      >
                         <span className={styles.tableCell}>Overall</span>
-                        <span className={`${styles.tableCell} ${styles.result}`}>0.77</span>
-                        <span className={`${styles.tableCell} ${styles.tablePass}`}>34</span>
-                        <span className={`${styles.tableCell} ${styles.tableFail}`}>3</span>
-                        <span className={`${styles.tableCell} ${styles.tableSkip}`}>1</span>
+                        <span
+                          className={`${styles.tableCell} ${styles.result}`}
+                        >
+                          0.77
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tablePass}`}
+                        >
+                          34
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableFail}`}
+                        >
+                          3
+                        </span>
+                        <span
+                          className={`${styles.tableCell} ${styles.tableSkip}`}
+                        >
+                          1
+                        </span>
                         <span className={styles.tableCell}>2.1s</span>
-                        <span className={styles.tableCell}>tooling + grounding need work</span>
+                        <span className={styles.tableCell}>
+                          tooling + grounding need work
+                        </span>
                       </div>
                     </div>
                   );
@@ -286,7 +409,10 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
                         <span className={styles.tableFail}>3 failed</span>
                         <span className={styles.summarySeparator}>, </span>
                         <span className={styles.tableSkip}>1 skipped</span>
-                        <span className={styles.summarySeparator}> in 6.84s</span>
+                        <span className={styles.summarySeparator}>
+                          {" "}
+                          in 6.84s
+                        </span>
                       </>
                     ) : (
                       step.line
@@ -297,7 +423,9 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
 
               {status === "running" ? (
                 <div className={styles.progressGroup}>
-                  <div className={`${styles.terminalLine} ${styles.progressIntro}`}>
+                  <div
+                    className={`${styles.terminalLine} ${styles.progressIntro}`}
+                  >
                     <span className={styles.inlineDots} aria-hidden="true">
                       <span />
                       <span />
@@ -325,7 +453,9 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
                         style={{ width: `${metricsProgress}%` }}
                       />
                     </span>
-                    <span className={styles.progressPct}>{metricsProgress}%</span>
+                    <span className={styles.progressPct}>
+                      {metricsProgress}%
+                    </span>
                   </div>
                 </div>
               ) : null}
@@ -344,7 +474,11 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
           data-callout
         >
           {status === "running" ? (
-            <LoaderCircle size={14} className={styles.spinner} aria-hidden="true" />
+            <LoaderCircle
+              size={14}
+              className={styles.spinner}
+              aria-hidden="true"
+            />
           ) : (
             <Play size={14} aria-hidden="true" />
           )}
@@ -354,6 +488,5 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({ hideHeader = false }) =
     </section>
   );
 };
-
 
 export default HomePytestDemo;
