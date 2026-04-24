@@ -1,13 +1,24 @@
 .videoContainer {
   position: relative;
-  margin-bottom: 1rem;
+  margin-block: 2em;
+  padding: 12px;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+  border-radius: 0;
+
+  video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+  }
 
   .overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: calc(100% - 100px);
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    height: calc(100% - 100px - 12px);
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0.7) 0%,

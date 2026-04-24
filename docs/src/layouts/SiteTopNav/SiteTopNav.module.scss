@@ -1,0 +1,292 @@
+$gutter: 1rem;
+$grid-min: 768px;
+$inline-nav-min: 1100px;
+$toc-visible-min: 1280px;
+
+.headerDocs {
+  position: sticky;
+  top: var(--fd-docs-row-1);
+  z-index: 10;
+  --nd-header-logo-width: 268px;
+  backdrop-filter: blur(12px);
+  transition: colors;
+}
+
+.headerHome {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--home-header-height);
+  background-color: color-mix(
+    in oklab,
+    var(--color-fd-background) 88%,
+    transparent
+  );
+  backdrop-filter: blur(12px);
+}
+
+.headerDocs[data-transparent="false"] {
+  background-color: color-mix(
+    in oklab,
+    var(--color-fd-background) 80%,
+    transparent
+  );
+}
+
+.homeFrame {
+  width: 100%;
+  max-width: var(--site-shell-max-width);
+  height: 100%;
+  margin: 0 auto;
+}
+
+.row {
+  display: flex;
+}
+
+.logoCell,
+.mainCell,
+.utilsCell {
+  min-width: 0;
+}
+
+.row {
+  --nd-header-utils-width: max-content;
+  align-items: stretch;
+  height: 56px;
+  border-bottom: 1px solid var(--color-fd-border);
+
+  @media (min-width: $toc-visible-min) {
+    --nd-header-utils-width: var(--fd-toc-width);
+  }
+
+  @media (min-width: $grid-min) {
+    display: grid;
+    grid-template-columns:
+      var(--nd-header-logo-width, var(--fd-sidebar-col))
+      minmax(0, 1fr)
+      var(--nd-header-utils-width);
+  }
+}
+
+.homeRow {
+  --nd-header-utils-width: auto;
+
+  border-bottom: 1px solid var(--color-fd-border);
+
+  @media (min-width: $grid-min) {
+    grid-template-columns: 268px minmax(0, 1fr) auto;
+  }
+}
+
+.homeLogoCell {
+  display: flex;
+  align-items: center;
+  padding-inline: $gutter;
+  width: 268px;
+  flex: 0 0 268px;
+
+  @media (min-width: $grid-min) {
+    border-left: 1px solid var(--color-fd-border);
+    border-right: 1px solid var(--color-fd-border);
+  }
+}
+
+.homeMainCell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline: 1rem;
+
+  @media (min-width: $grid-min) {
+    justify-content: flex-start;
+  }
+}
+
+.homeUtilsCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline: $gutter;
+
+  @media (min-width: $grid-min) {
+    border-right: 1px solid var(--color-fd-border);
+  }
+}
+
+.logoCell {
+  display: flex;
+  align-items: center;
+  padding-left: $gutter;
+  flex: 0 0 auto;
+
+  @media (min-width: $grid-min) {
+    border-left: 1px solid var(--color-fd-border);
+    border-right: 1px solid var(--color-fd-border);
+  }
+}
+
+.mainCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  flex: 1 1 0;
+
+  @media (min-width: $grid-min) {
+    justify-content: space-between;
+  }
+}
+
+.utilsCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: $gutter;
+  flex: 0 0 auto;
+
+  @media (min-width: $grid-min) {
+    border-right: 1px solid var(--color-fd-border);
+  }
+
+  @media (min-width: $toc-visible-min) {
+    padding-left: 0;
+  }
+
+  @media (min-width: $inline-nav-min) {
+    border-left: 1px solid var(--color-fd-border);
+  }
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.wordmark {
+  display: block;
+  background-color: var(--color-fd-foreground);
+  -webkit-mask: url("/icons/DeepEval.svg") no-repeat center / contain;
+  mask: url("/icons/DeepEval.svg") no-repeat center / contain;
+}
+
+.wordmarkHome {
+  width: 103px;
+  height: 22px;
+}
+
+.docsLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.homeNavDesktop {
+  min-width: 0;
+  width: 100%;
+}
+
+.homeUtilities {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.homeCta {
+  flex-shrink: 0;
+}
+
+.homeDiscordCta {
+  flex-shrink: 0;
+}
+
+.mainNavLinks {
+  display: none;
+
+  @media (min-width: $inline-nav-min) {
+    display: block;
+  }
+}
+
+.mainMenuTrigger {
+  display: none;
+
+  @media (min-width: 768px) and (max-width: #{$inline-nav-min - 0.02px}) {
+    display: block;
+  }
+}
+
+.utilsDesktop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: 767.98px) {
+    display: none;
+  }
+}
+
+.utilityThemeSwitch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 31px;
+  min-height: 31px;
+  padding: 3px;
+  box-sizing: border-box;
+  vertical-align: top;
+
+  :global(button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    box-sizing: border-box;
+  }
+}
+
+.utilsMobile {
+  display: flex;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+@media (max-width: 1099.98px) {
+  .homeRow {
+    justify-content: space-between;
+  }
+
+  .homeMainCell {
+    display: none;
+  }
+
+  .homeNavDesktop {
+    display: none;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .wordmarkHome {
+    width: 94px;
+    height: 20px;
+  }
+
+  .homeDiscordCta {
+    display: none;
+  }
+}

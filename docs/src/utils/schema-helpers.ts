@@ -1,4 +1,4 @@
-const BASE_URL = "https://deepeval.com";
+import { siteUrl as BASE_URL } from "@/lib/shared";
 
 export interface ArticleSchemaProps {
   title: string

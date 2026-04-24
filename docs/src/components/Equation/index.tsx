@@ -6,7 +6,7 @@ interface EquationProps {
   formula: string;
 }
 
-const Equation = (props: EquationProps) => {
+const Equation: React.FC<EquationProps> = (props) => {
   const html = katex.renderToString(props.formula, {
     throwOnError: false,
     displayMode: true,

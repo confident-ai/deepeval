@@ -1,0 +1,548 @@
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  --demo-surface: var(--color-fd-background);
+  --demo-surface-muted: color-mix(
+    in oklab,
+    var(--color-fd-background) 92%,
+    var(--color-fd-foreground)
+  );
+  --demo-border: var(--color-fd-border);
+  --demo-border-strong: color-mix(
+    in oklab,
+    var(--color-fd-border) 88%,
+    var(--color-fd-foreground)
+  );
+  --demo-foreground: var(--color-fd-foreground);
+  --demo-muted: var(--color-fd-muted-foreground);
+  --demo-shadow: color-mix(
+    in oklab,
+    var(--color-fd-foreground) 10%,
+    transparent
+  );
+  --demo-accent-blue: color-mix(in oklab, #0ea5e9 78%, var(--demo-foreground));
+  --demo-accent-cyan: color-mix(in oklab, #06b6d4 72%, var(--demo-foreground));
+  --demo-accent-teal: color-mix(in oklab, #14b8a6 76%, var(--demo-foreground));
+  --demo-accent-green: color-mix(in oklab, #16a34a 82%, var(--demo-foreground));
+  --demo-accent-red: color-mix(in oklab, #e11d48 82%, var(--demo-foreground));
+  --demo-accent-amber: color-mix(in oklab, #d97706 82%, var(--demo-foreground));
+}
+
+.codePanel {
+  min-height: 12rem;
+}
+
+.fusedBlock {
+  border: 1px solid var(--demo-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--demo-surface) 96%, var(--demo-foreground)) 0%,
+    var(--demo-surface) 100%
+  );
+  box-shadow: 0 5px 10px var(--demo-shadow);
+  overflow: hidden;
+}
+
+.blockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 2rem;
+  padding: 0 0.875rem;
+  border-bottom: 1px solid var(--demo-border);
+  color: var(--demo-muted);
+  font-size: 11px;
+}
+
+.blockHeaderLeft,
+.blockHeaderRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.windowDots {
+  display: inline-flex;
+  gap: 0.375rem;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--demo-muted) 45%, var(--demo-surface));
+  }
+
+  span:nth-child(1) {
+    background: #ff5f57;
+  }
+
+  span:nth-child(2) {
+    background: #febc2e;
+  }
+
+  span:nth-child(3) {
+    background: #28c840;
+  }
+}
+
+.panelLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerLogo {
+  display: inline-flex;
+  align-items: center;
+  color: color-mix(in oklab, var(--demo-foreground) 78%, transparent);
+}
+
+.headerLogoImage {
+  display: block;
+}
+
+.blockBody {
+  padding: 0.85rem 0.9rem 0.95rem;
+}
+
+.codeBlock {
+  padding: 1rem;
+
+  pre {
+    margin: 0;
+    overflow-x: auto;
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo,
+      "JetBrains Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--demo-foreground);
+    font-variant-ligatures: none;
+  }
+}
+
+.codeLine {
+  white-space: pre;
+}
+
+.codeKeyword {
+  color: color-mix(in oklab, #7c3aed 80%, var(--demo-foreground));
+}
+
+.codeModule {
+  color: color-mix(in oklab, #0f766e 82%, var(--demo-foreground));
+}
+
+.codeFunction {
+  color: color-mix(in oklab, #1d4ed8 80%, var(--demo-foreground));
+}
+
+.codeDecorator {
+  color: var(--demo-accent-cyan);
+}
+
+.codeVariable {
+  color: var(--demo-foreground);
+}
+
+.codeOperator,
+.codePunctuation {
+  color: color-mix(in oklab, var(--demo-foreground) 72%, transparent);
+}
+
+.codeString {
+  color: var(--demo-accent-amber);
+}
+
+.codeNumber {
+  color: var(--demo-accent-red);
+}
+
+.codeComment {
+  color: var(--demo-muted);
+}
+
+.codeIndent {
+  display: inline-block;
+  width: 4ch;
+  color: transparent;
+}
+
+.runtimePanel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.runButton {
+  --fd-callout-color: var(--color-fd-primary-foreground);
+  --fd-callout-ink: color-mix(
+    in oklch,
+    var(--color-fd-primary-foreground) 14%,
+    transparent
+  );
+  --fd-callout-rule: color-mix(
+    in oklch,
+    var(--color-fd-foreground) 55%,
+    transparent
+  );
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--color-fd-primary);
+  border-radius: 0;
+  background: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease,
+    border-color 160ms ease;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--color-fd-primary) 88%, transparent);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
+}
+
+.terminal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--demo-surface);
+  color: var(--demo-foreground);
+  box-shadow: 0 12px 28px var(--demo-shadow);
+}
+
+.terminalStatus {
+  text-transform: capitalize;
+}
+
+.terminalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 0.85rem 0.9rem 0.95rem;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo,
+    "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.3;
+  font-variant-ligatures: none;
+}
+
+.terminalLine {
+  white-space: pre-wrap;
+  animation: line-in 220ms ease-out;
+}
+
+.commandLine {
+  color: var(--demo-foreground);
+}
+
+.prompt {
+  display: inline-block;
+  width: 1rem;
+  color: var(--demo-accent-amber);
+}
+
+.muted {
+  color: var(--demo-muted);
+}
+
+.deepeval {
+  color: var(--demo-accent-blue);
+}
+
+.metric {
+  color: color-mix(in oklab, #8b5cf6 70%, var(--demo-foreground));
+}
+
+.success {
+  color: var(--demo-accent-green);
+}
+
+.summary {
+  color: var(--demo-foreground);
+  margin-top: 0.25rem;
+}
+
+.summarySeparator {
+  color: var(--demo-foreground);
+}
+
+.result {
+  color: var(--demo-accent-teal);
+}
+
+.tableWrap {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.75rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--demo-border-strong);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableRow {
+  display: grid;
+  min-width: 36rem;
+  grid-template-columns: minmax(0, 1.6fr) 6rem 4.25rem 4.25rem 4.25rem 4.5rem minmax(
+      0,
+      1.7fr
+    );
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--demo-border-strong);
+  }
+}
+
+.tableTitleRow {
+  grid-template-columns: 1fr;
+}
+
+.tableCell,
+.tableCellHead {
+  padding: 0.32rem 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tableCell:first-child,
+.tableCellHead:first-child {
+  border-right: 1px solid var(--demo-border-strong);
+}
+
+.tableCell:nth-child(n + 2),
+.tableCellHead:nth-child(n + 2) {
+  text-align: right;
+}
+
+.tableCell:nth-child(2),
+.tableCellHead:nth-child(2),
+.tableCell:nth-child(3),
+.tableCellHead:nth-child(3),
+.tableCell:nth-child(4),
+.tableCellHead:nth-child(4),
+.tableCell:nth-child(5),
+.tableCellHead:nth-child(5),
+.tableCell:nth-child(6),
+.tableCellHead:nth-child(6) {
+  border-right: 1px solid var(--demo-border-strong);
+}
+
+.tableCell {
+  color: var(--demo-foreground);
+  font-size: 10px;
+}
+
+.tableCellHead {
+  color: var(--demo-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 9px;
+}
+
+.tableTitle {
+  padding: 0.42rem 0.55rem;
+  color: var(--demo-foreground);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tableScore {
+  color: var(--demo-accent-blue);
+}
+
+.tableWarn {
+  color: var(--demo-accent-red);
+}
+
+.suiteMeta {
+  margin-top: 0.55rem;
+}
+
+.tablePass {
+  color: var(--demo-accent-green);
+}
+
+.tableFail {
+  color: var(--demo-accent-red);
+}
+
+.tableSkip {
+  color: var(--demo-accent-amber);
+}
+
+.tableRowSummary {
+  background: var(--demo-surface-muted);
+  font-weight: 600;
+}
+
+.progressGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  padding-top: 0.2rem;
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--demo-border-strong);
+}
+
+.progressIntro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--demo-muted);
+  font-size: 11px;
+}
+
+.progressLine {
+  display: grid;
+  grid-template-columns: 7.25rem minmax(0, 1fr) 3rem;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.progressLabel {
+  color: var(--demo-muted);
+  font-size: 11px;
+}
+
+.progressTrack {
+  position: relative;
+  height: 3px;
+  overflow: hidden;
+  background: var(--demo-border-strong);
+}
+
+.progressFill,
+.progressFillAlt {
+  display: block;
+  height: 100%;
+  transition: width 300ms ease;
+}
+
+.progressFill {
+  background: linear-gradient(
+    90deg,
+    var(--demo-accent-blue) 0%,
+    var(--demo-accent-cyan) 100%
+  );
+}
+
+.progressFillAlt {
+  background: linear-gradient(
+    90deg,
+    var(--demo-accent-teal) 0%,
+    var(--demo-accent-cyan) 100%
+  );
+}
+
+.progressPct {
+  color: var(--demo-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.inlineDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+
+  span {
+    width: 4px;
+    height: 4px;
+    background: var(--demo-accent-cyan);
+    border-radius: 999px;
+    animation: pulse-dot 1s ease-in-out infinite;
+  }
+
+  span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+.cursor {
+  width: 10px;
+  height: 1.1em;
+  margin-top: 0.125rem;
+  background: var(--demo-accent-amber);
+  animation: blink 1s steps(1, end) infinite;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+}

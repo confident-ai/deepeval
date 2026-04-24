@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
-import styles from "./FAQ.module.scss";
+import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import SchemaInjector from "../SchemaInjector/SchemaInjector";
-import { buildFAQPageSchema } from "@site/src/utils/schema-helpers";
+import { buildFAQPageSchema } from "@/src/utils/schema-helpers";
 
 export interface QA {
   question: string;
@@ -12,6 +12,11 @@ interface FAQsProps {
   qas: QA[];
 }
 
+/**
+ * Walks a ReactNode tree and concatenates its visible text. Used to
+ * flatten rich MDX answers into a plain string for the FAQPage JSON-LD,
+ * which expects `text` to be a single string per crawler spec.
+ */
 function extractText(node: ReactNode): string {
   if (node == null || typeof node === "boolean") return "";
   if (typeof node === "string" || typeof node === "number") return String(node);
@@ -22,30 +27,33 @@ function extractText(node: ReactNode): string {
   return "";
 }
 
-export function FAQs({ qas }: FAQsProps) {
+/**
+ * Accordion-style FAQ list that also emits a schema.org FAQPage JSON-LD
+ * block. The UI is delegated to Fumadocs' `Accordions` component so we
+ * inherit Radix-powered a11y, keyboard nav, and deep-link support for
+ * free. The schema emission stays inside this wrapper so callers don't
+ * have to remember to pair the two manually.
+ */
+export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
   const schema = buildFAQPageSchema(
     qas.map(({ question, answer }) => ({
       question,
       answer: extractText(answer).replace(/\s+/g, " ").trim(),
-    }))
+    })),
   );
 
   return (
     <>
       <SchemaInjector schema={schema} />
-      <div className={styles.list}>
+      <Accordions type="single">
         {qas.map(({ question, answer }) => (
-          <details key={question} className={styles.item}>
-            <summary className={styles.summary}>
-              <span className={styles.question}>{question}</span>
-              <span className={styles.icon} aria-hidden="true" />
-            </summary>
-            <div className={styles.answer}>{answer}</div>
-          </details>
+          <Accordion key={question} title={question}>
+            {answer}
+          </Accordion>
         ))}
-      </div>
+      </Accordions>
     </>
   );
-}
+};
 
 export default FAQs;

@@ -2306,7 +2306,7 @@ interface FeatureComparisonTableProps {
   competitor: string;
 }
   
-export default function FeatureComparisonTable({ type, competitor }: FeatureComparisonTableProps) {
+const FeatureComparisonTable: React.FC<FeatureComparisonTableProps> = ({ type, competitor }) => {
   const [topKey, subKey] = type.split("::");
   const data = datasets[topKey]?.[subKey as keyof (typeof datasets)[typeof topKey]] || [];
 
@@ -2351,4 +2351,6 @@ export default function FeatureComparisonTable({ type, competitor }: FeatureComp
       </div>
     </div>
   );
-} 
+}; 
+
+export default FeatureComparisonTable;

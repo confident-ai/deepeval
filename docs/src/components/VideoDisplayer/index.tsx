@@ -1,3 +1,5 @@
+'use client';
+
 import React from "react";
 import styles from "./VideoDisplayer.module.scss";
 import { appendDeepEvalAttribution } from "@site/src/utils/utm";
@@ -8,7 +10,7 @@ interface VideoDisplayerProps {
   label: string;
 }
 
-const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
+const VideoDisplayer: React.FC<VideoDisplayerProps> = ({ src, confidentUrl, label }) => {
   return (
     <div className={styles.videoContainer}>
       <video width="100%" muted autoPlay controls playsInline controlsList="nodownload">
@@ -41,6 +43,6 @@ const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
         }
     </div>
   );
-}
+};
 
 export default VideoDisplayer;

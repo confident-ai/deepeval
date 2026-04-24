@@ -1,58 +1,62 @@
+// Metric classification tags shown under each metric's H1. Each variant
+// gets a distinct hue, rendered as a soft tinted bg + subtle border +
+// saturated text so it reads cleanly on both the light off-white and
+// dark backgrounds without duplicating theme rules. No border-radius —
+// matches the site-wide square aesthetic.
+//
+// Implementation detail: `color-mix(in oklab, <hue> N%, transparent)` is
+// used instead of `rgba(...)` because oklab mixing keeps hues visually
+// balanced across brightness shifts (a 10% tint of yellow stops looking
+// muddy, a 10% tint of blue stops looking washed out).
+
 .metricTagsDisplayer {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
-  margin-bottom: 1rem;
+  margin: 0 0 1.25rem;
 
   .pill {
+    // Layout: inline chip tight to the text it contains.
+    display: inline-flex;
+    align-items: center;
     padding: 2px 10px;
     font-size: 12px;
-    border-radius: 0.5rem;
-    background-color: var(--pill-neutral-bg);
-    border: 1px solid var(--pill-neutral-border);
-    color: var(--pill-neutral-fg);
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
 
-    &.usesLLM {
-      background-color: var(--pill-uses-llm-bg);
-      border-color: var(--pill-uses-llm-border);
-      color: var(--pill-uses-llm-fg);
-    }
+    border: 1px solid transparent;
+    border-radius: 0;
 
-    &.rag {
-      background-color: var(--pill-rag-bg);
-      border-color: var(--pill-rag-border);
-      color: var(--pill-rag-fg);
-    }
+    // Per-variant hue baseline. Overridden below.
+    --pill-hue: var(--color-fd-muted-foreground);
 
-    &.agent {
-      background-color: var(--pill-agent-bg);
-      border-color: var(--pill-agent-border);
-      color: var(--pill-agent-fg);
-    }
+    background-color: color-mix(in oklab, var(--pill-hue) 12%, transparent);
+    border-color: color-mix(in oklab, var(--pill-hue) 28%, transparent);
+    color: var(--pill-hue);
 
-    &.chatbot {
-      background-color: var(--pill-chatbot-bg);
-      border-color: var(--pill-chatbot-border);
-      color: var(--pill-chatbot-fg);
-    }
-
-    &.custom {
-      background-color: var(--pill-custom-bg);
-      border-color: var(--pill-custom-border);
-      color: var(--pill-custom-fg);
-    }
-
-    &.safety {
-      background-color: var(--pill-safety-bg);
-      border-color: var(--pill-safety-border);
-      color: var(--pill-safety-fg);
-    }
-
-    &.multimodal {
-      background-color: var(--pill-multimodal-bg);
-      border-color: var(--pill-multimodal-border);
-      color: var(--pill-multimodal-fg);
-    }
+    // ----- variants -----
+    &.usesLLM       { --pill-hue: oklch(0.58 0.19 280); } // violet
+    &.custom        { --pill-hue: oklch(0.60 0.16 60);  } // amber
+    &.singleTurn    { --pill-hue: oklch(0.55 0.18 245); } // blue
+    &.multiTurn     { --pill-hue: oklch(0.58 0.13 195); } // teal
+    &.referenceless { --pill-hue: oklch(0.58 0.18 15);  } // rose
+    &.referenceBased{ --pill-hue: oklch(0.58 0.15 155); } // emerald
+    &.rag           { --pill-hue: oklch(0.60 0.14 220); } // sky
+    &.agent         { --pill-hue: oklch(0.56 0.19 265); } // indigo
+    &.chatbot       { --pill-hue: oklch(0.60 0.22 330); } // fuchsia
+    &.safety        { --pill-hue: oklch(0.58 0.22 25);  } // red
+    &.multimodal    { --pill-hue: oklch(0.62 0.16 50);  } // orange
   }
+}
+
+// Nudge the tinted bg a touch brighter in dark mode so tags stay legible
+// against the dark surface. Scoped to the component so it doesn't leak.
+:global(.dark) .metricTagsDisplayer .pill {
+  background-color: color-mix(in oklab, var(--pill-hue) 20%, transparent);
+  border-color: color-mix(in oklab, var(--pill-hue) 38%, transparent);
+  // Lighten the text so it pops on dark surfaces without looking neon.
+  color: color-mix(in oklab, var(--pill-hue) 85%, white);
 }

@@ -1,0 +1,41 @@
+{
+  "title": "Integrations",
+  "pages": [
+    "---LLM Frameworks---",
+    "frameworks/openai",
+    "frameworks/anthropic",
+    "frameworks/agentcore",
+    "frameworks/langchain",
+    "frameworks/langgraph",
+    "frameworks/llamaindex",
+    "frameworks/crewai",
+    "frameworks/pydanticai",
+    "frameworks/openai-agents",
+    "frameworks/huggingface",
+
+    "---Evaluation Model---",
+    "models/openai",
+    "models/azure-openai",
+    "models/ollama",
+    "models/openrouter",
+    "models/anthropic",
+    "models/amazon-bedrock",
+    "models/gemini",
+    "models/deepseek",
+    "models/vertex-ai",
+    "models/grok",
+    "models/moonshot",
+    "models/portkey",
+    "models/vllm",
+    "models/lmstudio",
+    "models/litellm",
+
+    "---Vector Databases---",
+    "vector-databases/cognee",
+    "vector-databases/elasticsearch",
+    "vector-databases/chroma",
+    "vector-databases/weaviate",
+    "vector-databases/qdrant",
+    "vector-databases/pgvector"
+  ]
+}

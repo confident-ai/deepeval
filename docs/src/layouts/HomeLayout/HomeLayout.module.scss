@@ -1,0 +1,84 @@
+.layout {
+  width: 100%;
+  min-height: 0;
+  --hero-height: calc(100dvh - var(--home-header-height));
+
+  .stage {
+    position: relative;
+    min-height: calc(var(--hero-height) + var(--right-pane-scroll-range, 0px));
+  }
+
+  .stageRightRail {
+    position: absolute;
+    inset: 0 0 0 40%;
+    border-left: 1px solid var(--color-fd-border);
+    border-right: 1px solid var(--color-fd-border);
+    pointer-events: none;
+  }
+
+  .frame {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    position: sticky;
+    top: var(--home-header-height);
+    height: var(--hero-height);
+    min-height: 0;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .leftPane {
+    display: flex;
+    align-self: stretch;
+    align-items: center;
+    min-height: 0;
+    border-left: 1px solid var(--color-fd-border);
+  }
+
+  .rightPane {
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .rightPaneContent {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 2rem;
+  }
+
+  @media (max-width: 1023px) {
+    height: auto;
+
+    .frame {
+      grid-template-columns: 1fr;
+      position: static;
+      top: auto;
+      height: auto;
+      overflow: visible;
+    }
+
+    .stage {
+      min-height: auto;
+    }
+
+    .stageRightRail {
+      display: none;
+    }
+
+    .leftPane {
+      display: block;
+      align-self: start;
+      min-height: auto;
+    }
+
+    .rightPane {
+      height: auto;
+      overflow: visible;
+      background-color: var(--color-prose-bg);
+      border-left: 1px solid var(--color-fd-border);
+      border-right: 1px solid var(--color-fd-border);
+    }
+  }
+}

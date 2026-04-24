@@ -27,7 +27,7 @@ const MetricTagsDisplayer = ({
   custom = false,
   safety = false,
   multimodal = true,
-}: MetricTagsDisplayerProps) => {
+}) => {
   if (!usesLLMs) multimodal = false;
 
   return (
