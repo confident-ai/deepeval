@@ -130,6 +130,18 @@ function loadRepoContributors() {
   }
 }
 
+function loadExistingManifest() {
+  if (!existsSync(OUTPUT)) return {};
+  try {
+    const manifest = JSON.parse(readFileSync(OUTPUT, 'utf8'));
+    return manifest && typeof manifest === 'object' && !Array.isArray(manifest)
+      ? manifest
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 function saveJson(path, obj) {
   mkdirSync(join(path, '..'), { recursive: true });
   writeFileSync(path, JSON.stringify(obj, null, 2) + '\n');
@@ -199,6 +211,7 @@ async function main() {
     keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
+  const fileSet = new Set(files.map((file) => relative('.', file)));
 
   // First pass: gather per-file commit metadata (all local, no network).
   const perFile = new Map(); // relPath → Map<email, { name, commits, sha }>
@@ -292,10 +305,25 @@ async function main() {
     if (list.length > 0) manifest[rel] = list;
   }
 
+  // Hosted builds can have incomplete git history without being marked as
+  // shallow. Never let a partial regeneration replace a richer checked-in
+  // manifest entry for a page that still exists.
+  const existingManifest = loadExistingManifest();
+  let preserved = 0;
+  for (const [rel, existingList] of Object.entries(existingManifest)) {
+    if (!fileSet.has(rel) || !Array.isArray(existingList)) continue;
+    const generatedList = manifest[rel];
+    if (!Array.isArray(generatedList) || existingList.length > generatedList.length) {
+      manifest[rel] = existingList;
+      preserved += 1;
+    }
+  }
+
   saveJson(OUTPUT, manifest);
   console.log(
     `[contributors] ${Object.keys(manifest).length} pages, ` +
-    `resolved ${resolved} new author(s), aliased ${aliased}, skipped ${skipped}, bots filtered ${bot}` +
+    `resolved ${resolved} new author(s), aliased ${aliased}, skipped ${skipped}, bots filtered ${bot}, ` +
+    `preserved ${preserved} existing page(s)` +
     (rateLimited ? ' (rate-limited; re-run with GITHUB_TOKEN)' : '') + '.'
   );
 }
