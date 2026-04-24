@@ -25,6 +25,11 @@ type BlogFrontmatter = {
   date?: Date | string;
   category?: BlogCategoryId;
   lastModified?: number | string | Date | null;
+  // Optional per-post cover image (absolute URL). When present it
+  // overrides the site-wide `og:image` fallback set in `app/layout.tsx`
+  // so social previews show the post's hero art instead of the generic
+  // social card. Validated in `blogPageSchema` (source.config.ts).
+  image?: string;
 };
 
 /**
@@ -127,7 +132,10 @@ export const blogSection = createSection({
   },
   // Individual posts get `openGraph.type = 'article'` + publish /
   // modified timestamps + author list, so social previews render as
-  // proper article cards instead of a generic website card.
+  // proper article cards instead of a generic website card. If the
+  // post sets `image:` in frontmatter we also promote it to
+  // `openGraph.images` / `twitter.images` so the share card shows the
+  // post's hero art instead of the generic site-wide social_card.png.
   extendMetadata: (page) => {
     const data = page.data as BlogFrontmatter;
     if (!data.authors) return {};
@@ -135,6 +143,7 @@ export const blogSection = createSection({
     const publishedTime = toIso(data.date);
     const modifiedTime = toIso(data.lastModified ?? undefined);
     const authorNames = data.authors.map((id) => getAuthor(id).name);
+    const image = data.image;
 
     return {
       openGraph: {
@@ -142,6 +151,17 @@ export const blogSection = createSection({
         ...(publishedTime ? { publishedTime } : {}),
         ...(modifiedTime ? { modifiedTime } : {}),
         authors: authorNames,
+        // Per-post hero art overrides the site-wide `/img/social_card.png`
+        // default set in `app/layout.tsx`. We intentionally DO NOT also
+        // override `twitter.images` here: Next.js replaces (doesn't
+        // deep-merge) the `twitter` object across nested `generateMetadata`
+        // calls, so setting it would also wipe the layout's `card`,
+        // `site`, and `creator`. X/Twitter's card renderer falls back
+        // to `og:image` when `twitter:image` is absent, and other
+        // `summary_large_image` consumers (LinkedIn, Slack, Discord)
+        // read `og:image` directly — so the single override covers
+        // every surface.
+        ...(image ? { images: image } : {}),
       },
     };
   },

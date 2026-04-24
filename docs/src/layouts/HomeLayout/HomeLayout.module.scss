@@ -36,6 +36,7 @@
   }
 
   .rightPane {
+    min-width: 0;
     overflow: hidden;
     background: transparent;
   }
@@ -45,6 +46,7 @@
     flex-direction: column;
     gap: 1rem;
     width: 100%;
+    min-width: 0;
     padding: 1rem 2rem;
   }
 

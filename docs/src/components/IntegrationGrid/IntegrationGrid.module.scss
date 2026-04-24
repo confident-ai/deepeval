@@ -20,6 +20,7 @@
   grid-template-rows: auto auto;
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
   margin: 1rem 0 2rem;
 
   @media (max-width: 720px) {
@@ -57,6 +58,7 @@
 .panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   border: 1px solid var(--color-fd-border);
   background: var(--color-fd-card);
   padding: 0.85rem 0.9rem 0.9rem;
@@ -85,6 +87,7 @@
   grid-template-columns: repeat(var(--tile-cols), 1fr);
   gap: 0;
   flex: 1 1 auto;
+  min-width: 0;
 
   border-top: 1px solid var(--color-fd-border);
   border-left: 1px solid var(--color-fd-border);
@@ -96,6 +99,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+  min-width: 0;
   padding: 0.9rem 0.4rem 0.85rem;
   min-height: 84px;
 
@@ -146,6 +150,8 @@
 }
 
 .logoInline {
+  color: inherit;
+  fill: currentColor;
   width: 100%;
   height: 100%;
   max-width: 24px;
@@ -175,7 +181,72 @@
 }
 
 @media (max-width: 720px) {
+  .panel {
+    padding: 0.75rem;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  }
+
   .tile {
-    min-height: 72px;
+    gap: 0.3rem;
+    min-height: 68px;
+    padding: 0.65rem 0.3rem;
+  }
+
+  .logoWrap {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo {
+    max-width: 24px;
+    max-height: 24px;
+  }
+
+  .logoInline {
+    max-width: 20px;
+    max-height: 20px;
+  }
+
+  .tileName {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .panel {
+    padding: 0.625rem;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
+  }
+
+  .tile {
+    gap: 0.24rem;
+    min-height: 58px;
+    padding: 0.5rem 0.2rem;
+  }
+
+  .logoWrap {
+    width: 20px;
+    height: 20px;
+  }
+
+  .logo {
+    max-width: 20px;
+    max-height: 20px;
+  }
+
+  .logoInline {
+    max-width: 17px;
+    max-height: 17px;
+  }
+
+  .tileName {
+    font-size: 9px;
+    line-height: 1.15;
   }
 }
