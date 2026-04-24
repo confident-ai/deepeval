@@ -10,6 +10,7 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
 import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
+import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
 import LinkCards from "@site/src/components/LinkCards";
@@ -32,6 +33,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ImageDisplayer,
     Callout,
     Equation,
+    Mermaid,
     MetricTagsDisplayer,
     FeatureComparisonTable,
     LinkCards,

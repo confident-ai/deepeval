@@ -11,7 +11,7 @@ interface TectStackCardsProps {
   techStack: TechStackCardProps[];
 }
 
-const TechStackCards = ({ techStack }: TectStackCardsProps) => {
+const TechStackCards: React.FC<TectStackCardsProps> = ({ techStack }) => {
   return (
     <div className={styles.section}>
       <div className={styles.list}>
@@ -23,7 +23,7 @@ const TechStackCards = ({ techStack }: TectStackCardsProps) => {
   );
 };
 
-const TechStackCard = ({ name, logo, website }: TechStackCardProps) => {
+const TechStackCard: React.FC<TechStackCardProps> = ({ name, logo, website }) => {
   return (
     <div className={styles.card}>
       <div className={styles.content}>

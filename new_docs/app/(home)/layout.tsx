@@ -1,12 +1,5 @@
-import { HomeLayout } from 'fumadocs-ui/layouts/home';
-import { baseOptions } from '@/lib/layout.shared';
-import Footer from '@/src/components/Footer';
+import HomePageShell from "@/src/layouts/HomePageShell";
 
-export default function Layout({ children }: LayoutProps<'/'>) {
-  return (
-    <>
-      <HomeLayout {...baseOptions()}>{children}</HomeLayout>
-      <Footer />
-    </>
-  );
+export default function Layout({ children }: LayoutProps<"/">) {
+  return <HomePageShell>{children}</HomePageShell>;
 }

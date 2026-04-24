@@ -34,7 +34,7 @@ function extractText(node: ReactNode): string {
  * free. The schema emission stays inside this wrapper so callers don't
  * have to remember to pair the two manually.
  */
-export function FAQs({ qas }: FAQsProps) {
+export const FAQs: React.FC<FAQsProps> = ({ qas }) => {
   const schema = buildFAQPageSchema(
     qas.map(({ question, answer }) => ({
       question,
@@ -44,7 +44,7 @@ export function FAQs({ qas }: FAQsProps) {
 
   return (
     <>
-      <SchemaInjector schema={schema as Record<string, unknown> | null} />
+      <SchemaInjector schema={schema} />
       <Accordions type="single">
         {qas.map(({ question, answer }) => (
           <Accordion key={question} title={question}>
@@ -54,6 +54,6 @@ export function FAQs({ qas }: FAQsProps) {
       </Accordions>
     </>
   );
-}
+};
 
 export default FAQs;

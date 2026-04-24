@@ -21,32 +21,6 @@
   margin: 0;
 }
 
-.link {
-  display: inline-flex;
-  // Squared avatars need a squared hit target; matches the blog byline
-  // avatars for visual consistency.
-  padding: 0;
-  line-height: 0;
-
-  &:hover .avatar {
-    border-color: var(--color-fd-primary);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--color-fd-primary);
-    outline-offset: 2px;
-  }
-}
-
-.avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 0;
-  object-fit: cover;
-  border: 1px solid var(--color-fd-border);
-  transition: border-color 120ms ease;
-}
-
 // `+N` overflow pill — now a real button (Radix PopoverTrigger) that
 // reveals the hidden contributors on click. Sized to match the
 // avatars so the row stays visually aligned; squared corners + muted

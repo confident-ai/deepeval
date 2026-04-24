@@ -1,6 +1,6 @@
 .meta {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   // The copy-markdown header above already draws a bottom border, so
   // we don't add a top border here. We keep only the bottom border to
@@ -10,19 +10,50 @@
   border-bottom: 1px solid var(--color-fd-border);
 }
 
-// Each author is its own avatar+name row. With a single author this
-// collapses to a normal inline byline; with multiple it stacks.
-.authorList {
+.authorBlock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.leadAuthor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.authorText {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
+  min-width: 0;
+}
+
+.authorLabel,
+.coAuthorLabel {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.coAuthorList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
   min-width: 0;
 }
 
-.author {
+.coAuthor {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -30,8 +61,18 @@
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  object-fit: cover;
+  margin: 0;
+  border: 1px solid var(--color-fd-border);
+  flex-shrink: 0;
+}
+
+.coAuthorAvatar {
+  width: 32px;
+  height: 32px;
   border-radius: 0;
   object-fit: cover;
   margin: 0;
@@ -40,9 +81,21 @@
 }
 
 .name {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.3;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--color-fd-foreground);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.coAuthorName {
+  font-size: 14px;
+  line-height: 1.3;
+  font-weight: 600;
   color: var(--color-fd-foreground);
   text-decoration: none;
 
@@ -74,4 +127,21 @@
 .categoryIcon {
   width: 12px;
   height: 12px;
+}
+
+@media (max-width: 767.98px) {
+  .meta {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .authorBlock,
+  .coAuthorList {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .category {
+    margin-left: 0;
+  }
 }

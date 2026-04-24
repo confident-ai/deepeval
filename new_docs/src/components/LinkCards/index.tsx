@@ -16,7 +16,7 @@ interface LinkCardsProps {
   tutorials: LinkCardProps[];
 }
 
-const LinkCards = ({ tutorials }: LinkCardsProps) => {
+const LinkCards: React.FC<LinkCardsProps> = ({ tutorials }) => {
   return (
     <div className={styles.section}>
       <div className={styles.grid}>
@@ -26,16 +26,16 @@ const LinkCards = ({ tutorials }: LinkCardsProps) => {
       </div>
     </div>
   );
-}
+};
 
-const LinkCard = ({ 
+const LinkCard: React.FC<LinkCardProps> = ({
   title, 
   description, 
   to, 
   number, 
   objectives, 
   icon 
-}: LinkCardProps) => {
+}) => {
   
   const IconComponent = icon ? (LucideIcons[icon] as React.ElementType) : null;
   
@@ -56,6 +56,6 @@ const LinkCard = ({
       </div>
     </Link>
   );
-}
+};
 
 export default LinkCards;

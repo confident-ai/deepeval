@@ -1,0 +1,663 @@
+/* --------------------------------------------------------------------
+ * DatasetDemos — two demo panels that live inside the
+ * "Dataset Generation & Simulation" tabs:
+ *   1. GoldenGenerationDemo  — synthetic goldens generated from source docs
+ *   2. MultiTurnSimulationDemo — user-agent ↔ system conversation, graded
+ * ------------------------------------------------------------------ */
+
+.panel {
+  --panel-surface: var(--color-fd-background);
+  --panel-surface-raised: color-mix(
+    in oklab,
+    var(--color-fd-background) 94%,
+    var(--color-fd-foreground)
+  );
+  --panel-surface-muted: color-mix(
+    in oklab,
+    var(--color-fd-background) 88%,
+    var(--color-fd-foreground)
+  );
+  --panel-border: var(--color-fd-border);
+  --panel-muted: var(--color-fd-muted-foreground);
+  --panel-foreground: var(--color-fd-foreground);
+  --panel-dim: color-mix(in oklab, var(--panel-muted) 70%, transparent);
+
+  --accent-violet: color-mix(in oklab, #7c3aed 80%, var(--panel-foreground));
+  --accent-blue: color-mix(in oklab, #0ea5e9 78%, var(--panel-foreground));
+  --accent-teal: color-mix(in oklab, #14b8a6 76%, var(--panel-foreground));
+  --accent-green: color-mix(in oklab, #16a34a 82%, var(--panel-foreground));
+  --accent-amber: color-mix(in oklab, #d97706 82%, var(--panel-foreground));
+  --accent-rose: color-mix(in oklab, #e11d48 82%, var(--panel-foreground));
+
+  width: 100%;
+  background: var(--panel-surface);
+  overflow: hidden;
+}
+
+/* ---------- Shared panel header bar ---------- */
+
+.panelBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  height: 3rem;
+  padding: 0 0.2rem 0.6rem;
+  color: var(--panel-muted);
+  font-size: 11.5px;
+}
+
+.panelTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--panel-muted);
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.01em;
+}
+
+.panelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 8px;
+  border: 1px solid var(--panel-border);
+  color: var(--panel-muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.panelIcon {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.8;
+  color: var(--panel-muted);
+}
+
+.panelIconSm {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+  color: var(--accent-violet);
+}
+
+.arrow {
+  color: var(--panel-dim);
+  margin: 0 0.1rem;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  background: var(--accent-green);
+  box-shadow: 0 0 0 2.5px
+    color-mix(in oklab, var(--accent-green) 25%, transparent);
+  animation: liveDotPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes liveDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ====================================================================
+ * GoldenGenerationDemo
+ * ================================================================== */
+
+/* ---------- Pipeline stage indicator (replaces the panel title bar) ---------- */
+
+.stages {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0.35rem 0.2rem 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1;
+}
+
+.stage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  white-space: nowrap;
+  transition:
+    color 0.35s ease,
+    opacity 0.35s ease;
+
+  &:not(:last-child)::after {
+    content: "→";
+    margin-left: 0.45rem;
+    color: var(--panel-dim);
+    font-family: inherit;
+  }
+}
+
+.stageMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  font-size: 10px;
+  line-height: 1;
+  transition:
+    color 0.35s ease,
+    transform 0.35s ease;
+}
+
+.stage_pending {
+  color: var(--panel-foreground);
+  opacity: 0.55;
+
+  .stageMark {
+    color: var(--panel-dim);
+    font-size: 6px;
+  }
+}
+
+.stage_active {
+  color: var(--accent-violet);
+  font-weight: 600;
+
+  .stageMark {
+    color: var(--accent-violet);
+    font-size: 8px;
+    transform: scale(1.1);
+    animation: stageDotPulse 1s ease-in-out infinite;
+  }
+}
+
+.stage_done {
+  color: var(--panel-foreground);
+
+  .stageMark {
+    color: var(--accent-green);
+  }
+}
+
+@keyframes stageDotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Pipeline finished → hide the ongoing activity indicators so the panel
+ * rests at a static final state. */
+.panel[data-done="true"] {
+  .sourceScan,
+  .flowPulse {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.goldenLayout {
+  display: grid;
+  grid-template-columns: 160px 36px 1fr;
+  gap: 0;
+  padding: 0.2rem 0.2rem 0.2rem;
+  min-height: 13rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 26px auto;
+  }
+}
+
+/* ---------- Source (LEFT) ---------- */
+
+.source {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sourceLabel,
+.goldenLabel {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--panel-dim);
+}
+
+.sourceDoc {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem 0.5rem 0.5rem;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface-raised);
+  overflow: hidden;
+  flex: 1 1 auto;
+}
+
+.sourceDocName {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--panel-muted);
+  margin-bottom: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sourceLine {
+  height: 4px;
+  background: color-mix(in oklab, var(--panel-foreground) 12%, transparent);
+}
+
+/* Scanning highlight: a thin horizontal bar that sweeps down the doc,
+ * suggesting "DeepEval is reading this document" */
+.sourceScan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  top: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in oklab, var(--accent-violet) 20%, transparent) 50%,
+    transparent 100%
+  );
+  animation: sourceScan 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sourceScan {
+  0% {
+    transform: translateY(-20%);
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* ---------- Particle flow (MIDDLE) ---------- */
+
+.flow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--panel-border) 0 3px,
+      transparent 3px 6px
+    );
+  }
+
+  @media (max-width: 640px) {
+    transform: rotate(90deg);
+  }
+}
+
+.flowPulse {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-violet);
+  box-shadow: 0 0 0 3px
+    color-mix(in oklab, var(--accent-violet) 25%, transparent);
+  transform: translate(0, -50%);
+  opacity: 0;
+  animation: flowPulse 2.7s ease-in-out infinite;
+}
+
+@keyframes flowPulse {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* ---------- Goldens (RIGHT) ---------- */
+
+.goldens {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.goldenCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.65rem 0.55rem;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface-raised);
+  opacity: 0;
+  transform: translateY(4px);
+  animation: goldenAppear 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+}
+
+@keyframes goldenAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.goldenHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.goldenId {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--panel-muted);
+}
+
+.goldenTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.tag_standard {
+  color: var(--panel-muted);
+}
+.tag_variation {
+  color: var(--accent-blue);
+}
+.tag_edge_case {
+  color: var(--accent-amber);
+}
+.tag_adversarial {
+  color: var(--accent-rose);
+}
+
+.goldenQ,
+.goldenA {
+  margin: 0;
+  display: flex;
+  gap: 0.4rem;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--panel-foreground);
+}
+
+.goldenA {
+  color: var(--panel-muted);
+}
+
+.goldenQALabel {
+  flex: 0 0 auto;
+  width: 12px;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  color: var(--accent-violet);
+}
+
+/* ====================================================================
+ * MultiTurnSimulationDemo
+ * ================================================================== */
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.35rem 0.2rem 0.3rem;
+  min-height: 18rem;
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 76%;
+  opacity: 0;
+  animation: turnAppear 0.5s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+}
+
+.turn_user {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.turn_agent {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+@keyframes turnAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.turnLabel {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--panel-dim);
+  text-transform: uppercase;
+}
+
+.bubble {
+  display: inline-block;
+  min-height: 1.85rem;
+  min-width: 2.6rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--panel-border);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--panel-foreground);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+  word-break: break-word;
+}
+
+.turn_user .bubble {
+  background: var(--panel-surface-raised);
+  border-top-left-radius: 2px;
+}
+
+.turn_agent .bubble {
+  background: color-mix(
+    in oklab,
+    var(--accent-violet) 12%,
+    var(--panel-surface)
+  );
+  border-color: color-mix(
+    in oklab,
+    var(--accent-violet) 35%,
+    var(--panel-border)
+  );
+  border-top-right-radius: 2px;
+}
+
+/* Inline typing indicator — lives inside the bubble and is swapped out
+ * for the streaming text once the model "starts responding". */
+.typingDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 1em;
+  vertical-align: middle;
+
+  span {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--panel-muted);
+    animation: typingBounce 1s ease-in-out infinite;
+  }
+
+  span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes typingBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+/* Streaming caret — a soft block cursor that sits at the end of the
+ * partially-revealed text while characters are still arriving. */
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: 0.55;
+  animation: caretBlink 0.9s steps(2, end) infinite;
+}
+
+@keyframes caretBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Score row at the end ---------- */
+
+.scoreRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px dashed var(--panel-border);
+  background: color-mix(in oklab, var(--accent-green) 5%, var(--panel-surface));
+  opacity: 0;
+  animation: turnAppear 0.6s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+}
+
+.scoreItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scoreName {
+  font-size: 11px;
+  color: var(--panel-muted);
+}
+
+.scoreValue {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-green);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreAllPassed {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--accent-green);
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-green);
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sourceScan,
+  .flowPulse,
+  .liveDot,
+  .typingDots span,
+  .caret,
+  .goldenCard,
+  .turn,
+  .scoreRow {
+    animation: none;
+  }
+
+  .goldenCard,
+  .turn,
+  .scoreRow {
+    opacity: 1;
+    transform: none;
+  }
+
+  .caret {
+    display: none;
+  }
+}

@@ -1,0 +1,310 @@
+/* --------------------------------------------------------------------
+ * AgentTraceTerminal
+ *
+ * A mock-terminal panel that renders a full agentic trace with metrics
+ * scored at each step (LLM calls, tool calls, retrievers). Lines animate
+ * in sequentially so it feels like a live `deepeval test run` output.
+ * ------------------------------------------------------------------ */
+
+.terminal {
+  --trace-surface: color-mix(
+    in oklab,
+    var(--color-fd-background) 96%,
+    var(--color-fd-foreground)
+  );
+  --trace-border: var(--color-fd-border);
+  --trace-muted: var(--color-fd-muted-foreground);
+  --trace-foreground: var(--color-fd-foreground);
+  --trace-dim: color-mix(
+    in oklab,
+    var(--trace-muted) 72%,
+    transparent
+  );
+
+  --trace-green: color-mix(in oklab, #16a34a 82%, var(--trace-foreground));
+  --trace-amber: color-mix(in oklab, #d97706 82%, var(--trace-foreground));
+  --trace-blue: color-mix(in oklab, #0ea5e9 78%, var(--trace-foreground));
+  --trace-violet: color-mix(in oklab, #7c3aed 80%, var(--trace-foreground));
+  --trace-teal: color-mix(in oklab, #14b8a6 76%, var(--trace-foreground));
+
+  width: 100%;
+  margin: 1.25rem 0 0.5rem;
+  border: 1px solid var(--trace-border);
+  background: var(--trace-surface);
+  box-shadow: 0 5px 14px
+    color-mix(in oklab, var(--trace-foreground) 8%, transparent);
+  overflow: hidden;
+}
+
+/* ---------- Title bar ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 2rem;
+  padding: 0 0.875rem;
+  border-bottom: 1px solid var(--trace-border);
+  background: color-mix(
+    in oklab,
+    var(--trace-surface) 94%,
+    var(--trace-foreground)
+  );
+  color: var(--trace-muted);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.35rem;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--trace-muted) 45%, var(--trace-surface));
+  }
+
+  span:nth-child(1) {
+    background: #ff5f57;
+  }
+  span:nth-child(2) {
+    background: #febc2e;
+  }
+  span:nth-child(3) {
+    background: #28c840;
+  }
+}
+
+.title {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--trace-muted);
+}
+
+.barSpacer {
+  flex: 1 1 auto;
+}
+
+/* ---------- Body ---------- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem 1rem;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--trace-foreground);
+  overflow: hidden;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(2px);
+  animation: lineAppear 0.45s ease-out forwards;
+}
+
+@keyframes lineAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.line_cmd {
+  grid-template-columns: auto 1fr;
+  color: var(--trace-foreground);
+}
+
+.line_blank {
+  grid-template-columns: auto;
+  height: 0.35rem;
+  line-height: 0.35rem;
+  color: var(--trace-dim);
+}
+
+.line_root {
+  grid-template-columns: auto 1fr;
+  font-weight: 600;
+}
+
+.line_summary {
+  grid-template-columns: auto 1fr auto;
+  margin-top: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--trace-border);
+  color: var(--trace-foreground);
+}
+
+/* ---------- Tokens: prompt / command ---------- */
+
+.prompt {
+  color: var(--trace-muted);
+  user-select: none;
+}
+
+.cmdText {
+  color: var(--trace-foreground);
+}
+
+/* ---------- Tokens: tree prefix + root ---------- */
+
+.prefix {
+  color: var(--trace-dim);
+  font-variant-ligatures: none;
+}
+
+.rootDot {
+  color: var(--trace-violet);
+  font-weight: 700;
+}
+
+.rootName {
+  color: var(--trace-foreground);
+  font-weight: 600;
+}
+
+/* ---------- Badges for each step kind ---------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.1rem;
+  min-width: 2.2rem;
+  padding: 0 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.badge_agent {
+  color: var(--trace-violet);
+}
+
+.badge_tool {
+  color: var(--trace-amber);
+}
+
+.badge_llm {
+  color: var(--trace-blue);
+}
+
+.badge_retriever {
+  color: var(--trace-teal);
+}
+
+/* ---------- Step name (middle column) ---------- */
+
+.name {
+  color: var(--trace-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ---------- Right-aligned metric meta (metric · score · duration) ---------- */
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--trace-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric {
+  color: var(--trace-muted);
+  font-size: 11px;
+}
+
+.score {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.scorePass {
+  color: var(--trace-green);
+}
+
+.scoreFail {
+  color: #e11d48;
+}
+
+.duration {
+  color: var(--trace-dim);
+  font-size: 11px;
+  min-width: 3.25rem;
+  text-align: right;
+}
+
+/* ---------- Summary row ---------- */
+
+.summaryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--trace-green);
+  box-shadow: 0 0 0 3px
+    color-mix(in oklab, var(--trace-green) 25%, transparent);
+}
+
+.summaryText {
+  color: var(--trace-foreground);
+  font-weight: 500;
+}
+
+.summaryBadge {
+  padding: 2px 7px;
+  border: 1px solid var(--trace-green);
+  border-radius: 2px;
+  color: var(--trace-green);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------- Responsive: on narrow screens hide metric label to save space ---------- */
+
+@media (max-width: 720px) {
+  .body {
+    padding: 0.75rem 0.85rem;
+    font-size: 11px;
+  }
+
+  .metric {
+    display: none;
+  }
+
+  .line {
+    gap: 0.4rem;
+  }
+
+  .duration {
+    min-width: 2.75rem;
+  }
+}
+
+/* ---------- Respect reduced-motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

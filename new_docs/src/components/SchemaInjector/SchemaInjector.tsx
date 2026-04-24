@@ -1,5 +1,9 @@
 interface SchemaInjectorProps {
-  schema?: Record<string, unknown> | null;
+  // Accepts any object — the schema-builder helpers in
+  // `src/utils/schema-helpers.ts` return `object` (not
+  // `Record<string, unknown>`), and widening the prop type here avoids
+  // forcing every call site to cast.
+  schema?: object | null;
 }
 
 /**
@@ -12,7 +16,7 @@ interface SchemaInjectorProps {
  * produces invalid JSON-LD. We instead escape the single character that
  * can actually break a script block (`</`) before serializing.
  */
-export default function SchemaInjector({ schema }: SchemaInjectorProps) {
+const SchemaInjector: React.FC<SchemaInjectorProps> = ({ schema }) => {
   if (!schema) return null;
   const json = JSON.stringify(schema).replace(/</g, "\\u003c");
   return (
@@ -21,4 +25,7 @@ export default function SchemaInjector({ schema }: SchemaInjectorProps) {
       dangerouslySetInnerHTML={{ __html: json }}
     />
   );
-}
+};
+
+
+export default SchemaInjector;

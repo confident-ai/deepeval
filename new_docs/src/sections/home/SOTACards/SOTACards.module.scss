@@ -1,0 +1,325 @@
+/* --------------------------------------------------------------------
+ * SOTACards — 3-up card grid for "SOTA Evaluation Techniques".
+ * Each card: animated SVG glyph + heading + description.
+ * Shares the same shell look as JudgeCards for visual consistency.
+ * ------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  margin: 1.25rem 0 2rem;
+
+  border: 1px solid var(--color-fd-border);
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.15rem 1.4rem;
+  box-sizing: border-box;
+
+  &:not(:last-child) {
+    border-right: 1px solid var(--color-fd-border);
+  }
+
+  @media (max-width: 720px) {
+    &:not(:last-child) {
+      border-right: none;
+      border-bottom: 1px solid var(--color-fd-border);
+    }
+  }
+}
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 3rem;
+}
+
+.glyph {
+  width: 4rem;
+  height: 3rem;
+  color: var(--color-fd-foreground);
+  overflow: visible;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--color-fd-foreground);
+}
+
+.description {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 300;
+  color: var(--color-fd-muted-foreground);
+  text-wrap: pretty;
+}
+
+/* -------------------- G-Eval: chain-of-thought nodes -------------------- */
+
+.cotNode {
+  fill: currentColor;
+  opacity: 0.2;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: cotNodePulse 2.4s ease-in-out infinite;
+}
+
+.cotNodeFinal {
+  fill: currentColor;
+  opacity: 0.2;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: cotNodePulseFinal 2.4s ease-in-out infinite;
+}
+
+.cotLink {
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-dasharray: 10;
+  stroke-dashoffset: 10;
+  opacity: 0.3;
+  animation: cotLinkDraw 2.4s ease-in-out infinite;
+}
+
+@keyframes cotNodePulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  30%,
+  55% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  70% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+}
+
+@keyframes cotNodePulseFinal {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  30%,
+  85% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes cotLinkDraw {
+  0% {
+    stroke-dashoffset: 10;
+    opacity: 0.15;
+  }
+  30%,
+  85% {
+    stroke-dashoffset: 0;
+    opacity: 0.7;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.15;
+  }
+}
+
+/* -------------------- DAG: graph with streaming edges -------------------- */
+
+.dagNode {
+  fill: currentColor;
+  opacity: 0.35;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: dagNodeLight 2.7s ease-in-out infinite;
+}
+
+.dagNodeFinal {
+  fill: currentColor;
+  opacity: 0.35;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: dagNodeLightFinal 2.7s ease-in-out infinite;
+}
+
+.dagEdge {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  opacity: 0.25;
+  animation: dagEdgeDraw 2.7s ease-in-out infinite;
+}
+
+@keyframes dagNodeLight {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  40%,
+  65% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes dagNodeLightFinal {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50%,
+  90% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes dagEdgeDraw {
+  0% {
+    stroke-dashoffset: 30;
+    opacity: 0.15;
+  }
+  35%,
+  85% {
+    stroke-dashoffset: 0;
+    opacity: 0.7;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.15;
+  }
+}
+
+/* -------------------- QAG: Q → doc → A with traveling pulse -------------------- */
+
+.qagBlock {
+  fill: currentColor;
+}
+
+.qagBlockRing {
+  fill: none;
+  stroke: var(--color-fd-border);
+  stroke-width: 1;
+}
+
+.qagLabel {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  font-weight: 600;
+  fill: currentColor;
+  letter-spacing: -0.02em;
+}
+
+.qagDoc {
+  /* Subtle pulse to draw attention to the reference. */
+  animation: qagDocBreathe 3s ease-in-out infinite;
+}
+
+.qagDocRing {
+  fill: none;
+  stroke: var(--color-fd-border);
+  stroke-width: 1;
+}
+
+.qagDocLine {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-linecap: round;
+  opacity: 0.4;
+}
+
+.qagPulse {
+  fill: currentColor;
+  animation: qagPulseTravel 2.6s ease-in-out infinite;
+}
+
+@keyframes qagDocBreathe {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes qagPulseTravel {
+  0% {
+    cx: 10;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    cx: 32;
+    opacity: 1;
+  }
+  55% {
+    cx: 32;
+    opacity: 0.5;
+  }
+  95% {
+    cx: 54;
+    opacity: 1;
+  }
+  100% {
+    cx: 54;
+    opacity: 0;
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .cotNode,
+  .cotNodeFinal,
+  .cotLink,
+  .dagNode,
+  .dagNodeFinal,
+  .dagEdge,
+  .qagDoc,
+  .qagPulse {
+    animation: none;
+  }
+
+  .cotNode,
+  .cotNodeFinal,
+  .dagNode,
+  .dagNodeFinal {
+    opacity: 0.9;
+  }
+
+  .cotLink,
+  .dagEdge {
+    stroke-dashoffset: 0;
+    opacity: 0.7;
+  }
+
+  .qagPulse {
+    display: none;
+  }
+}

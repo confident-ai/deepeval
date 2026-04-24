@@ -8,7 +8,7 @@ interface ImageDisplayerProps {
   caption?: React.ReactNode;
 }
 
-const ImageDisplayer = ({ src, alt, width, caption }: ImageDisplayerProps) => {
+const ImageDisplayer: React.FC<ImageDisplayerProps> = ({ src, alt, width, caption }) => {
   return (
     <figure className={styles.imageContainer}>
       <img src={src} alt={alt ?? ""} style={width ? { width } : undefined} />

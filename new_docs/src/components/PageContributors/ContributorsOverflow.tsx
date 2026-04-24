@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 // The rest of <PageContributors> is a server component — only the
 // popover trigger needs client interactivity, so we keep this splinter
 // minimal. Radix Popover gives us keyboard/focus/outside-click for
@@ -17,9 +19,9 @@ interface ContributorsOverflowProps {
   contributors: Contributor[];
 }
 
-export default function ContributorsOverflow({
+const ContributorsOverflow: React.FC<ContributorsOverflowProps> = ({
   contributors,
-}: ContributorsOverflowProps) {
+}) => {
   if (contributors.length === 0) return null;
   return (
     <Popover>
@@ -39,7 +41,7 @@ export default function ContributorsOverflow({
         <ul className={styles.popoverList}>
           {contributors.map((c) => (
             <li key={c.login}>
-              <a
+              <Link
                 href={c.url}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -61,11 +63,14 @@ export default function ContributorsOverflow({
                 {c.commits > 0 ? (
                   <span className={styles.popoverCommits}>{c.commits}</span>
                 ) : null}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
       </PopoverContent>
     </Popover>
   );
-}
+};
+
+
+export default ContributorsOverflow;

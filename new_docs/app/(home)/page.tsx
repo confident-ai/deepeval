@@ -1,21 +1,35 @@
-import Link from 'next/link';
+import type { Metadata } from "next";
+import { DocsBody } from "fumadocs-ui/layouts/notebook/page";
+import { getMDXComponents } from "@/components/mdx";
+import ReadMe from "@/home/read-me.mdx";
+import HomeLayout from "@/src/layouts/HomeLayout";
+import HomeHeroSection from "@/src/sections/home/HomeHeroSection";
+import { siteTitle } from "@/lib/shared";
+
+// Homepage sets `title.absolute` so the root layout's `%s | …` template
+// doesn't double up the site name. The tagline here mirrors the old
+// Docusaurus `tagline` ("Evaluation Framework for LLMs") expanded into
+// a proper meta-description sentence.
+export const metadata: Metadata = {
+  title: { absolute: siteTitle },
+  description:
+    "DeepEval is the open-source LLM evaluation framework for testing and benchmarking LLM applications — 50+ plug-and-play metrics for RAG, agents, chatbots, and more.",
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (
-    <main className="flex flex-col items-center justify-center flex-1 gap-6 text-center px-6 py-24">
-      <h1 className="text-4xl font-bold tracking-tight">
-        The LLM Evaluation Framework
-      </h1>
-      <p className="max-w-xl text-fd-muted-foreground">
-        DeepEval lets you build reliable evaluation pipelines for any LLM
-        system. This is a stub homepage &mdash; the real one ships later.
-      </p>
-      <Link
-        href="/docs/getting-started"
-        className="rounded-md bg-fd-primary text-fd-primary-foreground px-5 py-2.5 font-medium"
-      >
-        Get Started
-      </Link>
-    </main>
+    <section className="mx-auto flex w-full max-w-[var(--site-shell-max-width)] flex-1 flex-col">
+      <HomeLayout
+        leftContent={<HomeHeroSection />}
+        rightContent={
+          <div className="docs-page-surface">
+            <DocsBody>
+              <ReadMe components={getMDXComponents()} />
+            </DocsBody>
+          </div>
+        }
+      />
+    </section>
   );
 }

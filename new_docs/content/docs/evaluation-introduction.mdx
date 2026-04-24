@@ -4,7 +4,6 @@ title: Introduction to LLM Evals
 sidebar_label: Introduction
 ---
 
-
 ## Quick Summary
 
 Evaluation refers to the process of testing your LLM application outputs, and requires the following components:
@@ -15,7 +14,23 @@ Evaluation refers to the process of testing your LLM application outputs, and re
 
 Here's a diagram of what an ideal evaluation workflow looks like using `deepeval`:
 
-<ImageDisplayer src="https://d2lsxfc3p6r9rv.cloudfront.net/workflow.png" />
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant DS as EvaluationDataset
+    participant M as Metrics
+    participant App as LLMApp
+    participant DE as DeepEval
+
+    Dev->>DS: Generate or load dataset
+    Dev->>M: Define evaluation metrics
+    loop Evaluate, improve, re-run
+        DS->>App: Run LLM app on dataset
+        App->>DE: Produce outputs to evaluate
+        DE->>Dev: Report failing cases + metric scores
+        Dev->>App: Improve prompts, tools, or logic
+    end
+```
 
 There are **TWO** types of LLM evaluations in `deepeval`:
 

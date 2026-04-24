@@ -50,10 +50,15 @@ const CONTENT_DIRS = [
 ];
 const OUTPUT = 'lib/generated/contributors.json';
 const CACHE = 'lib/generated/.contributors-cache.json';
+const REPO_CONTRIBUTORS = 'lib/generated/repo-contributors.json';
 
-// Cofounders — always credited on every page regardless of git history.
-// Pinned to the top of each page's list in this order.
-const PINNED_LOGINS = ['penguine-ip', 'kritinv'];
+// Some commit emails are not linked to a public GitHub identity, so the
+// commit API returns `author: null`. For those cases we maintain a tiny
+// email->login fallback and hydrate the avatar/profile URL from the
+// repo-wide contributors manifest.
+const AUTHOR_LOGIN_ALIASES = {
+  'jeffreyip@confident-ai.com': 'penguine-ip',
+};
 
 // Read repo coords from lib/shared.ts so there's one source of truth.
 // Parsing literals avoids having to compile the TS file at script time.
@@ -104,9 +109,33 @@ function loadCache() {
   try { return JSON.parse(readFileSync(CACHE, 'utf8')); } catch { return {}; }
 }
 
+function loadRepoContributors() {
+  if (!existsSync(REPO_CONTRIBUTORS)) return {};
+  try {
+    const list = JSON.parse(readFileSync(REPO_CONTRIBUTORS, 'utf8'));
+    return Object.fromEntries(
+      Array.isArray(list)
+        ? list
+            .filter((entry) => entry?.login && entry?.avatarUrl && entry?.url)
+            .map((entry) => [entry.login, entry])
+        : [],
+    );
+  } catch {
+    return {};
+  }
+}
+
 function saveJson(path, obj) {
   mkdirSync(join(path, '..'), { recursive: true });
   writeFileSync(path, JSON.stringify(obj, null, 2) + '\n');
+}
+
+function findCommitMetaForEmail(perFile, email) {
+  for (const byEmail of perFile.values()) {
+    const entry = byEmail.get(email);
+    if (entry) return entry;
+  }
+  return null;
 }
 
 async function resolveAuthor(sha, { user, repo, token }) {
@@ -143,6 +172,7 @@ async function main() {
   const { user, repo } = readGitConfig();
   const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
   const cache = loadCache();
+  const repoContributors = loadRepoContributors();
 
   const files = CONTENT_DIRS.flatMap((d) => walkMdx(d));
   if (files.length === 0) {
@@ -170,9 +200,26 @@ async function main() {
   const uniqueEmails = new Set();
   for (const byEmail of perFile.values()) for (const e of byEmail.keys()) uniqueEmails.add(e);
 
-  let resolved = 0, skipped = 0, bot = 0, rateLimited = false;
+  let resolved = 0, aliased = 0, skipped = 0, bot = 0, rateLimited = false;
   for (const email of uniqueEmails) {
+    if (cache[email]?.name && cache[email]?.login && cache[email]?.avatarUrl && cache[email]?.url) {
+      continue;
+    }
+
+    const aliasLogin = AUTHOR_LOGIN_ALIASES[email];
+    if (aliasLogin && repoContributors[aliasLogin]) {
+      const meta = findCommitMetaForEmail(perFile, email);
+      cache[email] = {
+        login: aliasLogin,
+        name: meta?.name || aliasLogin,
+        avatarUrl: repoContributors[aliasLogin].avatarUrl,
+        url: repoContributors[aliasLogin].url,
+      };
+      aliased += 1;
+      continue;
+    }
     if (email in cache) continue;
+
     // Use any commit SHA associated with this email (they all resolve
     // to the same GH user for a given email).
     let sha;
@@ -199,20 +246,6 @@ async function main() {
 
   saveJson(CACHE, cache);
 
-  // Pinned logins → profile lookup from cache. We look up each pinned
-  // login by scanning the cache for any email that resolved to it; that
-  // way we don't have to burn extra API calls just to fetch cofounder
-  // avatars. If a pinned login isn't in the cache yet (first run, or
-  // they've never committed anywhere in this repo), we skip silently —
-  // better than showing a half-rendered entry.
-  const pinnedProfiles = PINNED_LOGINS.map((login) => {
-    for (const entry of Object.values(cache)) {
-      if (entry?.login === login) return entry;
-    }
-    console.warn(`[contributors] pinned login "${login}" not found in cache; skipping until they appear in git history.`);
-    return null;
-  }).filter(Boolean);
-
   // Third pass: materialize the manifest using the (now populated) cache.
   const manifest = {};
   for (const [rel, byEmail] of perFile) {
@@ -228,35 +261,22 @@ async function main() {
         continue;
       }
       seenLogins.add(author.login);
-      list.push({ ...author, commits: meta.commits });
+      list.push({
+        ...author,
+        name: author.name || meta.name || author.login,
+        commits: meta.commits,
+      });
     }
 
     // Sort real committers by commit count, then alphabetical.
     list.sort((a, b) => b.commits - a.commits || a.login.localeCompare(b.login));
-
-    // Prepend pinned cofounders. If a cofounder also shows up as a real
-    // committer, keep their actual commit count but move them to the
-    // pinned slot (preserves attribution honesty while guaranteeing
-    // top-of-list placement).
-    const pinnedList = [];
-    for (const profile of pinnedProfiles) {
-      const idx = list.findIndex((x) => x.login === profile.login);
-      if (idx >= 0) {
-        pinnedList.push(list[idx]);
-        list.splice(idx, 1);
-      } else {
-        pinnedList.push({ ...profile, commits: 0 });
-      }
-    }
-
-    const finalList = [...pinnedList, ...list];
-    if (finalList.length > 0) manifest[rel] = finalList;
+    if (list.length > 0) manifest[rel] = list;
   }
 
   saveJson(OUTPUT, manifest);
   console.log(
     `[contributors] ${Object.keys(manifest).length} pages, ` +
-    `resolved ${resolved} new author(s), skipped ${skipped}, bots filtered ${bot}` +
+    `resolved ${resolved} new author(s), aliased ${aliased}, skipped ${skipped}, bots filtered ${bot}` +
     (rateLimited ? ' (rate-limited; re-run with GITHUB_TOKEN)' : '') + '.'
   );
 }

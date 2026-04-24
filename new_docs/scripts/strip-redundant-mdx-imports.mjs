@@ -10,16 +10,19 @@
 import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+// Kept in sync with the globally-registered components in
+// components/mdx.tsx's `getMDXComponents()`.
 const REGISTERED = [
   'VideoDisplayer',
+  'ImageDisplayer',
+  'Callout',
   'Equation',
   'MetricTagsDisplayer',
   'FeatureComparisonTable',
   'LinkCards',
   'TechStackCards',
-  'CopyMarkdownButton',
   'FAQ',
-  'Timeline',
+  'BlogPostMeta',
 ];
 
 // Strip a whole line (including its trailing newline) matching:

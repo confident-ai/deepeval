@@ -1,4 +1,5 @@
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
+import { remarkMdxMermaid } from 'fumadocs-core/mdx-plugins/remark-mdx-mermaid';
 import lastModified from 'fumadocs-mdx/plugins/last-modified';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 import { z } from 'zod';
@@ -87,8 +88,29 @@ export default defineConfig({
   mdxOptions: {
     // remarkDirective parses `:::type[title]` container directives;
     // remarkAdmonitions rewrites the recognized ones into <Callout>.
-    remarkPlugins: [remarkMath, remarkDirective, remarkAdmonitions],
+    remarkPlugins: [
+      remarkMath,
+      remarkDirective,
+      remarkAdmonitions,
+      remarkMdxMermaid,
+    ],
     // rehypeKatex must run before the syntax highlighter
     rehypePlugins: (v) => [rehypeKatex, ...v],
+    // Fumadocs' default `remark-image` plugin tries to fetch every
+    // remote image at build time to precompute `width`/`height` for
+    // `next/image`. Our blog + tutorial content references dozens of
+    // images on `deepeval-docs.s3.us-east-1.amazonaws.com` — those
+    // fetches intermittently time out (see the "Failed obtain image
+    // size" build error), which hard-fails the entire build.
+    //
+    // Setting `external: false` keeps the plugin running for LOCAL
+    // images (under `public/` — still get proper dimensions + blur
+    // placeholders) but skips remote URLs: they pass through as plain
+    // `<img src="https://…">` tags. Runtime rendering still works
+    // because `next.config.mjs` whitelists the S3 hostname for
+    // `next/image`, and Next's lowering of `![]()` to `<Image>` at
+    // the MDX layer is happy without precomputed dimensions as long
+    // as an `<img>` fallback is acceptable in the HTML output.
+    remarkImageOptions: { external: false },
   },
 });

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAuthor, type AuthorId } from "@/lib/authors";
 import { getBlogCategory, type BlogCategoryId } from "@/lib/blog-categories";
 import styles from "./BlogPostMeta.module.scss";
@@ -7,38 +8,64 @@ interface BlogPostMetaProps {
   category?: BlogCategoryId;
 }
 
-const BlogPostMeta = ({ authors, category }: BlogPostMetaProps) => {
+const BlogPostMeta: React.FC<BlogPostMetaProps> = ({ authors, category }) => {
   const resolved = authors.map((id) => ({ id, ...getAuthor(id) }));
+  const [leadAuthor, ...coAuthors] = resolved;
   const resolvedCategory = category ? getBlogCategory(category) : null;
   const CategoryIcon = resolvedCategory?.icon;
 
-  // Single author keeps the compact inline row (avatar + name side by
-  // side). With 2+ authors the overlapping-avatar + comma-joined names
-  // starts reading as one blended unit, so we break each author onto
-  // their own row — cleaner attribution for co-authored posts.
   return (
     <div className={styles.meta}>
-      <ul className={styles.authorList}>
-        {resolved.map((author) => (
-          <li key={author.id} className={styles.author}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={author.imageUrl}
-              alt=""
-              className={styles.avatar}
-              aria-hidden="true"
-            />
-            <a
-              href={author.url}
+      <div className={styles.authorBlock}>
+        <div className={styles.leadAuthor}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={leadAuthor.imageUrl}
+            alt=""
+            className={styles.avatar}
+            aria-hidden="true"
+          />
+          <div className={styles.authorText}>
+            <span className={styles.authorLabel}>First author</span>
+            <Link
+              href={leadAuthor.url}
               target="_blank"
               rel="noopener noreferrer"
               className={styles.name}
             >
-              {author.name}
-            </a>
-          </li>
-        ))}
-      </ul>
+              {leadAuthor.name}
+            </Link>
+          </div>
+        </div>
+
+        {coAuthors.length > 0 ? (
+          <ul className={styles.coAuthorList}>
+            {coAuthors.map((author) => (
+              <li key={author.id} className={styles.coAuthor}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={author.imageUrl}
+                  alt=""
+                  className={styles.coAuthorAvatar}
+                  aria-hidden="true"
+                />
+                <div className={styles.authorText}>
+                  <span className={styles.coAuthorLabel}>Co-author</span>
+                  <Link
+                    href={author.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.coAuthorName}
+                  >
+                    {author.name}
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
       {resolvedCategory && CategoryIcon ? (
         <span className={styles.category}>
           <CategoryIcon className={styles.categoryIcon} aria-hidden="true" />

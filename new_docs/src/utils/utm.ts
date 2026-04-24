@@ -4,11 +4,12 @@
  *
  * The site is on a PURE-RUNTIME tagging model:
  *   - For anchor clicks, the click-time interceptor in
- *     `src/clientModules/confident-ref-page.ts` walks every <a href> at click
- *     time, and (if the host is in CONFIDENT_HOSTNAMES) stamps the full UTM
- *     payload onto the href before the browser navigates. utm_content is
- *     resolved from the anchor's `data-utm-content` attribute or a
- *     `utm--<value>` className convention; falls back to "inline_link".
+ *     `src/layouts/UtmCapture/UtmCapture.tsx` (mounted once in app/layout.tsx)
+ *     walks every <a href> at click time, and (if the host is in
+ *     CONFIDENT_HOSTNAMES) stamps the full UTM payload onto the href before
+ *     the browser navigates. utm_content is resolved from the anchor's
+ *     `data-utm-content` attribute or a `utm--<value>` className convention;
+ *     falls back to "inline_link".
  *
  *   - For IMPERATIVE navigations (window.open / location.href = ...) there is
  *     no anchor for the click listener to grab. Those callsites use the

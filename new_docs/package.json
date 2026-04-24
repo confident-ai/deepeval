@@ -8,7 +8,8 @@
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "contributors": "node scripts/generate-contributors.mjs",
-    "prebuild": "npm run contributors",
+    "repo-contributors": "node scripts/generate-repo-contributors.mjs",
+    "prebuild": "npm run repo-contributors && npm run contributors",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
@@ -19,7 +20,9 @@
     "katex": "^0.16.45",
     "lucide-react": "^1.8.0",
     "mdast-util-directive": "^3.1.0",
+    "mermaid": "^11.14.0",
     "next": "16.2.4",
+    "next-themes": "^0.4.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "rehype-katex": "^7.0.1",

@@ -3,6 +3,9 @@
   "pages": [
     "index",
 
+    "---[Megaphone]Announcements---",
+    "deepeval-got-a-new-look",
+
     "---[Users]Community---",
     "medical-chatbot-deepeval-guide",
     "rag-contract-assistant-deepeval-guide",

@@ -53,7 +53,7 @@ const DEFAULT_TITLES: Partial<Record<CalloutType, string>> = {
   error: "Error",
 };
 
-const Callout = ({ type = "note", title, children }: CalloutProps) => {
+const Callout: React.FC<CalloutProps> = ({ type = "note", title, children }) => {
   const Icon = ICONS[type] ?? StickyNote;
   const displayTitle = title ?? DEFAULT_TITLES[type];
 
