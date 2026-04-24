@@ -23,10 +23,10 @@
  * resolve to a GitHub user are dropped — no point showing a ghost.
  *
  * Failure modes handled gracefully (all exit 0 so builds don't break):
- *   - Not in a git repo, or no commits touch content/docs: keeps the
- *     previous JSON file if one exists, otherwise writes `{}`. This
- *     matters for hosted builds that may not expose `.git` inside the
- *     app root even though a checked-in manifest is present.
+ *   - Not in a git repo, a shallow git checkout, or no commits touch
+ *     content/docs: keeps the previous JSON file if one exists, otherwise
+ *     writes `{}`. This matters for hosted builds that may not expose the
+ *     full git history needed by `git log --follow`.
  *   - GitHub API 403 / rate-limited: keeps existing cache entries,
  *     skips the uncached emails, warns.
  *
@@ -81,6 +81,10 @@ function tryExec(cmd) {
 
 function inGitRepo() {
   return tryExec('git rev-parse --is-inside-work-tree') === 'true';
+}
+
+function inShallowRepo() {
+  return tryExec('git rev-parse --is-shallow-repository') === 'true';
 }
 
 function walkMdx(dir, acc = []) {
@@ -174,6 +178,12 @@ function isBot(author) {
 async function main() {
   if (!inGitRepo()) {
     console.warn('[contributors] not inside a git repo; cannot regenerate contributors manifest.');
+    keepExistingOrWriteEmpty(OUTPUT);
+    return;
+  }
+
+  if (inShallowRepo()) {
+    console.warn('[contributors] shallow git checkout; keeping existing contributors manifest.');
     keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
