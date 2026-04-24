@@ -203,8 +203,6 @@ const HomePytestDemo: React.FC<HomePytestDemoProps> = ({
     setStatus("running");
   }
 
-  return null;
-
   return (
     <section className={styles.demo}>
       <ColabTerminalBlock
