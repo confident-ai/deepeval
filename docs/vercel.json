@@ -1,4 +1,5 @@
 {
+  "framework": "nextjs",
   "redirects": [
     {
       "source": "/guides/guides-multi-turn-tracing",
