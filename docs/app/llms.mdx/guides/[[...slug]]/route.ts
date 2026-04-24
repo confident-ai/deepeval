@@ -3,6 +3,6 @@ import { createLLMsRoute } from '@/lib/llms-route';
 
 const route = createLLMsRoute(guidesSource);
 
-export const revalidate = route.revalidate;
+export const revalidate = false;
 export const GET = route.GET;
 export const generateStaticParams = route.generateStaticParams;

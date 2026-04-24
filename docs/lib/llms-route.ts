@@ -30,5 +30,5 @@ export function createLLMsRoute(source: Source) {
     }));
   }
 
-  return { GET, generateStaticParams, revalidate: false as const };
+  return { GET, generateStaticParams };
 }
