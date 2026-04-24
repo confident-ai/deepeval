@@ -182,17 +182,18 @@ def unpatch_openai_after():
 
 @pytest.fixture(autouse=True)
 def _reset_tracing_state():
+    from deepeval.tracing.types import EvalSession
+
     trace_manager.clear_traces()
-    trace_manager.traces_to_evaluate_order.clear()
-    trace_manager.traces_to_evaluate.clear()
-    trace_manager.integration_traces_to_evaluate.clear()
-    trace_manager.trace_uuid_to_golden.clear()
+    # Atomic reset: dropping the session clears mode + every per-run
+    # collection (pending_traces, traces_to_evaluate, trace_uuid_to_golden,
+    # test_case_metrics) in one go, so a test cannot leak eval state to its
+    # neighbors via a forgotten field.
+    trace_manager.eval_session = EvalSession()
     try:
         trace_manager.task_bindings.clear()
     except Exception:
         pass
-    trace_manager.evaluating = False
-    trace_manager.evaluation_loop = False
     yield
 
 

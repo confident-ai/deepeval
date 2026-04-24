@@ -1,0 +1,252 @@
+/* --------------------------------------------------------------------
+ * IntegrationGrid — "Works with your stack. All of it."
+ *
+ * Outer layout:
+ *
+ *   +---------------+---------------+
+ *   |               |   Frameworks  |
+ *   | Model         +---------------+
+ *   | Providers     |   CI / CD     |
+ *   +---------------+---------------+
+ *
+ * Model Providers takes the tall left panel (two rows); Frameworks
+ * and CI/CD stack in the right column. On narrow screens the grid
+ * collapses to a single column.
+ * ------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  margin: 1rem 0 2rem;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+}
+
+.tall {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.top {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.bottom {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+@media (max-width: 720px) {
+  .tall,
+  .top,
+  .bottom {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* ---------- Panel shell ---------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+  padding: 0.85rem 0.9rem 0.9rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.panelLabel {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+}
+
+/* ---------- Tile grid inside a panel ---------- */
+
+.tiles {
+  --tile-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--tile-cols), 1fr);
+  gap: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+
+  border-top: 1px solid var(--color-fd-border);
+  border-left: 1px solid var(--color-fd-border);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.9rem 0.4rem 0.85rem;
+  min-height: 84px;
+
+  border-right: 1px solid var(--color-fd-border);
+  border-bottom: 1px solid var(--color-fd-border);
+  background: var(--color-fd-background);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+
+  &:hover {
+    background: color-mix(
+      in oklab,
+      var(--color-fd-foreground) 4%,
+      var(--color-fd-background)
+    );
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-fd-primary, var(--color-fd-foreground));
+    outline-offset: -2px;
+  }
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+  max-width: 28px;
+  max-height: 28px;
+  object-fit: contain;
+}
+
+/* Inline, monochrome brand marks (OpenAI, OpenAI Agents, Vercel AI SDK,
+ * CircleCI, GitHub Actions). These render as real inline <svg> so
+ * `fill="currentColor"` inherits from this wrapper's `color` and flips
+ * with light/dark mode. */
+.logoWrapInline {
+  color: var(--color-fd-foreground);
+}
+
+.logoInline {
+  color: inherit;
+  fill: currentColor;
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+  display: block;
+}
+
+.tileName {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-fd-foreground);
+  text-align: center;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Tighten slightly on the smaller right-column panels so the right
+ * stack matches the density of the tall Model Providers panel. */
+.top .tile,
+.bottom .tile {
+  min-height: 76px;
+  padding: 0.75rem 0.35rem 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    padding: 0.75rem;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  }
+
+  .tile {
+    gap: 0.3rem;
+    min-height: 68px;
+    padding: 0.65rem 0.3rem;
+  }
+
+  .logoWrap {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logo {
+    max-width: 24px;
+    max-height: 24px;
+  }
+
+  .logoInline {
+    max-width: 20px;
+    max-height: 20px;
+  }
+
+  .tileName {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .panel {
+    padding: 0.625rem;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
+  }
+
+  .tile {
+    gap: 0.24rem;
+    min-height: 58px;
+    padding: 0.5rem 0.2rem;
+  }
+
+  .logoWrap {
+    width: 20px;
+    height: 20px;
+  }
+
+  .logo {
+    max-width: 20px;
+    max-height: 20px;
+  }
+
+  .logoInline {
+    max-width: 17px;
+    max-height: 17px;
+  }
+
+  .tileName {
+    font-size: 9px;
+    line-height: 1.15;
+  }
+}

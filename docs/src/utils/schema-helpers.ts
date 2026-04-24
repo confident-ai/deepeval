@@ -1,4 +1,4 @@
-const BASE_URL = "https://deepeval.com";
+import { siteUrl as BASE_URL } from "@/lib/shared";
 
 export interface ArticleSchemaProps {
   title: string
@@ -127,6 +127,28 @@ export function buildBreadcrumbSchema(trail: BreadcrumbItem[]): object | null {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: items,
+  };
+}
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export function buildFAQPageSchema(qas: FAQItem[]): object | null {
+  if (!qas || qas.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: qas.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: answer,
+      },
+    })),
   };
 }
 

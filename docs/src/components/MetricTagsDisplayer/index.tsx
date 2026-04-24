@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './MetricTagsDisplayer.module.css';
+import styles from './MetricTagsDisplayer.module.scss';
 
 interface MetricTagsDisplayerProps {
   usesLLMs?: boolean;
@@ -27,7 +27,7 @@ const MetricTagsDisplayer = ({
   custom = false,
   safety = false,
   multimodal = true,
-}: MetricTagsDisplayerProps) => {
+}) => {
   if (!usesLLMs) multimodal = false;
 
   return (

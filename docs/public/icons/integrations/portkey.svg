@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="portkey_grad" x1="0" y1="0.5" x2="1" y2="0.5">
+    <stop offset="0%" stop-color="#3B82C4"/>
+    <stop offset="100%" stop-color="#C0283D"/>
+  </linearGradient>
+</defs>
+<path d="M40.8 9.4H87.2C90.2 9.4 92.9 10.8 94.4 13.4L117.5 53.4C119 56 119 60 117.5 62.6L94.4 102.6C92.9 105.2 90.2 106.6 87.2 106.6H40.8C37.8 106.6 35.1 105.2 33.6 102.6L10.5 62.6C9 60 9 56 10.5 53.4L33.6 13.4C35.1 10.8 37.8 9.4 40.8 9.4Z" stroke="url(#portkey_grad)" stroke-width="11" fill="none"/>
+<path d="M58 38L82 58L58 78" stroke="url(#portkey_grad)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

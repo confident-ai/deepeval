@@ -1356,7 +1356,6 @@ class EvaluationDataset:
 
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
-        trace_manager.integration_traces_to_evaluate.clear()
         goldens = self.goldens
         with capture_evaluation_run("traceable evaluate()"):
             global_test_run_manager.reset()
@@ -1427,6 +1426,10 @@ class EvaluationDataset:
                         display_config.file_output_dir,
                     )
 
+            global_test_run_manager.configure_local_store(
+                results_folder=display_config.results_folder,
+                results_subfolder=display_config.results_subfolder,
+            )
             # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 

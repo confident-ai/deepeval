@@ -4,6 +4,7 @@ import os
 import pyfiglet
 import typer
 import webbrowser
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import ValidationError
 from pydantic.fields import FieldInfo
@@ -36,6 +37,54 @@ from deepeval.cli.dotenv_handler import DotenvHandler
 
 StrOrEnum = Union[str, "Enum"]
 PROD = "https://app.confident-ai.com"
+WWW = "https://www.confident-ai.com"
+
+# Hosts considered "browser-clickable" Confident AI properties. Programmatic
+# hosts (api.*, deepeval.*, otel.*) are intentionally excluded.
+_CONFIDENT_UTM_HOSTS = frozenset(
+    {"confident-ai.com", "www.confident-ai.com", "app.confident-ai.com"}
+)
+_UTM_SOURCE = "deepeval"
+
+
+def with_utm(
+    url: str,
+    *,
+    medium: str,
+    content: str,
+) -> str:
+    """Append standardized UTM params to a Confident AI URL.
+
+    Schema:
+      - utm_source  = "deepeval" (constant; identifies all deepeval-driven traffic)
+      - utm_medium  = surface type ("cli" / "python_sdk")
+      - utm_content = location on the source surface (e.g. "login_pair_browser_open")
+
+    `utm_campaign` is intentionally omitted: this is evergreen referral, not a
+    time-bound marketing push.
+
+    `ref_page` is intentionally NOT supported here: CLI invocations and Python
+    SDK call sites are not pages. `utm_medium` already identifies the surface
+    type and `utm_content` pinpoints the call site. `ref_page` is exclusively a
+    docs-site concept (set by the remark plugin / runtime client module).
+
+    No-ops if the URL is not a tracked Confident AI host or already carries a
+    `utm_source` (don't clobber upstream tagging).
+    """
+    if not url:
+        return url
+    parts = urlsplit(url)
+    if parts.hostname not in _CONFIDENT_UTM_HOSTS:
+        return url
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    if "utm_source" in query:
+        return url
+    query["utm_source"] = _UTM_SOURCE
+    query["utm_medium"] = medium
+    query["utm_content"] = content
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
 # List all mutually exclusive USE_* keys
 USE_LLM_KEYS = [
     key
@@ -64,10 +113,13 @@ def upload_and_open_link(_span: Optional[Span] = None):
         if confident_api_key == "" or confident_api_key is None:
             render_login_message()
 
-            print(
-                f"🔑 You'll need to get an API key at [link={PROD}]{PROD}[/link] to view your results (free)"
+            login_url = with_utm(
+                PROD, medium="cli", content="upload_and_open_link"
             )
-            webbrowser.open(PROD)
+            print(
+                f"🔑 You'll need to get an API key at [link={login_url}]{login_url}[/link] to view your results (free)"
+            )
+            webbrowser.open(login_url)
             while True:
                 confident_api_key = input("🔐 Enter your API Key: ").strip()
                 if confident_api_key:

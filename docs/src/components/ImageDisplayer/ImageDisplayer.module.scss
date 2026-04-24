@@ -1,0 +1,24 @@
+.imageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block: 0;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-fd-border);
+    background: var(--color-fd-card);
+    border-radius: 0;
+    display: block;
+  }
+
+  figcaption {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+    text-align: center;
+  }
+}

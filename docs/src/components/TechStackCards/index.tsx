@@ -1,6 +1,5 @@
 import React from 'react';
-import Link from '@docusaurus/Link';
-import styles from './TechStackCards.module.css';
+import styles from './TechStackCards.module.scss';
 
 interface TechStackCardProps {
   name: string;
@@ -12,7 +11,7 @@ interface TectStackCardsProps {
   techStack: TechStackCardProps[];
 }
 
-const TechStackCards = ({ techStack }: TectStackCardsProps) => {
+const TechStackCards: React.FC<TectStackCardsProps> = ({ techStack }) => {
   return (
     <div className={styles.section}>
       <div className={styles.list}>
@@ -24,12 +23,12 @@ const TechStackCards = ({ techStack }: TectStackCardsProps) => {
   );
 };
 
-const TechStackCard = ({ name, logo, website }: TechStackCardProps) => {
+const TechStackCard: React.FC<TechStackCardProps> = ({ name, logo, website }) => {
   return (
     <div className={styles.card}>
-      <div className={styles.cardContent}>
+      <div className={styles.content}>
         <img src={logo} alt={`${name} logo`} className={styles.logo} />
-        <h3 className={styles.cardTitle}>{name}</h3>
+        <h3 className={styles.title}>{name}</h3>
       </div>
     </div>
   );

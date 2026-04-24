@@ -1,5 +1,8 @@
+'use client';
+
 import React from "react";
-import styles from "./VideoDisplayer.module.css";
+import styles from "./VideoDisplayer.module.scss";
+import { appendDeepEvalAttribution } from "@site/src/utils/utm";
 
 interface VideoDisplayerProps {
   src: string;
@@ -7,7 +10,7 @@ interface VideoDisplayerProps {
   label: string;
 }
 
-const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
+const VideoDisplayer: React.FC<VideoDisplayerProps> = ({ src, confidentUrl, label }) => {
   return (
     <div className={styles.videoContainer}>
       <video width="100%" muted autoPlay controls playsInline controlsList="nodownload">
@@ -18,7 +21,7 @@ const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
       </video>
       {confidentUrl &&       
         <div className={styles.overlay}>
-          <div className={styles.playButton} onClick={() => window.open("https://www.confident-ai.com" + confidentUrl, '_blank')}>
+          <div className={styles.playButton} onClick={() => window.open(appendDeepEvalAttribution(confidentUrl, { content: 'video_overlay' }), '_blank')}>
             {label}
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
@@ -40,6 +43,6 @@ const VideoDisplayer = ({ src, confidentUrl, label }: VideoDisplayerProps) => {
         }
     </div>
   );
-}
+};
 
 export default VideoDisplayer;

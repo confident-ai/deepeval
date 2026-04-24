@@ -22,7 +22,7 @@
         <a href="#-metrics-and-features">Metrics and Features</a> |
         <a href="#-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
-        <a href="https://confident-ai.com?utm_source=GitHub">Confident AI</a>
+        <a href="https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=header_nav">Confident AI</a>
     <p>
 </h4>
 
@@ -58,7 +58,7 @@
 Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
 > [!IMPORTANT]
-> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://confident-ai.com?utm_source=GitHub) to compare iterations of your LLM app, generate & share testing reports, and more.
+> Need a place for your DeepEval testing data to live 🏡❤️? [Sign up to the DeepEval platform](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout) to compare iterations of your LLM app, generate & share testing reports, and more.
 >
 > ![Demo GIF](assets/demo.gif)
 
@@ -171,7 +171,7 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 ## ☁️ Platform + Ecosystem
 
-[Confident AI](https://confident-ai.com?utm_source=GitHub) is an all-in-one platform that integrates natively with DeepEval.
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section) is an all-in-one platform that integrates natively with DeepEval.
 
 - Manage datasets, trace LLM applications, run evaluations, and monitor responses in production — all from one platform.
 - Don't need a UI? Confident AI can also be your data persistant layer - run evals, pull datasets, and inspect traces straight from claude code, cursor, via Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
@@ -397,7 +397,7 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://confident-ai.com?utm_source=GitHub) is an all-in-one platform to manage datasets, trace LLM applications, and run evaluations in production. Log in from the CLI to get started:
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section) is an all-in-one platform to manage datasets, trace LLM applications, and run evaluations in production. Log in from the CLI to get started:
 
 ```bash
 deepeval login
@@ -417,7 +417,7 @@ Prefer to stay in your IDE? Use DeepEval via [Confident AI's MCP server](https:/
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
 </p>
 
-Everything on Confident AI is available [here](https://www.confident-ai.com/docs?utm_source=GitHub).
+Everything on Confident AI is available [here](https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=github&utm_content=cloud_docs).
 
 <br />
 

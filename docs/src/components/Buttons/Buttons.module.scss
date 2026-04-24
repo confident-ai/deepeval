@@ -1,0 +1,78 @@
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  line-height: 1;
+  text-decoration: none;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease,
+    border-color 160ms ease;
+
+  p {
+    margin: 0;
+  }
+}
+
+.primary {
+  --fd-callout-color: var(--color-fd-primary-foreground);
+  --fd-callout-ink: color-mix(
+    in oklch,
+    var(--color-fd-primary-foreground) 14%,
+    transparent
+  );
+  --fd-callout-rule: color-mix(
+    in oklch,
+    var(--color-fd-foreground) 55%,
+    transparent
+  );
+  background: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  border: 1px solid var(--color-fd-primary);
+
+  &:hover {
+    background: color-mix(in oklch, var(--color-fd-primary) 88%, transparent);
+  }
+}
+
+.secondary {
+  background: transparent;
+  color: var(--color-fd-foreground);
+  border: 1px solid var(--color-fd-border);
+
+  &:hover {
+    background: var(--color-fd-muted);
+    border-color: color-mix(
+      in oklch,
+      var(--color-fd-foreground) 25%,
+      transparent
+    );
+  }
+}
+
+.startIcon,
+.endIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.startIcon :global(svg),
+.endIcon :global(svg) {
+  width: 0.82rem;
+  height: 0.82rem;
+  flex-shrink: 0;
+}
+
+.primary:disabled,
+.secondary:disabled {
+  cursor: default;
+  opacity: 0.75;
+}

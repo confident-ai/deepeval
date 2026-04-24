@@ -1,0 +1,777 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* ------------------------------------------------------------------ */
+/* Theme tokens                                                        */
+/* - Fonts: Inter (UI/body) + Instrument Serif (display).              */
+/* - Layout width.                                                     */
+/* - Zero out every Tailwind radius token → square corners everywhere. */
+/* - Light-mode color tokens (full Fumadocs set).                      */
+/* ------------------------------------------------------------------ */
+@theme {
+  --font-sans: var(--font-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-heading), "Space Grotesk", "Inter", ui-sans-serif,
+    system-ui, sans-serif;
+
+  --fd-layout-width: 90rem;
+  --site-shell-max-width: 1400px;
+  --site-shell-pad-x: 32px;
+  --site-shell-pad-x-mobile: 20px;
+
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+
+  /* Foundation — warm off-white */
+  --color-fd-background: hsl(40, 25%, 97%);
+  --color-bg-inverse: #000000;
+  --color-fd-foreground: hsl(0, 0%, 9%);
+  --color-fd-muted: hsl(40, 15%, 94%);
+  --color-fd-muted-foreground: hsl(0, 0%, 52%);
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(0, 0%, 12%);
+  --color-fd-card: hsl(0, 0%, 100%);
+  --color-fd-card-foreground: hsl(0, 0%, 9%);
+  --color-fd-border: hsla(35, 12%, 65%, 0.4);
+  --color-fd-secondary: hsl(40, 15%, 92%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 9%);
+  --color-fd-accent: hsla(35, 12%, 80%, 0.45);
+  --color-fd-accent-foreground: hsl(0, 0%, 9%);
+
+  /* Primary = neutral foreground. Violet is gone entirely. */
+  --color-fd-primary: hsl(0, 0%, 9%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-ring: hsl(0, 0%, 9%);
+
+  /* Prose body copy — in between foreground (9%) and muted (52%). */
+  --color-prose: hsl(0, 0%, 30%);
+
+  /* Prose surface — slightly whiter than the page off-white so the
+   * MDX article reads as a distinct "paper" on top of the canvas.   */
+  --color-prose-bg: hsl(40, 30%, 99%);
+}
+
+/* Dark mode — neutral foundation, no accent color */
+.dark {
+  --color-fd-background: hsl(0, 0%, 7%);
+  --color-bg-inverse: #ffffff;
+  --color-fd-foreground: hsl(0, 0%, 92%);
+  --color-fd-muted: hsl(0, 0%, 13%);
+  --color-fd-muted-foreground: hsla(0, 0%, 78%, 0.8);
+  --color-fd-popover: hsl(0, 0%, 11%);
+  --color-fd-popover-foreground: hsl(0, 0%, 87%);
+  --color-fd-card: hsl(0, 0%, 10%);
+  --color-fd-card-foreground: hsl(0, 0%, 98%);
+  --color-fd-border: hsla(0, 0%, 40%, 0.2);
+  --color-fd-secondary: hsl(0, 0%, 13%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 92%);
+  --color-fd-accent: hsla(0, 0%, 41%, 0.3);
+  --color-fd-accent-foreground: hsl(0, 0%, 90%);
+
+  --color-fd-primary: hsl(0, 0%, 92%);
+  --color-fd-primary-foreground: hsl(0, 0%, 9%);
+  --color-fd-ring: hsl(0, 0%, 92%);
+
+  /* Prose body copy — in between foreground (92%) and muted (78%). */
+  --color-prose: hsl(0, 0%, 84%);
+
+  /* Prose surface — one notch brighter than the page background so the
+   * article still reads as a lifted "paper" in dark mode.            */
+  --color-prose-bg: hsl(0, 0%, 12%);
+}
+
+:root {
+  --color-bg-inverse: #000000;
+}
+
+.dark {
+  --color-bg-inverse: #ffffff;
+}
+
+/* MDX content — cap each child block and center it inside the page
+ * column. Notebook's container uses flex-col + `*:max-w` which
+ * left-aligns by default; `margin-inline: auto` centers it.         */
+:is(#nd-page, .docs-page-surface) > * {
+  max-width: 650px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+/* (fix: remove or correct the invalid selector) */
+/* The selector `* >` is invalid and will throw a CSS error.
+   If the intention is to add a border for debugging, use a valid selector like `*` or a more specific one. */
+
+/* * {
+  border: 1px solid red !important;
+} */
+
+/* ------------------------------------------------------------------ */
+/* Reusable utility: engineering grid background                       */
+/*                                                                     */
+/* Apply the `.bg-grid` class to any element to paint a layered grid   */
+/* behind its content — large cells framing smaller subcells, like     */
+/* engineering graph paper. Override the locally-scoped CSS variables  */
+/* to change cell size / line color / strength per instance, e.g.:     */
+/*                                                                     */
+/*   <section class="bg-grid" style="--grid-cell: 120px">...</section> */
+/*                                                                     */
+/* Defaults are deliberately strong-ish so the utility looks right     */
+/* when used on standalone blocks (hero, cards). The MDX article       */
+/* column turns the strength way down below — see `#nd-page`.          */
+/* ------------------------------------------------------------------ */
+.bg-grid {
+  --grid-cell: 80px;
+  --grid-subcell: 16px;
+  --grid-line: var(--color-fd-border);
+  --grid-subline: color-mix(in oklab, var(--color-fd-border) 40%, transparent);
+  --grid-line-width: 1px;
+
+  background-image: linear-gradient(
+      to right,
+      var(--grid-line) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to bottom,
+      var(--grid-line) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to right,
+      var(--grid-subline) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    ),
+    linear-gradient(
+      to bottom,
+      var(--grid-subline) var(--grid-line-width),
+      transparent var(--grid-line-width)
+    );
+  background-size: var(--grid-cell) var(--grid-cell),
+    var(--grid-cell) var(--grid-cell), var(--grid-subcell) var(--grid-subcell),
+    var(--grid-subcell) var(--grid-subcell);
+  background-position: 0 0;
+}
+
+/* Reusable prose "paper" surface.
+ *
+ * The grid sits on a ::before layer (not the element directly) so we can
+ * inset it away from container edges. The inset leaves a clean gutter of
+ * prose-bg between the grid and vertical borders, avoiding doubled lines. */
+#nd-page,
+.paper-grid-surface {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-prose-bg);
+}
+
+#nd-page::before,
+.paper-grid-surface::before {
+  content: "";
+  position: absolute;
+  /* Gutter on left/right only — tops/bottoms don't collide with anything,
+   * so letting the grid run edge-to-edge vertically is fine.          */
+  inset: 0 2px;
+  z-index: -1;
+  pointer-events: none;
+
+  /* Note: --color-fd-border is already translucent (~0.4 alpha), so the
+   * color-mix percentage multiplies into that. Anything under ~15%
+   * falls below the visible threshold on the off-white surface.       */
+  --grid-line: color-mix(in oklab, var(--color-fd-border) 20%, transparent);
+  --grid-subline: color-mix(in oklab, var(--color-fd-border) 10%, transparent);
+
+  background-image: linear-gradient(
+      to right,
+      var(--grid-line) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-subline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-subline) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: 0 0;
+}
+
+/* Sidebar — smaller font + tight row padding.
+ * Fumadocs items render as <a>/<button> with `p-2` (0.5rem) and the
+ * aside is `text-sm` (14px). We drop to ~13px, zero the viewport's
+ * inline padding so section separator rules span the full width,
+ * and let each item / heading own its own inline padding.           */
+#nd-sidebar,
+#nd-sidebar-mobile {
+  font-size: 13px;
+
+  /* Fumadocs' banner wrapper (`> div:first-child`) previously sat
+   * empty (tabs are hidden on desktop, nav title lives in the top
+   * nav) and took up `p-4 pb-2` of dead space. It now hosts the
+   * search trigger (see `SidebarSearch` + `sidebar.banner` in
+   * `lib/section.tsx`). A hairline underneath separates it from
+   * the first section heading ("Getting Started"), mirroring the
+   * `p ~ p` rule that already divides subsequent sections.
+   *
+   * Padding is forced to a uniform 0.5rem (overriding Fumadocs'
+   * `p-4 pb-2`) so the search trigger sits tight against the
+   * sidebar's vertical rules on both sides and hugs the divider
+   * above/below — matches the visual density of the section
+   * headings directly below, which also use 0.5rem horizontal
+   * padding. */
+  > div:first-child {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-fd-border);
+  }
+
+  [data-radix-scroll-area-viewport] {
+    padding: 0.25rem 0;
+  }
+
+  a,
+  button {
+    padding-top: 0.125rem;
+    padding-bottom: 0.125rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Section headings (rendered as <p>) — tighter top/bottom rhythm.
+   * All sections get 1rem of top breathing room above their text
+   * (first via padding; subsequent via margin + padding with the
+   * separator line in between).                                      */
+  p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    padding-top: 1rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-top: none;
+    font-size: 13px;
+  }
+
+  p ~ p {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-fd-border);
+  }
+
+  /* Section-heading icons (Lucide SVGs rendered inside the <p>).
+   * Match the 13px heading text, use a slightly thinner stroke so
+   * they don't feel heavier than the label next to them.            */
+  p svg {
+    width: 13px;
+    height: 13px;
+    stroke-width: 1.75;
+  }
+}
+
+/* Mobile sidebar drawer.
+ *
+ * Fumadocs renders the drawer as `fixed ... inset-y-0`, which starts it
+ * at the top of the viewport. Our custom notebook header is also sticky
+ * and defines `--fd-header-height`, so anchor the drawer below that
+ * header instead of letting its search field and first section slide
+ * underneath the nav bar. */
+#nd-sidebar-mobile {
+  top: var(--fd-docs-row-2);
+}
+
+/* TOC — shrink to match sidebar's 13px, make the "On this page"
+ * heading use the dark foreground color, and add a little inline
+ * padding so items don't hug the left border.
+ *
+ * The heading rule also applies to any sibling heading we render into
+ * `tableOfContent.footer` (e.g. Contributors) via `data-toc-heading`,
+ * so custom footer content stays visually aligned with fumadocs' own
+ * `#toc-title`. */
+#nd-toc {
+  font-size: 13px;
+  padding-top: 1rem;
+  padding-right: 0;
+  /* No horizontal padding on the container itself — each direct child
+   * owns its own inline padding. That way full-bleed children (e.g. the
+   * tocFooter with its `border-top` separator) can span edge-to-edge,
+   * while normal sections (title, scroll area) still get the 0.75rem
+   * indent via the rule below. Opt out with `data-toc-full-bleed`. */
+  > :not([data-toc-full-bleed]) {
+    padding: 0.75rem;
+    padding-top: 0.5rem;
+  }
+
+  #toc-title,
+  [data-toc-heading] {
+    color: var(--color-fd-foreground);
+    font-size: 13px;
+  }
+
+  a {
+    font-size: 13px;
+  }
+}
+
+/* Vertical rules framing the three columns + the top nav.
+ *
+ * Note: #nd-sidebar's <aside> is `w-full` of a wider grid track and
+ * uses `items-end` to align the visible 268px nav to the right edge.
+ * So borders on the aside itself land in the wrong place — we target
+ * its direct child (the actual 268px column) instead.               */
+#nd-sidebar > * {
+  border-inline-start: 1px solid var(--color-fd-border);
+}
+
+#nd-sidebar-mobile > *,
+#nd-toc {
+  border-inline: 1px solid var(--color-fd-border);
+}
+
+/* The seam between sidebar and prose should belong to the main docs
+ * surface, not the collapsible sidebar rail. That keeps the vertical
+ * divider visible even when the sidebar is collapsed away. */
+#nd-page {
+  border-inline-start: 1px solid var(--color-fd-border);
+}
+
+/* ==================================================================
+ * Blueprint callout — one treatment, many hooks.
+ *
+ * A diagonal-hatched "poché" fill framed by four outward-facing L
+ * brackets at the corners — camera-viewfinder / crop-mark style.
+ * Reads as a labelled region on an engineering schematic: the 45°
+ * stripes contrast the orthogonal MDX grid background, and the
+ * corner marks reference construction drawings where the box is
+ * implied by its corners rather than drawn as a closed rectangle.
+ *
+ * One source of truth so every hook picks up the same look:
+ *   - top-nav text items      (#nd-subnav a/button[data-active])
+ *   - prose inline link hover (.prose a:hover)
+ *   - ad-hoc use              (.fd-blueprint-callout)
+ *
+ * Per-context tweaks (outward gap, arm length, ink/rule strength)
+ * go via the `--fd-callout-*` custom properties below — override
+ * them in the context's own block without redeclaring the whole
+ * rule. That's the only way to keep the treatment genuinely
+ * consistent across contexts.
+ * ================================================================== */
+/* NB: selector list is intentionally NOT wrapped in `:where()` — we
+ * need each hook to keep its own specificity so it can beat the
+ * base prose-link rule further down the file. `:where()` zeros
+ * specificity, which would let `color: LinkText` / underline from
+ * `.prose a:not([data-card]…)` win on hover. */
+.fd-blueprint-callout,
+/* Top-nav text items — same callout for "I'm here" (active),
+ * "I'm thinking about going here" (hover), and the moment-of-click
+ * pressed state (`:active`). `[data-active]` (attribute presence,
+ * no value check) scopes this to opted-in affordances: NavLinks
+ * always carry it with "true"/"false", and the GitHub button opts
+ * in with "false". The icon-only utility buttons (theme switch,
+ * sidebar toggle) don't carry the attribute and keep their
+ * Fumadocs hover styles. */
+#nd-subnav :where(a, button)[data-active="true"],
+#nd-subnav :where(a, button)[data-active]:hover,
+#nd-subnav :where(a, button)[data-active]:active,
+:where(a, button)[data-callout]:hover,
+:where(a, button)[data-callout]:focus-visible,
+/* Fumadocs Cards — on hover, the same callout treatment as
+ * everywhere else. Cards are block-level `<a>`s with their own
+ * border + rounded background, so the hatch tints the card body
+ * and the corner marks frame it from outside. Kept out of the
+ * prose-link selector above (via `:not([data-card], [data-card] *)`)
+ * so card descendants don't also pick up link styling. */
+.prose [data-card]:hover,
+.prose a:not([data-card], [data-card] *, [data-button], [data-button] *):hover {
+  /* Tokens — local `--_*` copies with `--fd-callout-*` fallbacks so
+   * each context can override just the knob it cares about.
+   *
+   *   --fd-callout-offset  outward gap from host edge to corner
+   *                        marks (px). 0 = marks hug the edge.
+   *   --fd-callout-arm     length of each L arm (px).
+   *   --fd-callout-ink     hatch stripe colour (translucent).
+   *   --fd-callout-rule    corner-mark stroke colour.                 */
+  --_callout-offset: var(--fd-callout-offset, 4px);
+  --_callout-arm: var(--fd-callout-arm, 6px);
+  --_callout-ink: var(
+    --fd-callout-ink,
+    color-mix(in oklch, var(--color-fd-primary) 10%, transparent)
+  );
+  --_callout-rule: var(
+    --fd-callout-rule,
+    color-mix(in oklch, var(--color-fd-primary) 55%, transparent)
+  );
+
+  /* `position: relative` anchors the `::before` that paints the
+   * corner marks. On inline hosts (prose links) this is harmless —
+   * inline elements accept `position: relative` without becoming
+   * block-level, and the pseudo-element positions against the
+   * first line box. Multi-line wrapped inline links therefore
+   * show marks around the first line only; acceptable trade-off
+   * vs. adding per-line SVG which would be heavier. */
+  position: relative;
+  color: var(--fd-callout-color, var(--color-fd-foreground));
+  text-decoration-line: none;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--_callout-ink) 0 1px,
+    transparent 1px 6px
+  );
+  border-radius: 0;
+  /* When an inline link wraps across lines, repeat the hatch per
+   * line-box instead of drawing one awkward rectangle around the
+   * multi-line bounding box. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Corner marks — four outward-facing L brackets, one per corner.
+ *
+ * Implementation: a single ::before pseudo extended `--_callout-
+ * offset` pixels beyond the host on all four sides, painted with
+ * 8 `linear-gradient` layers (one horizontal + one vertical arm
+ * per corner). No extra markup required on the host, no SVG
+ * asset, no JS. Pseudo is inert (`pointer-events: none`) so it
+ * never intercepts clicks on the real link/button underneath.
+ *
+ * Why 8 gradients instead of 4 SVGs: `background-position` lets
+ * us anchor each stroke to a named corner (`top left`, `top
+ * right`, …) so the marks stay pinned regardless of host size.
+ * A single SVG would need `background-size: 100% 100%` and
+ * viewBox math to keep arm length from scaling with width. */
+.fd-blueprint-callout::before,
+#nd-subnav :where(a, button)[data-active="true"]::before,
+#nd-subnav :where(a, button)[data-active]:hover::before,
+#nd-subnav :where(a, button)[data-active]:active::before,
+:where(a, button)[data-callout]:hover::before,
+:where(a, button)[data-callout]:focus-visible::before,
+.prose [data-card]:hover::before,
+.prose
+  a:not(
+    [data-card],
+    [data-card] *,
+    [data-button],
+    [data-button] *
+  ):hover::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--_callout-offset));
+  pointer-events: none;
+  background:
+    /* top-left:    horizontal arm, then vertical arm */ linear-gradient(
+        var(--_callout-rule),
+        var(--_callout-rule)
+      )
+      top left / var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top left / 1px
+      var(--_callout-arm) no-repeat,
+    /* top-right */ linear-gradient(var(--_callout-rule), var(--_callout-rule))
+      top right / var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) top right / 1px
+      var(--_callout-arm) no-repeat,
+    /* bottom-left */
+      linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom left /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom left /
+      1px var(--_callout-arm) no-repeat,
+    /* bottom-right */
+      linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom right /
+      var(--_callout-arm) 1px no-repeat,
+    linear-gradient(var(--_callout-rule), var(--_callout-rule)) bottom right /
+      1px var(--_callout-arm) no-repeat;
+}
+
+#nd-subnav {
+  /* Only a top rule — the left/right edges sit at the viewport's
+   * vertical gutters (no visible border below them), and the bottom
+   * rule lives on `[data-header-body]` itself. Adding `border-left`
+   * here shifts the entire header grid 1px right under border-box
+   * sizing, knocking the col 1 / col 2 seam out of alignment with
+   * the sidebar's right border below. */
+  border-top: 1px solid var(--color-fd-border);
+
+  /* Keep the nav above the sidebar (z-20) and page chrome, but below
+   * popovers/menus (z-50) so dropdown content can layer over it. */
+  z-index: 40;
+  background-color: var(--color-fd-background);
+
+  /* `[data-header-body]` padding is intentionally handled inline by
+   * our NavHeader component — the body is a 3-column grid whose
+   * seams must line up pixel-for-pixel with the sidebar right border
+   * and the TOC left border below. Any container padding here would
+   * shift the whole grid and break the alignment. Per-cell padding
+   * (see `NavHeader/index.tsx`) is the right place to tune inset. */
+
+  /* Active-state weight bump for links / buttons in the top nav.
+   * The visual (hatch + corner marks) comes from the shared
+   * blueprint callout at the top of the file; here we only bump
+   * `font-weight` so the active label reads heavier than its
+   * hovered-but-not-active siblings. `px-2` padding on the link
+   * absorbs any glyph-metric shift, so the row doesn't reflow.
+   *
+   * Scoped to `#nd-subnav` on purpose: sidebar keeps its own pill
+   * active state from Fumadocs since nav links (jump) and sidebar
+   * items (drill-down) play different navigational roles. */
+  :where(a, button)[data-active="true"] {
+    font-weight: 500;
+  }
+
+  /* Square corners on everything inside the right-hand utility cell
+   * (GitHub button, theme switch, sidebar toggle). Fumadocs'
+   * ThemeSwitch renders a pill wrapper + inner buttons, each with
+   * their own `rounded-full` classes that a single parent
+   * `className` prop can't reach. Flattening the whole subtree
+   * here is both simpler than case-by-case overrides and
+   * future-proof against upstream tweaks.
+   *
+   * Scoped to `[data-header-body] > *:last-child` specifically so
+   * it doesn't leak to col 1 (logo) or col 2 (nav links) and
+   * doesn't fight with the blueprint callout's own `border-radius`
+   * in the middle cell. Specificity is (1,1,1), comfortably above
+   * Tailwind's single-class `.rounded-full` (0,1,0) — no
+   * `!important` required. */
+  [data-header-body] > *:last-child,
+  [data-header-body] > *:last-child *,
+  [data-header-body] > *:last-child *::before,
+  [data-header-body] > *:last-child *::after {
+    border-radius: 0 !important;
+  }
+}
+
+/* MDX prose — use muted foreground for paragraphs/lists so the
+ * reading copy feels airier. Headings, links, and inline code each
+ * get their own color overrides below.                              */
+.prose {
+  color: var(--color-prose);
+  font-weight: 300;
+  font-size: 15px;
+}
+
+/* Lists — squares instead of discs/circles at every nesting level. */
+.prose :where(ul, ul ul, ul ul ul) {
+  list-style-type: square;
+}
+
+/* Headings — Geist Mono for a light/technical notebook feel.
+ * Kept dark (foreground) so they pop against the muted body copy.
+ * Scoped to #nd-page so it covers both <DocsTitle> (rendered outside
+ * .prose) and any headings written in MDX (inside .prose).          */
+:is(#nd-page, .docs-page-surface) :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-heading);
+  color: var(--color-fd-foreground);
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+/* Body links — native browser blue, always regular weight (even when
+ * the author wraps them in **bold**). `LinkText` is the CSS system
+ * color that resolves to the UA's default link blue and adapts in
+ * dark mode.
+ *
+ * `:not([data-card], [data-card] *)` excludes Fumadocs Cards (and
+ * their descendants) so card-as-link doesn't pick up link styling —
+ * Fumadocs' own card theme classes win there.                       */
+.prose a:not([data-card], [data-card] *, [data-button], [data-button] *) {
+  color: LinkText;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+/* Hover state — visual comes from the shared blueprint callout
+ * at the top of the file. No per-context overrides needed here:
+ * prose links are inline with no padding, so the default 1px
+ * `--fd-callout-offset` is exactly the breathing room we want
+ * around glyphs. Left as a comment so the next reader knows
+ * where to look (and doesn't re-add a duplicate rule). */
+
+/* <details>/<summary> — ensure pointer cursor on hover. Tailwind
+ * Preflight doesn't set this, and some browsers default to text.    */
+summary {
+  cursor: pointer;
+}
+
+/* Headings are auto-wrapped in <a href="#anchor"> by Fumadocs — we
+ * don't want those to turn blue. Reset them back to inheriting.     */
+.prose :where(h1, h2, h3, h4, h5, h6) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* …and don't let the blueprint callout fire on heading anchors.
+ * The shared `.prose a:not([data-card]…):hover` rule at the top of
+ * the file would otherwise paint hatch + corner marks around every
+ * heading when the cursor passes over it, which reads as noise
+ * rather than affordance (users don't typically click heading
+ * self-links, they copy the URL via the hash icon).
+ *
+ * `:not([data-card])` on the anchor raises specificity to (0,3,1),
+ * matching the shared hover rule, so source order (this rule
+ * comes later) lets the reset win. Without it the heading
+ * carve-out is (0,2,1) and the callout leaks through.
+ *
+ * The `::before` reset neutralises the pseudo-element that paints
+ * the four corner marks — `background: none` clears all 8 gradient
+ * layers at once; `content: none` makes the pseudo not generate
+ * at all so it can't catch layout either. */
+.prose :where(h1, h2, h3, h4, h5, h6) a:not([data-card]):hover {
+  color: inherit;
+  background-image: none;
+}
+.prose :where(h1, h2, h3, h4, h5, h6) a:not([data-card]):hover::before {
+  content: none;
+}
+
+/* Force regular weight on links regardless of wrapping <strong>/<b>:
+ *   [**bold text**](url) → <a><strong>...</strong></a>   (strong inside a)
+ *   **[link](url)**      → <strong><a>...</a></strong>   (a inside strong)
+ *
+ * Same carve-out: skip cards so their title/body retain designed weights.
+ */
+.prose a:not([data-card], [data-card] *, [data-button], [data-button] *),
+.prose a:not([data-card], [data-card] *, [data-button], [data-button] *) *,
+.prose
+  :is(strong, b)
+  a:not([data-card], [data-card] *, [data-button], [data-button] *) {
+  font-weight: 400 !important;
+}
+
+/* ...but don't force 400 on heading links — headings should stay bold. */
+.prose :where(h1, h2, h3, h4, h5, h6) a,
+.prose :where(h1, h2, h3, h4, h5, h6) a * {
+  font-weight: inherit !important;
+}
+
+#docs-announcement,
+#docs-announcement * {
+  font-size: 13px;
+  font-weight: 400;
+}
+
+#docs-announcement a {
+  display: inline;
+  margin-inline: 0.2em;
+  color: LinkText;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fumadocs Cards — tweak default sizing to feel more like our notebook
+ * aesthetic: icons + title a hair bigger, description/body a hair
+ * smaller. The link-bleed carve-outs above already keep card text
+ * black and un-underlined.                                           */
+[data-card] svg {
+  width: 18px;
+  height: 18px;
+}
+
+[data-card] h3 {
+  font-size: 15px;
+}
+
+[data-card] p,
+[data-card] > div:last-child,
+[data-card] > div:last-child * {
+  font-size: 12px;
+}
+
+/* Blueprint callout tuning for cards. Default 4px offset already
+ * matches what cards want (standardised across every hook — the
+ * framing marks should always sit ~4px off the component edge,
+ * regardless of whether the component is a nav pill or a big
+ * block card), so we only override the tokens that actually need
+ * to differ on cards:
+ *
+ *   --fd-callout-arm:    12px       longer arms so the L shapes
+ *                                   read as deliberate framing
+ *                                   rather than tiny dots against
+ *                                   the card's larger rectangle.
+ *   --fd-callout-ink:    transparent kills the diagonal hatch; on
+ *                                   a card-sized surface the 6px
+ *                                   stripe cycle reads as dense
+ *                                   wallpaper and competes with
+ *                                   the title/body copy. The card
+ *                                   keeps its plain background
+ *                                   (plus Fumadocs' own accent
+ *                                   tint on hover) and only the
+ *                                   corner marks signal "you're
+ *                                   here." */
+.prose [data-card]:hover {
+  --fd-callout-arm: 12px;
+  --fd-callout-ink: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fumadocs Steps — the <Steps>/<Step> components ship without any CSS,
+ * so we own the styling: numbered square badges (no border-radius),
+ * a subtle left rail, and consistent vertical rhythm between steps.  */
+.fd-steps {
+  counter-reset: fd-step;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  margin-block: 1.5em;
+  padding-left: 28px;
+  border-left: 1px solid var(--color-fd-border);
+}
+
+.fd-step {
+  counter-increment: fd-step;
+  position: relative;
+
+  &::before {
+    content: counter(fd-step);
+    position: absolute;
+    top: 0;
+    left: calc(-28px - 12px);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-fd-card);
+    border: 1px solid var(--color-fd-border);
+    color: var(--color-fd-foreground);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 0;
+  }
+
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Fumadocs Tabs — wrap the tab list onto multiple rows when items
+ * would otherwise overflow horizontally. Fumadocs ships the tablist
+ * with `flex ... overflow-x-auto`, which turns extra tabs into a
+ * horizontal scroll strip (awkward on landing pages with 5+ tabs).
+ * The `.overflow-x-auto` suffix scopes the override specifically to
+ * Fumadocs' tablist so non-Fumadocs tablists elsewhere are unaffected.
+ * `gap-3.5` (0.875rem) already supplies the row-gap once wrapped. */
+[role="tablist"].overflow-x-auto {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  /* Tabs already carry `py-2` internally — an extra 14px of row-gap
+   * on top of that makes the wrapped rows feel disconnected. Zero it
+   * out so the rows stack tightly. */
+  row-gap: 0;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}

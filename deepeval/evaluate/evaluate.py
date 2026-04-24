@@ -1,11 +1,8 @@
 from typing import (
-    Callable,
     List,
     Optional,
     Union,
     Dict,
-    Any,
-    Awaitable,
 )
 from rich.console import Console
 import time
@@ -61,9 +58,8 @@ from deepeval.test_run import (
 from deepeval.utils import get_is_running_deepeval
 from deepeval.evaluate.types import EvaluationResult
 from deepeval.evaluate.execute import (
-    a_execute_agentic_test_cases,
     a_execute_test_cases,
-    execute_agentic_test_cases,
+    _assert_test_from_current_trace,
     execute_test_cases,
 )
 
@@ -77,14 +73,10 @@ def assert_test(
         ]
     ] = None,
     golden: Optional[Golden] = None,
-    observed_callback: Optional[
-        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
-    ] = None,
     run_async: bool = True,
 ):
     validate_assert_test_inputs(
         golden=golden,
-        observed_callback=observed_callback,
         test_case=test_case,
         metrics=metrics,
     )
@@ -101,33 +93,14 @@ def assert_test(
         write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
     )
 
-    if golden and observed_callback:
-        if run_async:
-            loop = get_or_create_event_loop()
-            test_result = loop.run_until_complete(
-                a_execute_agentic_test_cases(
-                    goldens=[golden],
-                    observed_callback=observed_callback,
-                    error_config=error_config,
-                    display_config=display_config,
-                    async_config=async_config,
-                    cache_config=cache_config,
-                    identifier=get_identifier(),
-                    _use_bar_indicator=True,
-                    _is_assert_test=True,
-                )
-            )[0]
-        else:
-            test_result = execute_agentic_test_cases(
-                goldens=[golden],
-                observed_callback=observed_callback,
-                error_config=error_config,
-                display_config=display_config,
-                cache_config=cache_config,
-                identifier=get_identifier(),
-                _use_bar_indicator=False,
-                _is_assert_test=True,
-            )[0]
+    if golden and not test_case:
+        # Trace-scoped assert_test: read the active trace set by the plugin.
+        test_result = _assert_test_from_current_trace(
+            golden=golden,
+            metrics=metrics,
+            error_config=error_config,
+            display_config=display_config,
+        )
 
     elif test_case and metrics:
         if run_async:
@@ -266,6 +239,11 @@ def evaluate(
         if hyperparameters is not None or test_run.hyperparameters is None:
             test_run.hyperparameters = process_hyperparameters(hyperparameters)
             test_run.prompts = process_prompts(hyperparameters)
+
+        global_test_run_manager.configure_local_store(
+            results_folder=display_config.results_folder,
+            results_subfolder=display_config.results_subfolder,
+        )
 
         if _skip_reset:
             test_run.run_duration += run_duration

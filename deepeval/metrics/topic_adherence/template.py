@@ -79,7 +79,8 @@ class TopicAdherenceTemplate:
         question: str,
         response: str,
     ) -> str:
-        return textwrap.dedent(f"""You are given:
+        return textwrap.dedent(
+            f"""You are given:
                 - A list of **relevant topics**
                 - A **user question**
                 - An **assistant response**
@@ -137,7 +138,8 @@ class TopicAdherenceTemplate:
                 Response: {response}
 
                 JSON:
-            """)
+            """
+        )
 
     @staticmethod
     def generate_reason(success, score, threshold, TP, TN, FP, FN) -> str:
