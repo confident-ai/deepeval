@@ -8,6 +8,22 @@ from deepeval.tracing import (
 import asyncio
 
 
+def _make_answer_relevancy_metrics():
+    """Lazily create AnswerRelevancyMetric to avoid requiring API keys at import time."""
+    try:
+        return [AnswerRelevancyMetric()]
+    except Exception:
+        return []
+
+
+def _make_task_completion_metrics():
+    """Lazily create TaskCompletionMetric to avoid requiring API keys at import time."""
+    try:
+        return [TaskCompletionMetric(task="Get the weather")]
+    except Exception:
+        return []
+
+
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
@@ -64,7 +80,7 @@ async def custom_research_agent(query: str):
 
 @observe(
     available_tools=["get_weather", "get_location"],
-    metrics=[AnswerRelevancyMetric()],
+    metrics=_make_answer_relevancy_metrics(),
 )
 async def weather_agent(query: str):
     update_current_span(
@@ -84,7 +100,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["research_agent", "custom_research_agent"],
-    metrics=[TaskCompletionMetric(task="Get the weather")],
+    metrics=_make_task_completion_metrics(),
     metric_collection="Test",
 )
 async def meta_agent(input: str):
