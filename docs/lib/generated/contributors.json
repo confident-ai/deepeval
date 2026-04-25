@@ -1689,321 +1689,6 @@
       "commits": 1
     }
   ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-bias.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-competition.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-excessive-agency.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-graphic-content.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-illegal-activities.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-intellectual-property.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-misinformation.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-personal-safety.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-pii-leakage.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-prompt-leakage.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-robustness.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-toxicity.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities-unauthorized-access.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/(vulnerabilities)/red-teaming-vulnerabilities.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 8
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 3
-    }
-  ],
   "content/docs/benchmarks-arc.mdx": [
     {
       "login": "penguine-ip",
@@ -2780,52 +2465,6 @@
       "commits": 1
     }
   ],
-  "content/docs/red-teaming-attack-enhancements.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 7
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 1
-    }
-  ],
-  "content/docs/red-teaming-introduction.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 13
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 4
-    },
-    {
-      "login": "amrakshay",
-      "name": "Akshay Rahatwal",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/19661888?v=4",
-      "url": "https://github.com/amrakshay",
-      "commits": 1
-    }
-  ],
   "content/docs/synthesizer-introduction.mdx": [
     {
       "login": "penguine-ip",
@@ -3080,57 +2719,6 @@
       "name": "João Matias",
       "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
       "url": "https://github.com/joaopmatias",
-      "commits": 1
-    }
-  ],
-  "content/guides/guides-red-teaming.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 10
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin_Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 3
-    },
-    {
-      "login": "BloggerBust",
-      "name": "BloggerBust",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/10637462?v=4",
-      "url": "https://github.com/BloggerBust",
-      "commits": 1
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    },
-    {
-      "login": "karthick965938",
-      "name": "Karthick Nagarajan",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/16076431?v=4",
-      "url": "https://github.com/karthick965938",
-      "commits": 1
-    },
-    {
-      "login": "MANISH007700",
-      "name": "Manish-Luci",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/56771432?v=4",
-      "url": "https://github.com/MANISH007700",
-      "commits": 1
-    },
-    {
-      "login": "trevor-cai",
-      "name": "Trevor",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/230393880?v=4",
-      "url": "https://github.com/trevor-cai",
       "commits": 1
     }
   ],
@@ -4522,6 +4110,57 @@
       "name": "João Matias",
       "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
       "url": "https://github.com/joaopmatias",
+      "commits": 1
+    }
+  ],
+  "content/guides/guides-red-teaming.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 10
+    },
+    {
+      "login": "kritinv",
+      "name": "Kritin_Vongthongsri",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
+      "url": "https://github.com/kritinv",
+      "commits": 3
+    },
+    {
+      "login": "BloggerBust",
+      "name": "BloggerBust",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/10637462?v=4",
+      "url": "https://github.com/BloggerBust",
+      "commits": 1
+    },
+    {
+      "login": "joaopmatias",
+      "name": "João Matias",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
+      "url": "https://github.com/joaopmatias",
+      "commits": 1
+    },
+    {
+      "login": "karthick965938",
+      "name": "Karthick Nagarajan",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/16076431?v=4",
+      "url": "https://github.com/karthick965938",
+      "commits": 1
+    },
+    {
+      "login": "MANISH007700",
+      "name": "Manish-Luci",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/56771432?v=4",
+      "url": "https://github.com/MANISH007700",
+      "commits": 1
+    },
+    {
+      "login": "trevor-cai",
+      "name": "Trevor",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/230393880?v=4",
+      "url": "https://github.com/trevor-cai",
       "commits": 1
     }
   ]

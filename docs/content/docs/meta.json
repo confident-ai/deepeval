@@ -34,11 +34,6 @@
     "(generate-goldens)",
     "conversation-simulator",
 
-    "---[ShieldAlert]Red-Teaming---",
-    "red-teaming-introduction",
-    "red-teaming-attack-enhancements",
-    "(vulnerabilities)",
-
     "---[Trophy]Benchmarks---",
     "benchmarks-introduction",
     "benchmarks-mmlu",
