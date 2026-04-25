@@ -4,19 +4,29 @@ import pytest
 
 from deepeval import assert_test
 from deepeval.dataset import Golden
-from deepeval.tracing import observe, update_current_trace
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import observe, update_current_span, update_current_trace
+from deepeval.metrics import AnswerRelevancyMetric, GEval, FaithfulnessMetric
+from deepeval.test_case import LLMTestCaseParams
 
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def retriever(query: str) -> list[str]:
     return [f"chunk about: {query}", "static context chunk"]
 
+metric1 = GEval(
+    name="Metric 1",
+    criteria="Metric 1 criteria",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
 
-@observe()
+@observe(metrics=[FaithfulnessMetric()])
 def llm_app(query: str) -> str:
     chunks = retriever(query)
     answer = f"stubbed answer for '{query}' using {len(chunks)} chunks"
+    update_current_span(retrieval_context=chunks)
     update_current_trace(
         input=query,
         output=answer,
@@ -34,4 +44,4 @@ GOLDENS = [
 @pytest.mark.parametrize("golden", GOLDENS)
 def test_llm_app_trace_scope(golden: Golden):
     llm_app(golden.input)
-    assert_test(golden=golden)
+    assert_test(golden=golden, metrics=[metric1])

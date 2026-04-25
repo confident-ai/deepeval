@@ -1,33 +1,22 @@
 ---
 id: getting-started
-title: Quick Introduction
-sidebar_label: Quick Introduction
+title: DeepEval 5-min Quickstart
+sidebar_label: 5-min Quickstart
 ---
 
 import { ASSETS } from "@site/src/assets";
-import {
-  Bot,
-  FileSearch,
-  MessagesSquare,
-  Route,
-  GitMerge,
-  Gauge,
-  FileText,
-  Cloud,
-  ShieldCheck,
-} from "lucide-react";
+import { Bot, FileSearch, MessagesSquare } from "lucide-react";
 
-**DeepEval** is an open-source evaluation framework for LLMs. DeepEval makes it extremely easy to build
-and iterate on LLM (applications) and was built with the following principles in mind:
+This quickstart takes you from installation to your first passing eval in a few
+minutes. You'll create a small test case, choose a metric, and run it with
+`deepeval test run`.
 
-- Easily "unit test" LLM outputs in a similar way to Pytest.
-- Plug-and-use 50+ LLM-evaluated metrics, most with research backing, and all are multi-modal.
-- Evaluation for RAG, agents, chatbots, and virtually any use case.
-- Supports both end-to-end and component level evaluation.
-- Synthetic dataset generation with state-of-the-art evolution techniques.
-- Metrics are simple to customize and covers all use cases.
+By the end of this quickstart, you should be able to:
 
-DeepEval also integrates natively with [Confident AI](https:/www.confident-ai.com), an AI quality platform for teams to collaborate with observability, evals, and monitoring.
+- Run your first local eval with a test case, metric, and `deepeval test run`.
+- Add tracing when you want to evaluate an AI agent or its internal components.
+- Know where to go next for datasets, synthetic data, integrations, and the
+  Confident AI platform.
 
 ## Installation
 
@@ -304,13 +293,35 @@ for temp in [0.0, 0.4, 0.8]:
 The folder then holds one file per run — hyperparameters, metric reasons, and scores all live inside each file — so Cursor or Claude Code can `ls` the folder and read the runs directly. See [Saving test runs locally](/docs/evaluation-flags-and-configs#saving-test-runs-locally) for the full layout options.
 :::
 
-:::info
+## DeepEval for Online Evals
 
-When you do LLM tracing using `deepeval`, you can automatically evals on **traces, spans, and threads (conversations) in production**. Simply get an [API key from Confident AI](https://app.confident-ai.com) and set it in the CLI:
+When you do LLM tracing using `deepeval`, you can automatically run online evals to monitor **traces, spans, and threads (conversations) in production**.
+
+You'll need to use Confident AI to provide the necessary backend infrastructure and dashboard for this.
+
+Simply get an [API key from Confident AI](https://app.confident-ai.com) and set it in the CLI:
 
 ```bash
 CONFIDENT_API_KEY="confident_us..."
 ```
+
+Then add a "metric collection" to your trace:
+
+```python
+from deepeval.tracing import observe, update_current_trace
+
+@observe()
+def ai_agent(input: str) -> str:
+    output = "Your AI agent output"
+    update_current_trace(metric_collection="My Online Evals",)
+    return output
+```
+
+✅ Done. All invocations of your AI agent will now have online evals ran on it.
+
+:::tip
+To learn more on what a "metric collection" is, and how to pair observability with online evals, checkout the [docs on Confident AI.](https://www.confident-ai.com/docs/llm-tracing/quickstart)
+:::
 
 `deepeval`'s LLM tracing implementation is **non-instrusive**, meaning it will not affect any part of your code.
 
@@ -350,149 +361,69 @@ Threads are made up of **one or more traces**, and represents a multi-turn inter
 </Tab>
 </Tabs>
 
-:::
+## Next Steps
 
-## Continue With Your Use Case
+- Learn the core concepts if you want to build a repeatable eval suite:
 
-Tell us what you're building for more tailored onboarding:
+  - [Test cases](/docs/evaluation-test-cases)
+  - [Metrics](/docs/metrics-introduction)
+  - [Datasets](/docs/evaluation-datasets)
 
-<Cards>
-  <Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
-    - Setup LLM tracing - Test end-to-end task completion - Evaluate individual
-    components
-  </Card>
-  <Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
-    - Evaluate RAG end-to-end - Test retriever and generator separately -
-    Multi-turn RAG evals
-  </Card>
-  <Card
-    icon={<MessagesSquare />}
-    title="Chatbots"
-    href="/docs/getting-started-chatbots"
-  >
-    - Setup multi-turn test cases - Evaluate turns in a conversation - Simulate
-    user interactions
-  </Card>
-</Cards>
+- Follow a use-case quickstart if you want a path tailored to your system:
 
-_\*All quickstarts include a guide on how to bring evals to production near the end_
+  - [AI agents](/docs/getting-started-agents)
+  - [RAG](/docs/getting-started-rag)
+  - [Chatbots](/docs/getting-started-chatbots)
 
-## Two Modes of LLM Evals
+- Explore other workflows when you're ready to go beyond a single eval:
 
-`deepeval` offers two main modes of evaluation:
+  - [Generate synthetic data](/docs/synthesizer-introduction)
+  - [Simulate conversations](/docs/conversation-simulator)
+  - [Use integrations](/integrations) with LangChain, LangGraph, OpenAI, CrewAI, and more
 
-<Cards>
-  <Card
-    icon={<Route />}
-    title="End-to-End LLM Evals"
-    description="Best for: Raw LLM APIs, simple apps (no agents), chatbots, and occasionally RAG."
-    href="/docs/evaluation-end-to-end-llm-evals"
-  >
-    - Treats your LLM app as a black-box - Minimal setup, unopinionated - Can be
-    included in CI/CD - For single and multi-turn
-  </Card>
-  <Card
-    icon={<GitMerge />}
-    title="Component-Level LLM Evals"
-    description="Best for: AI agents, complex workflows, MCP evals, component-based RAG."
-    href="/docs/evaluation-component-level-llm-evals"
-  >
-    - Full visibility into your LLM app, white-box testing - Setup
-    non-instrusive LLM tracing - Can be included in CI/CD - Best for single-turn
-  </Card>
-</Cards>
-
-## Essential Resources
-
-These are things you should definitely learn about:
-
-<Cards>
-  <Card
-    icon={<Gauge />}
-    title="Metrics"
-    description="Learn about the 50+ metrics available, how to choose, and how to customize them."
-    href="/docs/metrics-introduction"
-  />
-  <Card
-    icon={<FileText />}
-    title="Datasets"
-    description="Learn how they are used within DeepEval, the concept of goldens, and how to use them for evals."
-    href="/docs/evaluation-datasets"
-  />
-  <Card
-    icon={<GitMerge />}
-    title="Tracing"
-    description="Learn how to trace your LLM applications, evaluate on a component-level, and monitor in production."
-    href="/docs/evaluation-llm-tracing"
-  />
-</Cards>
-
-## Other Products
-
-Learn more offerings available in `deepeval`'s ecosystem:
-
-<Cards>
-  <Card
-    icon={<Cloud />}
-    title="Confident AI"
-    description="An AI quality platform with observability, evals, and monitoring. DeepEval integrates with it natively, letting technical and non-technical teams collaborate on testing AI from /dev to /prod."
-    href="https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=other_products_card&ref_page=/docs/getting-started"
-    external
-  />
-  <Card
-    icon={<ShieldCheck />}
-    title="DeepTeam"
-    description="DeepTeam is DeepEval for AI safety and security testing. Expose 50+ vulnerabilities, with 20+ attack methods such as tree jailbreaking all automated."
-    href="https://trydeepteam.com"
-    external
-  />
-</Cards>
+If your team needs shared reports, regression analysis, or production monitoring,
+DeepEval integrates natively with [Confident AI](https://www.confident-ai.com/docs).
 
 ## FAQs
 
 <FAQs
   qas={[
     {
-      question: "What is DeepEval?",
+      question: "Why did my eval get stuck?",
       answer:
-        "DeepEval is an open-source LLM evaluation framework. It lets you unit-test LLM outputs, run end-to-end and component-level evals, generate synthetic datasets, and red-team your LLM applications — all from Python, without depending on any external service.",
+        "Most LLM-as-a-judge metrics call an evaluation model. If the provider is rate-limited, out of quota, or slow to respond, the eval may appear stuck. Check your model provider key, quota, and network access.",
     },
     {
-      question: "Do I need an account or API key to use DeepEval?",
+      question: "Do I need Confident AI for this quickstart?",
       answer: (
         <>
-          No. DeepEval runs fully locally. You only need an LLM provider key
-          (e.g. <code>OPENAI_API_KEY</code>) for metrics that judge with an LLM,
-          and you can also plug in any custom or local model.
+          No. DeepEval runs locally. Confident AI is optional and useful when
+          you want shared reports, regression tracking, observability, or
+          production monitoring.
         </>
       ),
     },
     {
-      question: "How is DeepEval related to Confident AI?",
+      question: "Where should I put this test file?",
       answer: (
         <>
-          DeepEval is a standalone open-source framework. It integrates natively
-          with{" "}
-          <a href="https://app.confident-ai.com" target="_blank" rel="noopener">
-            Confident AI
-          </a>
-          , an AI quality platform with observability, evals, and monitoring, but
-          using DeepEval does not require Confident AI.
+          Put it anywhere Pytest can discover it, usually alongside your app or
+          in a <code>tests/</code> folder. Then run{" "}
+          <code>deepeval test run path/to/test_file.py</code>.
         </>
       ),
     },
     {
-      question: "What can I evaluate with DeepEval?",
+      question: "Can I use a model other than OpenAI?",
       answer:
-        "AI agents, chatbots, RAG, summarization, structured outputs, multi-modal apps — and virtually any other LLM use case. DeepEval ships 50+ research-backed metrics and lets you define fully custom ones.",
+        "Yes. DeepEval supports multiple model providers and custom/local models for evaluation. OpenAI is only the quickest default path for many examples.",
     },
     {
-      question: "Can I use DeepEval in CI/CD?",
+      question: "What should I read after this?",
       answer: (
         <>
-          Yes. DeepEval is built to run in <code>pytest</code> and any CI
-          provider (GitHub Actions, GitLab CI, etc.), so you can gate
-          deployments on regression tests for your LLM application.
+          If you're evaluating an agent, start with tracing. If you're building
+          a repeatable eval suite, start with datasets and metrics.
         </>
       ),
     },

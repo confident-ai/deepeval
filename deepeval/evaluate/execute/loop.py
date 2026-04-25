@@ -39,6 +39,7 @@ from deepeval.tracing.api import (
 )
 from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
+from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (
@@ -185,7 +186,7 @@ def execute_agentic_test_cases_from_loop(
                 )
                 with Observer(
                     "custom",
-                    func_name="Test Wrapper",
+                    func_name=PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME,
                     _progress=progress,
                     _pbar_callback_id=pbar_tags_id,
                 ):

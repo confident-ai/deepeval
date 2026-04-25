@@ -36,6 +36,7 @@ from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run import (
     global_test_run_manager,
 )
+from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
 from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
     create_api_trace,
@@ -92,7 +93,10 @@ def _assert_test_from_current_trace(
     # span errors. Nested errors caught by user code don't taint the trace.
     user_roots: List[BaseSpan] = []
     for s in current_trace.root_spans or []:
-        if getattr(s, "name", None) == "Test Wrapper" and s.children:
+        if (
+            getattr(s, "name", None) == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+            and s.children
+        ):
             user_roots.extend(s.children)
         else:
             user_roots.append(s)
@@ -101,16 +105,39 @@ def _assert_test_from_current_trace(
         TraceSpanStatus.ERRORED if errored else TraceSpanStatus.SUCCESS
     )
 
+    # Skip deepeval's internal pytest wrapper and promote its first child.
+    root_for_dfs: Optional[BaseSpan] = None
+    is_promoted_root = False
+    if current_trace.root_spans:
+        root = current_trace.root_spans[0]
+        if (
+            getattr(root, "name", None)
+            == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+            and root.children
+        ):
+            root_for_dfs = root.children[0]
+            is_promoted_root = True
+        else:
+            root_for_dfs = root
+
+    effective_trace_output = (
+        current_trace.output
+        if current_trace.output is not None
+        else getattr(root_for_dfs, "output", None)
+    )
+
     trace_api = create_api_trace(trace=current_trace, golden=golden)
     trace_api.status = (
         TraceSpanApiStatus.ERRORED if errored else TraceSpanApiStatus.SUCCESS
     )
+    if trace_api.output is None and effective_trace_output is not None:
+        trace_api.output = effective_trace_output
 
     test_case = LLMTestCase(
         input=golden.input,
         actual_output=(
-            str(current_trace.output)
-            if current_trace.output is not None
+            str(effective_trace_output)
+            if effective_trace_output is not None
             else None
         ),
         expected_output=current_trace.expected_output,
@@ -218,17 +245,6 @@ def _assert_test_from_current_trace(
             api_span.metrics_data.append(metric_data)
             api_test_case.update_status(metric_data.success)
 
-    # Skip the plugin's "Test Wrapper" and promote its first child as the root.
-    root_for_dfs: Optional[BaseSpan] = None
-    is_promoted_root = False
-    if current_trace.root_spans:
-        root = current_trace.root_spans[0]
-        if getattr(root, "name", None) == "Test Wrapper" and root.children:
-            root_for_dfs = root.children[0]
-            is_promoted_root = True
-        else:
-            root_for_dfs = root
-
     if root_for_dfs is not None:
         dfs(root_for_dfs, is_promoted_root=is_promoted_root)
 
@@ -241,14 +257,10 @@ def _assert_test_from_current_trace(
         trace=current_trace
     ):
         llm_test_case_for_trace = LLMTestCase(
-            input=(
-                str(current_trace.input)
-                if current_trace.input is not None
-                else golden.input or "None"
-            ),
+            input=golden.input or "None",
             actual_output=(
-                str(current_trace.output)
-                if current_trace.output is not None
+                str(effective_trace_output)
+                if effective_trace_output is not None
                 else None
             ),
             expected_output=current_trace.expected_output

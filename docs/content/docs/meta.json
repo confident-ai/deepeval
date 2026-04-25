@@ -1,6 +1,10 @@
 {
   "title": "Docs",
   "pages": [
+    "introduction",
+    "introduction-design-philosophy",
+    "introduction-comparisons",
+
     "---[Rocket]Getting Started---",
     "getting-started",
     "(use-cases)",

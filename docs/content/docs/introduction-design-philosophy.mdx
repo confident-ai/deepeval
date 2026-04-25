@@ -1,0 +1,146 @@
+---
+id: introduction-design-philosophy
+title: Design Philosophy
+---
+
+import { FlaskConical, GitMerge, PackageCheck, Workflow } from "lucide-react";
+import AgentTraceTerminal from "@site/src/sections/home/AgentTraceTerminal";
+import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
+import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
+
+**DeepEval** is an open-source evaluation framework for LLM applications, built
+around a simple idea: evaluation should fit the way your team actually iterates.
+
+DeepEval is designed around a few principles that make these workflows fast:
+
+<Cards>
+  <Card
+    icon={<PackageCheck />}
+    title="Local-first"
+    description="Run evals in your own environment, against the code, datasets, and traces you are actively editing."
+  />
+  <Card
+    icon={<FlaskConical />}
+    title="Pytest-native"
+    description="Turn LLM quality into tests you can rerun locally, automate in CI, and trust during refactors."
+  />
+  <Card
+    icon={<GitMerge />}
+    title="Trace-aware"
+    description="Use traces when you need to see which tool call, planner step, retriever, or generator caused a regression."
+  />
+  <Card
+    icon={<Workflow />}
+    title="Composable"
+    description="Combine datasets, metrics, traces, custom models, QA workflows, and coding-agent loops instead of buying into one rigid process."
+  />
+</Cards>
+
+## Modular By Design
+
+DeepEval gives you the building blocks to assemble your own eval pipeline:
+
+- [Test cases](/docs/evaluation-test-cases): structure the inputs, outputs,
+  expected behavior, context, tools, and metadata you want to evaluate.
+- [Datasets](/docs/evaluation-datasets): organize reusable goldens for
+  regression tests, experiments, and CI/CD.
+- [Metrics](/docs/metrics-introduction): define how outputs, traces, and spans
+  are scored.
+- [Traces and spans](/docs/evaluation-llm-tracing): capture what happened during
+  execution so you can evaluate full runs or individual components.
+- [Synthezier](/docs/synthesizer-introduction): generate test data when
+  you do not have enough examples yet.
+
+You can use them together through DeepEval's built-in workflows, or compose them
+yourself when your system needs something more specific. The framework is opinionated enough to make evals repeatable, but it does not
+force you into one rigid pipeline.
+
+## Rapid Local Iteration
+
+For engineers, the fastest loop is local: run the agent, inspect the trace,
+identify the failing span, patch the prompt or code, and run the eval again.
+
+<AgentTraceTerminal />
+
+<TraceLoopConnector />
+
+<ClaudeCodeTerminal />
+
+That loop starts locally, where iteration is fastest. When your team needs to
+collaborate on results, compare regressions, monitor production traces, or share
+reports with non-engineers, DeepEval integrates natively with
+[Confident AI](https://www.confident-ai.com).
+
+## Flexible Evaluation Models
+
+DeepEval is designed around two complementary models. Both can produce
+end-to-end evals, and both can support component-level evals when you need more
+granularity.
+
+### Test Case-Based Evals
+
+Use this when you already know the input and expected behavior. This is the most
+direct path for QA workflows, regression suites, CI/CD gates, and end-to-end
+output quality checks. You can also create component-level test cases manually
+when you want to evaluate a specific part of the system.
+
+### Trace-Based Evals
+
+Use this when you can run the application and want to score what happened during
+execution: full traces, individual spans, tool calls, and agent steps. This is
+the natural path for AI agents, tool-using systems, and multi-step applications
+where the final answer is not enough to explain the failure.
+
+The goal is not to choose one forever. Start with test cases when you need a
+simple quality gate. Add traces when you need to understand how your application
+arrived at the result.
+
+:::info
+Already using another observability tool? Visit [Comparisons](/docs/introduction-comparisons)
+to understand the pros and cons of using DeepEval for trace-based evals.
+:::
+
+## CI/CD-Native
+
+DeepEval has first-class Pytest integration. You can write evals
+beside your application code, run them locally, and use pass/fail results in
+CI/CD. Evals can start as quick experiments, then become regression tests that
+protect future changes.
+
+Because results can be saved locally, agentic coding tools can also inspect the
+same artifacts you do: failing metrics, reasons, traces, and test runs. That
+makes evals usable not only by humans, but by the tools helping you edit the
+agent.
+
+## No Cold-Starts
+
+Good evals need examples. Without a dataset, it is hard to know whether a prompt,
+model, or agent change actually improved quality, or whether it only worked for
+the one example you happened to test manually.
+
+When you do not have enough examples yet, [synthetic data generation](/docs/synthesizer-introduction)
+helps you bootstrap a dataset from documents, contexts, or seed examples. This
+lets you cover edge cases before users find them, instead of waiting for enough
+production traffic or manual QA cycles to build coverage.
+
+## Enterprise Platform When Needed
+
+Local iteration should stay fast, but teams eventually need shared reports,
+regression analysis, trace observability, production monitoring, dataset
+management, prompt versioning, and collaboration with non-engineers.
+
+DeepEval integrates natively with [Confident AI](https://www.confident-ai.com)
+for those workflows. The same evals you run locally can become shared test runs,
+experiments, dashboards, and monitoring jobs when your team needs a platform.
+
+## Opinionated Primitives, Simple API
+
+AI is fast-moving, so evals need stable concepts underneath them. DeepEval keeps
+the primitives opinionated: test cases describe what happened, metrics describe
+how to score it, and `assert_test()` turns the result into a test.
+
+The same primitives scale from one test case to datasets, traces, spans, and
+production monitoring.
+
+If you are ready to run your first eval, start with the
+[5 min Quickstart](/docs/getting-started).
