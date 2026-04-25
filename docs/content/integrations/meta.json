@@ -1,7 +1,7 @@
 {
   "title": "Integrations",
   "pages": [
-    "---LLM Frameworks---",
+    "---Orchestration Frameworks---",
     "frameworks/openai",
     "frameworks/anthropic",
     "frameworks/agentcore",
