@@ -629,7 +629,7 @@ from openai import OpenAI
 from deepeval.tracing import observe, update_current_trace
 
 @observe()
-def llm_app(query: str) -> str:
+def my_ai_agent(query: str) -> str:
 
     @observe()
     def retriever(query: str) -> list[str]:
@@ -649,7 +649,7 @@ def llm_app(query: str) -> str:
 
 There are **TWO** ways to create test cases when using the `update_current_trace` function:
 
-- [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
+- [Optional] `test_case`: Takes an `LLMTestCase` to create a trace-level test case.
 
 - Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
   - [Optional] `input`
@@ -679,7 +679,7 @@ dataset = EvaluationDataset()
 dataset.pull(alias="YOUR-DATASET-ALIAS")
 
 for golden in dataset.evals_iterator(metrics=[AnswerRelevancyMetric()]):
-    llm_app(golden.input) # Replace with your LLM app
+    my_ai_agent(golden.input)  # captures trace
 ```
 
 There are **SIX** optional parameters when using the `evals_iterator()`:

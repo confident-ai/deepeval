@@ -135,7 +135,8 @@ summarizer = MeetingSummarizer()
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_meeting_summarizer_components(golden):
-    assert_test(golden=golden, observed_callback=summarizer.summarize)
+    summarizer.summarize(golden.input)  # captures trace
+    assert_test(golden=golden)  # evaluates spans
 ```
 
 ```bash

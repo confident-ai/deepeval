@@ -32,7 +32,7 @@ The trend you'll notice is use cases that are more complex in architecture are m
 
 ## How Does It Work?
 
-Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoke it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+Once your AI agent is decorated with `@observe`, you can invoke it with `Golden`s to capture traces and create test cases within your observed spans. These span-level test cases are then evaluated using the metrics supplied to `@observe(metrics=[...])` to create a **test run**.
 
 <div style={{ textAlign: "center", margin: "2rem 0" }}>
 
@@ -100,7 +100,7 @@ from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
-def your_llm_app(input: str):
+def my_ai_agent(input: str):
     def retriever(input: str):
         return ["Hardcoded", "text", "chunks", "from", "vectordb"]
 
@@ -119,7 +119,7 @@ def your_llm_app(input: str):
     return generator(input, retriever(input))
 
 
-print(your_llm_app("How are you?"))
+print(my_ai_agent("How are you?"))  # captures trace
 ```
 
 In the example above, we:
@@ -288,15 +288,14 @@ You can [learn more about loading datasets here](/docs/evaluation-datasets#load-
 You can use the dataset's `evals_iterator` to run component-level evals by simply calling your LLM app within the loop for all goldens.
 
 ```python title="main.py"
-from somewhere import your_llm_app # Replace with your LLM app
+from somewhere import my_ai_agent # Replace with your AI agent
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 
 for golden in dataset.evals_iterator():
-    # Invoke your LLM app
-    your_llm_app(golden.input)
+    my_ai_agent(golden.input)  # captures trace
 ```
 
 There are **SIX** optional parameters when using the `evals_iterator()`:

@@ -411,18 +411,19 @@ You can [learn more about loading datasets here](/docs/evaluation-datasets#load-
 
 You can use `deepeval`'s `assert_test` function to write test files.
 
-```python title="test_llm_app.py" {10}
+```python title="test_my_ai_agent.py" {10-11}
 import pytest
 
-from your_agent import your_llm_app # Replace with your LLM app
+from your_agent import my_ai_agent # Replace with your @observe-instrumented AI agent
 
 from deepeval import assert_test
 from deepeval.dataset import Golden
 
 # Loop through goldens in our dataset using pytest
 @pytest.mark.parametrize("golden", dataset.goldens)
-def test_llm_app(golden: Golden):
-    assert_test(golden=golden, observed_callback=your_llm_app)
+def test_my_ai_agent(golden: Golden):
+    my_ai_agent(golden.input)  # captures trace
+    assert_test(golden=golden)  # evaluates spans
 
 @deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
 def hyperparameters():
@@ -432,14 +433,12 @@ def hyperparameters():
 Finally, don't forget to run the test file in the CLI:
 
 ```bash
-deepeval test run test_llm_app.py
+deepeval test run test_my_ai_agent.py
 ```
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
+There is **ONE** mandatory parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
 
-- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
+- `golden`: the `Golden` used to identify the active trace captured during the test.
 
 Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
 
@@ -449,8 +448,8 @@ Create a YAML file to execute your test file automatically in CI/CD pipelines. [
 :::info
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
 
-- Declaration of `metrics` because those are defined at the span level in the `metrics` parameter.
-- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
+- Declaration of `metrics` because component-level metrics are defined on spans with `@observe(metrics=[...])`.
+- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your AI agent.
 :::
 
 ## YAML File For CI/CD Evals

@@ -17876,7 +17876,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 client = OpenAI()
 
-def your_llm_app(input: str):
+def my_ai_agent(input: str):
     def retriever(input: str):
         return ["Hardcoded text chunks from your vector database"]
 
@@ -17897,7 +17897,7 @@ def your_llm_app(input: str):
 
     return generator(input, retriever(input))
 
-print(your_llm_app("How are you?"))
+print(my_ai_agent("How are you?"))  # captures trace
 
 ```
 
@@ -17909,7 +17909,7 @@ At this point, you can either pause and [learn how to setup LLM tracing in the n
 
 ## Run Component-Level Evals [​](https://deepeval.com/docs/evaluation-component-level-llm-evals\#run-component-level-evals "Direct link to Run Component-Level Evals")
 
-Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoked it with `Golden` s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+Once your AI agent is decorated with `@observe`, you can invoke it with `Golden` s to capture traces and create test cases within your observed spans. These span-level test cases are then evaluated using the metrics supplied to `@observe(metrics=[...])` to create a **test run**.
 
 All components evaluated
 
@@ -17937,7 +17937,7 @@ To use `evaluate()` for component-level testing, supply a list of `Golden` s ins
 main.py
 
 ```codeBlockLines_e6Vv
-from somewhere import your_llm_app # Replace with your LLM app
+from somewhere import my_ai_agent # Replace with your AI agent
 
 from deepeval.dataset import Golden
 from deepeval import evaluate
@@ -17946,7 +17946,7 @@ from deepeval import evaluate
 goldens = [Golden(input="...")]
 
 # Evaluate with `observed_callback`
-evaluate(goldens=goldens, observed_callback=your_llm_app)
+evaluate(goldens=goldens, observed_callback=my_ai_agent)
 ```
 
 There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function for **COMPONENT-LEVEL** evaluation:
@@ -17961,7 +17961,7 @@ There are **TWO** mandatory and **FIVE** optional parameters when calling the `e
 
 tip
 
-You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase` s because it is handled at runtime by `update_current_span` in your LLM app.
+You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase` s because it is handled at runtime by `update_current_span` in your AI agent.
 
 ### Use `deepeval test run` in CI/CD pipelines [​](https://deepeval.com/docs/evaluation-component-level-llm-evals\#use-deepeval-test-run-in-cicd-pipelines "Direct link to use-deepeval-test-run-in-cicd-pipelines")
 
@@ -17970,7 +17970,7 @@ You'll notice that unlike end-to-end evaluation, there is no declaration of `met
 test\_llm\_app.py
 
 ```codeBlockLines_e6Vv codeBlockLinesWithNumbering_o6Pm
-from somewhere import your_llm_app # Replace with your LLM app
+from somewhere import my_ai_agent # Replace with your AI agent
 import pytest
 from deepeval.dataset import Golden
 from deepeval import assert_test
@@ -17980,8 +17980,9 @@ goldens = [Golden(input="...")]
 
 # Loop through goldens using pytest
 @pytest.mark.parametrize("golden", goldens)
-def test_llm_app(golden: Golden):
-    assert_test(golden=golden, observed_callback=your_llm_app)
+def test_my_ai_agent(golden: Golden):
+    my_ai_agent(golden.input)  # captures trace
+    assert_test(golden=golden)  # evaluates spans
 
 ```
 
@@ -17989,21 +17990,19 @@ info
 
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
 
-- Declaration of `metrics` because those are defined at the span level in the `metrics` parameter.
-- Creation of `LLMTestCase` s because it is handled at runtime by `update_current_span` in your LLM app.
+- Declaration of `metrics` because component-level metrics are defined on spans with `@observe(metrics=[...])`.
+- Creation of `LLMTestCase` s because it is handled at runtime by `update_current_span` in your AI agent.
 
 Finally, don't forget to run the test file in the CLI:
 
 ```codeBlockLines_e6Vv
-deepeval test run test_llm_app.py
+deepeval test run test_my_ai_agent.py
 
 ```
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
+There is **ONE** mandatory parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
 
-- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- \[Optional\] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
+- `golden`: the `Golden` used to identify the active trace captured during the test.
 
 [Click here](https://deepeval.com/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
 

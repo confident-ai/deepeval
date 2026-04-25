@@ -2239,7 +2239,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 132
+      "commits": 133
     },
     {
       "login": "kritinv",
@@ -2351,6 +2351,33 @@
       "name": "Rahul Shah",
       "avatarUrl": "https://avatars.githubusercontent.com/u/23214902?v=4",
       "url": "https://github.com/r-sniper",
+      "commits": 1
+    }
+  ],
+  "content/docs/introduction-comparisons.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 1
+    }
+  ],
+  "content/docs/introduction-design-philosophy.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 1
+    }
+  ],
+  "content/docs/introduction.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
       "commits": 1
     }
   ],

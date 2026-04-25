@@ -116,7 +116,8 @@ agent = RAGAgent() # Initialize with your best config
 
 @pytest.mark.parametrize("golden", dataset.goldens)
 def test_meeting_summarizer_components(golden):
-    assert_test(golden=golden, observed_callback=agent.answer)
+    agent.answer(golden.input)  # captures trace
+    assert_test(golden=golden)  # evaluates spans
 ```
 
 ```bash
