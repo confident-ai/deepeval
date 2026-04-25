@@ -250,9 +250,7 @@ class Settings(BaseSettings):
         return super().__setattr__(name, value)
 
     model_config = SettingsConfigDict(
-        extra="ignore",
-        case_sensitive=True,
-        validate_assignment=True,
+        extra="ignore", case_sensitive=True, validate_assignment=True,
     )
 
     #
@@ -272,8 +270,7 @@ class Settings(BaseSettings):
         description="Extra PYTHONPATH used by the CLI runner (default: current project '.').",
     )
     CONFIDENT_REGION: Optional[str] = Field(
-        None,
-        description="Optional Confident AI region hint (uppercased).",
+        None, description="Optional Confident AI region hint (uppercased).",
     )
     CONFIDENT_OPEN_BROWSER: Optional[bool] = Field(
         True,
@@ -361,8 +358,7 @@ class Settings(BaseSettings):
         description="CUDA debug toggle (forces synchronous CUDA ops). Useful for debugging GPU errors.",
     )
     CUDA_VISIBLE_DEVICES: Optional[str] = Field(
-        None,
-        description="CUDA device visibility mask (e.g. '0' or '0,1').",
+        None, description="CUDA device visibility mask (e.g. '0' or '0,1').",
     )
     TOKENIZERS_PARALLELISM: Optional[bool] = Field(
         None,
@@ -378,8 +374,7 @@ class Settings(BaseSettings):
     #
 
     API_KEY: Optional[SecretStr] = Field(
-        None,
-        description="Alias for CONFIDENT_API_KEY (Confident AI API key).",
+        None, description="Alias for CONFIDENT_API_KEY (Confident AI API key).",
     )
     CONFIDENT_API_KEY: Optional[SecretStr] = Field(
         None,
@@ -533,6 +528,19 @@ class Settings(BaseSettings):
     GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None, description="Grok output token cost (used for cost reporting)."
     )
+    # Groq
+    USE_GROQ_MODEL: Optional[bool] = Field(
+        None, description="Select Groq as the active LLM provider."
+    )
+    GROQ_API_KEY: Optional[SecretStr] = Field(None, description="Groq API key.")
+    GROQ_MODEL_NAME: Optional[str] = Field(None, description="Groq model name.")
+    GROQ_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None, description="Groq input token cost (used for cost reporting)."
+    )
+    GROQ_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None, description="Groq output token cost (used for cost reporting)."
+    )
+
     # LiteLLM
     USE_LITELLM: Optional[bool] = Field(
         None, description="Select LiteLLM as the active LLM provider."
@@ -1018,6 +1026,7 @@ class Settings(BaseSettings):
         "USE_GEMINI_MODEL",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
+        "USE_GROQ_MODEL",
         "USE_DEEPSEEK_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
@@ -1421,9 +1430,7 @@ class Settings(BaseSettings):
                 updates = {k: after[k] for k in changed_keys}
 
                 if "LOG_LEVEL" in updates:
-                    from deepeval.config.logging import (
-                        apply_deepeval_log_level,
-                    )
+                    from deepeval.config.logging import apply_deepeval_log_level
 
                     apply_deepeval_log_level()
 
