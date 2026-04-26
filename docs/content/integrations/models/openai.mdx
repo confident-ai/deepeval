@@ -98,7 +98,7 @@ answer_relevancy = AnswerRelevancyMetric(
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GPTModel`:
 
-- [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to `gpt-4.1`.
+- [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
 - [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
 - [Optional] `base_url`: A string specifying your OpenAI URL.
 - [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.

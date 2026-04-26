@@ -2,7 +2,7 @@ from typing import Any, Callable, Union
 
 from deepeval.models.base_model import DeepEvalModelData
 
-DEFAULT_GPT_MODEL = "gpt-4.1"
+DEFAULT_GPT_MODEL = "gpt-5.4"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
@@ -388,6 +388,24 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=1.75 / 1e6,
             output_price=14.00 / 1e6,
         ),
+        "gpt-5.4": make_model_data(
+            supports_log_probs=True,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.50 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "gpt-5.4-2026-03-05": make_model_data(
+            supports_log_probs=True,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.50 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
         "gpt-5.4-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
@@ -401,7 +419,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_log_probs=False,
             supports_multimodal=True,
             supports_structured_outputs=True,
-            supports_json=False,
+            supports_json=True,
             supports_temperature=False,
             input_price=5.00 / 1e6,
             output_price=30.00 / 1e6,
@@ -410,7 +428,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_log_probs=False,
             supports_multimodal=True,
             supports_structured_outputs=True,
-            supports_json=False,
+            supports_json=True,
             supports_temperature=False,
             input_price=5.00 / 1e6,
             output_price=30.00 / 1e6,

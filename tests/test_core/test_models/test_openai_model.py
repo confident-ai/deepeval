@@ -11,7 +11,7 @@ from deepeval.config.settings import get_settings, reset_settings
 from deepeval.models.llms.openai_model import GPTModel
 from deepeval.tracing.patchers import patch_openai_client
 from deepeval.tracing.types import LlmSpan, TraceSpanStatus
-from deepeval.models.llms.constants import OPENAI_MODELS_DATA
+from deepeval.models.llms.constants import DEFAULT_GPT_MODEL, OPENAI_MODELS_DATA
 from tests.test_core.stubs import _RecordingClient
 
 # ── shared helpers ────────────────────────────────────────────────────────────
@@ -554,6 +554,15 @@ def test_openai_model_defaults_model_from_settings_when_no_ctor_model(settings):
     assert model.name == "gpt-4o-mini"
 
 
+def test_openai_model_defaults_to_shared_default_when_no_setting(settings):
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+        settings.OPENAI_MODEL_NAME = None
+
+    model = GPTModel()
+    assert model.name == DEFAULT_GPT_MODEL
+
+
 def test_openai_model_costs_defaults_from_settings_for_missing_pricing(
     settings,
 ):
@@ -813,10 +822,29 @@ def test_gpt55_model_data_matches_openai_docs():
     assert model_data.supports_log_probs is False
     assert model_data.supports_multimodal is True
     assert model_data.supports_structured_outputs is True
-    assert model_data.supports_json is False
+    assert model_data.supports_json is True
     assert model_data.supports_temperature is False
     assert model_data.input_price == 5.00 / 1e6
     assert model_data.output_price == 30.00 / 1e6
+
+
+def test_gpt54_model_data_matches_openai_docs():
+    model_data = OPENAI_MODELS_DATA.get("gpt-5.4")
+
+    assert model_data.supports_log_probs is True
+    assert model_data.supports_multimodal is True
+    assert model_data.supports_structured_outputs is True
+    assert model_data.supports_json is True
+    assert model_data.supports_temperature is False
+    assert model_data.input_price == 2.50 / 1e6
+    assert model_data.output_price == 15.00 / 1e6
+
+
+def test_gpt54_snapshot_model_data_matches_alias():
+    alias = OPENAI_MODELS_DATA.get("gpt-5.4")
+    snapshot = OPENAI_MODELS_DATA.get("gpt-5.4-2026-03-05")
+
+    assert snapshot == alias
 
 
 def test_gpt55_snapshot_model_data_matches_alias():
