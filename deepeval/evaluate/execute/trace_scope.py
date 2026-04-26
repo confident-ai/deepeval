@@ -111,8 +111,7 @@ def _assert_test_from_current_trace(
     if current_trace.root_spans:
         root = current_trace.root_spans[0]
         if (
-            getattr(root, "name", None)
-            == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+            getattr(root, "name", None) == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
             and root.children
         ):
             root_for_dfs = root.children[0]

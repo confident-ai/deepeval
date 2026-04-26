@@ -1053,7 +1053,9 @@ class Settings(BaseSettings):
         if v is None:
             return None
         if not (0.0 <= float(v) <= 1.0):
-            raise ValueError("CONFIDENT_TRACE_SAMPLE_RATE must be between 0 and 1")
+            raise ValueError(
+                "CONFIDENT_TRACE_SAMPLE_RATE must be between 0 and 1"
+            )
         return float(v)
 
     @field_validator("DEEPEVAL_DEFAULT_SAVE", mode="before")

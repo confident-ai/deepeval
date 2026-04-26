@@ -1,7 +1,10 @@
 import json
 
 from deepeval.dataset import ConversationalGolden
-from deepeval.simulator import ConversationSimulator, ConversationSimulatorTemplate
+from deepeval.simulator import (
+    ConversationSimulator,
+    ConversationSimulatorTemplate,
+)
 from deepeval.simulator.controller import end, proceed
 from deepeval.test_case import Turn
 
@@ -40,7 +43,6 @@ async def model_callback(input: str, turns: list[Turn], thread_id: str) -> Turn:
         role="assistant",
         content=f"I can help with that. You said: {input}",
     )
-
 
 
 def controller(simulated_user_turns: int):

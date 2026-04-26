@@ -126,7 +126,6 @@ class ToolUseMetric(BaseConversationalMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -195,7 +194,6 @@ class ToolUseMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}",
                 ],
             )
-
 
             return self.score
 

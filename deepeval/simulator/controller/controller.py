@@ -29,9 +29,7 @@ class SimulationController:
     def __init__(
         self,
         generate_schema: Callable[[str, BaseModel], BaseModel],
-        a_generate_schema: Callable[
-            [str, BaseModel], Awaitable[BaseModel]
-        ],
+        a_generate_schema: Callable[[str, BaseModel], Awaitable[BaseModel]],
         controller: Callable,
         run_remote: bool = False,
     ):
@@ -299,4 +297,3 @@ class _ExpectedOutcomeController:
 
 
 expected_outcome_controller = _ExpectedOutcomeController()
-

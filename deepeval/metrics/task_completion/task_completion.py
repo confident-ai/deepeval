@@ -101,7 +101,6 @@ class TaskCompletionMetric(BaseMetric):
                     ],
                 )
 
-
             return self.score
 
     async def a_measure(
@@ -144,7 +143,6 @@ class TaskCompletionMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
 
             return self.score
 

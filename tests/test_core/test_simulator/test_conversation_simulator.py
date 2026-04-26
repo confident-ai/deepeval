@@ -2,7 +2,10 @@ from typing import List
 
 import pytest
 
-from deepeval.simulator import ConversationSimulator, ConversationSimulatorTemplate
+from deepeval.simulator import (
+    ConversationSimulator,
+    ConversationSimulatorTemplate,
+)
 from deepeval.test_case.conversational_test_case import (
     ConversationalTestCase,
     Turn,

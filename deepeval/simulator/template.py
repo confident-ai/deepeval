@@ -100,4 +100,3 @@ class ConversationSimulatorTemplate:
         """
         )
         return prompt
-

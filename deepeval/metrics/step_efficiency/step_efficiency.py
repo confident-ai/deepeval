@@ -94,7 +94,6 @@ class StepEfficiencyMetric(BaseMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -140,7 +139,6 @@ class StepEfficiencyMetric(BaseMetric):
                     f"Efficiency Reason: {self.reason}",
                 ],
             )
-
 
             return self.score
 

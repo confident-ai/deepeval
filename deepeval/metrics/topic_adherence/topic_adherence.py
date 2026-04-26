@@ -134,7 +134,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -208,7 +207,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}",
                 ],
             )
-
 
             return self.score
 

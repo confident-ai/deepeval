@@ -76,7 +76,6 @@ class PatternMatchMetric(BaseMetric):
                     ],
                 )
 
-
             return self.score
 
     async def a_measure(

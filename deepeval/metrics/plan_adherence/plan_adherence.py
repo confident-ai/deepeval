@@ -109,7 +109,6 @@ class PlanAdherenceMetric(BaseMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -164,7 +163,6 @@ class PlanAdherenceMetric(BaseMetric):
                     f"Final Reason: {self.reason} \n",
                 ],
             )
-
 
             return self.score
 

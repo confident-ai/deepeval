@@ -113,7 +113,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -175,7 +174,6 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}",
                 ],
             )
-
 
             return self.score
 

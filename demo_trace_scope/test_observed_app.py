@@ -13,6 +13,7 @@ from deepeval.test_case import LLMTestCaseParams
 def retriever(query: str) -> list[str]:
     return [f"chunk about: {query}", "static context chunk"]
 
+
 metric1 = GEval(
     name="Metric 1",
     criteria="Metric 1 criteria",
@@ -21,6 +22,7 @@ metric1 = GEval(
         LLMTestCaseParams.ACTUAL_OUTPUT,
     ],
 )
+
 
 @observe(metrics=[FaithfulnessMetric()])
 def llm_app(query: str) -> str:

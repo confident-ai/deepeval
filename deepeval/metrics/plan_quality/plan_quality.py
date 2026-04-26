@@ -112,7 +112,6 @@ class PlanQualityMetric(BaseMetric):
                     ],
                 )
 
-
                 return self.score
 
     async def a_measure(
@@ -166,7 +165,6 @@ class PlanQualityMetric(BaseMetric):
                     f"Final Reason: {self.reason} \n",
                 ],
             )
-
 
             return self.score
 

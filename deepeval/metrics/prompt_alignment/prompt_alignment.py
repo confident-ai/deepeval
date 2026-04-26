@@ -25,7 +25,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 
 
-
 class PromptAlignmentMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [

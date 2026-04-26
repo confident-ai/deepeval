@@ -4,7 +4,9 @@ from deepeval.dataset import Golden
 from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
 from deepeval.evaluate.configs import DisplayConfig, ErrorConfig
 from deepeval.evaluate.execute import trace_scope as trace_scope_mod
-from deepeval.evaluate.execute.trace_scope import _assert_test_from_current_trace
+from deepeval.evaluate.execute.trace_scope import (
+    _assert_test_from_current_trace,
+)
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import BaseSpan, Trace, TraceSpanStatus
