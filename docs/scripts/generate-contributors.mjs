@@ -53,6 +53,11 @@ const OUTPUT = 'lib/generated/contributors.json';
 const CACHE = 'lib/generated/.contributors-cache.json';
 const REPO_CONTRIBUTORS = 'lib/generated/repo-contributors.json';
 
+// Pages that replace older docs should keep the original page attribution.
+const PAGE_CONTRIBUTOR_ALIASES = {
+  'content/docs/introduction.mdx': 'content/docs/getting-started.mdx',
+};
+
 // Some commit emails are not linked to a public GitHub identity, so the
 // commit API returns `author: null`. For those cases we maintain a tiny
 // email->login fallback and hydrate the avatar/profile URL from the
@@ -317,6 +322,11 @@ async function main() {
       manifest[rel] = existingList;
       preserved += 1;
     }
+  }
+
+  for (const [target, source] of Object.entries(PAGE_CONTRIBUTOR_ALIASES)) {
+    if (!fileSet.has(target) || !Array.isArray(manifest[source])) continue;
+    manifest[target] = manifest[source].map((entry) => ({ ...entry }));
   }
 
   saveJson(OUTPUT, manifest);

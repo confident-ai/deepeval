@@ -2239,7 +2239,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 133
+      "commits": 135
     },
     {
       "login": "kritinv",
@@ -2360,7 +2360,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 2
     }
   ],
   "content/docs/introduction-design-philosophy.mdx": [
@@ -2378,7 +2378,119 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
+      "commits": 135
+    },
+    {
+      "login": "kritinv",
+      "name": "Kritin_Vongthongsri",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
+      "url": "https://github.com/kritinv",
+      "commits": 8
+    },
+    {
+      "login": "ChristianBernhard",
+      "name": "Christian Bernhard",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/44226023?v=4",
+      "url": "https://github.com/ChristianBernhard",
+      "commits": 3
+    },
+    {
+      "login": "BloggerBust",
+      "name": "BloggerBust",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/10637462?v=4",
+      "url": "https://github.com/BloggerBust",
       "commits": 2
+    },
+    {
+      "login": "Andrea23Romano",
+      "name": "Andrea23Romano",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/103339491?v=4",
+      "url": "https://github.com/Andrea23Romano",
+      "commits": 1
+    },
+    {
+      "login": "bderenzi",
+      "name": "Brian DeRenzi",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/94682?v=4",
+      "url": "https://github.com/bderenzi",
+      "commits": 1
+    },
+    {
+      "login": "bmerkle",
+      "name": "Bernhard Merkle",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/232471?v=4",
+      "url": "https://github.com/bmerkle",
+      "commits": 1
+    },
+    {
+      "login": "chkimes",
+      "name": "Chad Kimes",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/1936066?v=4",
+      "url": "https://github.com/chkimes",
+      "commits": 1
+    },
+    {
+      "login": "connorbrinton",
+      "name": "Connor Brinton",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/1848731?v=4",
+      "url": "https://github.com/connorbrinton",
+      "commits": 1
+    },
+    {
+      "login": "Deeds67",
+      "name": "Pierre Marais",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/8532893?v=4",
+      "url": "https://github.com/Deeds67",
+      "commits": 1
+    },
+    {
+      "login": "dunnkers",
+      "name": "Jeroen Overschie",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/744430?v=4",
+      "url": "https://github.com/dunnkers",
+      "commits": 1
+    },
+    {
+      "login": "elsatch",
+      "name": "César García",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/653433?v=4",
+      "url": "https://github.com/elsatch",
+      "commits": 1
+    },
+    {
+      "login": "fabiofumarola",
+      "name": "fabio fumarola",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/1550672?v=4",
+      "url": "https://github.com/fabiofumarola",
+      "commits": 1
+    },
+    {
+      "login": "joaopmatias",
+      "name": "João Matias",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
+      "url": "https://github.com/joaopmatias",
+      "commits": 1
+    },
+    {
+      "login": "NeelayS",
+      "name": "Neelay Shah",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/44301912?v=4",
+      "url": "https://github.com/NeelayS",
+      "commits": 1
+    },
+    {
+      "login": "NimJay",
+      "name": "Nim Jayawardena",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/10292865?v=4",
+      "url": "https://github.com/NimJay",
+      "commits": 1
+    },
+    {
+      "login": "r-sniper",
+      "name": "Rahul Shah",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/23214902?v=4",
+      "url": "https://github.com/r-sniper",
+      "commits": 1
     }
   ],
   "content/docs/metrics-introduction.mdx": [
