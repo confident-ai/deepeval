@@ -18,6 +18,8 @@ import LinkCards from "@site/src/components/LinkCards";
 import TechStackCards from "@site/src/components/TechStackCards";
 import { FAQs } from "@site/src/components/FAQ";
 import BlogPostMeta from "@site/src/components/BlogPostMeta";
+import ChangelogContributors from "@site/src/components/ChangelogContributors";
+import RepoContributors from "@site/src/sections/home/RepoContributors";
 
 function DefaultLLMModel() {
   return <code>{DEFAULT_LLM_MODEL}</code>;
@@ -45,6 +47,8 @@ export function getMDXComponents(components?: MDXComponents) {
     TechStackCards,
     FAQs,
     BlogPostMeta,
+    ChangelogContributors,
+    RepoContributors,
     DefaultLLMModel,
     ...components,
   } satisfies MDXComponents;
