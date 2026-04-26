@@ -65,6 +65,7 @@ from .multimodal_metrics import (
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
 )
+from .trust_score.trust_score import TrustScoreMetric
 
 __all__ = [
     # Base classes
@@ -129,4 +130,5 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
+    "TrustScoreMetric",
 ]
