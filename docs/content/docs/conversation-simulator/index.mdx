@@ -62,7 +62,7 @@ sequenceDiagram
 
 ## Create Your First Simulator
 
-To create a `ConversationSimulator`, you'll need to define a callback that wraps around your LLM chatbot. See [Model Callback](/docs/conversation-simulator/model-callback) for supported callback arguments.
+To create a `ConversationSimulator`, you'll need to define a callback that wraps around your LLM chatbot. See [Model Callback](/docs/conversation-simulator-model-callback) for supported callback arguments.
 
 ```python
 from deepeval.test_case import Turn
@@ -106,7 +106,7 @@ There are **ONE** mandatory and **ONE** optional parameter when calling the `sim
 
 A simulation ends when `max_user_simulations` has been reached, or when the simulator's controller decides the conversation should end. By default, the controller checks whether the conversation has achieved the expected outcome outlined in a `ConversationalGolden`.
 
-See [Stopping Logic](/docs/conversation-simulator/stopping-logic) to define your own stopping logic.
+See [Stopping Logic](/docs/conversation-simulator-stopping-logic) to define your own stopping logic.
 
 ::::tip
 You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
@@ -140,7 +140,7 @@ evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
 
 Customize the simulator around your application's conversation state, stopping criteria, and post-processing needs.
 
-- [Model Callback](/docs/conversation-simulator/model-callback): pass conversation history or `thread_id` into your chatbot so simulations exercise the same stateful path as production.
-- [Stopping Logic](/docs/conversation-simulator/stopping-logic): replace expected-outcome stopping with business-specific logic such as tool calls, confirmation messages, or failure states.
-- [Custom Templates](/docs/conversation-simulator/custom-templates): change the simulated user's style, domain framing, or pressure level by overriding the user-turn prompts.
-- [Lifecycle Hooks](/docs/conversation-simulator/lifecycle-hooks): process each completed conversation immediately instead of waiting for the full simulation batch to finish.
+- [Model Callback](/docs/conversation-simulator-model-callback): pass conversation history or `thread_id` into your chatbot so simulations exercise the same stateful path as production.
+- [Stopping Logic](/docs/conversation-simulator-stopping-logic): replace expected-outcome stopping with business-specific logic such as tool calls, confirmation messages, or failure states.
+- [Custom Templates](/docs/conversation-simulator-custom-templates): change the simulated user's style, domain framing, or pressure level by overriding the user-turn prompts.
+- [Lifecycle Hooks](/docs/conversation-simulator-lifecycle-hooks): process each completed conversation immediately instead of waiting for the full simulation batch to finish.

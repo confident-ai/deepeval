@@ -1,9 +1,9 @@
 {
   "title": "Conversation Simulator",
   "pages": [
-    "model-callback",
-    "stopping-logic",
-    "custom-templates",
-    "lifecycle-hooks"
+    "../conversation-simulator-model-callback",
+    "../conversation-simulator-stopping-logic",
+    "../conversation-simulator-custom-templates",
+    "../conversation-simulator-lifecycle-hooks"
   ]
 }

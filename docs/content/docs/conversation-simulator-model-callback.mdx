@@ -19,10 +19,10 @@ async def model_callback(input: str) -> Turn:
 ## Supported Arguments
 
 - `input`: the latest simulated user message.
-- [Optional] `turns`: a list of `Turn`s, which include the role and content of each message in the conversation.
+- [Optional] `turns`: a list of `Turn`s accumulated up to this point in the simulation, including the latest simulated user message.
 - [Optional] `thread_id`: a unique identifier for each conversation.
 
-While `turns` captures the dialogue context for each turn, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data. In these cases, you'll want to take advantage of the `thread_id`.
+While `turns` captures the conversation history available at the moment your callback runs, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data. In these cases, you'll want to take advantage of the `thread_id`.
 
 ## Common Use Cases
 
@@ -40,7 +40,7 @@ async def model_callback(input: str) -> Turn:
 
 ### Message History
 
-If your application expects the full message history on every request, use `turns` to pass the simulated conversation transcript.
+If your application expects the message history on every request, use `turns` to pass the simulated conversation transcript up to the current user message.
 
 ```python
 from typing import List

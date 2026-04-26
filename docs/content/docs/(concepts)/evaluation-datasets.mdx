@@ -486,10 +486,10 @@ dataset = EvaluationDataset(goldens=goldens)
 
 In this example, we've used the `generate_goldens_from_docs` method, which is one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
 
-- [`generate_goldens_from_docs()`](/docs/golden-synthesizer/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
-- [`generate_goldens_from_contexts()`](/docs/golden-synthesizer/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
-- [`generate_goldens_from_scratch()`](/docs/golden-synthesizer/synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
-- [`generate_goldens_from_goldens()`](/docs/golden-synthesizer/synthesizer-generate-from-goldens): useful for generating goldens by augmenting a known set of goldens.
+- [`generate_goldens_from_docs()`](/docs/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
+- [`generate_goldens_from_contexts()`](/docs/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
+- [`generate_goldens_from_scratch()`](/docs/synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
+- [`generate_goldens_from_goldens()`](/docs/synthesizer-generate-from-goldens): useful for generating goldens by augmenting a known set of goldens.
 
 `deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data.
 

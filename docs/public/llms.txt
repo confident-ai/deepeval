@@ -58,7 +58,7 @@
 - [Medical Chatbot Tutorial](https://deepeval.com/tutorials/tutorial-llm-application-example): Learn to build a medical chatbot for diagnosis and appointments.
 - [Toxicity Vulnerability Evaluation](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity): Evaluate LLM's resistance to generating harmful or toxic content.
 - [Testing LLM Robustness](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-robustness): Learn how to test LLM robustness against malicious inputs.
-- [Generate Synthetic Goldens](https://deepeval.com/docs/golden-synthesizer/synthesizer-generate-from-goldens): Generate synthetic Goldens from existing Goldens easily.
+- [Generate Synthetic Goldens](https://deepeval.com/docs/synthesizer-generate-from-goldens): Generate synthetic Goldens from existing Goldens easily.
 - [Improving QA Agent](https://deepeval.com/tutorials/qa-agent-improving-hyperparameters): Learn to enhance QA agent performance through hyperparameter tuning.
 - [Red Teaming Bias](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias): Test LLMs for bias in responses across various categories.
 - [Confident AI Documentation](https://www.confident-ai.com/docs/): AI quality platform with observability, evals, and monitoring — DeepEval integrates with it natively.
@@ -99,5 +99,5 @@
 - [Red Teaming Vulnerabilities](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities): Explore vulnerabilities in LLMs for effective red teaming.
 - [End-to-End LLM Evaluation](https://deepeval.com/docs/evaluation-end-to-end-llm-evals): Comprehensive guide for end-to-end evaluation of LLM applications.
 - [Multimodal Tool Correctness](https://deepeval.com/docs/multimodal-metrics-tool-correctness): Assess multimodal LLM tool calling accuracy and correctness.
-- [Generate Goldens](https://deepeval.com/docs/golden-synthesizer/synthesizer-generate-from-contexts): Generate synthetic Goldens from provided contexts easily.
-- [Synthetic Goldens Generation](https://deepeval.com/docs/golden-synthesizer/synthesizer-generate-from-scratch): Generate synthetic Goldens from scratch for LLM applications.
+- [Generate Goldens](https://deepeval.com/docs/synthesizer-generate-from-contexts): Generate synthetic Goldens from provided contexts easily.
+- [Synthetic Goldens Generation](https://deepeval.com/docs/synthesizer-generate-from-scratch): Generate synthetic Goldens from scratch for LLM applications.

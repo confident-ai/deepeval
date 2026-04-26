@@ -12,26 +12,6 @@
       "statusCode": 301
     },
     {
-      "source": "/docs/synthesizer-generate-from-docs",
-      "destination": "/docs/golden-synthesizer/synthesizer-generate-from-docs",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/synthesizer-generate-from-contexts",
-      "destination": "/docs/golden-synthesizer/synthesizer-generate-from-contexts",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/synthesizer-generate-from-scratch",
-      "destination": "/docs/golden-synthesizer/synthesizer-generate-from-scratch",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/synthesizer-generate-from-goldens",
-      "destination": "/docs/golden-synthesizer/synthesizer-generate-from-goldens",
-      "statusCode": 301
-    },
-    {
       "source": "/guides/guides-multi-turn-tracing",
       "destination": "/guides/guides-tracing-multi-turn",
       "statusCode": 301
