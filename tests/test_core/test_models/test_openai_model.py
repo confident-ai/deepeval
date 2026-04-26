@@ -807,6 +807,25 @@ class TestPatchOpenaiClientTokenCounts:
         assert kw["output_token_count"] == 0
 
 
+def test_gpt55_model_data_matches_openai_docs():
+    model_data = OPENAI_MODELS_DATA.get("gpt-5.5")
+
+    assert model_data.supports_log_probs is False
+    assert model_data.supports_multimodal is True
+    assert model_data.supports_structured_outputs is True
+    assert model_data.supports_json is False
+    assert model_data.supports_temperature is False
+    assert model_data.input_price == 5.00 / 1e6
+    assert model_data.output_price == 30.00 / 1e6
+
+
+def test_gpt55_snapshot_model_data_matches_alias():
+    alias = OPENAI_MODELS_DATA.get("gpt-5.5")
+    snapshot = OPENAI_MODELS_DATA.get("gpt-5.5-2026-04-23")
+
+    assert snapshot == alias
+
+
 ##############################
 # calculate_cost unit tests  #
 ##############################
