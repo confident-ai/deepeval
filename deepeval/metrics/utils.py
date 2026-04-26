@@ -37,6 +37,7 @@ from deepeval.models import (
     KimiModel,
     GrokModel,
     DeepSeekModel,
+    OpenRouterModel,
 )
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
@@ -545,6 +546,13 @@ def should_use_deepseek_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_openrouter_model():
+    if SETTINGS.USE_OPENROUTER_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENROUTER_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_moonshot_model():
     if SETTINGS.USE_MOONSHOT_MODEL:
         return True
@@ -603,6 +611,8 @@ def initialize_model(
         return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
+    elif should_use_openrouter_model():
+        return OpenRouterModel(model=model), True
     elif should_use_anthropic_model():
         return AnthropicModel(model=model), True
     elif should_use_amazon_bedrock_model():
@@ -631,6 +641,7 @@ def is_native_model(
         or isinstance(model, KimiModel)
         or isinstance(model, GrokModel)
         or isinstance(model, DeepSeekModel)
+        or isinstance(model, OpenRouterModel)
     ):
         return True
     else:
