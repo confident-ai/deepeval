@@ -1,9 +1,8 @@
 ---
-id: synthesizer-introduction
-title: Introduction to Synthetic Data Generation
-sidebar_label: Introduction
+id: golden-synthesizer
+title: Golden Synthesizer
+sidebar_label: Golden Synthesizer
 ---
-
 
 import { ASSETS } from "@site/src/assets";
 
@@ -183,7 +182,8 @@ And that's it! You now have access to a list of synthetic goldens generated usin
 
 ## Save Your Synthetic Dataset
 
-### On Confident AI
+<Tabs items={["Confident AI", "Locally"]}>
+<Tab value="Confident AI">
 
 To avoid losing any generated synthetic `Goldens`, you can push a dataset containing the generated goldens to Confident AI:
 
@@ -209,7 +209,8 @@ dataset.pull(alias="My Generated Dataset")
 evaluate(dataset, metrics=[AnswerRelevancyMetric()])
 ```
 
-### Locally
+</Tab>
+<Tab value="Locally">
 
 Alternatively, you can use the `save_as()` method to save synthetic goldens locally:
 
@@ -252,6 +253,9 @@ synthesizer.save_as(
 :::caution
 Note that `file_name` should not contain any periods or file extensions, as these will be automatically added based on the `file_type` parameter.
 :::
+
+</Tab>
+</Tabs>
 
 ## Customize Your Generations
 
@@ -396,9 +400,9 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
 
 <div
   style={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   }}
 >
   <ImageDisplayer src={ASSETS.generationFiltration} />

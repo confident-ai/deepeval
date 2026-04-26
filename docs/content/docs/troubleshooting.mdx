@@ -69,7 +69,7 @@ Note that retry logging levels are read at call-time.
 
 If evaluations frequently time out (or appear to hang), the quickest fix is usually to increase the overall per-task time budget and reduce the number of retries.
 
-`deepeval` uses an outer time budget per task (metric / test case). It can also apply a per-attempt timeout to individual provider calls. If you don’t set a per-attempt override, DeepEval may derive one from the outer budget and the retry settings.
+`deepeval` uses an outer time budget per task (metric / test case). It can also apply a per-attempt timeout to individual provider calls. If you don’t set a per-attempt override, `deepeval` may derive one from the outer budget and the retry settings.
 
 Key settings:
 
@@ -78,7 +78,7 @@ Key settings:
 - `DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE`: extra buffer reserved for async gather / cleanup.
 - `DEEPEVAL_RETRY_MAX_ATTEMPTS`: total attempts (first try + retries).
 - `DEEPEVAL_RETRY_INITIAL_SECONDS`, `DEEPEVAL_RETRY_EXP_BASE`, `DEEPEVAL_RETRY_JITTER`, `DEEPEVAL_RETRY_CAP_SECONDS`: retry backoff tuning.
-- `DEEPEVAL_SDK_RETRY_PROVIDERS`: list of provider slugs that should use SDK-managed retries instead of DeepEval retries (use `['*']` for all).
+- `DEEPEVAL_SDK_RETRY_PROVIDERS`: list of provider slugs that should use SDK-managed retries instead of `deepeval` retries (use `['*']` for all).
 
 A common debugging setup is to temporarily increase budgets:
 

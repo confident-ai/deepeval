@@ -486,7 +486,7 @@ In the end, you will have the same number of test cases in your test run as gold
 <Step>
 ### View on Confident AI (recommended)
 
-If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which DeepEval integrates with natively.
+If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
 
 <Tabs items={["Python", "LangGraph", "LangChain", "CrewAI"]}>
 <Tab value="Python">
@@ -618,7 +618,7 @@ tools = [{
 
 In the example below, [Task Completion](/docs/metrics-task-completion) is used to evaluate the performance of the `your_ai_agent` function, while [Argument Correctness](/docs/metrics-argument-correctness) is used to evaluate `llm`.
 
-This is because while Argument Correctness requires [setting up a test case](/docs/metrics-introduction#test-case-parameters) with the input, actual output, and tools called, Task Completion is the only metric on DeepEval that **doesn't require a test case**.
+This is because while Argument Correctness requires [setting up a test case](/docs/metrics-introduction#test-case-parameters) with the input, actual output, and tools called, Task Completion is the only metric on `deepeval` that **doesn't require a test case**.
 
 </details>
 

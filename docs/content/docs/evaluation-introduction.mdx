@@ -20,7 +20,7 @@ sequenceDiagram
     participant DS as EvaluationDataset
     participant M as Metrics
     participant App as LLMApp
-    participant DE as DeepEval
+    participant DE as `deepeval`
 
     Dev->>DS: Generate or load dataset
     Dev->>M: Define evaluation metrics
@@ -141,7 +141,7 @@ dataset = EvaluationDataset(goldens=goldens)
 ```
 
 :::info
-`deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](/docs/synthesizer-introduction)
+`deepeval`'s `Synthesizer` is highly customizable, and you can learn more about it [here.](/docs/golden-synthesizer)
 :::
 
 ## Evaluating With Pytest

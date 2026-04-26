@@ -1,7 +1,7 @@
 ---
 id: synthesizer-generate-from-docs
 title: Generate Goldens From Documents
-sidebar_label: From Documents
+sidebar_label: Generate From Documents
 ---
 
 
@@ -125,12 +125,12 @@ There are **SEVEN** optional parameters when creating a `ContextConstructionConf
 :::caution
 **Unlike other customizations where configurations to your `Synthesizer` generation pipeline is defined at point of instantiating a `Synthesizer`**, customizing context construction happens at the generation level because context construction is unique to the `generate_goldens_from_docs()` method.
 
-To learn how to customize all other aspects of your generation pipeline, such as output formats, evolution complexity, [click here.](/docs/synthesizer-introduction#customize-your-generations)
+To learn how to customize all other aspects of your generation pipeline, such as output formats, evolution complexity, [click here.](/docs/golden-synthesizer#customize-your-generations)
 :::
 
 ## How Does Context Construction Work?
 
-The `generate_goldens_from_docs()` method has an additional context construction pipeline that precedes the [goldens generation pipeline](#synthesizer-introduction#how-does-it-work). This is because to generate goldens grounded in context, we first have to extract and construct groups of contexts found in provided documents.
+The `generate_goldens_from_docs()` method has an additional context construction pipeline that precedes the [goldens generation pipeline](/docs/golden-synthesizer#how-does-it-work). This is because to generate goldens grounded in context, we first have to extract and construct groups of contexts found in provided documents.
 
 The context construction pipeline consists of three main steps:
 
@@ -168,7 +168,7 @@ Each chunk is quality scored (0-1) by an LLM (the `critic_model`) based based on
 If the quality score is still lower than the `context_quality_threshold` after `max_retries`, the context with the highest quality score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guaranteed to have context to be used for grouping.
 
 :::note
-The `critic_model` in the context construction pipeline can be different from the one used in the [`FiltrationConfig` of the generation pipeline](/docs/synthesizer-introduction#filteration-quality).
+The `critic_model` in the context construction pipeline can be different from the one used in the [`FiltrationConfig` of the generation pipeline](/docs/golden-synthesizer#filteration-quality).
 :::
 
 ### Context Grouping

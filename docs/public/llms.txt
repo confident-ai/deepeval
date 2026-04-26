@@ -67,7 +67,7 @@
 - [Document Summarization Datasets](https://deepeval.com/tutorials/doc-summarization-annotating-datasets): Learn to create and maintain datasets for document summarization.
 - [DeepEval LLM Comparisons](https://deepeval.com/blog/tags/comparisons): DeepEval provides comprehensive LLM evaluation comparisons and insights.
 - [Winogrande Benchmark](https://deepeval.com/docs/benchmarks-winogrande): Winogrande dataset for commonsense reasoning evaluation and usage.
-- [Synthetic Data Generation](https://deepeval.com/docs/synthesizer-introduction): DeepEval's Synthesizer generates high-quality synthetic evaluation data.
+- [Synthetic Data Generation](https://deepeval.com/docs/synthetic-data-generation-introduction): DeepEval's Synthesizer generates high-quality synthetic evaluation data.
 - [LLM Benchmarking Guide](https://deepeval.com/docs/benchmarks-introduction): Standardized benchmarks for evaluating LLM performance effectively.
 - [Conversation Simulator](https://deepeval.com/docs/conversation-simulator): Generate conversational test cases for chatbot evaluation.
 - [Evaluation Datasets Overview](https://deepeval.com/docs/evaluation-datasets): Explore evaluation datasets, goldens, and dataset creation methods.

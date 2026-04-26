@@ -2,6 +2,16 @@
   "framework": "nextjs",
   "redirects": [
     {
+      "source": "/docs/synthesizer-introduction",
+      "destination": "/docs/golden-synthesizer",
+      "statusCode": 301
+    },
+    {
+      "source": "/synthesizer-introduction",
+      "destination": "/golden-synthesizer",
+      "statusCode": 301
+    },
+    {
       "source": "/guides/guides-multi-turn-tracing",
       "destination": "/guides/guides-tracing-multi-turn",
       "statusCode": 301

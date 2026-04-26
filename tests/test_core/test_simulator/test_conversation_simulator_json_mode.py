@@ -24,8 +24,8 @@ def patch_initialize_model(monkeypatch):
 
 
 def _golden():
-    # Setting expected_outcome causes stop_conversation() to run first.
-    # That path builds the prompt from the template's stop_simulation.
+    # Setting expected_outcome causes the default expected-outcome check to run.
+    # That path builds the prompt from the controller template.
     return ConversationalGolden(
         scenario="Forgot password and needs reset",
         expected_outcome="User successfully resets password.",
@@ -48,7 +48,6 @@ def test_simulator_handles_example_json_from_prompt(
         async_mode=async_mode,
     )
 
-    # Expect this to run without exception after template fix.
     cases = sim.simulate([_golden()], max_user_simulations=1)
     assert isinstance(cases, list) and len(cases) == 1
     tc = cases[0]

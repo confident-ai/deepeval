@@ -2012,36 +2012,6 @@
       "commits": 5
     }
   ],
-  "content/docs/conversation-simulator.mdx": [
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 23
-    },
-    {
-      "login": "kritinv",
-      "name": "Kritin_Vongthongsri",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/73642562?v=4",
-      "url": "https://github.com/kritinv",
-      "commits": 7
-    },
-    {
-      "login": "eduardoarndt",
-      "name": "Eduardo Arndt",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/43975245?v=4",
-      "url": "https://github.com/eduardoarndt",
-      "commits": 1
-    },
-    {
-      "login": "joaopmatias",
-      "name": "João Matias",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/17345950?v=4",
-      "url": "https://github.com/joaopmatias",
-      "commits": 1
-    }
-  ],
   "content/docs/data-privacy.mdx": [
     {
       "login": "penguine-ip",
@@ -2604,7 +2574,7 @@
       "commits": 1
     }
   ],
-  "content/docs/synthesizer-introduction.mdx": [
+  "content/docs/golden-synthesizer.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",

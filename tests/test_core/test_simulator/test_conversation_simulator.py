@@ -1,41 +1,19 @@
-from typing import List, Optional
-from openai import AsyncOpenAI, OpenAI
+from typing import List
+
 import pytest
 
-from deepeval.simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator, ConversationSimulatorTemplate
 from deepeval.test_case.conversational_test_case import (
-    Turn,
     ConversationalTestCase,
+    Turn,
 )
 from deepeval.dataset.golden import ConversationalGolden
-
-
-def sync_callback(
-    input: str, turns: List[Turn], thread_id: Optional[str] = None
-) -> Turn:
-    client = OpenAI()
-    messages = [{"role": turn.role, "content": turn.content} for turn in turns]
-    messages.append({"role": "user", "content": input})
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-    )
-    print(thread_id)
-    return Turn(role="assistant", content=response.choices[0].message.content)
-
-
-async def async_callback_complete(
-    input: str, turns: List[Turn], thread_id: Optional[str] = None
-) -> Turn:
-    client = AsyncOpenAI()
-    messages = [{"role": turn.role, "content": turn.content} for turn in turns]
-    messages.append({"role": "user", "content": input})
-    response = await client.chat.completions.create(
-        model="gpt-4o",
-        messages=messages,
-    )
-    print(thread_id)
-    return Turn(role="assistant", content=response.choices[0].message.content)
+from tests.test_core.test_simulator.helpers import (
+    StaticSimulatorModel,
+    async_callback_complete,
+    static_callback,
+    sync_callback,
+)
 
 
 def test_no_existing_turns():
@@ -94,7 +72,7 @@ def test_stop_early():
         turns=None,
     )
     simulator = ConversationSimulator(
-        model_callback=async_callback_complete,  # async callback path
+        model_callback=async_callback_complete,
         simulator_model="gpt-4.1-mini",
         async_mode=True,
     )
@@ -125,6 +103,78 @@ def test_invalid_max_user_simulations():
         simulator.simulate([golden], max_user_simulations=0)
 
 
+def test_custom_simulation_template_is_used():
+    class FormalTemplate(ConversationSimulatorTemplate):
+        @staticmethod
+        def simulate_first_user_turn(golden, language):
+            return (
+                "Generate a formal user message. "
+                "Use the phrase FORMAL_STYLE. "
+                'Return JSON: {"simulated_input": "hello"}'
+            )
+
+    golden = ConversationalGolden(
+        scenario="Purchase a concert ticket",
+        expected_outcome=None,
+        user_description="Test User",
+        turns=None,
+    )
+    simulator_model = StaticSimulatorModel()
+    simulator = ConversationSimulator(
+        model_callback=static_callback,
+        simulator_model=simulator_model,
+        async_mode=False,
+        simulation_template=FormalTemplate,
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert any("FORMAL_STYLE" in prompt for prompt in simulator_model.prompts)
+
+
+def test_custom_simulation_template_must_inherit_base_template():
+    class InvalidTemplate:
+        pass
+
+    with pytest.raises(TypeError):
+        ConversationSimulator(
+            model_callback=static_callback,
+            simulator_model=StaticSimulatorModel(),
+            async_mode=False,
+            simulation_template=InvalidTemplate,
+        )
+
+
+def test_custom_simulation_template_validates_first_turn_signature():
+    class InvalidTemplate(ConversationSimulatorTemplate):
+        @staticmethod
+        def simulate_first_user_turn(scenario, language):
+            return "bad"
+
+    with pytest.raises(TypeError):
+        ConversationSimulator(
+            model_callback=static_callback,
+            simulator_model=StaticSimulatorModel(),
+            async_mode=False,
+            simulation_template=InvalidTemplate,
+        )
+
+
+def test_custom_simulation_template_validates_next_turn_signature():
+    class InvalidTemplate(ConversationSimulatorTemplate):
+        @staticmethod
+        def simulate_user_turn(golden, language):
+            return "bad"
+
+    with pytest.raises(TypeError):
+        ConversationSimulator(
+            model_callback=static_callback,
+            simulator_model=StaticSimulatorModel(),
+            async_mode=False,
+            simulation_template=InvalidTemplate,
+        )
+
+
 def test_turn_alternation():
     golden = ConversationalGolden(
         scenario="Purchase a concert ticket",
@@ -143,16 +193,12 @@ def test_turn_alternation():
     cases = simulator.simulate([golden], max_user_simulations=3)
     tc = cases[0]
 
-    # Start from existing turns and check alternation using modulo pattern
     num_existing = len(golden.turns)
     for i in range(num_existing, len(tc.turns)):
-        # Check alternation: each turn should differ from previous turn
         assert tc.turns[i].role != tc.turns[i - 1].role
 
 
 def test_max_simulations_ignores_existing_turns():
-    """Test that max_user_simulations only counts new simulated user turns,
-    not existing user turns in the golden."""
     golden = ConversationalGolden(
         scenario="Book a flight",
         expected_outcome=None,
@@ -177,20 +223,14 @@ def test_max_simulations_ignores_existing_turns():
     cases = simulator.simulate([golden], max_user_simulations=max_sims)
     tc = cases[0]
 
-    # Count existing user turns
     num_existing_turns = len(golden.turns)
-
-    # Count new user turns (after existing turns)
     new_turns = tc.turns[num_existing_turns:]
     new_user_turns = sum(1 for turn in new_turns if turn.role == "user")
 
-    # Verify that new user turns equals max_user_simulations
     assert new_user_turns == max_sims
 
 
 def test_on_simulation_complete_hook_single_conversation():
-    """Test that on_simulation_complete hook is called with correct parameters
-    for a single conversation."""
     golden = ConversationalGolden(
         scenario="Purchase a concert ticket",
         expected_outcome=None,
@@ -198,7 +238,6 @@ def test_on_simulation_complete_hook_single_conversation():
         turns=None,
     )
 
-    # Track hook calls
     hook_calls = []
 
     def on_complete(test_case, index):
@@ -214,21 +253,14 @@ def test_on_simulation_complete_hook_single_conversation():
         [golden], max_user_simulations=2, on_simulation_complete=on_complete
     )
 
-    # Verify hook was called once
     assert len(hook_calls) == 1
-
-    # Verify hook was called with correct index
     assert hook_calls[0]["index"] == 0
-
-    # Verify hook was called with the correct test case
     assert hook_calls[0]["test_case"] == cases[0]
     assert isinstance(hook_calls[0]["test_case"], ConversationalTestCase)
     assert hook_calls[0]["test_case"].scenario == golden.scenario
 
 
 def test_on_simulation_complete_hook_multiple_conversations():
-    """Test that on_simulation_complete hook is called for each conversation
-    with correct indices and test cases."""
     goldens = [
         ConversationalGolden(
             scenario=f"Scenario {i}",
@@ -239,7 +271,6 @@ def test_on_simulation_complete_hook_multiple_conversations():
         for i in range(3)
     ]
 
-    # Track hook calls
     hook_calls = []
 
     def on_complete(test_case, index):
@@ -256,14 +287,10 @@ def test_on_simulation_complete_hook_multiple_conversations():
         goldens, max_user_simulations=1, on_simulation_complete=on_complete
     )
 
-    # Verify hook was called for each conversation
     assert len(hook_calls) == 3
-
-    # Verify all indices are present (order may vary due to async)
     indices = {call["index"] for call in hook_calls}
     assert indices == {0, 1, 2}
 
-    # Verify each test case matches the corresponding case
     for call in hook_calls:
         idx = call["index"]
         assert call["test_case"] == cases[idx]
