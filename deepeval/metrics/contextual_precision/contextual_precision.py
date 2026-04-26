@@ -22,7 +22,6 @@ from deepeval.metrics.contextual_precision.template import (
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.contextual_precision.schema as cpschema
-from deepeval.metrics.api import metric_data_manager
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -110,10 +109,6 @@ class ContextualPrecisionMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -162,10 +157,6 @@ class ContextualPrecisionMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self, input: str, multimodal: bool):

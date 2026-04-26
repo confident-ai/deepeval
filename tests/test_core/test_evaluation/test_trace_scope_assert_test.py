@@ -3,6 +3,7 @@ from time import perf_counter
 from deepeval.dataset import Golden
 from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
 from deepeval.evaluate.configs import DisplayConfig, ErrorConfig
+from deepeval.evaluate.execute import trace_scope as trace_scope_mod
 from deepeval.evaluate.execute.trace_scope import _assert_test_from_current_trace
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.context import current_trace_context
@@ -84,17 +85,20 @@ def test_assert_test_metrics_run_at_trace_level_with_golden_input(
     trace = _make_pytest_wrapped_trace(app_span)
 
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.trace_manager._convert_span_to_api_span",
+        trace_scope_mod.trace_manager,
+        "_convert_span_to_api_span",
         lambda *_: make_span_api_like(),
         raising=True,
     )
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.global_test_run_manager.update_test_run",
+        trace_scope_mod.global_test_run_manager,
+        "update_test_run",
         lambda *_a, **_k: None,
         raising=True,
     )
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.global_test_run_manager.save_test_run",
+        trace_scope_mod.global_test_run_manager,
+        "save_test_run",
         lambda *_a, **_k: None,
         raising=True,
     )
@@ -135,7 +139,8 @@ def test_assert_test_uses_observe_metrics_for_span_level_evals(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.trace_manager._convert_span_to_api_span",
+        trace_scope_mod.trace_manager,
+        "_convert_span_to_api_span",
         lambda *_: make_span_api_like(),
         raising=True,
     )
@@ -144,12 +149,14 @@ def test_assert_test_uses_observe_metrics_for_span_level_evals(monkeypatch):
         captured["api_test_case"] = api_test_case
 
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.global_test_run_manager.update_test_run",
+        trace_scope_mod.global_test_run_manager,
+        "update_test_run",
         capture_test_run,
         raising=True,
     )
     monkeypatch.setattr(
-        "deepeval.evaluate.execute.trace_scope.global_test_run_manager.save_test_run",
+        trace_scope_mod.global_test_run_manager,
+        "save_test_run",
         lambda *_a, **_k: None,
         raising=True,
     )

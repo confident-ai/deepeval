@@ -22,7 +22,6 @@ from deepeval.metrics.pii_leakage.schema import (
     ExtractedPII,
     PIILeakageScoreReason,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class PIILeakageMetric(BaseMetric):
@@ -100,10 +99,6 @@ class PIILeakageMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -149,10 +144,6 @@ class PIILeakageMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self) -> Optional[str]:

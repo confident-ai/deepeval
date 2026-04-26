@@ -21,7 +21,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from .template import MCPUseMetricTemplate
 from .schema import MCPPrimitivesScore, MCPArgsScore
-from deepeval.metrics.api import metric_data_manager
 
 
 class MCPUseMetric(BaseMetric):
@@ -117,10 +116,6 @@ class MCPUseMetric(BaseMetric):
                     self,
                     steps=steps,
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
                 return self.score
 
@@ -184,10 +179,6 @@ class MCPUseMetric(BaseMetric):
                 self,
                 steps=steps,
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     def _get_primitives_used_score(

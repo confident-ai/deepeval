@@ -17,7 +17,6 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics.api import metric_data_manager
 
 
 class MCPTaskCompletionMetric(BaseConversationalMetric):
@@ -99,10 +98,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                         f"Score: {self.score}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -153,10 +148,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     f"Score: {self.score}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
         return self.score
 

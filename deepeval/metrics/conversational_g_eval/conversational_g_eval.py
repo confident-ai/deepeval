@@ -36,7 +36,6 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
-from deepeval.metrics.api import metric_data_manager
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
@@ -144,10 +143,6 @@ class ConversationalGEval(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -196,10 +191,6 @@ class ConversationalGEval(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

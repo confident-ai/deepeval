@@ -21,7 +21,6 @@ from deepeval.metrics.knowledge_retention.schema import (
     KnowledgeRetentionScoreReason,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.api import metric_data_manager
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
@@ -93,10 +92,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -139,10 +134,6 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self) -> str:

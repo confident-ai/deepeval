@@ -614,26 +614,6 @@ def set_debug(
         "--trace-sample-rate",
         help="Set CONFIDENT_TRACE_SAMPLE_RATE.",
     ),
-    metric_logging_verbose: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-verbose/--no-metric-logging-verbose",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_VERBOSE.",
-    ),
-    metric_logging_flush: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-flush/--no-metric-logging-flush",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_FLUSH.",
-    ),
-    metric_logging_sample_rate: Optional[float] = typer.Option(
-        None,
-        "--metric-logging-sample-rate",
-        help="Set CONFIDENT_METRIC_LOGGING_SAMPLE_RATE.",
-    ),
-    metric_logging_enabled: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-enabled/--no-metric-logging-enabled",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_ENABLED.",
-    ),
     # Persistence
     save: Optional[str] = typer.Option(
         None,
@@ -692,18 +672,6 @@ def set_debug(
         if trace_sample_rate is not None:
             settings.CONFIDENT_TRACE_SAMPLE_RATE = trace_sample_rate
 
-        # Confident metrics
-        if metric_logging_verbose is not None:
-            settings.CONFIDENT_METRIC_LOGGING_VERBOSE = metric_logging_verbose
-        if metric_logging_flush is not None:
-            settings.CONFIDENT_METRIC_LOGGING_FLUSH = metric_logging_flush
-        if metric_logging_sample_rate is not None:
-            settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = (
-                metric_logging_sample_rate
-            )
-        if metric_logging_enabled is not None:
-            settings.CONFIDENT_METRIC_LOGGING_ENABLED = metric_logging_enabled
-
     handled, path, updates = edit_ctx.result
 
     _handle_save_result(
@@ -760,12 +728,6 @@ def unset_debug(
         settings.CONFIDENT_TRACE_ENVIRONMENT = None
         settings.CONFIDENT_TRACE_FLUSH = None
         settings.CONFIDENT_TRACE_SAMPLE_RATE = None
-
-        # Confident metrics
-        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = None
-        settings.CONFIDENT_METRIC_LOGGING_FLUSH = None
-        settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = None
-        settings.CONFIDENT_METRIC_LOGGING_ENABLED = None
 
     handled, path, updates = edit_ctx.result
 
