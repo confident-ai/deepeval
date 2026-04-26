@@ -164,3 +164,28 @@ def test_async_controller_none_defaults_to_proceed():
 
     assert len(cases[0].turns) == 4
     assert simulated_user_turn_counts == [0, 1]
+
+
+def test_controller_unknown_return_value_defaults_to_proceed():
+    golden = ConversationalGolden(
+        scenario="Purchase a concert ticket",
+        expected_outcome=None,
+        user_description="Test User",
+    )
+    simulated_user_turn_counts = []
+
+    def controller(simulated_user_turns):
+        simulated_user_turn_counts.append(simulated_user_turns)
+        return "keep going"
+
+    simulator = ConversationSimulator(
+        model_callback=static_callback,
+        simulator_model=StaticSimulatorModel(),
+        async_mode=False,
+        controller=controller,
+    )
+
+    cases = simulator.simulate([golden], max_user_simulations=2)
+
+    assert len(cases[0].turns) == 4
+    assert simulated_user_turn_counts == [0, 1]

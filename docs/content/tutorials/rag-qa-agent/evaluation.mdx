@@ -65,7 +65,7 @@ This method is the quickest because the data already exists, however it might no
 
 ### Generate QA Pairs
 
-It is highly recommended to generate synthetic question-answer pairs using `deepeval`'s [`Synthesizer`](https://deepeval.com/docs/synthesizer-introduction). Because this allows you to:
+It is highly recommended to generate synthetic question-answer pairs using `deepeval`'s [`Synthesizer`](https://deepeval.com/docs/golden-synthesizer). Because this allows you to:
 
 - Generate question answer pairs that test your RAG application on edge cases
 - Create a dataset with these QA pairs that allow you to use them anytime and anywhere
@@ -108,7 +108,7 @@ dataset.push(alias="RAG QA Agent Dataset")
 ✅ Done. We can now move on to creating test cases using this dataset.
 
 :::info
-You can learn more about how to use and customize the [synthesizer here](https://deepeval.com/docs/synthesizer-introduction).
+You can learn more about how to use and customize the [synthesizer here](https://deepeval.com/docs/golden-synthesizer).
 :::
 
 For RAG applications, it is recommended to evaluate your application on a component level for retriever, generator and as a whole RAG too.

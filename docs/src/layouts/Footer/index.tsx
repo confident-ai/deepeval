@@ -19,7 +19,7 @@ const COLUMNS: FooterColumn[] = [
     links: [
       { label: "Getting Started", href: "/docs/getting-started" },
       { label: "Metrics", href: "/docs/metrics-introduction" },
-      { label: "Synthesizer", href: "/docs/synthesizer-introduction" },
+      { label: "Golden Synthesizer", href: "/docs/golden-synthesizer" },
       {
         label: "Prompt Optimization",
         href: "/docs/prompt-optimization-introduction",

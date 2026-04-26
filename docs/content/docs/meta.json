@@ -34,8 +34,8 @@
     "(algorithms)",
 
     "---[Database]Synthetic Data Generation---",
-    "synthesizer-introduction",
-    "(generate-goldens)",
+    "synthetic-data-generation-introduction",
+    "golden-synthesizer",
     "conversation-simulator",
 
     "---[Trophy]Benchmarks---",

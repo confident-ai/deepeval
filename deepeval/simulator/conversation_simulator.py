@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Callable
+from typing import Optional, List, Union, Callable, Type
 from rich.progress import Progress
 from pydantic import BaseModel
 import inspect
@@ -27,7 +27,10 @@ from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
 )
-from deepeval.simulator.utils import dump_conversational_golden
+from deepeval.simulator.utils import (
+    dump_conversational_golden,
+    validate_simulation_template,
+)
 from deepeval.progress_context import conversation_simulator_progress_context
 from deepeval.dataset import ConversationalGolden
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
@@ -44,7 +47,12 @@ class ConversationSimulator:
         language: str = "English",
         run_remote: bool = False,
         controller: Callable = expected_outcome_controller,
+        simulation_template: Type[
+            ConversationSimulatorTemplate
+        ] = ConversationSimulatorTemplate,
     ):
+        validate_simulation_template(simulation_template)
+
         self.model_callback = model_callback
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
@@ -53,7 +61,7 @@ class ConversationSimulator:
         self.async_mode = async_mode
         self.language = language
         self.simulated_conversations: List[ConversationalTestCase] = []
-        self.template = ConversationSimulatorTemplate
+        self.template = simulation_template
         self.run_remote = run_remote
         if not run_remote:
             self.simulator_model, self.using_native_model = initialize_model(

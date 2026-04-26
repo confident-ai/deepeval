@@ -284,7 +284,7 @@ contextual_precision = ContextualPrecisionMetric(threshold=0.8)
 <details>
 <summary>What RAG metrics are available?</summary>
 
-DeepEval offers a total of 5 RAG metrics, which are:
+`deepeval` offers a total of 5 RAG metrics, which are:
 
 - [Answer Relevancy](/docs/metrics-answer-relevancy)
 - [Faithfulness](/docs/metrics-faithfulness)
@@ -325,7 +325,7 @@ This creates a test run, which is a "snapshot"/benchmark of your RAG pipeline at
 ### Viewing on Confident AI (recommended)
 
 
-If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which DeepEval integrates with natively.
+If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
 
 <VideoDisplayer src={ASSETS.gettingStartedRag} />
 
@@ -633,7 +633,7 @@ python main.py
 Now that you have run your first RAG evals, you should:
 
 1. **Customize your metrics**: Include all 5 [RAG metrics](/docs/metrics-introduction) based on your use case.
-2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point.
+2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point.
 3. **Enable evals in production**: Just replace `metrics` in `@observe` with a [`metric_collection`](https://www.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string on Confident AI.
 
 You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.

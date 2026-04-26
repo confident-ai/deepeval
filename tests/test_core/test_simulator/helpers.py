@@ -45,6 +45,7 @@ async def async_static_callback(input: str) -> Turn:
 class StaticSimulatorModel(DeepEvalBaseLLM):
     def __init__(self, expected_outcome_complete: bool = False):
         self.schema_calls = []
+        self.prompts = []
         self.user_input_count = 0
         self.expected_outcome_complete = expected_outcome_complete
         super().__init__(model="static-simulator-model")
@@ -53,6 +54,7 @@ class StaticSimulatorModel(DeepEvalBaseLLM):
         return self
 
     def generate(self, prompt: str, schema=None):
+        self.prompts.append(prompt)
         if schema is None:
             return '{"simulated_input": "simulated user input"}'
 

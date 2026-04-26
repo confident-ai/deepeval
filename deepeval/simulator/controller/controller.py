@@ -248,13 +248,8 @@ class SimulationController:
         )
 
     def _normalize_decision(self, decision: Optional[Decision]) -> Decision:
-        if decision is None:
-            return Decision(should_end=False)
         if not isinstance(decision, Decision):
-            raise TypeError(
-                "ConversationSimulator controller must return proceed(), "
-                "end(), or None."
-            )
+            return Decision(should_end=False)
         return decision
 
     def _should_end(

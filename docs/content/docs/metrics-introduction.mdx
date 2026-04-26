@@ -79,7 +79,7 @@ Safety metrics concerns more on LLM security. They include:
 - PIILeakage
 - Role Violation
 
-For those looking for a full-blown LLM red teaming orchestration frameowork, checkout [DeepTeam](https://www.trydeepteam.com/). DeepTeam is DeepEval but for red teaming LLMs specifically.
+For those looking for a full-blown LLM red teaming orchestration frameowork, checkout [DeepTeam](https://www.trydeepteam.com/). DeepTeam is `deepeval` but for red teaming LLMs specifically.
 
 </Tab>
 <Tab value="Image">
@@ -120,7 +120,7 @@ from deepeval import evaluate
 
 evaluate(
     metrics=[AnswerRelevancyMetric()],
-    test_cases=[LLMTestCase(input="What's DeepEval?", actual_output="Your favorite eval framework's favorite evals framework.")]
+    test_cases=[LLMTestCase(input="What's `deepeval`?", actual_output="Your favorite eval framework's favorite evals framework.")]
 )
 ```
 
@@ -134,7 +134,7 @@ If you're logged into [Confident AI](https://confident-ai.com) before running an
 
 More information on everything can be found on the [Confident AI evaluation docs.](https://www.confident-ai.com/docs/llm-evaluation/quickstart)
 
-## Why DeepEval Metrics?
+## Why `deepeval` Metrics?
 
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 

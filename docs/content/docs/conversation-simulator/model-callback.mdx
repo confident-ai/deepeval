@@ -1,0 +1,66 @@
+---
+id: conversation-simulator-model-callback
+title: Model Callback
+sidebar_label: Model Callback
+---
+
+The `model_callback` is the bridge between the simulator and your LLM application. It receives the simulated user input and returns your chatbot's assistant turn.
+
+Only the `input` argument is required when defining your `model_callback`, but you may also define optional arguments that `deepeval` will pass by name.
+
+```python title="main.py"
+from deepeval.test_case import Turn
+
+async def model_callback(input: str) -> Turn:
+    response = await your_llm_app(input)
+    return Turn(role="assistant", content=response)
+```
+
+## Supported Arguments
+
+- `input`: the latest simulated user message.
+- [Optional] `turns`: a list of `Turn`s, which include the role and content of each message in the conversation.
+- [Optional] `thread_id`: a unique identifier for each conversation.
+
+While `turns` captures the dialogue context for each turn, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data. In these cases, you'll want to take advantage of the `thread_id`.
+
+## Common Use Cases
+
+### Stateless APIs
+
+Some chatbot APIs manage conversation state internally or do not need prior turns. Use only `input` for this setup.
+
+```python
+from deepeval.test_case import Turn
+
+async def model_callback(input: str) -> Turn:
+    response = await chatbot.chat(input)
+    return Turn(role="assistant", content=response)
+```
+
+### Message History
+
+If your application expects the full message history on every request, use `turns` to pass the simulated conversation transcript.
+
+```python
+from typing import List
+from deepeval.test_case import Turn
+
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
+    messages = [{"role": turn.role, "content": turn.content} for turn in turns]
+    response = await chatbot.chat(messages=messages)
+    return Turn(role="assistant", content=response)
+```
+
+### Backend Sessions
+
+For backend memory, tool state, carts, or API session data stored outside the transcript, use `thread_id` to keep each simulation connected to the right session.
+
+```python title="main.py"
+from typing import List
+from deepeval.test_case import Turn
+
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
+    res = await your_llm_app(input=input, turns=turns, thread_id=thread_id)
+    return Turn(role="assistant", content=res)
+```

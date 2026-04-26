@@ -457,7 +457,7 @@ Similar to the `evaluate()` function, `assert_test()` for component-level evalua
 To run your unit tests on all changes in prod, you can use the following `YAML` file in your **github actions** or any other similar CI/CD pipelines. This example uses `poetry` for installation, `OPENAI_API_KEY` as your LLM judge to run evals locally. You can also optionally add `CONFIDENT_API_KEY` to send results to Confident AI.
 
 ```yaml {32-33}
-name: LLM App DeepEval Tests
+name: LLM App `deepeval` Tests
 
 on:
   push:
@@ -485,7 +485,7 @@ jobs:
       - name: Install Dependencies
         run: poetry install --no-root
 
-      - name: Run DeepEval Unit Tests
+      - name: Run `deepeval` Unit Tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}

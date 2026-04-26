@@ -1,0 +1,9 @@
+{
+  "title": "Conversation Simulator",
+  "pages": [
+    "model-callback",
+    "stopping-logic",
+    "custom-templates",
+    "lifecycle-hooks"
+  ]
+}
