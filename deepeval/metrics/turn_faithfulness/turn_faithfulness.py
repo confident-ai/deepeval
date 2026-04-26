@@ -30,7 +30,6 @@ from deepeval.metrics.turn_faithfulness.schema import (
     Claims,
     InteractionFaithfulnessScore,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class TurnFaithfulnessMetric(BaseConversationalMetric):
@@ -127,10 +126,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                         f"Final Reason: {self.reason}\n",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -189,10 +184,6 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}\n",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

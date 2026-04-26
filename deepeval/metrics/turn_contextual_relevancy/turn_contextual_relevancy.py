@@ -28,7 +28,6 @@ from deepeval.metrics.turn_contextual_relevancy.schema import (
     ContextualRelevancyScoreReason,
     InteractionContextualRelevancyScore,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class TurnContextualRelevancyMetric(BaseConversationalMetric):
@@ -120,10 +119,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                         f"Final Reason: {self.reason}\n",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -184,10 +179,6 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     f"Final Reason: {self.reason}\n",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

@@ -6,7 +6,6 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     construct_verbose_logs,
 )
-from deepeval.metrics.api import metric_data_manager
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
@@ -77,10 +76,6 @@ class PatternMatchMetric(BaseMetric):
                     ],
                 )
 
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

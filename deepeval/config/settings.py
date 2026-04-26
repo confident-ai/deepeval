@@ -794,21 +794,6 @@ class Settings(BaseSettings):
         description="Enable detailed internal tracing of metric and model methods inside @observe spans.",
     )
 
-    CONFIDENT_METRIC_LOGGING_FLUSH: Optional[bool] = Field(
-        None,
-        description="Flush metric logs eagerly (useful for debugging; may add overhead).",
-    )
-    CONFIDENT_METRIC_LOGGING_VERBOSE: Optional[bool] = Field(
-        True, description="Enable verbose metric logging."
-    )
-    CONFIDENT_METRIC_LOGGING_SAMPLE_RATE: Optional[float] = Field(
-        1.0,
-        description="Metric logging sampling rate (0–1). Lower to reduce overhead.",
-    )
-    CONFIDENT_METRIC_LOGGING_ENABLED: Optional[bool] = Field(
-        True, description="Enable metric logging to Confident where supported."
-    )
-
     CONFIDENT_OTEL_URL: Optional[AnyUrl] = Field(
         "https://otel.confident-ai.com",
         description="OpenTelemetry OTLP exporter endpoint (if using OTEL export).",
@@ -988,9 +973,6 @@ class Settings(BaseSettings):
     ##############
 
     @field_validator(
-        "CONFIDENT_METRIC_LOGGING_ENABLED",
-        "CONFIDENT_METRIC_LOGGING_VERBOSE",
-        "CONFIDENT_METRIC_LOGGING_FLUSH",
         "CONFIDENT_OPEN_BROWSER",
         "CONFIDENT_TRACE_FLUSH",
         "CONFIDENT_TRACE_INTERNAL",
@@ -1054,7 +1036,6 @@ class Settings(BaseSettings):
         "AWS_BEDROCK_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
         "CONFIDENT_TRACE_SAMPLE_RATE",
-        "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
         mode="before",
     )
     @classmethod
@@ -1066,17 +1047,13 @@ class Settings(BaseSettings):
             return None
         return float(v)
 
-    @field_validator(
-        "CONFIDENT_TRACE_SAMPLE_RATE", "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE"
-    )
+    @field_validator("CONFIDENT_TRACE_SAMPLE_RATE")
     @classmethod
     def _validate_sample_rate(cls, v):
         if v is None:
             return None
         if not (0.0 <= float(v) <= 1.0):
-            raise ValueError(
-                "CONFIDENT_TRACE_SAMPLE_RATE or CONFIDENT_METRIC_LOGGING_SAMPLE_RATE must be between 0 and 1"
-            )
+            raise ValueError("CONFIDENT_TRACE_SAMPLE_RATE must be between 0 and 1")
         return float(v)
 
     @field_validator("DEEPEVAL_DEFAULT_SAVE", mode="before")

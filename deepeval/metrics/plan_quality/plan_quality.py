@@ -26,7 +26,6 @@ from deepeval.metrics.plan_quality.template import (
 from deepeval.metrics.plan_adherence.template import (
     PlanAdherenceTemplate,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class PlanQualityMetric(BaseMetric):
@@ -113,10 +112,6 @@ class PlanQualityMetric(BaseMetric):
                     ],
                 )
 
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
                 return self.score
 
@@ -172,10 +167,6 @@ class PlanQualityMetric(BaseMetric):
                 ],
             )
 
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
 
             return self.score
 

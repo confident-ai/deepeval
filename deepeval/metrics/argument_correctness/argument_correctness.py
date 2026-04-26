@@ -24,7 +24,6 @@ from deepeval.metrics.argument_correctness.schema import (
     Verdicts,
     ArgumentCorrectnessScoreReason,
 )
-from deepeval.metrics.api import metric_data_manager
 
 
 class ArgumentCorrectnessMetric(BaseMetric):
@@ -111,10 +110,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
             return self.score
 
     async def a_measure(
@@ -166,10 +161,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(self, input: str, multimodal: bool) -> str:

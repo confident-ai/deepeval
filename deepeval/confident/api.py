@@ -131,7 +131,6 @@ class Endpoints(Enum):
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
     EXPERIMENT_ENDPOINT = "/v1/experiment"
-    METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
     PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:version"
