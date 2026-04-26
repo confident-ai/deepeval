@@ -1,4 +1,4 @@
-import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import {
   BookOpen,
   Compass,
@@ -6,8 +6,8 @@ import {
   Blocks,
   History,
   Newspaper,
-} from 'lucide-react';
-import { appName, gitConfig } from './shared';
+} from "lucide-react";
+import { appName, gitConfig } from "./shared";
 
 // Nav items rendered in the middle column of the top nav, between the
 // logo and the search bar. Exported so our custom header slot
@@ -25,12 +25,37 @@ import { appName, gitConfig } from './shared';
 //   Changelog    → History       (time-ordered records)
 //   Blog         → Newspaper     (articles / posts)
 export const navLinks = [
-  { text: 'Docs', url: '/docs/getting-started', activeBase: '/docs', icon: <BookOpen /> },
-  { text: 'Guides', url: '/guides/guides-ai-agent-evaluation', activeBase: '/guides', icon: <Compass /> },
-  { text: 'Tutorials', url: '/tutorials/tutorial-introduction', activeBase: '/tutorials', icon: <GraduationCap /> },
-  { text: 'Integrations', url: '/integrations/models/openai', activeBase: '/integrations', icon: <Blocks /> },
-  { text: 'Changelog', url: '/changelog', activeBase: '/changelog', icon: <History /> },
-  { text: 'Blog', url: '/blog', activeBase: '/blog', icon: <Newspaper /> },
+  {
+    text: "Docs",
+    url: "/docs/introduction",
+    activeBase: "/docs",
+    icon: <BookOpen />,
+  },
+  {
+    text: "Guides",
+    url: "/guides/guides-ai-agent-evaluation",
+    activeBase: "/guides",
+    icon: <Compass />,
+  },
+  {
+    text: "Tutorials",
+    url: "/tutorials/tutorial-introduction",
+    activeBase: "/tutorials",
+    icon: <GraduationCap />,
+  },
+  {
+    text: "Integrations",
+    url: "/integrations/models/openai",
+    activeBase: "/integrations",
+    icon: <Blocks />,
+  },
+  {
+    text: "Changelog",
+    url: "/changelog",
+    activeBase: "/changelog",
+    icon: <History />,
+  },
+  { text: "Blog", url: "/blog", activeBase: "/blog", icon: <Newspaper /> },
 ];
 
 export function baseOptions(): BaseLayoutProps {
@@ -41,10 +66,10 @@ export function baseOptions(): BaseLayoutProps {
           role="img"
           aria-label={appName}
           style={{
-            display: 'block',
-            height: '28px',
-            width: '131px',
-            backgroundColor: 'var(--color-fd-foreground)',
+            display: "block",
+            height: "28px",
+            width: "131px",
+            backgroundColor: "var(--color-fd-foreground)",
             WebkitMask: 'url("/icons/DeepEval.svg") no-repeat center / contain',
             mask: 'url("/icons/DeepEval.svg") no-repeat center / contain',
           }}
