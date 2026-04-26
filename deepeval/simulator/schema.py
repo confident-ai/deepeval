@@ -8,8 +8,3 @@ class ConversationCompletion(BaseModel):
 
 class SimulatedInput(BaseModel):
     simulated_input: str
-
-
-class SimulateHttpResponse(BaseModel):
-    user_input: str
-    complete: bool

@@ -6,13 +6,10 @@ from typing import Awaitable, Callable, List, Optional
 from pydantic import BaseModel
 from rich.progress import Progress
 
-from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator.controller.template import SimulatorControllerTemplate
 from deepeval.simulator.controller.types import Context, Decision
 from deepeval.simulator.schema import ConversationCompletion
-from deepeval.simulator.schema import SimulateHttpResponse
-from deepeval.simulator.utils import dump_conversational_golden
 from deepeval.test_case import Turn
 from deepeval.utils import update_pbar
 
@@ -31,11 +28,9 @@ class SimulationController:
         generate_schema: Callable[[str, BaseModel], BaseModel],
         a_generate_schema: Callable[[str, BaseModel], Awaitable[BaseModel]],
         controller: Callable,
-        run_remote: bool = False,
     ):
         self.controller = controller
         self.template = SimulatorControllerTemplate
-        self.run_remote = run_remote
         self.generate_schema = generate_schema
         self.a_generate_schema = a_generate_schema
 
@@ -106,46 +101,27 @@ class SimulationController:
         progress: Optional[Progress] = None,
         pbar_turns_id: Optional[int] = None,
     ) -> bool:
-        if not self.run_remote:
-            if golden.expected_outcome is None:
-                return False
+        if golden.expected_outcome is None:
+            return False
 
-            conversation_history = json.dumps(
-                [t.model_dump() for t in turns],
-                indent=4,
-                ensure_ascii=False,
-            )
-            prompt = self.template.check_expected_outcome(
-                conversation_history, golden.expected_outcome
-            )
-            is_complete: ConversationCompletion = self._generate_schema(
-                prompt, ConversationCompletion
-            )
-            if is_complete.is_complete:
-                update_pbar(
-                    progress,
-                    pbar_turns_id,
-                    advance_to_end=is_complete.is_complete,
-                )
-            return is_complete.is_complete
-
-        api = Api()
-        temp_golden = ConversationalGolden(
-            scenario=golden.scenario,
-            expected_outcome=golden.expected_outcome,
-            user_description=golden.user_description,
-            context=golden.context,
-            turns=turns,
+        conversation_history = json.dumps(
+            [t.model_dump() for t in turns],
+            indent=4,
+            ensure_ascii=False,
         )
-        data, _ = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.SIMULATE_ENDPOINT,
-            body=dump_conversational_golden(temp_golden),
+        prompt = self.template.check_expected_outcome(
+            conversation_history, golden.expected_outcome
         )
-        res = SimulateHttpResponse(
-            user_input=data["userResponse"], complete=data["completed"]
+        is_complete: ConversationCompletion = self._generate_schema(
+            prompt, ConversationCompletion
         )
-        return res.complete
+        if is_complete.is_complete:
+            update_pbar(
+                progress,
+                pbar_turns_id,
+                advance_to_end=is_complete.is_complete,
+            )
+        return is_complete.is_complete
 
     async def a_check_expected_outcome(
         self,
@@ -154,46 +130,27 @@ class SimulationController:
         progress: Optional[Progress] = None,
         pbar_turns_id: Optional[int] = None,
     ) -> bool:
-        if not self.run_remote:
-            if golden.expected_outcome is None:
-                return False
+        if golden.expected_outcome is None:
+            return False
 
-            conversation_history = json.dumps(
-                [t.model_dump() for t in turns],
-                indent=4,
-                ensure_ascii=False,
-            )
-            prompt = self.template.check_expected_outcome(
-                conversation_history, golden.expected_outcome
-            )
-            is_complete: ConversationCompletion = await self._a_generate_schema(
-                prompt, ConversationCompletion
-            )
-            if is_complete.is_complete:
-                update_pbar(
-                    progress,
-                    pbar_turns_id,
-                    advance_to_end=is_complete.is_complete,
-                )
-            return is_complete.is_complete
-
-        api = Api()
-        temp_golden = ConversationalGolden(
-            scenario=golden.scenario,
-            expected_outcome=golden.expected_outcome,
-            user_description=golden.user_description,
-            context=golden.context,
-            turns=turns,
+        conversation_history = json.dumps(
+            [t.model_dump() for t in turns],
+            indent=4,
+            ensure_ascii=False,
         )
-        data, _ = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.SIMULATE_ENDPOINT,
-            body=dump_conversational_golden(temp_golden),
+        prompt = self.template.check_expected_outcome(
+            conversation_history, golden.expected_outcome
         )
-        res = SimulateHttpResponse(
-            user_input=data["userResponse"], complete=data["completed"]
+        is_complete: ConversationCompletion = await self._a_generate_schema(
+            prompt, ConversationCompletion
         )
-        return res.complete
+        if is_complete.is_complete:
+            update_pbar(
+                progress,
+                pbar_turns_id,
+                advance_to_end=is_complete.is_complete,
+            )
+        return is_complete.is_complete
 
     def _build_context(
         self,

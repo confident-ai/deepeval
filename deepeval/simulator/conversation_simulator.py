@@ -28,13 +28,10 @@ from deepeval.simulator.controller.controller import (
     expected_outcome_controller,
 )
 from deepeval.simulator.utils import (
-    dump_conversational_golden,
     validate_simulation_template,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
 from deepeval.dataset import ConversationalGolden
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
-from deepeval.simulator.schema import SimulateHttpResponse
 
 
 class ConversationSimulator:
@@ -45,7 +42,6 @@ class ConversationSimulator:
         max_concurrent: int = 5,
         async_mode: bool = True,
         language: str = "English",
-        run_remote: bool = False,
         controller: Callable = expected_outcome_controller,
         simulation_template: Type[
             ConversationSimulatorTemplate
@@ -62,21 +58,11 @@ class ConversationSimulator:
         self.language = language
         self.simulated_conversations: List[ConversationalTestCase] = []
         self.template = simulation_template
-        self.run_remote = run_remote
-        if not run_remote:
-            self.simulator_model, self.using_native_model = initialize_model(
-                simulator_model
-            )
-        else:
-            if not is_confident():
-                raise ValueError(
-                    "Confident API key not found. Run `deepeval login` to login."
-                )
-            self.simulator_model = None
-            self.using_native_model = False
+        self.simulator_model, self.using_native_model = initialize_model(
+            simulator_model
+        )
         self.controller = SimulationController(
             controller=controller,
-            run_remote=self.run_remote,
             generate_schema=self.generate_schema,
             a_generate_schema=self.a_generate_schema,
         )
@@ -92,11 +78,7 @@ class ConversationSimulator:
         self.simulation_cost = 0 if self.using_native_model else None
 
         with conversation_simulator_progress_context(
-            simulator_model=(
-                self.simulator_model.get_model_name()
-                if self.simulator_model
-                else "Confident API"
-            ),
+            simulator_model=self.simulator_model.get_model_name(),
             num_conversations=len(conversational_goldens),
             async_mode=self.async_mode,
         ) as (progress, pbar_id), progress:
@@ -424,110 +406,36 @@ class ConversationSimulator:
     ############################################
 
     def generate_first_user_input(self, golden: ConversationalGolden):
-        if not self.run_remote:
-            prompt = self.template.simulate_first_user_turn(
-                golden, self.language
-            )
-            simulated_input: SimulatedInput = self.generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-        else:
-            api = Api()
-            data, _ = api.send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.SIMULATE_ENDPOINT,
-                body=dump_conversational_golden(golden),
-            )
-            res = SimulateHttpResponse(
-                user_input=data["userResponse"], complete=data["completed"]
-            )
-            user_input = res.user_input
-        return user_input
+        prompt = self.template.simulate_first_user_turn(golden, self.language)
+        simulated_input: SimulatedInput = self.generate_schema(
+            prompt, SimulatedInput
+        )
+        return simulated_input.simulated_input
 
     async def a_generate_first_user_input(self, golden: ConversationalGolden):
-        if not self.run_remote:
-            prompt = self.template.simulate_first_user_turn(
-                golden, self.language
-            )
-            simulated_input: SimulatedInput = await self.a_generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-        else:
-            api = Api()
-            data, _ = await api.a_send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.SIMULATE_ENDPOINT,
-                body=dump_conversational_golden(golden),
-            )
-            res = SimulateHttpResponse(
-                user_input=data["userResponse"], complete=data["completed"]
-            )
-            user_input = res.user_input
-        return user_input
+        prompt = self.template.simulate_first_user_turn(golden, self.language)
+        simulated_input: SimulatedInput = await self.a_generate_schema(
+            prompt, SimulatedInput
+        )
+        return simulated_input.simulated_input
 
     def generate_next_user_input(
         self, golden: ConversationalGolden, turns: List[Turn]
     ):
-        if not self.run_remote:
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = self.generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-        else:
-            api = Api()
-            temp_golden = ConversationalGolden(
-                scenario=golden.scenario,
-                expected_outcome=golden.expected_outcome,
-                user_description=golden.user_description,
-                context=golden.context,
-                turns=turns,
-            )
-            data, _ = api.send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.SIMULATE_ENDPOINT,
-                body=dump_conversational_golden(temp_golden),
-            )
-            res = SimulateHttpResponse(
-                user_input=data["userResponse"], complete=data["completed"]
-            )
-            user_input = res.user_input
-        return user_input
+        prompt = self.template.simulate_user_turn(golden, turns, self.language)
+        simulated_input: SimulatedInput = self.generate_schema(
+            prompt, SimulatedInput
+        )
+        return simulated_input.simulated_input
 
     async def a_generate_next_user_input(
         self, golden: ConversationalGolden, turns: List[Turn]
     ):
-        if not self.run_remote:
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = await self.a_generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-        else:
-            api = Api()
-            temp_golden = ConversationalGolden(
-                scenario=golden.scenario,
-                expected_outcome=golden.expected_outcome,
-                user_description=golden.user_description,
-                context=golden.context,
-                turns=turns,
-            )
-            data, _ = await api.a_send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.SIMULATE_ENDPOINT,
-                body=dump_conversational_golden(temp_golden),
-            )
-            res = SimulateHttpResponse(
-                user_input=data["userResponse"], complete=data["completed"]
-            )
-            user_input = res.user_input
-        return user_input
+        prompt = self.template.simulate_user_turn(golden, turns, self.language)
+        simulated_input: SimulatedInput = await self.a_generate_schema(
+            prompt, SimulatedInput
+        )
+        return simulated_input.simulated_input
 
     ############################################
     ### Generate Structured Response ###########
