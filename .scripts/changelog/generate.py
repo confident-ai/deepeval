@@ -32,7 +32,8 @@ from pydantic import BaseModel, Field, field_validator
 OWNER = "confident-ai"
 REPO = "deepeval"
 
-START_MARKER = "<!-- DeepEval release notes start -->"
+START_MARKER = "{/* DeepEval release notes start */}"
+LEGACY_START_MARKER = "<!-- DeepEval release notes start -->"
 
 CATEGORY_ORDER = [
     "Backward Incompatible Change",
@@ -148,21 +149,25 @@ VERSION_RE = re.compile(r"^####\s+(v[0-9].+?)\s*$")
 # - Prefer the stable marker (lets humans edit the visible link/text)
 # - Fall back to parsing the link if the marker is missing
 BULLET_PR_RE = re.compile(r"\[#(\d+)\]\(")
-BULLET_PR_MARKER_RE = re.compile(r"<!--\s*pr:(\d+)\s*-->")
+BULLET_PR_MARKER_RE = re.compile(
+    r"(?:<!--\s*pr:(\d+)\s*-->|\{/\*\s*pr:(\d+)\s*\*/\})"
+)
 BULLET_TAIL_RE = re.compile(
-    r"\s*\(\[#\d+\]\([^)]+\)\)\s*<!--\s*pr:\d+\s*-->.*$"
+    r"\s*\(\[#\d+\]\([^)]+\)\)\s*(?:<!--\s*pr:\d+\s*-->|\{/\*\s*pr:\d+\s*\*/\}).*$"
 )
 
 # Optional ignore list to be placed right after START_MARKER to avoid confusing the parser:
 # add a list of PR numbers you would like to be excluded from the generated changelog.
-# <!-- changelog-ignore:
+# {/* changelog-ignore:
 # - 1234
 # - 5678
-# -->
+# */}
 IGNORE_BLOCK_TOP_RE = re.compile(
-    r"(?is)^\s*<!--\s*changelog-ignore:.*?-->\s*\n*"
+    r"(?is)^\s*(?:<!--\s*changelog-ignore:.*?-->|\{/\*\s*changelog-ignore:.*?\*/\})\s*\n*"
 )
-IGNORE_BLOCK_ANY_RE = re.compile(r"(?is)<!--\s*changelog-ignore:(.*?)-->")
+IGNORE_BLOCK_ANY_RE = re.compile(
+    r"(?is)(?:<!--\s*changelog-ignore:(.*?)-->|\{/\*\s*changelog-ignore:(.*?)\*/\})"
+)
 
 ###############
 # Git helpers #
@@ -761,8 +766,16 @@ def split_prefix_and_body(text: str) -> Tuple[str, str]:
         rest = s2[matched.end() :]
         return ignore_block.rstrip("\n") + "\n", rest
 
-    if START_MARKER in text:
-        before, _, after = text.partition(START_MARKER)
+    marker_in_text = next(
+        (
+            marker
+            for marker in (START_MARKER, LEGACY_START_MARKER)
+            if marker in text
+        ),
+        None,
+    )
+    if marker_in_text:
+        before, _, after = text.partition(marker_in_text)
         ignore_block, rest = _pull_top_ignore_block(after)
         prefix = before.rstrip() + "\n\n" + START_MARKER + "\n"
         if ignore_block:
@@ -792,21 +805,21 @@ def split_prefix_and_body(text: str) -> Tuple[str, str]:
 
 def parse_ignore_prs(text: str) -> set[int]:
     """
-    Parse PR numbers from one or more `<!-- changelog-ignore: ... -->` HTML comment blocks.
+    Parse PR numbers from one or more changelog-ignore comment blocks.
 
     Should be placed immediately after the `START_MARKER`, for example:
 
-        <!-- changelog-ignore:
+        {/* changelog-ignore:
         - 1234
         - 5678
-        -->
+        */}
 
     Lines may contain comments which can be used to document why a PR is being ignored
     Any integers found in the block are treated as PR numbers.
     """
     ignored: set[int] = set()
     for matched in IGNORE_BLOCK_ANY_RE.finditer(text):
-        block = matched.group(1)
+        block = next(group for group in matched.groups() if group is not None)
         for line in block.splitlines():
             line = line.strip()
             if not line or line.startswith("#"):
@@ -875,7 +888,7 @@ def parse_body(body: str) -> ChangelogIndex:
             )
             if not matched:
                 continue
-            pr = int(matched.group(1))
+            pr = int(next(group for group in matched.groups() if group))
             idx[month][category][version][pr] = line.rstrip()
 
     return idx
@@ -1143,7 +1156,7 @@ def build_release_entries(
                 author = f" ({user_display})"
         line = (
             f"- {title_out} ([#{pr_num}](https://github.com/{OWNER}/{REPO}/pull/{pr_num})) "
-            f"<!-- pr:{pr_num} -->{author}"
+            f"{{/* pr:{pr_num} */}}{author}"
         )
         idx[month][category][tag][pr_num] = line
         _status(f"[{tag}] PR #{pr_num}: done")

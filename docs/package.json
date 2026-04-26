@@ -8,8 +8,9 @@
     "start": "next start",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
     "contributors": "node scripts/generate-contributors.mjs",
+    "changelog-contributors": "node scripts/generate-changelog-contributors.mjs",
     "repo-contributors": "node scripts/generate-repo-contributors.mjs",
-    "prebuild": "npm run repo-contributors && npm run contributors",
+    "prebuild": "npm run repo-contributors && npm run contributors && npm run changelog-contributors",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
