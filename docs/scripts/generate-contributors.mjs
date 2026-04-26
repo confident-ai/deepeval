@@ -36,26 +36,33 @@
  *
  * Run: `npm run contributors`  (also runs pre-build).
  */
-import { execSync } from 'node:child_process';
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { execSync } from "node:child_process";
+import {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+  statSync,
+} from "node:fs";
+import { join, relative } from "node:path";
 
 // Sections that display a contributors list. Changelog and blog are
 // intentionally omitted — blog posts have their own author byline, and
 // changelog entries are attributed by release.
 const CONTENT_DIRS = [
-  'content/docs',
-  'content/guides',
-  'content/tutorials',
-  'content/integrations',
+  "content/docs",
+  "content/guides",
+  "content/tutorials",
+  "content/integrations",
 ];
-const OUTPUT = 'lib/generated/contributors.json';
-const CACHE = 'lib/generated/.contributors-cache.json';
-const REPO_CONTRIBUTORS = 'lib/generated/repo-contributors.json';
+const OUTPUT = "lib/generated/contributors.json";
+const CACHE = "lib/generated/.contributors-cache.json";
+const REPO_CONTRIBUTORS = "lib/generated/repo-contributors.json";
 
 // Pages that replace older docs should keep the original page attribution.
 const PAGE_CONTRIBUTOR_ALIASES = {
-  'content/docs/introduction.mdx': 'content/docs/getting-started.mdx',
+  "content/docs/introduction.mdx": "content/docs/getting-started.mdx",
 };
 
 // Some commit emails are not linked to a public GitHub identity, so the
@@ -63,33 +70,37 @@ const PAGE_CONTRIBUTOR_ALIASES = {
 // email->login fallback and hydrate the avatar/profile URL from the
 // repo-wide contributors manifest.
 const AUTHOR_LOGIN_ALIASES = {
-  'jeffreyip@confident-ai.com': 'penguine-ip',
+  "jeffreyip@confident-ai.com": "penguine-ip",
 };
 
 // Read repo coords from lib/shared.ts so there's one source of truth.
 // Parsing literals avoids having to compile the TS file at script time.
 function readGitConfig() {
-  const src = readFileSync('lib/shared.ts', 'utf8');
+  const src = readFileSync("lib/shared.ts", "utf8");
   const user = src.match(/user:\s*['"]([^'"]+)['"]/)?.[1];
   const repo = src.match(/repo:\s*['"]([^'"]+)['"]/)?.[1];
-  if (!user || !repo) throw new Error('could not parse gitConfig from lib/shared.ts');
+  if (!user || !repo)
+    throw new Error("could not parse gitConfig from lib/shared.ts");
   return { user, repo };
 }
 
 function tryExec(cmd) {
   try {
-    return execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execSync(cmd, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
   } catch {
     return null;
   }
 }
 
 function inGitRepo() {
-  return tryExec('git rev-parse --is-inside-work-tree') === 'true';
+  return tryExec("git rev-parse --is-inside-work-tree") === "true";
 }
 
 function inShallowRepo() {
-  return tryExec('git rev-parse --is-shallow-repository') === 'true';
+  return tryExec("git rev-parse --is-shallow-repository") === "true";
 }
 
 function walkMdx(dir, acc = []) {
@@ -98,7 +109,7 @@ function walkMdx(dir, acc = []) {
     const full = join(dir, entry);
     const s = statSync(full);
     if (s.isDirectory()) walkMdx(full, acc);
-    else if (entry.endsWith('.mdx') || entry.endsWith('.md')) acc.push(full);
+    else if (entry.endsWith(".mdx") || entry.endsWith(".md")) acc.push(full);
   }
   return acc;
 }
@@ -106,29 +117,38 @@ function walkMdx(dir, acc = []) {
 // `git log --follow` so renames don't reset attribution. %x09 = tab, so
 // we don't have to worry about author names containing our delimiter.
 function gitCommitsForFile(file) {
-  const out = tryExec(`git log --follow --format="%H%x09%ae%x09%an" -- "${file}"`);
+  const out = tryExec(
+    `git log --follow --format="%H%x09%ae%x09%an" -- "${file}"`
+  );
   if (!out) return [];
-  return out.split('\n').filter(Boolean).map((line) => {
-    const [sha, email, name] = line.split('\t');
-    return { sha, email: email.toLowerCase(), name };
-  });
+  return out
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      const [sha, email, name] = line.split("\t");
+      return { sha, email: email.toLowerCase(), name };
+    });
 }
 
 function loadCache() {
   if (!existsSync(CACHE)) return {};
-  try { return JSON.parse(readFileSync(CACHE, 'utf8')); } catch { return {}; }
+  try {
+    return JSON.parse(readFileSync(CACHE, "utf8"));
+  } catch {
+    return {};
+  }
 }
 
 function loadRepoContributors() {
   if (!existsSync(REPO_CONTRIBUTORS)) return {};
   try {
-    const list = JSON.parse(readFileSync(REPO_CONTRIBUTORS, 'utf8'));
+    const list = JSON.parse(readFileSync(REPO_CONTRIBUTORS, "utf8"));
     return Object.fromEntries(
       Array.isArray(list)
         ? list
             .filter((entry) => entry?.login && entry?.avatarUrl && entry?.url)
             .map((entry) => [entry.login, entry])
-        : [],
+        : []
     );
   } catch {
     return {};
@@ -138,8 +158,8 @@ function loadRepoContributors() {
 function loadExistingManifest() {
   if (!existsSync(OUTPUT)) return {};
   try {
-    const manifest = JSON.parse(readFileSync(OUTPUT, 'utf8'));
-    return manifest && typeof manifest === 'object' && !Array.isArray(manifest)
+    const manifest = JSON.parse(readFileSync(OUTPUT, "utf8"));
+    return manifest && typeof manifest === "object" && !Array.isArray(manifest)
       ? manifest
       : {};
   } catch {
@@ -148,8 +168,8 @@ function loadExistingManifest() {
 }
 
 function saveJson(path, obj) {
-  mkdirSync(join(path, '..'), { recursive: true });
-  writeFileSync(path, JSON.stringify(obj, null, 2) + '\n');
+  mkdirSync(join(path, ".."), { recursive: true });
+  writeFileSync(path, JSON.stringify(obj, null, 2) + "\n");
 }
 
 function keepExistingOrWriteEmpty(path) {
@@ -169,9 +189,15 @@ function findCommitMetaForEmail(perFile, email) {
 }
 
 async function resolveAuthor(sha, { user, repo, token }) {
-  const headers = { 'User-Agent': 'deepeval-docs-contributors', Accept: 'application/vnd.github+json' };
+  const headers = {
+    "User-Agent": "deepeval-docs-contributors",
+    Accept: "application/vnd.github+json",
+  };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`https://api.github.com/repos/${user}/${repo}/commits/${sha}`, { headers });
+  const res = await fetch(
+    `https://api.github.com/repos/${user}/${repo}/commits/${sha}`,
+    { headers }
+  );
   if (res.status === 403 || res.status === 429) throw new Error(`rate_limited`);
   if (!res.ok) return null; // 404 (commit not on this remote yet) → treat as unresolvable
   const body = await res.json();
@@ -189,18 +215,24 @@ async function resolveAuthor(sha, { user, repo, token }) {
 }
 
 function isBot(author) {
-  return author?.login?.endsWith('[bot]') || /\[bot\]$/.test(author?.name ?? '');
+  return (
+    author?.login?.endsWith("[bot]") || /\[bot\]$/.test(author?.name ?? "")
+  );
 }
 
 async function main() {
   if (!inGitRepo()) {
-    console.warn('[contributors] not inside a git repo; cannot regenerate contributors manifest.');
+    console.warn(
+      "[contributors] not inside a git repo; cannot regenerate contributors manifest."
+    );
     keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
 
   if (inShallowRepo()) {
-    console.warn('[contributors] shallow git checkout; keeping existing contributors manifest.');
+    console.warn(
+      "[contributors] shallow git checkout; keeping existing contributors manifest."
+    );
     keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
@@ -212,21 +244,27 @@ async function main() {
 
   const files = CONTENT_DIRS.flatMap((d) => walkMdx(d));
   if (files.length === 0) {
-    console.warn(`[contributors] no MDX files found under ${CONTENT_DIRS.join(', ')}.`);
+    console.warn(
+      `[contributors] no MDX files found under ${CONTENT_DIRS.join(", ")}.`
+    );
     keepExistingOrWriteEmpty(OUTPUT);
     return;
   }
-  const fileSet = new Set(files.map((file) => relative('.', file)));
+  const fileSet = new Set(files.map((file) => relative(".", file)));
 
   // First pass: gather per-file commit metadata (all local, no network).
   const perFile = new Map(); // relPath → Map<email, { name, commits, sha }>
   for (const file of files) {
-    const rel = relative('.', file);
+    const rel = relative(".", file);
     const commits = gitCommitsForFile(file);
     if (commits.length === 0) continue;
     const byEmail = new Map();
     for (const c of commits) {
-      const prev = byEmail.get(c.email) ?? { name: c.name, commits: 0, sha: c.sha };
+      const prev = byEmail.get(c.email) ?? {
+        name: c.name,
+        commits: 0,
+        sha: c.sha,
+      };
       prev.commits += 1;
       byEmail.set(c.email, prev);
     }
@@ -235,11 +273,21 @@ async function main() {
 
   // Second pass: resolve every unseen email to a GitHub user.
   const uniqueEmails = new Set();
-  for (const byEmail of perFile.values()) for (const e of byEmail.keys()) uniqueEmails.add(e);
+  for (const byEmail of perFile.values())
+    for (const e of byEmail.keys()) uniqueEmails.add(e);
 
-  let resolved = 0, aliased = 0, skipped = 0, bot = 0, rateLimited = false;
+  let resolved = 0,
+    aliased = 0,
+    skipped = 0,
+    bot = 0,
+    rateLimited = false;
   for (const email of uniqueEmails) {
-    if (cache[email]?.name && cache[email]?.login && cache[email]?.avatarUrl && cache[email]?.url) {
+    if (
+      cache[email]?.name &&
+      cache[email]?.login &&
+      cache[email]?.avatarUrl &&
+      cache[email]?.url
+    ) {
       continue;
     }
 
@@ -262,18 +310,28 @@ async function main() {
     let sha;
     for (const byEmail of perFile.values()) {
       const entry = byEmail.get(email);
-      if (entry) { sha = entry.sha; break; }
+      if (entry) {
+        sha = entry.sha;
+        break;
+      }
     }
     if (!sha) continue;
     try {
       const author = await resolveAuthor(sha, { user, repo, token });
-      if (author && isBot(author)) { cache[email] = null; bot += 1; continue; }
+      if (author && isBot(author)) {
+        cache[email] = null;
+        bot += 1;
+        continue;
+      }
       cache[email] = author;
-      if (author) resolved += 1; else skipped += 1;
+      if (author) resolved += 1;
+      else skipped += 1;
     } catch (e) {
-      if (e.message === 'rate_limited') {
+      if (e.message === "rate_limited") {
         rateLimited = true;
-        console.warn('[contributors] GitHub API rate-limited; stopping resolution. Set GITHUB_TOKEN to raise the ceiling.');
+        console.warn(
+          "[contributors] GitHub API rate-limited; stopping resolution. Set GITHUB_TOKEN to raise the ceiling."
+        );
         break;
       }
       console.warn(`[contributors] failed resolving ${email}: ${e.message}`);
@@ -306,7 +364,9 @@ async function main() {
     }
 
     // Sort real committers by commit count, then alphabetical.
-    list.sort((a, b) => b.commits - a.commits || a.login.localeCompare(b.login));
+    list.sort(
+      (a, b) => b.commits - a.commits || a.login.localeCompare(b.login)
+    );
     if (list.length > 0) manifest[rel] = list;
   }
 
@@ -318,7 +378,10 @@ async function main() {
   for (const [rel, existingList] of Object.entries(existingManifest)) {
     if (!fileSet.has(rel) || !Array.isArray(existingList)) continue;
     const generatedList = manifest[rel];
-    if (!Array.isArray(generatedList) || existingList.length > generatedList.length) {
+    if (
+      !Array.isArray(generatedList) ||
+      existingList.length > generatedList.length
+    ) {
       manifest[rel] = existingList;
       preserved += 1;
     }
@@ -332,10 +395,14 @@ async function main() {
   saveJson(OUTPUT, manifest);
   console.log(
     `[contributors] ${Object.keys(manifest).length} pages, ` +
-    `resolved ${resolved} new author(s), aliased ${aliased}, skipped ${skipped}, bots filtered ${bot}, ` +
-    `preserved ${preserved} existing page(s)` +
-    (rateLimited ? ' (rate-limited; re-run with GITHUB_TOKEN)' : '') + '.'
+      `resolved ${resolved} new author(s), aliased ${aliased}, skipped ${skipped}, bots filtered ${bot}, ` +
+      `preserved ${preserved} existing page(s)` +
+      (rateLimited ? " (rate-limited; re-run with GITHUB_TOKEN)" : "") +
+      "."
   );
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
