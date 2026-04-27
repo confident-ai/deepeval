@@ -1048,5 +1048,5 @@ def test_generate_cli_requires_method_specific_input(
     )
 
     assert result.exit_code != 0
-    assert "--documents" in result.output
+    assert "-documents" in _normalize_cli_output(result.output)
     assert fake_generate_cli.instances == []
