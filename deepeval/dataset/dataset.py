@@ -620,9 +620,8 @@ class EvaluationDataset:
             user_descriptions,
         ):
             if scenario:
-                self._multi_turn = True
                 parsed_turns = parse_turns(turns) if turns else []
-                self.goldens.append(
+                self.add_golden(
                     ConversationalGolden(
                         scenario=scenario,
                         turns=parsed_turns,
@@ -635,8 +634,7 @@ class EvaluationDataset:
                     )
                 )
             else:
-                self._multi_turn = False
-                self.goldens.append(
+                self.add_golden(
                     Golden(
                         input=input,
                         actual_output=actual_output,
@@ -692,8 +690,7 @@ class EvaluationDataset:
                 parsed_turns = parse_turns(turns) if turns else []
                 additional_metadata = json_obj.get(additional_metadata_key_name)
 
-                self._multi_turn = True
-                self.goldens.append(
+                self.add_golden(
                     ConversationalGolden(
                         scenario=scenario,
                         turns=parsed_turns,
@@ -718,8 +715,7 @@ class EvaluationDataset:
                 source_file = json_obj.get(source_file_key_name)
                 additional_metadata = json_obj.get(additional_metadata_key_name)
 
-                self._multi_turn = False
-                self.goldens.append(
+                self.add_golden(
                     Golden(
                         input=input,
                         actual_output=actual_output,
@@ -729,6 +725,136 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=additional_metadata,
+                        comments=comments,
+                        name=name,
+                        source_file=source_file,
+                    )
+                )
+
+    def add_goldens_from_jsonl_file(
+        self,
+        file_path: str,
+        input_key_name: str = "input",
+        actual_output_key_name: Optional[str] = "actual_output",
+        expected_output_key_name: Optional[str] = "expected_output",
+        context_key_name: Optional[str] = "context",
+        context_col_delimiter: str = "|",
+        retrieval_context_key_name: Optional[str] = "retrieval_context",
+        retrieval_context_col_delimiter: str = "|",
+        tools_called_key_name: Optional[str] = "tools_called",
+        expected_tools_key_name: Optional[str] = "expected_tools",
+        comments_key_name: str = "comments",
+        name_key_name: str = "name",
+        source_file_key_name: Optional[str] = "source_file",
+        additional_metadata_key_name: Optional[str] = "additional_metadata",
+        custom_column_key_values_key_name: Optional[
+            str
+        ] = "custom_column_key_values",
+        scenario_key_name: Optional[str] = "scenario",
+        turns_key_name: Optional[str] = "turns",
+        expected_outcome_key_name: Optional[str] = "expected_outcome",
+        user_description_key_name: Optional[str] = "user_description",
+        encoding_type: str = "utf-8",
+    ):
+        def parse_context(value, delimiter: str):
+            if value is None:
+                return None
+            if isinstance(value, list):
+                return value
+            if isinstance(value, str):
+                return value.split(delimiter) if value else []
+            raise TypeError(
+                "Expected context fields in JSONL goldens to be a list, string, or null."
+            )
+
+        def parse_tools(value):
+            if not value:
+                return None
+            if isinstance(value, str):
+                value = trimAndLoadJson(value)
+            return [ToolCall(**tool) for tool in value]
+
+        try:
+            with open(file_path, "r", encoding=encoding_type) as file:
+                json_lines = [
+                    (line_number, line.strip())
+                    for line_number, line in enumerate(file, start=1)
+                    if line.strip()
+                ]
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file {file_path} was not found.")
+
+        for line_number, line in json_lines:
+            try:
+                json_obj = json.loads(line)
+            except json.JSONDecodeError:
+                raise ValueError(
+                    f"The file {file_path} contains invalid JSON on line {line_number}."
+                )
+
+            if scenario_key_name in json_obj and json_obj[scenario_key_name]:
+                scenario = json_obj.get(scenario_key_name)
+                turns = json_obj.get(turns_key_name, [])
+                expected_outcome = json_obj.get(expected_outcome_key_name)
+                user_description = json_obj.get(user_description_key_name)
+                context = parse_context(
+                    json_obj.get(context_key_name), context_col_delimiter
+                )
+                comments = json_obj.get(comments_key_name)
+                name = json_obj.get(name_key_name)
+                parsed_turns = parse_turns(turns) if turns else []
+                additional_metadata = json_obj.get(additional_metadata_key_name)
+                custom_column_key_values = json_obj.get(
+                    custom_column_key_values_key_name
+                )
+
+                self.add_golden(
+                    ConversationalGolden(
+                        scenario=scenario,
+                        turns=parsed_turns,
+                        expected_outcome=expected_outcome,
+                        user_description=user_description,
+                        context=context,
+                        comments=comments,
+                        name=name,
+                        additional_metadata=additional_metadata,
+                        custom_column_key_values=custom_column_key_values,
+                    )
+                )
+            else:
+                input = json_obj.get(input_key_name)
+                actual_output = json_obj.get(actual_output_key_name)
+                expected_output = json_obj.get(expected_output_key_name)
+                context = parse_context(
+                    json_obj.get(context_key_name), context_col_delimiter
+                )
+                retrieval_context = parse_context(
+                    json_obj.get(retrieval_context_key_name),
+                    retrieval_context_col_delimiter,
+                )
+                tools_called = parse_tools(json_obj.get(tools_called_key_name))
+                expected_tools = parse_tools(
+                    json_obj.get(expected_tools_key_name)
+                )
+                comments = json_obj.get(comments_key_name)
+                name = json_obj.get(name_key_name)
+                source_file = json_obj.get(source_file_key_name)
+                additional_metadata = json_obj.get(additional_metadata_key_name)
+                custom_column_key_values = json_obj.get(
+                    custom_column_key_values_key_name
+                )
+
+                self.add_golden(
+                    Golden(
+                        input=input,
+                        actual_output=actual_output,
+                        expected_output=expected_output,
+                        context=context,
+                        retrieval_context=retrieval_context,
+                        tools_called=tools_called,
+                        expected_tools=expected_tools,
+                        additional_metadata=additional_metadata,
+                        custom_column_key_values=custom_column_key_values,
                         comments=comments,
                         name=name,
                         source_file=source_file,

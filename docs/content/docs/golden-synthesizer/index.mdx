@@ -180,6 +180,118 @@ Here's an example of what the resulting DataFrame might look like for a single-t
 
 And that's it! You now have access to a list of synthetic goldens generated using information from your knowledge base.
 
+## Generate Goldens From The CLI
+
+You can also generate synthetic goldens directly from the command line with `deepeval generate`. The two required selectors are:
+
+- `--method`: choose where the goldens come from: `docs`, `contexts`, `scratch`, or `goldens`.
+- `--variation`: choose the golden type: `single-turn` or `multi-turn`.
+
+The shortest document-based example looks like this:
+
+```bash
+deepeval generate \
+  --method docs \
+  --variation single-turn \
+  --documents example.txt \
+  --output-dir ./synthetic_data
+```
+
+### CLI Examples
+
+Generate goldens from documents:
+
+```bash
+deepeval generate \
+  --method docs \
+  --variation single-turn \
+  --documents example.txt \
+  --documents another.pdf \
+  --max-goldens-per-context 2
+```
+
+Generate goldens from prepared contexts:
+
+```bash
+deepeval generate \
+  --method contexts \
+  --variation single-turn \
+  --contexts-file contexts.json \
+  --max-goldens-per-context 2
+```
+
+The `contexts.json` file should contain a list of context lists:
+
+```json
+[
+  ["context chunk 1", "context chunk 2"],
+  ["another context chunk"]
+]
+```
+
+Generate goldens from scratch:
+
+```bash
+deepeval generate \
+  --method scratch \
+  --variation single-turn \
+  --num-goldens 25 \
+  --scenario "Non-technical users querying a database" \
+  --task "Answer text-to-SQL questions" \
+  --input-format "Questions in English" \
+  --expected-output-format "SQL query"
+```
+
+For multi-turn scratch generation, use the conversational styling options:
+
+```bash
+deepeval generate \
+  --method scratch \
+  --variation multi-turn \
+  --num-goldens 25 \
+  --scenario-context "Non-technical users querying a database" \
+  --conversational-task "Help users query data" \
+  --participant-roles "User and assistant"
+```
+
+Generate more goldens from an existing golden file:
+
+```bash
+deepeval generate \
+  --method goldens \
+  --variation single-turn \
+  --goldens-file existing_goldens.json \
+  --max-goldens-per-golden 2
+```
+
+### CLI Options Reference
+
+Common options:
+
+| Option | Description |
+| --- | --- |
+| `--method docs\|contexts\|scratch\|goldens` | Selects the generation method. |
+| `--variation single-turn\|multi-turn` | Selects whether to generate `Golden`s or `ConversationalGolden`s. |
+| `--output-dir` | Directory for the generated file. Defaults to `./synthetic_data`. |
+| `--file-type json\|csv\|jsonl` | Output file type. Defaults to `json`. |
+| `--file-name` | Optional output filename without extension. |
+| `--model` | Model to use for generation. |
+| `--async-mode / --sync-mode` | Enables or disables concurrent generation. |
+| `--max-concurrent` | Maximum number of concurrent generation tasks. |
+| `--include-expected / --no-include-expected` | Generates or skips expected outputs/outcomes. |
+| `--cost-tracking` | Prints generation cost when supported by the model. |
+
+Method-specific options:
+
+| Method | Required Options | Useful Optional Options |
+| --- | --- | --- |
+| `docs` | `--documents` | `--max-goldens-per-context`, `--max-contexts-per-document`, `--min-contexts-per-document`, `--chunk-size`, `--chunk-overlap`, `--context-quality-threshold`, `--context-similarity-threshold`, `--max-retries` |
+| `contexts` | `--contexts-file` | `--max-goldens-per-context` |
+| `scratch` | `--num-goldens` plus styling options | Single-turn: `--scenario`, `--task`, `--input-format`, `--expected-output-format`. Multi-turn: `--scenario-context`, `--conversational-task`, `--participant-roles`, `--scenario-format`, `--expected-outcome-format` |
+| `goldens` | `--goldens-file` | `--max-goldens-per-golden` |
+
+For deeper configuration details, see the method-specific pages for [generating from docs](/docs/synthesizer-generate-from-docs), [contexts](/docs/synthesizer-generate-from-contexts), [scratch](/docs/synthesizer-generate-from-scratch), and [goldens](/docs/synthesizer-generate-from-goldens).
+
 ## Save Your Synthetic Dataset
 
 <Tabs items={["Confident AI", "Locally"]}>

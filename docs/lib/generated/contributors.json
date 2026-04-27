@@ -3683,6 +3683,15 @@
       "commits": 3
     }
   ],
+  "content/integrations/index.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 2
+    }
+  ],
   "content/integrations/models/amazon-bedrock.mdx": [
     {
       "login": "A-Vamshi",

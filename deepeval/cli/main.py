@@ -43,7 +43,8 @@ from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
-from deepeval.cli.test import app as test_app
+from deepeval.cli.generate.command import generate_command
+from deepeval.cli.test.command import app as test_app
 from deepeval.cli.server import start_server
 from deepeval.cli.utils import (
     coerce_blank_to_none,
@@ -63,6 +64,7 @@ from deepeval.confident.api import (
 
 app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
+app.command(name="generate")(generate_command)
 
 
 class Regions(Enum):

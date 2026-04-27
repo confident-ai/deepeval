@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Mapping, Tuple
 from typer.testing import CliRunner
 from dataclasses import dataclass
 
+import deepeval.cli.generate.command as generate_cli
 from deepeval.cli.main import app as cli_app
 from deepeval.cli.utils import USE_EMBED_KEYS, USE_LLM_KEYS
 from deepeval.config.settings import Settings, reset_settings  # noqa: E402
@@ -797,3 +798,255 @@ def test_settings_set_writes_to_dotenv_even_if_value_already_in_json_store(
     # Assert the setting was persisted to dotenv
     env = _read_dotenv(env_path)
     assert env.get("TEMPERATURE") == "0.5"
+
+
+@dataclass
+class _FakeContextConstructionConfig:
+    max_contexts_per_document: int = 3
+    min_contexts_per_document: int = 1
+    chunk_size: int = 1024
+    chunk_overlap: int = 0
+    context_quality_threshold: float = 0.5
+    context_similarity_threshold: float = 0.0
+    max_retries: int = 3
+
+
+class _FakeSynthesizer:
+    instances = []
+
+    def __init__(self, **kwargs):
+        self.init_kwargs = kwargs
+        self.calls = []
+        _FakeSynthesizer.instances.append(self)
+
+    def _record(self, name: str, **kwargs):
+        self.calls.append((name, kwargs))
+        return []
+
+    def generate_goldens_from_docs(self, **kwargs):
+        return self._record("generate_goldens_from_docs", **kwargs)
+
+    def generate_conversational_goldens_from_docs(self, **kwargs):
+        return self._record(
+            "generate_conversational_goldens_from_docs", **kwargs
+        )
+
+    def generate_goldens_from_contexts(self, **kwargs):
+        return self._record("generate_goldens_from_contexts", **kwargs)
+
+    def generate_conversational_goldens_from_contexts(self, **kwargs):
+        return self._record(
+            "generate_conversational_goldens_from_contexts", **kwargs
+        )
+
+    def generate_goldens_from_scratch(self, **kwargs):
+        return self._record("generate_goldens_from_scratch", **kwargs)
+
+    def generate_conversational_goldens_from_scratch(self, **kwargs):
+        return self._record(
+            "generate_conversational_goldens_from_scratch", **kwargs
+        )
+
+    def generate_goldens_from_goldens(self, **kwargs):
+        return self._record("generate_goldens_from_goldens", **kwargs)
+
+    def generate_conversational_goldens_from_goldens(self, **kwargs):
+        return self._record(
+            "generate_conversational_goldens_from_goldens", **kwargs
+        )
+
+    def save_as(self, **kwargs):
+        self.calls.append(("save_as", kwargs))
+        return str(
+            Path(kwargs["directory"]) / f"generated.{kwargs['file_type']}"
+        )
+
+
+@pytest.fixture()
+def fake_generate_cli(monkeypatch):
+    _FakeSynthesizer.instances = []
+    monkeypatch.setattr(generate_cli, "Synthesizer", _FakeSynthesizer)
+    monkeypatch.setattr(
+        generate_cli,
+        "ContextConstructionConfig",
+        _FakeContextConstructionConfig,
+    )
+    return _FakeSynthesizer
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected_call"),
+    [
+        (
+            [
+                "--method",
+                "docs",
+                "--variation",
+                "single-turn",
+                "--documents",
+                "example.txt",
+            ],
+            "generate_goldens_from_docs",
+        ),
+        (
+            [
+                "--method",
+                "docs",
+                "--variation",
+                "multi-turn",
+                "--documents",
+                "example.txt",
+            ],
+            "generate_conversational_goldens_from_docs",
+        ),
+        (
+            [
+                "--method",
+                "contexts",
+                "--variation",
+                "single-turn",
+                "--contexts-file",
+                "{contexts_file}",
+            ],
+            "generate_goldens_from_contexts",
+        ),
+        (
+            [
+                "--method",
+                "contexts",
+                "--variation",
+                "multi-turn",
+                "--contexts-file",
+                "{contexts_file}",
+            ],
+            "generate_conversational_goldens_from_contexts",
+        ),
+        (
+            [
+                "--method",
+                "scratch",
+                "--variation",
+                "single-turn",
+                "--num-goldens",
+                "3",
+                "--scenario",
+                "Users querying data",
+                "--task",
+                "Answer data questions",
+                "--input-format",
+                "Questions in English",
+            ],
+            "generate_goldens_from_scratch",
+        ),
+        (
+            [
+                "--method",
+                "scratch",
+                "--variation",
+                "multi-turn",
+                "--num-goldens",
+                "3",
+                "--scenario-context",
+                "Users querying data",
+                "--conversational-task",
+                "Answer data questions",
+                "--participant-roles",
+                "User and assistant",
+            ],
+            "generate_conversational_goldens_from_scratch",
+        ),
+        (
+            [
+                "--method",
+                "goldens",
+                "--variation",
+                "single-turn",
+                "--goldens-file",
+                "{single_turn_goldens_file}",
+            ],
+            "generate_goldens_from_goldens",
+        ),
+        (
+            [
+                "--method",
+                "goldens",
+                "--variation",
+                "multi-turn",
+                "--goldens-file",
+                "{multi_turn_goldens_file}",
+            ],
+            "generate_conversational_goldens_from_goldens",
+        ),
+    ],
+)
+def test_generate_cli_dispatches_by_method_and_variation(
+    runner: CliRunner,
+    tmp_path: Path,
+    fake_generate_cli,
+    argv: List[str],
+    expected_call: str,
+) -> None:
+    contexts_file = tmp_path / "contexts.json"
+    contexts_file.write_text(
+        json.dumps([["context chunk 1", "context chunk 2"]]),
+        encoding="utf-8",
+    )
+    single_turn_goldens_file = tmp_path / "single_goldens.json"
+    single_turn_goldens_file.write_text(
+        json.dumps([{"input": "What is DeepEval?", "context": ["docs"]}]),
+        encoding="utf-8",
+    )
+    multi_turn_goldens_file = tmp_path / "multi_goldens.json"
+    multi_turn_goldens_file.write_text(
+        json.dumps([{"scenario": "A user asks for help", "context": ["docs"]}]),
+        encoding="utf-8",
+    )
+
+    formatted_argv = [
+        arg.format(
+            contexts_file=contexts_file,
+            single_turn_goldens_file=single_turn_goldens_file,
+            multi_turn_goldens_file=multi_turn_goldens_file,
+        )
+        for arg in argv
+    ]
+
+    output_dir = tmp_path / "generated"
+    result = runner.invoke(
+        cli_app,
+        [
+            "generate",
+            *formatted_argv,
+            "--output-dir",
+            str(output_dir),
+            "--file-name",
+            "generated",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0, result.output
+    synth = fake_generate_cli.instances[-1]
+    assert synth.calls[0][0] == expected_call
+    assert synth.calls[-1] == (
+        "save_as",
+        {
+            "file_type": "json",
+            "directory": str(output_dir),
+            "file_name": "generated",
+            "quiet": True,
+        },
+    )
+
+
+def test_generate_cli_requires_method_specific_input(
+    runner: CliRunner, fake_generate_cli
+) -> None:
+    result = runner.invoke(
+        cli_app,
+        ["generate", "--method", "docs", "--variation", "single-turn"],
+    )
+
+    assert result.exit_code != 0
+    assert "--documents" in result.output
+    assert fake_generate_cli.instances == []
