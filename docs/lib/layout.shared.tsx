@@ -45,7 +45,7 @@ export const navLinks = [
   },
   {
     text: "Integrations",
-    url: "/integrations/models/openai",
+    url: "/integrations",
     activeBase: "/integrations",
     icon: <Blocks />,
   },
