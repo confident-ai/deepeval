@@ -53,7 +53,7 @@ Only define the arguments your controller needs. `deepeval` will pass supported 
 
 - [Optional] `turns`: the current list of `Turn`s in the simulation.
 - [Optional] `golden`: the `ConversationalGolden` being simulated.
-- [Optional] `index`: the index of the golden being simulated.
+- [Optional] `index`: the index of the turn being simulated.
 - [Optional] `thread_id`: the unique thread ID for the simulated conversation.
 - [Optional] `simulated_user_turns`: the number of new simulated user turns generated so far.
 - [Optional] `max_user_simulations`: the maximum number of user-assistant message cycles allowed.
@@ -65,11 +65,14 @@ Only define the arguments your controller needs. `deepeval` will pass supported 
 If your controller returns anything other than `proceed()` or `end()`, `deepeval` treats it the same as `proceed()`. This is useful when you only want to explicitly handle terminal states:
 
 ```python
-from deepeval.simulator.controller import end
+import random
+from deepeval.simulator.controller import end, proceed
 
-def controller(last_assistant_turn):
-    if last_assistant_turn and "refund processed" in last_assistant_turn.content.lower():
-        return end(reason="Refund flow completed")
+def controller():
+    if random.random() > 0.5:
+        return end(reason="Random early stop")
+
+    return proceed()
 ```
 
 Your controller can return:
