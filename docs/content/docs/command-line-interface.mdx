@@ -9,6 +9,8 @@ sidebar_label: CLI Settings
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
 
 - Logging in/out and viewing test runs
+- Running evaluations from test files
+- Generating synthetic goldens from docs, contexts, scratch, or existing goldens
 - Enabling/disabling debug
 - Selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
@@ -40,6 +42,116 @@ deepeval also uses a legacy JSON keystore at `.deepeval/.deepeval` for **non-sec
 :::tip
 To disable dotenv autoloading (useful in pytest/CI to avoid loading local `.env*` files on import), set `DEEPEVAL_DISABLE_DOTENV=1`.
 :::
+
+## Core Commands
+
+### `generate`
+
+Use `deepeval generate` to generate synthetic goldens from the terminal with the Golden Synthesizer. The command requires two selectors:
+
+- `--method`: where goldens come from: `docs`, `contexts`, `scratch`, or `goldens`
+- `--variation`: what to generate: `single-turn` or `multi-turn`
+
+Generate single-turn goldens from documents:
+
+```bash
+deepeval generate \
+  --method docs \
+  --variation single-turn \
+  --documents example.txt \
+  --documents another.pdf \
+  --output-dir ./synthetic_data
+```
+
+Generate multi-turn goldens from scratch:
+
+```bash
+deepeval generate \
+  --method scratch \
+  --variation multi-turn \
+  --num-goldens 25 \
+  --scenario-context "Users asking support questions" \
+  --conversational-task "Help users solve product issues" \
+  --participant-roles "User and assistant"
+```
+
+Common options:
+
+| Option                                       | Description                                                                  |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| `--method docs\|contexts\|scratch\|goldens`  | Select the generation method.                                                |
+| `--variation single-turn\|multi-turn`        | Select whether to generate `Golden`s or `ConversationalGolden`s.             |
+| `--output-dir`                               | Directory where generated goldens are saved. Defaults to `./synthetic_data`. |
+| `--file-type json\|csv\|jsonl`               | Output file type. Defaults to `json`.                                        |
+| `--file-name`                                | Optional output filename without extension.                                  |
+| `--model`                                    | Model to use for generation.                                                 |
+| `--async-mode / --sync-mode`                 | Enable or disable concurrent generation.                                     |
+| `--max-concurrent`                           | Maximum number of concurrent generation tasks.                               |
+| `--include-expected / --no-include-expected` | Generate or skip expected outputs/outcomes.                                  |
+| `--cost-tracking`                            | Print generation cost when supported by the model.                           |
+
+Method-specific options:
+
+| Method     | Required Options                     | Useful Optional Options                                                                                                                                                                                               |
+| ---------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`     | `--documents`                        | `--max-goldens-per-context`, `--max-contexts-per-document`, `--min-contexts-per-document`, `--chunk-size`, `--chunk-overlap`, `--context-quality-threshold`, `--context-similarity-threshold`, `--max-retries`        |
+| `contexts` | `--contexts-file`                    | `--max-goldens-per-context`                                                                                                                                                                                           |
+| `scratch`  | `--num-goldens` plus styling options | Single-turn: `--scenario`, `--task`, `--input-format`, `--expected-output-format`. Multi-turn: `--scenario-context`, `--conversational-task`, `--participant-roles`, `--scenario-format`, `--expected-outcome-format` |
+| `goldens`  | `--goldens-file`                     | `--max-goldens-per-golden`                                                                                                                                                                                            |
+
+For a deeper walkthrough, see the [Golden Synthesizer](/docs/golden-synthesizer#generate-goldens-from-the-cli) docs.
+
+### `test`
+
+Use `deepeval test run` to run evaluation test files through `pytest` with the `deepeval` pytest plugin enabled.
+
+```bash
+deepeval test --help
+deepeval test run --help
+```
+
+Run a single test file:
+
+```bash
+deepeval test run test_chatbot.py
+```
+
+Run a test directory:
+
+```bash
+deepeval test run tests/evals
+```
+
+Run a specific test:
+
+```bash
+deepeval test run test_chatbot.py::test_answer_relevancy
+```
+
+Useful options:
+
+| Option                           | Description                                                    |
+| -------------------------------- | -------------------------------------------------------------- |
+| `--verbose`, `-v`                | Show verbose pytest output and turn on deepeval verbose mode.  |
+| `--exit-on-first-failure`, `-x`  | Stop after the first failed test.                              |
+| `--show-warnings`, `-w`          | Show pytest warnings instead of disabling them.                |
+| `--identifier`, `-id`            | Attach an identifier to the test run.                          |
+| `--num-processes`, `-n`          | Run tests with multiple pytest-xdist processes.                |
+| `--repeat`, `-r`                 | Rerun each test case the specified number of times.            |
+| `--use-cache`, `-c`              | Use cached evaluation results when `--repeat` is not set.      |
+| `--ignore-errors`, `-i`          | Continue when deepeval evaluation errors occur.                |
+| `--skip-on-missing-params`, `-s` | Skip test cases with missing metric parameters.                |
+| `--display`, `-d`                | Control final result display. Defaults to showing all results. |
+| `--mark`, `-m`                   | Run tests matching a pytest marker expression.                 |
+
+You can pass additional pytest flags after the `deepeval` options. For example:
+
+```bash
+deepeval test run tests/evals \
+  --mark "not slow" \
+  --exit-on-first-failure \
+  -- --tb=short
+```
 
 ## Confident AI Commands
 
@@ -74,6 +186,7 @@ For example, **&#36;3 / MTok = 0.000003**.
 :::
 
 To set the model and token cost for Anthropic you would run:
+
 ```bash
 deepeval set-anthropic -m claude-3-7-sonnet-latest -i 0.000003 -o 0.000015 --save=dotenv
 Saved environment variables to .env.local (ensure it's git-ignored).
@@ -81,9 +194,10 @@ Saved environment variables to .env.local (ensure it's git-ignored).
 ```
 
 To view your settings for Anthropic you would run:
+
 ```bash
 deepeval settings -l anthropic
-                                                                                Settings                                                                        
+                                                                                Settings
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name                            ┃ Value                    ┃ Description                                                                                      ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -93,26 +207,6 @@ deepeval settings -l anthropic
 │ ANTHROPIC_MODEL_NAME            │ claude-3-7-sonnet-latest │ Anthropic model name (e.g. 'claude-3-...').                                                      │
 │ USE_ANTHROPIC_MODEL             │ True                     │ Select Anthropic as the active LLM provider (USE_* flags are mutually exclusive in CLI helpers). │
 └─────────────────────────────────┴──────────────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-## Core Commands
-
-### `login` & `logout`
-
-- `deepeval login [--save=dotenv[:path]]` (interactive prompt)
-- `deepeval logout [--save=dotenv[:path]]`: Clears keys from the JSON keystore and removes them from the chosen dotenv file.
-
-### `view`
-
-- `deepeval view`: Opens the latest test run in your browser. If needed, uploads artifacts first.
-
-### `test`
-
-The CLI includes a test sub-app for running E2E examples and fixtures. Usage varies, so consult the built-in help:
-
-```bash
-deepeval test --help
-deepeval test <command> --help
 ```
 
 ## Debug Controls
@@ -140,9 +234,10 @@ To see all available debug flags, run `deepeval set-debug --help`.
 
 :::tip
 To filter (substring match) settings by name displaying each setting's current value and description run:
+
 ```bash
 deepeval settings -l log-level
-                                                            Settings                                                     
+                                                            Settings
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Name                            ┃ Value ┃ Description                                                                  ┃
 ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
@@ -151,6 +246,7 @@ deepeval settings -l log-level
 │ LOG_LEVEL                       │ 40    │ Global logging level (e.g. DEBUG/INFO/WARNING/ERROR/CRITICAL or numeric).    │
 └─────────────────────────────────┴───────┴──────────────────────────────────────────────────────────────────────────────┘
 ```
+
 :::
 
 To restore defaults and clean persisted values:
@@ -203,7 +299,6 @@ If you want to see what environment variables `deepeval` manages under the hood,
 | Azure OpenAI          | `set-azure-openai-embedding` | `unset-azure-openai-embedding` |
 | Local (HTTP)          | `set-local-embeddings`       | `unset-local-embeddings`       |
 | Ollama                | `set-ollama-embeddings`      | `unset-ollama-embeddings`      |
-
 
 :::tip
 For provider-specific flags, run `deepeval set-<provider> --help`.
