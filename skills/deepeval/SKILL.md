@@ -1,21 +1,23 @@
 ---
 name: deepeval
 description: >
-  DeepEval evaluation workflow for AI applications. TRIGGER when the user wants
-  to add evals, evaluate an LLM app, evaluate a RAG pipeline, test an agent,
-  generate datasets or goldens, use deepeval generate, use deepeval test run,
-  add tracing, use @observe, send results to Confident AI, monitor production,
-  run online evals, inspect traces, or iterate on prompts/tools/retrieval from
-  eval failures. Covers Python SDK, pytest eval suites, CLI generation, tracing,
-  Confident AI reporting, and agent-driven improvement loops. DO NOT TRIGGER
-  for unrelated generic pytest, non-AI test setup, or non-DeepEval observability
-  work unless the user asks to compare or migrate to DeepEval.
+  DeepEval evaluation workflow for AI agents and LLM applications. TRIGGER when
+  the user wants to evaluate or improve an AI agent, tool-using workflow,
+  multi-turn chatbot, RAG pipeline, or LLM app; add evals; generate datasets or
+  goldens; use deepeval generate; use deepeval test run; add tracing or
+  @observe; send results to Confident AI; monitor production; run online evals;
+  inspect traces; or iterate on prompts, tools, retrieval, or agent behavior
+  from eval failures. AI agents are the primary use case. Covers Python SDK,
+  pytest eval suites, CLI generation, tracing, Confident AI reporting, and
+  agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest,
+  non-AI test setup, or non-DeepEval observability work unless the user asks to
+  compare or migrate to DeepEval.
 license: Apache-2.0
 metadata:
   author: Confident AI
   version: "1.0.0"
   category: llm-evaluation
-  tags: "deepeval, evals, llm, rag, agents, tracing, confident-ai"
+  tags: "deepeval, evals, agents, llm, chatbot, rag, tracing, confident-ai"
 compatibility: Requires Python 3.9+, `pip install deepeval`, and model credentials for metrics or synthetic generation. Confident AI reporting requires `deepeval login`.
 ---
 
