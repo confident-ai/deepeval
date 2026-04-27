@@ -4,6 +4,7 @@ import {
   Compass,
   GraduationCap,
   Blocks,
+  Building2,
   History,
   Newspaper,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { appName, gitConfig } from "./shared";
 //   Guides       → Compass       (directional walkthroughs)
 //   Tutorials    → GraduationCap (learning path)
 //   Integrations → Blocks        (modular pluggable pieces)
+//   Enterprise   → Building2     (organization / deployment)
 //   Changelog    → History       (time-ordered records)
 //   Blog         → Newspaper     (articles / posts)
 export const navLinks = [
@@ -48,6 +50,12 @@ export const navLinks = [
     url: "/integrations",
     activeBase: "/integrations",
     icon: <Blocks />,
+  },
+  {
+    text: "Enterprise",
+    url: "/enterprise",
+    activeBase: "/enterprise",
+    icon: <Building2 />,
   },
   {
     text: "Changelog",

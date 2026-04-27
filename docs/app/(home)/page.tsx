@@ -19,17 +19,15 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <section className="mx-auto flex w-full max-w-[var(--site-shell-max-width)] flex-1 flex-col">
-      <HomeLayout
-        leftContent={<HomeHeroSection />}
-        rightContent={
-          <div className="docs-page-surface">
-            <DocsBody>
-              <ReadMe components={getMDXComponents()} />
-            </DocsBody>
-          </div>
-        }
-      />
-    </section>
+    <HomeLayout
+      leftContent={<HomeHeroSection />}
+      rightContent={
+        <div className="docs-page-surface">
+          <DocsBody>
+            <ReadMe components={getMDXComponents()} />
+          </DocsBody>
+        </div>
+      }
+    />
   );
 }

@@ -19,6 +19,9 @@ import TechStackCards from "@site/src/components/TechStackCards";
 import { FAQs } from "@site/src/components/FAQ";
 import BlogPostMeta from "@site/src/components/BlogPostMeta";
 import ChangelogContributors from "@site/src/components/ChangelogContributors";
+import SectionLabel from "@site/src/components/SectionLabel";
+import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
+import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
 
 function DefaultLLMModel() {
@@ -48,6 +51,9 @@ export function getMDXComponents(components?: MDXComponents) {
     FAQs,
     BlogPostMeta,
     ChangelogContributors,
+    SectionLabel,
+    EnterpriseComparisonTable,
+    EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
     ...components,
