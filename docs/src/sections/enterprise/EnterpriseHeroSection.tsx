@@ -6,7 +6,6 @@ import enterpriseStyles from "./EnterpriseHeroSection.module.scss";
 export type EnterpriseLogoItem = {
   name: string;
   slug: string;
-  src?: string;
 };
 
 type EnterpriseHeroSectionProps = {
@@ -18,22 +17,19 @@ const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
   {
     name: "Syngenta Group",
     slug: "syngenta-group",
-    src: "/icons/brand-icons/syngenta-group.svg",
   },
   { name: "Panasonic", slug: "panasonic" },
   { name: "Finom", slug: "finom" },
-  { name: "Humach", slug: "humach", src: "/icons/brand-icons/humach.svg" },
+  { name: "Humach", slug: "humach" },
   { name: "Toshiba", slug: "toshiba" },
   { name: "BCG", slug: "bcg" },
   {
     name: "Epic Games",
     slug: "epic-games",
-    src: "/icons/brand-icons/epic-games.svg",
   },
   {
     name: "Phreesia",
     slug: "phreesia",
-    src: "/icons/brand-icons/phreesia.svg",
   },
 ];
 
@@ -78,10 +74,7 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
           {logoItems.map((brand) => (
             <div key={brand.slug} className={styles.cell}>
               <img
-                src={
-                  brand.src ??
-                  `https://www.confident-ai.com/icons/brand-icons/${brand.slug}.svg`
-                }
+                src={`/icons/brand-icons/${brand.slug}.svg`}
                 alt={brand.name}
                 className={styles.logo}
               />
