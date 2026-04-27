@@ -65,7 +65,7 @@ def load_contexts_file(contexts_file: Path) -> List[List[str]]:
             isinstance(chunk, str) for chunk in context
         ):
             raise typer.BadParameter(
-                "Contexts file must be shaped like [[\"chunk 1\", \"chunk 2\"], ...].",
+                'Contexts file must be shaped like [["chunk 1", "chunk 2"], ...].',
                 param_hint="--contexts-file",
             )
 

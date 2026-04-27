@@ -19,7 +19,9 @@ dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
 
 
 async def TARGET_APP_ENTRYPOINT(user_input, turns, thread_id):
-    raise NotImplementedError("Replace TARGET_APP_ENTRYPOINT with your chatbot.")
+    raise NotImplementedError(
+        "Replace TARGET_APP_ENTRYPOINT with your chatbot."
+    )
 
 
 async def chatbot_callback(input: str, turns=None, thread_id=None):

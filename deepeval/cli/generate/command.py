@@ -191,9 +191,7 @@ def generate_command(
     goldens = None
 
     if method == GenerationMethod.DOCS:
-        document_paths = require_method_option(
-            documents, "--documents", method
-        )
+        document_paths = require_method_option(documents, "--documents", method)
     elif method == GenerationMethod.CONTEXTS:
         contexts_path = require_method_option(
             contexts_file, "--contexts-file", method

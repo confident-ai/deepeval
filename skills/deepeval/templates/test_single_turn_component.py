@@ -17,7 +17,9 @@ dataset.add_goldens_from_json_file(file_path=DATASET_PATH)
 
 
 def TARGET_APP_ENTRYPOINT(user_input):
-    raise NotImplementedError("Replace TARGET_APP_ENTRYPOINT with your component.")
+    raise NotImplementedError(
+        "Replace TARGET_APP_ENTRYPOINT with your component."
+    )
 
 
 def APP_RESPONSE_ADAPTER(response):
