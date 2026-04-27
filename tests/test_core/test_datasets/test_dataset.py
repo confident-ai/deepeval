@@ -286,6 +286,131 @@ class TestSaveAndLoad:
                 assert isinstance(turns, list) and turns[0]["user_id"] == "u1"
                 assert isinstance(turns[0]["tools_called"], list)
 
+    def test_add_goldens_from_jsonl_file_loads_single_turn_goldens(self):
+        """Load single-turn goldens from JSONL and preserve extra fields."""
+        goldens = [
+            Golden(
+                input="Ask",
+                expected_output="Ans",
+                actual_output="Ans",
+                retrieval_context=["rctx"],
+                context=["ctx"],
+                tools_called=[ToolCall(name="search")],
+                expected_tools=[ToolCall(name="finalize")],
+                additional_metadata={"k": "v"},
+                custom_column_key_values={"col": "val"},
+            )
+        ]
+        dataset = EvaluationDataset(goldens)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="single_jsonl"
+            )
+
+            loaded_dataset = EvaluationDataset()
+            loaded_dataset.add_goldens_from_jsonl_file(path)
+
+        loaded = loaded_dataset.goldens[0]
+        assert loaded.input == "Ask"
+        assert loaded.context == ["ctx"]
+        assert loaded.retrieval_context == ["rctx"]
+        assert loaded.tools_called[0].name == "search"
+        assert loaded.expected_tools[0].name == "finalize"
+        assert loaded.additional_metadata["k"] == "v"
+        assert loaded.custom_column_key_values["col"] == "val"
+
+    def test_add_goldens_from_jsonl_file_loads_conversational_goldens(self):
+        """Load conversational goldens from JSONL and preserve turns."""
+        goldens = [
+            ConversationalGolden(
+                scenario="Book a flight",
+                expected_outcome="User gets options",
+                user_description="Traveler",
+                context=["travel"],
+                turns=[
+                    Turn(
+                        role="user",
+                        content="Find flights",
+                        user_id="u1",
+                        retrieval_context=["r"],
+                        tools_called=[ToolCall(name="search")],
+                    )
+                ],
+                additional_metadata={"k": "v"},
+                custom_column_key_values={"col": "val"},
+            )
+        ]
+        dataset = EvaluationDataset(goldens)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="convo_jsonl"
+            )
+
+            loaded_dataset = EvaluationDataset()
+            loaded_dataset.add_goldens_from_jsonl_file(path)
+
+        loaded = loaded_dataset.goldens[0]
+        assert loaded.scenario == "Book a flight"
+        assert loaded.context == ["travel"]
+        assert loaded.turns[0].user_id == "u1"
+        assert loaded.turns[0].tools_called[0].name == "search"
+        assert loaded.additional_metadata["k"] == "v"
+        assert loaded.custom_column_key_values["col"] == "val"
+
+    def test_add_goldens_from_json_file_rejects_mixed_variations(self):
+        dataset = EvaluationDataset()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "mixed.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(
+                    [
+                        {"input": "single turn golden"},
+                        {"scenario": "multi-turn golden"},
+                    ],
+                    f,
+                )
+
+            with pytest.raises(
+                TypeError,
+                match="You cannot add 'ConversationalGolden' to a single-turn dataset.",
+            ):
+                dataset.add_goldens_from_json_file(path)
+
+    def test_add_goldens_from_csv_file_rejects_mixed_variations(self):
+        dataset = EvaluationDataset()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "mixed.csv")
+            with open(path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["input", "scenario"])
+                writer.writerow(["single turn golden", ""])
+                writer.writerow(["", "multi-turn golden"])
+
+            with pytest.raises(
+                TypeError,
+                match="You cannot add 'ConversationalGolden' to a single-turn dataset.",
+            ):
+                dataset.add_goldens_from_csv_file(path)
+
+    def test_add_goldens_from_jsonl_file_rejects_mixed_variations(self):
+        dataset = EvaluationDataset()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "mixed.jsonl")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(json.dumps({"scenario": "multi-turn golden"}) + "\n")
+                f.write(json.dumps({"input": "single turn golden"}) + "\n")
+
+            with pytest.raises(
+                TypeError,
+                match="You cannot add 'Golden' to a multi-turn dataset.",
+            ):
+                dataset.add_goldens_from_jsonl_file(path)
+
     def test_save_as_empty_dataset_raises_error(self):
         """Test that calling save_as on an empty dataset raises a ValueError."""
         dataset = EvaluationDataset()

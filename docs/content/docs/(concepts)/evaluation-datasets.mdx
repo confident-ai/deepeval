@@ -356,9 +356,9 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 
 ### Load Dataset
 
-`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+`deepeval` offers support for loading datasets stored in JSON, JSONL, CSV, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
 
-<Tabs items={["Confident AI", "From JSON", "From CSV"]}>
+<Tabs items={["Confident AI", "From JSON", "From JSONL", "From CSV"]}>
 <Tab value="Confident AI">
 
 You can load entire datasets on Confident AI's cloud in one line of code.
@@ -413,6 +413,38 @@ dataset.add_test_cases_from_json_file(
 
 :::info
 Loading datasets as goldens are especially helpful if you're looking to generate LLM `actual_output`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
+:::
+
+</Tab>
+<Tab value="From JSONL">
+
+You can load existing `Golden`s or `ConversationalGolden`s from a `.jsonl` file by supplying a `file_path`. Each line should contain one JSON object that maps to either a `Golden` or a `ConversationalGolden`.
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+# Add goldens from a JSONL file
+dataset.add_goldens_from_jsonl_file(
+    file_path="example.jsonl",
+) # file_path is the absolute path to your .jsonl file
+```
+
+For single-turn goldens, each line can look like:
+
+```json
+{"input": "What is DeepEval?", "expected_output": "An LLM evaluation framework.", "context": ["DeepEval helps evaluate LLM apps."]}
+```
+
+For multi-turn goldens, each line can look like:
+
+```json
+{"scenario": "A user asks for help evaluating an LLM app.", "expected_outcome": "The user understands how to create an evaluation dataset.", "context": ["DeepEval supports evaluation datasets."]}
+```
+
+:::note
+An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a JSONL file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
 :::
 
 </Tab>
