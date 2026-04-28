@@ -7,6 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class DeepEvalModelData:
     supports_log_probs: Optional[bool] = None
+    max_log_probs: Optional[int] = None
     supports_multimodal: Optional[bool] = None
     supports_structured_outputs: Optional[bool] = None
     supports_json: Optional[bool] = None

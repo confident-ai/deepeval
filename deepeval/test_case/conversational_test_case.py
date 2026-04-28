@@ -1,4 +1,5 @@
 import re
+import warnings
 from pydantic import (
     BaseModel,
     Field,
@@ -21,9 +22,11 @@ from deepeval.test_case.mcp import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 
-class TurnParams(Enum):
+class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
+    METADATA = "metadata"
+    TAGS = "tags"
     SCENARIO = "scenario"
     EXPECTED_OUTCOME = "expected_outcome"
     CONTEXT = "context"
@@ -34,6 +37,18 @@ class TurnParams(Enum):
     MCP_TOOLS = "mcp_tools_called"
     MCP_RESOURCES = "mcp_resources_called"
     MCP_PROMPTS = "mcp_prompts_called"
+
+
+def __getattr__(name: str):
+    if name == "TurnParams":
+        warnings.warn(
+            "'TurnParams' is deprecated and will be removed in a future "
+            "release. Use 'MultiTurnParams' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return MultiTurnParams
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 class Turn(BaseModel):
@@ -53,13 +68,30 @@ class Turn(BaseModel):
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)
     mcp_resources_called: Optional[List[MCPResourceCall]] = Field(default=None)
     mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(default=None)
-    additional_metadata: Optional[Dict] = Field(
+    metadata: Optional[Dict] = Field(
         default=None,
-        serialization_alias="additionalMetadata",
         validation_alias=AliasChoices(
-            "additionalMetadata", "additional_metadata"
+            "metadata", "additionalMetadata", "additional_metadata"
         ),
     )
+
+    @property
+    def additional_metadata(self) -> Optional[Dict]:
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.metadata
+
+    @additional_metadata.setter
+    def additional_metadata(self, value: Optional[Dict]):
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.metadata = value
 
     @property
     def _mcp_interaction(self) -> bool:
@@ -84,8 +116,8 @@ class Turn(BaseModel):
             attrs.append(f"mcp_resources_called={self.mcp_resources_called!r}")
         if self.mcp_prompts_called is not None:
             attrs.append(f"mcp_prompts_called={self.mcp_prompts_called!r}")
-        if self.additional_metadata is not None:
-            attrs.append(f"additional_metadata={self.additional_metadata!r}")
+        if self.metadata is not None:
+            attrs.append(f"metadata={self.metadata!r}")
         return f"Turn({', '.join(attrs)})"
 
     @model_validator(mode="before")
@@ -158,11 +190,10 @@ class ConversationalTestCase(BaseModel):
         serialization_alias="chatbotRole",
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
-    additional_metadata: Optional[Dict] = Field(
+    metadata: Optional[Dict] = Field(
         default=None,
-        serialization_alias="additionalMetadata",
         validation_alias=AliasChoices(
-            "additionalMetadata", "additional_metadata"
+            "metadata", "additionalMetadata", "additional_metadata"
         ),
     )
     comments: Optional[str] = Field(default=None)
@@ -173,6 +204,24 @@ class ConversationalTestCase(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+
+    @property
+    def additional_metadata(self) -> Optional[Dict]:
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.metadata
+
+    @additional_metadata.setter
+    def additional_metadata(self, value: Optional[Dict]):
+        warnings.warn(
+            "'additional_metadata' is deprecated. Use 'metadata' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.metadata = value
 
     @model_validator(mode="after")
     def set_is_multimodal(self):

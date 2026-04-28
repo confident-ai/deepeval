@@ -98,7 +98,7 @@ trainer = Trainer(
 Use `deepeval` to define an `EvaluationDataset` and the metrics you want to evaluate your LLM on:
 
 ```python
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import GEval
 
@@ -109,7 +109,7 @@ dataset = EvaluationDataset(goldens=[first_golden, second_golden])
 coherence_metric = GEval(
     name="Coherence",
     criteria="Coherence - determine if the actual output is coherent with the input.",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
 )
 ```
 

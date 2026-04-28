@@ -1,6 +1,8 @@
+import warnings
+
 from .llm_test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ToolCall,
     ToolCallParams,
     MLLMImage,
@@ -8,7 +10,7 @@ from .llm_test_case import (
 from .conversational_test_case import (
     ConversationalTestCase,
     Turn,
-    TurnParams,
+    MultiTurnParams,
 )
 from .arena_test_case import ArenaTestCase, Contestant
 from .mcp import (
@@ -20,12 +22,12 @@ from .mcp import (
 
 __all__ = [
     "LLMTestCase",
-    "LLMTestCaseParams",
+    "SingleTurnParams",
     "ToolCall",
     "ToolCallParams",
     "ConversationalTestCase",
     "Turn",
-    "TurnParams",
+    "MultiTurnParams",
     "MCPServer",
     "MCPPromptCall",
     "MCPResourceCall",
@@ -34,3 +36,23 @@ __all__ = [
     "ArenaTestCase",
     "Contestant",
 ]
+
+
+def __getattr__(name: str):
+    if name == "LLMTestCaseParams":
+        warnings.warn(
+            "'LLMTestCaseParams' is deprecated and will be removed in a future "
+            "release. Use 'SingleTurnParams' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return SingleTurnParams
+    if name == "TurnParams":
+        warnings.warn(
+            "'TurnParams' is deprecated and will be removed in a future "
+            "release. Use 'MultiTurnParams' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return MultiTurnParams
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

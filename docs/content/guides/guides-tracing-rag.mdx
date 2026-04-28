@@ -313,12 +313,12 @@ Now call your function using the `evals_iterator` of `EvaluationDataset` with me
 ```python
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 correctness_metric = GEval(
     name="Correctness",
     criteria="Determine whether the actual output is factually correct based on the expected output.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
     threshold=0.7,
 )
 

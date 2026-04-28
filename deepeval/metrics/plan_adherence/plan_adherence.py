@@ -8,7 +8,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -27,9 +27,9 @@ from deepeval.metrics.plan_adherence.template import (
 
 class PlanAdherenceMetric(BaseMetric):
 
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(

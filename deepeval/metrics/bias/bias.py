@@ -3,7 +3,7 @@ from typing import List, Optional, Type, Union
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
@@ -25,9 +25,9 @@ from deepeval.metrics.bias.schema import (
 
 
 class BiasMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(

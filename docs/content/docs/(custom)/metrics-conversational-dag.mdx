@@ -64,7 +64,7 @@ There are exactly **FOUR** different node types you can choose from to create a 
 
 ### Task node
 
-The `ConversationalTaskNode` is designed specifically for processing either the data from a test case using parameters from `TurnParams`, or the output from a parent `ConversationalTaskNode`.
+The `ConversationalTaskNode` is designed specifically for processing either the data from a test case using parameters from `MultiTurnParams`, or the output from a parent `ConversationalTaskNode`.
 
 :::note
 The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
@@ -76,12 +76,12 @@ You can also break down a conversation into atomic units by choosing a specific 
 
 ```python
 from deepeval.metrics.conversational_dag import ConversationalTaskNode
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 
 task_node = ConversationalTaskNode(
     instructions="Summarize the assistant's replies in one paragraph.",
     output_label="Summary",
-    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
     children=[],
     turn_window=(0,6),
 )
@@ -92,7 +92,7 @@ There are **THREE** mandatory and **THREE** optional parameters when creating a 
 - `instructions`: a string specifying how to process a conversation, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `child` `ConversationalBaseNode`s will use the `output_label` to reference the output from the current `ConversationalTaskNode`.
 - `children`: a list of `ConversationalBaseNode`s. There **must not** be a `ConversationalVerdictNode` in the list of children for a `ConversationalTaskNode`.
-- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `evaluation_params`: a list of type `MultiTurnParams`. Include only the parameters that are relevant for processing.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 - [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
 
@@ -116,7 +116,7 @@ There are **TWO** mandatory and **THREE** optional parameters when creating a `C
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `Turn`.
 - `children`: a list of exactly two `ConversationalVerdictNodes`, one with a verdict value of `True`, and the other with a value of `False`.
-- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `evaluation_params`: a list of type `MultiTurnParams`. Include only the parameters that are relevant for processing.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 - [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
 
@@ -145,7 +145,7 @@ There are **TWO** mandatory and **THREE** optional parameters when creating a `C
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `Turn`.
 - `children`: a list of `ConversationalVerdictNodes`, where the `verdict` values determine the possible verdict of the current non-binary judgement.
-- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `evaluation_params`: a list of type `MultiTurnParams`. Include only the parameters that are relevant for processing.
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 - [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
 
@@ -211,7 +211,7 @@ from deepeval.metrics.conversational_dag import ConversationalTaskNode
 task_node = ConversationalTaskNode(
     instructions="Summarize the conversation and explain assistant's behaviour overall.",
     output_label="Summary",
-    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
     children=[],
 )
 ```
@@ -284,7 +284,7 @@ from deepeval.metrics.conversational_dag import (
     ConversationalNonBinaryJudgementNode,
     ConversationalVerdictNode,
 )
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 
 non_binary_node = ConversationalNonBinaryJudgementNode(
     criteria="How was the assistant's behaviour towards user?",
@@ -306,7 +306,7 @@ binary_node = ConversationalBinaryJudgementNode(
 task_node = ConversationalTaskNode(
     instructions="Summarize the conversation and explain assistant's behaviour overall.",
     output_label="Summary",
-    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
     children=[binary_node],
 )
 

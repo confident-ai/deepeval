@@ -10,7 +10,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
@@ -27,9 +27,9 @@ from deepeval.metrics.argument_correctness.schema import (
 
 
 class ArgumentCorrectnessMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.TOOLS_CALLED,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.TOOLS_CALLED,
     ]
 
     def __init__(

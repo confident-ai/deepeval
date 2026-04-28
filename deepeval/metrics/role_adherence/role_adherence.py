@@ -16,12 +16,12 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import Turn, ConversationalTestCase, TurnParams
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
-    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+    _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
     def __init__(
         self,

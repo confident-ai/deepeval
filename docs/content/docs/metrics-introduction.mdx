@@ -155,14 +155,14 @@ Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to
 <Tab value="G-Eval">
 
 ```python
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 
 test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
 correctness = GEval(
     name="Correctness",
     criteria="Correctness - determine if the actual output is correct according to the expected output.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
     strict_mode=True
 )
 
@@ -174,14 +174,14 @@ print(correctness.score, correctness.reason)
 <Tab value="Conversational G-Eval">
 
 ```python
-from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
 convo_test_case = ConversationalTestCase(turns=[Turn(role="...", content="..."), Turn(role="...", content="...")])
 professionalism_metric = ConversationalGEval(
     name="Professionalism",
     criteria="Determine whether the assistant has acted professionally based on the content."
-    evaluation_params=[TurnParams.CONTENT],
+    evaluation_params=[MultiTurnParams.CONTENT],
     strict_mode=True
 )
 

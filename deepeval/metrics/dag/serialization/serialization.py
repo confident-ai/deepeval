@@ -56,7 +56,7 @@ from deepeval.metrics.dag.nodes import (
     VerdictNode,
 )
 from deepeval.metrics.g_eval.g_eval import GEval
-from deepeval.test_case import LLMTestCaseParams, TurnParams
+from deepeval.test_case import SingleTurnParams, MultiTurnParams
 
 from .registry import CLASS_TO_NODE_TYPE, NODE_CLASSES
 from .types import ChildType, NodeType
@@ -402,7 +402,7 @@ def _collect_referenced_ids(nodes_spec: Dict[str, Any]) -> Set[str]:
 
 
 def _eval_params_cls(multiturn: bool):
-    return TurnParams if multiturn else LLMTestCaseParams
+    return MultiTurnParams if multiturn else SingleTurnParams
 
 
 def _deserialize_eval_params(values, multiturn: bool):
@@ -519,7 +519,7 @@ def _build_metric(child_spec: Dict[str, Any]):
     if "evaluation_params" in kwargs and isinstance(
         kwargs["evaluation_params"], list
     ):
-        # Try LLMTestCaseParams first, then TurnParams for conversational metrics.
+        # Try SingleTurnParams first, then MultiTurnParams for conversational metrics.
         if issubclass(cls, BaseConversationalMetric):
             kwargs["evaluation_params"] = _deserialize_eval_params(
                 kwargs["evaluation_params"], multiturn=True

@@ -112,7 +112,7 @@ We will now call our summarization agent on the dataset `input`s and create our 
 Here's how we can pull our dataset and create test cases:
 
 ```python {1-2,6,13-20}
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.dataset import EvaluationDataset
 from meeting_summarizer import MeetingSummarizer # import your summarizer here
 
@@ -166,7 +166,7 @@ summary_concision = GEval(
     # Write your criteria here
     criteria="Assess whether the summary is concise and focused only on the essential points of the meeting? It should avoid repetition, irrelevant details, and unnecessary elaboration.",
     threshold=0.9,
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT]
 )
 ```
 
@@ -182,7 +182,7 @@ action_item_check = GEval(
     # Write your criteria here
     criteria="Are the action items accurate, complete, and clearly reflect the key tasks or follow-ups mentioned in the meeting?",
     threshold=0.9,
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT]
 )
 ```
 

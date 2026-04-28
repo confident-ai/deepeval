@@ -368,7 +368,7 @@ def _add_test_case_to_run(
         tokenCost=token_cost,
         completionTime=completion_time,
         tags=tags,
-        additionalMetadata=additional_metadata,
+        metadata=additional_metadata,
         success=passed,
         metricsData=None,
         trace=None,

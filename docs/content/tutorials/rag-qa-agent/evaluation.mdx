@@ -184,13 +184,13 @@ from deepeval.metrics import GEval
 answer_correctness = GEval(
     name="Answer Correctness",
     criteria="Evaluate if the actual output's 'answer' property is correct and complete from the input and retrieved context. If the answer is not correct or complete, reduce score."
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.RETRIEVAL_CONTEXT]
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.RETRIEVAL_CONTEXT]
 )
 
 citation_accuracy = GEval(
     name="Citation Accuracy",
     criteria="Check if the citations in the actual output are correct and relevant based on input and retrieved context. If they're not correct, reduce score."
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.RETRIEVAL_CONTEXT]
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.RETRIEVAL_CONTEXT]
 )
 ```
 

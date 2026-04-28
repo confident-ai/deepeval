@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Type
 import asyncio
 
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -27,10 +27,10 @@ from deepeval.metrics.faithfulness.schema import (
 
 
 class FaithfulnessMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.RETRIEVAL_CONTEXT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
     ]
 
     def __init__(

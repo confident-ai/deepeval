@@ -207,7 +207,7 @@ for golden in dataset.evals_iterator():
 You can also evaluate prompts side-by-side using `ArenaGEval` to pick the best-performing prompt for your given criteria. Simply include the prompts in the `hyperparameters` field of each `Contestant`.
 
 ```python title="main.py" showLineNumbers={true}
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
+from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams, Contestant
 from deepeval.metrics import ArenaGEval
 from deepeval.prompt import Prompt
 from deepeval import compare
@@ -234,8 +234,8 @@ arena_geval = ArenaGEval(
     name="Friendly",
     criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 )
 

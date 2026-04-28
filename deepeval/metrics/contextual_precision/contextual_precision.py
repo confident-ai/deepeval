@@ -13,7 +13,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -25,10 +25,10 @@ import deepeval.metrics.contextual_precision.schema as cpschema
 
 
 class ContextualPrecisionMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.RETRIEVAL_CONTEXT,
-        LLMTestCaseParams.EXPECTED_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.RETRIEVAL_CONTEXT,
+        SingleTurnParams.EXPECTED_OUTPUT,
     ]
 
     def __init__(

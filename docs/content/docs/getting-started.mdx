@@ -74,14 +74,14 @@ Run `touch test_example.py` in your terminal and paste in the following code:
 
 ```python title="test_example.py"
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 
 def test_correctness():
     correctness_metric = GEval(
         name="Correctness",
         criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(

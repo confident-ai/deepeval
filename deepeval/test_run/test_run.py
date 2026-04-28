@@ -896,23 +896,6 @@ class TestRunManager:
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
 
-        # DEBUG: dump the exact JSON payload sent to Confident AI.
-        try:
-            print(
-                "\n===== [deepeval debug] POST payload to Confident AI =====",
-                flush=True,
-            )
-            print(json.dumps(body, indent=2, default=str), flush=True)
-            print(
-                "===== [deepeval debug] end payload =====\n",
-                flush=True,
-            )
-        except Exception as _dbg_err:
-            print(
-                f"[deepeval debug] failed to dump payload: {_dbg_err}",
-                flush=True,
-            )
-
         data, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
@@ -1103,7 +1086,8 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
-        if is_confident() and self.disable_request is False:
+        confident_enabled = is_confident()
+        if confident_enabled and self.disable_request is False:
             return self.post_test_run(test_run)
         else:
             self.save_test_run(

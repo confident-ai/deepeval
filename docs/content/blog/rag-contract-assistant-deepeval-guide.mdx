@@ -318,7 +318,7 @@ Here’s how you can evaluate the generator with the above mentioned metrics:
 
 ```python
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric, GEval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 # Hardcoded query and expected answer
 query = "What benefits do part-time employees get?"
@@ -344,13 +344,13 @@ metrics = [
     GEval(
         name="Tone",
         criteria="Is the answer professional?",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
         strict_mode=True,
     ),
     GEval(
         name="Citations",
         criteria="Does the answer cite or refer to the source documents?",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.CONTEXT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.CONTEXT],
         strict_mode=True,
     ),
 ]
@@ -374,7 +374,7 @@ There are multiple levers you can adjust to improve the generator:
 4. Citation formatting and instruction
 
 ```python
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric, GEval
 from langchain.llms import Ollama, OpenAI, HuggingFaceHub
 
@@ -399,13 +399,13 @@ metrics = [
     GEval(
         name="Tone",
         criteria="Is the answer professional?",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
         strict_mode=True,
     ),
     GEval(
         name="Citations",
         criteria="Does the answer cite or refer to the source documents?",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.CONTEXT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.CONTEXT],
         strict_mode=True,
     ),
 ]
@@ -484,7 +484,7 @@ from deepeval.metrics import (
     GEval,
     ContextualRelevancyMetric,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.dataset import EvaluationDataset
 from deepeval import assert_test
 
@@ -541,7 +541,7 @@ metrics = [
     GEval(
         name="Professional Tone Check",
         criteria="Is the answer professionally framed and appropriate for a legal context?",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
         strict_mode=True,
         threshold=0.8,
     ),

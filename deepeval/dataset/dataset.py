@@ -350,7 +350,7 @@ class EvaluationDataset:
                     raise ValueError(f"Error processing expected_tools: {e}")
             else:
                 expected_tools.append([])
-        additional_metadatas = [
+        metadatas = [
             ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
                 df, additional_metadata_col_name, default=""
@@ -365,7 +365,7 @@ class EvaluationDataset:
             retrieval_context,
             tools_called,
             expected_tools,
-            additional_metadata,
+            metadata,
         ) in zip(
             inputs,
             actual_outputs,
@@ -374,7 +374,7 @@ class EvaluationDataset:
             retrieval_contexts,
             tools_called,
             expected_tools,
-            additional_metadatas,
+            metadatas,
         ):
             self.add_test_case(
                 LLMTestCase(
@@ -385,7 +385,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
-                    additional_metadata=additional_metadata,
+                    metadata=metadata,
                 )
             )
 
@@ -575,7 +575,7 @@ class EvaluationDataset:
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
-        additional_metadatas = [
+        metadatas = [
             ast.literal_eval(metadata) if metadata else None
             for metadata in get_column_data(
                 df, additional_metadata_col_name, default=""
@@ -597,7 +597,7 @@ class EvaluationDataset:
             comments,
             name,
             source_file,
-            additional_metadata,
+            metadata,
             scenario,
             turns,
             expected_outcome,
@@ -613,7 +613,7 @@ class EvaluationDataset:
             comments,
             name,
             source_files,
-            additional_metadatas,
+            metadatas,
             scenarios,
             turns_raw,
             expected_outcomes,
@@ -630,7 +630,7 @@ class EvaluationDataset:
                         context=context,
                         comments=comments,
                         name=name,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                     )
                 )
             else:
@@ -643,7 +643,7 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                         source_file=source_file,
                         comments=comments,
                         name=name,
@@ -688,7 +688,7 @@ class EvaluationDataset:
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
-                additional_metadata = json_obj.get(additional_metadata_key_name)
+                metadata = json_obj.get(additional_metadata_key_name)
 
                 self.add_golden(
                     ConversationalGolden(
@@ -699,7 +699,7 @@ class EvaluationDataset:
                         context=context,
                         comments=comments,
                         name=name,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                     )
                 )
             else:
@@ -713,7 +713,7 @@ class EvaluationDataset:
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
-                additional_metadata = json_obj.get(additional_metadata_key_name)
+                metadata = json_obj.get(additional_metadata_key_name)
 
                 self.add_golden(
                     Golden(
@@ -724,7 +724,7 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                         comments=comments,
                         name=name,
                         source_file=source_file,
@@ -803,7 +803,7 @@ class EvaluationDataset:
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
-                additional_metadata = json_obj.get(additional_metadata_key_name)
+                metadata = json_obj.get(additional_metadata_key_name)
                 custom_column_key_values = json_obj.get(
                     custom_column_key_values_key_name
                 )
@@ -817,7 +817,7 @@ class EvaluationDataset:
                         context=context,
                         comments=comments,
                         name=name,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                         custom_column_key_values=custom_column_key_values,
                     )
                 )
@@ -839,7 +839,7 @@ class EvaluationDataset:
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
-                additional_metadata = json_obj.get(additional_metadata_key_name)
+                metadata = json_obj.get(additional_metadata_key_name)
                 custom_column_key_values = json_obj.get(
                     custom_column_key_values_key_name
                 )
@@ -853,7 +853,7 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
-                        additional_metadata=additional_metadata,
+                        additional_metadata=metadata,
                         custom_column_key_values=custom_column_key_values,
                         comments=comments,
                         name=name,

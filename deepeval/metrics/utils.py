@@ -59,13 +59,13 @@ from deepeval.metrics import (
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ConversationalTestCase,
     MLLMImage,
     Turn,
     ArenaTestCase,
     ToolCall,
-    TurnParams,
+    MultiTurnParams,
 )
 
 MULTIMODAL_SUPPORTED_MODELS = {
@@ -105,7 +105,7 @@ def copy_metrics(
 
 
 def format_turns(
-    llm_test_cases: List[LLMTestCase], test_case_params: List[LLMTestCaseParams]
+    llm_test_cases: List[LLMTestCase], test_case_params: List[SingleTurnParams]
 ) -> List[Dict[str, Union[str, List[str]]]]:
     res = []
     for llm_test_case in llm_test_cases:
@@ -120,17 +120,28 @@ def format_turns(
 
 def convert_turn_to_dict(
     turn: Turn,
-    turn_params: List[TurnParams] = [TurnParams.CONTENT, TurnParams.ROLE],
+    turn_params: List[MultiTurnParams] = [
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+    ],
 ) -> Dict:
-    result = {
-        param.value: getattr(turn, param.value)
-        for param in turn_params
-        if (
-            param != TurnParams.SCENARIO
-            and param != TurnParams.EXPECTED_OUTCOME
-            and getattr(turn, param.value) is not None
-        )
-    }
+    result = {}
+    for param in turn_params:
+        if param in (
+            MultiTurnParams.SCENARIO,
+            MultiTurnParams.EXPECTED_OUTCOME,
+            MultiTurnParams.METADATA,
+            MultiTurnParams.TAGS,
+        ):
+            continue
+
+        if not hasattr(turn, param.value):
+            continue
+
+        value = getattr(turn, param.value)
+        if value is not None:
+            result[param.value] = value
+
     return result
 
 
@@ -220,7 +231,7 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
 
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
-    test_case_params: List[TurnParams],
+    test_case_params: List[MultiTurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
     model: Optional[DeepEvalBaseLLM] = None,
@@ -251,15 +262,31 @@ def check_conversational_test_case_params(
         raise ValueError(error_str)
 
     if (
-        TurnParams.EXPECTED_OUTCOME in test_case_params
+        MultiTurnParams.EXPECTED_OUTCOME in test_case_params
         and test_case.expected_outcome is None
     ):
         error_str = f"'expected_outcome' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
-    if TurnParams.SCENARIO in test_case_params and test_case.scenario is None:
+    if (
+        MultiTurnParams.SCENARIO in test_case_params
+        and test_case.scenario is None
+    ):
         error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
+        MultiTurnParams.METADATA in test_case_params
+        and test_case.metadata is None
+    ):
+        error_str = f"'metadata' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if MultiTurnParams.TAGS in test_case_params and test_case.tags is None:
+        error_str = f"'tags' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -276,7 +303,7 @@ def check_conversational_test_case_params(
 
 def check_llm_test_case_params(
     test_case: LLMTestCase,
-    test_case_params: List[LLMTestCaseParams],
+    test_case_params: List[SingleTurnParams],
     input_image_count: Optional[int],
     actual_output_image_count: Optional[int],
     metric: Union[BaseMetric, BaseArenaMetric],
@@ -327,10 +354,8 @@ def check_llm_test_case_params(
 
     # Centralized: if a metric requires actual_output, reject empty/whitespace
     # (including empty multimodal outputs) as "missing params".
-    if LLMTestCaseParams.ACTUAL_OUTPUT in test_case_params:
-        actual_output = getattr(
-            test_case, LLMTestCaseParams.ACTUAL_OUTPUT.value
-        )
+    if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
+        actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
         if isinstance(actual_output, str) and actual_output == "":
             error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
             metric.error = error_str
@@ -358,7 +383,7 @@ def check_llm_test_case_params(
 
 def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
-    test_case_params: List[LLMTestCaseParams],
+    test_case_params: List[SingleTurnParams],
     metric: BaseArenaMetric,
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,

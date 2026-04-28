@@ -34,8 +34,6 @@ def _secret_env_keys() -> frozenset[str]:
 
 
 def _env_key_for_legacy_enum(key) -> str:
-    # For ModelKeyValues, .name == .value, for KeyValues it's the important one:
-    # KeyValues.API_KEY.name == "API_KEY" (matches Settings), value == "api_key" (legacy json key)
     return getattr(key, "name", str(key))
 
 
@@ -48,7 +46,6 @@ _WARNED_SECRET_KEYS = set()
 
 class KeyValues(Enum):
     # Confident AI
-    API_KEY = "api_key"
     CONFIDENT_API_KEY = "confident_api_key"
     CONFIDENT_BASE_URL = "confident_base_url"
     CONFIDENT_REGION = "confident_region"

@@ -158,7 +158,6 @@ def _core_mode_no_confident(
     # Clear the in-memory Settings fields (no persistence)
     s = get_settings()
     with s.edit(persist=False) as ctx:
-        ctx.s.API_KEY = None
         ctx.s.CONFIDENT_API_KEY = None
 
     # Yield control to the test

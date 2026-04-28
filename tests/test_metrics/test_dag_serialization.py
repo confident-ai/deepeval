@@ -25,7 +25,7 @@ from deepeval.metrics.conversational_dag import (
     ConversationalVerdictNode,
 )
 from deepeval.metrics.dag.utils import is_valid_dag_from_roots
-from deepeval.test_case import LLMTestCaseParams, TurnParams
+from deepeval.test_case import SingleTurnParams, MultiTurnParams
 
 
 # ----------------------------------------------------------------------------
@@ -40,15 +40,15 @@ def _build_simple_single_turn_dag() -> DeepAcyclicGraph:
         criteria="Is the output a summary?",
         children=[leaf_false, leaf_true],
         evaluation_params=[
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
         ],
     )
     root = TaskNode(
         instructions="Extract the summary.",
         output_label="Summary",
         children=[judgement],
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
         label="extract",
     )
     return DeepAcyclicGraph(root_nodes=[root])
@@ -91,7 +91,7 @@ class TestSingleTurnRoundTrip:
         ]
         assert len(task_specs) == 1
         assert task_specs[0]["evaluation_params"] == [
-            LLMTestCaseParams.ACTUAL_OUTPUT.value
+            SingleTurnParams.ACTUAL_OUTPUT.value
         ]
 
     def test_dag_to_dict_verdict_with_score_only(self):
@@ -118,14 +118,14 @@ class TestSingleTurnRoundTrip:
         assert root.instructions == "Extract the summary."
         assert root.output_label == "Summary"
         assert root.label == "extract"
-        assert root.evaluation_params == [LLMTestCaseParams.ACTUAL_OUTPUT]
+        assert root.evaluation_params == [SingleTurnParams.ACTUAL_OUTPUT]
         assert len(root.children) == 1
         judge = root.children[0]
         assert isinstance(judge, BinaryJudgementNode)
         assert judge.criteria == "Is the output a summary?"
         assert judge.evaluation_params == [
-            LLMTestCaseParams.INPUT,
-            LLMTestCaseParams.ACTUAL_OUTPUT,
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
         ]
         assert {c.verdict for c in judge.children} == {True, False}
         assert {c.score for c in judge.children} == {0, 10}
@@ -154,7 +154,7 @@ class TestNonBinaryJudgement:
         judge = NonBinaryJudgementNode(
             criteria="Classify the format.",
             children=[v_a, v_b, v_c],
-            evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
         )
         dag = DeepAcyclicGraph(root_nodes=[judge])
 
@@ -176,7 +176,7 @@ class TestSharedChildDAG:
         shared_judge = BinaryJudgementNode(
             criteria="Inner check?",
             children=[leaf_no, leaf_yes],
-            evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
             label="shared_judge",
         )
         wrap_a = VerdictNode(verdict="left", child=shared_judge)
@@ -232,7 +232,7 @@ def _build_simple_multiturn_dag() -> DeepAcyclicGraph:
     judge = ConversationalBinaryJudgementNode(
         criteria="Did the assistant respond appropriately?",
         children=[v_no, v_yes],
-        evaluation_params=[TurnParams.CONTENT, TurnParams.ROLE],
+        evaluation_params=[MultiTurnParams.CONTENT, MultiTurnParams.ROLE],
     )
     return DeepAcyclicGraph(root_nodes=[judge])
 
@@ -248,8 +248,8 @@ class TestMultiturnRoundTrip:
         root = rebuilt.root_nodes[0]
         assert isinstance(root, ConversationalBinaryJudgementNode)
         assert root.evaluation_params == [
-            TurnParams.CONTENT,
-            TurnParams.ROLE,
+            MultiTurnParams.CONTENT,
+            MultiTurnParams.ROLE,
         ]
         assert {c.verdict for c in root.children} == {True, False}
 
@@ -268,13 +268,13 @@ class TestMultiturnRoundTrip:
         judge = ConversationalBinaryJudgementNode(
             criteria="?",
             children=[v_no, v_yes],
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
         )
         task = ConversationalTaskNode(
             instructions="Look at first 2 turns",
             output_label="X",
             children=[judge],
-            evaluation_params=[TurnParams.CONTENT],
+            evaluation_params=[MultiTurnParams.CONTENT],
             turn_window=(0, 1),
         )
         dag = DeepAcyclicGraph(root_nodes=[task])

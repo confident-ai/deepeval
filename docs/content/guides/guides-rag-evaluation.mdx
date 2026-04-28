@@ -244,13 +244,13 @@ Here is where you can take advantage of `deepeval`'s `GEval` metric, capable of 
 
 ```python
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 ...
 
 dark_humor = GEval(
     name="Dark Humor",
     criteria="Determine how funny the dark humor in the actual output is",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 dark_humor.measure(test_case)

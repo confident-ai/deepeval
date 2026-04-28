@@ -2127,7 +2127,7 @@ If you were to do this using `GEval`, your `evaluation_steps` might look somethi
 Which in term looks something like this in code:
 
 ```codeBlockLines_e6Vv
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.metrics import GEval
 
 metric = GEval(
@@ -2137,7 +2137,7 @@ metric = GEval(
         "If the `actual_output` has all the complete headings but are in the wrong order, penalize it.",\
         "If the summary has all the correct headings and they are in the right order, give it a perfect score."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT]
 )
 
 ```
@@ -2178,7 +2178,7 @@ Some might skeptical if this complexity is necessary but in reality, you'll quic
 Here's how this decision tree would look like in code:
 
 ```codeBlockLines_e6Vv
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
     TaskNode,
@@ -2206,7 +2206,7 @@ correct_headings_node = BinaryJudgementNode(
 
 extract_headings_node = TaskNode(
     instructions="Extract all headings in `actual_output`",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
 )
@@ -2273,13 +2273,13 @@ The `TaskNode` is designed specifically for processing data such as parameters f
 ```codeBlockLines_e6Vv
 from typing import Optional, List
 from deepeval.metrics.dag import BaseNode
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 class TaskNode(BaseNode):
     instructions: str
     output_label: str
     children: List[BaseNode]
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
 
 ```
@@ -2289,7 +2289,7 @@ There are **THREE** mandatory and **TWO** optional parameter when creating a `Ta
 - `instructions`: a string specifying how to process parameters of an `LLMTestCase`, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `children` `BaseNode` s will use the `output_label` to reference the output from the current `TaskNode`.
 - `children`: a list of `BaseNode` s. There **must not** be a `VerdictNode` in the list of children.
-- \[Optional\] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for processing.
+- \[Optional\] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for processing.
 - \[Optional\] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 info
@@ -2303,12 +2303,12 @@ The `BinaryJudgementNode` determines whether the verdict is `True` or `False` ba
 ```codeBlockLines_e6Vv
 from typing import Optional, List
 from deepeval.metrics.dag import BaseNode, VerdictNode
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 class BinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
 
 ```
@@ -2317,7 +2317,7 @@ There are **TWO** mandatory and **TWO** optional parameter when creating a `Bina
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** to output `True` or `False`.
 - `children`: a list of exactly two `VerdictNode` s, one with a `verdict` value of `True`, and the other with a value of `False`.
-- \[Optional\] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- \[Optional\] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
 - \[Optional\] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 tip
@@ -2333,12 +2333,12 @@ The `NonBinaryJudgementNode` determines what the verdict is based on the given `
 ```codeBlockLines_e6Vv
 from typing import Optional, List
 from deepeval.metrics.dag import BaseNode, VerdictNode
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 class NonBinaryJudgementNode(BaseNode):
     criteria: str
     children: List[VerdictNode]
-    evaluation_params: Optional[List[LLMTestCaseParams]] = None
+    evaluation_params: Optional[List[SingleTurnParams]] = None
     label: Optional[str] = None
 
 ```
@@ -2347,7 +2347,7 @@ There are **TWO** mandatory and **TWO** optional parameter when creating a `NonB
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `LLMTestCase`. You **DON'T HAVE TO TELL IT** what to output.
 - `children`: a list of `VerdictNode` s, where the `verdict` values determine the possible verdict of the current `NonBinaryJudgementNode`.
-- \[Optional\] `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- \[Optional\] `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
 - \[Optional\] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 ### `VerdictNode` [​](https://deepeval.com/docs/metrics-dag\#verdictnode "Direct link to verdictnode")
@@ -2461,14 +2461,14 @@ test\_example.py
 
 ```codeBlockLines_e6Vv
 from deepeval import assert_test
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 
 def test_correctness():
     correctness_metric = GEval(
         name="Correctness",
         criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(
@@ -2546,7 +2546,7 @@ from deepeval.dataset import Golden
 from deepeval.metrics import GEval
 from deepeval import evaluate
 
-correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT])
 
 @observe(metrics=[correctness])
 def inner_component():
@@ -2618,14 +2618,14 @@ All default metrics are evaluated using LLMs, and you can use **ANY** LLM of you
 `deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language. Here's an example:
 
 ```codeBlockLines_e6Vv
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 
 test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
 correctness = GEval(
     name="Correctness",
     criteria="Correctness - determine if the actual output is correct according to the expected output.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
     strict_mode=True
 )
 
@@ -2673,7 +2673,7 @@ correct_headings_node = BinaryJudgementNode(
 
 extract_headings_node = TaskNode(
     instructions="Extract all headings in `actual_output`",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
 )
@@ -5675,7 +5675,7 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
 
 ```codeBlockLines_e6Vv
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.metrics import GEval
 
 # Define criteria for evaluating professionalism
@@ -5686,7 +5686,7 @@ clear, respectful, and maintaining an empathetic tone consistent with medical in
 professionalism_metric = GEval(
     name="Professionalism",
     criteria=criteria,
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT]
 )
 
 ```
@@ -7548,7 +7548,7 @@ To create a custom metric that uses LLMs for evaluation, simply instantiate an `
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 correctness_metric = GEval(
     name="Correctness",
@@ -7559,7 +7559,7 @@ correctness_metric = GEval(
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 
 ```
@@ -7568,7 +7568,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
 - \[Optional\] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `GEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`.
 - \[Optional\] `rubric`: a list of `Rubric` s that allows you to [confine the range](https://deepeval.com/docs/metrics-llm-evals#rubric) of the final metric score.
 - \[Optional\] `threshold`: the passing threshold, defaulted to 0.5.
@@ -7619,7 +7619,7 @@ correctness_metric = GEval(
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 
 ```
@@ -7635,7 +7635,7 @@ from deepeval.metrics.g_eval import Rubric
 correctness_metric = GEval(
     name="Correctness",
     criteria="Determine whether the actual output is factually correct based on the expected output.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
     rubric=[\
         Rubric(score_range=(0,2), expected_outcome="Factually incorrect."),\
         Rubric(score_range=(3,6), expected_outcome="Mostly correct."),\
@@ -7772,7 +7772,7 @@ Answer correctness is the most used G-Eval metric of all and usually involves co
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 correctness = GEval(
     name="Correctness",
@@ -7781,7 +7781,7 @@ correctness = GEval(
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 
 ```
@@ -7794,7 +7794,7 @@ Coherence is usually a referenceless metric that covers several criteria such as
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 clarity = GEval(
     name="Clarity",
@@ -7804,7 +7804,7 @@ clarity = GEval(
         "Assess whether complex ideas are presented in a way that's easy to follow.",\
         "Identify any vague or confusing parts that reduce understanding."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -7817,7 +7817,7 @@ Tonality is similar to coherence in the sense that it is also a referenceless me
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 professionalism = GEval(
     name="Professionalism",
@@ -7827,7 +7827,7 @@ professionalism = GEval(
         "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",\
         "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -7840,7 +7840,7 @@ Safety evaluates whether your LLM's `actual_output` aligns with whatever ethical
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 pii_leakage = GEval(
     name="PII Leakage",
@@ -7850,7 +7850,7 @@ pii_leakage = GEval(
         "Ensure the output uses placeholders or anonymized data when applicable.",\
         "Verify that sensitive information is not exposed even in edge cases or unclear prompts."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -7863,7 +7863,7 @@ Although `deepeval` already offer RAG metrics such as the `AnswerRelevancyMetric
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 medical_faithfulness = GEval(
     name="Medical Faithfulness",
@@ -7874,7 +7874,7 @@ medical_faithfulness = GEval(
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",\
         "Provide reasons for the faithfulness score, emphasizing the importance of clinical accuracy and patient safety."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.RETRIEVAL_CONTEXT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.RETRIEVAL_CONTEXT],
 )
 
 ```
@@ -16443,13 +16443,13 @@ Here's how to define a G-Eval metric in DeepEval with just a few lines of code:
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 # Define a custom G-Eval metric
 custom_metric = GEval(
     name="Relevancy",
     criteria="Check if the actual output directly addresses the input.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.INPUT]
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.INPUT]
 )
 
 ```
@@ -16475,7 +16475,7 @@ Here's an example answer correctness metric defined using G-Eval:
 ```codeBlockLines_e6Vv
 # Create a custom correctness metric
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 correctness_metric = GEval(
     name="Correctness",
@@ -16486,7 +16486,7 @@ correctness_metric = GEval(
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 
 ```
@@ -16525,7 +16525,7 @@ Here's a an example coherence metric assessing clarify defined using G-Eval:
 ```codeBlockLines_e6Vv
 # Create a custom clarity metric focused on clear communication
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 clarity_metric = GEval(
     name="Clarity",
@@ -16535,7 +16535,7 @@ clarity_metric = GEval(
         "Assess whether complex ideas are presented in a way that’s easy to follow.",\
         "Identify any vague or confusing parts that reduce understanding."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -16570,7 +16570,7 @@ Here's an example professionalism metric defined using G-Eval:
 ```codeBlockLines_e6Vv
 # Create a custom professionalism metric
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 professionalism_metric = GEval(
     name="Professionalism",
@@ -16582,7 +16582,7 @@ professionalism_metric = GEval(
         "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",\
         "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -16615,7 +16615,7 @@ Here's an example custom PII Leakage metric.
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 pii_leakage_metric = GEval(
     name="PII Leakage",
@@ -16625,7 +16625,7 @@ pii_leakage_metric = GEval(
         "Ensure the output uses placeholders or anonymized data when applicable.",\
         "Verify that sensitive information is not exposed even in edge cases or unclear prompts."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -16661,7 +16661,7 @@ Below is an example of a custom **Faithfulness** metric for a medical diagnosis 
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 custom_faithfulness_metric = GEval(
     name="Medical Diagnosis Faithfulness",
@@ -16674,7 +16674,7 @@ custom_faithfulness_metric = GEval(
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",\
         "Provide reasons for the faithfulness score, emphasizing the importance of clinical accuracy and patient safety."\
     ],
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.RETRIEVAL_CONTEXT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.RETRIEVAL_CONTEXT],
 )
 
 ```
@@ -16699,12 +16699,12 @@ This is a naive G-Eval approach to evaluate the persuasiveness of a sales email 
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 geval_metric = GEval(
     name="Persuasiveness",
     criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 ```
@@ -16737,7 +16737,7 @@ A **DAG** handles the above use case deterministically by splitting the logic, a
 Here is an example of a G-Eval + DAG approach:
 
 ```codeBlockLines_e6Vv
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
     TaskNode,
@@ -16750,7 +16750,7 @@ from deepeval.metrics import DAGMetric, GEval
 geval_metric = GEval(
     name="Persuasiveness",
     criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 conciseness_node = BinaryJudgementNode(
@@ -21640,13 +21640,13 @@ Here is where you can take advantage of `deepeval`'s `GEval` metric, capable of 
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 ...
 
 dark_humor = GEval(
     name="Dark Humor",
     criteria="Determine how funny the dark humor in the actual output is",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
 )
 
 dark_humor.measure(test_case)

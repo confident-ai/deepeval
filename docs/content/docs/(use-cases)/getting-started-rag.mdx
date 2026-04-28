@@ -595,7 +595,7 @@ Define a multi-turn RAG metric to evaluate your chatbot system:
 
 ```python
 from deepeval.metrics import TurnRelevancy, TurnFaithfulness
-from deepeval.test_case import TurnParams
+from deepeval.test_case import MultiTurnParams
 
 turn_faithfulness = TurnFaithfulness()
 turn_relevancy = TurnRelevancy()

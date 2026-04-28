@@ -377,10 +377,6 @@ class Settings(BaseSettings):
     # Model Keys
     #
 
-    API_KEY: Optional[SecretStr] = Field(
-        None,
-        description="Alias for CONFIDENT_API_KEY (Confident AI API key).",
-    )
     CONFIDENT_API_KEY: Optional[SecretStr] = Field(
         None,
         description="Confident AI API key (used for uploading results/telemetry to Confident).",

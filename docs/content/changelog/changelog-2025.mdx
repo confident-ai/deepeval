@@ -14,6 +14,10 @@ sidebar_label: 🐍 2025
 - **Reliability** improved with better async handling, timeouts, and retries
 - **Documentation** expanded with comprehensive tutorials to help teams ship confidently
 
+## Heads up: deprecations
+
+- `LLMTestCaseParams` has been renamed to `SingleTurnParams`, and `TurnParams` has been renamed to `MultiTurnParams`, so the names line up with the AI system being evaluated rather than the underlying object. The old names still work but importing them now emits a `DeprecationWarning`; switch to `SingleTurnParams` / `MultiTurnParams` to silence it. GEval also now treats `metadata` and `tags` strictly as test-case-level params for `ConversationalTestCase` (they're no longer pulled from individual turns into the prompt).
+
 
 ## Thank you to our contributors
 
@@ -1050,7 +1054,7 @@ March made evaluations and synthesis more reliable. Defaults improved for Ollama
 #### v2.5.8
 
 - Fix Ragas metrics failing with an “async_mode is missing” error by explicitly running metric tracking in non-async mode during evaluation. ([#1402](https://github.com/confident-ai/deepeval/pull/1402)) {/* pr:1402 */} ([Tanay Agrawal](https://github.com/tanayag))
-- Fix the import path for `LLMTestCaseParams` in the metrics selection tutorial so the example code runs without import errors. ([#1407](https://github.com/confident-ai/deepeval/pull/1407)) {/* pr:1407 */} ([Obada Khalili](https://github.com/obadakhalili))
+- Fix the import path for `SingleTurnParams` in the metrics selection tutorial so the example code runs without import errors. ([#1407](https://github.com/confident-ai/deepeval/pull/1407)) {/* pr:1407 */} ([Obada Khalili](https://github.com/obadakhalili))
 - Fix a typo in the synthetic input generation template to clarify instructions about avoiding repetitive `input`. ([#1408](https://github.com/confident-ai/deepeval/pull/1408)) {/* pr:1408 */} ([John D. McDonald](https://github.com/Rasputin2))
 - Fix tool correctness reason messages so the `expected` and `called` tool names are reported in the right order when using exact match checks. ([#1409](https://github.com/confident-ai/deepeval/pull/1409)) {/* pr:1409 */} ([Casey Lewiston](https://github.com/shredinger137))
 - Fix the dataset synthesis tutorial to use the correct `StylingConfig` keyword argument, replacing `expected_output` with `expected_output_format` so the example code runs as intended. ([#1411](https://github.com/confident-ai/deepeval/pull/1411)) {/* pr:1411 */} ([Obada Khalili](https://github.com/obadakhalili))

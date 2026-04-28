@@ -378,7 +378,7 @@ The `ConversationalDAGMetric` lets you build **deterministic decision trees** fo
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import Turn, ConversationalTestCase, TurnParams
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import ConversationalDAGMetric
 from deepeval.metrics.dag import DeepAcyclicGraph
 from deepeval.metrics.conversational_dag import (
@@ -408,7 +408,7 @@ binary_node = ConversationalBinaryJudgementNode(
 task_node = ConversationalTaskNode(
     instructions="Summarize the conversation and explain assistant's behaviour overall.",
     output_label="Summary",
-    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    evaluation_params=[MultiTurnParams.ROLE, MultiTurnParams.CONTENT],
     children=[binary_node],
 )
 

@@ -121,7 +121,7 @@ def create_test_result(
             success=api_test_case.success,
             metrics_data=api_test_case.metrics_data,
             conversational=True,
-            additional_metadata=api_test_case.additional_metadata,
+            metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
     else:
@@ -135,7 +135,7 @@ def create_test_result(
                 actual_output=api_test_case.actual_output,
                 conversational=False,
                 multimodal=True,
-                additional_metadata=api_test_case.additional_metadata,
+                metadata=api_test_case.metadata,
             )
         else:
             return TestResult(
@@ -149,7 +149,7 @@ def create_test_result(
                 retrieval_context=api_test_case.retrieval_context,
                 conversational=False,
                 multimodal=False,
-                additional_metadata=api_test_case.additional_metadata,
+                metadata=api_test_case.metadata,
             )
 
 

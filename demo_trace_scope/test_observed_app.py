@@ -6,7 +6,7 @@ from deepeval import assert_test
 from deepeval.dataset import Golden
 from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.metrics import AnswerRelevancyMetric, GEval, FaithfulnessMetric
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 
 @observe(metrics=[AnswerRelevancyMetric()])
@@ -18,8 +18,8 @@ metric1 = GEval(
     name="Metric 1",
     criteria="Metric 1 criteria",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ],
 )
 
