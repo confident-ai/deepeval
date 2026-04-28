@@ -11,7 +11,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams, MLLMImage
+from deepeval.test_case import LLMTestCase, SingleTurnParams, MLLMImage
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
@@ -25,9 +25,9 @@ from deepeval.metrics.answer_relevancy.schema import (
 
 
 class AnswerRelevancyMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(

@@ -390,6 +390,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         ),
         "gpt-5.4": make_model_data(
             supports_log_probs=True,
+            max_log_probs=5,
             supports_multimodal=True,
             supports_structured_outputs=True,
             supports_json=True,
@@ -399,6 +400,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         ),
         "gpt-5.4-2026-03-05": make_model_data(
             supports_log_probs=True,
+            max_log_probs=5,
             supports_multimodal=True,
             supports_structured_outputs=True,
             supports_json=True,

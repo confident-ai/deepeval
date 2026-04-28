@@ -5,7 +5,7 @@ from deepeval.test_case import (
     LLMTestCase,
     MLLMImage,
     ToolCall,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval import evaluate
 
@@ -42,8 +42,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
             async_mode=False,
@@ -74,8 +74,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
         )
@@ -102,8 +102,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
         )
@@ -130,8 +130,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
             async_mode=False,
@@ -160,8 +160,8 @@ class TestGEval:
             metric = GEval(
                 name="Testing GEval",
                 evaluation_params=[
-                    LLMTestCaseParams.INPUT,
-                    LLMTestCaseParams.ACTUAL_OUTPUT,
+                    SingleTurnParams.INPUT,
+                    SingleTurnParams.ACTUAL_OUTPUT,
                 ],
                 async_mode=False,
                 model="gpt-3.5-turbo",
@@ -189,8 +189,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
         )
@@ -214,8 +214,8 @@ class TestGEval:
         metric = GEval(
             name="Testing GEval",
             evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
             ],
             criteria="Check if the actual output is relevant to input",
             async_mode=False,

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, Dict, List
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ArenaTestCase,
 )
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class BaseMetric:
-    _required_params = List[LLMTestCaseParams]
+    _required_params = List[SingleTurnParams]
     threshold: float
     score: Optional[float] = None
     score_breakdown: Dict = None

@@ -24,7 +24,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
 ```python
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams, Contestant
+from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams, Contestant
 from deepeval.metrics import ArenaGEval
 from deepeval import compare
 
@@ -52,8 +52,8 @@ metric = ArenaGEval(
     name="Friendly",
     criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ],
 )
 
@@ -64,7 +64,7 @@ There are **THREE** mandatory and **FOUR** optional parameters required when ins
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`, include only the parameters that are relevant for evaluation..
+- `evaluation_params`: a list of type `SingleTurnParams`, include only the parameters that are relevant for evaluation..
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `ConversationalGEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.

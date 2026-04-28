@@ -212,15 +212,15 @@ The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMI
 The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which picks a "winner" out of the list of contestants:
 
 ```python
-from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+from deepeval.metrics import ArenaTestCase, SingleTurnParams
 ...
 
 arena_geval = ArenaGEval(
     name="Friendly",
     criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ],
 )
 

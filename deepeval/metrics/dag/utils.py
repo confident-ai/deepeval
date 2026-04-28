@@ -16,7 +16,7 @@ from deepeval.metrics.conversational_dag import (
     ConversationalTaskNode,
     ConversationalVerdictNode,
 )
-from deepeval.test_case import LLMTestCaseParams, TurnParams
+from deepeval.test_case import SingleTurnParams, MultiTurnParams
 
 
 def is_valid_dag_from_roots(
@@ -75,9 +75,9 @@ def extract_required_params(
     nodes: list[BaseNode],
     multiturn: bool,
     required_params: Optional[
-        Union[Set[LLMTestCaseParams], Set[TurnParams]]
+        Union[Set[SingleTurnParams], Set[MultiTurnParams]]
     ] = None,
-) -> Union[Set[LLMTestCaseParams], Set[TurnParams]]:
+) -> Union[Set[SingleTurnParams], Set[MultiTurnParams]]:
     if required_params is None:
         required_params = set()
 

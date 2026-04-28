@@ -38,13 +38,13 @@ G-Eval is most effective when employing a model from the **GPT-4 model family** 
 
 ### 2. Select your evaluation parameters
 
-G-Eval allows you to select parameters that are relevant for evaluation by providing a list of `LLMTestCaseParams`, which includes:
+G-Eval allows you to select parameters that are relevant for evaluation by providing a list of `SingleTurnParams`, which includes:
 
-- `LLMTestCaseParams.INPUT`
-- `LLMTestCaseParams.ACTUAL_OUTPUT`
-- `LLMTestCaseParams.EXPECTED_OUTPUT`
-- `LLMTestCaseParams.CONTEXT`
-- `LLMTestCaseParams.RETRIEVAL_CONTEXT`
+- `SingleTurnParams.INPUT`
+- `SingleTurnParams.ACTUAL_OUTPUT`
+- `SingleTurnParams.EXPECTED_OUTPUT`
+- `SingleTurnParams.CONTEXT`
+- `SingleTurnParams.RETRIEVAL_CONTEXT`
 
 `ACTUAL_OUTPUT` should **always** be included in your `evaluation_params`, as this is what every Correctness metric will be directly evaluating. As mentioned earlier, Correctness is determined by how well the actual output aligns with the ground truth, which is typically more variable. The ground truth is best represented by `EXPECTED_OUTPUT`, where the expected output serves as the **ideal reference** for the actual output, with an exact match earning a score of 1.
 
@@ -54,8 +54,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.EXPECTED_OUTPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.EXPECTED_OUTPUT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     ...
 )
 ```
@@ -68,8 +68,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.CONTEXT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.CONTEXT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     ...
 )
 ```
@@ -86,8 +86,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.CONTEXT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.CONTEXT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Determine whether the actual output is factually correct based on the expected output."
     ],
@@ -101,8 +101,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.CONTEXT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.CONTEXT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     evaluation_steps=[
        'Compare the actual output directly with the expected output to verify factual accuracy.',
        'Check if all elements mentioned in the expected output are present and correctly represented in the actual output.',
@@ -118,8 +118,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.CONTEXT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.CONTEXT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
         "You should also lightly penalize omission of detail, and focus on the main idea",
@@ -181,8 +181,8 @@ correctness_metric = GEval(
     name="Correctness",
     model="gpt-4.1",
     evaluation_params=[
-        LLMTestCaseParams.CONTEXT,
-        LLMTestCaseParams.ACTUAL_OUTPUT],
+        SingleTurnParams.CONTEXT,
+        SingleTurnParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Check whether the facts in 'actual output' contradict any facts in 'expected output'",
         "Lightly penalize omissions of detail, focusing on the main idea",

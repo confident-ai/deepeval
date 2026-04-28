@@ -11,7 +11,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     ConversationalTestCase,
-    TurnParams,
+    MultiTurnParams,
     ToolCall,
     Turn,
 )
@@ -30,8 +30,8 @@ from deepeval.metrics.tool_use.schema import (
 class ToolUseMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
     ]
 
     def __init__(

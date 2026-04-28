@@ -440,13 +440,13 @@ Define your custom metric locally using the `GEval` class:
 
 ```python
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 # Define a custom metric for your specific use case
 reasoning_clarity = GEval(
     name="Reasoning Clarity",
     criteria="Evaluate how clearly the agent explains its reasoning and decision-making process before taking actions.",
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
 )
 ```
 

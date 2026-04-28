@@ -73,7 +73,7 @@ We will iterate on different retriever hyperparameters like chunk size, embeddin
 
 ```python
 from deepeval.dataset import EvaluatinDataset
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import (
     ContextualRelevancyMetric,
     ContextualRecallMetric,
@@ -222,7 +222,7 @@ This is a more elaborate and clear prompt template that was updated by taking th
 
 ```python
 from deepeval.dataset import EvaluatinDataset
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 from langchain.llms import Ollama, OpenAI, HuggingFaceHub
 from qa_agent import RAGAgent

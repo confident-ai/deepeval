@@ -23,7 +23,7 @@ To create a custom metric that evaluates entire LLM conversations, simply instan
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
 convo_test_case = ConversationalTestCase(
@@ -45,7 +45,7 @@ There are **THREE** mandatory and **SIX** optional parameters required when inst
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- [Optional] `evaluation_params`: a list of type `TurnParams`, include only the parameters that are relevant for evaluation. Defaulted to `[TurnParams.CONTENT]`.
+- [Optional] `evaluation_params`: a list of type `MultiTurnParams`, include only the parameters that are relevant for evaluation. Defaulted to `[MultiTurnParams.CONTENT]`.
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `ConversationalGEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.

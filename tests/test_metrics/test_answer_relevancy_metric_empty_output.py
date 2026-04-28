@@ -16,7 +16,7 @@ from unittest.mock import patch
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.utils import check_llm_test_case_params
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.errors import MissingTestCaseParamsError
 from tests.test_core.stubs import DummyModel
 

@@ -605,7 +605,7 @@ def _add_test_case_to_run(
         tokenCost=token_cost,  # Total token count from llmSpans
         completionTime=completion_time,  # Duration in seconds from timestamps
         tags=tags,  # From CallbackHandler tags
-        additionalMetadata=additional_metadata,
+        metadata=additional_metadata,
         success=passed,
         metricsData=None,  # None = "no metrics evaluated" (bypasses guard)
         trace=None,  # Must be None - embedding traces causes 500s

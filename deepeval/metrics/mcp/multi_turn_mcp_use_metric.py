@@ -12,7 +12,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import ConversationalTestCase, TurnParams
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore, Reason
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
@@ -21,8 +21,8 @@ from deepeval.errors import MissingTestCaseParamsError
 
 class MultiTurnMCPUseMetric(BaseConversationalMetric):
     _required_test_case_params = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
     ]
 
     def __init__(

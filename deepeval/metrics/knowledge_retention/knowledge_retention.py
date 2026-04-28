@@ -1,6 +1,6 @@
 from typing import Optional, Union, List
 
-from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
+from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -24,7 +24,7 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
-    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+    _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
     def __init__(
         self,

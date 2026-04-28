@@ -9,7 +9,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.test_case import ConversationalTestCase, TurnParams
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -25,8 +25,8 @@ from deepeval.metrics.topic_adherence.schema import (
 class TopicAdherenceMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
     ]
 
     def __init__(

@@ -13,7 +13,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     ToolCallParams,
     ToolCall,
 )
@@ -24,10 +24,10 @@ from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 
 class ToolCorrectnessMetric(BaseMetric):
 
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.TOOLS_CALLED,
-        LLMTestCaseParams.EXPECTED_TOOLS,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.TOOLS_CALLED,
+        SingleTurnParams.EXPECTED_TOOLS,
     ]
 
     def __init__(

@@ -282,6 +282,13 @@ class GPTModel(DeepEvalBaseLLM):
     # Other generate functions #
     ############################
 
+    def _cap_top_logprobs(self, top_logprobs: int) -> int:
+        max_log_probs = self.model_data.max_log_probs
+        if max_log_probs is None:
+            return top_logprobs
+
+        return min(top_logprobs, max_log_probs)
+
     @retry_openai
     def generate_raw_response(
         self,
@@ -298,6 +305,7 @@ class GPTModel(DeepEvalBaseLLM):
                 "when calling `generate_raw_response`."
             )
 
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
         if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)
@@ -336,6 +344,7 @@ class GPTModel(DeepEvalBaseLLM):
                 "when calling `a_generate_raw_response`."
             )
 
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
         if is_multimodal:
             prompt = convert_to_multi_modal_array(input=prompt)

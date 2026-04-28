@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Type, Tuple
 import asyncio
 import itertools
-from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -31,11 +31,11 @@ from deepeval.metrics.turn_contextual_precision.schema import (
 
 
 class TurnContextualPrecisionMetric(BaseConversationalMetric):
-    _required_test_case_params: List[TurnParams] = [
-        TurnParams.ROLE,
-        TurnParams.CONTENT,
-        TurnParams.RETRIEVAL_CONTEXT,
-        TurnParams.EXPECTED_OUTCOME,
+    _required_test_case_params: List[MultiTurnParams] = [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.RETRIEVAL_CONTEXT,
+        MultiTurnParams.EXPECTED_OUTCOME,
     ]
 
     def __init__(

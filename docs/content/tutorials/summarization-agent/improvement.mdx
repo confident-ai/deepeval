@@ -136,7 +136,7 @@ These are more elaborate and clear system prompts that are updated by taking the
 We can pull a dataset and use that dataset to iterate over our hyperparameters to initialize our summarization agent with different configurations to produce different test cases. Here's how we can do that:
 
 ```python
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import GEval
 from deepeval import evaluate

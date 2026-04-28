@@ -6,7 +6,7 @@ from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -43,7 +43,7 @@ class GEval(BaseMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[LLMTestCaseParams],
+        evaluation_params: List[SingleTurnParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,

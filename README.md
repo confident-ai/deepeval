@@ -220,13 +220,13 @@ Open `test_chatbot.py` and write your first test case to run an **end-to-end** e
 import pytest
 from deepeval import assert_test
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 def test_case():
     correctness_metric = GEval(
         name="Correctness",
         criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-        evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(
@@ -268,14 +268,14 @@ Use the `@observe` decorator to trace components (LLM calls, retrievers, tool ca
 
 ```python
 from deepeval.tracing import observe, update_current_span
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import GEval
 
 correctness = GEval(
     name="Correctness",
     criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
 )
 
 @observe(metrics=[correctness])

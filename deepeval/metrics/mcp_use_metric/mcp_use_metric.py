@@ -10,7 +10,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
     MCPServer,
     MCPToolCall,
     MCPResourceCall,
@@ -24,10 +24,10 @@ from .schema import MCPPrimitivesScore, MCPArgsScore
 
 
 class MCPUseMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.MCP_SERVERS,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.MCP_SERVERS,
     ]
 
     def __init__(

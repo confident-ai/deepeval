@@ -270,7 +270,6 @@ def login(
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
             with settings.edit(save=save) as edit_ctx:
-                settings.API_KEY = key
                 settings.CONFIDENT_API_KEY = key
 
             handled, path, updated = edit_ctx.result
@@ -335,7 +334,6 @@ def logout(
     settings = get_settings()
     save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
     with settings.edit(save=save) as edit_ctx:
-        settings.API_KEY = None
         settings.CONFIDENT_API_KEY = None
 
     handled, path, updated = edit_ctx.result

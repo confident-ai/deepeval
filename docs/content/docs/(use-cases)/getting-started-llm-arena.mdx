@@ -198,14 +198,14 @@ The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the
 
 ```python
 from deepeval.metrics import ArenaGEval
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 
 arena_geval = ArenaGEval(
     name="Friendly",
     criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 )
 ```
@@ -227,7 +227,7 @@ Now that you have created an arena with contestants and defined a metric, you ca
 You can run arena evals by using the `compare()` function.
 
 ```python {3,11} title="main.py"
-from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, SingleTurnParams
 from deepeval.metrics import ArenaGEval
 from deepeval import compare
 

@@ -17,7 +17,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_geval_upload_payload,
 )
 from deepeval.test_case import (
-    TurnParams,
+    MultiTurnParams,
     ConversationalTestCase,
 )
 from deepeval.metrics.conversational_g_eval.template import (
@@ -39,11 +39,19 @@ import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
+def _debug_print_prompt(label: str, prompt: str) -> None:
+    """Debug helper: dump a built prompt to stdout. Remove or gate when no longer needed."""
+    bar = "=" * 80
+    print(f"\n{bar}\n[ConversationalGEval prompt] {label}\n{bar}")
+    print(prompt)
+    print(f"{bar}\n", flush=True)
+
+
 class ConversationalGEval(BaseConversationalMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: Optional[List[TurnParams]] = None,
+        evaluation_params: Optional[List[MultiTurnParams]] = None,
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -63,12 +71,12 @@ class ConversationalGEval(BaseConversationalMetric):
 
         self.name = name
         if evaluation_params is None:
-            evaluation_params = [TurnParams.CONTENT, TurnParams.ROLE]
+            evaluation_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
-        if TurnParams.CONTENT not in evaluation_params:
-            evaluation_params.append(TurnParams.CONTENT)
-        if TurnParams.ROLE not in evaluation_params:
-            evaluation_params.append(TurnParams.ROLE)
+        if MultiTurnParams.CONTENT not in evaluation_params:
+            evaluation_params.append(MultiTurnParams.CONTENT)
+        if MultiTurnParams.ROLE not in evaluation_params:
+            evaluation_params.append(MultiTurnParams.ROLE)
 
         self.evaluation_params = evaluation_params
 
@@ -204,6 +212,9 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
+        _debug_print_prompt(
+            f"{self.__name__} :: generate_evaluation_steps (async)", prompt
+        )
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -221,6 +232,9 @@ class ConversationalGEval(BaseConversationalMetric):
         )
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
+        )
+        _debug_print_prompt(
+            f"{self.__name__} :: generate_evaluation_steps (sync)", prompt
         )
         return generate_with_schema_and_extract(
             metric=self,
@@ -261,6 +275,9 @@ class ConversationalGEval(BaseConversationalMetric):
                 ],
                 parameters=g_eval_params_str,
             )
+        _debug_print_prompt(
+            f"{self.__name__} :: generate_evaluation_results (async)", prompt
+        )
         try:
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
@@ -326,6 +343,9 @@ class ConversationalGEval(BaseConversationalMetric):
                 ],
                 parameters=g_eval_params_str,
             )
+        _debug_print_prompt(
+            f"{self.__name__} :: generate_evaluation_results (sync)", prompt
+        )
         try:
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")

@@ -26,13 +26,13 @@ Your test file must be named with a `test_` prefix (like `test_app.py`) for Deep
 
 ```python title="test_app.py"
 from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 
 correctness_metric = GEval(
     name="Correctness",
     criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
     threshold=0.5
 )
 

@@ -142,7 +142,7 @@ def _assert_test_from_current_trace(
         expected_output=current_trace.expected_output,
         context=current_trace.context,
         retrieval_context=current_trace.retrieval_context,
-        additional_metadata=golden.additional_metadata,
+        metadata=golden.additional_metadata,
         tools_called=current_trace.tools_called,
         expected_tools=current_trace.expected_tools,
         comments=golden.comments,
