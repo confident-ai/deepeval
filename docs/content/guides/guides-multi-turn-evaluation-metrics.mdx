@@ -450,6 +450,93 @@ Not every application needs every metric. Here's a decision framework:
 All multi-turn metrics in `deepeval` support custom LLM judges, configurable thresholds, strict mode for binary scoring, and detailed reasoning explanations. See each metric's documentation for full configuration options.
 :::
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What are multi-turn evaluation metrics?",
+      answer: (
+        <>
+          Multi-turn evaluation metrics score a full conversation rather than a
+          single response. In DeepEval, they operate on{" "}
+          <code>ConversationalTestCase</code>s and cover conversation quality,
+          behavioral compliance, agentic outcomes, multi-turn RAG, and custom
+          criteria.
+        </>
+      ),
+    },
+    {
+      question: "Which metric measures whether a conversation succeeded?",
+      answer: (
+        <>
+          <code>ConversationCompletenessMetric</code> is the headline metric.
+          It measures the fraction of user intentions across the conversation
+          that the assistant satisfied.
+        </>
+      ),
+    },
+    {
+      question: "What's the difference between TurnRelevancyMetric and ConversationCompletenessMetric?",
+      answer: (
+        <>
+          <code>TurnRelevancyMetric</code> evaluates each turn-level response in
+          context, catching off-topic or irrelevant replies.{" "}
+          <code>ConversationCompletenessMetric</code> evaluates whether the
+          conversation as a whole resolved the user's goals.
+        </>
+      ),
+    },
+    {
+      question: "When should I use RoleAdherenceMetric vs TopicAdherenceMetric?",
+      answer: (
+        <>
+          Use <code>RoleAdherenceMetric</code> when your assistant has a defined
+          persona it must maintain (e.g., bank teller, support agent). Use{" "}
+          <code>TopicAdherenceMetric</code> when the assistant must stay within
+          a specific subject area regardless of how the user steers the
+          conversation.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate multi-turn RAG with DeepEval?",
+      answer: (
+        <>
+          Yes. Use <code>TurnFaithfulnessMetric</code>,{" "}
+          <code>TurnContextualRelevancyMetric</code>,{" "}
+          <code>TurnContextualPrecisionMetric</code>, and{" "}
+          <code>TurnContextualRecallMetric</code>. These run the standard RAG
+          metrics at each retrieval-bearing turn.
+        </>
+      ),
+    },
+    {
+      question: "How do I write custom multi-turn metrics?",
+      answer: (
+        <>
+          Use <code>ConversationalGEval</code> for natural-language criteria
+          across the whole conversation, or{" "}
+          <code>ConversationalDAGMetric</code> for deterministic decision-tree
+          logic with branching judgments.
+        </>
+      ),
+    },
+    {
+      question: "Do multi-turn metrics need expected outputs?",
+      answer: (
+        <>
+          Most are referenceless—they evaluate the conversation as-is. Some,
+          like <code>TurnContextualPrecisionMetric</code> and{" "}
+          <code>TurnContextualRecallMetric</code>, are reference-based and
+          require <code>expected_output</code> to score retrieval quality
+          across turns.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps
 
 Now that you understand the available multi-turn evaluation metrics, here's where to go next:

@@ -506,6 +506,83 @@ To catch these issues, `deepeval` provides metrics you can apply at different sc
 
 With proper evaluation in place, you can catch regressions before users do, pinpoint exactly where your agent is failing, make data-driven decisions about which version to ship, and continuously monitor quality in production.
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is AI agent evaluation?",
+      answer:
+        "AI agent evaluation is the process of measuring how well an autonomous LLM system reasons, plans, selects and calls tools, and completes tasks. Unlike single-turn LLM evaluation, agent evaluation operates on the full execution trace and assesses the reasoning layer and the action layer separately.",
+    },
+    {
+      question: "How is AI agent evaluation different from regular LLM evaluation?",
+      answer:
+        "Standard LLM evaluation scores one input-output pair. AI agent evaluation runs against an execution trace that contains reasoning steps, tool calls, and intermediate decisions—so you can pinpoint whether failures came from bad planning, wrong tool selection, incorrect arguments, or incomplete task execution.",
+    },
+    {
+      question: "Which AI agent metrics should I use in DeepEval?",
+      answer: (
+        <>
+          For most agents, start with <code>PlanQualityMetric</code> and{" "}
+          <code>PlanAdherenceMetric</code> for reasoning,{" "}
+          <code>ToolCorrectnessMetric</code> and{" "}
+          <code>ArgumentCorrectnessMetric</code> for the action layer, and{" "}
+          <code>TaskCompletionMetric</code> with{" "}
+          <code>StepEfficiencyMetric</code> for end-to-end execution quality.
+        </>
+      ),
+    },
+    {
+      question: "What is the difference between end-to-end and component-level agent evals?",
+      answer: (
+        <>
+          End-to-end evals are passed to <code>evals_iterator(metrics=[...])</code>{" "}
+          and score the entire trace—best for plan quality and task completion.
+          Component-level evals are attached via{" "}
+          <code>@observe(metrics=[...])</code> and score a specific span like
+          the LLM tool-calling component—best for tool selection and argument
+          correctness.
+        </>
+      ),
+    },
+    {
+      question: "Do I need tracing to evaluate AI agents?",
+      answer: (
+        <>
+          Yes. Agent metrics in DeepEval require tracing because they read from
+          the full execution trace—reasoning steps, tool calls, and arguments.
+          Wrap your agent functions with <code>@observe</code> and the trace is
+          built automatically.
+        </>
+      ),
+    },
+    {
+      question: "Can I write custom AI agent evaluation metrics?",
+      answer: (
+        <>
+          Yes. Use <code>GEval</code> for subjective natural-language criteria
+          like reasoning clarity or professional tone, and{" "}
+          <code>DAGMetric</code> for deterministic decision-tree logic. Both can
+          run end-to-end or be attached to a specific span.
+        </>
+      ),
+    },
+    {
+      question: "How do I run AI agent evaluation in production?",
+      answer: (
+        <>
+          Run development evaluations locally with DeepEval, then export
+          traces to <a href="https://confident-ai.com">Confident AI</a> for
+          asynchronous production evaluation. Attach metric collections to
+          your agent and LLM spans so the platform scores live traffic without
+          adding latency to your application.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps And Additional Resources
 
 While `deepeval` handles the metrics and evaluation logic, [Confident AI](https://confident-ai.com) is the platform that brings everything together. It solves the infrastructure overhead so you can focus on building better agents:

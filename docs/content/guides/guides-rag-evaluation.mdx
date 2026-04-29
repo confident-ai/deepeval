@@ -472,3 +472,90 @@ You can simply return an empty dictionary `{}` if you don't have any custom para
 **Congratulations 🎉!** You've just learnt most of what you need to know for RAG evaluation.
 
 For any addition questions, please come and ask away in the [DeepEval discord server](https://discord.com/invite/a3K9c8GRGt), we'll be happy to have you.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is RAG evaluation?",
+      answer:
+        "RAG evaluation is the process of measuring how well a Retrieval-Augmented Generation pipeline performs—both the retriever (does it pull the right context?) and the generator (does it produce a faithful, relevant answer using that context?). DeepEval evaluates these layers separately so you can debug failures at the component level.",
+    },
+    {
+      question: "Which metrics should I use for RAG?",
+      answer: (
+        <>
+          Use <code>ContextualRelevancyMetric</code>,{" "}
+          <code>ContextualPrecisionMetric</code>, and{" "}
+          <code>ContextualRecallMetric</code> for the retriever, and{" "}
+          <code>AnswerRelevancyMetric</code> with{" "}
+          <code>FaithfulnessMetric</code> for the generator. The full set of
+          five gives you complete component-level coverage.
+        </>
+      ),
+    },
+    {
+      question: "What is the RAG triad?",
+      answer: (
+        <>
+          The RAG triad is the referenceless trio of{" "}
+          <code>AnswerRelevancyMetric</code>, <code>FaithfulnessMetric</code>,
+          and <code>ContextualRelevancyMetric</code>. It lets you evaluate RAG
+          end-to-end without needing a labelled <code>expected_output</code>.
+          See the <a href="/guides/guides-rag-triad">RAG Triad guide</a> for
+          details.
+        </>
+      ),
+    },
+    {
+      question: "Do I need expected outputs to evaluate RAG?",
+      answer: (
+        <>
+          No. You can evaluate RAG without labels using the RAG triad.
+          Reference-based metrics like <code>ContextualPrecisionMetric</code>{" "}
+          and <code>ContextualRecallMetric</code> require an{" "}
+          <code>expected_output</code>, but they're optional and used when you
+          want stricter retrieval evaluation.
+        </>
+      ),
+    },
+    {
+      question: "How do I evaluate multi-turn RAG?",
+      answer: (
+        <>
+          Use the multi-turn RAG metrics—<code>TurnFaithfulnessMetric</code>,{" "}
+          <code>TurnContextualRelevancyMetric</code>,{" "}
+          <code>TurnContextualPrecisionMetric</code>, and{" "}
+          <code>TurnContextualRecallMetric</code>—on a{" "}
+          <code>ConversationalTestCase</code> where each retrieval-bearing turn
+          has its own <code>retrieval_context</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I run RAG evaluation in CI/CD?",
+      answer: (
+        <>
+          Yes. Use <code>assert_test</code> in your test files and run them
+          with <code>deepeval test run</code> in your CI pipeline. Failing
+          scores break the build, so RAG regressions never reach production.
+        </>
+      ),
+    },
+    {
+      question: "How do I tune RAG hyperparameters using evaluation?",
+      answer: (
+        <>
+          Each RAG metric maps to specific hyperparameters: contextual
+          relevancy to chunk size, top-K, and embedding model; faithfulness to
+          your LLM choice; answer relevancy to your prompt template. Track
+          scores per configuration with{" "}
+          <code>@deepeval.log_hyperparameters</code> on{" "}
+          <a href="https://confident-ai.com">Confident AI</a> to see which
+          combination performs best.
+        </>
+      ),
+    },
+  ]}
+/>

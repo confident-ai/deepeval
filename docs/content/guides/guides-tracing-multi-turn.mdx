@@ -382,6 +382,80 @@ In this guide, you learned how to stitch individual traces together to monitor t
 
 :::
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is multi-turn tracing?",
+      answer:
+        "Multi-turn tracing is the practice of grouping per-turn traces into a single conversational thread so you can monitor context retention, role adherence, and topic drift across an entire user session.",
+    },
+    {
+      question: "What's the difference between a trace and a thread in DeepEval?",
+      answer: (
+        <>
+          A trace is one back-and-forth interaction (one user message and one
+          assistant response). A thread is the historical sequence of those
+          traces grouped together by a shared <code>thread_id</code>—the
+          production equivalent of a <code>ConversationalTestCase</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I stitch traces into a multi-turn thread?",
+      answer: (
+        <>
+          Tag each per-turn trace with the same <code>thread_id</code> using{" "}
+          <code>update_current_trace(thread_id=...)</code>. DeepEval and{" "}
+          <a href="https://confident-ai.com">Confident AI</a> use this ID to
+          reconstruct the full conversation from isolated traces.
+        </>
+      ),
+    },
+    {
+      question: "Where does conversation memory live?",
+      answer:
+        "Memory management remains your responsibility—DeepEval observes execution but doesn't store conversation state for you. Pass the conversation history to your model however your application normally does, and DeepEval will trace each call.",
+    },
+    {
+      question: "How do I attach retrieval_context to specific turns?",
+      answer: (
+        <>
+          Use <code>update_current_span(retrieval_context=...)</code> inside
+          the retriever step of that turn. This makes multi-turn RAG metrics
+          like <code>TurnFaithfulnessMetric</code> work without extra wiring.
+        </>
+      ),
+    },
+    {
+      question: "How do I evaluate a complete thread on demand?",
+      answer: (
+        <>
+          Call <code>evaluate_thread(thread_id=..., metric_collection=...)</code>{" "}
+          after the conversation ends.{" "}
+          <a href="https://confident-ai.com">Confident AI</a> reconstructs the
+          full thread from all traces sharing that ID and runs the metric
+          collection asynchronously—useful for support or sales workflows that
+          have a clear end state.
+        </>
+      ),
+    },
+    {
+      question: "Can I monitor multi-turn quality continuously?",
+      answer: (
+        <>
+          Yes. Attach a multi-turn <code>metric_collection</code> via{" "}
+          <code>update_current_trace</code> and{" "}
+          <a href="https://confident-ai.com">Confident AI</a> evaluates every
+          thread asynchronously. Use the Thread Explorer to replay sessions
+          turn-by-turn and pinpoint where drift or memory failures occurred.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps And Additional Resources
 
 Now that your conversational agent is instrumented, you can begin automating your multi-turn evaluation pipeline and curating high-quality datasets:

@@ -81,3 +81,84 @@ Congratulations 🎉! You've learnt everything you need to know for the RAG tria
 ## Scaling RAG Evaluation
 
 As you scale up your RAG evaluation efforts, you can simply supply more test cases to the list of `test_cases` in the [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) and more importantly, you can also [generate synthetic datasets using `deepeval`](/guides/guides-using-synthesizer) to test your RAG application at scale.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the RAG triad?",
+      answer: (
+        <>
+          The RAG triad is a referenceless evaluation framework for RAG that
+          combines three metrics: <code>AnswerRelevancyMetric</code>,{" "}
+          <code>FaithfulnessMetric</code>, and{" "}
+          <code>ContextualRelevancyMetric</code>. High scores across all three
+          indicate that your RAG pipeline is using the right hyperparameters
+          end-to-end.
+        </>
+      ),
+    },
+    {
+      question: "Why is the RAG triad referenceless?",
+      answer: (
+        <>
+          None of the three metrics requires <code>expected_output</code>. They
+          score relevancy, faithfulness, and retrieval quality directly from
+          the <code>input</code>, <code>actual_output</code>, and{" "}
+          <code>retrieval_context</code>—so you can evaluate RAG even when you
+          don't have a labelled ground truth answer.
+        </>
+      ),
+    },
+    {
+      question: "What hyperparameter does each RAG triad metric target?",
+      answer:
+        "Answer relevancy targets the prompt template; faithfulness targets the generator LLM; contextual relevancy targets chunk size, top-K, and the embedding model. A low score on any single metric points you straight to the hyperparameter to tune.",
+    },
+    {
+      question: "Is faithfulness the same as groundedness?",
+      answer: (
+        <>
+          Yes. Faithfulness and groundedness are two names for the same
+          concept—how well the generated answer is supported by the{" "}
+          <code>retrieval_context</code>, with no hallucinated claims.
+        </>
+      ),
+    },
+    {
+      question: "How is contextual relevancy different from contextual precision?",
+      answer: (
+        <>
+          Contextual relevancy is referenceless: it scores how relevant the
+          retrieved chunks are to the input. Contextual precision and
+          contextual recall are reference-based and require{" "}
+          <code>expected_output</code> to measure ranking and coverage of the
+          ideal answer's information.
+        </>
+      ),
+    },
+    {
+      question: "Do I need labeled data to use the RAG triad?",
+      answer: (
+        <>
+          No. The whole point of the RAG triad is that it's fully referenceless.
+          You can evaluate RAG with just <code>input</code>,{" "}
+          <code>actual_output</code>, and <code>retrieval_context</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I scale RAG triad evaluation to many test cases?",
+      answer: (
+        <>
+          Use{" "}
+          <a href="/guides/guides-using-synthesizer">DeepEval's Synthesizer</a>{" "}
+          to generate hundreds of <code>Golden</code>s from your knowledge
+          base, then pass them to <code>evaluate()</code> with the RAG triad
+          metrics.
+        </>
+      ),
+    },
+  ]}
+/>

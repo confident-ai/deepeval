@@ -550,6 +550,91 @@ In this guide, you learned how to instrument complex AI agents to capture their 
 
 :::
 
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is agentic tracing?",
+      answer: (
+        <>
+          Agentic tracing is the practice of capturing the non-deterministic
+          execution path of an AI agent—every reasoning step, tool call, and
+          handoff—as a structured tree. In DeepEval, this is done by
+          decorating your code with <code>@observe</code>, which automatically
+          builds the execution tree.
+        </>
+      ),
+    },
+    {
+      question: "How is agent tracing different from RAG tracing?",
+      answer:
+        "RAG tracing typically captures a linear pipeline (retrieve → generate). Agent tracing captures dynamic loops where the agent iteratively calls tools and re-plans, producing a tree with multiple LLM and tool spans per request.",
+    },
+    {
+      question: "Which span types should I use for AI agents?",
+      answer: (
+        <>
+          Use <code>type="agent"</code> for the orchestrator,{" "}
+          <code>type="llm"</code> for inference and decision making,{" "}
+          <code>type="tool"</code> for external function or API executions,
+          and <code>type="retriever"</code> for any context-fetching steps.
+          DeepEval builds the parent-child tree from your call stack
+          automatically.
+        </>
+      ),
+    },
+    {
+      question: "How do I trace tool calls in DeepEval?",
+      answer: (
+        <>
+          Decorate each tool function with <code>@observe(type="tool")</code>.
+          DeepEval captures the arguments, return value, and latency, and
+          automatically propagates the call to the parent span's{" "}
+          <code>tools_called</code> attribute so agent metrics can read it.
+        </>
+      ),
+    },
+    {
+      question: "Can I run metrics on individual agent spans during development?",
+      answer: (
+        <>
+          Yes. Pass <code>metrics=[...]</code> to <code>@observe</code>{" "}
+          directly. For example, attach <code>ToolCorrectnessMetric</code> to
+          the LLM span to evaluate tool selection at the component level, and{" "}
+          <code>TaskCompletionMetric</code> to the agent span for end-to-end
+          evaluation.
+        </>
+      ),
+    },
+    {
+      question: "How do I detect reasoning loops or runaway agents?",
+      answer: (
+        <>
+          Look for repeated tool calls with identical arguments inside the
+          same trace, or an unusually high number of LLM inference spans for a
+          simple task. Tracing surfaces these patterns visually—either by
+          inspecting the raw trace dictionary locally or via{" "}
+          <a href="https://confident-ai.com">Confident AI</a>'s trace
+          explorer.
+        </>
+      ),
+    },
+    {
+      question: "How do I run agentic evaluation in production?",
+      answer: (
+        <>
+          Define a metric collection on{" "}
+          <a href="https://confident-ai.com">Confident AI</a> and pass{" "}
+          <code>metric_collection</code> to your <code>@observe</code>{" "}
+          decorators. Traces are exported asynchronously and evaluated by
+          Confident AI without blocking your live agent.
+        </>
+      ),
+    },
+  ]}
+/>
+
 ## Next Steps And Additional Resources
 
 Now that your agent is fully instrumented, you can establish a robust evaluation pipeline to measure its autonomous performance over time:
