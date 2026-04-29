@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/confident-ai-deepeval-badge.png)](https://mseep.ai/app/confident-ai-deepeval)
+
 <p align="center">
     <img src="https://github.com/confident-ai/deepeval/blob/main/docs/static/img/deepeval.png" alt="DeepEval Logo" width="100%">
 </p>
