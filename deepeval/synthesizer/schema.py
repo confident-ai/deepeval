@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 
@@ -13,6 +13,7 @@ class InputFeedback(BaseModel):
 
 class SyntheticData(BaseModel):
     input: str
+    used_source_files: Optional[List[str]] = None
 
 
 class SyntheticDataList(BaseModel):
