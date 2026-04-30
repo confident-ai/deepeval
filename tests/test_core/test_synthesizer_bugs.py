@@ -234,3 +234,21 @@ class TestRewriteInputsZeroRetries:
         assert all(s == 0.0 for s in scores)
         assert filtered[0].input == "async question 1"
         assert filtered[1].input == "async question 2"
+
+
+class TestCrossFileSourceLabeling:
+    def test_format_context_with_sources_labels_each_chunk(self):
+        synth = _make_synthesizer()
+
+        context = ["chunk A text", "chunk B text"]
+        chunk_source_files = ["file_a.txt", "file_b.txt"]
+
+        formatted = synth._format_context_with_sources(
+            context=context,
+            chunk_source_files=chunk_source_files,
+        )
+
+        assert formatted == [
+            "[SOURCE: file_a.txt] chunk A text",
+            "[SOURCE: file_b.txt] chunk B text",
+        ]
