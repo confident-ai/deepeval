@@ -8,18 +8,20 @@ from deepeval.optimizer.types import PromptConfigurationId, ScoreTable
 
 
 def _is_dominated(
-    candidate_scores: List[float], other_scores: List[float]
+    candidate_scores: List[float], 
+    other_scores: List[float],
+    min_delta: float = 0.01
 ) -> bool:
     """
     Return True if `candidate_scores` is dominated by `other_scores`:
     (other >= candidate on all dimensions) AND (other > candidate on at least one).
     """
     other_ge_everywhere = all(
-        other_score >= candidate_score
+        (other_score + 1e-9) >= candidate_score
         for candidate_score, other_score in zip(candidate_scores, other_scores)
     )
     other_gt_somewhere = any(
-        other_score > candidate_score
+        other_score > (candidate_score + min_delta)
         for candidate_score, other_score in zip(candidate_scores, other_scores)
     )
     return other_ge_everywhere and other_gt_somewhere

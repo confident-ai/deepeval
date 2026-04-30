@@ -1,38 +1,34 @@
 from __future__ import annotations
+import json
+import re
 import inspect
 import random
-import re
 import statistics
 from typing import (
     Any,
-    Callable,
     List,
     Optional,
     Protocol,
     Sequence,
     Tuple,
-    TYPE_CHECKING,
     Union,
     Dict,
-    Set,
 )
-
+from deepeval.errors import DeepEvalError
+from deepeval.prompt.api import PromptType, PromptMessage
+from deepeval.prompt.prompt import Prompt
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseMetric, BaseConversationalMetric
 from deepeval.prompt.prompt import Prompt
 from deepeval.prompt.api import PromptMessage
 from deepeval.optimizer.types import (
     ModelCallback,
-    ModuleId,
     PromptConfigurationId,
     PromptConfiguration,
     PromptConfigSnapshot,
     OptimizationReport,
 )
-
-if TYPE_CHECKING:
-    from deepeval.dataset.golden import Golden, ConversationalGolden
-    from deepeval.prompt.api import PromptMessage
+from deepeval.dataset.golden import Golden, ConversationalGolden
 
 
 def split_goldens(
@@ -92,67 +88,6 @@ def split_goldens(
     d_feedback = [goldens[i] for i in range(total) if i not in pareto_indices]
 
     return d_feedback, d_pareto
-
-
-################################
-# Prompt normalization helpers #
-################################
-
-
-def _slug(text: str) -> str:
-    slug = text.lower()
-    slug = re.sub(r"[^a-z0-9]+", "-", slug)
-    return slug.strip("-")
-
-
-def generate_module_id(prompt: Prompt, index: int, existing: Set[str]) -> str:
-    """
-    Build a human readable module id stable within a single optimization run.
-    Prefers alias/label; enrich with model settings provider and name; dedupe; cap to 64 chars.
-    """
-    parts: List[str] = []
-    if prompt.alias:
-        parts.append(str(prompt.alias))
-    if prompt.label:
-        parts.append(str(prompt.label))
-
-    ms = prompt.model_settings
-    if ms is not None:
-        if ms.provider is not None:
-            parts.append(ms.provider.value)
-        if ms.name:
-            parts.append(ms.name)
-
-    base = "-".join(_slug(p) for p in parts if p) or f"module-{index+1}"
-    base = base[:64] or f"module-{index+1}"
-
-    candidate = base
-    suffix = 2
-    while candidate in existing:
-        candidate = f"{base}-{suffix}"
-        candidate = candidate[:64]
-        suffix += 1
-
-    existing.add(candidate)
-    return candidate
-
-
-def normalize_seed_prompts(
-    seed_prompts: Union[Dict[ModuleId, Prompt], List[Prompt]],
-) -> Dict[ModuleId, Prompt]:
-    """
-    Accept either {module_id: Prompt} or List[Prompt].
-    If a list is given, generate human readable module ids.
-    """
-    if isinstance(seed_prompts, dict):
-        return dict(seed_prompts)  # shallow copy
-
-    mapping: Dict[ModuleId, Prompt] = {}
-    used: Set[str] = set()
-    for i, prompt in enumerate(seed_prompts):
-        module_id = generate_module_id(prompt, i, used)
-        mapping[module_id] = prompt
-    return mapping
 
 
 def invoke_model_callback(
@@ -475,5 +410,60 @@ def mean_of_all(scores: Sequence[float]) -> float:
     return statistics.fmean(scores) if scores else 0.0
 
 
-def median_of_all(scores: Sequence[float]) -> float:
-    return statistics.median(scores) if scores else 0.0
+###########################
+#### Prompt Utils #########
+###########################
+
+def _parse_prompt(prompt: Prompt) -> str:
+    if prompt.type == PromptType.TEXT:
+        return prompt.text_template
+    
+    elif prompt.type == PromptType.LIST:
+        messages = [
+            {"role": msg.role, "content": msg.content} 
+            for msg in prompt.messages_template
+        ]
+        return json.dumps(messages, indent=4)
+    else:
+        raise DeepEvalError(f"Invalid prompt type: {prompt.type}")
+
+def _create_prompt(old_prompt: Prompt, new_content: str) -> Prompt:
+    prompt_kwargs = {
+        "alias": old_prompt.alias,
+        "model_settings": old_prompt.model_settings,
+        "output_type": old_prompt.output_type,
+        "output_schema": old_prompt.output_schema,
+        "branch": old_prompt.branch,
+        "interpolation_type": old_prompt.interpolation_type,
+        "confident_api_key": old_prompt.confident_api_key,
+    }
+
+    if old_prompt.type == PromptType.TEXT:
+        prompt_kwargs["text_template"] = new_content
+        prompt_kwargs["messages_template"] = None
+        
+    elif old_prompt.type == PromptType.LIST:
+        prompt_kwargs["text_template"] = None
+        
+        try:
+            parsed_messages: List[Dict[str, str]] = json.loads(new_content)
+            
+            messages_template = [
+                PromptMessage(
+                    role=msg.get("role"), 
+                    content=msg.get("content")
+                )
+                for msg in parsed_messages
+            ]
+            prompt_kwargs["messages_template"] = messages_template
+            
+        except json.JSONDecodeError as e:
+            raise DeepEvalError(f"Failed to parse the LLM's rewritten messages into JSON: {e}")
+        except Exception as e:
+            raise DeepEvalError(f"Failed to reconstruct PromptMessages: {e}")
+
+    new_prompt = Prompt(**prompt_kwargs)
+    
+    new_prompt.label = old_prompt.label
+    
+    return new_prompt

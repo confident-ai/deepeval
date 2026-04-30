@@ -1,13 +1,12 @@
+import sys
 from contextlib import contextmanager
 from typing import (
-    Callable,
-    Dict,
     List,
     Optional,
     Tuple,
     Union,
 )
-
+from rich.console import Console
 from rich.progress import (
     Progress,
     SpinnerColumn,
@@ -33,7 +32,6 @@ from deepeval.optimizer.utils import (
 )
 from deepeval.optimizer.configs import (
     DisplayConfig,
-    MutationConfig,
     AsyncConfig,
 )
 from deepeval.prompt.prompt import Prompt
@@ -59,7 +57,6 @@ class PromptOptimizer:
         algorithm: Union[GEPA, MIPROV2, COPRO, SIMBA] = GEPA(),
         async_config: Optional[AsyncConfig] = AsyncConfig(),
         display_config: Optional[DisplayConfig] = DisplayConfig(),
-        mutation_config: Optional[MutationConfig] = MutationConfig(),
     ):
         self.optimizer_model, self.using_native_model = initialize_model(
             optimizer_model
@@ -74,14 +71,13 @@ class PromptOptimizer:
 
         self.async_config = async_config
         self.display_config = display_config
-        self.mutation_config = mutation_config
         self.algorithm = algorithm
         self.optimization_report = None
         self._configure_algorithm()
 
         # Internal state used only when a progress indicator is active.
         # Tuple is (Progress instance, task_id).
-        self._progress_state: Optional[Tuple[Progress, int]] = None
+        self._progress_state: Optional[Tuple[Progress, int, int]] = None
 
     ##############
     # Public API #
@@ -98,13 +94,13 @@ class PromptOptimizer:
                 self.a_optimize(prompt=prompt, goldens=goldens)
             )
 
-        try:
-            with self._progress_context():
-                best_prompt, self.optimization_report = self.algorithm.execute(
-                    prompt=prompt, goldens=goldens
-                )
-        except Exception as exc:
-            self._handle_optimization_error(exc)
+        with self._progress_context():
+            best_prompt, self.optimization_report = self.algorithm.execute(
+                prompt=prompt, goldens=goldens
+            )
+
+        if self.display_config.show_indicator:
+            self._print_summary_table()
 
         return best_prompt
 
@@ -113,15 +109,15 @@ class PromptOptimizer:
         prompt: Prompt,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Prompt:
-        try:
-            with self._progress_context():
-                best_prompt, self.optimization_report = (
-                    await self.algorithm.a_execute(
-                        prompt=prompt, goldens=goldens
-                    )
+        with self._progress_context():
+            best_prompt, self.optimization_report = (
+                await self.algorithm.a_execute(
+                    prompt=prompt, goldens=goldens
                 )
-        except Exception as exc:
-            self._handle_optimization_error(exc)
+            )
+
+        if self.display_config.show_indicator:
+            self._print_summary_table()
 
         return best_prompt
 
@@ -135,6 +131,7 @@ class PromptOptimizer:
             model_callback=self.model_callback,
             metrics=self.metrics,
             max_concurrent=self.async_config.max_concurrent,
+            optimizer_model=self.optimizer_model,
             throttle_seconds=float(self.async_config.throttle_value),
         )
 
@@ -143,16 +140,31 @@ class PromptOptimizer:
         if isinstance(self.algorithm, GEPA):
             max_chars = GEPA_REWRITE_INSTRUCTION_MAX_CHARS
         else:
+            self.algorithm.optimizer_model = self.optimizer_model
             max_chars = MIPROV2_REWRITE_INSTRUCTION_MAX_CHARS
         self.algorithm._rewriter = Rewriter(
             optimizer_model=self.optimizer_model,
             max_chars=max_chars,
-            list_mutation_config=self.mutation_config,
             random_state=self.algorithm.random_state,
         )
 
         # Set status callback
         self.algorithm.status_callback = self._on_status
+        # Set sub-step callback (updates the bottom progress row)
+        self.algorithm.step_callback = self._on_step
+
+
+    def _print_summary_table(self) -> None:
+        console = Console(file=sys.stderr)
+
+        if hasattr(self.algorithm, "generate_summary_table"):
+            renderables = self.algorithm.generate_summary_table(self.optimization_report)
+            console.print()
+            for renderable in renderables:
+                console.print(renderable)
+            console.print()
+        else:
+            console.print(f"[dim]Optimization complete. (No summary table provided by {self.algorithm.name})[/]")
 
     @contextmanager
     def _progress_context(self):
@@ -164,23 +176,23 @@ class PromptOptimizer:
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(bar_width=40),
+            BarColumn(bar_width=60),
             TimeElapsedColumn(),
             transient=True,
         ) as progress:
-            task = progress.add_task(
-                f"Optimizing prompt with {self.algorithm.name}..."
+            iter_task = progress.add_task(
+                f"[bold white]Optimizing prompt with {self.algorithm.name}[/]"
             )
-            self._progress_state = (progress, task)
+            step_task = progress.add_task(
+                "[rgb(55,65,81)]waiting...[/]"
+            )
+            self._progress_state = (progress, iter_task, step_task)
             try:
                 yield
             finally:
                 self._progress_state = None
 
     def _handle_optimization_error(self, exc: Exception) -> None:
-        """
-        Handle optimization errors by formatting and raising a user-friendly message.
-        """
         total_steps: Optional[int] = None
         iterations: Optional[int] = getattr(self.algorithm, "iterations", None)
         if iterations is not None:
@@ -220,11 +232,11 @@ class PromptOptimizer:
 
         if kind is RunnerStatusType.ERROR:
             if self._progress_state is not None:
-                progress, task = self._progress_state
+                progress, iter_task, step_task = self._progress_state
                 if total_steps is not None:
-                    progress.update(task, total=total_steps)
-                description = self._format_progress_description(detail)
-                progress.update(task, description=description)
+                    progress.update(iter_task, total=total_steps)
+                progress.update(iter_task, description=self._format_iter_description(step_index, total_steps))
+                progress.update(step_task, description=f"[rgb(255,85,85)]✕ {detail}[/]")
             print(f"[{algo}] {detail}")
             return
 
@@ -240,24 +252,35 @@ class PromptOptimizer:
         if self._progress_state is None:
             return
 
-        progress, task = self._progress_state
+        progress, iter_task, step_task = self._progress_state
 
         if total_steps is not None:
-            progress.update(task, total=total_steps)
+            progress.update(iter_task, total=total_steps)
 
         if step_index is not None and step_index > 0:
-            progress.advance(task, 1)
+            progress.advance(iter_task, 1)
 
-        description = self._format_progress_description(detail)
-        progress.update(task, description=description)
+        progress.update(iter_task, description=self._format_iter_description(step_index, total_steps))
 
-    def _format_progress_description(self, detail: str) -> str:
-        """
-        Compose a human readable progress line using an algorithm agnostic
-        prefix and an algorithm specific detail string provided by the algorithm.
-        """
+    def _on_step(self, label: str) -> None:
+        if self._progress_state is None:
+            return
+        progress, _, step_task = self._progress_state
+        progress.update(step_task, description=self._format_step_description(label))
+
+    def _format_iter_description(
+        self,
+        step_index: Optional[int],
+        total_steps: Optional[int],
+    ) -> str:
         algo = self.algorithm.name
-        base = f"Optimizing prompt with {algo}"
-        if detail:
-            return f"{base} [rgb(25,227,160)]{detail}[/]"
+        base = f"[bold white]Optimizing prompt with {algo}[/]"
+        if step_index is not None and total_steps is not None:
+            pct = int(100 * step_index / total_steps) if total_steps else 0
+            return f"{base} [rgb(55,65,81)]iteration {step_index}/{total_steps} ({pct}%)[/]"
         return base
+
+    def _format_step_description(self, label: str) -> str:
+        if label:
+            return f"[rgb(25,227,160)]⤷ {label}[/]"
+        return ""
