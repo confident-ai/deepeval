@@ -1,8 +1,19 @@
 {
+  "framework": "nextjs",
   "redirects": [
     {
-      "source": "/docs/getting-started-agents",
-      "destination": "/guides/guides-ai-agent-evaluation",
+      "source": "/docs/synthesizer-introduction",
+      "destination": "/docs/golden-synthesizer",
+      "statusCode": 301
+    },
+    {
+      "source": "/synthesizer-introduction",
+      "destination": "/golden-synthesizer",
+      "statusCode": 301
+    },
+    {
+      "source": "/guides/guides-multi-turn-tracing",
+      "destination": "/guides/guides-tracing-multi-turn",
       "statusCode": 301
     },
     {
@@ -92,9 +103,9 @@
     },
     {
       "source": "/confident-ai/:path*",
-      "destination": "https://www.confident-ai.com/docs",
+      "destination": "https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=vercel_redirect&ref_page=/confident-ai/:path*",
       "statusCode": 301
-    },    
+    },
     {
       "source": "/docs/red-teaming-vulnerabilities-competition",
       "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-competition",

@@ -55,6 +55,20 @@ def secure_exec(code_str, global_vars=None, local_vars=None):
             "TypeError": TypeError,
             "IndexError": IndexError,
             "KeyError": KeyError,
+            "AssertionError": AssertionError,
+            "StopIteration": StopIteration,
+            "isinstance": isinstance,
+            "hasattr": hasattr,
+            "getattr": getattr,
+            "type": type,
+            "hash": hash,
+            "frozenset": frozenset,
+            "repr": repr,
+            "print": print,
+            "True": True,
+            "False": False,
+            "None": None,
+            "math": __import__("math"),
         }
     }
     safe_globals.update(global_vars)
@@ -188,10 +202,12 @@ class HumanEval(DeepEvalBaseBenchmark):
             c = 0
             for function in functions:
                 try:
-                    secure_exec(function)
-                    secure_exec(golden.expected_output)
+                    full_code = function + "\n" + golden.expected_output
+                    secure_exec(full_code)
                     c += 1
-                except AssertionError as e:
+                except AssertionError:
+                    pass
+                except Exception:
                     pass
             self.c[task.value] = c
             self.functions[task.value] = functions

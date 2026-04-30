@@ -1,0 +1,34 @@
+{
+  "uuid": "fa4d1038-f5c7-45ee-95c1-52ee54062dc2",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "0c98ee30-d1f8-4e77-b929-96f71b8cf4e5",
+      "name": "llm_with_costs",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-01-29T09:53:13.374Z",
+      "endTime": "2026-01-29T09:53:13.374Z",
+      "input": {
+        "prompt": "Premium query"
+      },
+      "output": "Premium response: Premium query",
+      "model": "gpt-4-turbo",
+      "inputTokenCount": 10.0,
+      "outputTokenCount": 20.0,
+      "costPerInputToken": 0.01,
+      "costPerOutputToken": 0.03
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.374Z",
+  "endTime": "2026-01-29T09:53:13.374Z",
+  "environment": "testing",
+  "input": {
+    "prompt": "Premium query"
+  },
+  "output": "Premium response: Premium query",
+  "status": "SUCCESS"
+}

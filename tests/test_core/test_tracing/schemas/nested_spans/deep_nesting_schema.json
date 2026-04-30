@@ -1,0 +1,55 @@
+{
+  "uuid": "c102089c-bd93-4990-9bfc-60b109176856",
+  "baseSpans": [
+    {
+      "uuid": "f49b569b-5dcb-4402-90f2-5534ea767d2e",
+      "name": "deep_nesting_level_1",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:13.083Z",
+      "endTime": "2026-01-29T09:53:13.083Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Deep: data"
+    },
+    {
+      "uuid": "d10f8ded-d963-4411-a5ba-22105689220e",
+      "name": "deep_nesting_level_2",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f49b569b-5dcb-4402-90f2-5534ea767d2e",
+      "startTime": "2026-01-29T09:53:13.083Z",
+      "endTime": "2026-01-29T09:53:13.083Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Deep: data"
+    },
+    {
+      "uuid": "76d62736-59ea-42c9-bc25-af1d2171ab5a",
+      "name": "deep_nesting_level_3",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d10f8ded-d963-4411-a5ba-22105689220e",
+      "startTime": "2026-01-29T09:53:13.083Z",
+      "endTime": "2026-01-29T09:53:13.083Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Deep: data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.083Z",
+  "endTime": "2026-01-29T09:53:13.083Z",
+  "environment": "testing",
+  "input": {
+    "data": "data"
+  },
+  "output": "Deep: data",
+  "status": "SUCCESS"
+}

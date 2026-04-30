@@ -62,6 +62,8 @@ class BaseSpanWrapper:
     trace_context: Optional[List[str]] = None
     trace_tools_called: Optional[List[ToolCall]] = None
     trace_expected_tools: Optional[List[ToolCall]] = None
+    trace_test_case_id: Optional[str] = None
+    trace_turn_id: Optional[str] = None
     trace_metric_collection: Optional[str] = None
     trace_environment: Optional[str] = None
 
@@ -242,6 +244,16 @@ class ConfidentSpanExporter(SpanExporter):
                 base_span_wrapper.trace_expected_tools
             )
 
+        # set the trace test case id and turn id
+        if base_span_wrapper.trace_test_case_id and isinstance(
+            base_span_wrapper.trace_test_case_id, str
+        ):
+            current_trace.test_case_id = base_span_wrapper.trace_test_case_id
+        if base_span_wrapper.trace_turn_id and isinstance(
+            base_span_wrapper.trace_turn_id, str
+        ):
+            current_trace.turn_id = base_span_wrapper.trace_turn_id
+
         # set the trace metric collection
         if base_span_wrapper.trace_metric_collection:
             current_trace.metric_collection = (
@@ -340,6 +352,9 @@ class ConfidentSpanExporter(SpanExporter):
         ):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
+        trace_test_case_id = span.attributes.get("confident.trace.test_case_id")
+        trace_turn_id = span.attributes.get("confident.trace.turn_id")
+
         raw_trace_metric_collection = span.attributes.get(
             "confident.trace.metric_collection"
         )
@@ -370,6 +385,8 @@ class ConfidentSpanExporter(SpanExporter):
         base_span_wrapper.trace_context = trace_context
         base_span_wrapper.trace_tools_called = trace_tools_called
         base_span_wrapper.trace_expected_tools = trace_expected_tools
+        base_span_wrapper.trace_test_case_id = trace_test_case_id
+        base_span_wrapper.trace_turn_id = trace_turn_id
         base_span_wrapper.trace_metric_collection = trace_metric_collection
         base_span_wrapper.trace_environment = trace_environment
 
@@ -524,11 +541,20 @@ class ConfidentSpanExporter(SpanExporter):
                 except Exception:
                     pass
             prompt = span.attributes.get("confident.span.prompt")
+            prompt_alias = span.attributes.get("confident.span.prompt_alias")
+            prompt_commit_hash = span.attributes.get(
+                "confident.span.prompt_commit_hash"
+            )
+            prompt_label = span.attributes.get("confident.span.prompt_label")
+            prompt_version = span.attributes.get(
+                "confident.span.prompt_version"
+            )
             confident_prompt = None
             if prompt and isinstance(prompt, str):
                 prompt = json.loads(prompt)
                 try:
                     confident_prompt = Prompt(alias=prompt["alias"])
+                    confident_prompt.hash = prompt["hash"]
                     confident_prompt.version = prompt["version"]
                 except Exception:
                     pass
@@ -551,6 +577,10 @@ class ConfidentSpanExporter(SpanExporter):
                 input=input,
                 output=output,
                 prompt=confident_prompt,
+                prompt_alias=prompt_alias,
+                prompt_commit_hash=prompt_commit_hash,
+                prompt_label=prompt_label,
+                prompt_version=prompt_version,
             )
             return llm_span
 

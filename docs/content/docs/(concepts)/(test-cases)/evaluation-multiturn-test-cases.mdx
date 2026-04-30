@@ -1,0 +1,275 @@
+---
+id: evaluation-multiturn-test-cases
+title: Multi-Turn Test Case
+sidebar_label: Multi-Turn
+---
+
+import { ASSETS } from "@site/src/assets";
+
+## Quick Summary
+
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **SIX** parameters:
+
+- `turns`
+- [Optional] `scenario`
+- [Optional] `expected_outcome`
+- [Optional] `user_description`
+- [Optional] `context`
+- [Optional] `chatbot_role`
+
+:::note
+`deepeval` makes the assumption that a multi-turn use case are mainly conversational chatbots. Agents on the other hand, should be evaluated via [component-level evaluation](/docs/evaluation-component-level-llm-evals) instead, where each component in your agentic workflow is assessed individually.
+:::
+
+Here's an example implementation of a `ConversationalTestCase`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn
+
+test_case = ConversationalTestCase(
+    scenario="User chit-chatting randomly with AI.",
+    expected_outcome="AI should respond in friendly manner.",
+    turns=[
+        Turn(role="user", content="How are you doing?"),
+        Turn(role="assistant", content="Why do you care?")
+    ]
+)
+```
+
+## Multi-Turn LLM Interaction
+
+Different from a [single-turn LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), a multi-turn LLM interaction encapsulates exchanges between a user and a conversational agent/chatbot, which is represented by a `ConversationalTestCase` in `deepeval`.
+
+<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+
+The `turns` parameter in a conversational test case is vital to specifying the roles and content of a conversation (in OpenAI API format), and allows you to supply any optional `tools_called` and `retrieval_context`. Additional optional parameters such as `scenario` and `expected outcome` is best suited for users converting [`ConversationalGolden`s](/docs/evaluation-datasets#goldens-data-model) to test cases at evaluation time.
+
+## Conversational Test Case
+
+While a [single-turn test case](/docs/evaluation-test-cases) represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
+
+A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
+
+```python title="main.py"
+from deepeval.test_case import Turn, ConversationalTestCase
+
+turns = [
+    Turn(role="user", content="Why did the chicken cross the road?"),
+    Turn(role="assistant", content="Are you trying to be funny?"),
+]
+
+test_case = ConversationalTestCase(turns=turns)
+```
+
+:::note
+Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
+:::
+
+### Turns
+
+The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-conversational-g-eval), you might also want to supply different parameteres to a `Turn`. A `Turn` is made up of the following parameters:
+
+```python
+class Turn:
+    role: Literal["user", "assistant"]
+    content: str
+    user_id: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
+```
+
+:::info
+You should only provide the `retrieval_context` and `tools_called` parameter if the `role` is `"assistant"`.
+:::
+
+The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
+
+### Scenario
+
+The `scenario` parameter is an **optional** parameter that specifies the circumstances of which a conversation is taking place in.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(scenario="Frustrated user asking for a refund.", turns=[Turn(...)])
+```
+
+### Expected Outcome
+
+The `expected_outcome` parameter is an **optional** parameter that specifies the expected outcome of a given `scenario`.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    scenario="Frustrated user asking for a refund.",
+    expected_outcome="AI routes to a real human agent.",
+    turns=[Turn(...)]
+)
+```
+
+### Chatbot Role
+
+The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(chatbot_role="A happy jolly wizard.", turns=[Turn(...)])
+```
+
+### User Description
+
+The `user_description` parameter is an **optional** parameter that specifies the profile of the user for a given conversation.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    user_description="John Smith, lives in NYC, has a dog, divorced.",
+    turns=[Turn(...)]
+)
+```
+
+### Context
+
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    context=["Customers must be over 50 to be eligible for a refund."],
+    turns=[Turn(...)]
+)
+```
+
+:::info
+A single-turn `LLMTestCase` also contains `context`.
+:::
+
+## Including Images
+
+By default `deepeval` supports passing both text and images inside your test cases using the `MLLMImage` object. The `MLLMImage` class in `deepeval` is used to reference multimodal images in your test cases. It allows you to create test cases using local images, remote URLs and `base64` data.
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ],
+    scenario=f"A person trying to buy shoes online by looking at a customer's photo {shoes}",
+    expected_outcome=f"The assistant must clarify that the shoes in the image {shoes} are blue color.",
+    user_description=f"...",
+    context=[f"..."]
+)
+```
+
+:::info
+Multimodal test cases are automatically detected when you include `MLLMImage` objects in your inputs or outputs. You can use them with almost all the `deepeval` metrics.
+:::
+
+### `MLLMImage` Data Model
+
+Here's the data model of the `MLLMImage` in `deepeval`:
+
+```python
+class MLLMImage:
+    dataBase64: Optional[str] = None
+    mimeType: Optional[str] = None
+    url: Optional[str] = None
+    local: Optional[bool] = None
+    filename: Optional[str] = None
+```
+
+You **MUST** either provide `url` or `dataBase64` and `mimeType` parameters when initializing an `MLLMImage`. The `local` attribute should be set to `True` for locally stored images and `False` for images hosted online (default is `False`).
+
+:::note
+
+All the `MLLMImage` instances are converted to a special `deepeval` slug, (e.g `[DEEPEVAL:IMAGE:uuid]`). This is how your `MLLMImage`s look like in your test cases after you embed them in f-strings:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ]
+)
+
+print(test_case.turns[0].content)
+```
+
+This outputs the following:
+
+```
+What's the color of the shoes in this image? [DEEPEVAL:IMAGE:awefv234fvbnhg456]
+```
+
+Users who'd like to access their images themselves for any ETL can use the `convert_to_multi_modal_array` method to convert your test cases to a list of strings and `MLLMImage` in order. Here's how to use it:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+from deepeval.utils import convert_to_multi_modal_array
+
+shoes = MLLMImage(url='./shoes.png', local=True)
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content=f"What's the color of the shoes in this image? {shoes}"),
+        Turn(role="assistant", content=f"They are blue shoes!")
+    ]
+)
+
+print(convert_to_multi_modal_array(test_case.turns[0].content))
+```
+
+This will output the following:
+
+```
+["What's the color of the shoes in this image? ",  [DEEPEVAL:IMAGE:awefv234fvbnhg456]]
+```
+
+The `[DEEPEVAL:IMAGE:awefv234fvbnhg456]` here is actually the instance of `MLLMImage` you passed inside your test case.
+
+:::
+
+## Label Test Cases For Confident AI
+
+If you're using Confident AI, these are some additional parameters to help manage your test cases.
+
+### Name
+
+The optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(name="my-external-unique-id", ...)
+```
+
+### Tags
+
+Alternatively, you can also tag test cases for filtering and searching on Confident AI:
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(tags=["Topic 1", "Topic 3"], ...)
+```
+
+## Using Test Cases For Evals
+
+You can create test cases for two types of evaluation:
+
+- [End-to-end](/docs/evaluation-end-to-end-llm-evals) - Treats your multi-turn LLM app as a black-box, and evaluates the overall conversation by considering each turn's inputs and outputs.
+- One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
+
+Unlike for single-turn test cases, the concept of component-level evaluation does not exist for multi-turn use cases.

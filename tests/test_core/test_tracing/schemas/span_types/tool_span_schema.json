@@ -1,0 +1,30 @@
+{
+  "uuid": "43ba868d-d485-417a-842a-7d0c099f391d",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "71ae3c36-accf-4074-b310-80f87acd5a42",
+      "name": "web_search",
+      "status": "SUCCESS",
+      "type": "tool",
+      "startTime": "2026-01-29T09:53:13.671Z",
+      "endTime": "2026-01-29T09:53:13.671Z",
+      "input": {
+        "query": "Python tutorials"
+      },
+      "output": "Search results for: Python tutorials",
+      "description": "Search the web for information"
+    }
+  ],
+  "startTime": "2026-01-29T09:53:13.671Z",
+  "endTime": "2026-01-29T09:53:13.671Z",
+  "environment": "testing",
+  "input": {
+    "query": "Python tutorials"
+  },
+  "output": "Search results for: Python tutorials",
+  "status": "SUCCESS"
+}

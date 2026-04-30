@@ -1,15 +1,15 @@
 {
-  "uuid": "330fe36c-9407-4181-b5ee-eead3f92c72d",
+  "uuid": "7ab557f4-c2e9-4df1-abd8-dbe7300379c0",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "e3283f0c-656a-4463-86fe-4ee0714f0db6",
+      "uuid": "8c3cac68-fe82-41bd-b367-94f0c618977c",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2025-10-17T07:52:56.366Z",
-      "endTime": "2025-10-17T07:52:58.041Z",
+      "startTime": "2026-02-15T05:57:14.253Z",
+      "endTime": "2026-02-15T05:57:15.730Z",
       "input": [
         {
           "role": "system",
@@ -20,19 +20,18 @@
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm just a program, but I'm here to help you. How can I assist you today?",
+      "output": "Hello! I'm here and ready to help. How can I assist you today?",
       "model": "gpt-4o",
-      "prompt": {},
       "inputTokenCount": 29.0,
-      "outputTokenCount": 22.0
+      "outputTokenCount": 17.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2025-10-17T07:52:56.366Z",
-  "endTime": "2025-10-17T07:52:58.041Z",
+  "startTime": "2026-02-15T05:57:14.253Z",
+  "endTime": "2026-02-15T05:57:15.730Z",
   "environment": "development",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm just a program, but I'm here to help you. How can I assist you today?",
+  "output": "Hello! I'm here and ready to help. How can I assist you today?",
   "status": "SUCCESS"
 }

@@ -5,7 +5,6 @@ from dotenv import dotenv_values
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
-
 _TRUTHY = frozenset({"1", "true", "t", "yes", "y", "on", "enable", "enabled"})
 _FALSY = frozenset({"0", "false", "f", "no", "n", "off", "disable", "disabled"})
 _LIST_SEP_RE = re.compile(r"[,\s;]+")

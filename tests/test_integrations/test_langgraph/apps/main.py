@@ -17,38 +17,56 @@ def separator(title: str):
 def main():
     # 1. Simple App
     separator("1. SIMPLE APP - Single Tool (Weather)")
-    from tests.test_integrations.test_langgraph.apps.langgraph_simple_app import app as simple_app
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_simple_app import (
+        app as simple_app,
+    )
+
     callback = CallbackHandler(
         name="demo-simple",
         tags=["demo", "simple"],
         metadata={"app": "simple"},
     )
     result = simple_app.invoke(
-        {"messages": [HumanMessage(content="What's the weather in San Francisco?")]},
+        {
+            "messages": [
+                HumanMessage(content="What's the weather in San Francisco?")
+            ]
+        },
         config={"callbacks": [callback]},
     )
     print(f"Response: {result['messages'][-1].content}")
 
     # 2. Multiple Tools App
-    separator("2. MULTIPLE TOOLS APP - Weather, Population, Timezone, Calculator")
-    from tests.test_integrations.test_langgraph.apps.langgraph_multiple_tools_app import app as multiple_tools_app
-    
+    separator(
+        "2. MULTIPLE TOOLS APP - Weather, Population, Timezone, Calculator"
+    )
+    from tests.test_integrations.test_langgraph.apps.langgraph_multiple_tools_app import (
+        app as multiple_tools_app,
+    )
+
     callback = CallbackHandler(
         name="demo-multiple-tools",
         tags=["demo", "multiple-tools"],
         metadata={"app": "multiple_tools"},
     )
     result = multiple_tools_app.invoke(
-        {"messages": [HumanMessage(content="Tell me about Tokyo - weather, population, and timezone. Also calculate 15 * 23.")]},
+        {
+            "messages": [
+                HumanMessage(
+                    content="Tell me about Tokyo - weather, population, and timezone. Also calculate 15 * 23."
+                )
+            ]
+        },
         config={"callbacks": [callback]},
     )
     print(f"Response: {result['messages'][-1].content}")
 
     # 3. Streaming App (Sync)
     separator("3. STREAMING APP - Stock Price Tools")
-    from tests.test_integrations.test_langgraph.apps.langgraph_streaming_app import sync_app as streaming_app
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_streaming_app import (
+        sync_app as streaming_app,
+    )
+
     callback = CallbackHandler(
         name="demo-streaming",
         tags=["demo", "streaming"],
@@ -60,7 +78,7 @@ def main():
         config={"callbacks": [callback]},
     ):
         print(f"  Chunk: {list(chunk.keys())}")
-    
+
     # Also get final result
     callback = CallbackHandler(
         name="demo-streaming-invoke",
@@ -75,8 +93,10 @@ def main():
 
     # 4. Conditional App
     separator("4. CONDITIONAL APP - Intent-Based Routing")
-    from tests.test_integrations.test_langgraph.apps.langgraph_conditional_app import app as conditional_app
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_conditional_app import (
+        app as conditional_app,
+    )
+
     # Research route
     callback = CallbackHandler(
         name="demo-conditional-research",
@@ -88,7 +108,7 @@ def main():
         config={"callbacks": [callback]},
     )
     print(f"Research Response: {result['messages'][-1].content}")
-    
+
     # Fact check route
     callback = CallbackHandler(
         name="demo-conditional-factcheck",
@@ -103,23 +123,33 @@ def main():
 
     # 5. Parallel Tools App
     separator("5. PARALLEL TOOLS APP - Multiple Parallel Tool Calls")
-    from tests.test_integrations.test_langgraph.apps.langgraph_parallel_tools_app import sync_app as parallel_app
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_parallel_tools_app import (
+        sync_app as parallel_app,
+    )
+
     callback = CallbackHandler(
         name="demo-parallel",
         tags=["demo", "parallel"],
         metadata={"app": "parallel"},
     )
     result = parallel_app.invoke(
-        {"messages": [HumanMessage(content="Get weather for Tokyo, New York, and London.")]},
+        {
+            "messages": [
+                HumanMessage(
+                    content="Get weather for Tokyo, New York, and London."
+                )
+            ]
+        },
         config={"callbacks": [callback]},
     )
     print(f"Response: {result['messages'][-1].content}")
 
     # 6. Async App (run synchronously for demo)
     separator("6. ASYNC APP - Database Search & Translation")
-    from tests.test_integrations.test_langgraph.apps.langgraph_async_app import app as async_app
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_async_app import (
+        app as async_app,
+    )
+
     async def run_async():
         callback = CallbackHandler(
             name="demo-async",
@@ -127,21 +157,27 @@ def main():
             metadata={"app": "async"},
         )
         result = await async_app.ainvoke(
-            {"messages": [HumanMessage(content="Search for information about Python")]},
+            {
+                "messages": [
+                    HumanMessage(content="Search for information about Python")
+                ]
+            },
             config={"callbacks": [callback]},
         )
         return result
-    
+
     result = asyncio.run(run_async())
     print(f"Response: {result['messages'][-1].content}")
 
     # 7. Multi-Turn App
     separator("7. MULTI-TURN APP - Shopping Cart with Memory")
-    from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import get_app_with_memory
-    
+    from tests.test_integrations.test_langgraph.apps.langgraph_multi_turn_app import (
+        get_app_with_memory,
+    )
+
     app = get_app_with_memory()
     thread_id = "demo-session-001"
-    
+
     # Turn 1
     callback = CallbackHandler(
         name="demo-multi-turn-1",
@@ -152,10 +188,13 @@ def main():
     )
     result = app.invoke(
         {"messages": [HumanMessage(content="Add 2 apples to my cart")]},
-        config={"callbacks": [callback], "configurable": {"thread_id": thread_id}},
+        config={
+            "callbacks": [callback],
+            "configurable": {"thread_id": thread_id},
+        },
     )
     print(f"Turn 1: {result['messages'][-1].content}")
-    
+
     # Turn 2
     callback = CallbackHandler(
         name="demo-multi-turn-2",
@@ -166,10 +205,13 @@ def main():
     )
     result = app.invoke(
         {"messages": [HumanMessage(content="Also add 3 oranges")]},
-        config={"callbacks": [callback], "configurable": {"thread_id": thread_id}},
+        config={
+            "callbacks": [callback],
+            "configurable": {"thread_id": thread_id},
+        },
     )
     print(f"Turn 2: {result['messages'][-1].content}")
-    
+
     # Turn 3
     callback = CallbackHandler(
         name="demo-multi-turn-3",
@@ -180,7 +222,10 @@ def main():
     )
     result = app.invoke(
         {"messages": [HumanMessage(content="What's in my cart?")]},
-        config={"callbacks": [callback], "configurable": {"thread_id": thread_id}},
+        config={
+            "callbacks": [callback],
+            "configurable": {"thread_id": thread_id},
+        },
     )
     print(f"Turn 3: {result['messages'][-1].content}")
 
@@ -189,4 +234,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

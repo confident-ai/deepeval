@@ -1,34 +1,34 @@
 {
-  "uuid": "3385b15a-6724-4df5-8175-b784c968a5f1",
+  "uuid": "4749e9a7-0bc3-4472-88a8-b95a62e6afb9",
   "baseSpans": [
     {
-      "uuid": "e26f1437-7aba-4ee0-9d13-a80fa992ecb0",
+      "uuid": "f308dfa7-4594-40ab-805f-db7eb81e2911",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-29T09:21:30.616Z",
-      "endTime": "2025-10-29T09:21:35.863Z",
+      "startTime": "2026-02-15T10:19:58.943Z",
+      "endTime": "2026-02-15T10:20:00.992Z",
       "input": {
         "question": "What city does John live in and how old is he?"
       },
-      "output": "John lives in San Francisco and he is 30 years old."
+      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is."
     }
   ],
   "agentSpans": [
     {
-      "uuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
+      "uuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "e26f1437-7aba-4ee0-9d13-a80fa992ecb0",
-      "startTime": "2025-10-29T09:21:30.620Z",
-      "endTime": "2025-10-29T09:21:35.855Z",
-      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.",
+      "parentUuid": "f308dfa7-4594-40ab-805f-db7eb81e2911",
+      "startTime": "2026-02-15T10:19:58.947Z",
+      "endTime": "2026-02-15T10:20:00.985Z",
+      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.",
       "output": "John lives in San Francisco and he is 30 years old.",
       "toolsCalled": [
         {
           "name": "knowledge_retrieval",
-          "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.",
+          "output": "",
           "inputParameters": {
             "output": "Retrieve information about John, specifically his city of residence and age."
           }
@@ -40,35 +40,34 @@
   ],
   "llmSpans": [
     {
-      "uuid": "eee72251-85fb-4f8b-b107-5742bdbf9dd3",
+      "uuid": "352dba10-ed63-45d2-bcc6-15516af874a6",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
-      "startTime": "2025-10-29T09:21:34.798Z",
-      "endTime": "2025-10-29T09:21:35.853Z",
+      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
+      "startTime": "2026-02-15T10:19:59.973Z",
+      "endTime": "2026-02-15T10:20:00.983Z",
       "input": [
         {
           "role": "system",
-          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user.\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!"
+          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "I now can give a great answer  \nFinal Answer: John lives in San Francisco and he is 30 years old.",
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
+      "model": "gpt-4o-mini"
     },
     {
-      "uuid": "aa87c362-931c-4de3-b625-5aa7c0420f98",
+      "uuid": "82736372-9030-4b02-b90e-906680d55d37",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5641a001-a8bd-4a8b-9597-82ef5005be08",
-      "startTime": "2025-10-29T09:21:30.621Z",
-      "endTime": "2025-10-29T09:21:34.125Z",
+      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
+      "startTime": "2026-02-15T10:19:58.950Z",
+      "endTime": "2026-02-15T10:19:59.937Z",
       "input": [
         {
           "role": "system",
@@ -80,30 +79,29 @@
         }
       ],
       "output": "Retrieve information about John, specifically his city of residence and age.",
-      "model": "gpt-4o-mini",
-      "prompt": {}
+      "model": "gpt-4o-mini"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "5641a001-a8bd-4a8b-9597-82ef5005be08",
+      "uuid": "4f9a9791-0293-49f7-9d58-8e702fbfa274",
       "name": "knowledge_retrieval",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "d35b79bb-a6e4-460a-b2d7-b1e0725b784c",
-      "startTime": "2025-10-29T09:21:30.621Z",
-      "endTime": "2025-10-29T09:21:34.795Z",
+      "parentUuid": "782d07ac-6735-4fcc-8426-eb3b9df66b2b",
+      "startTime": "2026-02-15T10:19:58.948Z",
+      "endTime": "2026-02-15T10:19:59.971Z",
       "input": "Retrieve information about John, specifically his city of residence and age.",
-      "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco."
+      "output": ""
     }
   ],
-  "startTime": "2025-10-29T09:21:30.616Z",
-  "endTime": "2025-10-29T09:21:35.863Z",
+  "startTime": "2026-02-15T10:19:58.943Z",
+  "endTime": "2026-02-15T10:20:00.992Z",
   "environment": "development",
   "input": {
     "question": "What city does John live in and how old is he?"
   },
-  "output": "John lives in San Francisco and he is 30 years old.",
+  "output": "I'm sorry, but I don't have any information about John, including what city he lives in or how old he is.",
   "status": "SUCCESS"
 }

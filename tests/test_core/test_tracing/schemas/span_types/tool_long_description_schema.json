@@ -1,0 +1,30 @@
+{
+  "uuid": "426dfd37-31df-4a00-8edd-020af3b07c9b",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "a56b762e-eca9-46b8-a259-a80727e04597",
+      "name": "tool_with_long_description",
+      "status": "SUCCESS",
+      "type": "tool",
+      "startTime": "2026-01-29T09:53:13.760Z",
+      "endTime": "2026-01-29T09:53:13.760Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "Processed: data",
+      "description": "A very long description that explains what this tool does in great detail including all the parameters it accepts and the output format it returns"
+    }
+  ],
+  "startTime": "2026-01-29T09:53:13.760Z",
+  "endTime": "2026-01-29T09:53:13.760Z",
+  "environment": "testing",
+  "input": {
+    "data": "data"
+  },
+  "output": "Processed: data",
+  "status": "SUCCESS"
+}

@@ -16,7 +16,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import (
     LLMTestCase,
-    LLMTestCaseParams,
+    SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -24,14 +24,12 @@ from deepeval.metrics.prompt_alignment.template import PromptAlignmentTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 
-from deepeval.metrics.api import metric_data_manager
-
 
 class PromptAlignmentMetric(BaseMetric):
 
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -111,10 +109,6 @@ class PromptAlignmentMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                if _log_metric_to_confident:
-                    metric_data_manager.post_metric_if_enabled(
-                        self, test_case=test_case
-                    )
 
             return self.score
 
@@ -161,10 +155,6 @@ class PromptAlignmentMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            if _log_metric_to_confident:
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
             return self.score
 
     async def _a_generate_reason(

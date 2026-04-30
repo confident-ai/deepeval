@@ -1,0 +1,51 @@
+{
+  "uuid": "3fca5b805c88a9788cbd4281b305ca46",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "bb092b6a3a92bbad",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:48.273Z",
+      "endTime": "2026-03-09T11:17:50.762Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "bb092b6a3a92bbad",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:48.273Z",
+      "endTime": "2026-03-09T11:17:50.762Z",
+      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:48.273Z",
+  "endTime": "2026-03-09T11:17:50.762Z",
+  "name": "agentcore-multiple-tools-weather",
+  "metadata": {
+    "test_type": "multiple_tools_weather"
+  },
+  "tags": [
+    "agentcore",
+    "multiple-tools",
+    "weather"
+  ],
+  "environment": "development",
+  "threadId": "multiple-tools-weather-123",
+  "userId": "test-user",
+  "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
+  "output": "<thinking>The get_weather tool has returned the result for Tokyo. I can now report the weather to the User.</thinking>\n\nThe current weather in Tokyo is sunny with a temperature of 72F.\n",
+  "status": "SUCCESS"
+}

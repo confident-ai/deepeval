@@ -1,0 +1,64 @@
+{
+  "uuid": "712b9c48-40d5-4d23-8de8-93f6deca643b",
+  "baseSpans": [
+    {
+      "uuid": "9dbf0849-6cf4-43ce-8327-55b496f209c2",
+      "name": "three_level_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
+      "input": {
+        "data": "x y"
+      },
+      "output": {
+        "level": "top",
+        "stage": "end"
+      }
+    },
+    {
+      "uuid": "de98435a-74fe-4c74-85a2-4689643ca6ad",
+      "name": "mid_level_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "9dbf0849-6cf4-43ce-8327-55b496f209c2",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
+      "input": {
+        "data": "x y"
+      },
+      "output": {
+        "level": "mid",
+        "stage": "end"
+      }
+    },
+    {
+      "uuid": "897078a2-3be6-4c36-a41d-530e3c8069f7",
+      "name": "stream_simple",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "de98435a-74fe-4c74-85a2-4689643ca6ad",
+      "startTime": "2026-02-27T11:14:37.863Z",
+      "endTime": "2026-02-27T11:14:37.863Z",
+      "input": {
+        "data": "x y"
+      },
+      "output": "y"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.863Z",
+  "endTime": "2026-02-27T11:14:37.863Z",
+  "environment": "development",
+  "input": {
+    "data": "x y"
+  },
+  "output": {
+    "level": "top",
+    "stage": "end"
+  },
+  "status": "SUCCESS"
+}

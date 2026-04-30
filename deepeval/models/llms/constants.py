@@ -2,8 +2,7 @@ from typing import Any, Callable, Union
 
 from deepeval.models.base_model import DeepEvalModelData
 
-
-DEFAULT_GPT_MODEL = "gpt-4.1"
+DEFAULT_GPT_MODEL = "gpt-5.4"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
@@ -389,6 +388,53 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=1.75 / 1e6,
             output_price=14.00 / 1e6,
         ),
+        "gpt-5.4": make_model_data(
+            supports_log_probs=True,
+            max_log_probs=5,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.50 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "gpt-5.4-2026-03-05": make_model_data(
+            supports_log_probs=True,
+            max_log_probs=5,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.50 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "gpt-5.4-mini": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=False,
+            supports_temperature=False,
+            input_price=0.75 / 1e6,
+            output_price=4.50 / 1e6,
+        ),
+        "gpt-5.5": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=5.00 / 1e6,
+            output_price=30.00 / 1e6,
+        ),
+        "gpt-5.5-2026-04-23": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=5.00 / 1e6,
+            output_price=30.00 / 1e6,
+        ),
     }
 )
 
@@ -496,8 +542,24 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             supports_multimodal=True,
             supports_structured_outputs=True,
             supports_json=True,
-            input_price=15.00 / 1e6,
-            output_price=75.00 / 1e6,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        "claude-opus-4-6-20250610": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        "claude-sonnet-4-6-20250514": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
         ),
         "claude-3-opus": make_model_data(
             supports_log_probs=False,
@@ -575,6 +637,63 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             supports_log_probs=False,
             supports_multimodal=True,
             supports_structured_outputs=True,
+            supports_json=True,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        "claude-opus-4-7": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        "claude-opus-4-6": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=5.00 / 1e6,
+            output_price=25.00 / 1e6,
+        ),
+        "claude-sonnet-4-6": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "claude-3-7-sonnet-latest": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "claude-3-5-sonnet-latest": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
+        ),
+        "claude-3-5-haiku-latest": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=1.00 / 1e6,
+            output_price=5.00 / 1e6,
+        ),
+        "claude-3-opus-latest": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=False,
             supports_json=True,
             input_price=15.00 / 1e6,
             output_price=75.00 / 1e6,

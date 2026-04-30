@@ -1,0 +1,51 @@
+{
+  "uuid": "b1ad74d44c893c27e788424da02fc894",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "4d2e254949fea22c",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:45.882Z",
+      "endTime": "2026-03-09T11:17:48.211Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "The sum of 15 and 25 is 40.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "4d2e254949fea22c",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:45.882Z",
+      "endTime": "2026-03-09T11:17:48.211Z",
+      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "output": "The sum of 15 and 25 is 40.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:45.882Z",
+  "endTime": "2026-03-09T11:17:48.211Z",
+  "name": "agentcore-tool-metric-test",
+  "metadata": {
+    "test_type": "tool_metric_collection"
+  },
+  "tags": [
+    "agentcore",
+    "tool",
+    "metric-collection"
+  ],
+  "environment": "development",
+  "threadId": "tool-metric-123",
+  "userId": "test-user",
+  "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+  "output": "The sum of 15 and 25 is 40.\n",
+  "status": "SUCCESS"
+}

@@ -1,0 +1,119 @@
+---
+# id: ollama
+title: Ollama
+sidebar_label: Ollama
+---
+
+DeepEval allows you to use any model served by Ollama to run evals, either through the CLI or directly in Python. Some capabilities, such as multimodal support, are detected from a known-model list.
+
+:::note
+Before getting started, make sure your Ollama model is installed and running. See the full list of available models [here](https://ollama.com/search).
+
+```bash
+ollama run deepseek-r1:1.5b
+```
+
+:::
+
+### Environment Setup
+DeepEval can use a local Ollama server (default: `http://localhost:11434`).
+Optionally set a custom host:
+
+```bash
+# .env.local
+LOCAL_MODEL_BASE_URL=http://localhost:11434
+```
+
+### Command Line
+
+To configure your Ollama model through the CLI, run the following command. Replace `deepseek-r1:1.5b` with any Ollama-supported model of your choice.
+
+```bash
+deepeval set-ollama --model=deepseek-r1:1.5b
+```
+
+You may also specify the **base URL** of your local Ollama model instance if you've defined a custom port. By default, the base URL is set to `http://localhost:11434`.
+
+```bash
+deepeval set-ollama --model=deepseek-r1:1.5b \
+    --base-url="http://localhost:11434"
+```
+
+:::info
+The CLI command above sets Ollama as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Ollama:
+
+```bash
+deepeval unset-ollama
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### Python
+
+Alternatively, you can specify your model directly in code using `OllamaModel` from DeepEval's model collection.
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import OllamaModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = OllamaModel(
+    model="deepseek-r1:1.5b",
+    base_url="http://localhost:11434",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+</Tab>
+<Tab value="ENV">
+
+To use any Ollama model directly in `deepeval`, set the `LOCAL_MODEL_API_KEY` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="deepseek-r1:1.5b",
+)
+```
+
+</Tab>
+</Tabs>
+
+There is **ONE** mandatory parameter and **THREE** optional parameters when creating an `OllamaModel`:
+
+- [Optional] `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; falls back to `http://localhost:11434` if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to Ollama’s `chat(..., options={...})` call.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
+:::
+
+### Available Ollama Models
+
+:::note
+This list only displays some of the available models. For a comprehensive list, refer to the Ollama's official documentation.
+:::
+
+Below is a list of commonly used Ollama models:
+
+- `deepseek-r1`
+- `llama3.1`
+- `gemma`
+- `qwen`
+- `mistral`
+- `codellama`
+- `phi3`
+- `tinyllama`
+- `starcoder2`

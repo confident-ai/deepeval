@@ -1,0 +1,163 @@
+---
+id: integrations
+title: Integrations Overview
+sidebar_label: Overview
+---
+
+DeepEval integrates with the frameworks, model providers, and data stores teams already use to build LLM applications. Use these pages to connect tracing, evaluation, synthetic data, and model configuration to your existing stack.
+
+## Frameworks
+
+Framework integrations let DeepEval evaluate entire execution traces without manually orchestrating every intermediate step. Use these when you want traces, spans, and component-level evals to line up with the framework your agents, chains, tools, and workflows already run on.
+
+<Cards>
+  <Card
+    title="OpenAI"
+    href="/integrations/frameworks/openai"
+    description="Trace OpenAI SDK calls and evaluate OpenAI-powered apps."
+  />
+  <Card
+    title="Anthropic"
+    href="/integrations/frameworks/anthropic"
+    description="Trace Anthropic model calls inside DeepEval workflows."
+  />
+  <Card
+    title="AgentCore"
+    href="/integrations/frameworks/agentcore"
+    description="Instrument AWS AgentCore agents with OpenTelemetry traces."
+  />
+  <Card
+    title="LangChain"
+    href="/integrations/frameworks/langchain"
+    description="Trace and evaluate LangChain chains, tools, and agents."
+  />
+  <Card
+    title="LangGraph"
+    href="/integrations/frameworks/langgraph"
+    description="Trace and evaluate graph-based agent workflows."
+  />
+  <Card
+    title="LlamaIndex"
+    href="/integrations/frameworks/llamaindex"
+    description="Instrument LlamaIndex retrieval and agent pipelines."
+  />
+  <Card
+    title="CrewAI"
+    href="/integrations/frameworks/crewai"
+    description="Trace CrewAI crews, agents, tasks, and tool calls."
+  />
+  <Card
+    title="Pydantic AI"
+    href="/integrations/frameworks/pydanticai"
+    description="Trace Pydantic AI agents and evaluate their outputs."
+  />
+  <Card
+    title="OpenAI Agents"
+    href="/integrations/frameworks/openai-agents"
+    description="Evaluate workflows built with the OpenAI Agents SDK."
+  />
+  <Card
+    title="Hugging Face"
+    href="/integrations/frameworks/huggingface"
+    description="Run DeepEval callbacks during Hugging Face training/evaluation."
+  />
+</Cards>
+
+## Evaluation Models
+
+Evaluation model integrations configure the LLM provider DeepEval uses for LLM-as-a-judge metrics, synthetic data generation, conversation simulation, and prompt optimization. Pick the provider that matches your infrastructure, latency, privacy, and cost needs.
+
+<Cards className="md:grid-cols-3">
+  <Card
+    title="OpenAI"
+    href="/integrations/models/openai"
+  />
+  <Card
+    title="Azure OpenAI"
+    href="/integrations/models/azure-openai"
+  />
+  <Card
+    title="Ollama"
+    href="/integrations/models/ollama"
+  />
+  <Card
+    title="OpenRouter"
+    href="/integrations/models/openrouter"
+  />
+  <Card
+    title="Anthropic"
+    href="/integrations/models/anthropic"
+  />
+  <Card
+    title="Amazon Bedrock"
+    href="/integrations/models/amazon-bedrock"
+  />
+  <Card
+    title="Gemini"
+    href="/integrations/models/gemini"
+  />
+  <Card
+    title="DeepSeek"
+    href="/integrations/models/deepseek"
+  />
+  <Card
+    title="Vertex AI"
+    href="/integrations/models/vertex-ai"
+  />
+  <Card
+    title="Grok"
+    href="/integrations/models/grok"
+  />
+  <Card
+    title="Moonshot"
+    href="/integrations/models/moonshot"
+  />
+  <Card
+    title="Portkey"
+    href="/integrations/models/portkey"
+  />
+  <Card
+    title="vLLM"
+    href="/integrations/models/vllm"
+  />
+  <Card
+    title="LM Studio"
+    href="/integrations/models/lmstudio"
+  />
+  <Card
+    title="LiteLLM"
+    href="/integrations/models/litellm"
+  />
+</Cards>
+
+
+## Vector DBs
+
+Vector database integrations show how to connect retrieval systems to DeepEval so RAG metrics can evaluate the context your application actually retrieves. Use these examples to benchmark retrieval quality and end-to-end RAG behavior.
+
+<Cards>
+  <Card
+    title="Cognee"
+    href="/integrations/vector-databases/cognee"
+  />
+  <Card
+    title="Elasticsearch"
+    href="/integrations/vector-databases/elasticsearch"
+  />
+  <Card
+    title="Chroma"
+    href="/integrations/vector-databases/chroma"
+  />
+  <Card
+    title="Weaviate"
+    href="/integrations/vector-databases/weaviate"
+  />
+  <Card
+    title="Qdrant"
+    href="/integrations/vector-databases/qdrant"
+  />
+  <Card
+    title="PGVector"
+    href="/integrations/vector-databases/pgvector"
+  />
+</Cards>

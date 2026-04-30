@@ -75,3 +75,35 @@ class DeepAcyclicGraph:
                 for root_node in self.root_nodes
             )
         )
+
+    def to_dict(self) -> dict:
+        """Serialize this DAG to a JSON-friendly dict (structure only)."""
+        from deepeval.metrics.dag.serialization import dag_to_dict
+
+        return dag_to_dict(self)
+
+    def to_json(self, indent: int = 2) -> str:
+        """Serialize this DAG to a JSON string (structure only)."""
+        from deepeval.metrics.dag.serialization import dag_to_json
+
+        return dag_to_json(self, indent=indent)
+
+    @classmethod
+    def from_dict(
+        cls, data: dict, multiturn: bool = False
+    ) -> "DeepAcyclicGraph":
+        """Re-create a DAG from a dict produced by ``to_dict``.
+
+        ``multiturn`` selects between single-turn and conversational node
+        classes; the JSON document itself is mode-agnostic.
+        """
+        from deepeval.metrics.dag.serialization import dag_from_dict
+
+        return dag_from_dict(data, multiturn=multiturn)
+
+    @classmethod
+    def from_json(cls, s: str, multiturn: bool = False) -> "DeepAcyclicGraph":
+        """Re-create a DAG from a JSON string produced by ``to_json``."""
+        from deepeval.metrics.dag.serialization import dag_from_json
+
+        return dag_from_json(s, multiturn=multiturn)

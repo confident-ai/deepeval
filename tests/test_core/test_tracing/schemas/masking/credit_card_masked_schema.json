@@ -1,0 +1,29 @@
+{
+  "uuid": "76f7b103-9c62-4519-a067-e2c17559a7dc",
+  "baseSpans": [
+    {
+      "uuid": "731bafbf-a44d-4205-b1e5-d9db959810a3",
+      "name": "process_with_credit_card",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T10:10:19.623Z",
+      "endTime": "2026-01-29T10:10:19.623Z",
+      "input": {
+        "user_input": "My card is ****-****-****-****"
+      },
+      "output": "Processed: My card is ****-****-****-****"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T10:10:19.623Z",
+  "endTime": "2026-01-29T10:10:19.624Z",
+  "environment": "development",
+  "input": {
+    "user_input": "My card is ****-****-****-****"
+  },
+  "output": "Processed: My card is ****-****-****-****",
+  "status": "SUCCESS"
+}

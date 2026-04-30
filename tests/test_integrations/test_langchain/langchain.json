@@ -1,42 +1,518 @@
 {
-  "uuid": "510f0a6f-a396-4cd9-82eb-5316ab5ce71e",
+  "uuid": "f59218fd-7db9-41f5-b6b7-59787a14cccc",
   "baseSpans": [
     {
-      "uuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "name": "AgentExecutor",
+      "uuid": "019d0514-b48e-7463-9421-caa770115ea7",
+      "name": "LangGraph",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-27T11:51:29.723Z",
-      "endTime": "2025-10-27T11:51:31.819Z",
+      "startTime": "2026-03-19T07:52:16.270Z",
+      "endTime": "2026-03-19T07:52:19.786Z",
       "input": {
-        "input": "What is 8 multiplied by 6?"
+        "messages": [
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+          }
+        ]
       },
       "output": {
-        "output": "8 multiplied by 6 is 48."
+        "messages": [
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 67,
+                "total_tokens": 84,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_ca3e7d71bf",
+              "id": "chatcmpl-DL2SuGRcjxnOEqZhaRkmtMzaKuy57",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0514-b491-7b83-a3d0-7488f88343f0-0",
+            "tool_calls": [
+              {
+                "name": "multiply",
+                "args": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 67,
+              "output_tokens": 17,
+              "total_tokens": 84,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "multiply",
+            "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+            "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+            "status": "success"
+          },
+          {
+            "content": "8 multiplied by 6 is 48.",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 10,
+                "prompt_tokens": 92,
+                "total_tokens": 102,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_ca3e7d71bf",
+              "id": "chatcmpl-DL2SvxdwbNXOiuHdfDGXnQ6dm14pb",
+              "service_tier": "default",
+              "finish_reason": "stop",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0514-b9e8-7253-90e1-53a12b19da98-0",
+            "tool_calls": [],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 92,
+              "output_tokens": 10,
+              "total_tokens": 102,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          }
+        ]
+      },
+      "metricCollection": "task_completion"
+    },
+    {
+      "uuid": "019d0514-b9e7-7ed3-a964-a02f087ddf09",
+      "name": "model",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0514-b48e-7463-9421-caa770115ea7",
+      "startTime": "2026-03-19T07:52:17.639Z",
+      "endTime": "2026-03-19T07:52:19.786Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+          },
+          {
+            "content": "",
+            "additional_kwargs": {
+              "refusal": null
+            },
+            "response_metadata": {
+              "token_usage": {
+                "completion_tokens": 17,
+                "prompt_tokens": 67,
+                "total_tokens": 84,
+                "completion_tokens_details": {
+                  "accepted_prediction_tokens": 0,
+                  "audio_tokens": 0,
+                  "reasoning_tokens": 0,
+                  "rejected_prediction_tokens": 0
+                },
+                "prompt_tokens_details": {
+                  "audio_tokens": 0,
+                  "cached_tokens": 0
+                }
+              },
+              "model_provider": "openai",
+              "model_name": "gpt-4o-mini-2024-07-18",
+              "system_fingerprint": "fp_ca3e7d71bf",
+              "id": "chatcmpl-DL2SuGRcjxnOEqZhaRkmtMzaKuy57",
+              "service_tier": "default",
+              "finish_reason": "tool_calls",
+              "logprobs": null
+            },
+            "type": "ai",
+            "id": "lc_run--019d0514-b491-7b83-a3d0-7488f88343f0-0",
+            "tool_calls": [
+              {
+                "name": "multiply",
+                "args": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+                "type": "tool_call"
+              }
+            ],
+            "invalid_tool_calls": [],
+            "usage_metadata": {
+              "input_tokens": 67,
+              "output_tokens": 17,
+              "total_tokens": 84,
+              "input_token_details": {
+                "audio": 0,
+                "cache_read": 0
+              },
+              "output_token_details": {
+                "audio": 0,
+                "reasoning": 0
+              }
+            }
+          },
+          {
+            "content": "48",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "multiply",
+            "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+            "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+            "status": "success"
+          }
+        ]
+      },
+      "output": [
+        {
+          "graph": null,
+          "update": {
+            "messages": [
+              {
+                "content": "8 multiplied by 6 is 48.",
+                "additional_kwargs": {
+                  "refusal": null
+                },
+                "response_metadata": {
+                  "token_usage": {
+                    "completion_tokens": 10,
+                    "prompt_tokens": 92,
+                    "total_tokens": 102,
+                    "completion_tokens_details": {
+                      "accepted_prediction_tokens": 0,
+                      "audio_tokens": 0,
+                      "reasoning_tokens": 0,
+                      "rejected_prediction_tokens": 0
+                    },
+                    "prompt_tokens_details": {
+                      "audio_tokens": 0,
+                      "cached_tokens": 0
+                    }
+                  },
+                  "model_provider": "openai",
+                  "model_name": "gpt-4o-mini-2024-07-18",
+                  "system_fingerprint": "fp_ca3e7d71bf",
+                  "id": "chatcmpl-DL2SvxdwbNXOiuHdfDGXnQ6dm14pb",
+                  "service_tier": "default",
+                  "finish_reason": "stop",
+                  "logprobs": null
+                },
+                "type": "ai",
+                "id": "lc_run--019d0514-b9e8-7253-90e1-53a12b19da98-0",
+                "tool_calls": [],
+                "invalid_tool_calls": [],
+                "usage_metadata": {
+                  "input_tokens": 92,
+                  "output_tokens": 10,
+                  "total_tokens": 102,
+                  "input_token_details": {
+                    "audio": 0,
+                    "cache_read": 0
+                  },
+                  "output_token_details": {
+                    "audio": 0,
+                    "reasoning": 0
+                  }
+                }
+              }
+            ]
+          },
+          "resume": null,
+          "goto": []
+        }
+      ]
+    },
+    {
+      "uuid": "019d0514-b9e6-7600-b180-bf8ca7ca40c5",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0514-b48e-7463-9421-caa770115ea7",
+      "startTime": "2026-03-19T07:52:17.638Z",
+      "endTime": "2026-03-19T07:52:17.639Z",
+      "input": {
+        "__type": "tool_call_with_context",
+        "tool_call": {
+          "name": "multiply",
+          "args": {
+            "a": 8,
+            "b": 6
+          },
+          "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+          "type": "tool_call"
+        },
+        "state": {
+          "messages": [
+            {
+              "content": "What is 8 multiplied by 6?",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "human",
+              "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+            },
+            {
+              "content": "",
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "token_usage": {
+                  "completion_tokens": 17,
+                  "prompt_tokens": 67,
+                  "total_tokens": 84,
+                  "completion_tokens_details": {
+                    "accepted_prediction_tokens": 0,
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 0
+                  }
+                },
+                "model_provider": "openai",
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_ca3e7d71bf",
+                "id": "chatcmpl-DL2SuGRcjxnOEqZhaRkmtMzaKuy57",
+                "service_tier": "default",
+                "finish_reason": "tool_calls",
+                "logprobs": null
+              },
+              "type": "ai",
+              "id": "lc_run--019d0514-b491-7b83-a3d0-7488f88343f0-0",
+              "tool_calls": [
+                {
+                  "name": "multiply",
+                  "args": {
+                    "a": 8,
+                    "b": 6
+                  },
+                  "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+                  "type": "tool_call"
+                }
+              ],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 67,
+                "output_tokens": 17,
+                "total_tokens": 84,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "output": {
+        "messages": [
+          {
+            "content": "48",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "multiply",
+            "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+            "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+            "status": "success"
+          }
+        ]
       },
       "toolsCalled": [
         {
           "name": "multiply",
-          "output": 48,
+          "output": {
+            "content": "48",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "tool",
+            "name": "multiply",
+            "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+            "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+            "status": "success"
+          },
           "inputParameters": {
             "a": 8,
             "b": 6
           }
         }
+      ]
+    },
+    {
+      "uuid": "019d0514-b48e-7463-9421-cab30a2ea950",
+      "name": "model",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "019d0514-b48e-7463-9421-caa770115ea7",
+      "startTime": "2026-03-19T07:52:16.270Z",
+      "endTime": "2026-03-19T07:52:17.638Z",
+      "input": {
+        "messages": [
+          {
+            "content": "What is 8 multiplied by 6?",
+            "additional_kwargs": {},
+            "response_metadata": {},
+            "type": "human",
+            "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+          }
+        ]
+      },
+      "output": [
+        {
+          "graph": null,
+          "update": {
+            "messages": [
+              {
+                "content": "",
+                "additional_kwargs": {
+                  "refusal": null
+                },
+                "response_metadata": {
+                  "token_usage": {
+                    "completion_tokens": 17,
+                    "prompt_tokens": 67,
+                    "total_tokens": 84,
+                    "completion_tokens_details": {
+                      "accepted_prediction_tokens": 0,
+                      "audio_tokens": 0,
+                      "reasoning_tokens": 0,
+                      "rejected_prediction_tokens": 0
+                    },
+                    "prompt_tokens_details": {
+                      "audio_tokens": 0,
+                      "cached_tokens": 0
+                    }
+                  },
+                  "model_provider": "openai",
+                  "model_name": "gpt-4o-mini-2024-07-18",
+                  "system_fingerprint": "fp_ca3e7d71bf",
+                  "id": "chatcmpl-DL2SuGRcjxnOEqZhaRkmtMzaKuy57",
+                  "service_tier": "default",
+                  "finish_reason": "tool_calls",
+                  "logprobs": null
+                },
+                "type": "ai",
+                "id": "lc_run--019d0514-b491-7b83-a3d0-7488f88343f0-0",
+                "tool_calls": [
+                  {
+                    "name": "multiply",
+                    "args": {
+                      "a": 8,
+                      "b": 6
+                    },
+                    "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+                    "type": "tool_call"
+                  }
+                ],
+                "invalid_tool_calls": [],
+                "usage_metadata": {
+                  "input_tokens": 67,
+                  "output_tokens": 17,
+                  "total_tokens": 84,
+                  "input_token_details": {
+                    "audio": 0,
+                    "cache_read": 0
+                  },
+                  "output_token_details": {
+                    "audio": 0,
+                    "reasoning": 0
+                  }
+                }
+              }
+            ]
+          },
+          "resume": null,
+          "goto": "<circular>"
+        }
       ],
-      "metricCollection": "task_completion"
+      "metricCollection": "test_collection_1"
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "788ee75c-8d96-400f-be86-c80e156952e0",
+      "uuid": "019d0514-b9e8-7253-90e1-53a12b19da98",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:30.918Z",
-      "endTime": "2025-10-27T11:51:31.817Z",
+      "parentUuid": "019d0514-b9e7-7ed3-a964-a02f087ddf09",
+      "startTime": "2026-03-19T07:52:17.641Z",
+      "endTime": "2026-03-19T07:52:19.785Z",
       "input": [
         {
           "role": "system",
@@ -65,34 +541,22 @@
         "tool_calls": []
       },
       "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
-      "tokenIntervals": {
-        "2025-10-27T11:51:31.601041Z": "",
-        "2025-10-27T11:51:31.625156Z": "8",
-        "2025-10-27T11:51:31.625846Z": " multiplied",
-        "2025-10-27T11:51:31.656635Z": " by",
-        "2025-10-27T11:51:31.657268Z": " ",
-        "2025-10-27T11:51:31.731089Z": "6",
-        "2025-10-27T11:51:31.731818Z": " is",
-        "2025-10-27T11:51:31.798890Z": " ",
-        "2025-10-27T11:51:31.799604Z": "48",
-        "2025-10-27T11:51:31.802986Z": ".",
-        "2025-10-27T11:51:31.803654Z": "",
-        "2025-10-27T11:51:31.804490Z": ""
-      },
-      "metricCollection": "test_collection_1"
+      "inputTokenCount": 92.0,
+      "outputTokenCount": 10.0,
+      "metricCollection": "test_collection_1",
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "efbbe7dc-b402-4d6b-8eb7-937a78efa7d2",
+      "uuid": "019d0514-b491-7b83-a3d0-7488f88343f0",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:29.725Z",
-      "endTime": "2025-10-27T11:51:30.912Z",
+      "parentUuid": "019d0514-b48e-7463-9421-cab30a2ea950",
+      "startTime": "2026-03-19T07:52:16.273Z",
+      "endTime": "2026-03-19T07:52:17.637Z",
       "input": [
         {
           "role": "system",
@@ -117,64 +581,199 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_qJmLsryAQS9bFYYJpBUpJ0k7"
+            "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D"
           }
         ]
       },
       "model": "gpt-4o-mini-2024-07-18",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
-      "tokenIntervals": {
-        "2025-10-27T11:51:30.772180Z": "",
-        "2025-10-27T11:51:30.777234Z": "",
-        "2025-10-27T11:51:30.777621Z": "",
-        "2025-10-27T11:51:30.818538Z": "",
-        "2025-10-27T11:51:30.819034Z": "",
-        "2025-10-27T11:51:30.882415Z": "",
-        "2025-10-27T11:51:30.883403Z": "",
-        "2025-10-27T11:51:30.897397Z": "",
-        "2025-10-27T11:51:30.898656Z": "",
-        "2025-10-27T11:51:30.904001Z": "",
-        "2025-10-27T11:51:30.905056Z": "",
-        "2025-10-27T11:51:30.907320Z": ""
-      },
-      "metricCollection": "test_collection_1"
+      "inputTokenCount": 67.0,
+      "outputTokenCount": 17.0,
+      "metricCollection": "test_collection_1",
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptLabel": "test-label",
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "4a492248-4373-43b3-996e-0c478c84fd60",
+      "uuid": "019d0514-b9e6-7600-b180-bf9a6f615841",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
-      "startTime": "2025-10-27T11:51:30.913Z",
-      "endTime": "2025-10-27T11:51:30.914Z",
+      "parentUuid": "019d0514-b9e6-7600-b180-bf8ca7ca40c5",
+      "startTime": "2026-03-19T07:52:17.638Z",
+      "endTime": "2026-03-19T07:52:17.639Z",
       "input": {
         "a": 8,
         "b": 6
       },
-      "output": 48,
-      "metricCollection": "test_collection_1"
+      "output": {
+        "content": "48",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "multiply",
+        "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+        "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+        "status": "success"
+      }
     }
   ],
-  "startTime": "2025-10-27T11:51:29.723Z",
-  "endTime": "2025-10-27T11:51:31.819Z",
+  "startTime": "2026-03-19T07:52:16.270Z",
+  "endTime": "2026-03-19T07:52:19.786Z",
   "environment": "development",
   "input": {
-    "input": "What is 8 multiplied by 6?"
+    "messages": [
+      {
+        "content": "What is 8 multiplied by 6?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+      }
+    ]
   },
   "output": {
-    "output": "8 multiplied by 6 is 48."
+    "messages": [
+      {
+        "content": "What is 8 multiplied by 6?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "human",
+        "id": "3b423f2e-04e4-4e7c-af11-00337d6ecd5b"
+      },
+      {
+        "content": "",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 17,
+            "prompt_tokens": 67,
+            "total_tokens": 84,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_ca3e7d71bf",
+          "id": "chatcmpl-DL2SuGRcjxnOEqZhaRkmtMzaKuy57",
+          "service_tier": "default",
+          "finish_reason": "tool_calls",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d0514-b491-7b83-a3d0-7488f88343f0-0",
+        "tool_calls": [
+          {
+            "name": "multiply",
+            "args": {
+              "a": 8,
+              "b": 6
+            },
+            "id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+            "type": "tool_call"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 67,
+          "output_tokens": 17,
+          "total_tokens": 84,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      },
+      {
+        "content": "48",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "multiply",
+        "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+        "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+        "status": "success"
+      },
+      {
+        "content": "8 multiplied by 6 is 48.",
+        "additional_kwargs": {
+          "refusal": null
+        },
+        "response_metadata": {
+          "token_usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 92,
+            "total_tokens": 102,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_provider": "openai",
+          "model_name": "gpt-4o-mini-2024-07-18",
+          "system_fingerprint": "fp_ca3e7d71bf",
+          "id": "chatcmpl-DL2SvxdwbNXOiuHdfDGXnQ6dm14pb",
+          "service_tier": "default",
+          "finish_reason": "stop",
+          "logprobs": null
+        },
+        "type": "ai",
+        "id": "lc_run--019d0514-b9e8-7253-90e1-53a12b19da98-0",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 92,
+          "output_tokens": 10,
+          "total_tokens": 102,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    ]
   },
   "status": "SUCCESS",
   "toolsCalled": [
     {
       "name": "multiply",
-      "output": 48,
+      "output": {
+        "content": "48",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "type": "tool",
+        "name": "multiply",
+        "id": "cceae6bb-669c-4e51-8fa3-2bb1d01d5201",
+        "tool_call_id": "call_HRRT23IbUfFgKZ9Xm3G3ZC0D",
+        "status": "success"
+      },
       "inputParameters": {
         "a": 8,
         "b": 6

@@ -66,7 +66,6 @@ from .multimodal_metrics import (
     ImageReferenceMetric,
 )
 
-
 __all__ = [
     # Base classes
     "BaseMetric",

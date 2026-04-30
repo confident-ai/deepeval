@@ -1,0 +1,40 @@
+{
+  "uuid": "61119436-8ffa-4049-a518-6aa0b6630d32",
+  "baseSpans": [
+    {
+      "uuid": "c94c5cf0-7d31-41c9-810b-b85b45afd611",
+      "name": "async_streaming_with_nested",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.410Z",
+      "endTime": "2026-02-27T11:14:37.421Z",
+      "input": {
+        "data": "test"
+      }
+    },
+    {
+      "uuid": "efcd5bec-24a2-44b7-b29d-a45555f36c82",
+      "name": "async_helper",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c94c5cf0-7d31-41c9-810b-b85b45afd611",
+      "startTime": "2026-02-27T11:14:37.410Z",
+      "endTime": "2026-02-27T11:14:37.421Z",
+      "input": {
+        "data": "test"
+      },
+      "output": "Async Processed: test"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.410Z",
+  "endTime": "2026-02-27T11:14:37.421Z",
+  "environment": "development",
+  "input": {
+    "data": "test"
+  },
+  "status": "SUCCESS"
+}

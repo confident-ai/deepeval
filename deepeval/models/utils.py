@@ -4,7 +4,6 @@ from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
 
-
 logger = logging.getLogger(__name__)
 
 

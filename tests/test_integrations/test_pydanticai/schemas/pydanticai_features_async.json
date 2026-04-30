@@ -1,0 +1,89 @@
+{
+  "uuid": "96c82cc07d1b3f93f031ba2a6e3191ce",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "ce5fc309f1759044",
+      "name": "evals_agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-30T08:34:43.222Z",
+      "endTime": "2026-01-30T08:34:45.264Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": "The query 'Async Data' has been processed successfully.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_async_v1"
+    },
+    {
+      "uuid": "ce5fc309f1759044",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-01-30T08:34:43.222Z",
+      "endTime": "2026-01-30T08:34:45.264Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": "The query 'Async Data' has been processed successfully.",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-30T08:34:43.222Z",
+  "endTime": "2026-01-30T08:34:45.264Z",
+  "name": "pydanticai-full-features-async",
+  "metadata": {
+    "env": "testing_async",
+    "mode": "async"
+  },
+  "tags": [
+    "pydanticai",
+    "features",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "thread-async-features-002",
+  "userId": "user-async-002",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "Use the special_tool to process 'Async Data'"
+    }
+  ],
+  "output": "The query 'Async Data' has been processed successfully.",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_async_v1"
+}

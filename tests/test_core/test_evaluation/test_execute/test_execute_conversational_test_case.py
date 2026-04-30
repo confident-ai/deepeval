@@ -14,8 +14,8 @@ from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
 )
 from deepeval.models.llms.openai_model import GPTModel
 
-
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
+_e2e_mod = importlib.import_module("deepeval.evaluate.execute.e2e")
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
     or not os.getenv("OPENAI_API_KEY").strip(),
@@ -137,7 +137,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_true(
 
     # patch in our own TestRunManager so we can inspect persisted results
     monkeypatch.setattr(
-        exec_mod,
+        _e2e_mod,
         "global_test_run_manager",
         trm,
         raising=True,
@@ -210,7 +210,7 @@ def test_conversational_sync_persists_metric_on_timeout_ignore_errors_false(
 
     # patch in our own TestRunManager so we can inspect persisted results
     monkeypatch.setattr(
-        exec_mod,
+        _e2e_mod,
         "global_test_run_manager",
         trm,
         raising=True,

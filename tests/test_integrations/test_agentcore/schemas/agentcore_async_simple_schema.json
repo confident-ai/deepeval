@@ -1,0 +1,51 @@
+{
+  "uuid": "a1fc13b8c6f2dc5d155abed1b8d2d967",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "f356d9ca9c29da50",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:27.310Z",
+      "endTime": "2026-03-09T11:17:28.436Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, there, friend.\n",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "f356d9ca9c29da50",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:27.310Z",
+      "endTime": "2026-03-09T11:17:28.436Z",
+      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "output": "Hello, there, friend.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:27.310Z",
+  "endTime": "2026-03-09T11:17:28.436Z",
+  "name": "agentcore-async-simple-test",
+  "metadata": {
+    "test_type": "async_simple"
+  },
+  "tags": [
+    "agentcore",
+    "simple",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "async-simple-123",
+  "userId": "test-user-async",
+  "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+  "output": "Hello, there, friend.\n",
+  "status": "SUCCESS"
+}

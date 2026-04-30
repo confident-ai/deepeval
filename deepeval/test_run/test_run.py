@@ -3,9 +3,7 @@ import os
 import json
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
-import shutil
 import sys
-import datetime
 from rich.table import Table
 from rich.console import Console
 from rich import print
@@ -41,7 +39,6 @@ from deepeval.prompt import (
 )
 from rich.panel import Panel
 from rich.columns import Columns
-
 
 portalocker = None
 if not is_read_only_env():
@@ -98,6 +95,7 @@ class TraceMetricScores(BaseModel):
 
 class PromptData(BaseModel):
     alias: Optional[str] = None
+    hash: Optional[str] = None
     version: Optional[str] = None
     text_template: Optional[str] = None
     messages_template: Optional[List[PromptMessage]] = None
@@ -190,26 +188,49 @@ class TestRun(BaseModel):
         if self.dataset_id is None:
             self.dataset_id = test_case._dataset_id
 
-    def sort_test_cases(self):
-        self.test_cases.sort(
-            key=lambda x: (x.order if x.order is not None else float("inf"))
-        )
-        # Optionally update order only if not already set
+    @staticmethod
+    def _assign_unique_orders(test_cases):
+        """Assign unique sequential orders to a sorted list of test cases.
+
+        Preserves the original gap-filling behaviour (only touch test cases
+        whose order is ``None``) **unless** duplicates are detected.  When
+        multiple ``evaluate()`` calls accumulate into the same test run each
+        call starts its order counter from 0, producing duplicates such as
+        ``[0, 0, 1, 1, ...]``.  Confident AI treats ``order`` as a unique
+        position identifier, so duplicates cause earlier test cases to be
+        displayed as *Skipped*.  In that case we fall back to a full
+        sequential re-number to guarantee uniqueness.
+        """
+        # --- original logic: fill Nones, keep existing values ---
         highest_order = 0
-        for test_case in self.test_cases:
+        for test_case in test_cases:
             if test_case.order is None:
                 test_case.order = highest_order
             highest_order = test_case.order + 1
 
+        # --- check for duplicates introduced by accumulation ---
+        seen = set()
+        has_duplicates = False
+        for test_case in test_cases:
+            if test_case.order in seen:
+                has_duplicates = True
+                break
+            seen.add(test_case.order)
+
+        if has_duplicates:
+            for i, test_case in enumerate(test_cases):
+                test_case.order = i
+
+    def sort_test_cases(self):
+        self.test_cases.sort(
+            key=lambda x: (x.order if x.order is not None else float("inf"))
+        )
+        self._assign_unique_orders(self.test_cases)
+
         self.conversational_test_cases.sort(
             key=lambda x: (x.order if x.order is not None else float("inf"))
         )
-        # Optionally update order only if not already set
-        highest_order = 0
-        for test_case in self.conversational_test_cases:
-            if test_case.order is None:
-                test_case.order = highest_order
-            highest_order = test_case.order + 1
+        self._assign_unique_orders(self.conversational_test_cases)
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
@@ -438,12 +459,30 @@ class TestRunManager:
         self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
         self.disable_request = False
+        self.results_folder: Optional[str] = None
+        self.results_subfolder: Optional[str] = None
 
     def reset(self):
         self.test_run = None
         self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
         self.disable_request = False
+        self.results_folder = None
+        self.results_subfolder = None
+
+    def configure_local_store(
+        self,
+        results_folder: Optional[str] = None,
+        results_subfolder: Optional[str] = None,
+    ):
+        """Configure where `save_test_run_locally` writes the full TestRun JSON.
+
+        Values set here take precedence over the `DEEPEVAL_RESULTS_FOLDER`
+        env var. Intended to be called from `evaluate()` / `evals_iterator()`
+        right before `wrap_up_test_run()`.
+        """
+        self.results_folder = results_folder
+        self.results_subfolder = results_subfolder
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
@@ -943,24 +982,50 @@ class TestRunManager:
         return link, res.id
 
     def save_test_run_locally(self):
-        local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
-        if local_folder:
-            new_test_filename = datetime.datetime.now().strftime(
-                "%Y%m%d_%H%M%S"
+        """Persist the current TestRun as `test_run_<YYYYMMDD_HHMMSS>.json`.
+
+        Resolution order for the target directory:
+          1. `TestRunManager.results_folder` (set via `configure_local_store`,
+             typically from `DisplayConfig.results_folder`), optionally nested
+             under `results_subfolder`.
+          2. `DEEPEVAL_RESULTS_FOLDER` env var (legacy behavior).
+          3. No-op.
+
+        Hyperparameters, prompts, per-test-case scores and reasons all live
+        inside the resulting JSON via the existing TestRun pydantic schema —
+        the same payload Confident AI uploads — so AI tools like Cursor /
+        Claude Code can read the folder directly.
+        """
+        if self.test_run is None:
+            return
+
+        from deepeval.evaluate.local_store import (
+            resolve_target_dir,
+            write_test_run,
+        )
+
+        target_dir = resolve_target_dir(
+            results_folder=self.results_folder,
+            results_subfolder=self.results_subfolder,
+        )
+        if target_dir is None:
+            return
+
+        if target_dir.exists() and target_dir.is_file():
+            print(
+                f"❌ Error: results_folder={target_dir} already exists and is a file.\n"
+                "Detailed results won't be saved. Please specify a folder or an available path."
             )
-            os.rename(self.temp_file_path, new_test_filename)
-            if not os.path.exists(local_folder):
-                os.mkdir(local_folder)
-                shutil.copy(new_test_filename, local_folder)
-                print(f"Results saved in {local_folder} as {new_test_filename}")
-            elif os.path.isfile(local_folder):
-                print(
-                    f"""❌ Error: DEEPEVAL_RESULTS_FOLDER={local_folder} already exists and is a file.\nDetailed results won't be saved. Please specify a folder or an available path."""
-                )
-            else:
-                shutil.copy(new_test_filename, local_folder)
-                print(f"Results saved in {local_folder} as {new_test_filename}")
-            os.remove(new_test_filename)
+            return
+
+        try:
+            path = write_test_run(target_dir, self.test_run)
+            print(f"Test run saved at {path}")
+        except Exception as e:
+            print(
+                f"Warning: failed to save test run to {target_dir}: {e}",
+                file=sys.stderr,
+            )
 
     def wrap_up_test_run(
         self,
@@ -1021,7 +1086,8 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
-        if is_confident() and self.disable_request is False:
+        confident_enabled = is_confident()
+        if confident_enabled and self.disable_request is False:
             return self.post_test_run(test_run)
         else:
             self.save_test_run(
@@ -1112,8 +1178,8 @@ class TestRunManager:
                 lines.append("")
                 lines.extend(settings_lines)
             title = f"{format_string(prompt.alias)}"
-            if prompt.version:
-                title += f" (v{prompt.version})"
+            if prompt.hash:
+                title += f" ({prompt.hash})"
             body = "\n".join(lines)
             panel = Panel(
                 body,

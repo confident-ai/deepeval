@@ -1,0 +1,51 @@
+{
+  "uuid": "6ac7b253-3ccd-4ab7-853f-f6434dfbfa66",
+  "baseSpans": [
+    {
+      "uuid": "6cd2b9b2-d046-48ea-ae82-07318c3d7d46",
+      "name": "async_three_level_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:38.119Z",
+      "endTime": "2026-02-27T11:14:38.131Z",
+      "input": {
+        "data": "x y"
+      }
+    },
+    {
+      "uuid": "12e8052e-dfdb-4c35-85e2-d263b04abfd6",
+      "name": "async_mid_level_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6cd2b9b2-d046-48ea-ae82-07318c3d7d46",
+      "startTime": "2026-02-27T11:14:38.119Z",
+      "endTime": "2026-02-27T11:14:38.131Z",
+      "input": {
+        "data": "x y"
+      }
+    },
+    {
+      "uuid": "4626a607-15bf-497e-a848-16b264603816",
+      "name": "async_stream_simple",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "12e8052e-dfdb-4c35-85e2-d263b04abfd6",
+      "startTime": "2026-02-27T11:14:38.119Z",
+      "endTime": "2026-02-27T11:14:38.131Z",
+      "input": {
+        "data": "x y"
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:38.119Z",
+  "endTime": "2026-02-27T11:14:38.131Z",
+  "environment": "development",
+  "input": {
+    "data": "x y"
+  },
+  "status": "SUCCESS"
+}

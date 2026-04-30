@@ -3,7 +3,9 @@ from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateTraceRequestBody
 
 
-def evaluate_trace(trace_uuid: str, metric_collection: str):
+def evaluate_trace(
+    trace_uuid: str, metric_collection: str, overwrite_metrics: bool = False
+):
     trace = current_trace_context.get()
     api_key = None
     if trace:
@@ -11,8 +13,7 @@ def evaluate_trace(trace_uuid: str, metric_collection: str):
     api = Api(api_key=api_key)
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
-        traceUuid=trace_uuid,
-        metricCollection=metric_collection,
+        metricCollection=metric_collection, overwriteMetrics=overwrite_metrics
     )
     try:
         body = evaluate_trace_request_body.model_dump(
@@ -33,7 +34,9 @@ def evaluate_trace(trace_uuid: str, metric_collection: str):
     )
 
 
-async def a_evaluate_trace(trace_uuid: str, metric_collection: str):
+async def a_evaluate_trace(
+    trace_uuid: str, metric_collection: str, overwrite_metrics: bool = False
+):
     trace = current_trace_context.get()
     api_key = None
     if trace:
@@ -41,8 +44,7 @@ async def a_evaluate_trace(trace_uuid: str, metric_collection: str):
     api = Api(api_key=api_key)
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
-        traceUuid=trace_uuid,
-        metricCollection=metric_collection,
+        metricCollection=metric_collection, overwriteMetrics=overwrite_metrics
     )
     try:
         body = evaluate_trace_request_body.model_dump(

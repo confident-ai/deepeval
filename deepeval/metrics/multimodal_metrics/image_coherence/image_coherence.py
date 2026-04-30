@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional, List, Tuple, Union
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase, MLLMImage
+from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
 from deepeval.metrics.multimodal_metrics.image_coherence.template import (
     ImageCoherenceTemplate,
 )
@@ -25,9 +25,9 @@ from deepeval.utils import (
 
 
 class ImageCoherenceMetric(BaseMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+    _required_params: List[SingleTurnParams] = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ]
 
     def __init__(
@@ -85,7 +85,12 @@ class ImageCoherenceMetric(BaseMetric):
                 self.contexts_below = []
                 self.scores = []
                 self.reasons = []
-                for image_index in self.get_image_indices(actual_output):
+                image_indices = self.get_image_indices(actual_output)
+                if not image_indices:
+                    raise ValueError(
+                        f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                    )
+                for image_index in image_indices:
                     context_above, context_below = self.get_image_context(
                         image_index, actual_output
                     )
@@ -188,6 +193,10 @@ class ImageCoherenceMetric(BaseMetric):
 
             tasks = []
             image_indices = self.get_image_indices(actual_output)
+            if not image_indices:
+                raise ValueError(
+                    f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                )
             for image_index in image_indices:
                 context_above, context_below = self.get_image_context(
                     image_index, actual_output

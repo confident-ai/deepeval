@@ -1,0 +1,35 @@
+{
+  "uuid": "2932ad50-3886-4814-a4f5-25fba15981dc",
+  "baseSpans": [
+    {
+      "uuid": "c138f8da-b05d-4a77-a1d6-80d6954c3373",
+      "name": "trace_with_user_info",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T09:53:12.999Z",
+      "endTime": "2026-01-29T09:53:12.999Z",
+      "input": {
+        "data": "data"
+      },
+      "output": "data"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:12.999Z",
+  "endTime": "2026-01-29T09:53:12.999Z",
+  "metadata": {
+    "subscription_tier": "premium",
+    "region": "us-west-2"
+  },
+  "environment": "testing",
+  "threadId": "thread_456",
+  "userId": "user_123",
+  "input": {
+    "data": "data"
+  },
+  "output": "data",
+  "status": "SUCCESS"
+}

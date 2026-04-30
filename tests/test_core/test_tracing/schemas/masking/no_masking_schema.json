@@ -1,0 +1,29 @@
+{
+  "uuid": "ddc40aca-abf7-4f42-ba36-edf0746e5bc8",
+  "baseSpans": [
+    {
+      "uuid": "100257e2-b664-4c72-a07e-592e939ca922",
+      "name": "process_unmasked",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-01-29T10:10:19.673Z",
+      "endTime": "2026-01-29T10:10:19.673Z",
+      "input": {
+        "data": "Card: ****-****-****-****"
+      },
+      "output": "Unmasked: Card: ****-****-****-****"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-01-29T10:10:19.673Z",
+  "endTime": "2026-01-29T10:10:19.673Z",
+  "environment": "development",
+  "input": {
+    "data": "Card: ****-****-****-****"
+  },
+  "output": "Unmasked: Card: ****-****-****-****",
+  "status": "SUCCESS"
+}

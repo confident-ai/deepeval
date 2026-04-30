@@ -48,9 +48,7 @@ def test_write_to_cache_flushes_and_syncs(
 
     # Call the real method implementation, bound to our dummy object
     prompt_mod.Prompt._write_to_cache(
-        dummy_self,
-        cache_key=cache_key,
-        version="v1",
+        dummy_self, cache_key=cache_key, hash="bab04ce"
     )
 
     # Assert file was flushed and synced

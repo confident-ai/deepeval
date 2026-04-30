@@ -1,0 +1,99 @@
+{
+  "uuid": "008d8606-4762-43c7-a36d-9fea28dfde01",
+  "baseSpans": [
+    {
+      "uuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
+      "name": "multi_step_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
+      "input": {
+        "query": "hello"
+      },
+      "output": {
+        "step": "done"
+      }
+    },
+    {
+      "uuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
+      "name": "streaming_rag_pipeline",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
+      "input": {
+        "query": "hello"
+      },
+      "output": "[done]\n"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "8610e320-b844-4550-8a23-dd8881ff7319",
+      "name": "summarize",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "d3e87d16-3d6f-46f5-8560-b0da052a2826",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
+      "input": {
+        "text": "[context] relevant context for: hello\n Based on relevant context for: hello,  the answer to 'hello'  is 42. [done]\n"
+      },
+      "output": "summary of: [context] relevant context for: hello\n Based on relevant context for: hello,  the answer to 'hello'  is 42. [done]\n",
+      "model": "gpt-4o-mini",
+      "inputTokenCount": 10.0,
+      "outputTokenCount": 5.0
+    },
+    {
+      "uuid": "895997fd-7dd6-4f09-9d59-3c7beddfa344",
+      "name": "stream_llm_tokens",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
+      "input": {
+        "query": "hello",
+        "context": "relevant context for: hello"
+      },
+      "output": "is 42.",
+      "model": "gpt-4o",
+      "inputTokenCount": 5.0,
+      "outputTokenCount": 3.0,
+      "costPerInputToken": 0.005,
+      "costPerOutputToken": 0.015
+    }
+  ],
+  "retrieverSpans": [
+    {
+      "uuid": "c52774aa-b3aa-4bac-9ee1-6930f0567f61",
+      "name": "retrieve_documents",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "parentUuid": "7d12cfdd-17d4-423b-84f1-2f2009fd48d6",
+      "startTime": "2026-02-27T11:14:37.588Z",
+      "endTime": "2026-02-27T11:14:37.588Z",
+      "input": {
+        "query": "hello"
+      },
+      "output": "relevant context for: hello",
+      "embedder": "text-embedding-3-small",
+      "topK": 5,
+      "chunkSize": 512
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.588Z",
+  "endTime": "2026-02-27T11:14:37.588Z",
+  "environment": "development",
+  "input": {
+    "query": "hello"
+  },
+  "output": {
+    "step": "done"
+  },
+  "status": "SUCCESS"
+}

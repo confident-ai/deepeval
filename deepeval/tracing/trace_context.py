@@ -69,9 +69,11 @@ def trace(
         )
 
     current_trace = current_trace_context.get()
+    started_new_trace = False
 
     if not current_trace:
         current_trace = trace_manager.start_new_trace()
+        started_new_trace = True
 
     if metrics:
         current_trace.metrics = metrics
@@ -79,7 +81,7 @@ def trace(
     if metric_collection:
         current_trace.metric_collection = metric_collection
 
-    current_trace_context.set(current_trace)
+    trace_ctx_token = current_trace_context.set(current_trace)
 
     update_current_trace(
         name=name,
@@ -103,5 +105,10 @@ def trace(
     try:
         yield current_trace
     finally:
+        if started_new_trace:
+            trace_manager.end_trace(current_trace.uuid)
+
+        current_trace_context.reset(trace_ctx_token)
+
         current_llm_context.set(LlmSpanContext())
         current_agent_context.set(AgentSpanContext())

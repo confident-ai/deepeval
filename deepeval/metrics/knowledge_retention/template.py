@@ -139,7 +139,9 @@ JSON:
     User message: "It's Emily Chen"
     JSON:
     {{
-        "Full Name": "Emily Chen"
+        "data": {{
+            "Full Name": "Emily Chen"
+        }}
     }}
 
     ---
@@ -153,7 +155,9 @@ JSON:
     User message: "I'm in Berlin right now."
     JSON:
     {{
-        "Current Location": "Berlin"
+        "data": {{
+            "Current Location": "Berlin"
+        }}
     }}
 
     ---
@@ -167,7 +171,9 @@ JSON:
     User message: "Yes, I'm vegetarian and allergic to peanuts."
     JSON:
     {{
-        "Dietary Restrictions": ["Vegetarian", "Peanut Allergy"]
+        "data": {{
+            "Dietary Restrictions": ["Vegetarian", "Peanut Allergy"]
+        }}
     }}
 
     ---
@@ -181,7 +187,9 @@ JSON:
     User message: "No, it's actually 1992."
     JSON:
     {{
-        "Birth Year": "1992"
+        "data": {{
+            "Birth Year": "1992"
+        }}
     }}
 
     ---

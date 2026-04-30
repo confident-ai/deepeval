@@ -1,0 +1,138 @@
+.root {
+  --fd-callout-rule: color-mix(
+    in oklch,
+    var(--color-fd-foreground) 55%,
+    transparent
+  );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+
+  position: relative;
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  appearance: none;
+  cursor: pointer;
+
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+
+  &[data-layout="full"] {
+    width: 100%;
+  }
+
+  &[data-layout="inline"] {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  &[data-tone="inverse"] {
+    --fd-callout-color: var(--color-fd-background);
+    --fd-callout-ink: color-mix(
+      in oklch,
+      var(--color-fd-background) 14%,
+      transparent
+    );
+
+    background-color: var(--color-bg-inverse);
+    color: var(--color-fd-background);
+    border: 1px solid var(--color-bg-inverse);
+
+    &:hover {
+      background-color: color-mix(
+        in oklch,
+        var(--color-bg-inverse) 88%,
+        var(--color-fd-background)
+      );
+      border-color: color-mix(
+        in oklch,
+        var(--color-bg-inverse) 88%,
+        var(--color-fd-background)
+      );
+      color: var(--color-fd-background);
+    }
+  }
+
+  &[data-tone="secondary"] {
+    --fd-callout-color: var(--color-fd-foreground);
+    --fd-callout-ink: color-mix(
+      in oklch,
+      var(--color-fd-foreground) 10%,
+      transparent
+    );
+
+    background: transparent;
+    color: var(--color-fd-foreground);
+    border: 1px solid var(--color-fd-border);
+
+    &:hover {
+      background: var(--color-fd-muted);
+      border-color: color-mix(
+        in oklch,
+        var(--color-fd-foreground) 25%,
+        transparent
+      );
+      color: var(--color-fd-foreground);
+    }
+  }
+
+  &.highlighted[data-tone="inverse"] {
+    background-color: color-mix(
+      in oklch,
+      var(--color-bg-inverse) 88%,
+      var(--color-fd-background)
+    );
+    border-color: color-mix(
+      in oklch,
+      var(--color-bg-inverse) 88%,
+      var(--color-fd-background)
+    );
+    color: var(--color-fd-background);
+  }
+
+  &.highlighted[data-tone="secondary"] {
+    background: var(--color-fd-muted);
+    border-color: color-mix(
+      in oklch,
+      var(--color-fd-foreground) 25%,
+      transparent
+    );
+    color: var(--color-fd-foreground);
+  }
+
+  svg {
+    width: 0.82rem;
+    height: 0.82rem;
+    flex-shrink: 0;
+    fill: currentColor;
+  }
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.star {
+  width: 12px;
+  height: 12px;
+  color: #fbbf24;
+  fill: currentColor;
+}

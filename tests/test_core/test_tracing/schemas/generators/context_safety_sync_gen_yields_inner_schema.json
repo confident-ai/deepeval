@@ -1,0 +1,53 @@
+{
+  "uuid": "44a769bc-2f83-4de6-bd9c-c27ef147e8c9",
+  "baseSpans": [
+    {
+      "uuid": "256c1538-1eaf-4d71-93f5-dd6854cc9148",
+      "name": "outer_gen_yields_from_inner_gen",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.825Z",
+      "endTime": "2026-02-27T11:14:37.825Z",
+      "input": {
+        "message": "alpha beta"
+      },
+      "output": {
+        "type": "wrapper",
+        "data": "end"
+      }
+    },
+    {
+      "uuid": "cce60c91-613d-4ff6-8f56-303fd27327cd",
+      "name": "stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "256c1538-1eaf-4d71-93f5-dd6854cc9148",
+      "startTime": "2026-02-27T11:14:37.825Z",
+      "endTime": "2026-02-27T11:14:37.825Z",
+      "input": {
+        "message": "alpha beta"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "alpha beta"
+        }
+      }
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.825Z",
+  "endTime": "2026-02-27T11:14:37.825Z",
+  "environment": "development",
+  "input": {
+    "message": "alpha beta"
+  },
+  "output": {
+    "type": "wrapper",
+    "data": "end"
+  },
+  "status": "SUCCESS"
+}

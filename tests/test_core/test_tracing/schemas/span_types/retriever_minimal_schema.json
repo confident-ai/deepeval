@@ -1,0 +1,33 @@
+{
+  "uuid": "115a88f7-dd7d-4292-a59d-1bfd5dd7030a",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "9a7953e6-3a5f-48b2-8a8f-d6d1b6b89b26",
+      "name": "retrieve_minimal",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "startTime": "2026-01-29T09:53:13.498Z",
+      "endTime": "2026-01-29T09:53:13.498Z",
+      "input": {
+        "query": "search query"
+      },
+      "output": [
+        "Result: search query"
+      ]
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.498Z",
+  "endTime": "2026-01-29T09:53:13.498Z",
+  "environment": "testing",
+  "input": {
+    "query": "search query"
+  },
+  "output": [
+    "Result: search query"
+  ],
+  "status": "SUCCESS"
+}

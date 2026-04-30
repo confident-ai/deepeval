@@ -1,0 +1,11 @@
+{
+  "title": "Safety",
+  "pages": [
+    "metrics-bias",
+    "metrics-toxicity",
+    "metrics-non-advice",
+    "metrics-misuse",
+    "metrics-pii-leakage",
+    "metrics-role-violation"
+  ]
+}

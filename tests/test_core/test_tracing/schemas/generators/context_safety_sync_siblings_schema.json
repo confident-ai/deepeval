@@ -1,0 +1,110 @@
+{
+  "uuid": "b0281b8e-486e-418e-886a-38482751e2e6",
+  "baseSpans": [
+    {
+      "uuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
+      "name": "sibling_generators",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
+      "input": {
+        "data": "a b"
+      },
+      "output": {
+        "simple": [
+          "a",
+          "b"
+        ],
+        "chunks": [
+          {
+            "type": "chunk",
+            "data": {
+              "token": "a"
+            }
+          },
+          {
+            "type": "chunk",
+            "data": {
+              "token": "b"
+            }
+          },
+          {
+            "type": "final_response",
+            "data": {
+              "content": "a b"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uuid": "4ee39325-c4fc-45f7-b5e5-5470022a5b28",
+      "name": "stream_chunks",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
+      "input": {
+        "message": "a b"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "a b"
+        }
+      }
+    },
+    {
+      "uuid": "1d685f52-fd5f-4e9d-a4c2-976923771be8",
+      "name": "stream_simple",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "25e50d0f-40ab-4123-9070-9d2a242f1add",
+      "startTime": "2026-02-27T11:14:37.876Z",
+      "endTime": "2026-02-27T11:14:37.876Z",
+      "input": {
+        "data": "a b"
+      },
+      "output": "b"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-02-27T11:14:37.876Z",
+  "endTime": "2026-02-27T11:14:37.876Z",
+  "environment": "development",
+  "input": {
+    "data": "a b"
+  },
+  "output": {
+    "simple": [
+      "a",
+      "b"
+    ],
+    "chunks": [
+      {
+        "type": "chunk",
+        "data": {
+          "token": "a"
+        }
+      },
+      {
+        "type": "chunk",
+        "data": {
+          "token": "b"
+        }
+      },
+      {
+        "type": "final_response",
+        "data": {
+          "content": "a b"
+        }
+      }
+    ]
+  },
+  "status": "SUCCESS"
+}

@@ -16,6 +16,7 @@ class TestTurnInitialization:
         assert turn.mcp_tools_called is None
         assert turn.mcp_resources_called is None
         assert turn.mcp_prompts_called is None
+        assert turn.metadata is None
         assert turn.additional_metadata is None
 
     def test_user_role_initialization(self):
@@ -54,6 +55,7 @@ class TestTurnInitialization:
         assert len(turn.retrieval_context) == 2
         assert len(turn.tools_called) == 1
         assert turn.tools_called[0].name == "weather_tool"
+        assert turn.metadata["model"] == "gpt-4"
         assert turn.additional_metadata["model"] == "gpt-4"
 
 
@@ -164,9 +166,24 @@ class TestTurnWithMetadata:
 
     def test_simple_metadata(self):
         metadata = {"model": "gpt-4", "tokens": 150}
+        turn = Turn(role="assistant", content="Response", metadata=metadata)
+        assert turn.metadata == metadata
+        assert turn.additional_metadata == metadata
+
+    def test_additional_metadata_input_compatibility(self):
+        metadata = {"model": "gpt-4", "tokens": 150}
         turn = Turn(
             role="assistant", content="Response", additional_metadata=metadata
         )
+        assert turn.metadata == metadata
+        assert turn.additional_metadata == metadata
+
+    def test_additional_metadata_camelcase_input_compatibility(self):
+        metadata = {"model": "gpt-4", "tokens": 150}
+        turn = Turn(
+            role="assistant", content="Response", additionalMetadata=metadata
+        )
+        assert turn.metadata == metadata
         assert turn.additional_metadata == metadata
 
     def test_complex_metadata(self):
@@ -229,7 +246,7 @@ class TestTurnRepresentation:
         assert "role='assistant'" in repr_str
         assert "content='Hi there!'" in repr_str
         assert "user_id='user123'" in repr_str
-        assert "additional_metadata=" in repr_str
+        assert "metadata=" in repr_str
 
     def test_repr_with_tools(self):
         tool_call = ToolCall(
@@ -332,7 +349,7 @@ class TestTurnSerialization:
         assert dumped["user_id"] == "user123"
         assert len(dumped["retrieval_context"]) == 2
         assert len(dumped["tools_called"]) == 1
-        assert dumped["additional_metadata"]["key"] == "value"
+        assert dumped["metadata"]["key"] == "value"
 
     def test_model_dump_exclude_none(self):
         turn = Turn(role="user", content="Hello")
@@ -341,7 +358,7 @@ class TestTurnSerialization:
         assert "user_id" not in dumped
         assert "retrieval_context" not in dumped
         assert "tools_called" not in dumped
-        assert "additional_metadata" not in dumped
+        assert "metadata" not in dumped
 
 
 class TestTurnCamelCaseInitialization:

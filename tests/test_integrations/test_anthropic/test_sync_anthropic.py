@@ -6,7 +6,6 @@ from deepeval.prompt import Prompt
 from deepeval.tracing import LlmSpanContext, trace
 from tests.test_integrations.utils import assert_trace_json
 
-
 client = Anthropic()
 
 prompt = Prompt(alias="asd")

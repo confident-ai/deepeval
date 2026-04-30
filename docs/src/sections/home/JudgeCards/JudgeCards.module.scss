@@ -1,0 +1,205 @@
+/* --------------------------------------------------------------------
+ * JudgeCards — 3-up card grid for the "LLM-as-a-Judge Metrics" section.
+ * Each card: animated SVG glyph + heading + description.
+ * ------------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  margin: 1.25rem 0 2rem;
+
+  border: 1px solid var(--color-fd-border);
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.15rem 1.4rem;
+  box-sizing: border-box;
+
+  // Vertical separators only between columns (none on outer edges).
+  &:not(:last-child) {
+    border-right: 1px solid var(--color-fd-border);
+  }
+
+  @media (max-width: 720px) {
+    &:not(:last-child) {
+      border-right: none;
+      border-bottom: 1px solid var(--color-fd-border);
+    }
+  }
+}
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 3rem;
+}
+
+.glyph {
+  width: 4rem;
+  height: 3rem;
+  color: var(--color-fd-foreground);
+  overflow: visible;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--color-fd-foreground);
+}
+
+.description {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-weight: 300;
+  color: var(--color-fd-muted-foreground);
+  text-wrap: pretty;
+}
+
+/* -------------------- Glyph: Metrics (bars) -------------------- */
+
+.glyphAxis {
+  stroke: var(--color-fd-border);
+  stroke-width: 1;
+}
+
+.glyphBar {
+  fill: currentColor;
+  transform-origin: center bottom;
+  transform-box: fill-box;
+  animation: barPulse 2.4s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+@keyframes barPulse {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* -------------------- Glyph: Multi-modalities (image frame) -------------------- */
+
+.glyphImageFrame {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+
+.glyphImageFill {
+  fill: currentColor;
+  opacity: 0.85;
+}
+
+.glyphImageSun {
+  fill: currentColor;
+  transform-origin: 24px 18px;
+  transform-box: view-box;
+  animation: sunRiseFall 4.2s ease-in-out infinite;
+}
+
+/* Sun traces an arc from behind the mountains, up to the top of the frame,
+   then back down. Mountains occlude the sun when it dips low (sun is drawn
+   before the mountain path in SVG source order). */
+@keyframes sunRiseFall {
+  0%,
+  100% {
+    transform: translateY(12px);
+    opacity: 0.35;
+  }
+  20% {
+    transform: translateY(2px);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(2px);
+    opacity: 0.9;
+  }
+}
+
+/* -------------------- Glyph: Conversational evals (bubbles + scores) -------------------- */
+
+.glyphConvBubble {
+  opacity: 0.85;
+}
+
+.glyphConvBubbleUser {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+}
+
+.glyphConvBubbleAgent {
+  fill: currentColor;
+}
+
+.glyphConvScore {
+  fill: var(--color-fd-border);
+  animation: convScorePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes convScorePulse {
+  0%,
+  10% {
+    fill: var(--color-fd-border);
+    transform: scale(0.6);
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  25%,
+  75% {
+    fill: color-mix(in oklab, #16a34a 80%, currentColor);
+    transform: scale(1);
+  }
+  90%,
+  100% {
+    fill: var(--color-fd-border);
+    transform: scale(0.6);
+  }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .glyphBar,
+  .glyphImageSun,
+  .glyphConvScore {
+    animation: none;
+  }
+
+  .glyphBar {
+    transform: scaleY(0.7);
+    opacity: 0.8;
+  }
+
+  .glyphImageSun {
+    opacity: 0.9;
+  }
+
+  .glyphConvScore {
+    fill: color-mix(in oklab, #16a34a 80%, currentColor);
+  }
+}

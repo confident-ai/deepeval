@@ -22,7 +22,6 @@ from deepeval.utils import (
     require_param,
 )
 
-
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
 

@@ -1,24 +1,23 @@
 from deepeval.metrics import GEval
 from deepeval.tracing import observe, update_current_trace
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import SingleTurnParams
 from deepeval.test_case import ToolCall
 from deepeval.dataset import EvaluationDataset
-
 
 relevnacy = GEval(
     name="Relevancy",
     criteria="For the given input, the output should be relevant to the input.",
     evaluation_params=[
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ],
 )
 correctness = GEval(
     name="Correctness",
     criteria="Given the expected output, determine whether the output is correct or not.",
     evaluation_params=[
-        LLMTestCaseParams.EXPECTED_OUTPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
+        SingleTurnParams.EXPECTED_OUTPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
     ],
 )
 

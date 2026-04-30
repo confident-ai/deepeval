@@ -21,10 +21,17 @@ from deepeval.prompt.api import (
     PromptPushRequest,
     PromptVersionsHttpResponse,
     PromptMessageList,
-    PromptUpdateRequest,
+    PromptCommitsHttpResponse,
+    PromptCreateVersion,
     ModelSettings,
     OutputSchema,
     OutputType,
+    Tool,
+    PromptCommit,
+    PromptBranch,
+    PromptBranchesHttpResponse,
+    PromptCreateBranchRequest,
+    PromptUpdateBranchRequest,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -47,6 +54,8 @@ else:
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 VERSION_CACHE_KEY = "version"
+HASH_CACHE_KEY = "hash"
+BRANCH_CACHE_KEY = "branch"
 LABEL_CACHE_KEY = "label"
 
 # Global background event loop for polling
@@ -91,16 +100,19 @@ class CachedPrompt(BaseModel):
     model_config = make_model_config(use_enum_values=True)
 
     alias: str
-    version: str
+    hash: str
+    version: Optional[str]
     label: Optional[str] = None
+    branch: Optional[str] = None
     template: Optional[str]
     messages_template: Optional[List[PromptMessage]]
-    prompt_version_id: str
+    prompt_id: str
     type: PromptType
     interpolation_type: PromptInterpolationType
     model_settings: Optional[ModelSettings]
     output_type: Optional[OutputType]
     output_schema: Optional[OutputSchema]
+    tools: Optional[List[Tool]] = None
 
 
 class Prompt:
@@ -114,6 +126,8 @@ class Prompt:
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
+        confident_api_key: Optional[str] = None,
+        branch: Optional[str] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -129,9 +143,13 @@ class Prompt:
         self.interpolation_type: PromptInterpolationType = (
             interpolation_type or PromptInterpolationType.FSTRING
         )
+        self.confident_api_key = confident_api_key
+        self.tools: Optional[List[Tool]] = None
+        self.branch = branch
 
         self._version = None
-        self._prompt_version_id: Optional[str] = None
+        self._hash = None
+        self._prompt_id: Optional[str] = None
         self._polling_tasks: Dict[str, Dict[str, asyncio.Task]] = {}
         self._refresh_map: Dict[str, Dict[str, int]] = {}
         self._lock = (
@@ -153,14 +171,25 @@ class Prompt:
             pass
 
     @property
+    def hash(self):
+        if self._hash is not None and self._hash != "latest":
+            return self._hash
+        commits = self._get_commits()
+        if len(commits) == 0:
+            return "latest"
+        else:
+            return commits[0].hash
+
+    @property
     def version(self):
         if self._version is not None and self._version != "latest":
             return self._version
-        versions = self._get_versions()
-        if len(versions) == 0:
-            return "latest"
         else:
-            return versions[-1].version
+            return None
+
+    @hash.setter
+    def hash(self, value):
+        self._hash = value
 
     @version.setter
     def version(self, value):
@@ -244,7 +273,7 @@ class Prompt:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         data, _ = api.send_request(
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
@@ -253,11 +282,28 @@ class Prompt:
         versions = PromptVersionsHttpResponse(**data)
         return versions.text_versions or versions.messages_versions or []
 
+    def _get_commits(self, branch: Optional[str] = None) -> List[PromptCommit]:
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+        api = Api(api_key=self.confident_api_key)
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_COMMITS_ENDPOINT,
+            url_params={"alias": self.alias},
+            params={"branch": branch} if branch else None,
+        )
+        commits = PromptCommitsHttpResponse(**data)
+        return commits.commits or []
+
     def _read_from_cache(
         self,
         alias: str,
+        hash: Optional[str] = None,
         version: Optional[str] = None,
         label: Optional[str] = None,
+        branch: Optional[str] = None,
     ) -> Optional[CachedPrompt]:
         if portalocker is None or not os.path.exists(CACHE_FILE_NAME):
             return None
@@ -272,7 +318,15 @@ class Prompt:
                 cache_data = json.load(f)
 
             if alias in cache_data:
-                if version:
+                if hash:
+                    if (
+                        HASH_CACHE_KEY in cache_data[alias]
+                        and hash in cache_data[alias][HASH_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][HASH_CACHE_KEY][hash]
+                        )
+                elif version:
                     if (
                         VERSION_CACHE_KEY in cache_data[alias]
                         and version in cache_data[alias][VERSION_CACHE_KEY]
@@ -288,6 +342,14 @@ class Prompt:
                         return CachedPrompt(
                             **cache_data[alias][LABEL_CACHE_KEY][label]
                         )
+                elif branch:
+                    if (
+                        HASH_CACHE_KEY in cache_data[alias]
+                        and branch in cache_data[alias][BRANCH_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][BRANCH_CACHE_KEY][branch]
+                        )
             return None
         except (portalocker.exceptions.LockException, Exception):
             # If cache is locked, corrupted or unreadable, return None and let it fetch from API
@@ -295,17 +357,22 @@ class Prompt:
 
     def _write_to_cache(
         self,
-        cache_key: Literal[VERSION_CACHE_KEY, LABEL_CACHE_KEY],
-        version: str,
+        cache_key: Literal[
+            VERSION_CACHE_KEY, LABEL_CACHE_KEY, HASH_CACHE_KEY, BRANCH_CACHE_KEY
+        ],
+        hash: str,
+        version: Optional[str] = None,
         label: Optional[str] = None,
+        branch: Optional[str] = None,
         text_template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
-        prompt_version_id: Optional[str] = None,
+        prompt_id: Optional[str] = None,
         type: Optional[PromptType] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[OutputSchema] = None,
+        tools: Optional[List[Tool]] = None,
     ):
         if portalocker is None or not self.alias:
             return
@@ -342,20 +409,27 @@ class Prompt:
                 # Cache the prompt
                 cached_entry = {
                     "alias": self.alias,
+                    "hash": hash,
                     "version": version,
                     "label": label,
+                    "branch": branch,
                     "template": text_template,
                     "messages_template": messages_template,
-                    "prompt_version_id": prompt_version_id,
+                    "prompt_id": prompt_id,
                     "type": type,
                     "interpolation_type": interpolation_type,
                     "model_settings": model_settings,
                     "output_type": output_type,
                     "output_schema": output_schema,
+                    "tools": tools,
                 }
 
-                if cache_key == VERSION_CACHE_KEY:
+                if cache_key == HASH_CACHE_KEY:
+                    cache_data[self.alias][cache_key][hash] = cached_entry
+                elif cache_key == VERSION_CACHE_KEY:
                     cache_data[self.alias][cache_key][version] = cached_entry
+                elif cache_key == BRANCH_CACHE_KEY:
+                    cache_data[self.alias][cache_key][branch] = cached_entry
                 else:
                     cache_data[self.alias][cache_key][label] = cached_entry
 
@@ -379,23 +453,27 @@ class Prompt:
         start_time: float,
         version: Optional[str] = None,
         label: Optional[str] = None,
+        hash: Optional[str] = None,
+        branch: Optional[str] = None,
     ):
         """
         Load prompt from cache and update progress bar.
         Raises if unable to load from cache.
         """
         cached_prompt = self._read_from_cache(
-            self.alias, version=version, label=label
+            self.alias, version=version, label=label, hash=hash, branch=branch
         )
         if not cached_prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
 
         with self._lock:
             self._version = cached_prompt.version
+            self._hash = hash
             self.label = cached_prompt.label
+            self.branch = cached_prompt.branch
             self.text_template = cached_prompt.template
             self.messages_template = cached_prompt.messages_template
-            self._prompt_version_id = cached_prompt.prompt_version_id
+            self._prompt_id = cached_prompt.prompt_id
             self.type = (
                 PromptType(cached_prompt.type) if cached_prompt.type else None
             )
@@ -413,6 +491,7 @@ class Prompt:
             self.output_schema = construct_base_model(
                 cached_prompt.output_schema
             )
+            self.tools = cached_prompt.tools
 
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
@@ -429,16 +508,22 @@ class Prompt:
         self,
         version: Optional[str] = None,
         label: Optional[str] = None,
+        hash: Optional[str] = None,
         fallback_to_cache: bool = True,
         write_to_cache: bool = True,
         default_to_cache: bool = True,
         refresh: Optional[int] = 60,
+        branch: Optional[str] = None,
     ):
         should_write_on_first_fetch = False
         if refresh:
             # Check if we need to bootstrap the cache
             cached_prompt = self._read_from_cache(
-                self.alias, version=version, label=label
+                self.alias,
+                version=version,
+                label=label,
+                hash=hash,
+                branch=branch,
             )
             if cached_prompt is None:
                 # No cache exists, so we should write after fetching to bootstrap
@@ -454,23 +539,27 @@ class Prompt:
         if refresh:
             loop = _get_or_create_polling_loop()
             asyncio.run_coroutine_threadsafe(
-                self.create_polling_task(version, label, refresh), loop
+                self.create_polling_task(version, label, hash, branch, refresh),
+                loop,
             )
 
         if default_to_cache:
             try:
                 cached_prompt = self._read_from_cache(
-                    self.alias, version=version, label=label
+                    self.alias,
+                    version=version,
+                    label=label,
+                    hash=hash,
+                    branch=branch,
                 )
                 if cached_prompt:
                     with self._lock:
                         self._version = cached_prompt.version
+                        self._hash = hash
                         self.label = cached_prompt.label
                         self.text_template = cached_prompt.template
                         self.messages_template = cached_prompt.messages_template
-                        self._prompt_version_id = (
-                            cached_prompt.prompt_version_id
-                        )
+                        self._prompt_id = cached_prompt.prompt_id
                         self.type = (
                             PromptType(cached_prompt.type)
                             if cached_prompt.type
@@ -492,22 +581,28 @@ class Prompt:
                         self.output_schema = construct_base_model(
                             cached_prompt.output_schema
                         )
+                        self.tools = cached_prompt.tools
                     return
             except Exception:
                 pass
 
-        api = Api()
+        api = Api(api_key=self.confident_api_key)
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
             BarColumn(bar_width=60),
             TextColumn("[progress.description]{task.description}"),
             transient=False,
         ) as progress:
-            HINT_TEXT = (
-                f"version='{version or 'latest'}'"
-                if not label
-                else f"label='{label}'"
-            )
+            if label:
+                HINT_TEXT = f"label={label}"
+            elif version:
+                HINT_TEXT = f"version={version}"
+            else:
+                branch_name = branch or self.branch
+                HINT_TEXT = (
+                    f"hash={hash or 'latest'}, branch={branch_name or 'main'}"
+                )
+
             task_id = progress.add_task(
                 f"Pulling [rgb(106,0,255)]'{self.alias}' ({HINT_TEXT})[/rgb(106,0,255)] from Confident AI...",
                 total=100,
@@ -524,18 +619,29 @@ class Prompt:
                             "label": label,
                         },
                     )
-                else:
+                elif version:
                     data, _ = api.send_request(
                         method=HttpMethods.GET,
                         endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
                         url_params={
                             "alias": self.alias,
-                            "versionId": version or "latest",
+                            "version": version,
                         },
+                    )
+                else:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_COMMIT_HASH_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "hash": hash or "latest",
+                        },
+                        params={"branch": branch or self.branch},
                     )
 
                 response = PromptHttpResponse(
                     id=data["id"],
+                    hash=data["hash"],
                     version=data.get("version", None),
                     label=data.get("label", None),
                     text=data.get("text", None),
@@ -545,6 +651,7 @@ class Prompt:
                     model_settings=data.get("modelSettings", None),
                     output_type=data.get("outputType", None),
                     output_schema=data.get("outputSchema", None),
+                    tools=data.get("tools", None),
                 )
             except Exception:
                 if fallback_to_cache:
@@ -554,16 +661,19 @@ class Prompt:
                         start_time,
                         version=version,
                         label=label,
+                        hash=hash,
+                        branch=branch,
                     )
                     return
                 raise
 
             with self._lock:
+                self._hash = response.hash
                 self._version = response.version
                 self.label = response.label
                 self.text_template = response.text
                 self.messages_template = response.messages
-                self._prompt_version_id = response.id
+                self._prompt_id = response.id
                 self.type = response.type
                 self.interpolation_type = response.interpolation_type
                 self.model_settings = response.model_settings
@@ -571,6 +681,7 @@ class Prompt:
                 self.output_schema = construct_base_model(
                     response.output_schema
                 )
+                self.tools = response.tools
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -580,19 +691,66 @@ class Prompt:
             )
             # Write to cache if explicitly requested OR if we need to bootstrap cache for refresh mode
             if write_to_cache or should_write_on_first_fetch:
+                if label:
+                    cache_key = LABEL_CACHE_KEY
+                elif version:
+                    cache_key = VERSION_CACHE_KEY
+                else:
+                    cache_key = HASH_CACHE_KEY
                 self._write_to_cache(
-                    cache_key=LABEL_CACHE_KEY if label else VERSION_CACHE_KEY,
+                    cache_key=cache_key,
                     version=response.version,
                     label=response.label,
+                    hash=response.hash,
+                    branch=branch,
                     text_template=response.text,
                     messages_template=response.messages,
-                    prompt_version_id=response.id,
+                    prompt_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
                     model_settings=response.model_settings,
                     output_type=response.output_type,
                     output_schema=response.output_schema,
+                    tools=response.tools,
                 )
+
+    def create_version(
+        self, hash: Optional[str] = None, _verbose: Optional[bool] = True
+    ):
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        body = PromptCreateVersion(hash=hash)
+        try:
+            body = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = body.dict(by_alias=True, exclude_none=True)
+
+        api = Api(api_key=self.confident_api_key)
+
+        data, _ = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
+            url_params={"alias": self.alias},
+            body=body,
+        )
+
+        version = data.get("version")
+        hash = data.get("hash")
+        if version and hash:
+            self._version = version
+            self._hash = hash
+            if _verbose:
+                console = Console()
+                console.print(
+                    f"✅ New Prompt version successfully created: {version}"
+                )
+        return version
 
     def push(
         self,
@@ -604,11 +762,13 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        tools: Optional[List[Tool]] = None,
         _verbose: Optional[bool] = True,
+        branch: Optional[str] = None,
     ):
-        if self.alias is None:
+        if not self.alias or not self.alias.strip():
             raise ValueError(
-                "Prompt alias is not set. Please set an alias to continue."
+                "Prompt alias is not set or is empty. Please set an alias to continue."
             )
         text_template = text or self.text_template
         messages_template = messages or self.messages_template
@@ -626,6 +786,8 @@ class Prompt:
             output_type=output_type or self.output_type,
             output_schema=construct_output_schema(output_schema)
             or construct_output_schema(self.output_schema),
+            tools=tools or self.tools,
+            branch=branch or self.branch,
         )
         try:
             body = body.model_dump(
@@ -635,16 +797,18 @@ class Prompt:
             # Pydantic version below 2.0
             body = body.dict(by_alias=True, exclude_none=True)
 
-        api = Api()
-        _, link = api.send_request(
+        api = Api(api_key=self.confident_api_key)
+        data, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.PROMPTS_ENDPOINT,
             body=body,
         )
-        versions = self._get_versions()
+        prompt_id = data.get("promptId")
+        commits = self._get_commits()
 
-        if link and versions:
-            self._prompt_version_id = versions[-1].id
+        if link and commits:
+            self._prompt_id = prompt_id
+            self._hash = commits[0].hash
             self.text_template = text_template
             self.messages_template = messages_template
             self.interpolation_type = (
@@ -653,6 +817,7 @@ class Prompt:
             self.model_settings = model_settings or self.model_settings
             self.output_type = output_type or self.output_type
             self.output_schema = output_schema or self.output_schema
+            self.tools = tools or self.tools
             self.type = PromptType.TEXT if text_template else PromptType.LIST
             if _verbose:
                 console = Console()
@@ -663,7 +828,7 @@ class Prompt:
 
     def update(
         self,
-        version: str,
+        version: Optional[str] = None,
         text: Optional[str] = None,
         messages: Optional[List[PromptMessage]] = None,
         interpolation_type: Optional[
@@ -672,47 +837,157 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        tools: Optional[List[Tool]] = None,
     ):
-        if self.alias is None:
-            raise ValueError(
-                "Prompt alias is not set. Please set an alias to continue."
-            )
+        """
+        Backward compatibility wrapper for update method.
+        """
+        import warnings
 
-        body = PromptUpdateRequest(
+        warnings.warn(
+            "The update() method is deprecated. We no longer support "
+            "updating existing versions. Each prompt update will now create a new commit instead. "
+            "Please use push() directly for new code. This call is now redirecting to push method.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        # Delegate to push() which creates a new commit
+        return self.push(
             text=text,
             messages=messages,
             interpolation_type=interpolation_type,
             model_settings=model_settings,
             output_type=output_type,
-            output_schema=construct_output_schema(output_schema),
+            output_schema=output_schema,
+            tools=tools,
+            _verbose=True,
         )
+
+    ############################################
+    ### Branching
+    ############################################
+
+    def get_branches(self) -> List[PromptBranch]:
+        if not self.alias:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        api = Api(api_key=self.confident_api_key)
+
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_BRANCHES_ENDPOINT,
+            url_params={"alias": self.alias},
+        )
+
+        response = PromptBranchesHttpResponse(**data)
+        return response.branches or []
+
+    def create_branch(self, branch: str, _verbose: Optional[bool] = True):
+        if not self.alias:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        api = Api(api_key=self.confident_api_key)
+
+        body = PromptCreateBranchRequest(branch=branch)
         try:
-            body = body.model_dump(
+            body_dict = body.model_dump(
                 by_alias=True, exclude_none=True, mode="json"
             )
         except AttributeError:
-            body = body.dict(by_alias=True, exclude_none=True)
-        api = Api()
-        data, _ = api.send_request(
-            method=HttpMethods.PUT,
-            endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
-            url_params={
-                "alias": self.alias,
-                "versionId": version,
-            },
-            body=body,
+            body_dict = body.dict(by_alias=True, exclude_none=True)
+
+        data, link = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.PROMPTS_BRANCHES_ENDPOINT,
+            url_params={"alias": self.alias},
+            body=body_dict,
         )
-        if data:
-            self._version = version
-            self.text_template = text
-            self.messages_template = messages
-            self.interpolation_type = interpolation_type
-            self.model_settings = model_settings
-            self.output_type = output_type
-            self.output_schema = output_schema
-            self.type = PromptType.TEXT if text else PromptType.LIST
+
+        self.branch = branch
+
+        if _verbose:
             console = Console()
-            console.print("✅ Prompt successfully updated on Confident AI!")
+            console.print(
+                f"✅ Prompt branch '{branch}' successfully created! View at "
+                f"[link={link}]{link}[/link]"
+            )
+
+    def update_branch(
+        self,
+        name: str,
+        branch: Optional[str] = None,
+        _verbose: Optional[bool] = True,
+    ):
+        if not self.alias:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        branch_to_update = branch or self.branch
+        if branch_to_update == "main":
+            raise ValueError("Cannot update the name of the main branch.")
+
+        api = Api(api_key=self.confident_api_key)
+
+        body = PromptUpdateBranchRequest(name=name)
+        try:
+            body_dict = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
+        except AttributeError:
+            body_dict = body.dict(by_alias=True, exclude_none=True)
+
+        api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
+            url_params={"alias": self.alias, "name": branch_to_update},
+            body=body_dict,
+        )
+
+        # If we just renamed the branch this instance is tracking, update the instance state
+        if branch_to_update == self.branch:
+            self.branch = name
+
+        if _verbose:
+            console = Console()
+            console.print(
+                f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'."
+            )
+
+    def delete_branch(
+        self, branch: Optional[str] = None, _verbose: Optional[bool] = True
+    ):
+        if not self.alias:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        branch_to_delete = branch or self.branch
+        if branch_to_delete == "main":
+            raise ValueError("Cannot delete the main branch.")
+
+        api = Api(api_key=self.confident_api_key)
+
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.PROMPTS_BRANCH_ENDPOINT,
+            url_params={"alias": self.alias, "name": branch_to_delete},
+        )
+
+        # If we deleted the branch this instance is currently tracking, safely fall back to tracking "main"
+        if branch_to_delete == self.branch:
+            self.branch = "main"
+
+        if _verbose:
+            console = Console()
+            console.print(
+                f"✅ Successfully deleted branch '{branch_to_delete}'."
+            )
 
     ############################################
     ### Polling
@@ -722,11 +997,20 @@ class Prompt:
         self,
         version: Optional[str],
         label: Optional[str],
+        hash: Optional[str],
+        branch: Optional[str],
         refresh: Optional[int] = 60,
     ):
         # If polling task doesn't exist, start it
-        CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
-        cache_value = label if label else version
+        if label:
+            CACHE_KEY = LABEL_CACHE_KEY
+            cache_value = label
+        elif version:
+            CACHE_KEY = VERSION_CACHE_KEY
+            cache_value = version
+        else:
+            CACHE_KEY = HASH_CACHE_KEY
+            cache_value = hash or "latest"
 
         # Initialize nested dicts if they don't exist
         if CACHE_KEY not in self._polling_tasks:
@@ -742,7 +1026,7 @@ class Prompt:
             self._refresh_map[CACHE_KEY][cache_value] = refresh
             if not polling_task:
                 self._polling_tasks[CACHE_KEY][cache_value] = (
-                    asyncio.create_task(self.poll(version, label))
+                    asyncio.create_task(self.poll(version, label, hash, branch))
                 )
 
         # If invalid `refresh`, stop the task
@@ -758,14 +1042,26 @@ class Prompt:
         self,
         version: Optional[str] = None,
         label: Optional[str] = None,
+        hash: Optional[str] = None,
+        branch: Optional[str] = None,
     ):
-        CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
-        cache_value = label if label else version
+        if label:
+            CACHE_KEY = LABEL_CACHE_KEY
+            cache_value = label
+        elif version:
+            CACHE_KEY = VERSION_CACHE_KEY
+            cache_value = version
+        elif branch:
+            CACHE_KEY = BRANCH_CACHE_KEY
+            cache_value = branch
+        else:
+            CACHE_KEY = HASH_CACHE_KEY
+            cache_value = hash or "latest"
 
         while True:
             await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
 
-            api = Api()
+            api = Api(api_key=self.confident_api_key)
             try:
                 if label:
                     data, _ = api.send_request(
@@ -776,24 +1072,40 @@ class Prompt:
                             "label": label,
                         },
                     )
-                else:
+                elif version:
                     data, _ = api.send_request(
                         method=HttpMethods.GET,
                         endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
                         url_params={
                             "alias": self.alias,
-                            "versionId": version or "latest",
+                            "version": version,
                         },
+                    )
+                else:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_COMMIT_HASH_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "hash": hash or "latest",
+                        },
+                        params={"branch": branch or self.branch},
                     )
 
                 response = PromptHttpResponse(
                     id=data["id"],
                     version=data.get("version", None),
+                    hash=data["hash"],
                     label=data.get("label", None),
                     text=data.get("text", None),
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
+                    model_settings=data.get("modelSettings", None),
+                    output_type=data.get("outputType", None),
+                    output_schema=data.get("outputSchema", None),
+                    tools=data.get("tools", None),
+                    branch=data.get("branch", None),
                 )
 
                 # Update the cache with fresh data from server
@@ -801,22 +1113,36 @@ class Prompt:
                     cache_key=CACHE_KEY,
                     version=response.version,
                     label=response.label,
+                    hash=response.hash,
+                    branch=response.branch,
                     text_template=response.text,
                     messages_template=response.messages,
-                    prompt_version_id=response.id,
+                    prompt_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
+                    model_settings=response.model_settings,
+                    output_type=response.output_type,
+                    output_schema=response.output_schema,
+                    tools=response.tools,
                 )
 
                 # Update in-memory properties with fresh data (thread-safe)
                 with self._lock:
                     self._version = response.version
                     self.label = response.label
+                    self._hash = hash
+                    self.branch = response.branch
                     self.text_template = response.text
                     self.messages_template = response.messages
-                    self._prompt_version_id = response.id
+                    self._prompt_id = response.id
                     self.type = response.type
                     self.interpolation_type = response.interpolation_type
+                    self.model_settings = response.model_settings
+                    self.output_type = response.output_type
+                    self.output_schema = construct_base_model(
+                        response.output_schema
+                    )
+                    self.tools = response.tools
 
             except Exception:
                 pass

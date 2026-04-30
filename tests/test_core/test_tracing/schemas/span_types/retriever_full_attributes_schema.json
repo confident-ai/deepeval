@@ -1,0 +1,40 @@
+{
+  "uuid": "e9851e78-27ee-4f3e-a990-2e920e3db578",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [],
+  "retrieverSpans": [
+    {
+      "uuid": "928c5036-92f0-43b9-8c49-ec09d983ab86",
+      "name": "retriever_full_attributes",
+      "status": "SUCCESS",
+      "type": "retriever",
+      "startTime": "2026-01-29T09:53:13.636Z",
+      "endTime": "2026-01-29T09:53:13.636Z",
+      "input": {
+        "query": "machine learning"
+      },
+      "output": [
+        "Chunk 1",
+        "Chunk 2",
+        "Chunk 3"
+      ],
+      "embedder": "voyage-code-2",
+      "topK": 3,
+      "chunkSize": 1024
+    }
+  ],
+  "toolSpans": [],
+  "startTime": "2026-01-29T09:53:13.636Z",
+  "endTime": "2026-01-29T09:53:13.636Z",
+  "environment": "testing",
+  "input": {
+    "query": "machine learning"
+  },
+  "output": [
+    "Chunk 1",
+    "Chunk 2",
+    "Chunk 3"
+  ],
+  "status": "SUCCESS"
+}

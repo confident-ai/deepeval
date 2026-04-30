@@ -1,58 +1,45 @@
 {
-  "name": "docs",
+  "name": "new_docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "docusaurus": "docusaurus",
-    "start": "docusaurus start",
-    "build": "docusaurus build",
-    "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
-    "clear": "docusaurus clear",
-    "serve": "docusaurus serve",
-    "write-translations": "docusaurus write-translations",
-    "write-heading-ids": "docusaurus write-heading-ids"
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start",
+    "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "contributors": "node scripts/generate-contributors.mjs",
+    "changelog-contributors": "node scripts/generate-changelog-contributors.mjs",
+    "repo-contributors": "node scripts/generate-repo-contributors.mjs",
+    "prebuild": "npm run repo-contributors && npm run contributors && npm run changelog-contributors",
+    "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.9.2",
-    "@docusaurus/plugin-client-redirects": "^3.9.2",
-    "@docusaurus/preset-classic": "^3.9.2",
-    "@docusaurus/theme-mermaid": "^3.9.2",
-    "@mdx-js/react": "3",
-    "clsx": "^1.2.1",
-    "docusaurus-plugin-sass": "^0.2.5",
-    "font-awesome": "^4.7.0",
-    "lucide-react": "^0.526.0",
-    "posthog-docusaurus": "^2.0.2",
-    "posthog-js": "^1.206.1",
-    "prism-react-renderer": "2",
-    "react": "18",
-    "react-dom": "18",
-    "react-player": "^2.16.0",
-    "rehype-katex": "6",
-    "remark-math": "5",
-    "sass": "^1.76.0",
-    "zwitch": "^2.0.4"
+    "@radix-ui/react-popover": "1.1.15",
+    "fumadocs-core": "16.8.1",
+    "fumadocs-mdx": "14.3.1",
+    "fumadocs-ui": "16.8.1",
+    "katex": "^0.16.45",
+    "lucide-react": "^1.8.0",
+    "mdast-util-directive": "^3.1.0",
+    "mermaid": "^11.14.0",
+    "next": "16.2.4",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "rehype-katex": "^7.0.1",
+    "remark-directive": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.9.2",
-    "css-loader": "^7.1.2",
-    "prettier": "^3.5.3",
-    "style-loader": "^4.0.0"
-  },
-  "browserslist": {
-    "production": [
-      ">0.5%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "engines": {
-    "node": ">=18.0"
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.10",
+    "sass": "^1.99.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.3"
   }
 }

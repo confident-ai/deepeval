@@ -43,7 +43,8 @@ from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
-from deepeval.cli.test import app as test_app
+from deepeval.cli.generate.command import generate_command
+from deepeval.cli.test.command import app as test_app
 from deepeval.cli.server import start_server
 from deepeval.cli.utils import (
     coerce_blank_to_none,
@@ -53,7 +54,9 @@ from deepeval.cli.utils import (
     render_login_message,
     resolve_field_names,
     upload_and_open_link,
+    with_utm,
     PROD,
+    WWW,
 )
 from deepeval.confident.api import (
     is_confident,
@@ -61,11 +64,13 @@ from deepeval.confident.api import (
 
 app = typer.Typer(name="deepeval", no_args_is_help=True)
 app.add_typer(test_app, name="test")
+app.command(name="generate")(generate_command)
 
 
 class Regions(Enum):
     US = "US"
     EU = "EU"
+    AU = "AU"
 
 
 def version_callback(value: Optional[bool] = None) -> None:
@@ -156,7 +161,7 @@ def main(
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
-        ..., help="The data region to use (US or EU)"
+        ..., help="The data region to use (US or EU or AU)"
     ),
     save: Optional[str] = typer.Option(
         None,
@@ -174,7 +179,12 @@ def set_confident_region_command(
 ):
     """Set the Confident AI data region."""
     # Add flag emojis based on region
-    flag = "🇺🇸" if region == Regions.US else "🇪🇺"
+    if region == Regions.EU:
+        flag = "🇪🇺"
+    elif region == Regions.AU:
+        flag = "🇦🇺"
+    else:
+        flag = "🇺🇸"
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
@@ -197,7 +207,7 @@ def set_confident_region_command(
 @app.command(
     help=(
         "Login will prompt you for your Confident AI API key (input hidden). "
-        "Get it from https://app.confident-ai.com. "
+        f"Get it from {with_utm(PROD, medium='cli', content='login_help_text')}. "
         "Required to log events to the server. "
         "The API key will be saved in your environment variables, typically in .env.local, unless a different path is provided with --save."
     )
@@ -233,11 +243,17 @@ def login(
                 )
                 pairing_thread.start()
 
-                # Open web url
-                login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
+                login_url = with_utm(
+                    f"{PROD}/pair?code={pairing_code}&port={port}",
+                    medium="cli",
+                    content="login_pair_browser_open",
+                )
                 webbrowser.open(login_url)
+                fallback_url = with_utm(
+                    PROD, medium="cli", content="login_pair_fallback_link"
+                )
                 print(
-                    f"(open this link if your browser did not open: [link={PROD}]{PROD}[/link])"
+                    f"(open this link if your browser did not open: [link={fallback_url}]{fallback_url}[/link])"
                 )
 
                 # Manual fallback if still empty
@@ -254,7 +270,6 @@ def login(
             settings = get_settings()
             save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
             with settings.edit(save=save) as edit_ctx:
-                settings.API_KEY = key
                 settings.CONFIDENT_API_KEY = key
 
             handled, path, updated = edit_ctx.result
@@ -275,11 +290,15 @@ def login(
             print(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
             )
+            quickstart_url = with_utm(
+                f"{WWW}/docs/llm-evaluation/quickstart",
+                medium="cli",
+                content="login_success_quickstart",
+            )
             print(
                 "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. "
                 "Follow our quickstart tutorial here: "
-                "[bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]"
-                "https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
+                f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
             )
         except Exception as e:
             completed = False
@@ -315,7 +334,6 @@ def logout(
     settings = get_settings()
     save = save or settings.DEEPEVAL_DEFAULT_SAVE or "dotenv:.env.local"
     with settings.edit(save=save) as edit_ctx:
-        settings.API_KEY = None
         settings.CONFIDENT_API_KEY = None
 
     handled, path, updated = edit_ctx.result
@@ -596,26 +614,6 @@ def set_debug(
         "--trace-sample-rate",
         help="Set CONFIDENT_TRACE_SAMPLE_RATE.",
     ),
-    metric_logging_verbose: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-verbose/--no-metric-logging-verbose",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_VERBOSE.",
-    ),
-    metric_logging_flush: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-flush/--no-metric-logging-flush",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_FLUSH.",
-    ),
-    metric_logging_sample_rate: Optional[float] = typer.Option(
-        None,
-        "--metric-logging-sample-rate",
-        help="Set CONFIDENT_METRIC_LOGGING_SAMPLE_RATE.",
-    ),
-    metric_logging_enabled: Optional[bool] = typer.Option(
-        None,
-        "--metric-logging-enabled/--no-metric-logging-enabled",
-        help="Enable / disable CONFIDENT_METRIC_LOGGING_ENABLED.",
-    ),
     # Persistence
     save: Optional[str] = typer.Option(
         None,
@@ -674,18 +672,6 @@ def set_debug(
         if trace_sample_rate is not None:
             settings.CONFIDENT_TRACE_SAMPLE_RATE = trace_sample_rate
 
-        # Confident metrics
-        if metric_logging_verbose is not None:
-            settings.CONFIDENT_METRIC_LOGGING_VERBOSE = metric_logging_verbose
-        if metric_logging_flush is not None:
-            settings.CONFIDENT_METRIC_LOGGING_FLUSH = metric_logging_flush
-        if metric_logging_sample_rate is not None:
-            settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = (
-                metric_logging_sample_rate
-            )
-        if metric_logging_enabled is not None:
-            settings.CONFIDENT_METRIC_LOGGING_ENABLED = metric_logging_enabled
-
     handled, path, updates = edit_ctx.result
 
     _handle_save_result(
@@ -742,12 +728,6 @@ def unset_debug(
         settings.CONFIDENT_TRACE_ENVIRONMENT = None
         settings.CONFIDENT_TRACE_FLUSH = None
         settings.CONFIDENT_TRACE_SAMPLE_RATE = None
-
-        # Confident metrics
-        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = None
-        settings.CONFIDENT_METRIC_LOGGING_FLUSH = None
-        settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = None
-        settings.CONFIDENT_METRIC_LOGGING_ENABLED = None
 
     handled, path, updates = edit_ctx.result
 

@@ -1,0 +1,63 @@
+{
+  "uuid": "4b4b6a890d51171eeadf3f0a3e06c4cf",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "6ab30773b1e78612",
+      "name": "invoke_agent Strands Agents",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:33.266Z",
+      "endTime": "2026-03-09T11:17:35.192Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "The 'Async Data' has been processed successfully.\n",
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_async_v1"
+    },
+    {
+      "uuid": "6ab30773b1e78612",
+      "name": "",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-03-09T11:17:33.266Z",
+      "endTime": "2026-03-09T11:17:35.192Z",
+      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "output": "The 'Async Data' has been processed successfully.\n",
+      "toolsCalled": [],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1"
+        }
+      ]
+    }
+  ],
+  "llmSpans": [],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-03-09T11:17:33.266Z",
+  "endTime": "2026-03-09T11:17:35.192Z",
+  "name": "agentcore-full-features-async",
+  "metadata": {
+    "env": "testing_async",
+    "mode": "async"
+  },
+  "tags": [
+    "agentcore",
+    "features",
+    "async"
+  ],
+  "environment": "development",
+  "threadId": "thread-async-features-002",
+  "userId": "user-async-002",
+  "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+  "output": "The 'Async Data' has been processed successfully.\n",
+  "status": "SUCCESS",
+  "metricCollection": "trace_metrics_override_async_v1"
+}

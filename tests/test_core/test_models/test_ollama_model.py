@@ -75,3 +75,36 @@ def test_ollama_model_defaults_model_and_base_url_from_settings(
     host = kwargs.get("host")
     assert host is not None
     assert host.rstrip("/") == "http://settings-host:11434"
+
+
+########################################
+# Cost behavior: Ollama always returns 0
+########################################
+
+
+@patch("deepeval.models.llms.ollama_model.require_dependency")
+def test_ollama_generate_returns_zero_cost(mock_require_dep, settings):
+    from unittest.mock import MagicMock
+    from types import SimpleNamespace
+
+    reset_settings(reload_dotenv=False)
+
+    with settings.edit(persist=False):
+        settings.OLLAMA_MODEL_NAME = "llama3"
+        settings.LOCAL_MODEL_BASE_URL = "http://localhost:11434"
+
+    fake_ollama = make_fake_ollama_module(_RecordingClient)
+    mock_require_dep.return_value = fake_ollama
+
+    model = OllamaModel(model="llama3")
+
+    fake_chat_model = MagicMock()
+    fake_response = SimpleNamespace(
+        message=SimpleNamespace(content="test output")
+    )
+    fake_chat_model.chat.return_value = fake_response
+    model.load_model = lambda **kwargs: fake_chat_model
+
+    output, cost = model.generate("test prompt")
+    assert cost == 0
+    assert output == "test output"
