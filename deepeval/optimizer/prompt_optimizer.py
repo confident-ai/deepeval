@@ -111,9 +111,7 @@ class PromptOptimizer:
     ) -> Prompt:
         with self._progress_context():
             best_prompt, self.optimization_report = (
-                await self.algorithm.a_execute(
-                    prompt=prompt, goldens=goldens
-                )
+                await self.algorithm.a_execute(prompt=prompt, goldens=goldens)
             )
 
         if self.display_config.show_indicator:
@@ -153,18 +151,21 @@ class PromptOptimizer:
         # Set sub-step callback (updates the bottom progress row)
         self.algorithm.step_callback = self._on_step
 
-
     def _print_summary_table(self) -> None:
         console = Console(file=sys.stderr)
 
         if hasattr(self.algorithm, "generate_summary_table"):
-            renderables = self.algorithm.generate_summary_table(self.optimization_report)
+            renderables = self.algorithm.generate_summary_table(
+                self.optimization_report
+            )
             console.print()
             for renderable in renderables:
                 console.print(renderable)
             console.print()
         else:
-            console.print(f"[dim]Optimization complete. (No summary table provided by {self.algorithm.name})[/]")
+            console.print(
+                f"[dim]Optimization complete. (No summary table provided by {self.algorithm.name})[/]"
+            )
 
     @contextmanager
     def _progress_context(self):
@@ -183,9 +184,7 @@ class PromptOptimizer:
             iter_task = progress.add_task(
                 f"[bold white]Optimizing prompt with {self.algorithm.name}[/]"
             )
-            step_task = progress.add_task(
-                "[rgb(55,65,81)]waiting...[/]"
-            )
+            step_task = progress.add_task("[rgb(55,65,81)]waiting...[/]")
             self._progress_state = (progress, iter_task, step_task)
             try:
                 yield
@@ -235,8 +234,15 @@ class PromptOptimizer:
                 progress, iter_task, step_task = self._progress_state
                 if total_steps is not None:
                     progress.update(iter_task, total=total_steps)
-                progress.update(iter_task, description=self._format_iter_description(step_index, total_steps))
-                progress.update(step_task, description=f"[rgb(255,85,85)]✕ {detail}[/]")
+                progress.update(
+                    iter_task,
+                    description=self._format_iter_description(
+                        step_index, total_steps
+                    ),
+                )
+                progress.update(
+                    step_task, description=f"[rgb(255,85,85)]✕ {detail}[/]"
+                )
             print(f"[{algo}] {detail}")
             return
 
@@ -260,13 +266,18 @@ class PromptOptimizer:
         if step_index is not None and step_index > 0:
             progress.advance(iter_task, 1)
 
-        progress.update(iter_task, description=self._format_iter_description(step_index, total_steps))
+        progress.update(
+            iter_task,
+            description=self._format_iter_description(step_index, total_steps),
+        )
 
     def _on_step(self, label: str) -> None:
         if self._progress_state is None:
             return
         progress, _, step_task = self._progress_state
-        progress.update(step_task, description=self._format_step_description(label))
+        progress.update(
+            step_task, description=self._format_step_description(label)
+        )
 
     def _format_iter_description(
         self,

@@ -11,7 +11,11 @@ from deepeval.optimizer.types import (
 from deepeval.prompt.prompt import Prompt
 from deepeval.optimizer.utils import _parse_prompt, _create_prompt
 from deepeval.prompt.api import PromptType
-from deepeval.metrics.utils import a_generate_with_schema_and_extract, generate_with_schema_and_extract, initialize_model
+from deepeval.metrics.utils import (
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
+    initialize_model,
+)
 from .schema import RewriterSchema
 from .template import RewriterTemplate
 
@@ -50,9 +54,7 @@ class Rewriter:
         if not feedback_diagnosis or not feedback_diagnosis.analysis:
             return old_prompt
 
-        current_prompt_block = _parse_prompt(
-            old_prompt
-        )
+        current_prompt_block = _parse_prompt(old_prompt)
 
         failures_block = feedback_diagnosis.failures
         successes_block = feedback_diagnosis.successes
@@ -68,7 +70,7 @@ class Rewriter:
         )
 
         revised_prompt_text = generate_with_schema_and_extract(
-            metric=self, 
+            metric=self,
             prompt=mutation_prompt,
             schema_cls=RewriterSchema,
             extract_schema=lambda s: s.revised_prompt,
@@ -78,10 +80,7 @@ class Rewriter:
         if isinstance(revised_prompt_text, list):
             revised_prompt_text = json.dumps(revised_prompt_text)
 
-        return _create_prompt(
-            old_prompt,
-            revised_prompt_text
-        )
+        return _create_prompt(old_prompt, revised_prompt_text)
 
     async def a_rewrite(
         self,
@@ -91,9 +90,7 @@ class Rewriter:
         if not feedback_diagnosis or not feedback_diagnosis.analysis:
             return old_prompt
 
-        current_prompt_block = _parse_prompt(
-            old_prompt
-        )
+        current_prompt_block = _parse_prompt(old_prompt)
 
         failures_block = feedback_diagnosis.failures
         successes_block = feedback_diagnosis.successes
@@ -119,10 +116,7 @@ class Rewriter:
         if isinstance(revised_prompt_text, list):
             revised_prompt_text = json.dumps(revised_prompt_text)
 
-        return _create_prompt(
-            old_prompt,
-            revised_prompt_text
-        )
+        return _create_prompt(old_prompt, revised_prompt_text)
 
     def _accrue_cost(self, cost: float) -> None:
         pass

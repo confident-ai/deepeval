@@ -53,7 +53,8 @@ def test_create_prompt_list_rejects_comma_separated_objects_without_array():
     )
 
     with pytest.raises(
-        DeepEvalError, match="Failed to parse the LLM's rewritten messages into JSON"
+        DeepEvalError,
+        match="Failed to parse the LLM's rewritten messages into JSON",
     ):
         _create_prompt(old_prompt, new_content)
 
@@ -66,6 +67,7 @@ def test_create_prompt_list_raises_for_invalid_json():
         ]
     )
     with pytest.raises(
-        DeepEvalError, match="Failed to parse the LLM's rewritten messages into JSON"
+        DeepEvalError,
+        match="Failed to parse the LLM's rewritten messages into JSON",
     ):
         _create_prompt(old_prompt, "not-json-at-all")

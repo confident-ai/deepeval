@@ -43,7 +43,7 @@ JSON:
             example_instruction = '[{"role": "system", "content": "Determine the sentiment of the text. Pay special attention to sarcasm..."},{"role": "user", "content": "{{input}}"}]'
         else:
             format_instruction = "The final string representing the optimized revised instruction."
-            example_instruction = '"Determine the sentiment of the text. Respond with only \'Positive\' or \'Negative\'. Pay special attention to sarcasm..."'
+            example_instruction = "\"Determine the sentiment of the text. Respond with only 'Positive' or 'Negative'. Pay special attention to sarcasm...\""
 
         return f"""You are an expert prompt engineer. Your task is to propose an improved instruction for an LLM task.
 

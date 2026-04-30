@@ -40,12 +40,14 @@ class PromptConfiguration:
 
 class RunnerStatusType(str, Enum):
     """Status events emitted by optimization runners."""
+
     PROGRESS = "progress"
     TIE = "tie"
     ERROR = "error"
 
 
 RunnerStatusCallback = Callable[..., None]
+
 
 class AcceptedIterationDict(TypedDict):
     parent: PromptConfigurationId

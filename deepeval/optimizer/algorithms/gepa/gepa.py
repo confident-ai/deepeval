@@ -39,7 +39,7 @@ from deepeval.optimizer.utils import (
 from deepeval.optimizer.policies import (
     pick_best_with_ties,
     select_prompt_configuration_pareto,
-    _is_dominated
+    _is_dominated,
 )
 from deepeval.prompt.api import PromptType
 from deepeval.prompt.prompt import Prompt
@@ -175,7 +175,7 @@ class GEPA(BaseAlgorithm):
         def _one_iteration() -> bool:
             nonlocal accepted_iterations
             nonlocal consecutive_rejections
-            
+
             if not d_feedback:
                 return False
 
@@ -209,7 +209,9 @@ class GEPA(BaseAlgorithm):
 
             # 5. Rewrite
             child_prompt = self._generate_child_prompt(
-                selected_module_id, parent_prompt_configuration, feedback_diagnosis
+                selected_module_id,
+                parent_prompt_configuration,
+                feedback_diagnosis,
             )
             if child_prompt is None:
                 # Child prompt matched parent; skip this iteration.
@@ -228,24 +230,30 @@ class GEPA(BaseAlgorithm):
                 parent_agg = self.aggregate_instances(
                     self.pareto_score_table[parent_prompt_configuration.id]
                 )
-                self._iteration_log.append({
-                    "iteration": self._current_iteration,
-                    "outcome": "skipped",
-                    "reason": f"Skipped (minibatch score did not improve)",
-                    "before": parent_agg,
-                    "after": child_minibatch_score,
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": self._current_iteration,
+                        "outcome": "skipped",
+                        "reason": f"Skipped (minibatch score did not improve)",
+                        "before": parent_agg,
+                        "after": child_minibatch_score,
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
                 return True
 
             # 7. Evaluate child on the GLOBAL validation set (d_pareto)
             child_pareto_scores = self.scorer.score_pareto(
                 child_prompt_configuration, d_pareto
             )
-            parent_pareto_scores = self.pareto_score_table[parent_prompt_configuration.id]
+            parent_pareto_scores = self.pareto_score_table[
+                parent_prompt_configuration.id
+            ]
 
             # 8. Acceptance test (Pareto non-domination vs parent)
-            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+            accepted = self._should_accept_child(
+                child_pareto_scores, parent_pareto_scores
+            )
 
             if accepted:
                 consecutive_rejections = 0
@@ -261,27 +269,35 @@ class GEPA(BaseAlgorithm):
                         child_agg,
                     )
                 )
-                self._iteration_log.append({
-                    "iteration": self._current_iteration,
-                    "outcome": "accepted",
-                    "reason": "Accepted by Pareto non-domination",
-                    "before": parent_agg,
-                    "after": child_agg,
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": self._current_iteration,
+                        "outcome": "accepted",
+                        "reason": "Accepted by Pareto non-domination",
+                        "before": parent_agg,
+                        "after": child_agg,
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
             else:
                 consecutive_rejections += 1
-                self._iteration_log.append({
-                    "iteration": self._current_iteration,
-                    "outcome": "rejected",
-                    "reason": f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
-                    "before": self.aggregate_instances(parent_pareto_scores),
-                    "after": self.aggregate_instances(child_pareto_scores),
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": self._current_iteration,
+                        "outcome": "rejected",
+                        "reason": f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
+                        "before": self.aggregate_instances(
+                            parent_pareto_scores
+                        ),
+                        "after": self.aggregate_instances(child_pareto_scores),
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
 
             if consecutive_rejections >= self.patience:
-                self._iteration_log[-1]["reason"] = f"early stop (patience={self.patience})"
+                self._iteration_log[-1][
+                    "reason"
+                ] = f"early stop (patience={self.patience})"
                 return False
 
             return True
@@ -353,7 +369,10 @@ class GEPA(BaseAlgorithm):
 
             # Seed Pareto scores lazily on first iteration
             if not self.pareto_score_table:
-                self._update_step(cur, f"Scoring seed prompt on {len(d_pareto)} pareto goldens...")
+                self._update_step(
+                    cur,
+                    f"Scoring seed prompt on {len(d_pareto)} pareto goldens...",
+                )
                 self.pareto_score_table[root_prompt_configuration.id] = (
                     await self.scorer.a_score_pareto(
                         root_prompt_configuration, d_pareto
@@ -370,7 +389,9 @@ class GEPA(BaseAlgorithm):
             minibatch = self._draw_minibatch(d_feedback)
 
             # 4. Feedback
-            self._update_step(cur, f"Gathering feedback on {len(minibatch)} goldens...")
+            self._update_step(
+                cur, f"Gathering feedback on {len(minibatch)} goldens..."
+            )
             feedback_diagnosis = await self.scorer.a_get_minibatch_feedback(
                 parent_prompt_configuration, selected_module_id, minibatch
             )
@@ -382,18 +403,22 @@ class GEPA(BaseAlgorithm):
             # 5. Rewrite
             self._update_step(cur, "Rewriting prompt from feedback...")
             child_prompt = await self._a_generate_child_prompt(
-                selected_module_id, parent_prompt_configuration, feedback_diagnosis
+                selected_module_id,
+                parent_prompt_configuration,
+                feedback_diagnosis,
             )
 
             if child_prompt is None:
-                self._iteration_log.append({
-                    "iteration": cur,
-                    "outcome": "skipped",
-                    "reason": "child == parent",
-                    "before": None,
-                    "after": None,
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": cur,
+                        "outcome": "skipped",
+                        "reason": "child == parent",
+                        "before": None,
+                        "after": None,
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
                 return True
 
             # 6. Child prompt_configuration
@@ -409,18 +434,23 @@ class GEPA(BaseAlgorithm):
                 parent_agg = self.aggregate_instances(
                     self.pareto_score_table[parent_prompt_configuration.id]
                 )
-                self._iteration_log.append({
-                    "iteration": cur,
-                    "outcome": "skipped",
-                    "reason": f"Skipped (minibatch score did not improve)",
-                    "before": parent_agg,
-                    "after": child_minibatch_score,
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": cur,
+                        "outcome": "skipped",
+                        "reason": f"Skipped (minibatch score did not improve)",
+                        "before": parent_agg,
+                        "after": child_minibatch_score,
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
                 return True
 
             # 7. Evaluate child on the GLOBAL validation set (d_pareto)
-            self._update_step(cur, f"Evaluating child on pareto set ({len(d_pareto)} goldens)...")
+            self._update_step(
+                cur,
+                f"Evaluating child on pareto set ({len(d_pareto)} goldens)...",
+            )
             child_pareto_scores = await self.scorer.a_score_pareto(
                 child_prompt_configuration, d_pareto
             )
@@ -429,7 +459,9 @@ class GEPA(BaseAlgorithm):
             ]
 
             # 8. Acceptance test (Pareto non-domination vs parent)
-            accepted = self._should_accept_child(child_pareto_scores, parent_pareto_scores)
+            accepted = self._should_accept_child(
+                child_pareto_scores, parent_pareto_scores
+            )
 
             if accepted:
                 consecutive_rejections = 0
@@ -445,27 +477,35 @@ class GEPA(BaseAlgorithm):
                         child_agg,
                     )
                 )
-                self._iteration_log.append({
-                    "iteration": cur,
-                    "outcome": "accepted",
-                    "reason": "Accepted by Pareto non-domination",
-                    "before": parent_agg,
-                    "after": child_agg,
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": cur,
+                        "outcome": "accepted",
+                        "reason": "Accepted by Pareto non-domination",
+                        "before": parent_agg,
+                        "after": child_agg,
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
             else:
                 consecutive_rejections += 1
-                self._iteration_log.append({
-                    "iteration": cur,
-                    "outcome": "rejected",
-                    "reason": f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
-                    "before": self.aggregate_instances(parent_pareto_scores),
-                    "after": self.aggregate_instances(child_pareto_scores),
-                    "elapsed": time.perf_counter() - iter_start,
-                })
+                self._iteration_log.append(
+                    {
+                        "iteration": cur,
+                        "outcome": "rejected",
+                        "reason": f"Rejected (consecutive rejections: {consecutive_rejections}/{self.patience})",
+                        "before": self.aggregate_instances(
+                            parent_pareto_scores
+                        ),
+                        "after": self.aggregate_instances(child_pareto_scores),
+                        "elapsed": time.perf_counter() - iter_start,
+                    }
+                )
 
             if consecutive_rejections >= self.patience:
-                self._iteration_log[-1]["reason"] = f"early stop (patience={self.patience})"
+                self._iteration_log[-1][
+                    "reason"
+                ] = f"early stop (patience={self.patience})"
                 return False
 
             return True
@@ -684,13 +724,21 @@ class GEPA(BaseAlgorithm):
     def _should_accept_child(
         self, child_scores: List[float], parent_scores: List[float]
     ) -> bool:
-        if _is_dominated(candidate_scores=child_scores, other_scores=parent_scores, min_delta=GEPA_MIN_DELTA):
+        if _is_dominated(
+            candidate_scores=child_scores,
+            other_scores=parent_scores,
+            min_delta=GEPA_MIN_DELTA,
+        ):
             return False
 
         current_archive_scores = list(self.pareto_score_table.values())
 
         for existing_scores in current_archive_scores:
-            if _is_dominated(candidate_scores=child_scores, other_scores=existing_scores, min_delta=GEPA_MIN_DELTA):
+            if _is_dominated(
+                candidate_scores=child_scores,
+                other_scores=existing_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
                 return False
 
         return True
@@ -705,13 +753,19 @@ class GEPA(BaseAlgorithm):
         child_agg_score: float,
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
-        self.pareto_score_table[child_prompt_configuration.id] = child_pareto_scores
+        self.pareto_score_table[child_prompt_configuration.id] = (
+            child_pareto_scores
+        )
 
         ids_to_remove = []
         for config_id, scores in self.pareto_score_table.items():
             if config_id == child_prompt_configuration.id:
                 continue
-            if _is_dominated(candidate_scores=scores, other_scores=child_pareto_scores, min_delta=GEPA_MIN_DELTA):
+            if _is_dominated(
+                candidate_scores=scores,
+                other_scores=child_pareto_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
                 ids_to_remove.append(config_id)
 
         for rid in ids_to_remove:
@@ -735,13 +789,19 @@ class GEPA(BaseAlgorithm):
         child_agg_score: float,
     ) -> AcceptedIterationDict:
         self._add_prompt_configuration(child_prompt_configuration)
-        self.pareto_score_table[child_prompt_configuration.id] = child_pareto_scores
+        self.pareto_score_table[child_prompt_configuration.id] = (
+            child_pareto_scores
+        )
 
         ids_to_remove = []
         for config_id, scores in self.pareto_score_table.items():
             if config_id == child_prompt_configuration.id:
                 continue
-            if _is_dominated(candidate_scores=scores, other_scores=child_pareto_scores, min_delta=GEPA_MIN_DELTA):
+            if _is_dominated(
+                candidate_scores=scores,
+                other_scores=child_pareto_scores,
+                min_delta=GEPA_MIN_DELTA,
+            ):
                 ids_to_remove.append(config_id)
 
         for rid in ids_to_remove:
@@ -754,7 +814,6 @@ class GEPA(BaseAlgorithm):
             before=parent_agg_score,
             after=child_agg_score,
         )
-
 
     def _update_step(self, iteration: int, label: str) -> None:
         """Update the sub-step row on the outer progress bar."""
@@ -846,9 +905,9 @@ class GEPA(BaseAlgorithm):
     def generate_summary_table(self, report: OptimizationReport) -> List[Table]:
         """Generates GEPA-specific evolutionary iteration and Pareto tables."""
         _PURPLE = "rgb(106,0,255)"
-        _GREEN  = "rgb(25,227,160)"
-        _RED    = "rgb(255,85,85)"
-        _DIM    = "rgb(55,65,81)"
+        _GREEN = "rgb(25,227,160)"
+        _RED = "rgb(255,85,85)"
+        _DIM = "rgb(55,65,81)"
 
         tables = []
         iteration_log = getattr(self, "_iteration_log", [])
@@ -856,9 +915,15 @@ class GEPA(BaseAlgorithm):
         # 1. Iteration Table
         iter_table = Table(
             title=f"✨ [{_PURPLE}]{self.name}[/] Evolutionary Mutations",
-            box=box.ROUNDED, border_style=_PURPLE, header_style=f"bold {_PURPLE}", show_lines=True, expand=True
+            box=box.ROUNDED,
+            border_style=_PURPLE,
+            header_style=f"bold {_PURPLE}",
+            show_lines=True,
+            expand=True,
         )
-        iter_table.add_column("#", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column(
+            "#", style="bold white", justify="right", no_wrap=True
+        )
         iter_table.add_column("Outcome", justify="center", no_wrap=True)
         iter_table.add_column("Before", justify="right", no_wrap=True)
         iter_table.add_column("After", justify="right", no_wrap=True)
@@ -882,7 +947,7 @@ class GEPA(BaseAlgorithm):
                 outcome_cell = f"[{_DIM}]↷ skipped[/]"
 
             before_cell = f"{before:.4f}" if before is not None else "—"
-            after_cell  = f"{after:.4f}" if after is not None else "—"
+            after_cell = f"{after:.4f}" if after is not None else "—"
 
             if before is not None and after is not None:
                 delta = after - before
@@ -893,15 +958,27 @@ class GEPA(BaseAlgorithm):
                 delta_cell = "—"
 
             time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
-            iter_table.add_row(i, outcome_cell, before_cell, after_cell, delta_cell, reason, time_cell)
-        
+            iter_table.add_row(
+                i,
+                outcome_cell,
+                before_cell,
+                after_cell,
+                delta_cell,
+                reason,
+                time_cell,
+            )
+
         tables.append(iter_table)
 
         # 2. Pareto Table
         if report and report.pareto_scores:
             pareto_table = Table(
                 title=f"[{_PURPLE}]Final Pareto Archive[/]",
-                box=box.HORIZONTALS, border_style=_PURPLE, header_style=f"bold {_PURPLE}", show_lines=True, expand=True
+                box=box.HORIZONTALS,
+                border_style=_PURPLE,
+                header_style=f"bold {_PURPLE}",
+                show_lines=True,
+                expand=True,
             )
             pareto_table.add_column("Config ID", style="white", no_wrap=True)
             pareto_table.add_column("Role", justify="center", no_wrap=True)
@@ -919,17 +996,21 @@ class GEPA(BaseAlgorithm):
                     short_id = f"[bold {_GREEN}]{short_id} ★[/]"
 
                 if len(scores) > 6:
-                    score_strs = [f"{s:.3f}" for s in scores[:3]] + ["..."] + [f"{s:.3f}" for s in scores[-3:]]
+                    score_strs = (
+                        [f"{s:.3f}" for s in scores[:3]]
+                        + ["..."]
+                        + [f"{s:.3f}" for s in scores[-3:]]
+                    )
                 else:
                     score_strs = [f"{s:.3f}" for s in scores]
                 scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
 
                 agg = sum(scores) / len(scores) if scores else 0.0
                 agg_color = _GREEN if is_best else "white"
-                agg_cell  = f"[{agg_color}]{agg:.4f}[/]"
+                agg_cell = f"[{agg_color}]{agg:.4f}[/]"
 
                 pareto_table.add_row(short_id, role, scores_cell, agg_cell)
-            
+
             tables.append(pareto_table)
 
         return tables

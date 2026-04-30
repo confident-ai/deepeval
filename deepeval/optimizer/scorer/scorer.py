@@ -29,7 +29,11 @@ from deepeval.test_case import (
     Turn,
 )
 from deepeval.prompt.prompt import Prompt
-from deepeval.metrics.utils import a_generate_with_schema_and_extract, generate_with_schema_and_extract, initialize_model
+from deepeval.metrics.utils import (
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
+    initialize_model,
+)
 
 from deepeval.optimizer.types import (
     ModelCallback,
@@ -145,15 +149,17 @@ class Scorer(BaseScorer):
         for golden in minibatch:
             actual = self.generate(prompt_configuration.prompts, golden)
             test_case = self._golden_to_test_case(golden, actual)
-            
+
             metrics = copy_metrics(self.metrics)
             for metric in metrics:
                 _measure_no_indicator(metric=metric, test_case=test_case)
-            
-            evaluation_results_block = self._build_evaluation_results_block(golden, actual, metrics)
+
+            evaluation_results_block = self._build_evaluation_results_block(
+                golden, actual, metrics
+            )
             if evaluation_results_block:
                 results.append(evaluation_results_block)
-        
+
         if not results:
             return ScorerDiagnosisResult(
                 failures=[],
@@ -161,11 +167,15 @@ class Scorer(BaseScorer):
                 analysis="",
                 results=[],
             )
-        
+
         evaluation_results = "\n\n---\n\n".join(results)
 
         prompt = prompt_configuration.prompts[module]
-        original_prompt = prompt.text_template if prompt.type == PromptType.TEXT else prompt.messages_template
+        original_prompt = (
+            prompt.text_template
+            if prompt.type == PromptType.TEXT
+            else prompt.messages_template
+        )
 
         diagnosis_prompt = ScorerTemplate.generate_diagnosis(
             original_prompt=original_prompt,
@@ -185,7 +195,6 @@ class Scorer(BaseScorer):
             analysis=diagnosis.analysis,
             results=results,
         )
-        
 
     async def a_score_pareto(
         self,
@@ -219,18 +228,22 @@ class Scorer(BaseScorer):
         async def process_one_trace(golden) -> Optional[str]:
             actual = await self.a_generate(prompt_configuration.prompts, golden)
             test_case = self._golden_to_test_case(golden, actual)
-            
+
             metrics = copy_metrics(self.metrics)
             for metric in metrics:
-                await _a_measure_no_indicator(metric=metric, test_case=test_case)
-            
+                await _a_measure_no_indicator(
+                    metric=metric, test_case=test_case
+                )
+
             return self._build_evaluation_results_block(golden, actual, metrics)
 
-        tasks = [self._bounded(process_one_trace(golden)) for golden in minibatch]
+        tasks = [
+            self._bounded(process_one_trace(golden)) for golden in minibatch
+        ]
         raw_results = await asyncio.gather(*tasks)
-        
+
         results = [r for r in raw_results if r]
-        
+
         if not results:
             return ScorerDiagnosisResult(
                 failures=[],
@@ -238,11 +251,15 @@ class Scorer(BaseScorer):
                 analysis="",
                 results=[],
             )
-        
+
         evaluation_results = "\n\n---\n\n".join(results)
 
         prompt = prompt_configuration.prompts[module]
-        original_prompt = prompt.text_template if prompt.type == PromptType.TEXT else prompt.messages_template
+        original_prompt = (
+            prompt.text_template
+            if prompt.type == PromptType.TEXT
+            else prompt.messages_template
+        )
 
         diagnosis_prompt = ScorerTemplate.generate_diagnosis(
             original_prompt=original_prompt,
@@ -315,7 +332,9 @@ class Scorer(BaseScorer):
         for metric in metrics:
             score = await _a_measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        score = sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        score = (
+            sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        )
         return score
 
     def _score_one(
@@ -331,7 +350,9 @@ class Scorer(BaseScorer):
         for metric in metrics:
             score = _measure_no_indicator(metric, test_case)
             per_metric[metric.__class__.__name__] = float(score)
-        score = sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        score = (
+            sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
+        )
         return score
 
     def _select_module_id_from_prompts(
@@ -350,24 +371,28 @@ class Scorer(BaseScorer):
             )
 
     def _build_evaluation_results_block(
-        self, 
-        golden: Union[Golden, ConversationalGolden], 
-        actual: str, 
-        metrics: List[BaseMetric]
+        self,
+        golden: Union[Golden, ConversationalGolden],
+        actual: str,
+        metrics: List[BaseMetric],
     ) -> str:
         if isinstance(golden, Golden):
             input_str = golden.input
             expected_str = golden.expected_output or "None provided"
         else:
-            input_str = "\n".join([t.content for t in golden.turns if t.role == "user"])
+            input_str = "\n".join(
+                [t.content for t in golden.turns if t.role == "user"]
+            )
             expected_str = golden.expected_outcome or "None provided"
-        
+
         reasons = []
         for metric in metrics:
             score = metric.score
             reason = metric.reason
-            reasons.append(f"- {metric.__class__.__name__} (Score: {score}): {reason}")
-            
+            reasons.append(
+                f"- {metric.__class__.__name__} (Score: {score}): {reason}"
+            )
+
         return (
             f"[Input]: {input_str}\n"
             f"[Expected]: {expected_str}\n"

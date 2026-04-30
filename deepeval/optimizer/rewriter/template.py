@@ -16,7 +16,9 @@ class RewriterTemplate:
             )
             example_prompt = '[{"role": "system", "content": "You are a helpful assistant..."},{"role": "user", "content": "{{input}}"}]'
         else:
-            format_instruction = "The final string representing the optimized revised prompt."
+            format_instruction = (
+                "The final string representing the optimized revised prompt."
+            )
             example_prompt = '"<the optimized revised prompt here>"'
 
         return f"""You are an expert AI Prompt Engineer. Your goal is to perform a 'Prompt Mutation' to move the prompt closer to the Pareto Frontier.

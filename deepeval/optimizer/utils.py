@@ -414,18 +414,20 @@ def mean_of_all(scores: Sequence[float]) -> float:
 #### Prompt Utils #########
 ###########################
 
+
 def _parse_prompt(prompt: Prompt) -> str:
     if prompt.type == PromptType.TEXT:
         return prompt.text_template
-    
+
     elif prompt.type == PromptType.LIST:
         messages = [
-            {"role": msg.role, "content": msg.content} 
+            {"role": msg.role, "content": msg.content}
             for msg in prompt.messages_template
         ]
         return json.dumps(messages, indent=4)
     else:
         raise DeepEvalError(f"Invalid prompt type: {prompt.type}")
+
 
 def _create_prompt(old_prompt: Prompt, new_content: str) -> Prompt:
     prompt_kwargs = {
@@ -441,29 +443,28 @@ def _create_prompt(old_prompt: Prompt, new_content: str) -> Prompt:
     if old_prompt.type == PromptType.TEXT:
         prompt_kwargs["text_template"] = new_content
         prompt_kwargs["messages_template"] = None
-        
+
     elif old_prompt.type == PromptType.LIST:
         prompt_kwargs["text_template"] = None
-        
+
         try:
             parsed_messages: List[Dict[str, str]] = json.loads(new_content)
-            
+
             messages_template = [
-                PromptMessage(
-                    role=msg.get("role"), 
-                    content=msg.get("content")
-                )
+                PromptMessage(role=msg.get("role"), content=msg.get("content"))
                 for msg in parsed_messages
             ]
             prompt_kwargs["messages_template"] = messages_template
-            
+
         except json.JSONDecodeError as e:
-            raise DeepEvalError(f"Failed to parse the LLM's rewritten messages into JSON: {e}")
+            raise DeepEvalError(
+                f"Failed to parse the LLM's rewritten messages into JSON: {e}"
+            )
         except Exception as e:
             raise DeepEvalError(f"Failed to reconstruct PromptMessages: {e}")
 
     new_prompt = Prompt(**prompt_kwargs)
-    
+
     new_prompt.label = old_prompt.label
-    
+
     return new_prompt

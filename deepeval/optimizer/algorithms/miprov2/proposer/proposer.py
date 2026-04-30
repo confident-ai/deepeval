@@ -40,7 +40,7 @@ INSTRUCTION_TIPS = [
 
 class InstructionProposer:
     """
-    Generates N diverse instruction candidates for a given prompt using 
+    Generates N diverse instruction candidates for a given prompt using
     Program-and-Data-Aware grounding and Bayesian tip diversity.
     """
 
@@ -76,7 +76,9 @@ class InstructionProposer:
             if isinstance(golden, Golden):
                 inp = str(golden.input)
                 out = str(golden.expected_output or "")
-                examples.append(f"Example {i}:\n  Input: {inp}\n  Expected: {out}")
+                examples.append(
+                    f"Example {i}:\n  Input: {inp}\n  Expected: {out}"
+                )
             else:
                 msgs = golden.turns if golden.turns else []
                 msg_str = " | ".join(str(m) for m in msgs)
@@ -90,7 +92,7 @@ class InstructionProposer:
 
     def _generate_dataset_summary(self, examples_text: str) -> str:
         prompt = ProposerTemplate.generate_dataset_summary(examples_text)
-        
+
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -134,7 +136,11 @@ class InstructionProposer:
         candidates: List[Prompt] = [prompt]
 
         # 1. Format inputs using the global utility
-        is_list = prompt.type.value == "list" if hasattr(prompt.type, "value") else prompt.type == "list"
+        is_list = (
+            prompt.type.value == "list"
+            if hasattr(prompt.type, "value")
+            else prompt.type == "list"
+        )
         prompt_text = _parse_prompt(prompt)
         examples_text = self._format_examples(goldens, max_examples=5)
 
@@ -142,7 +148,9 @@ class InstructionProposer:
         try:
             dataset_summary = self._generate_dataset_summary(examples_text)
         except Exception:
-            dataset_summary = "A standard text processing task based on the provided inputs."
+            dataset_summary = (
+                "A standard text processing task based on the provided inputs."
+            )
 
         # 3. Generate Candidates
         tips = self._select_tips(num_candidates - 1)
@@ -161,7 +169,7 @@ class InstructionProposer:
                 if new_text:
                     if isinstance(new_text, list):
                         new_text = json.dumps(new_text)
-                    
+
                     if new_text.strip():
                         new_prompt = _create_prompt(prompt, new_text)
                         if not self._is_duplicate(new_prompt, candidates):
@@ -177,7 +185,7 @@ class InstructionProposer:
 
     async def _a_generate_dataset_summary(self, examples_text: str) -> str:
         prompt = ProposerTemplate.generate_dataset_summary(examples_text)
-        
+
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
@@ -223,14 +231,22 @@ class InstructionProposer:
     ) -> List[Prompt]:
         candidates: List[Prompt] = [prompt]
 
-        is_list = prompt.type.value == "list" if hasattr(prompt.type, "value") else prompt.type == "list"
+        is_list = (
+            prompt.type.value == "list"
+            if hasattr(prompt.type, "value")
+            else prompt.type == "list"
+        )
         prompt_text = _parse_prompt(prompt)
         examples_text = self._format_examples(goldens, max_examples=5)
 
         try:
-            dataset_summary = await self._a_generate_dataset_summary(examples_text)
+            dataset_summary = await self._a_generate_dataset_summary(
+                examples_text
+            )
         except Exception:
-            dataset_summary = "A standard text processing task based on the provided inputs."
+            dataset_summary = (
+                "A standard text processing task based on the provided inputs."
+            )
 
         tips = self._select_tips(num_candidates - 1)
 
@@ -253,7 +269,7 @@ class InstructionProposer:
             if new_text:
                 if isinstance(new_text, list):
                     new_text = json.dumps(new_text)
-                
+
                 if new_text.strip():
                     new_prompt = _create_prompt(prompt, new_text)
                     if not self._is_duplicate(new_prompt, candidates):
@@ -280,15 +296,17 @@ class InstructionProposer:
 
         for p in existing:
             existing_text = _parse_prompt(p).strip().lower()
-            
+
             # Exact match
             if new_text == existing_text:
                 return True
-                
+
             # Mathematical similarity match (>90% similar)
             if len(new_text) > 0 and len(existing_text) > 0:
-                similarity = difflib.SequenceMatcher(None, new_text, existing_text).ratio()
+                similarity = difflib.SequenceMatcher(
+                    None, new_text, existing_text
+                ).ratio()
                 if similarity > 0.90:
                     return True
-                    
+
         return False

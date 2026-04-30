@@ -473,7 +473,9 @@ class SuffixRewriter:
 
     async def a_rewrite(self, *, old_prompt, feedback_diagnosis=None, **kwargs):
         self.a_calls.append((old_prompt, feedback_diagnosis))
-        return self.rewrite(old_prompt=old_prompt, feedback_diagnosis=feedback_diagnosis)
+        return self.rewrite(
+            old_prompt=old_prompt, feedback_diagnosis=feedback_diagnosis
+        )
 
 
 class AddBetterRewriter:

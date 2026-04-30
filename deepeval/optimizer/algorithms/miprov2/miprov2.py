@@ -15,9 +15,11 @@ from typing import Dict, List, Tuple, Union, Optional
 from rich.table import Table
 from rich import box
 import re
+
 try:
     import optuna
     from optuna.samplers import TPESampler
+
     OPTUNA_AVAILABLE = True
 except ImportError:
     OPTUNA_AVAILABLE = False
@@ -36,10 +38,12 @@ from deepeval.optimizer.types import (
 )
 from deepeval.optimizer.algorithms.base import BaseAlgorithm
 from deepeval.optimizer.utils import build_prompt_config_snapshots
-from deepeval.optimizer.algorithms.miprov2.proposer.proposer import InstructionProposer
+from deepeval.optimizer.algorithms.miprov2.proposer.proposer import (
+    InstructionProposer,
+)
 from deepeval.optimizer.algorithms.miprov2.bootstrapper import (
-    DemonstrationBootstrapper, 
-    render_prompt_with_demonstrations
+    DemonstrationBootstrapper,
+    render_prompt_with_demonstrations,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
 
@@ -66,7 +70,9 @@ class MIPROV2(BaseAlgorithm):
     ):
         super().__init__()
         if not OPTUNA_AVAILABLE:
-            raise DeepEvalError("MIPROv2 requires optuna. Please run `pip install optuna`.")
+            raise DeepEvalError(
+                "MIPROv2 requires optuna. Please run `pip install optuna`."
+            )
 
         self.num_trials = num_trials
         self.num_candidates = num_candidates
@@ -81,7 +87,7 @@ class MIPROV2(BaseAlgorithm):
         self.parents_by_id: Dict[str, str] = {}
         self._config_cache: Dict[Tuple[int, int], PromptConfiguration] = {}
         self.prompt_configurations_by_id: Dict[str, PromptConfiguration] = {}
-        
+
         self.candidates: List[Prompt] = []
         self.demo_sets = []
 
@@ -95,15 +101,14 @@ class MIPROV2(BaseAlgorithm):
     def _init_components(self) -> None:
         """Initialize the Proposer and Bootstrapper using the injected models."""
         self.proposer = InstructionProposer(
-            optimizer_model=self.optimizer_model,
-            random_state=self.random_state
+            optimizer_model=self.optimizer_model, random_state=self.random_state
         )
         self.bootstrapper = DemonstrationBootstrapper(
             scorer=self.scorer,
             max_bootstrapped_demonstrations=self.max_bootstrapped_demonstrations,
             max_labeled_demonstrations=self.max_labeled_demonstrations,
             num_demonstration_sets=self.num_demonstration_sets,
-            random_state=self.random_state
+            random_state=self.random_state,
         )
 
     def _sample_minibatch(self, goldens: List) -> List:
@@ -112,7 +117,9 @@ class MIPROV2(BaseAlgorithm):
             return goldens
         return self.random_state.sample(goldens, self.minibatch_size)
 
-    def _build_config(self, instr_idx: int, demo_idx: int) -> PromptConfiguration:
+    def _build_config(
+        self, instr_idx: int, demo_idx: int
+    ) -> PromptConfiguration:
         """Stitch an instruction and demo set into a unified prompt configuration, using a cache to prevent ID leaks."""
         cache_key = (instr_idx, demo_idx)
         if hasattr(self, "_config_cache") and cache_key in self._config_cache:
@@ -120,15 +127,19 @@ class MIPROV2(BaseAlgorithm):
 
         base_prompt = self.candidates[instr_idx]
         demo_set = self.demo_sets[demo_idx]
-        
-        unified_prompt = render_prompt_with_demonstrations(base_prompt, demo_set)
-        
-        config = PromptConfiguration.new(prompts={self.SINGLE_MODULE_ID: unified_prompt})
+
+        unified_prompt = render_prompt_with_demonstrations(
+            base_prompt, demo_set
+        )
+
+        config = PromptConfiguration.new(
+            prompts={self.SINGLE_MODULE_ID: unified_prompt}
+        )
         self.prompt_configurations_by_id[config.id] = config
-        
+
         if hasattr(self, "_config_cache"):
             self._config_cache[cache_key] = config
-            
+
         return config
 
     def _update_step(self, message: str) -> None:
@@ -141,7 +152,7 @@ class MIPROV2(BaseAlgorithm):
         if getattr(self, "status_callback", None) is not None:
             self.status_callback(
                 RunnerStatusType.PROGRESS,
-                detail="",  
+                detail="",
                 step_index=step,
                 total_steps=total,
             )
@@ -156,68 +167,96 @@ class MIPROV2(BaseAlgorithm):
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
         import uuid
+
         self._init_components()
         self._iteration_log = []
-        
-        # Phase 1: Propose & Bootstrap
-        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
-        self.candidates = self.proposer.propose(prompt, goldens, self.num_candidates)
 
-        self._update_step(f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets...")
+        # Phase 1: Propose & Bootstrap
+        self._update_step(
+            f"Generating {self.num_candidates} diverse instructions..."
+        )
+        self.candidates = self.proposer.propose(
+            prompt, goldens, self.num_candidates
+        )
+
+        self._update_step(
+            f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets..."
+        )
         self.demo_sets = self.bootstrapper.bootstrap(prompt, goldens)
 
         # Phase 2: Bayesian Optimization
-        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
+        self._update_step(
+            "Initializing Tree-structured Parzen Estimator (TPE)..."
+        )
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        study = optuna.create_study(direction="maximize", sampler=TPESampler(seed=self.seed))
+        study = optuna.create_study(
+            direction="maximize", sampler=TPESampler(seed=self.seed)
+        )
 
-        best_score = float('-inf')
+        best_score = float("-inf")
         best_config_id = None
         accepted_iterations: List[AcceptedIterationDict] = []
 
         for trial_idx in range(self.num_trials):
             trial_start = time.time()
             self._update_trial_progress(trial_idx + 1, self.num_trials)
-            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
-            
+            self._update_step(
+                f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}..."
+            )
+
             trial = study.ask()
-            instr_idx = trial.suggest_categorical("instr_idx", list(range(len(self.candidates))))
-            demo_idx = trial.suggest_categorical("demo_idx", list(range(len(self.demo_sets))))
+            instr_idx = trial.suggest_categorical(
+                "instr_idx", list(range(len(self.candidates)))
+            )
+            demo_idx = trial.suggest_categorical(
+                "demo_idx", list(range(len(self.demo_sets)))
+            )
 
             config = self._build_config(instr_idx, demo_idx)
             minibatch = self._sample_minibatch(goldens)
 
             score = self.scorer.score_minibatch(config, minibatch)
             study.tell(trial, score)
-            
-            self._iteration_log.append({
-                "iteration": trial_idx + 1,
-                "outcome": "accepted" if score > best_score else "rejected",
-                "before": best_score if best_score != float('-inf') else 0.0,
-                "after": score,
-                "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
-                "elapsed": time.time() - trial_start
-            })
+
+            self._iteration_log.append(
+                {
+                    "iteration": trial_idx + 1,
+                    "outcome": "accepted" if score > best_score else "rejected",
+                    "before": (
+                        best_score if best_score != float("-inf") else 0.0
+                    ),
+                    "after": score,
+                    "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                    "elapsed": time.time() - trial_start,
+                }
+            )
 
             # Periodic Full Pareto Evaluation
-            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
-                self._update_step(f"Running full validation on current best configuration...")
+            if (
+                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
+                or trial_idx == self.num_trials - 1
+            ):
+                self._update_step(
+                    f"Running full validation on current best configuration..."
+                )
                 best_trial = study.best_trial
                 best_eval_config = self._build_config(
-                    best_trial.params["instr_idx"], 
-                    best_trial.params["demo_idx"]
+                    best_trial.params["instr_idx"],
+                    best_trial.params["demo_idx"],
                 )
-                
-                full_scores = self.scorer.score_pareto(best_eval_config, goldens)
+
+                full_scores = self.scorer.score_pareto(
+                    best_eval_config, goldens
+                )
                 avg_full_score = sum(full_scores) / len(full_scores)
 
                 self.pareto_score_table[best_eval_config.id] = full_scores
-                
+
                 if avg_full_score > best_score:
                     if best_config_id is not None:
                         accepted_iterations.append(
                             AcceptedIterationDict(
-                                parent=best_config_id, 
+                                parent=best_config_id,
                                 child=best_eval_config.id,
                                 module=self.SINGLE_MODULE_ID,
                                 before=best_score,
@@ -228,7 +267,7 @@ class MIPROV2(BaseAlgorithm):
                     best_config_id = best_eval_config.id
 
         true_best_id = None
-        true_best_score = float('-inf')
+        true_best_score = float("-inf")
         for cid, scores in self.pareto_score_table.items():
             avg_score = sum(scores) / len(scores) if scores else 0.0
             if avg_score > true_best_score:
@@ -237,14 +276,16 @@ class MIPROV2(BaseAlgorithm):
 
         final_id = true_best_id if true_best_id else best_config_id
         best_config = self.prompt_configurations_by_id[final_id]
-        
+
         report = OptimizationReport(
             optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
             best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=build_prompt_config_snapshots(self.prompt_configurations_by_id),
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
 
         return best_config.prompts[self.SINGLE_MODULE_ID], report
@@ -259,31 +300,48 @@ class MIPROV2(BaseAlgorithm):
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ) -> Tuple[Prompt, OptimizationReport]:
         import uuid
+
         self._init_components()
         self._iteration_log = []
 
-        self._update_step(f"Generating {self.num_candidates} diverse instructions...")
-        self.candidates = await self.proposer.a_propose(prompt, goldens, self.num_candidates)
+        self._update_step(
+            f"Generating {self.num_candidates} diverse instructions..."
+        )
+        self.candidates = await self.proposer.a_propose(
+            prompt, goldens, self.num_candidates
+        )
 
-        self._update_step(f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets...")
+        self._update_step(
+            f"Bootstrapping {self.num_demonstration_sets} verified demonstration sets..."
+        )
         self.demo_sets = await self.bootstrapper.a_bootstrap(prompt, goldens)
 
-        self._update_step("Initializing Tree-structured Parzen Estimator (TPE)...")
+        self._update_step(
+            "Initializing Tree-structured Parzen Estimator (TPE)..."
+        )
         optuna.logging.set_verbosity(optuna.logging.WARNING)
-        study = optuna.create_study(direction="maximize", sampler=TPESampler(seed=self.seed))
+        study = optuna.create_study(
+            direction="maximize", sampler=TPESampler(seed=self.seed)
+        )
 
-        best_score = float('-inf')
+        best_score = float("-inf")
         best_config_id = None
         accepted_iterations: List[AcceptedIterationDict] = []
 
         for trial_idx in range(self.num_trials):
             trial_start = time.time()
             self._update_trial_progress(trial_idx + 1, self.num_trials)
-            self._update_step(f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}...")
+            self._update_step(
+                f"Running Bayesian Trial {trial_idx + 1}/{self.num_trials}..."
+            )
 
             trial = study.ask()
-            instr_idx = trial.suggest_categorical("instr_idx", list(range(len(self.candidates))))
-            demo_idx = trial.suggest_categorical("demo_idx", list(range(len(self.demo_sets))))
+            instr_idx = trial.suggest_categorical(
+                "instr_idx", list(range(len(self.candidates)))
+            )
+            demo_idx = trial.suggest_categorical(
+                "demo_idx", list(range(len(self.demo_sets)))
+            )
 
             config = self._build_config(instr_idx, demo_idx)
             minibatch = self._sample_minibatch(goldens)
@@ -291,33 +349,44 @@ class MIPROV2(BaseAlgorithm):
             score = await self.scorer.a_score_minibatch(config, minibatch)
             study.tell(trial, score)
 
-            self._iteration_log.append({
-                "iteration": trial_idx + 1,
-                "outcome": "accepted" if score > best_score else "rejected",
-                "before": best_score if best_score != float('-inf') else 0.0,
-                "after": score,
-                "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
-                "elapsed": time.time() - trial_start
-            })
+            self._iteration_log.append(
+                {
+                    "iteration": trial_idx + 1,
+                    "outcome": "accepted" if score > best_score else "rejected",
+                    "before": (
+                        best_score if best_score != float("-inf") else 0.0
+                    ),
+                    "after": score,
+                    "reason": f"TPE Sample -> Instruction: {instr_idx}, DemoSet: {demo_idx}",
+                    "elapsed": time.time() - trial_start,
+                }
+            )
 
-            if (trial_idx + 1) % self.minibatch_full_eval_steps == 0 or trial_idx == self.num_trials - 1:
-                self._update_step(f"Running full validation on current best configuration...")
+            if (
+                (trial_idx + 1) % self.minibatch_full_eval_steps == 0
+                or trial_idx == self.num_trials - 1
+            ):
+                self._update_step(
+                    f"Running full validation on current best configuration..."
+                )
                 best_trial = study.best_trial
                 best_eval_config = self._build_config(
-                    best_trial.params["instr_idx"], 
-                    best_trial.params["demo_idx"]
+                    best_trial.params["instr_idx"],
+                    best_trial.params["demo_idx"],
                 )
-                
-                full_scores = await self.scorer.a_score_pareto(best_eval_config, goldens)
+
+                full_scores = await self.scorer.a_score_pareto(
+                    best_eval_config, goldens
+                )
                 avg_full_score = sum(full_scores) / len(full_scores)
 
                 self.pareto_score_table[best_eval_config.id] = full_scores
-                
+
                 if avg_full_score > best_score:
                     if best_config_id is not None:
                         accepted_iterations.append(
                             AcceptedIterationDict(
-                                parent=best_config_id, 
+                                parent=best_config_id,
                                 child=best_eval_config.id,
                                 module=self.SINGLE_MODULE_ID,
                                 before=best_score,
@@ -328,7 +397,7 @@ class MIPROV2(BaseAlgorithm):
                     best_config_id = best_eval_config.id
 
         true_best_id = None
-        true_best_score = float('-inf')
+        true_best_score = float("-inf")
         for cid, scores in self.pareto_score_table.items():
             avg_score = sum(scores) / len(scores) if scores else 0.0
             if avg_score > true_best_score:
@@ -337,14 +406,16 @@ class MIPROV2(BaseAlgorithm):
 
         final_id = true_best_id if true_best_id else best_config_id
         best_config = self.prompt_configurations_by_id[final_id]
-        
+
         report = OptimizationReport(
             optimization_id=getattr(self, "optimization_id", str(uuid.uuid4())),
             best_id=best_config.id,
             accepted_iterations=accepted_iterations,
             pareto_scores=self.pareto_score_table,
             parents=self.parents_by_id,
-            prompt_configurations=build_prompt_config_snapshots(self.prompt_configurations_by_id),
+            prompt_configurations=build_prompt_config_snapshots(
+                self.prompt_configurations_by_id
+            ),
         )
 
         return best_config.prompts[self.SINGLE_MODULE_ID], report
@@ -353,10 +424,10 @@ class MIPROV2(BaseAlgorithm):
         """Generates MIPROv2-specific Bayesian Search logs and Validation tables."""
         from rich.table import Table
         from rich import box
-        
+
         _PURPLE = "rgb(106,0,255)"
-        _GREEN  = "rgb(25,227,160)"
-        _DIM    = "rgb(55,65,81)"
+        _GREEN = "rgb(25,227,160)"
+        _DIM = "rgb(55,65,81)"
 
         tables = []
         iteration_log = getattr(self, "_iteration_log", [])
@@ -370,7 +441,9 @@ class MIPROV2(BaseAlgorithm):
             show_lines=True,
             expand=True,
         )
-        iter_table.add_column("#", style="bold white", justify="right", no_wrap=True)
+        iter_table.add_column(
+            "#", style="bold white", justify="right", no_wrap=True
+        )
         iter_table.add_column("Status", justify="center", no_wrap=True)
         iter_table.add_column("Best Prior", justify="right", no_wrap=True)
         iter_table.add_column("Trial Score", justify="right", no_wrap=True)
@@ -378,7 +451,7 @@ class MIPROV2(BaseAlgorithm):
         iter_table.add_column("Note", style=f"{_DIM}", no_wrap=False)
         iter_table.add_column("Time", justify="right", no_wrap=True)
 
-        running_max = float('-inf')
+        running_max = float("-inf")
 
         for entry in iteration_log:
             i = str(entry["iteration"])
@@ -387,7 +460,7 @@ class MIPROV2(BaseAlgorithm):
             elapsed = entry.get("elapsed", 0.0)
 
             # Define the "Before" state as the highest score seen up to this point
-            best_prior = running_max if running_max != float('-inf') else 0.0
+            best_prior = running_max if running_max != float("-inf") else 0.0
             delta = score - best_prior
 
             # If it's a new high score, update the running max and mark it
@@ -402,11 +475,23 @@ class MIPROV2(BaseAlgorithm):
                 sign = "+" if delta >= 0 else ""
 
             best_prior_cell = f"{best_prior:.4f}"
-            score_cell = f"[bold {color}]{score:.4f}[/]" if score >= running_max else f"[{color}]{score:.4f}[/]"
+            score_cell = (
+                f"[bold {color}]{score:.4f}[/]"
+                if score >= running_max
+                else f"[{color}]{score:.4f}[/]"
+            )
             delta_cell = f"[{color}]{sign}{delta:.4f}[/]"
             time_cell = f"[{_DIM}]{elapsed:.2f}s[/]"
 
-            iter_table.add_row(i, status_cell, best_prior_cell, score_cell, delta_cell, reason, time_cell)
+            iter_table.add_row(
+                i,
+                status_cell,
+                best_prior_cell,
+                score_cell,
+                delta_cell,
+                reason,
+                time_cell,
+            )
 
         tables.append(iter_table)
 
@@ -420,10 +505,16 @@ class MIPROV2(BaseAlgorithm):
                 show_lines=True,
                 expand=True,
             )
-            pareto_table.add_column("Config ID", style="white", justify="center", no_wrap=True)
+            pareto_table.add_column(
+                "Config ID", style="white", justify="center", no_wrap=True
+            )
             pareto_table.add_column("Role", justify="center", no_wrap=True)
-            pareto_table.add_column("Scores Array", justify="center", no_wrap=False)
-            pareto_table.add_column("True Avg Score", justify="right", no_wrap=True)
+            pareto_table.add_column(
+                "Scores Array", justify="center", no_wrap=False
+            )
+            pareto_table.add_column(
+                "True Avg Score", justify="right", no_wrap=True
+            )
 
             best_id = report.best_id
 
@@ -436,14 +527,22 @@ class MIPROV2(BaseAlgorithm):
                     short_id = f"[bold white]{short_id} ★[/]"
 
                 if len(scores) > 6:
-                    score_strs = [f"{s:.3f}" for s in scores[:3]] + ["..."] + [f"{s:.3f}" for s in scores[-3:]]
+                    score_strs = (
+                        [f"{s:.3f}" for s in scores[:3]]
+                        + ["..."]
+                        + [f"{s:.3f}" for s in scores[-3:]]
+                    )
                 else:
                     score_strs = [f"{s:.3f}" for s in scores]
                 scores_cell = f"[{_DIM}][{', '.join(score_strs)}][/]"
 
                 agg = sum(scores) / len(scores) if scores else 0.0
                 agg_color = "white" if is_best else _DIM
-                agg_cell  = f"[bold {agg_color}]{agg:.4f}[/]" if is_best else f"[{agg_color}]{agg:.4f}[/]"
+                agg_cell = (
+                    f"[bold {agg_color}]{agg:.4f}[/]"
+                    if is_best
+                    else f"[{agg_color}]{agg:.4f}[/]"
+                )
 
                 pareto_table.add_row(short_id, role, scores_cell, agg_cell)
 

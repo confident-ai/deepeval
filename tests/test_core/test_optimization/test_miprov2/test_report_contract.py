@@ -97,7 +97,9 @@ def test_miprov2_execute_report_contract(_miprov2_with_stubs):
     prompt = Prompt(text_template="base {input}")
     goldens = [Golden(input="q1", expected_output="a1")]
 
-    best_prompt, report = _miprov2_with_stubs.execute(prompt=prompt, goldens=goldens)
+    best_prompt, report = _miprov2_with_stubs.execute(
+        prompt=prompt, goldens=goldens
+    )
 
     assert best_prompt is not None
     assert isinstance(report.pareto_scores, dict)

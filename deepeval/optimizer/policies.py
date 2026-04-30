@@ -8,9 +8,9 @@ from deepeval.optimizer.types import PromptConfigurationId, ScoreTable
 
 
 def _is_dominated(
-    candidate_scores: List[float], 
+    candidate_scores: List[float],
     other_scores: List[float],
-    min_delta: float = 0.01
+    min_delta: float = 0.01,
 ) -> bool:
     """
     Return True if `candidate_scores` is dominated by `other_scores`:
